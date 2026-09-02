@@ -10,6 +10,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import collectors.collect_shadow as cs  # noqa: E402
@@ -95,3 +97,53 @@ def test_only_moneyline_is_used_for_convergence():
           "Will there be a run scored in the first inning?: Atlanta Braves"]  # reject
     kept = [q for q in qs if ":" not in q]
     assert kept == ["Atlanta Braves vs. Milwaukee Brewers"]
+
+
+# ── the 13-day crash loop ─────────────────────────────────────────────────
+# com.janus.convergence crash-looped every 30s from 2026-08-20 to 2026-09-02, writing 15,207
+# identical TypeErrors into 11.9 MB of unrotated stderr, undetected. Root cause: Resolver.resolve
+# signals failure by RETURNING Resolution(entity_id=None) rather than raising, so the surrounding
+# `try/except Exception` caught nothing and the None reached sorted() inside game_key.
+
+class _FakeRes:
+    def __init__(self, eid): self.entity_id = eid
+    @property
+    def ok(self): return self.entity_id is not None
+
+
+class _FakeResolver:
+    """Mimics the real contract: returns an unresolved Resolution, never raises."""
+    def __init__(self, mapping): self.mapping = mapping
+    def resolve(self, league, text=None, **kw): return _FakeRes(self.mapping.get(text))
+
+
+def test_game_key_rejects_unresolved_entity_id():
+    """The exact input that crash-looped. Must fail with a message naming the field, not a
+    TypeError from sorted() several frames away."""
+    with pytest.raises(ValueError, match="requires resolved ids"):
+        cs.game_key("2026-08-20", ["mlb:stl", None])
+
+
+def test_game_key_still_builds_a_stable_sorted_key():
+    assert cs.game_key("2026-08-20", ["mlb:lad", "mlb:stl"]) == "2026-08-20|mlb:lad|mlb:stl"
+    # order-independent: the key is sorted, so both call orders agree
+    assert cs.game_key("2026-08-20", ["mlb:stl", "mlb:lad"]) == "2026-08-20|mlb:lad|mlb:stl"
+
+
+def test_game_key_rejects_empty_date():
+    with pytest.raises(ValueError):
+        cs.game_key("", ["mlb:lad", "mlb:stl"])
+
+
+def test_resolved_ids_returns_none_rather_than_a_list_containing_none():
+    """A partially-resolved pair is a BLOCK, not a key with a hole in it."""
+    r = _FakeResolver({"STL": "mlb:stl", "LAD": "mlb:lad"})
+    assert cs.resolved_ids(r, "mlb", ["STL", "LAD"]) == ["mlb:stl", "mlb:lad"]
+    assert cs.resolved_ids(r, "mlb", ["STL", "NOT_A_TEAM"]) is None
+    assert cs.resolved_ids(r, "mlb", ["NOT_A_TEAM"]) is None
+
+
+def test_resolved_ids_survives_a_raising_resolver():
+    class Boom:
+        def resolve(self, *a, **k): raise RuntimeError("xref db unavailable")
+    assert cs.resolved_ids(Boom(), "mlb", ["STL"]) is None

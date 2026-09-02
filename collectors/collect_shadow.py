@@ -186,8 +186,39 @@ def parse_kalshi_ticker(ticker: str):
     return {"date": "20%s-%02d-%s" % (yy, _MON[mon], dd), "teams": pair, "outcome": outcome}
 
 
+def resolved_ids(resolver, league: str, texts) -> list[str] | None:
+    """Every text resolved, or None. An unresolved entity is a BLOCK, never a partial key.
+
+    `Resolver.resolve` signals failure by RETURNING `Resolution(entity_id=None)`; it does not
+    raise. A bare `try/except` around it therefore catches nothing, and the None flows onward
+    into `game_key` -> `sorted()` -> TypeError. That is the defect that crash-looped
+    com.janus.convergence every 30s from 2026-08-20 to 2026-09-02 (15,207 identical tracebacks,
+    11.9 MB of unrotated stderr, undetected). Check `.ok`, never truthiness of the call.
+    """
+    out: list[str] = []
+    for t in texts:
+        try:
+            res = resolver.resolve(league, text=t)
+        except Exception:                                          # noqa: BLE001
+            return None
+        if not res.ok:
+            return None
+        out.append(res.entity_id)
+    return out
+
+
 def game_key(date: str, entity_ids) -> str:
-    return date + "|" + "|".join(sorted(entity_ids))
+    """The pm_index key. Refuses unresolved ids rather than producing a corrupt key.
+
+    Three of this function's four call sites originally passed ids straight from
+    `Resolver.resolve(...).entity_id` with no `.ok` check. Guarding here means a caller cannot
+    get it wrong silently: the failure names the field instead of surfacing as a TypeError from
+    `sorted()` several frames away.
+    """
+    ids = list(entity_ids)
+    if not date or any(e is None for e in ids):
+        raise ValueError(f"game_key requires resolved ids; got date={date!r} entity_ids={ids!r}")
+    return date + "|" + "|".join(sorted(ids))
 
 
 def disk_ok(path="/") -> bool:
@@ -369,11 +400,11 @@ def poll_new_kalshi(store: Store, client: Client, resolver) -> list[tuple]:
         parsed = parse_kalshi_ticker(t)
         if not parsed:
             continue
-        try:
-            ids = [resolver.resolve("mlb", text=c).entity_id for c in parsed["teams"]]
-            out_id = resolver.resolve("mlb", text=parsed["outcome"]).entity_id
-        except Exception:                                          # noqa: BLE001
+        ids = resolved_ids(resolver, "mlb", parsed["teams"])
+        out_res = resolved_ids(resolver, "mlb", [parsed["outcome"]])
+        if ids is None or out_res is None:
             continue
+        out_id = out_res[0]
         row = store.con.execute(
             "SELECT pm_event, pm_label, pm_token FROM pm_index WHERE game_key=? AND entity_id=?",
             (game_key(parsed["date"], ids), out_id)).fetchone()
@@ -452,12 +483,12 @@ def main() -> int:
             if not parsed:
                 miss += 1
                 continue
-            try:
-                ids = [resolver.resolve("mlb", text=c).entity_id for c in parsed["teams"]]
-                oid = resolver.resolve("mlb", text=parsed["outcome"]).entity_id
-            except Exception:                                      # noqa: BLE001
+            ids = resolved_ids(resolver, "mlb", parsed["teams"])
+            oid_res = resolved_ids(resolver, "mlb", [parsed["outcome"]])
+            if ids is None or oid_res is None:
                 miss += 1
                 continue
+            oid = oid_res[0]
             got = store.con.execute(
                 "SELECT pm_event FROM pm_index WHERE game_key=? AND entity_id=?",
                 (game_key(parsed["date"], ids), oid)).fetchone()

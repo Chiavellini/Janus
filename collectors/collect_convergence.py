@@ -141,11 +141,11 @@ def load_pairs(shadow_db: Path) -> dict:
         parsed = cs.parse_kalshi_ticker(t)
         if not parsed:
             continue
-        try:
-            ids = [r.resolve("mlb", text=c).entity_id for c in parsed["teams"]]
-            oid = r.resolve("mlb", text=parsed["outcome"]).entity_id
-        except Exception:                                          # noqa: BLE001
+        ids = cs.resolved_ids(r, "mlb", parsed["teams"])
+        oid_res = cs.resolved_ids(r, "mlb", [parsed["outcome"]])
+        if ids is None or oid_res is None:
             continue
+        oid = oid_res[0]
         row = con.execute("SELECT pm_event, pm_label FROM pm_index WHERE game_key=? AND entity_id=?",
                           (cs.game_key(parsed["date"], ids), oid)).fetchone()
         if row:
