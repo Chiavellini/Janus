@@ -16,7 +16,13 @@ from nodes.venue_cloudbet.feed import (  # noqa: E402
     iter_event_markets,
     parse_selection,
 )
+from nodes.rules_exhaustive.rules import prove
 from nodes.cover.cover import Leg, REJECT_NOT_EXECUTABLE, best_cover  # noqa: E402
+
+#: A genuine proof from the mlb_no_draw rule. `ExhaustiveOutcomeSet` cannot be forged, so a test
+#: asserting exhaustiveness goes through the same gate production does.
+MLB2 = prove("mlb", "moneyline", "game", ["a", "b"])
+
 
 
 EVENT = {
@@ -66,13 +72,13 @@ def test_cloudbet_feed_quote_is_not_executable_until_acceptance():
             {"orderbook_fp": {"yes_dollars": [[0.40, 500]], "no_dollars": [[0.40, 500]]}},
             "yes", 1000.0))],
     }
-    assert best_cover(offers, 10, now_utc=1000.0, exhaustive=True).reject_reason == REJECT_NOT_EXECUTABLE
+    assert best_cover(offers, 10, now_utc=1000.0, exhaustive=MLB2).reject_reason == REJECT_NOT_EXECUTABLE
 
     accepted = selection.accepted_offer(10.0, odds=2.0)
     cover = best_cover({
         "Home FC": [cloudbet_leg(accepted)],
         "Away FC": [offers["Away FC"][0]],
-    }, 10, now_utc=1000.0, exhaustive=True)
+    }, 10, now_utc=1000.0, exhaustive=MLB2)
     assert cover.ok
     assert {leg.venue for leg in cover.legs} == {"cloudbet", "kalshi"}
 

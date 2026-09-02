@@ -39,6 +39,7 @@ from dataclasses import dataclass, field
 from typing import Mapping, Sequence
 
 from nodes.fees.models import Fill
+from nodes.rules_exhaustive.rules import ExhaustiveOutcomeSet
 from nodes.fees.registry import model_for, params_for
 from kernel.schema import Book
 
@@ -170,9 +171,14 @@ def _ov(legs: Sequence[Leg], venue: str) -> Mapping[str, object]:
 
 
 def price_combination(legs: Sequence[Leg], contracts: float, *, now_utc: float,
-                      max_leg_age_s: float, exhaustive: bool) -> Cover:
-    """Exact cost of one specific assignment of outcomes to venues. No greed, no approximation."""
-    if not exhaustive:
+                      max_leg_age_s: float, exhaustive: ExhaustiveOutcomeSet | None) -> Cover:
+    """Exact cost of one specific assignment of outcomes to venues. No greed, no approximation.
+
+    `exhaustive` is a PROOF minted by `nodes/rules_exhaustive`, not a flag. A bool cannot be passed:
+    that is what let `grids/live_sports` assert exhaustiveness for 3-way EPL and price a two-leg
+    "cover" that pays nothing on a draw at +31%.
+    """
+    if not isinstance(exhaustive, ExhaustiveOutcomeSet):
         return Cover(None, contracts, (), False, REJECT_NOT_EXHAUSTIVE)
 
     # A sportsbook feed is an indicative offer until the venue accepts the exact stake. The
@@ -218,7 +224,7 @@ def price_combination(legs: Sequence[Leg], contracts: float, *, now_utc: float,
 
 
 def best_cover(offers: Mapping[str, Sequence[Leg]], contracts: float, *, now_utc: float,
-               max_leg_age_s: float = 30.0, exhaustive: bool = False,
+               max_leg_age_s: float = 30.0, exhaustive: ExhaustiveOutcomeSet | None = None,
                top_k: int = 8) -> Cover:
     """Cheapest fee-net cover over `offers` = {outcome_id: [Leg, ...]}.
 
@@ -262,6 +268,10 @@ def best_cover(offers: Mapping[str, Sequence[Leg]], contracts: float, *, now_utc
 
 def selftest() -> None:
     from kernel.schema import Quote
+    from nodes.rules_exhaustive.rules import prove
+
+    #: A real proof, minted from the mlb_no_draw rule. Tests may not forge one.
+    MLB2 = prove("mlb", "moneyline", "game", ["a", "b"])
 
     def bk(levels, age=0.0):
         return Book(asks=tuple(Quote(p, s) for p, s in levels), fetched_utc=1000.0 - age)
@@ -278,7 +288,7 @@ def selftest() -> None:
     offers = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.45, 1000)]))],
               "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 1000)]))]}
     assert best_cover(offers, 100, now_utc=NOW).reject_reason == REJECT_NOT_EXHAUSTIVE
-    good = best_cover(offers, 100, now_utc=NOW, exhaustive=True)
+    good = best_cover(offers, 100, now_utc=NOW, exhaustive=MLB2)
     assert good.ok, good.reject_reason
     # 0.45+0.45 = 0.90 gross, plus both venues' fees -> still well under 1.0
     assert abs(good.gross_per_contract - 0.90) < 1e-9, good.gross_per_contract
@@ -288,30 +298,30 @@ def selftest() -> None:
     # ── a stale leg is REJECTED, not discounted ──────────────────────────
     stale = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.45, 1000)], age=120))],
              "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 1000)]))]}
-    assert best_cover(stale, 100, now_utc=NOW, exhaustive=True).reject_reason == REJECT_STALE
+    assert best_cover(stale, 100, now_utc=NOW, exhaustive=MLB2).reject_reason == REJECT_STALE
 
     # ── two legs on the SAME book is an accounting error ─────────────────
     # same book, DIFFERENT outcomes -> a legal same-venue cover, kept and labelled
     same_ok = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.45, 1000)]))],
                "B": [Leg("robinhood", "kalshi_clob", "b", "m", bk([(0.45, 1000)]))]}
-    c = best_cover(same_ok, 100, now_utc=NOW, exhaustive=True)
+    c = best_cover(same_ok, 100, now_utc=NOW, exhaustive=MLB2)
     assert c.ok, c.reject_reason
     assert c.single_venue is False        # two venue NAMES, one underlying book
     # same book, SAME outcome twice -> double-counting one book as two, rejected
     dbl = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.45, 1000)]))],
            "B": [Leg("robinhood", "kalshi_clob", "a", "m", bk([(0.45, 1000)]))]}
-    assert best_cover(dbl, 100, now_utc=NOW, exhaustive=True).reject_reason == REJECT_SAME_BOOK
+    assert best_cover(dbl, 100, now_utc=NOW, exhaustive=MLB2).reject_reason == REJECT_SAME_BOOK
 
     # ── depth binds BEFORE price: a great touch with no size is no cover ─
     thin = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.10, 5)]))],
             "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 1000)]))]}
-    assert best_cover(thin, 100, now_utc=NOW, exhaustive=True).reject_reason == REJECT_NO_DEPTH
+    assert best_cover(thin, 100, now_utc=NOW, exhaustive=MLB2).reject_reason == REJECT_NO_DEPTH
 
     # ── cost RISES with size when the ladder is layered ──────────────────
     lad = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.40, 50), (0.48, 5000)]))],
            "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 50), (0.50, 5000)]))]}
-    small = best_cover(lad, 50, now_utc=NOW, exhaustive=True)
-    big = best_cover(lad, 500, now_utc=NOW, exhaustive=True)
+    small = best_cover(lad, 50, now_utc=NOW, exhaustive=MLB2)
+    big = best_cover(lad, 500, now_utc=NOW, exhaustive=MLB2)
     assert small.ok and big.ok
     assert big.cost_per_contract > small.cost_per_contract, "depth-aware cost must rise with size"
 
@@ -320,7 +330,7 @@ def selftest() -> None:
     # would rate the cover free. Betfair (5% on net winnings) makes the effect visible.
     bf = {"A": [Leg("betfair", "betfair_exchange", "a", "m", bk([(0.45, 5000)]))],
           "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 5000)]))]}
-    cov = best_cover(bf, 100, now_utc=NOW, exhaustive=True)
+    cov = best_cover(bf, 100, now_utc=NOW, exhaustive=MLB2)
     assert cov.ok and cov.fee_per_contract > 0
     assert cov.worst_settlement_state == "a", cov.worst_settlement_state
     # the Betfair leg winning costs 5% of its (1-p) net winnings; the PM leg winning costs nothing
@@ -334,7 +344,7 @@ def selftest() -> None:
     two = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.50, 5000)])),
                  Leg("sxbet", "sxbet_clob", "a2", "m", bk([(0.505, 5000)]))],
            "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 5000)]))]}
-    got = best_cover(two, 100, now_utc=NOW, exhaustive=True)
+    got = best_cover(two, 100, now_utc=NOW, exhaustive=MLB2)
     assert got.ok and got.legs[0].venue == "sxbet", [l.venue for l in got.legs]
 
     print("nodes.cover.cover selftest OK")

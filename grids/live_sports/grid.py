@@ -30,6 +30,7 @@ from nodes.match_sports.sports_match import kalshi_markets, pair, pm_markets  # 
 from nodes.venue_kalshi.books import kalshi_book  # noqa: E402
 from nodes.venue_polymarket.books import pm_book, pm_token_map  # noqa: E402
 from nodes.cover.cover import Leg, best_cover  # noqa: E402
+from nodes.rules_exhaustive.rules import NotExhaustive, prove  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
 
 KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
@@ -184,8 +185,21 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB) -> di
                     result["blocked"].append({"game_id": g.game_id, "reason": "INCOMPLETE_BOOKS"})
                     result["games"].append(game_out); continue
                 discovered += len(rows) * 2; watched += len(rows) * 2
+
+                # Exhaustiveness is PROVEN per league, never assumed. An unproven outcome set is a
+                # BLOCK: pricing a 3-way EPL match as a two-leg cover reports ~+31% for what is
+                # really a bet the match is not drawn. `prove` mints the only token best_cover
+                # accepts, so an uncited league cannot reach the pricer at all.
+                proof = prove(g.league, "moneyline", "game", sorted(offers))
+                if isinstance(proof, NotExhaustive):
+                    result["blocked"].append({"game_id": g.game_id, "reason": proof.code,
+                                              "detail": proof.detail, **dict(proof.context)})
+                    game_out["exhaustive_block"] = proof.code
+                    result["games"].append(game_out); continue
+
                 for q in QUANTITIES:
-                    cov = best_cover(offers, q, now_utc=latest, max_leg_age_s=MAX_QUOTE_SKEW, exhaustive=True)
+                    cov = best_cover(offers, q, now_utc=latest, max_leg_age_s=MAX_QUOTE_SKEW,
+                                     exhaustive=proof)
                     edge = cov.edge_per_contract
                     cross = cov.ok and not cov.single_venue and {l.venue for l in cov.legs} == {"kalshi", "polymarket"}
                     ret = edge / cov.cost_per_contract if (edge is not None and cov.cost_per_contract and cov.cost_per_contract > 0) else None
