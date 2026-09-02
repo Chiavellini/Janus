@@ -35,6 +35,7 @@ from nodes.venue_kalshi.books import kalshi_book  # noqa: E402
 from nodes.venue_polymarket.books import pm_book, pm_token_map  # noqa: E402
 from nodes.cover.cover import Leg, best_cover  # noqa: E402
 from nodes.rules_exhaustive.rules import NotExhaustive, prove  # noqa: E402
+from nodes.fees.targeting import hurdle_for  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
 from ops import run_index  # noqa: E402
 
@@ -292,9 +293,23 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                         details={"game_id": g.game_id, "quantity": q, "edge_per_contract": edge,
                                  "skew_s": skew, "single_venue": cov.single_venue if cov.ok else None,
                                  "legs": [{"venue": x.venue, "outcome": x.outcome_id, "vwap": x.vwap} for x in cov.legs]}, seen_ts=latest)
+                    # HOW FAR AWAY was this, and how far away COULD it be? The lane used to
+                    # record only ACTIONABLE/NO_EDGE, which collapses "the venues disagree but
+                    # fees ate it" and "the venues agree" into one uninformative null. The fee
+                    # hurdle is computable in advance from the price, so record the distance to
+                    # actionable in cents -- that is the near-miss channel, empty since August.
+                    fav = max((l.vwap for l in cov.legs), default=None) if cov.ok else None
+                    hd = hurdle_for(fav, hurdle=MIN_RETURN) if fav is not None else None
+                    gross = cov.gross_per_contract if cov.ok else None
                     opp = {"game_id": g.game_id, "short_name": g.short_name, "quantity": q, "status": status,
                            "cost_per_contract": cov.cost_per_contract, "edge_per_contract": edge,
-                           "return_locked": ret, "quote_skew_s": skew, "transition_recorded": transition}
+                           "return_locked": ret, "quote_skew_s": skew, "transition_recorded": transition,
+                           "gross_per_contract": gross,
+                           "fee_per_contract": cov.fee_per_contract if cov.ok else None,
+                           "required_ask_sum": hd.required_ask_sum if hd else None,
+                           "fee_hurdle_cents": round(hd.gap_needed_cents, 3) if hd else None,
+                           "cents_from_actionable": (round((gross - hd.required_ask_sum) * 100.0, 3)
+                                                     if (hd and gross is not None) else None)}
                     game_out["observations"].append(opp)
                     if status == "ACTIONABLE": result["candidates"].append(opp); opportunities += 1
                 result["games"].append(game_out)
