@@ -4,13 +4,11 @@
 from __future__ import annotations
 
 import sqlite3
-import sys
 import tempfile
 import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 
 from collectors.collect_track_b import (  # noqa: E402
     parse_rtds_ticks, selftest as collector_selftest,

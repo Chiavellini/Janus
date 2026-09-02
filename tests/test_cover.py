@@ -15,37 +15,20 @@ project exists to prevent.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from collectors.sports_books import kalshi_book, pm_book, sx_book  # noqa: E402
 from lib.schema import Book, Quote  # noqa: E402
 from screen import cover as C  # noqa: E402
 
-PASS, FAIL = [], []
-
-
-def check(name):
-    def deco(fn):
-        try:
-            fn(); PASS.append(name); print(f"  PASS  {name}")
-        except Exception as e:  # noqa: BLE001
-            FAIL.append((name, e)); print(f"  FAIL  {name}: {type(e).__name__}: {e}")
-        return fn
-    return deco
-
-
-@check("cover_selftest")
-def _t0():
+def test_cover_selftest():
     C.selftest()
 
 
 # ── Kalshi: bids-only, asks must be folded ───────────────────────────────────
 
-@check("kalshi_book_folds_no_bids_into_yes_asks")
-def _t1():
+def test_kalshi_book_folds_no_bids_into_yes_asks():
     """Live shape, 2026-08-17. yes_dollars and no_dollars are BOTH bid ladders."""
     payload = {"orderbook_fp": {
         "yes_dollars": [["0.4200", "2.50"], ["0.5100", "3291.73"]],
@@ -65,8 +48,7 @@ def _t1():
     assert b.best_ask.price > b.best_bid.price
 
 
-@check("kalshi_yes_ask_plus_no_ask_never_below_one")
-def _t2():
+def test_kalshi_yes_ask_plus_no_ask_never_below_one():
     """The complement identity: yes_ask + no_ask = 2 - (yes_bid + no_bid) >= 1 IDENTICALLY.
 
     This is why intra-venue arbitrage on Kalshi is structurally impossible rather than merely
@@ -81,8 +63,7 @@ def _t2():
 
 # ── Polymarket: best price is LAST ───────────────────────────────────────────
 
-@check("pm_book_takes_best_price_not_first_element")
-def _t3():
+def test_pm_book_takes_best_price_not_first_element():
     payload = {"bids": [{"price": "0.48", "size": "5903"}, {"price": "0.50", "size": "1050"}],
                "asks": [{"price": "0.53", "size": "3136"}, {"price": "0.51", "size": "10249"}]}
     b = pm_book(payload, 100.0)
@@ -93,8 +74,7 @@ def _t3():
 
 # ── SX Bet: the taker pays 1 - makerOdds ─────────────────────────────────────
 
-@check("sx_book_inverts_maker_odds_and_picks_the_right_side")
-def _t4():
+def test_sx_book_inverts_maker_odds_and_picks_the_right_side():
     orders = [
         # maker backed outcome TWO at 0.55 -> offers outcome ONE to a taker at 0.45
         {"isMakerBettingOutcomeOne": False, "percentageOdds": str(int(0.55 * 1e20)),
@@ -117,8 +97,7 @@ def _bk(levels, age=0.0):
     return Book(asks=tuple(Quote(p, s) for p, s in levels), fetched_utc=1000.0 - age)
 
 
-@check("a_real_divergence_survives_only_if_it_beats_the_fee_floor")
-def _t5():
+def test_a_real_divergence_survives_only_if_it_beats_the_fee_floor():
     """The Stage-3 result in miniature, using the live numbers from 2026-08-17.
 
     Kalshi 0.47 + Polymarket 0.51 = 0.98 gross — a genuine 2c divergence at depth. Fees on that
@@ -136,8 +115,7 @@ def _t5():
     assert 0.025 < cov.fee_per_contract < 0.035, cov.fee_per_contract
 
 
-@check("cover_would_clear_on_a_zero_fee_venue_pair")
-def _t6():
+def test_cover_would_clear_on_a_zero_fee_venue_pair():
     """The counterfactual that makes the finding precise, and its caveat.
 
     The same 0.98 gross cover clears comfortably if both legs sit on zero-commission venues. That
@@ -151,8 +129,7 @@ def _t6():
     assert cov.single_venue is True
 
 
-@check("worst_case_settlement_state_is_used_not_the_average")
-def _t7():
+def test_worst_case_settlement_state_is_used_not_the_average():
     """An 'arb' that only pays when the favourite wins is a directional bet with extra steps."""
     offers = {"A": [C.Leg("betfair", "betfair_exchange", "a", "m", _bk([(0.10, 10_000)]))],
               "B": [C.Leg("polymarket", "polymarket_clob", "b", "m2", _bk([(0.88, 10_000)]),
@@ -163,8 +140,7 @@ def _t7():
     assert cov.worst_settlement_state == "a", cov.worst_settlement_state
 
 
-@check("depth_binds_before_price")
-def _t8():
+def test_depth_binds_before_price():
     """Phase 1's mentions track found capacity ($4 median at touch) binding before edge did."""
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.01, 3)]))],
               "B": [C.Leg("polymarket", "polymarket_clob", "b", "m2", _bk([(0.50, 10_000)]))]}
@@ -172,8 +148,7 @@ def _t8():
     assert not cov.ok and cov.reject_reason == C.REJECT_NO_DEPTH
 
 
-@check("stale_leg_is_rejected_not_discounted")
-def _t9():
+def test_stale_leg_is_rejected_not_discounted():
     """PM's limiter QUEUES, so a slow response is a stale quote wearing a fresh timestamp."""
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.40, 10_000)], age=300))],
               "B": [C.Leg("polymarket", "polymarket_clob", "b", "m2", _bk([(0.40, 10_000)]))]}
@@ -181,8 +156,7 @@ def _t9():
     assert not cov.ok and cov.reject_reason == C.REJECT_STALE
 
 
-@check("soccer_three_way_is_not_covered_by_two_legs")
-def _t10():
+def test_soccer_three_way_is_not_covered_by_two_legs():
     """Exhaustiveness is sport-specific. MLB moneyline has no draw; EPL does."""
     two_of_three = {"HOME": [C.Leg("kalshi", "kalshi_clob", "h", "m", _bk([(0.40, 10_000)]))],
                     "AWAY": [C.Leg("polymarket", "polymarket_clob", "a", "m2",
@@ -191,18 +165,9 @@ def _t10():
                         exhaustive=False).reject_reason == C.REJECT_NOT_EXHAUSTIVE
 
 
-@check("screen_is_deterministic_over_frozen_books")
-def _t11():
+def test_screen_is_deterministic_over_frozen_books():
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.47, 10_000)]))],
               "B": [C.Leg("polymarket", "polymarket_clob", "b", "m2", _bk([(0.51, 10_000)]))]}
     a = C.best_cover(offers, 200, now_utc=1000.0, exhaustive=True)
     b = C.best_cover(offers, 200, now_utc=1000.0, exhaustive=True)
     assert a == b
-
-
-if __name__ == "__main__":
-    print(f"\n{len(PASS)}/{len(PASS) + len(FAIL)} passed")
-    if FAIL:
-        for n, e in FAIL:
-            print(f"  FAILED {n}: {e}")
-        sys.exit(1)

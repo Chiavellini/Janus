@@ -9,10 +9,8 @@ no-match sentinel) being treated as evidence that two markets differ.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from match.verify import (  # noqa: E402
     classify, extract_triggers, no_shared_subject, qualifier_mismatch, strike_mismatch,

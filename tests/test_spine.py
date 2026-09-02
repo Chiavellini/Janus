@@ -9,11 +9,11 @@ checks is a comment.
 
 from __future__ import annotations
 
-import sys
+
+import pytest
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from catalog.stage1_checkpoint import (  # noqa: E402
     games_on_local_date, kalshi_date_from_rules, kalshi_date_from_ticker,
@@ -24,39 +24,20 @@ from lib.entities.resolve import (  # noqa: E402
 )
 from lib.schedule import espn  # noqa: E402
 
-PASS, FAIL = [], []
-
-
-def check(name):
-    def deco(fn):
-        try:
-            fn()
-            PASS.append(name)
-            print(f"  PASS  {name}")
-        except Exception as e:  # noqa: BLE001
-            FAIL.append((name, e))
-            print(f"  FAIL  {name}: {type(e).__name__}: {e}")
-        return fn
-    return deco
-
-
 # ── module selftests ─────────────────────────────────────────────────────────
 
-@check("schedule_espn_selftest")
-def _t1():
+def test_schedule_espn_selftest():
     espn.selftest()
 
 
-@check("entities_resolve_selftest")
-def _t2():
+def test_entities_resolve_selftest():
     from lib.entities import resolve
     resolve.selftest()
 
 
 # ── the shipped data tables ──────────────────────────────────────────────────
 
-@check("seeded_tables_load_and_are_consistent")
-def _t3():
+def test_seeded_tables_load_and_are_consistent():
     teams = load_teams()
     assert len(teams) >= 150, f"only {len(teams)} teams seeded"
     xrefs = load_xrefs()          # raises on any colliding venue id
@@ -70,8 +51,7 @@ def _t3():
     assert not bad, f"aliases reference unknown entities: {sorted(bad)[:5]}"
 
 
-@check("manual_alias_overlay_is_actually_loaded")
-def _t4():
+def test_manual_alias_overlay_is_actually_loaded():
     """The overlay is a separate file precisely so the seeder cannot clobber it. If loading ever
     silently drops it, the three known abbreviation divergences come back."""
     idx = build_alias_index(load_alias_rows())
@@ -85,8 +65,7 @@ def _t4():
     assert r.by_text("nfl", "JAX").entity_id == "nfl:jacksonville-jaguars"
 
 
-@check("real_ambiguities_refuse_to_resolve")
-def _t5():
+def test_real_ambiguities_refuse_to_resolve():
     """Six alias keys are genuinely ambiguous in the seeded corpus. Every one must refuse.
 
     Kalshi renders MLB teams by location only, so "New York" arrives as a real query — not a
@@ -102,8 +81,7 @@ def _t5():
         assert len(res.ambiguous_among) == n, f"{lg}/{txt!r} -> {res.ambiguous_among}"
 
 
-@check("no_short_alias_for_a_shared_location_city")
-def _t5b():
+def test_no_short_alias_for_a_shared_location_city():
     """Guards the exact false alias this table nearly shipped.
 
     An alias was auto-derived from co-occurrence with an exact venue id: nfl "la" -> Rams, n=4.
@@ -132,8 +110,7 @@ def _t5b():
     assert not offenders, f"ambiguous short aliases present: {offenders}"
 
 
-@check("xref_beats_an_ambiguous_label")
-def _t6():
+def test_xref_beats_an_ambiguous_label():
     """The whole point of carrying venue team ids: an exact id rescues an ambiguous label."""
     r = Resolver(load_teams(), build_alias_index(load_alias_rows()), load_xrefs())
     kalshi_mlb = [(v, e) for (v, _), e in r.xrefs.items() if v == "kalshi"]
@@ -147,8 +124,7 @@ def _t6():
 
 # ── Kalshi time parsing: the trap that puts every game 3 days late ───────────
 
-@check("kalshi_exact_time_parsed_from_mlb_rules")
-def _t7():
+def test_kalshi_exact_time_parsed_from_mlb_rules():
     rules = ("If St. Louis wins the St. Louis vs Cincinnati professional baseball game 1 of the "
              "double header originally scheduled for Aug 17, 2026 at 1:40 PM EDT, then the market "
              "resolves to Yes.")
@@ -158,8 +134,7 @@ def _t7():
         datetime.fromtimestamp(got, timezone.utc).isoformat()
 
 
-@check("kalshi_date_only_rules_are_not_a_failure")
-def _t8():
+def test_kalshi_date_only_rules_are_not_a_failure():
     """Every league except MLB states a date and no clock. That is the normal case, not a miss."""
     rules = ("If HOU Texans wins the Las Vegas vs Houston Pro Football game originally scheduled "
              "for Aug 20, 2026, then the market resolves to Yes.")
@@ -167,8 +142,7 @@ def _t8():
     assert kalshi_date_from_rules(rules) == date(2026, 8, 20)
 
 
-@check("close_time_is_start_plus_three_days_not_the_start")
-def _t9():
+def test_close_time_is_start_plus_three_days_not_the_start():
     """THE TRAP. Kalshi's close_time/expiration_time are a postponement buffer, ~3 days past the
     start. A join keyed on close_time puts every game three days late and matches nothing."""
     rules = ("game originally scheduled for Aug 17, 2026 at 1:40 PM EDT")
@@ -177,8 +151,7 @@ def _t9():
     assert close - start == 3 * 86400, (close - start)
 
 
-@check("ticker_date_parses_with_and_without_a_time_block")
-def _t10():
+def test_ticker_date_parses_with_and_without_a_time_block():
     assert kalshi_date_from_ticker("KXMLBGAME-26AUG171340STLCING1") == (2026, 8, 17, 1340)
     assert kalshi_date_from_ticker("KXNFLGAME-26AUG20LVHOU") == (2026, 8, 20, None)
     assert kalshi_date_from_ticker("garbage") is None
@@ -202,8 +175,7 @@ def _dh_fixture():
     return espn.parse_scoreboard(payload, "mlb")
 
 
-@check("exact_time_separates_a_doubleheader")
-def _t11():
+def test_exact_time_separates_a_doubleheader():
     gs = _dh_fixture()
     cands = espn.index_by_participants(gs)[("CIN", "STL")]
     t1 = kalshi_start_from_rules("scheduled for Aug 17, 2026 at 1:40 PM EDT")
@@ -212,8 +184,7 @@ def _t11():
     assert espn.nearest_game(cands, t2).game_id == "espn:mlb:2"
 
 
-@check("local_date_REFUSES_a_doubleheader")
-def _t12():
+def test_local_date_REFUSES_a_doubleheader():
     """Date-only matching cannot separate two games on the same date, so it must return None.
 
     This is why MLB is the one league whose rules text carries a clock time — and why the
@@ -225,8 +196,7 @@ def _t12():
     assert games_on_local_date(cands[:1], date(2026, 8, 17)).game_id == "espn:mlb:1"
 
 
-@check("late_game_local_date_uses_eastern_not_utc")
-def _t13():
+def test_late_game_local_date_uses_eastern_not_utc():
     """A 10pm-Pacific game is the NEXT DAY in UTC but the same day in Eastern, which is how Kalshi
     dates it. Matching on the UTC date would miss every West Coast night game."""
     payload = {"events": [
@@ -243,38 +213,29 @@ def _t13():
 
 # ── purity ───────────────────────────────────────────────────────────────────
 
-@check("parsing_performs_no_network_io")
-def _t14():
+def test_parsing_performs_no_network_io():
+    """The spine's parse path must not touch the network.
+
+    This used to install its own socket guard for the duration of one test. That guard now lives
+    in the repo-root conftest as an autouse fixture covering EVERY test, so this asserts two
+    things: that the global guard is genuinely armed (a fixture nobody verifies is a fixture that
+    can silently stop working -- the same class of bug as the swallowing @check harness these
+    files used to use), and that the parse path runs clean underneath it.
+    """
     import socket
-    real = socket.socket
+    with pytest.raises(AssertionError, match="network access"):
+        socket.socket()
 
-    class Blocked(socket.socket):
-        def __init__(self, *a, **k):
-            raise AssertionError("parse path attempted network I/O")
-
-    socket.socket = Blocked
-    try:
-        espn.parse_scoreboard({"events": []}, "mlb")
-        _dh_fixture()
-        normalize("St. Louis Cardinals")
-        Resolver(load_teams(), build_alias_index(load_alias_rows()), load_xrefs()) \
-            .by_text("mlb", "Cardinals")
-        kalshi_start_from_rules("scheduled for Aug 17, 2026 at 1:40 PM EDT")
-    finally:
-        socket.socket = real
+    espn.parse_scoreboard({"events": []}, "mlb")
+    _dh_fixture()
+    normalize("St. Louis Cardinals")
+    Resolver(load_teams(), build_alias_index(load_alias_rows()), load_xrefs()) \
+        .by_text("mlb", "Cardinals")
+    kalshi_start_from_rules("scheduled for Aug 17, 2026 at 1:40 PM EDT")
 
 
-@check("parse_is_deterministic_across_repeat_calls")
-def _t15():
+def test_parse_is_deterministic_across_repeat_calls():
     """The phase-1 determinism gate, applied to the spine."""
     a = [g.__dict__ for g in _dh_fixture()]
     b = [g.__dict__ for g in _dh_fixture()]
     assert a == b
-
-
-if __name__ == "__main__":
-    print(f"\n{len(PASS)}/{len(PASS) + len(FAIL)} passed")
-    if FAIL:
-        for n, e in FAIL:
-            print(f"  FAILED {n}: {e}")
-        sys.exit(1)

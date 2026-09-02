@@ -1,0 +1,29 @@
+# Configuration only. Janus is deliberately NOT a packaged project: there is no src/ layout, no
+# setup.py, no console_scripts and no editable install. Modules are imported by path and the root
+# conftest.py handles sys.path. Adding packaging here would buy nothing and cost a build step.
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-q --strict-markers -m 'not network'"
+markers = [
+    "network: hits a real venue API; deselected by default",
+    "slow: takes more than a second",
+]
+filterwarnings = ["error::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+exclude = [".pytest_cache", "__pycache__", "docs/archive"]
+
+[tool.ruff.lint]
+# BLE (blind except) and T20 (print) map directly onto two audited defects: the
+# try/finally-with-no-except in collectors/live_sports_arb.py, and 218 bare prints standing in for
+# any logging at all. Both are enabled deliberately and cleared incrementally.
+select = ["E", "F", "B", "BLE", "T20", "UP", "SIM", "DTZ"]
+
+[tool.ruff.lint.per-file-ignores]
+"research/**" = ["T20"]      # measure.py scripts legitimately print their results
+"ops/**" = ["T20"]           # operator-facing CLIs
+"tests/**" = ["T20"]

@@ -9,11 +9,9 @@ relay-disagreement handling, the coverage gate, and the verdict rule at its exac
 from __future__ import annotations
 
 import importlib.util
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 
 _SRC = ROOT / "research/exec/2026-08-19_spx-settlement-basis/measure_spx_basis.py"
 _spec = importlib.util.spec_from_file_location("measure_spx_basis", _SRC)

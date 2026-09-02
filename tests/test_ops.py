@@ -11,13 +11,11 @@ way)". test_watchdog_fires_on_the_real_convergence_signature is that demonstrati
 """
 from __future__ import annotations
 
-import sys
-import time
+import os
 from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import ops.run_index as ri  # noqa: E402
 import ops.watchdog as wd  # noqa: E402
@@ -74,7 +72,7 @@ def test_watchdog_fires_on_the_real_convergence_signature(index):
 
 def test_watchdog_is_quiet_for_a_healthy_daemon(index):
     """A monitor that always fires trains the operator to ignore it."""
-    ri._append(index, {"ts": NOW - 60, "job": "j", "status": "started", "pid": __import__("os").getpid()})
+    ri._append(index, {"ts": NOW - 60, "job": "j", "status": "started", "pid": os.getpid()})
     assert wd.check(index, now=NOW, slas={"j": wd.Sla("daemon", 3600)}) == []
 
 

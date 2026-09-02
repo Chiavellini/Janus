@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import datetime as dt
 import sqlite3
-import sys
 import tempfile
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -13,7 +12,6 @@ from zoneinfo import ZoneInfo
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 
 from collectors.ibkr_archive_core import (  # noqa: E402
     FIELDS, ArchiveStorage, alarm_decision, availability_status, nearest_strike, quote_row,
