@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+"""The size frontier. 'Is there an edge' and 'how much is it worth' are different questions."""
+from __future__ import annotations
+
+import pytest
+
+from kernel.schema import Book, Quote, liquidity_source_for
+from nodes.cover.capacity import frontier
+from nodes.cover.cover import Leg
+from nodes.rules_exhaustive.rules import prove
+
+T = 1000.0
+PROOF = prove("mlb", "moneyline", "game", ["a", "b"])
+
+
+def bk(levels):
+    return Book(asks=tuple(Quote(p, s) for p, s in levels), fetched_utc=T)
+
+
+def two(a_levels, b_levels, *, free=True):
+    ov_pm = {"fee_rate": 0.0} if free else {"fee_rate": 0.05}
+    ov_k = {"fee_multiplier": 0.0} if free else {}
+    return {"a": [Leg("polymarket", liquidity_source_for("polymarket"), "pm", "m",
+                      bk(a_levels), ov_pm)],
+            "b": [Leg("kalshi", liquidity_source_for("kalshi"), "k", "m2", bk(b_levels), ov_k)]}
+
+
+def f(offers, **kw):
+    return frontier(offers, now_utc=T, exhaustive=PROOF, **kw)
+
+
+def test_the_worked_example_reproduces():
+    """Layered books: cheap at the touch, dear in the tail."""
+    got = f(two([(0.51, 1000), (0.53, 2000), (0.58, 5000), (0.64, 10000)],
+                [(0.32, 1000), (0.34, 2000), (0.38, 5000), (0.41, 10000)]))
+    assert got.actionable
+    assert got.rungs[0].contracts == 1000
+    assert got.rungs[0].cost_per_contract == pytest.approx(0.83)
+    assert got.rungs[0].profit == pytest.approx(170.0)
+
+
+def test_n_star_is_not_n_max():
+    """The whole point. Profit peaks before the frontier and you would trade the peak."""
+    got = f(two([(0.51, 1000), (0.53, 2000), (0.58, 5000), (0.64, 10000)],
+                [(0.32, 1000), (0.34, 2000), (0.38, 5000), (0.41, 10000)]))
+    assert got.n_star < got.n_max
+    assert got.best.profit == max(r.profit for r in got.rungs)
+    deepest = got.rungs[-1]
+    assert got.best.return_on_capital > deepest.return_on_capital
+
+
+def test_every_rung_is_priced_below_one_all_in():
+    got = f(two([(0.51, 1000), (0.53, 2000), (0.58, 5000), (0.64, 10000)],
+                [(0.32, 1000), (0.34, 2000), (0.38, 5000), (0.41, 10000)]))
+    assert all(r.cost_per_contract < 1.0 for r in got.rungs)
+
+
+def test_cost_rises_monotonically_as_the_book_is_eaten():
+    got = f(two([(0.40, 100), (0.45, 100), (0.49, 100)],
+                [(0.40, 100), (0.45, 100), (0.49, 100)]))
+    costs = [r.cost_per_contract for r in got.rungs]
+    assert costs == sorted(costs)
+
+
+def test_a_coherent_market_yields_no_frontier_at_all():
+    """Both sides summing to 1.00 is the normal state, and must produce nothing."""
+    got = f(two([(0.60, 10000)], [(0.40, 10000)]))
+    assert not got.actionable and got.n_max == 0.0
+
+
+def test_a_thin_touch_with_a_dear_tail_caps_capacity():
+    """A great top-of-book with no size behind it is not a big opportunity."""
+    got = f(two([(0.10, 50), (0.80, 100000)], [(0.10, 50), (0.80, 100000)]))
+    assert got.actionable
+    assert got.n_max <= 50, "capacity stops where the cheap size stops"
+
+
+def test_fees_shrink_the_frontier():
+    cheap = f(two([(0.45, 5000)], [(0.45, 5000)], free=True))
+    dear = f(two([(0.45, 5000)], [(0.45, 5000)], free=False))
+    assert dear.best.profit < cheap.best.profit
+
+
+def test_same_venue_covers_are_excluded_as_the_control():
+    """Both legs on one book is the intra-venue no-arb control, not an opportunity."""
+    offers = {"a": [Leg("kalshi", "kalshi_clob", "k1", "m", bk([(0.40, 5000)]), {"fee_multiplier": 0.0})],
+              "b": [Leg("kalshi", "kalshi_clob", "k2", "m", bk([(0.40, 5000)]), {"fee_multiplier": 0.0})]}
+    assert not f(offers).actionable
+    assert f(offers, cross_venue_only=False).actionable
+
+
+def test_the_hurdle_truncates_the_frontier():
+    offers = two([(0.40, 1000), (0.49, 9000)], [(0.40, 1000), (0.49, 9000)])
+    loose, tight = f(offers, hurdle=0.0), f(offers, hurdle=0.10)
+    assert tight.n_max <= loose.n_max
+
+
+def test_an_unproven_outcome_set_yields_nothing():
+    offers = two([(0.40, 5000)], [(0.40, 5000)])
+    got = frontier(offers, now_utc=T, exhaustive=None)
+    assert not got.actionable
+    assert got.limit_reason == "outcome_set_not_proven_exhaustive"
+
+
+def test_capacity_is_reported_in_capital_not_just_contracts():
+    """You deploy dollars; the frontier must say how many."""
+    got = f(two([(0.51, 1000)], [(0.32, 1000)]))
+    r = got.best
+    assert r.capital == pytest.approx(r.contracts * r.cost_per_contract)
+    assert r.return_on_capital == pytest.approx(r.profit / r.capital)

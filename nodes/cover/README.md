@@ -1,7 +1,7 @@
 # cover
 
 **Kind:** `pure`
-**Implements:** `cover.py`
+**Implements:** `cover.py` (the price), `capacity.py` (the size frontier)
 
 **The one number the whole system exists to compute.** A cover buys every outcome so exactly $1
 arrives whichever way it settles. Cover for less than $1 and the difference is arbitrage.
@@ -30,6 +30,36 @@ settlement state rather than the expected one, hard-rejects stale legs, and dedu
 Five named reject reasons — `stale_leg`, `shared_liquidity_source`,
 `outcome_set_not_proven_exhaustive`, `insufficient_depth`, `quote_not_accepted` — which become
 this node's fault vocabulary under the grid runtime.
+
+## Capacity: how much it is worth, not whether an edge exists
+
+`capacity.py`. The lane priced three fixed sizes and reported whether each cleared the hurdle. That
+answers *is there an edge at 100 contracts*; it does not answer *how much does this make*.
+
+A cover buys equal **payout** units, not equal dollars: N contracts of each complementary outcome,
+each settling at $1, so exactly $N arrives either way. The cost of the Nth unit rises as both
+ladders are eaten, so `profit(N) = N · (1 − cost(N))` rises then falls, and **two different sizes
+matter**:
+
+- **`N_max`** — the largest size still clearing the hurdle. The capacity of the opportunity.
+- **`N_star`** — the size maximising total profit. Where you would actually trade.
+
+`N_star ≤ N_max` always, and on a layered book they are far apart:
+
+```
+       N     cost     edge     profit    capital
+    1000   0.8300  +0.1700     170.00     830.00
+    8000   0.9213  +0.0787     630.00    7370.00   ← N_star  (8.5% on capital)
+   18000   0.9928  +0.0072     130.00   17870.00   ← N_max   (0.7%)
+```
+
+Solved at the ladders' own **breakpoints** — the cumulative depths where `cost(N)` bends — which is
+exact, where a binary search over a fee curve that steps (Kalshi's ceil is per *order*) can land
+between steps and misreport the frontier by a level.
+
+A rung must be **strictly** profitable. A cover priced at exactly 1.0000 locks nothing, and it is
+the single most common state on a coherent market — admitting it would report a frontier on every
+pair in the universe.
 
 ## Failure modes
 

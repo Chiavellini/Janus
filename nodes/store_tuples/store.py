@@ -52,6 +52,17 @@ CREATE TABLE IF NOT EXISTS sweep_runs(
   universe TEXT NOT NULL, n_discovered INTEGER DEFAULT 0, n_watched INTEGER DEFAULT 0,
   n_changed INTEGER DEFAULT 0, n_opportunities INTEGER DEFAULT 0,
   status TEXT NOT NULL, error TEXT);
+-- Streaming cover evaluations. The lane re-prices on every book event, ~200/s across a few
+-- games, so writing all of them is neither affordable nor useful: most are identical. Rows land
+-- on a MATERIAL move in cover cost (default 0.1c, a tenth of a Kalshi tick) or on a heartbeat, so
+-- the series can be carried forward and the distribution reconstructed without storing noise.
+CREATE TABLE IF NOT EXISTS stream_evaluations(
+  seen_ts REAL NOT NULL, game_id TEXT NOT NULL, league TEXT NOT NULL, quantity REAL NOT NULL,
+  status TEXT NOT NULL, cost REAL, gross REAL, fees REAL, return_locked REAL,
+  required_ask_sum REAL, cents_from_actionable REAL,
+  blocked_by TEXT, triggered_by TEXT, latency_ms REAL, legs_json TEXT);
+CREATE INDEX IF NOT EXISTS stream_evaluations_game ON stream_evaluations(game_id, quantity, seen_ts);
+CREATE INDEX IF NOT EXISTS stream_evaluations_ts ON stream_evaluations(seen_ts);
 CREATE TABLE IF NOT EXISTS cloudbet_acceptances(
   reference_id TEXT PRIMARY KEY, state TEXT NOT NULL, event_id TEXT NOT NULL,
   market_url TEXT NOT NULL, requested_price REAL NOT NULL, requested_stake REAL NOT NULL,
@@ -80,6 +91,8 @@ class TupleStore:
         self.con.execute("PRAGMA journal_mode=WAL")
         self.con.execute("PRAGMA synchronous=NORMAL")
         self.con.executescript(DDL)
+        #: (game_id, quantity) -> (status, cost, ts) for the material-change gate on evaluations.
+        self._eval_last: dict[tuple, tuple] = {}
 
     def market(self, *, venue: str, market_id: str, family: str, event_key: str,
                outcome: str, category: str, created_ts: float | None,
@@ -231,6 +244,46 @@ class TupleStore:
             accept_price_change=row[7], accept_partial_stake=bool(row[8]), accepted_price=row[9],
             accepted_stake=row[10], provider_status=row[11], error=row[12], observed_utc=row[13],
         )
+
+    def evaluation(self, *, game_id: str, league: str, quantity: float, status: str,
+                   cost: float | None, gross: float | None, fees: float | None,
+                   return_locked: float | None, required_ask_sum: float | None,
+                   cents_from_actionable: float | None, blocked_by: str | None,
+                   triggered_by: str, latency_ms: float, legs: list | None = None,
+                   seen_ts: float | None = None, epsilon: float = 0.001,
+                   heartbeat_s: float = 15.0) -> bool:
+        """Record one streaming evaluation, gated on a MATERIAL move.
+
+        The lane prices on every book event -- roughly 200/s across a handful of games -- and most
+        of those are byte-identical to the last one. Writing all of them buys nothing and costs a
+        gigabyte a day. A row lands when the cover cost moves by `epsilon` (default 0.1c, a tenth
+        of a Kalshi tick), when the status changes, or on a heartbeat, which is enough to carry the
+        series forward and reconstruct the distribution.
+
+        Blocked evaluations are recorded too. "Could not price, and here is why" is what separates
+        no-edge from no-data, and it is the channel that was a header-only CSV all August.
+        """
+        ts = seen_ts if seen_ts is not None else time.time()
+        key = (game_id, quantity)
+        prev = self._eval_last.get(key)
+        material = (
+            prev is None
+            or prev[0] != status
+            or (cost is None) != (prev[1] is None)
+            or (cost is not None and prev[1] is not None and abs(cost - prev[1]) >= epsilon)
+            or (ts - prev[2]) >= heartbeat_s)
+        if not material:
+            return False
+        self.con.execute(
+            """INSERT INTO stream_evaluations(seen_ts,game_id,league,quantity,status,cost,gross,
+                 fees,return_locked,required_ask_sum,cents_from_actionable,blocked_by,triggered_by,
+                 latency_ms,legs_json)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (ts, game_id, league, quantity, status, cost, gross, fees, return_locked,
+             required_ask_sum, cents_from_actionable, blocked_by, triggered_by, latency_ms,
+             json.dumps(legs or [], separators=(",", ":"))))
+        self._eval_last[key] = (status, cost, ts)
+        return True
 
     def commit(self) -> None:
         self.con.commit()
