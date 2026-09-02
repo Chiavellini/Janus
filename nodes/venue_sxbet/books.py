@@ -14,6 +14,9 @@ Node kind: `source` (fetch) + `pure` (parse)."""
 
 from __future__ import annotations
 
+import time
+from collections import defaultdict
+
 from kernel.fetch import Client
 from kernel.schema import Book, Quote
 

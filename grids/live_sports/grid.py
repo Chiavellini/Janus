@@ -36,9 +36,17 @@ from nodes.store_tuples.store import TupleStore  # noqa: E402
 KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
 PM_CLOB = "https://clob.polymarket.com"
 SPEC_REF = "research/sports/2026-09-01_pure-arb-event-scan/spec.yaml"
-OUT_DIR = ROOT / "research/sports/2026-09-01_pure-arb-event-scan"
+#: Registered artifacts for a ledger row are IMMUTABLE. The scan used to write results.json and
+#: verdict.md straight into row 2's study directory with fixed filenames, so every run overwrote
+#: registered evidence and there was no scan history at all. Observation runs now write one
+#: directory per run on the data volume; a `latest` symlink is flipped only on a completed run, so
+#: a crashed run can never leave a previous "Status: OK" verdict standing as if it were fresh.
+RUNS_DIR = Path("/Volumes/Kilos/janus/runs/live_sports")
 DB = Path("/Volumes/Kilos/janus/tuples/tuples.sqlite")
 QUANTITIES = (5.0, 25.0, 100.0)
+
+#: Hours ahead of first pitch/puck to start watching a pre-game market.
+DEFAULT_PRE_HOURS = 6.0
 MIN_RETURN = 0.01
 MAX_QUOTE_SKEW = 5.0
 LIQUIDITY_SOURCE = {"kalshi": "kalshi_clob", "polymarket": "polymarket_clob"}
@@ -64,15 +72,30 @@ def _book_levels(book) -> list[dict]:
             for q in arr[:20]]
 
 
-def _live_games(leagues: list[str], now: datetime, include_near: bool) -> tuple[list, dict]:
-    games = []
+def _live_games(leagues: list[str], now: datetime, include_near: bool,
+                pre_hours: float = DEFAULT_PRE_HOURS) -> tuple[list, dict]:
+    """In-progress games, plus pre-game starting within `pre_hours`.
+
+    The window used to be a hardcoded +/-30 minutes, which is why the 2026-09-02 scan saw exactly
+    one game against a registered universe of 30 days. One ESPN failure also killed every league,
+    because the loop had no guard -- so each league is isolated here and a failed league is
+    reported rather than fatal.
+    """
+    games, failures = [], {}
+    horizon = max(1.0, pre_hours / 24.0 + 1.0)
     for league in leagues:
-        schedule = espn.fetch_range(league, now - timedelta(days=1), now + timedelta(days=1), use_cache=False)
+        try:
+            schedule = espn.fetch_range(league, now - timedelta(days=1),
+                                        now + timedelta(days=horizon), use_cache=False)
+        except Exception as exc:  # noqa: BLE001 -- one league must not take the others down
+            failures[league] = f"{type(exc).__name__}: {exc}"
+            continue
         for g in schedule:
             delta = g.start_utc - now.timestamp()
-            if g.state == "in" or (include_near and g.state == "pre" and -1800 <= delta <= 1800):
+            if g.state == "in" or (include_near and g.state == "pre"
+                                   and -1800 <= delta <= pre_hours * 3600.0):
                 games.append(g)
-    return games, {g.game_id: g for g in games}
+    return games, {"by_id": {g.game_id: g for g in games}, "schedule_failures": failures}
 
 
 def _match_live(league: str, games: list, now: datetime):
@@ -95,7 +118,8 @@ def _match_live(league: str, games: list, now: datetime):
                                                                "polymarket": dict(stats["p_reason"])}}, resolver
 
 
-def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB) -> dict:
+def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
+         pre_hours: float = DEFAULT_PRE_HOURS) -> dict:
     started = time.time(); now = datetime.now(timezone.utc)
     sweep_id = now.strftime("%Y%m%dT%H%M%SZ")
     result = {"spec_ref": SPEC_REF, "sweep_id": sweep_id, "mode": "live_plus_near" if include_near else "live",
@@ -105,7 +129,9 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB) -> di
     kclient, pclient = Client("kalshi", rate=8, burst=8, cache_dir=None), Client("polymarket", rate=8, burst=8, cache_dir=None)
     discovered = watched = changed = opportunities = 0
     try:
-        games, game_map = _live_games(leagues, now, include_near)
+        games, meta = _live_games(leagues, now, include_near, pre_hours)
+        for lg, err in meta["schedule_failures"].items():
+            result["blocked"].append({"league": lg, "reason": "SCHEDULE_FETCH", "detail": err})
         for league in leagues:
             league_games = [g for g in games if g.league == league]
             if not league_games:
@@ -124,6 +150,7 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB) -> di
                     result["games"].append(game_out); continue
                 slugs = sorted({m["pm_event"] for m in rows})
                 tokmap = pm_token_map(slugs, pclient)
+                tok_errors = tokmap.pop("__errors__", {})
                 token_by_entity = {}
                 for slug in slugs:
                     entry = tokmap.get(slug)
@@ -133,7 +160,10 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB) -> di
                         resolved = resolver.resolve(league, text=name, venue="polymarket")
                         if resolved.ok: token_by_entity[(slug, resolved.entity_id)] = token
                 if len(token_by_entity) < 2:
-                    result["blocked"].append({"game_id": g.game_id, "reason": "PM_TOKEN_RESOLUTION"})
+                    result["blocked"].append({
+                        "game_id": g.game_id, "reason": "PM_TOKEN_RESOLUTION",
+                        "resolved": len(token_by_entity), "slugs": slugs,
+                        "detail": tok_errors or "gamma returned no full-game moneyline market"})
                     result["games"].append(game_out); continue
                 # The exact match gives one Kalshi market and one PM token per team. Fetch four
                 # books concurrently so the cover does not mix a minute-old leg with a live leg.
@@ -235,10 +265,13 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB) -> di
     return result
 
 
-def write_artifacts(result: dict) -> None:
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    (OUT_DIR / "results.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
-    lines = ["# Live sports pure-arbitrage scan", "", f"Status: **{result.get('status')}**", "",
+def write_artifacts(result: dict) -> Path:
+    out = RUNS_DIR / result["sweep_id"]
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "results.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    lines = ["# Live sports pure-arbitrage scan", "",
+             f"Status: **{result.get('status')}** · run `{result['sweep_id']}` · "
+             f"finished {result.get('finished_utc', '(did not finish)')}", "",
              "The lane searched live schedule-anchored events and fetched books only for exact matches.", ""]
     s = result.get("summary", {})
     lines.append(f"Games in the live/near window: {s.get('scheduled_live_or_near_games', 0)}; exact two-outcome matches: {s.get('games_with_exact_matches', 0)}; "
@@ -250,13 +283,22 @@ def write_artifacts(result: dict) -> None:
         lines += ["", "Blocked states (not treated as zero-risk):"]
         lines += [f"- `{x.get('game_id')}`: {x.get('reason')}" for x in result["blocked"]]
     lines += ["", "No orders were submitted. Settlement rules, execution reconciliation, and any recheck remain required before promotion."]
-    (OUT_DIR / "verdict.md").write_text("\n".join(lines) + "\n")
+    (out / "verdict.md").write_text("\n".join(lines) + "\n")
+    if result.get("status") == "OK":                     # only a completed run becomes `latest`
+        link = RUNS_DIR / "latest"
+        tmp = RUNS_DIR / ".latest.tmp"
+        tmp.unlink(missing_ok=True)
+        tmp.symlink_to(out.name)
+        tmp.replace(link)                                # atomic flip
+    return out
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--leagues", default="mlb,nfl,nba,wnba,nhl,epl")
     ap.add_argument("--include-near", action="store_true")
+    ap.add_argument("--pre-hours", type=float, default=DEFAULT_PRE_HOURS,
+                    help="watch pre-game markets starting within N hours (default 6)")
     ap.add_argument("--db", type=Path, default=DB)
     ap.add_argument("--loop", action="store_true", help="repeat discovery/book polling; storage remains change-only")
     ap.add_argument("--period", type=int, default=10, help="seconds between live sweeps in --loop mode")
@@ -268,7 +310,7 @@ def main() -> None:
         return
     leagues = [x.strip() for x in a.leagues.split(",") if x.strip()]
     while True:
-        result = scan(leagues, include_near=a.include_near, db=a.db)
+        result = scan(leagues, include_near=a.include_near, db=a.db, pre_hours=a.pre_hours)
         write_artifacts(result)
         print(json.dumps(result["summary"], indent=2, sort_keys=True))
         if not a.loop:

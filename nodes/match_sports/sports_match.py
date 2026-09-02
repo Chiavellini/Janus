@@ -50,10 +50,18 @@ from nodes.entities.resolve import Resolver, normalize
 from nodes.entities.seed import NON_TEAM_OUTCOMES
 from nodes.schedule_espn import espn
 
-#: A PM FULL-GAME moneyline slug is exactly `mlb-{away}-{home}-{YYYY-MM-DD}`. Any further suffix
-#: marks a derivative event — a different period (`-first-five-winner`) or a different market type
-#: (`-player-props`, `-nrfi`, `-total-9pt5`, `-spread-away-1pt5`).
-PM_FULLGAME_SLUG = re.compile(r"^mlb-[a-z0-9]{2,4}-[a-z0-9]{2,4}-\d{4}-\d{2}-\d{2}$")
+#: A PM FULL-GAME moneyline slug is exactly `{league}-{away}-{home}-{YYYY-MM-DD}`. Any further
+#: suffix marks a derivative event — a different period (`-first-five-winner`, `-halftime-result`,
+#: `-second-half-result`) or a different market type (`-player-props`, `-nrfi`, `-total-9pt5`,
+#: `-spread-away-1pt5`, `-exact-score`, `-first-to-score`).
+#:
+#: This was hardcoded to `^mlb-` and applied to EVERY league, so NFL/NBA/WNBA/NHL/EPL rejected
+#: every event as `derivative_event_not_full_game_moneyline` and emitted zero pairs — a coverage
+#: failure that read as a benign reason code. Sampled 2026-09-02 against live Gamma data, the
+#: convention is identical across leagues (mlb-tb-nyy-…, nfl-ne-sea-…, nhl-tor-mon-…, epl-ips-liv-…),
+#: so the league prefix is a parameter, never a constant.
+def _fullgame_slug(league: str) -> re.Pattern[str]:
+    return re.compile(rf"^{re.escape(league)}-[a-z0-9]{{2,4}}-[a-z0-9]{{2,4}}-\d{{4}}-\d{{2}}-\d{{2}}$")
 
 
 @dataclass(frozen=True)
@@ -131,7 +139,7 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> l
         stats["pm_events"] += 1
         # DISCRIMINATION 1: derivative events share teams and start time but are not the same
         # contract. Rejecting them here is what the 15 hard negatives in the gold file test.
-        if not PM_FULLGAME_SLUG.match(slug):
+        if not _fullgame_slug(league).match(slug):
             _reason(stats["p_reason"], "derivative_event_not_full_game_moneyline")
             continue
         ents = []

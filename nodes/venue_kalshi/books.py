@@ -11,6 +11,8 @@ Grid position: feeds `nodes/cover` via a grid; see grids/live_sports/README.md."
 
 from __future__ import annotations
 
+import time
+
 from kernel.fetch import Client
 from kernel.schema import Book, Quote, fold_complement_bids
 

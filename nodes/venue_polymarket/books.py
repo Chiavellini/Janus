@@ -12,6 +12,9 @@ Node kind: `source` (fetch) + `pure` (parse)."""
 
 from __future__ import annotations
 
+import json
+import time
+
 from kernel.fetch import Client
 from kernel.schema import Book, Quote
 
@@ -35,14 +38,26 @@ def fetch_pm_books(token_map: dict[str, str], cl: Client) -> dict[str, Book]:
             now = time.time()
             d = cl.get_json(f"{PM_CLOB}/book", params={"token_id": token}, use_cache=False)
             out[outcome_id] = pm_book(d, now)
-        except Exception:  # noqa: BLE001
-            continue
+        # NARROW, deliberately. A bare `except Exception` here swallowed a NameError for the
+        # missing `json` import and turned a hard bug into "no tokens resolved" on every game --
+        # 14 of 14 blocked with PM_TOKEN_RESOLUTION and nothing saying why. Network and parse
+        # failures are expected and recorded; programming errors must stay loud.
+        except (OSError, RuntimeError, ValueError, KeyError) as exc:
+            errors[slug] = f"{type(exc).__name__}: {exc}"
+    if errors:
+        out["__errors__"] = errors  # type: ignore[assignment]
     return out
 
 
 def pm_token_map(slugs, cl: Client) -> dict[str, tuple[str, str]]:
-    """slug -> (token_outcome0, token_outcome1) for the FULL-GAME moneyline market only."""
-    out = {}
+    """slug -> ({outcome_label: token}, event) for the FULL-GAME moneyline market only.
+
+    Failures are recorded under the `__errors__` key rather than silently dropped, so a caller
+    that gets fewer tokens than it expected can say WHY instead of reporting a bare
+    PM_TOKEN_RESOLUTION block.
+    """
+    out: dict = {}
+    errors: dict[str, str] = {}
     for slug in slugs:
         try:
             ev = cl.get_json(f"{PM_GAMMA}/events", params={"slug": slug}, use_cache=False)
@@ -59,6 +74,12 @@ def pm_token_map(slugs, cl: Client) -> dict[str, tuple[str, str]]:
                 if toks and len(toks) == 2 and outs and len(outs) == 2:
                     out[slug] = (dict(zip(outs, toks)), ev)
                 break
-        except Exception:  # noqa: BLE001
-            continue
+        # NARROW, deliberately. A bare `except Exception` here swallowed a NameError for the
+        # missing `json` import and turned a hard bug into "no tokens resolved" on every game --
+        # 14 of 14 blocked with PM_TOKEN_RESOLUTION and nothing saying why. Network and parse
+        # failures are expected and recorded; programming errors must stay loud.
+        except (OSError, RuntimeError, ValueError, KeyError) as exc:
+            errors[slug] = f"{type(exc).__name__}: {exc}"
+    if errors:
+        out["__errors__"] = errors  # type: ignore[assignment]
     return out
