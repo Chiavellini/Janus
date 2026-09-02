@@ -223,8 +223,13 @@ def test_parsing_performs_no_network_io():
     files used to use), and that the parse path runs clean underneath it.
     """
     import socket
+    # The guard blocks CONNECTING OUT rather than constructing a socket: an asyncio event loop
+    # builds an internal self-pipe before running anything, so blocking socket() itself failed
+    # every async test as though it had reached the network.
     with pytest.raises(AssertionError, match="network access"):
-        socket.socket()
+        socket.create_connection(("example.com", 443))
+    with pytest.raises(AssertionError, match="network access"):
+        socket.socket().connect(("example.com", 443))
 
     espn.parse_scoreboard({"events": []}, "mlb")
     _dh_fixture()

@@ -88,9 +88,11 @@ class GamePoller:
         self.proof = got
         for outcome, venues in self.outcomes.items():
             for venue, market_id in venues.items():
+                # Kalshi's seq is per SUBSCRIPTION, so its replicas are verified by the stream.
+                # Polymarket has no sequence at all and needs an outside REST check.
                 self.replicas[(venue, outcome)] = BookReplica(
                     venue=venue, market_id=market_id,
-                    has_sequence=(venue == "kalshi"))
+                    verification="stream" if venue == "kalshi" else "external")
 
     # ── subscriptions ───────────────────────────────────────────────────
     def market_ids(self, venue: str) -> list[str]:

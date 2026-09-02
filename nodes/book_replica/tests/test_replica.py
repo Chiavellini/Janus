@@ -10,14 +10,14 @@ T = 1000.0
 
 
 def kalshi() -> BookReplica:
-    r = BookReplica("kalshi", "K1", has_sequence=True)
+    r = BookReplica("kalshi", "K1", verification="own_sequence")
     r.subscribed(T)
     r.snapshot_in([(0.40, 100)], [(0.42, 100)], seq=5, now=T)
     return r
 
 
 def polymarket() -> BookReplica:
-    r = BookReplica("polymarket", "P1", has_sequence=False, max_unverified_s=30.0)
+    r = BookReplica("polymarket", "P1", verification="external", max_unverified_s=30.0)
     r.subscribed(T)
     r.snapshot_in([(0.55, 100)], [(0.58, 100)], seq=None, now=T)
     return r

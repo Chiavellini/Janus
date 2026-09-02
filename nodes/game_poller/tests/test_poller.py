@@ -21,7 +21,7 @@ def sync_all(p: GamePoller, *, kh=0.50, ka=0.50, ph=0.50, pa=0.50, now=T, size=5
     for key, rep in p.replicas.items():
         rep.subscribed(now)
         rep.snapshot_in([(0.01, size)], [(prices[key], size)],
-                        seq=1 if rep.has_sequence else None, now=now)
+                        seq=1 if rep.verification != "external" else None, now=now)
 
 
 def test_a_three_way_league_never_gets_a_poller():
@@ -70,7 +70,9 @@ def test_one_desynced_replica_blocks_the_whole_cover():
     """A drifted book invents gaps. Three good replicas do not make a fourth trustworthy."""
     p = mlb()
     sync_all(p, kh=0.44, pa=0.44)
-    p.replicas[("kalshi", "home")].delta_in([], seq=99, now=T)      # force a seq gap
+    # Kalshi's seq is per subscription, so the STREAM detects the gap and tells the replica.
+    from nodes.book_replica.replica import Fault
+    p.replicas[("kalshi", "home")].invalidate(Fault.SEQ_GAP)
     e = p.on_event("kalshi", "K_H", now=T)[0]
     assert e.cover is None
     assert "SEQ_GAP" in e.blocked_by
@@ -102,11 +104,11 @@ def test_it_reports_its_subscriptions_per_venue():
     assert sorted(p.market_ids("polymarket")) == ["P_A", "P_H"]
 
 
-def test_kalshi_replicas_use_sequence_and_polymarket_ones_do_not():
-    """Kalshi has a monotonic seq; Polymarket has no sequence number at all."""
+def test_each_venue_declares_how_it_proves_it_is_in_sync():
+    """Kalshi's seq is per SUBSCRIPTION, so the stream verifies. Polymarket has no seq at all."""
     p = mlb()
-    assert p.replicas[("kalshi", "home")].has_sequence
-    assert not p.replicas[("polymarket", "home")].has_sequence
+    assert p.replicas[("kalshi", "home")].verification == "stream"
+    assert p.replicas[("polymarket", "home")].verification == "external"
 
 
 def test_draining_stops_evaluation():

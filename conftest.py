@@ -42,5 +42,21 @@ def _no_network(request, monkeypatch):
             "network access from a test without @pytest.mark.network — "
             "use a fixture or a cassette instead")
 
-    monkeypatch.setattr(socket, "socket", _blocked)
+    # Block CONNECTING OUT, not socket creation. Patching socket.socket itself was too blunt: an
+    # asyncio event loop builds an internal self-pipe before it runs anything, so every async test
+    # failed as if it had touched the network. `connect` and `create_connection` are the calls that
+    # actually leave the machine; socketpair, which asyncio uses, does not.
+    real_connect = socket.socket.connect
+    real_connect_ex = socket.socket.connect_ex
+
+    def _guard(fn):
+        def inner(self, address, *a, **k):
+            host = address[0] if isinstance(address, tuple) else address
+            if isinstance(host, str) and host in ("127.0.0.1", "::1", "localhost", ""):
+                return fn(self, address, *a, **k)          # loopback is not the outside world
+            return _blocked()
+        return inner
+
+    monkeypatch.setattr(socket.socket, "connect", _guard(real_connect), raising=False)
+    monkeypatch.setattr(socket.socket, "connect_ex", _guard(real_connect_ex), raising=False)
     monkeypatch.setattr(socket, "create_connection", _blocked)

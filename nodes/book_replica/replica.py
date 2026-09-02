@@ -72,11 +72,21 @@ class BookReplica:
     venue: str
     market_id: str
 
-    #: Kalshi supplies a monotonic seq. Polymarket does not; leave this False and rely on
-    #: `max_unverified_s` plus `reconcile()`.
-    has_sequence: bool = True
-    #: Polymarket only: how long a replica may run without an outside REST check before it is no
-    #: longer trusted. Ignored when `has_sequence` is True.
+    #: HOW this replica proves it is still in sync. Measured against both venues, 2026-09-02:
+    #:
+    #:   "own_sequence" -- the venue sequences PER MARKET, so the replica can check its own seq.
+    #:                     No venue here does this; kept because it is the natural default and a
+    #:                     venue that behaves this way should not need a transport to help.
+    #:   "stream"       -- the TRANSPORT verifies, and the replica trusts it. Kalshi: its `seq` is
+    #:                     per SUBSCRIPTION, not per market. Four tickers on one socket produce a
+    #:                     globally contiguous 1,2,3,4,5... so every individual ticker sees a
+    #:                     legitimately non-contiguous subsequence. Checking seq per market would
+    #:                     report a gap on essentially every message.
+    #:   "external"     -- nothing in the stream proves anything; an outside REST check must land
+    #:                     within `max_unverified_s`. Polymarket: no sequence number exists at all.
+    verification: str = "own_sequence"
+    #: "external" only: how long a replica may run without an outside REST check before it is no
+    #: longer trusted.
     max_unverified_s: float = 30.0
     #: How long without a connection heartbeat before the venue is presumed dead.
     heartbeat_timeout_s: float = 15.0
@@ -139,7 +149,7 @@ class BookReplica:
         if self.state is not ReplicaState.SYNCED:
             return Fault.NOT_SYNCED                  # deltas before the snapshot are discarded
 
-        if self.has_sequence and seq is not None and self.seq is not None:
+        if self.verification == "own_sequence" and seq is not None and self.seq is not None:
             if seq <= self.seq:
                 return None                          # duplicate or replay; ignore, stay synced
             if seq != self.seq + 1:
@@ -158,8 +168,38 @@ class BookReplica:
             self.seq = seq
         self.applied += 1
         self.updated_utc = self.heartbeat_utc = t
-        if self.has_sequence:
-            self.verified_utc = t                    # sequence IS the verification
+        if self.verification in ("own_sequence", "stream"):
+            self.verified_utc = t
+        return None
+
+    def project_in(self, bids, asks, *, seq: int | None = None,
+                   now: float | None = None) -> Fault | None:
+        """Full ladders derived from a venue delta: sequence-checked like a delta, applied whole.
+
+        Kalshi needs this and `delta_in` cannot express it. Kalshi ships YES-bid and NO-bid
+        ladders with a SIGNED per-level delta, and a YES ask exists only as a NO bid at 1-p -- so
+        one delta message changes BOTH sides of the projected book at once. The caller owns the
+        wire format and does the folding; the replica still owns the sequence check, because
+        whether the book can be trusted is this node's job and not the transport's.
+        """
+        t = now or time.time()
+        if self.state is not ReplicaState.SYNCED:
+            return Fault.NOT_SYNCED
+        if self.verification == "own_sequence" and seq is not None and self.seq is not None:
+            if seq <= self.seq:
+                return None                          # duplicate or replay
+            if seq != self.seq + 1:
+                self.seq_gaps += 1
+                self._invalidate(Fault.SEQ_GAP)
+                return Fault.SEQ_GAP
+        self.bids = {float(p): float(s) for p, s in bids if float(s) > 0}
+        self.asks = {float(p): float(s) for p, s in asks if float(s) > 0}
+        if seq is not None:
+            self.seq = seq
+        self.applied += 1
+        self.updated_utc = self.heartbeat_utc = t
+        if self.verification in ("own_sequence", "stream"):
+            self.verified_utc = t
         return None
 
     def reconcile(self, bids, asks, *, now: float | None = None,
@@ -192,6 +232,15 @@ class BookReplica:
             return False
         return all(abs(a[k] - b[k]) <= tol for k in a)
 
+    def invalidate(self, fault: Fault) -> None:
+        """Public: the TRANSPORT found a problem this replica cannot see.
+
+        Kalshi needs this. Its sequence is per subscription, so a gap means SOME message was lost
+        and nothing says which market it belonged to -- every replica on that socket is suspect,
+        and the one that can tell is the stream, not the book.
+        """
+        self._invalidate(fault)
+
     def _invalidate(self, fault: Fault) -> None:
         self.state = ReplicaState.RESYNCING
         self.last_fault = fault
@@ -210,7 +259,7 @@ class BookReplica:
             return Fault.HEARTBEAT_LOST
         if self.state is not ReplicaState.SYNCED:
             return self.last_fault or Fault.NOT_SYNCED
-        if not self.has_sequence and (t - self.verified_utc) > self.max_unverified_s:
+        if self.verification == "external" and (t - self.verified_utc) > self.max_unverified_s:
             return Fault.UNVERIFIED_TOO_LONG
         if t - self.updated_utc > max_age_s:
             return Fault.STALE
