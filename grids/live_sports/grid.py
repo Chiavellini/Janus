@@ -63,7 +63,16 @@ def _fetch_book(client: Client, venue: str, market_id: str, token: str | None = 
     if venue == "kalshi":
         payload = client.get_json(f"{KALSHI_BASE}/markets/{market_id}/orderbook",
                                   params={"depth": 20}, use_cache=False)
-        book = kalshi_book(payload, "yes", time.time())
+        # BOTH sides from the SAME payload, at no extra request. A Kalshi event carries one market
+        # per participant, and buying NO on the other participant's market is the same exposure as
+        # buying YES on this one -- a different order book with its own depth and its own price.
+        # Reading only the YES ladder of each market ignored roughly half the available liquidity
+        # on every pair, which understated every capacity number the frontier reports.
+        now_ts = time.time()
+        book = kalshi_book(payload, "yes", now_ts)
+        no_book = kalshi_book(payload, "no", now_ts)
+        return {"book": book, "no_book": no_book, "started": started, "received": time.time(),
+                "venue": venue, "market_id": market_id}
     else:
         payload = client.get_json(f"{PM_CLOB}/book", params={"token_id": token}, use_cache=False)
         book = pm_book(payload, time.time())
@@ -240,14 +249,26 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                     result["blocked"].append({"game_id": g.game_id, "reason": "QUOTE_SKEW", "skew_s": round(skew, 3)})
                     result["games"].append(game_out); continue
                 offers = defaultdict(list)
+                by_entity = {m["entity_id"]: m for m in rows}
                 for m in rows:
                     kf = fetched.get(("kalshi", m["kalshi_outcome"]))
                     pf = fetched.get(("polymarket", m["pm_outcome"]))
                     if not kf or not pf: continue
-                    offers[m["entity_id"]] = [
+                    legs = [
                         Leg("kalshi", LIQUIDITY_SOURCE["kalshi"], m["kalshi_outcome"], m["kalshi_event"], kf["book"]),
                         Leg("polymarket", LIQUIDITY_SOURCE["polymarket"], m["pm_outcome"], m["pm_event"], pf["book"], {"fee_rate": 0.05}),
                     ]
+                    # The complementary market's NO ladder is the same exposure from a different
+                    # book. Its outcome_id is that market's ticker, so the liquidity_source guard
+                    # still catches a genuine double-count of one book.
+                    other = next((x for e, x in by_entity.items() if e != m["entity_id"]), None)
+                    if other is not None:
+                        okf = fetched.get(("kalshi", other["kalshi_outcome"]))
+                        if okf and okf.get("no_book") and okf["no_book"].asks:
+                            legs.append(Leg("kalshi", LIQUIDITY_SOURCE["kalshi"],
+                                            f"{other['kalshi_outcome']}:NO", other["kalshi_event"],
+                                            okf["no_book"]))
+                    offers[m["entity_id"]] = legs
                     for venue, f in (("kalshi", kf), ("polymarket", pf)):
                         b = f["book"]
                         market_id = m["kalshi_outcome"] if venue == "kalshi" else m["pm_outcome"]
