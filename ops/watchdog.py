@@ -50,11 +50,10 @@ class Sla:
 #: Registered jobs. A job absent here is reported as UNREGISTERED rather than ignored --
 #: silently skipping unknown jobs is how a monitor stops covering what it was built for.
 SLAS: dict[str, Sla] = {
-    "newborn":         Sla("daemon", 3600),
-    "shadow":          Sla("daemon", 3600),
-    "track_b":         Sla("daemon", 3600),
-    "wti_ladder":      Sla("daemon", 3600),
-    "ibkr_archive":    Sla("daemon", 3600),
+    # Nothing is currently scheduled except this watchdog. Every Janus collector was stopped on
+    # 2026-09-02 (see CHANGELOG.md); the sports lane has never had a plist. Entries return here
+    # when a lane is actually deployed -- registering an SLA for a job that does not run is
+    # permanent noise, which is the failure mode that let a 13-day crash loop go unread.
 }
 
 
@@ -64,10 +63,13 @@ SLAS: dict[str, Sla] = {
 DISABLED: dict[str, str] = {
     "live_sports_arb": "not deployed — no launchd plist exists for the sports lane and the "
                        "Ashburn instance is stopped. Its SLA (oneshot, 300s) activates when the "
-                       "lane is actually scheduled; registering it early is permanent noise.",
-    "convergence": "unloaded 2026-09-02 after a 13-day crash loop; legacy crypto lane. "
-                   "Restore: launchctl bootstrap gui/$(id -u) "
-                   "~/Library/LaunchAgents/com.janus.convergence.plist",
+                       "lane is actually scheduled.",
+    "shadow": "stopped 2026-09-02; ledger F1 closed unscored. Collector removed. Plist preserved; restore with launchctl bootstrap.",
+    "convergence": "stopped 2026-09-02 after a 13-day crash loop; ledger F2 closed unscored. Collector removed. Plist preserved; restore with launchctl bootstrap.",
+    "newborn": "stopped 2026-09-02; ledger L24 closed, 960 MB capture archived. Collector removed. Plist preserved; restore with launchctl bootstrap.",
+    "track_b": "stopped 2026-09-02; IBKR/Track B track retired. Collector removed. Plist preserved; restore with launchctl bootstrap.",
+    "wti_ladder": "stopped 2026-09-02; commodities track retired. Collector removed. Plist preserved; restore with launchctl bootstrap.",
+    "ibkr_archive": "stopped 2026-09-02; IBKR track retired. Collector removed. Plist preserved; restore with launchctl bootstrap.",
 }
 
 
