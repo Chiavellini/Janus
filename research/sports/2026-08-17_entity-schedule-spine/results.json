@@ -1,0 +1,179 @@
+{
+ "stage": 1,
+ "track": "sports",
+ "date": "2026-08-17",
+ "kind": "characterization",
+ "test_looks_spent": 0,
+ "checkpoint": {
+  "criterion": ">=99% of one league-week resolves to a game_id",
+  "result": "PASS"
+ },
+ "per_league": {
+  "epl": {
+   "scheduled_games": 10,
+   "kalshi": {
+    "in_window": 10,
+    "resolved_to_game": 10,
+    "resolution_rate": 1.0,
+    "via_exact_time": 0,
+    "via_local_date": 10,
+    "entity_fail": 0,
+    "no_start": 0,
+    "no_game": 0
+   },
+   "polymarket": {
+    "in_window": 70,
+    "resolved_to_game": 70,
+    "resolution_rate": 1.0,
+    "entity_fail": 0,
+    "no_start": 0,
+    "no_game": 0
+   },
+   "context_colisting": {
+    "games_with_kalshi": 10,
+    "games_with_pm": 10,
+    "games_with_both": 10
+   },
+   "failure_total": 0
+  },
+  "mlb": {
+   "scheduled_games": 99,
+   "kalshi": {
+    "in_window": 41,
+    "resolved_to_game": 41,
+    "resolution_rate": 1.0,
+    "via_exact_time": 41,
+    "via_local_date": 0,
+    "entity_fail": 0,
+    "no_start": 0,
+    "no_game": 0
+   },
+   "polymarket": {
+    "in_window": 100,
+    "resolved_to_game": 100,
+    "resolution_rate": 1.0,
+    "entity_fail": 0,
+    "no_start": 0,
+    "no_game": 0
+   },
+   "context_colisting": {
+    "games_with_kalshi": 41,
+    "games_with_pm": 80,
+    "games_with_both": 41
+   },
+   "failure_total": 0
+  },
+  "nfl": {
+   "scheduled_games": 16,
+   "kalshi": {
+    "in_window": 16,
+    "resolved_to_game": 16,
+    "resolution_rate": 1.0,
+    "via_exact_time": 0,
+    "via_local_date": 16,
+    "entity_fail": 0,
+    "no_start": 0,
+    "no_game": 0
+   },
+   "polymarket": {
+    "in_window": 16,
+    "resolved_to_game": 16,
+    "resolution_rate": 1.0,
+    "entity_fail": 0,
+    "no_start": 0,
+    "no_game": 0
+   },
+   "context_colisting": {
+    "games_with_kalshi": 16,
+    "games_with_pm": 16,
+    "games_with_both": 16
+   },
+   "failure_total": 0
+  },
+  "wnba": {
+   "scheduled_games": 20,
+   "kalshi": {
+    "in_window": 7,
+    "resolved_to_game": 7,
+    "resolution_rate": 1.0,
+    "via_exact_time": 0,
+    "via_local_date": 7,
+    "entity_fail": 0,
+    "no_start": 0,
+    "no_game": 0
+   },
+   "polymarket": {
+    "in_window": 20,
+    "resolved_to_game": 20,
+    "resolution_rate": 1.0,
+    "entity_fail": 0,
+    "no_start": 0,
+    "no_game": 0
+   },
+   "context_colisting": {
+    "games_with_kalshi": 7,
+    "games_with_pm": 20,
+    "games_with_both": 7
+   },
+   "failure_total": 0
+  }
+ },
+ "overall": {
+  "venue_events_in_window": 280,
+  "resolved_to_game": 280,
+  "resolution_rate": 1.0,
+  "failures": 0
+ },
+ "tables": {
+  "teams": 159,
+  "xrefs": 191,
+  "xrefs_kalshi": 94,
+  "xrefs_polymarket": 97,
+  "aliases_generated": 644,
+  "aliases_manual": 70,
+  "xref_conflicts_remaining": 0,
+  "ambiguous_alias_keys": 6,
+  "leagues": [
+   "epl",
+   "mlb",
+   "nba",
+   "nfl",
+   "nhl",
+   "wnba"
+  ]
+ },
+ "measured_venue_facts": {
+  "espn_host": "site.api.espn.com returns 403; site.web.api.espn.com works (same paths)",
+  "espn_dates_param_timezone": "dates= is Eastern-scoped while event.date is UTC; over-fetch +/-1d and filter on UTC",
+  "kalshi_close_time": "close_time/expiration_time = scheduled start + EXACTLY 3 days (postponement buffer), NOT the start",
+  "kalshi_expected_expiration": "expected_expiration_time == occurrence_datetime == expected END of game",
+  "kalshi_start_source": "rules_primary states it in English; MLB alone includes a clock time (doubleheaders)",
+  "kalshi_no_sub_title": "equals yes_sub_title on 82/82 MLB markets - it is NOT the opposing team",
+  "kalshi_custom_strike_uuid": "stable per-team UUID; 30 distinct for 30 MLB teams, zero collisions",
+  "kalshi_sports_series_count": 3414,
+  "kalshi_game_level_leagues": "~250 distinct *GAME series",
+  "pm_slug_date_is_not_game_date": "mlb-stl-cin-2026-05-24 was PLAYED 2026-08-17; PM keeps the original slug on a postponed game while Kalshi re-mints on the new date",
+  "pm_structured_fields": "gameId, teams[].id, teams[].abbreviation, sport, startTime, markets[].gameStartTime, eventDate, period, score, live",
+  "pm_start_authority": "markets[].gameStartTime; agrees with Kalshi's ticker/rules time exactly",
+  "epl_three_way": "KXEPLGAME prices home/draw/away; 'Tie' is an outcome, not a participant (20/25 first-pass conflicts)",
+  "epl_settlement_text": "'after 90 minutes plus stoppage time (does not include extra time or penalties)' - the soccer wedge, stated by the venue",
+  "kalshi_settlement_sources_mlb": [
+   "ESPN",
+   "Fox Sports",
+   "the Governing League (mlb.com)"
+  ],
+  "pm_resolution_source_mlb": "https://www.mlb.com/",
+  "league_calendar_2026_08_17": {
+   "nba": "out of season (0 events)",
+   "nhl": "out of season (0 events)",
+   "nfl": "preseason only",
+   "mlb": "in season, ~99 games/week",
+   "wnba": "in season",
+   "epl": "season opens 2026-08-21"
+  }
+ },
+ "corrections_to_plan": {
+  "leagues_v1": "plan named [nfl, nba]; NBA and NHL have ZERO games in this window and NFL is preseason. MLB is the only dense in-season US league. Stage 2 should run on MLB.",
+  "false_alias_caught": "auto-derived nfl 'la'->Rams (n=4) rejected: 'LA' denotes either LA club and the Chargers simply had not appeared with that label yet"
+ }
+}

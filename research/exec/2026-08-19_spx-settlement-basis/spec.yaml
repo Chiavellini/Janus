@@ -1,0 +1,130 @@
+experiment_id: "janus-track-b-spx-settlement-basis"
+date_registered: "2026-08-19"
+track: exec
+program: track_b_hft
+ledger_ref: "snooping_ledger.md row L14 (descriptive settlement-reference characterization -- costs no test look)"
+status_at_registration: PENDING
+
+# IMMUTABLE AFTER THE FIRST KALSHI MARKET OR PRICE-RELAY REQUEST.
+
+purpose: >
+  Measure the basis between the two settlement references in the pair
+  KALSHI_SPX_LADDER_vs_CBOE_SPX_XSP_OPTIONS, which
+  research/exec/2026-08-18_ibkr-forward-archive/settlement_reference_map.yaml holds at BLOCK on an
+  unmeasured basis. Kalshi rules text (M1, read 2026-08-19T01:35Z) says KXINX/KXINXU settle on "the
+  end-of-day S&P 500 index value"; CBOE PM-settled SPXW/XSP exercise-settle on the official S&P 500
+  closing value. Plausibly the same reference; never measured. This experiment measures ONLY the
+  agreement between settlement VALUES. It reads no quote, computes no strategy return, extracts no
+  implied distribution, and compares no Kalshi price to any IBKR price.
+
+why_this_is_not_a_test_look: >
+  The output is the distribution of a difference between two published settlement values. It
+  contains no PnL, no signal, no candidate ranking, and no parameter that any later strategy
+  selects on. Registered as an L-row under snooping_ledger.md rule 5, the same class as L2 (the
+  phase-1 cross-venue settlement-agreement characterization).
+
+why_it_is_needed_now: >
+  AGENTS.md amendment 2026-08-14: never compare two prices without first measuring the basis
+  between their settlement references; an unmeasured basis is a BLOCK, not zero. This measurement
+  is IBKR-independent and free, so it can be completed while the IBKR families remain blocked on
+  entitlement (L13). It does NOT unblock anything IBKR-dependent by itself: the entitlement block
+  is separate and survives any outcome here.
+
+the_n1_observation_this_replaces:
+  date: "2026-08-18"
+  kalshi_expiration_value: 7691.76
+  ibkr_spx_index_last: 7693.26
+  difference_points: 1.50
+  status: "n=1 observation, NOT a measurement; recorded in the settlement map"
+  competing_explanation_that_must_be_separable: >
+    The IBKR print was read at 2026-08-19T01:20Z with the index feed frozen (availability code Z)
+    outside RTH, so the anomalous value may be IBKR's stale print rather than a Kalshi deviation.
+    This experiment therefore measures Kalshi against the official close and EXCLUDES the IBKR
+    print from the headline entirely. The IBKR side cannot be measured at all until L13 clears.
+
+references_and_evidence_tiers:
+  kalshi_settlement:
+    field: "expiration_value on settled markets"
+    source: "GET https://api.elections.kalshi.com/trade-api/v2 (public, unauthenticated)"
+    tier: M1
+  official_sp500_close:
+    sources_pre_declared: ["stooq (primary)", "yahoo chart (cross-check)"]
+    tier: R
+    note: >
+      Neither is S&P Dow Jones Indices. Two independent relays agreeing to <= 0.01 yields
+      CONFIRMED_RELAY, which is still tier R. The claim "equals the S&P DJI OFFICIAL close"
+      remains U in this experiment and must be labelled so in every output.
+  cboe_pm_exercise_settlement:
+    tier: R
+    structural_note: >
+      For PM-settled SPXW/XSP -- the contracts this pair is about -- CBOE publishes no independent
+      exercise-settlement print: the exercise settlement value IS the official closing index value
+      by rule. The separately published SET ticker covers AM-settled third-Friday SPX, which the
+      settlement map already records as a NON-match. So the intended three-way join collapses to
+      two sides, and that collapse is a structural fact declared here BEFORE the run, not a
+      discovery made after it.
+
+inclusion_rules:
+  series: [KXINX, KXINXU, KXINXAB, KXINXI]
+  status: settled
+  market_filter: >
+    Include a settled market only if BOTH hold: (a) its rules_primary states an end-of-day /
+    closing S&P 500 index value, and (b) its close_time falls at 16:00 America/New_York. Markets
+    failing (b) -- intraday hourly strikes -- are COLLECTED and COUNTED but reported in a separate
+    bucket and are never part of the headline.
+  dedupe: "one (settlement_date, expiration_value) pair per settlement date"
+  within_event_consistency: >
+    Every included market sharing an event_ticker must report the SAME expiration_value. A
+    disagreement is a STOP for that date, reported as WITHIN_EVENT_DISAGREEMENT with the values --
+    it would falsify our reading of the field, and reading it wrong is the failure mode this
+    experiment exists to avoid.
+  enumeration_channels_pre_declared:
+    - "GET /markets?series_ticker=<s>&status=settled (cursor)"
+    - "GET /events?series_ticker=<s>&status=settled&with_nested_markets=true (cursor)"
+  enumeration_rule: >
+    Both channels are walked and the UNION is used; per-channel counts are reported. L3 measured a
+    single-channel Polymarket crawl at 6x short of a 3-channel union, so a one-channel count is not
+    accepted as coverage here.
+
+coverage_gate:
+  min_settlement_dates: 20
+  on_fail: >
+    Verdict INSUFFICIENT_COVERAGE. Report the count. The pair stays BLOCK. Do NOT quote a
+    distribution, a median, or a "no material difference" conclusion from fewer than 20 dates, and
+    do NOT widen the series list or relax the 16:00 ET filter to reach the threshold.
+  reference_source_unavailable: >
+    If neither relay is reachable, verdict REFERENCE_SOURCE_UNAVAILABLE, pair stays BLOCK. An
+    unreachable source is recorded as an access result, never as agreement.
+
+statistics:
+  primary: "diff = kalshi_expiration_value - official_close, in index points and in bp of the close"
+  reported: [n_dates, frac_exactly_equal, median, iqr, mean, max_abs, full_distribution]
+  ci: "lib.stats.block_bootstrap_ci over the diffs, blocked by settlement date"
+  relay_disagreement: >
+    A date whose two relays differ by more than 0.01 is labelled RELAY_DISAGREE, EXCLUDED from the
+    headline, and counted in the output. Never averaged, never silently dropped.
+
+verdict_rule:
+  pair_leaves_block_to_OK_iff: "frac_exactly_equal >= 0.95 AND max_abs <= 0.01 AND n_dates >= 20"
+  otherwise: >
+    The pair stays BLOCK and the measured wedge is recorded as its known_basis. A measured non-zero
+    wedge is a RESULT, not a failure -- it is exactly the number the map is missing.
+  immutability: "This rule is fixed now and is not adjusted after seeing the distribution."
+
+not_estimated_here:
+  - option_implied_digitals
+  - any_kalshi_price_vs_ibkr_price_comparison
+  - tick_error_propagation_to_implied_vol
+  - ibkr_index_print_accuracy
+  - sp_dji_official_close_as_a_primary_source
+  - the_other_three_pairs_in_the_settlement_map
+
+privacy_and_disk:
+  identifiers_persisted: none
+  raw_rows: "/Volumes/Kilos/janus/spx_basis/ (never the root disk)"
+  disk_floor: "abort below 2 GB free on internal /"
+
+outputs:
+  results: "research/exec/2026-08-19_spx-settlement-basis/results.json"
+  verdict: "research/exec/2026-08-19_spx-settlement-basis/verdict.md"
+  map_amendment: "research/exec/2026-08-18_ibkr-forward-archive/settlement_reference_map.yaml (v3, one pair)"

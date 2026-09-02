@@ -1,0 +1,35 @@
+{
+ "league": "wnba",
+ "window_utc": [
+  "2026-08-17T00:00:00+00:00",
+  "2026-08-25T00:00:00+00:00"
+ ],
+ "scheduled_games": 20,
+ "kalshi": {
+  "events_seen": 7,
+  "in_window": 7,
+  "resolved_to_game": 7,
+  "resolution_rate": 1.0,
+  "entity_fail": 0,
+  "no_start": 0,
+  "no_game": 0,
+  "via_exact_time": 0,
+  "via_local_date": 7
+ },
+ "polymarket": {
+  "events_seen": 35,
+  "in_window": 20,
+  "resolved_to_game": 20,
+  "resolution_rate": 1.0,
+  "entity_fail": 0,
+  "no_start": 0,
+  "no_game": 0
+ },
+ "context_colisting": {
+  "games_with_kalshi": 7,
+  "games_with_pm": 20,
+  "games_with_both": 7
+ },
+ "failures": [],
+ "failure_total": 0
+}

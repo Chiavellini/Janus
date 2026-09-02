@@ -1,0 +1,92 @@
+experiment_id: "janus-culture-tuple-coherence-2026-09-01"
+date_registered: "2026-09-01"
+track: "tuples/culture"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row 1"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE FIRST SCAN.
+purpose: >
+  Find exploitable structural inconsistencies among related culture/entertainment prediction
+  markets. The unit is a tuple of contracts describing one event or ordered outcome family, not
+  a single cross-venue price difference. A candidate must first pass the semantic relation and
+  settlement checks; only then are executable prices, depth and fees evaluated.
+
+universe:
+  venues: [kalshi, polymarket]
+  categories: [culture, entertainment, pop-culture, sports]
+  include_alias_categories: ["Kalshi: Entertainment"]
+  exclude: [mentions, parlays, non_exhaustive_sets, unknown_settlement_rules]
+  sports_initial_scope: "live and newly-born moneyline/side/total markets where the outcome set and settlement rules are known"
+  recency_priority:
+    newborn_window_hours: 6
+    recently_born_window_hours: 24
+    live_definition: "event is currently in progress or the market is actively updating toward a near-term resolution"
+    ranking: ["newborn_and_live", "newborn", "recently_born", "short_term_live", "short_term", "long_term_exception"]
+    monitoring_rule: "only markets in an active tuple watchlist receive quote sweeps; discovery does not imply monitoring"
+  short_term_priority:
+    close_within_days: 30
+    ranking: "short-term candidates are ranked before all long-term candidates"
+  long_term_exception:
+    maximum_days_to_close: 240
+    minimum_conservative_net_return: 0.40
+    return_definition: "worst-case net holding-period return on locked capital, not annualized"
+    treatment_below_hurdle: exclude
+
+tuple_families:
+  - id: "exhaustive_partition"
+    relation: "mutually exclusive and collectively exhaustive outcomes for one event"
+    arbitrage_test: "buy one outcome on each required leg; total executable cost < guaranteed payout"
+  - id: "nested_threshold"
+    relation: "A implies B, or A is a strict subset of B, with identical subject and settlement"
+    arbitrage_test: "buy A and the complement of B, or use the permitted directional leg when direct shorting is available"
+  - id: "ordered_rank_or_ladder"
+    relation: "rank/threshold ordering creates monotonic or partition constraints"
+    arbitrage_test: "evaluate only the formally implied inequality/cover, never a title-similarity gap"
+  - id: "cross_venue_same_event"
+    relation: "the same culture event/outcome is listed on both venues"
+    arbitrage_test: "evaluate complementary executable legs after venue-specific fees and settlement checks"
+
+semantic_gate:
+  required: true
+  evidence: ["rules_text", "structured_event_or_series_metadata", "settlement_reference"]
+  unknown_is: BLOCK
+  title_similarity_is: "candidate-generation-only, never proof"
+  settlement_reference_basis: "must be measured or explicitly identical before pricing a tuple"
+  exhaustive_must_be_proven: true
+
+pricing:
+  prices: "executable asks/bids only; midpoint is diagnostic only"
+  depth: "walk the visible ladder to the tested quantity; no touch-only claim"
+  fees: "venue and market-specific fee model from lib/fees/"
+  staleness: "legs older than the pinned freshness limit are rejected, not down-weighted"
+  default_test_quantities_contracts: [1, 5, 25, 100]
+  actionability: "positive worst-case net return after fees and executable slippage"
+
+storage:
+  root: "/Volumes/Kilos/janus/tuples"
+  policy:
+    - "latest_state is one upserted row per market"
+    - "quote_history appends only on material quote/depth/state change"
+    - "tuple_opportunities appends only on relation or actionability change"
+    - "sweep_runs stores one aggregate health/count row per sweep"
+    - "raw payloads are not retained for unchanged markets"
+    - "unchanged markets are not rewritten as periodic full snapshots"
+    - "discovery stores only new/removed/changed metadata and watchlist membership"
+    - "quote sweeps run only for watched tuples, newborn/live cohorts, or prior actionable candidates"
+  material_quote_change: "best bid/ask change >= 1 tick, visible depth change >= 10%, or one-sided/status change"
+  retention: "keep all opportunity transitions; compact quote_history older than 30 days to daily state changes"
+
+primary_criterion:
+  statement: >
+    Produce a reproducible, audited list of culture tuples with a proven relation and positive
+    conservative net return at executable prices. Short-term tuples are eligible at any positive
+    net return; long-term tuples are eligible only when the conservative net return is at least
+    40% and close time is no more than 240 days.
+  stop_condition: "no tuple may be promoted when semantic, exhaustive, settlement or freshness evidence is missing"
+
+outputs:
+  spec: "research/tuples/2026-09-01_culture-short-horizon/spec.yaml"
+  results: "research/tuples/2026-09-01_culture-short-horizon/results.json"
+  verdict: "research/tuples/2026-09-01_culture-short-horizon/verdict.md"
+  database: "/Volumes/Kilos/janus/tuples/culture.sqlite"

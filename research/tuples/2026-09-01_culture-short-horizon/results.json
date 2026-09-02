@@ -1,0 +1,1455 @@
+{
+  "api_stats": {
+    "kalshi": {
+      "429s": 0,
+      "cache_hits": 0,
+      "offset_caps": 0,
+      "requests": 12,
+      "retries": 0
+    },
+    "polymarket": {
+      "429s": 0,
+      "cache_hits": 0,
+      "offset_caps": 0,
+      "requests": 21,
+      "retries": 0
+    }
+  },
+  "finished_utc": "2026-09-02T04:30:27.142966+00:00",
+  "matches": [
+    {
+      "created": {
+        "kalshi": "2026-08-19T15:03:54.272079Z",
+        "polymarket": "2026-08-06T08:21:19.737936Z"
+      },
+      "kalshi_id": "KXGRAMAOTY-69-LOS",
+      "outcome": "Lost Weekend",
+      "polymarket_condition_id": "0xc809f11195a2dd3185b62716b6539c4d1c039fd540d99adb1e7eca5b0aad7773",
+      "polymarket_id": "3377048",
+      "rows": [
+        {
+          "all_quantities": [
+            {
+              "fees": 0.041491,
+              "gross_cost": 5.52,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-LOS",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xc809f11195a2dd3185b62716b6539c4d1c039fd540d99adb1e7eca5b0aad7773",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.561491,
+              "quantity": 5.0,
+              "return_locked": -0.10096052,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.187455,
+              "gross_cost": 27.6,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-LOS",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xc809f11195a2dd3185b62716b6539c4d1c039fd540d99adb1e7eca5b0aad7773",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -2.787455,
+              "quantity": 25.0,
+              "return_locked": -0.10031343,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.71982,
+              "gross_cost": 110.4,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-LOS",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xc809f11195a2dd3185b62716b6539c4d1c039fd540d99adb1e7eca5b0aad7773",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -11.11982,
+              "quantity": 100.0,
+              "return_locked": -0.10007054,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "K_YES_PM_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        },
+        {
+          "all_quantities": [
+            {
+              "fees": 0.03387975,
+              "gross_cost": 4.995,
+              "legs": [
+                {
+                  "market_id": "0xc809f11195a2dd3185b62716b6539c4d1c039fd540d99adb1e7eca5b0aad7773",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-LOS",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -0.02887975,
+              "quantity": 5.0,
+              "return_locked": -0.00574278,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.17360002,
+              "gross_cost": 25.20747,
+              "legs": [
+                {
+                  "market_id": "0xc809f11195a2dd3185b62716b6539c4d1c039fd540d99adb1e7eca5b0aad7773",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-LOS",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -0.38107002,
+              "quantity": 25.0,
+              "return_locked": -0.01501395,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.71667504,
+              "gross_cost": 103.13659,
+              "legs": [
+                {
+                  "market_id": "0xc809f11195a2dd3185b62716b6539c4d1c039fd540d99adb1e7eca5b0aad7773",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-LOS",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -3.85326504,
+              "quantity": 100.0,
+              "return_locked": -0.03710297,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "PM_YES_K_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        }
+      ],
+      "rules": {
+        "kalshi": "If  Lost Weekend has won Album of the Year at the 69th Annual Grammy Awards, then the market resolves to Yes.",
+        "polymarket": "The GRAMMY Awards are presented annually by the Recording Academy. For the 69th Annual GRAMMY Awards, nominations are scheduled for November 16, 2026, and the ceremony for February 7, 2027.\n\nThis market will resolve according to the listed album that wins Album of the Year at the 69th Annual GRAMMY Awards.\n\nIf an album is not officially nominated for Album of the Year when the 69th Annual GRAMMY Awards nominees are announced, the corresponding market will immediately resolve to \"No\".\n\nIn case of a tie for the winner, this market will resolve in favor of the nominated album whose listed title comes first in alphabetical order.\n\nIf, for any reason, no winner is declared by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\".\n\nThe resolution source will be the television broadcast of the awards and the Grammy website (https://www.grammy.com/); however, other credible reporting may be used."
+      }
+    },
+    {
+      "created": {
+        "kalshi": "2026-06-12T19:08:57.351594Z",
+        "polymarket": "2026-08-06T08:21:18.041793Z"
+      },
+      "kalshi_id": "KXGRAMAOTY-69-YOU",
+      "outcome": "you seem pretty sad for a girl so in love",
+      "polymarket_condition_id": "0xb468027699f7e3c93aa8ea74932e8118c477d3efb8ad7e79a5b7600d92ba4fed",
+      "polymarket_id": "3377039",
+      "rows": [
+        {
+          "all_quantities": [
+            {
+              "fees": 0.1164,
+              "gross_cost": 6.3,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-YOU",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xb468027699f7e3c93aa8ea74932e8118c477d3efb8ad7e79a5b7600d92ba4fed",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -1.4164,
+              "quantity": 5.0,
+              "return_locked": -0.22074684,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.552,
+              "gross_cost": 31.5,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-YOU",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xb468027699f7e3c93aa8ea74932e8118c477d3efb8ad7e79a5b7600d92ba4fed",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -7.052,
+              "quantity": 25.0,
+              "return_locked": -0.22001747,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 2.13495,
+              "gross_cost": 127.1,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-YOU",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xb468027699f7e3c93aa8ea74932e8118c477d3efb8ad7e79a5b7600d92ba4fed",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -29.23495,
+              "quantity": 100.0,
+              "return_locked": -0.22621551,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "K_YES_PM_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        },
+        {
+          "all_quantities": [
+            {
+              "fees": 0.1304,
+              "gross_cost": 4.85,
+              "legs": [
+                {
+                  "market_id": "0xb468027699f7e3c93aa8ea74932e8118c477d3efb8ad7e79a5b7600d92ba4fed",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-YOU",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": 0.0196,
+              "quantity": 5.0,
+              "return_locked": 0.00393543,
+              "status": "ACTIONABLE"
+            },
+            {
+              "fees": 0.633935,
+              "gross_cost": 24.34,
+              "legs": [
+                {
+                  "market_id": "0xb468027699f7e3c93aa8ea74932e8118c477d3efb8ad7e79a5b7600d92ba4fed",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-YOU",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": 0.026065,
+              "quantity": 25.0,
+              "return_locked": 0.00104369,
+              "status": "ACTIONABLE"
+            },
+            {
+              "fees": 2.51606,
+              "gross_cost": 98.46,
+              "legs": [
+                {
+                  "market_id": "0xb468027699f7e3c93aa8ea74932e8118c477d3efb8ad7e79a5b7600d92ba4fed",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-YOU",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -0.97606,
+              "quantity": 100.0,
+              "return_locked": -0.00966625,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": {
+            "fees": 0.633935,
+            "gross_cost": 24.34,
+            "legs": [
+              {
+                "market_id": "0xb468027699f7e3c93aa8ea74932e8118c477d3efb8ad7e79a5b7600d92ba4fed",
+                "outcome": "YES",
+                "venue": "polymarket"
+              },
+              {
+                "market_id": "KXGRAMAOTY-69-YOU",
+                "outcome": "NO",
+                "venue": "kalshi"
+              }
+            ],
+            "net_profit": 0.026065,
+            "quantity": 25.0,
+            "return_locked": 0.00104369,
+            "status": "ACTIONABLE"
+          },
+          "direction": "PM_YES_K_NO",
+          "status": "ACTIONABLE",
+          "transition_recorded": true
+        }
+      ],
+      "rules": {
+        "kalshi": "If  you seem pretty sad for a girl so in love has won Album of the Year at the 69th Annual Grammy Awards, then the market resolves to Yes.",
+        "polymarket": "The GRAMMY Awards are presented annually by the Recording Academy. For the 69th Annual GRAMMY Awards, nominations are scheduled for November 16, 2026, and the ceremony for February 7, 2027.\n\nThis market will resolve according to the listed album that wins Album of the Year at the 69th Annual GRAMMY Awards.\n\nIf an album is not officially nominated for Album of the Year when the 69th Annual GRAMMY Awards nominees are announced, the corresponding market will immediately resolve to \"No\".\n\nIn case of a tie for the winner, this market will resolve in favor of the nominated album whose listed title comes first in alphabetical order.\n\nIf, for any reason, no winner is declared by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\".\n\nThe resolution source will be the television broadcast of the awards and the Grammy website (https://www.grammy.com/); however, other credible reporting may be used."
+      }
+    },
+    {
+      "created": {
+        "kalshi": "2026-06-12T19:08:57.351594Z",
+        "polymarket": "2026-08-06T08:21:18.400814Z"
+      },
+      "kalshi_id": "KXGRAMAOTY-69-LUX",
+      "outcome": "Lux",
+      "polymarket_condition_id": "0x3dc214aba95b98bc6ae436526ca4f817b70bd15e056a4dab82387ba9a732892f",
+      "polymarket_id": "3377041",
+      "rows": [
+        {
+          "all_quantities": [
+            {
+              "fees": 0.0684,
+              "gross_cost": 5.45,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-LUX",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x3dc214aba95b98bc6ae436526ca4f817b70bd15e056a4dab82387ba9a732892f",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.5184,
+              "quantity": 5.0,
+              "return_locked": -0.09394027,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.342,
+              "gross_cost": 27.25,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-LUX",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x3dc214aba95b98bc6ae436526ca4f817b70bd15e056a4dab82387ba9a732892f",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -2.592,
+              "quantity": 25.0,
+              "return_locked": -0.09394027,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 1.304325,
+              "gross_cost": 110.25,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-LUX",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x3dc214aba95b98bc6ae436526ca4f817b70bd15e056a4dab82387ba9a732892f",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -11.554325,
+              "quantity": 100.0,
+              "return_locked": -0.10357577,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "K_YES_PM_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        },
+        {
+          "all_quantities": [
+            {
+              "fees": 0.060475,
+              "gross_cost": 4.8,
+              "legs": [
+                {
+                  "market_id": "0x3dc214aba95b98bc6ae436526ca4f817b70bd15e056a4dab82387ba9a732892f",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-LUX",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": 0.139525,
+              "quantity": 5.0,
+              "return_locked": 0.02870604,
+              "status": "ACTIONABLE"
+            },
+            {
+              "fees": 0.302375,
+              "gross_cost": 24.136,
+              "legs": [
+                {
+                  "market_id": "0x3dc214aba95b98bc6ae436526ca4f817b70bd15e056a4dab82387ba9a732892f",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-LUX",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": 0.561625,
+              "quantity": 25.0,
+              "return_locked": 0.02298127,
+              "status": "ACTIONABLE"
+            },
+            {
+              "fees": 1.18947,
+              "gross_cost": 97.626,
+              "legs": [
+                {
+                  "market_id": "0x3dc214aba95b98bc6ae436526ca4f817b70bd15e056a4dab82387ba9a732892f",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-LUX",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": 1.18453,
+              "quantity": 100.0,
+              "return_locked": 0.01198729,
+              "status": "ACTIONABLE"
+            }
+          ],
+          "best": {
+            "fees": 1.18947,
+            "gross_cost": 97.626,
+            "legs": [
+              {
+                "market_id": "0x3dc214aba95b98bc6ae436526ca4f817b70bd15e056a4dab82387ba9a732892f",
+                "outcome": "YES",
+                "venue": "polymarket"
+              },
+              {
+                "market_id": "KXGRAMAOTY-69-LUX",
+                "outcome": "NO",
+                "venue": "kalshi"
+              }
+            ],
+            "net_profit": 1.18453,
+            "quantity": 100.0,
+            "return_locked": 0.01198729,
+            "status": "ACTIONABLE"
+          },
+          "direction": "PM_YES_K_NO",
+          "status": "ACTIONABLE",
+          "transition_recorded": true
+        }
+      ],
+      "rules": {
+        "kalshi": "If  Lux has won Album of the Year at the 69th Annual Grammy Awards, then the market resolves to Yes.",
+        "polymarket": "The GRAMMY Awards are presented annually by the Recording Academy. For the 69th Annual GRAMMY Awards, nominations are scheduled for November 16, 2026, and the ceremony for February 7, 2027.\n\nThis market will resolve according to the listed album that wins Album of the Year at the 69th Annual GRAMMY Awards.\n\nIf an album is not officially nominated for Album of the Year when the 69th Annual GRAMMY Awards nominees are announced, the corresponding market will immediately resolve to \"No\".\n\nIn case of a tie for the winner, this market will resolve in favor of the nominated album whose listed title comes first in alphabetical order.\n\nIf, for any reason, no winner is declared by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\".\n\nThe resolution source will be the television broadcast of the awards and the Grammy website (https://www.grammy.com/); however, other credible reporting may be used."
+      }
+    },
+    {
+      "created": {
+        "kalshi": "2026-06-12T19:08:57.351594Z",
+        "polymarket": "2026-08-06T08:21:18.214137Z"
+      },
+      "kalshi_id": "KXGRAMAOTY-69-LIF",
+      "outcome": "The Life of a Showgirl",
+      "polymarket_condition_id": "0x94ccb1564ce51c3b84880dbb2549497704c828243e9c24d2c24917345054da98",
+      "polymarket_id": "3377040",
+      "rows": [
+        {
+          "all_quantities": [
+            {
+              "fees": 0.02320775,
+              "gross_cost": 5.135,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-LIF",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x94ccb1564ce51c3b84880dbb2549497704c828243e9c24d2c24917345054da98",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.15820775,
+              "quantity": 5.0,
+              "return_locked": -0.03067107,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.08603875,
+              "gross_cost": 25.675,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-LIF",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x94ccb1564ce51c3b84880dbb2549497704c828243e9c24d2c24917345054da98",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.76103875,
+              "quantity": 25.0,
+              "return_locked": -0.02954224,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.3268315,
+              "gross_cost": 102.85,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-LIF",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x94ccb1564ce51c3b84880dbb2549497704c828243e9c24d2c24917345054da98",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -3.1768315,
+              "quantity": 100.0,
+              "return_locked": -0.03079016,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "K_YES_PM_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        },
+        {
+          "all_quantities": [
+            {
+              "fees": 0.0241,
+              "gross_cost": 5.2,
+              "legs": [
+                {
+                  "market_id": "0x94ccb1564ce51c3b84880dbb2549497704c828243e9c24d2c24917345054da98",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-LIF",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -0.2241,
+              "quantity": 5.0,
+              "return_locked": -0.04289734,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.1105,
+              "gross_cost": 26.0,
+              "legs": [
+                {
+                  "market_id": "0x94ccb1564ce51c3b84880dbb2549497704c828243e9c24d2c24917345054da98",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-LIF",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -1.1105,
+              "quantity": 25.0,
+              "return_locked": -0.04253078,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.422,
+              "gross_cost": 104.0,
+              "legs": [
+                {
+                  "market_id": "0x94ccb1564ce51c3b84880dbb2549497704c828243e9c24d2c24917345054da98",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-LIF",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -4.422,
+              "quantity": 100.0,
+              "return_locked": -0.0423474,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "PM_YES_K_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        }
+      ],
+      "rules": {
+        "kalshi": "If  The Life of a Showgirl has won Album of the Year at the 69th Annual Grammy Awards, then the market resolves to Yes.",
+        "polymarket": "The GRAMMY Awards are presented annually by the Recording Academy. For the 69th Annual GRAMMY Awards, nominations are scheduled for November 16, 2026, and the ceremony for February 7, 2027.\n\nThis market will resolve according to the listed album that wins Album of the Year at the 69th Annual GRAMMY Awards.\n\nIf an album is not officially nominated for Album of the Year when the 69th Annual GRAMMY Awards nominees are announced, the corresponding market will immediately resolve to \"No\".\n\nIn case of a tie for the winner, this market will resolve in favor of the nominated album whose listed title comes first in alphabetical order.\n\nIf, for any reason, no winner is declared by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\".\n\nThe resolution source will be the television broadcast of the awards and the Grammy website (https://www.grammy.com/); however, other credible reporting may be used."
+      }
+    },
+    {
+      "created": {
+        "kalshi": "2026-06-12T19:08:57.351594Z",
+        "polymarket": "2026-08-06T08:21:19.333718Z"
+      },
+      "kalshi_id": "KXGRAMAOTY-69-KIS",
+      "outcome": "Kiss All the Time. Disco, Occasionally",
+      "polymarket_condition_id": "0xbd969628160ef1e7fef6b4987be5936507c5459888ce84e8d126de56ec8f21f2",
+      "polymarket_id": "3377046",
+      "rows": [
+        {
+          "all_quantities": [
+            {
+              "fees": 0.010499,
+              "gross_cost": 5.09,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-KIS",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xbd969628160ef1e7fef6b4987be5936507c5459888ce84e8d126de56ec8f21f2",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.100499,
+              "quantity": 5.0,
+              "return_locked": -0.01970376,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.0419965,
+              "gross_cost": 25.46,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-KIS",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xbd969628160ef1e7fef6b4987be5936507c5459888ce84e8d126de56ec8f21f2",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.5019965,
+              "quantity": 25.0,
+              "return_locked": -0.0196846,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.14574275,
+              "gross_cost": 101.885,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-KIS",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xbd969628160ef1e7fef6b4987be5936507c5459888ce84e8d126de56ec8f21f2",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -2.03074275,
+              "quantity": 100.0,
+              "return_locked": -0.01990324,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "K_YES_PM_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        },
+        {
+          "all_quantities": [
+            {
+              "quantity": 5.0,
+              "status": "INSUFFICIENT_DEPTH"
+            },
+            {
+              "quantity": 25.0,
+              "status": "INSUFFICIENT_DEPTH"
+            },
+            {
+              "quantity": 100.0,
+              "status": "INSUFFICIENT_DEPTH"
+            }
+          ],
+          "best": null,
+          "direction": "PM_YES_K_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        }
+      ],
+      "rules": {
+        "kalshi": "If  Kiss All the Time. Disco, Occasionally has won Album of the Year at the 69th Annual Grammy Awards, then the market resolves to Yes.",
+        "polymarket": "The GRAMMY Awards are presented annually by the Recording Academy. For the 69th Annual GRAMMY Awards, nominations are scheduled for November 16, 2026, and the ceremony for February 7, 2027.\n\nThis market will resolve according to the listed album that wins Album of the Year at the 69th Annual GRAMMY Awards.\n\nIf an album is not officially nominated for Album of the Year when the 69th Annual GRAMMY Awards nominees are announced, the corresponding market will immediately resolve to \"No\".\n\nIn case of a tie for the winner, this market will resolve in favor of the nominated album whose listed title comes first in alphabetical order.\n\nIf, for any reason, no winner is declared by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\".\n\nThe resolution source will be the television broadcast of the awards and the Grammy website (https://www.grammy.com/); however, other credible reporting may be used."
+      }
+    },
+    {
+      "created": {
+        "kalshi": "2026-06-12T19:08:57.351594Z",
+        "polymarket": "2026-08-06T08:21:20.318646Z"
+      },
+      "kalshi_id": "KXGRAMAOTY-69-ICE",
+      "outcome": "ICEMAN",
+      "polymarket_condition_id": "0x80598c572c59e1c89cc1375caae1e648311cbe674e6ff02ba1b020c842057f83",
+      "polymarket_id": "3377051",
+      "rows": [
+        {
+          "all_quantities": [
+            {
+              "fees": 0.02271975,
+              "gross_cost": 5.145,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-ICE",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x80598c572c59e1c89cc1375caae1e648311cbe674e6ff02ba1b020c842057f83",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.16771975,
+              "quantity": 5.0,
+              "return_locked": -0.03245527,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.083354,
+              "gross_cost": 25.73,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-ICE",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x80598c572c59e1c89cc1375caae1e648311cbe674e6ff02ba1b020c842057f83",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.813354,
+              "quantity": 25.0,
+              "return_locked": -0.03150904,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.31488899,
+              "gross_cost": 103.0933,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-ICE",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x80598c572c59e1c89cc1375caae1e648311cbe674e6ff02ba1b020c842057f83",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -3.40818898,
+              "quantity": 100.0,
+              "return_locked": -0.0329586,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "K_YES_PM_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        },
+        {
+          "all_quantities": [
+            {
+              "quantity": 5.0,
+              "status": "INSUFFICIENT_DEPTH"
+            },
+            {
+              "quantity": 25.0,
+              "status": "INSUFFICIENT_DEPTH"
+            },
+            {
+              "quantity": 100.0,
+              "status": "INSUFFICIENT_DEPTH"
+            }
+          ],
+          "best": null,
+          "direction": "PM_YES_K_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        }
+      ],
+      "rules": {
+        "kalshi": "If  ICEMAN has won Album of the Year at the 69th Annual Grammy Awards, then the market resolves to Yes.",
+        "polymarket": "The GRAMMY Awards are presented annually by the Recording Academy. For the 69th Annual GRAMMY Awards, nominations are scheduled for November 16, 2026, and the ceremony for February 7, 2027.\n\nThis market will resolve according to the listed album that wins Album of the Year at the 69th Annual GRAMMY Awards.\n\nIf an album is not officially nominated for Album of the Year when the 69th Annual GRAMMY Awards nominees are announced, the corresponding market will immediately resolve to \"No\".\n\nIn case of a tie for the winner, this market will resolve in favor of the nominated album whose listed title comes first in alphabetical order.\n\nIf, for any reason, no winner is declared by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\".\n\nThe resolution source will be the television broadcast of the awards and the Grammy website (https://www.grammy.com/); however, other credible reporting may be used."
+      }
+    },
+    {
+      "created": {
+        "kalshi": "2026-06-12T19:08:57.351594Z",
+        "polymarket": "2026-08-06T08:21:18.762624Z"
+      },
+      "kalshi_id": "KXGRAMAOTY-69-GRE",
+      "outcome": "The Great Divide",
+      "polymarket_condition_id": "0xb074d43761586f038e32043351fccf1afe05f1c6012b75ece830cb8e0144c6c6",
+      "polymarket_id": "3377043",
+      "rows": [
+        {
+          "all_quantities": [
+            {
+              "fees": 0.04074775,
+              "gross_cost": 5.585,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-GRE",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xb074d43761586f038e32043351fccf1afe05f1c6012b75ece830cb8e0144c6c6",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.62574775,
+              "quantity": 5.0,
+              "return_locked": -0.11122926,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.19373875,
+              "gross_cost": 27.925,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-GRE",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xb074d43761586f038e32043351fccf1afe05f1c6012b75ece830cb8e0144c6c6",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -3.11873875,
+              "quantity": 25.0,
+              "return_locked": -0.11091318,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.75177598,
+              "gross_cost": 111.7639,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-GRE",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xb074d43761586f038e32043351fccf1afe05f1c6012b75ece830cb8e0144c6c6",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -12.51567598,
+              "quantity": 100.0,
+              "return_locked": -0.11123495,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "K_YES_PM_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        },
+        {
+          "all_quantities": [
+            {
+              "fees": 0.04475775,
+              "gross_cost": 4.865,
+              "legs": [
+                {
+                  "market_id": "0xb074d43761586f038e32043351fccf1afe05f1c6012b75ece830cb8e0144c6c6",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-GRE",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": 0.09024225,
+              "quantity": 5.0,
+              "return_locked": 0.01838018,
+              "status": "ACTIONABLE"
+            },
+            {
+              "fees": 0.3627761,
+              "gross_cost": 29.74361,
+              "legs": [
+                {
+                  "market_id": "0xb074d43761586f038e32043351fccf1afe05f1c6012b75ece830cb8e0144c6c6",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-GRE",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -5.1063861,
+              "quantity": 25.0,
+              "return_locked": -0.16961139,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 1.7086161,
+              "gross_cost": 129.79361,
+              "legs": [
+                {
+                  "market_id": "0xb074d43761586f038e32043351fccf1afe05f1c6012b75ece830cb8e0144c6c6",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-GRE",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -31.5022261,
+              "quantity": 100.0,
+              "return_locked": -0.2395566,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": {
+            "fees": 0.04475775,
+            "gross_cost": 4.865,
+            "legs": [
+              {
+                "market_id": "0xb074d43761586f038e32043351fccf1afe05f1c6012b75ece830cb8e0144c6c6",
+                "outcome": "YES",
+                "venue": "polymarket"
+              },
+              {
+                "market_id": "KXGRAMAOTY-69-GRE",
+                "outcome": "NO",
+                "venue": "kalshi"
+              }
+            ],
+            "net_profit": 0.09024225,
+            "quantity": 5.0,
+            "return_locked": 0.01838018,
+            "status": "ACTIONABLE"
+          },
+          "direction": "PM_YES_K_NO",
+          "status": "ACTIONABLE",
+          "transition_recorded": true
+        }
+      ],
+      "rules": {
+        "kalshi": "If  The Great Divide has won Album of the Year at the 69th Annual Grammy Awards, then the market resolves to Yes.",
+        "polymarket": "The GRAMMY Awards are presented annually by the Recording Academy. For the 69th Annual GRAMMY Awards, nominations are scheduled for November 16, 2026, and the ceremony for February 7, 2027.\n\nThis market will resolve according to the listed album that wins Album of the Year at the 69th Annual GRAMMY Awards.\n\nIf an album is not officially nominated for Album of the Year when the 69th Annual GRAMMY Awards nominees are announced, the corresponding market will immediately resolve to \"No\".\n\nIn case of a tie for the winner, this market will resolve in favor of the nominated album whose listed title comes first in alphabetical order.\n\nIf, for any reason, no winner is declared by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\".\n\nThe resolution source will be the television broadcast of the awards and the Grammy website (https://www.grammy.com/); however, other credible reporting may be used."
+      }
+    },
+    {
+      "created": {
+        "kalshi": "2026-06-12T19:08:57.351594Z",
+        "polymarket": "2026-08-06T08:21:19.13964Z"
+      },
+      "kalshi_id": "KXGRAMAOTY-69-DAN",
+      "outcome": "Dandelion",
+      "polymarket_condition_id": "0x1d0880880c6814b17d97fd5ec9a137e72b53de29d77ddbe1d8e7253217a779f0",
+      "polymarket_id": "3377045",
+      "rows": [
+        {
+          "all_quantities": [
+            {
+              "fees": 0.03028775,
+              "gross_cost": 5.085,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-DAN",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x1d0880880c6814b17d97fd5ec9a137e72b53de29d77ddbe1d8e7253217a779f0",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.11528775,
+              "quantity": 5.0,
+              "return_locked": -0.02253788,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.15143875,
+              "gross_cost": 25.425,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-DAN",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x1d0880880c6814b17d97fd5ec9a137e72b53de29d77ddbe1d8e7253217a779f0",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.57643875,
+              "quantity": 25.0,
+              "return_locked": -0.02253788,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.53086197,
+              "gross_cost": 103.28389,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-DAN",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x1d0880880c6814b17d97fd5ec9a137e72b53de29d77ddbe1d8e7253217a779f0",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -3.81475197,
+              "quantity": 100.0,
+              "return_locked": -0.03674576,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "K_YES_PM_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        },
+        {
+          "all_quantities": [
+            {
+              "quantity": 5.0,
+              "status": "INSUFFICIENT_DEPTH"
+            },
+            {
+              "quantity": 25.0,
+              "status": "INSUFFICIENT_DEPTH"
+            },
+            {
+              "quantity": 100.0,
+              "status": "INSUFFICIENT_DEPTH"
+            }
+          ],
+          "best": null,
+          "direction": "PM_YES_K_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        }
+      ],
+      "rules": {
+        "kalshi": "If  Dandelion has won Album of the Year at the 69th Annual Grammy Awards, then the market resolves to Yes.",
+        "polymarket": "The GRAMMY Awards are presented annually by the Recording Academy. For the 69th Annual GRAMMY Awards, nominations are scheduled for November 16, 2026, and the ceremony for February 7, 2027.\n\nThis market will resolve according to the listed album that wins Album of the Year at the 69th Annual GRAMMY Awards.\n\nIf an album is not officially nominated for Album of the Year when the 69th Annual GRAMMY Awards nominees are announced, the corresponding market will immediately resolve to \"No\".\n\nIn case of a tie for the winner, this market will resolve in favor of the nominated album whose listed title comes first in alphabetical order.\n\nIf, for any reason, no winner is declared by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\".\n\nThe resolution source will be the television broadcast of the awards and the Grammy website (https://www.grammy.com/); however, other credible reporting may be used."
+      }
+    },
+    {
+      "created": {
+        "kalshi": "2026-06-12T19:08:57.351594Z",
+        "polymarket": "2026-08-06T08:21:18.955412Z"
+      },
+      "kalshi_id": "KXGRAMAOTY-69-ART",
+      "outcome": "The Art of Loving",
+      "polymarket_condition_id": "0x517252e48417a7282d0f0a03094159bba33abe993802fbc8c4882b55f7491c6a",
+      "polymarket_id": "3377044",
+      "rows": [
+        {
+          "all_quantities": [
+            {
+              "fees": 0.12624375,
+              "gross_cost": 5.425,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-ART",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x517252e48417a7282d0f0a03094159bba33abe993802fbc8c4882b55f7491c6a",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.55124375,
+              "quantity": 5.0,
+              "return_locked": -0.09930094,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.62121875,
+              "gross_cost": 27.125,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-ART",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x517252e48417a7282d0f0a03094159bba33abe993802fbc8c4882b55f7491c6a",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -2.74621875,
+              "quantity": 25.0,
+              "return_locked": -0.09897632,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 2.474875,
+              "gross_cost": 108.5,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-ART",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0x517252e48417a7282d0f0a03094159bba33abe993802fbc8c4882b55f7491c6a",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -10.974875,
+              "quantity": 100.0,
+              "return_locked": -0.09889513,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "K_YES_PM_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        },
+        {
+          "all_quantities": [
+            {
+              "fees": 0.12773775,
+              "gross_cost": 4.835,
+              "legs": [
+                {
+                  "market_id": "0x517252e48417a7282d0f0a03094159bba33abe993802fbc8c4882b55f7491c6a",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-ART",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": 0.03726225,
+              "quantity": 5.0,
+              "return_locked": 0.00750841,
+              "status": "ACTIONABLE"
+            },
+            {
+              "fees": 0.58868875,
+              "gross_cost": 24.5613,
+              "legs": [
+                {
+                  "market_id": "0x517252e48417a7282d0f0a03094159bba33abe993802fbc8c4882b55f7491c6a",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-ART",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -0.14998875,
+              "quantity": 25.0,
+              "return_locked": -0.00596377,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 2.2983366,
+              "gross_cost": 100.2343,
+              "legs": [
+                {
+                  "market_id": "0x517252e48417a7282d0f0a03094159bba33abe993802fbc8c4882b55f7491c6a",
+                  "outcome": "YES",
+                  "venue": "polymarket"
+                },
+                {
+                  "market_id": "KXGRAMAOTY-69-ART",
+                  "outcome": "NO",
+                  "venue": "kalshi"
+                }
+              ],
+              "net_profit": -2.5326366,
+              "quantity": 100.0,
+              "return_locked": -0.02470078,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": {
+            "fees": 0.12773775,
+            "gross_cost": 4.835,
+            "legs": [
+              {
+                "market_id": "0x517252e48417a7282d0f0a03094159bba33abe993802fbc8c4882b55f7491c6a",
+                "outcome": "YES",
+                "venue": "polymarket"
+              },
+              {
+                "market_id": "KXGRAMAOTY-69-ART",
+                "outcome": "NO",
+                "venue": "kalshi"
+              }
+            ],
+            "net_profit": 0.03726225,
+            "quantity": 5.0,
+            "return_locked": 0.00750841,
+            "status": "ACTIONABLE"
+          },
+          "direction": "PM_YES_K_NO",
+          "status": "ACTIONABLE",
+          "transition_recorded": true
+        }
+      ],
+      "rules": {
+        "kalshi": "If  The Art of Loving has won Album of the Year at the 69th Annual Grammy Awards, then the market resolves to Yes.",
+        "polymarket": "The GRAMMY Awards are presented annually by the Recording Academy. For the 69th Annual GRAMMY Awards, nominations are scheduled for November 16, 2026, and the ceremony for February 7, 2027.\n\nThis market will resolve according to the listed album that wins Album of the Year at the 69th Annual GRAMMY Awards.\n\nIf an album is not officially nominated for Album of the Year when the 69th Annual GRAMMY Awards nominees are announced, the corresponding market will immediately resolve to \"No\".\n\nIn case of a tie for the winner, this market will resolve in favor of the nominated album whose listed title comes first in alphabetical order.\n\nIf, for any reason, no winner is declared by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\".\n\nThe resolution source will be the television broadcast of the awards and the Grammy website (https://www.grammy.com/); however, other credible reporting may be used."
+      }
+    },
+    {
+      "created": {
+        "kalshi": "2026-06-12T19:08:57.351594Z",
+        "polymarket": "2026-08-06T08:21:20.685121Z"
+      },
+      "kalshi_id": "KXGRAMAOTY-69-ARI",
+      "outcome": "Arirang",
+      "polymarket_condition_id": "0xeb0d7159f68a865ec83690b299f5e2825a465e6772fbabe0ecfce3ea70ba0e1b",
+      "polymarket_id": "3377053",
+      "rows": [
+        {
+          "all_quantities": [
+            {
+              "fees": 0.02024975,
+              "gross_cost": 5.195,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-ARI",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xeb0d7159f68a865ec83690b299f5e2825a465e6772fbabe0ecfce3ea70ba0e1b",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -0.21524975,
+              "quantity": 5.0,
+              "return_locked": -0.04127314,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.07124875,
+              "gross_cost": 25.975,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-ARI",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xeb0d7159f68a865ec83690b299f5e2825a465e6772fbabe0ecfce3ea70ba0e1b",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -1.04624875,
+              "quantity": 25.0,
+              "return_locked": -0.04016888,
+              "status": "NO_EDGE"
+            },
+            {
+              "fees": 0.274995,
+              "gross_cost": 103.9,
+              "legs": [
+                {
+                  "market_id": "KXGRAMAOTY-69-ARI",
+                  "outcome": "YES",
+                  "venue": "kalshi"
+                },
+                {
+                  "market_id": "0xeb0d7159f68a865ec83690b299f5e2825a465e6772fbabe0ecfce3ea70ba0e1b",
+                  "outcome": "NO",
+                  "venue": "polymarket"
+                }
+              ],
+              "net_profit": -4.174995,
+              "quantity": 100.0,
+              "return_locked": -0.04007675,
+              "status": "NO_EDGE"
+            }
+          ],
+          "best": null,
+          "direction": "K_YES_PM_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        },
+        {
+          "all_quantities": [
+            {
+              "quantity": 5.0,
+              "status": "INSUFFICIENT_DEPTH"
+            },
+            {
+              "quantity": 25.0,
+              "status": "INSUFFICIENT_DEPTH"
+            },
+            {
+              "quantity": 100.0,
+              "status": "INSUFFICIENT_DEPTH"
+            }
+          ],
+          "best": null,
+          "direction": "PM_YES_K_NO",
+          "status": "NO_EDGE",
+          "transition_recorded": true
+        }
+      ],
+      "rules": {
+        "kalshi": "If  Arirang has won Album of the Year at the 69th Annual Grammy Awards, then the market resolves to Yes.",
+        "polymarket": "The GRAMMY Awards are presented annually by the Recording Academy. For the 69th Annual GRAMMY Awards, nominations are scheduled for November 16, 2026, and the ceremony for February 7, 2027.\n\nThis market will resolve according to the listed album that wins Album of the Year at the 69th Annual GRAMMY Awards.\n\nIf an album is not officially nominated for Album of the Year when the 69th Annual GRAMMY Awards nominees are announced, the corresponding market will immediately resolve to \"No\".\n\nIn case of a tie for the winner, this market will resolve in favor of the nominated album whose listed title comes first in alphabetical order.\n\nIf, for any reason, no winner is declared by June 30, 2027, 11:59 PM ET, this market will resolve to \"Other\".\n\nThe resolution source will be the television broadcast of the awards and the Grammy website (https://www.grammy.com/); however, other credible reporting may be used."
+      }
+    }
+  ],
+  "name_mismatches": [
+    {
+      "kalshi_id": "KXGRAMAOTY-69-ROM",
+      "kalshi_outcome": "The Romantics",
+      "polymarket_candidates": [
+        "The Romantic - Bruno Mars"
+      ]
+    }
+  ],
+  "spec_ref": "research/tuples/2026-09-01_culture-short-horizon/spec.yaml",
+  "started_utc": "2026-09-02T04:30:16.092270+00:00",
+  "status": "OK",
+  "summary": {
+    "actionable_directions": 4,
+    "event": {
+      "endDate": "2027-02-07T23:59:00Z",
+      "id": "805160",
+      "startDate": "2026-08-06T08:26:54.31768Z",
+      "title": "Grammys 2027: Album of the Year Winner"
+    },
+    "exact_matches": 10,
+    "kalshi_markets": 12,
+    "name_mismatches": 1,
+    "polymarket_event_markets": 15
+  },
+  "sweep_id": "20260902T043016Z",
+  "universe": {
+    "kalshi_series": "KXGRAMAOTY",
+    "polymarket_query": "grammy"
+  }
+}

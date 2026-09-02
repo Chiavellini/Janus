@@ -1,0 +1,119 @@
+{
+ "polls": 8,
+ "observations_total": 1536,
+ "observations_priced": 1536,
+ "rejects": {},
+ "games": 48,
+ "kill_criterion": {
+  "min_depth_contracts": 200,
+  "observations_at_depth": 768,
+  "below_0995": 0,
+  "rate": 0.0,
+  "threshold": 0.005,
+  "rate_test_fails": true,
+  "candidates_seen": 0,
+  "candidates_persisted_60s": 0,
+  "persistence_test_fails": true,
+  "data_sufficient_for_verdict": false,
+  "required_polls": 168,
+  "required_observations_at_depth": 5000,
+  "both_tests_currently_fail": true,
+  "THESIS_DEAD": false,
+  "verdict": "PRELIMINARY - 8/168 polls, 768/5000 obs at depth"
+ },
+ "by_quantity": {
+  "50.0": {
+   "n": 384,
+   "gross_median": 1.01,
+   "gross_min": 0.98,
+   "gross_below_1": 16,
+   "gross_below_1_rate": 0.04167,
+   "fee_median": 0.02483,
+   "cost_median": 1.03771,
+   "cost_min": 1.01009,
+   "cost_below_0995": 0
+  },
+  "100.0": {
+   "n": 384,
+   "gross_median": 1.01393,
+   "gross_min": 0.98,
+   "gross_below_1": 15,
+   "gross_below_1_rate": 0.03906,
+   "fee_median": 0.02493,
+   "cost_median": 1.04092,
+   "cost_min": 1.00999,
+   "cost_below_0995": 0
+  },
+  "200.0": {
+   "n": 384,
+   "gross_median": 1.01873,
+   "gross_min": 0.98,
+   "gross_below_1": 8,
+   "gross_below_1_rate": 0.02083,
+   "fee_median": 0.02903,
+   "cost_median": 1.04678,
+   "cost_min": 1.00995,
+   "cost_below_0995": 0
+  },
+  "500.0": {
+   "n": 384,
+   "gross_median": 1.02029,
+   "gross_min": 0.98,
+   "gross_below_1": 8,
+   "gross_below_1_rate": 0.02083,
+   "fee_median": 0.02921,
+   "cost_median": 1.04952,
+   "cost_min": 1.00994,
+   "cost_below_0995": 0
+  }
+ },
+ "decomposition": {
+  "gross_below_1_observations": 47,
+  "gross_below_1_rate": 0.0306,
+  "best_gross_seen": 0.98,
+  "median_fee": 0.0284,
+  "reading": "Prices DIVERGE but by less than the fee floor on the reachable venue pair. That is a different finding from 'the venues agree', and phase 1 could not distinguish them.",
+  "best_divergence_example": {
+   "gross": 0.98,
+   "fee": 0.030095,
+   "cost": 1.010095,
+   "contracts": 50.0,
+   "legs": "kalshi:0.4700|polymarket:0.5100",
+   "max_leg_age_s": 0.7734990119934082
+  }
+ },
+ "cheapest_cover_venue_mix": {
+  "kalshi+polymarket": 702,
+  "polymarket+polymarket": 669,
+  "kalshi+kalshi": 165
+ },
+ "single_venue_share": 0.543,
+ "intra_venue_control": {
+  "n": 834,
+  "gross_below_1": 0,
+  "expectation": "0 - the complement identity makes intra-venue arb structurally impossible",
+  "status": "OK"
+ },
+ "status": "PRELIMINARY - collection interrupted",
+ "collection_note": "Forward polling ran 8 of an intended 40 polls before the background process was reaped on session cleanup (the same thing that killed the IBKR gateway earlier in this project). The registered design is 5-minutely for 7 days; completing it needs a launchd job under com.janus.*, which is a persistent system change and has NOT been installed without approval.",
+ "stability_across_sample_growth": {
+  "note": "Figures were compared at 2 polls and at 8 polls (4x the data) as a sanity check.",
+  "gross_below_1_rate": {
+   "at_2_polls": 0.03125,
+   "at_8_polls": 0.0306
+  },
+  "best_gross": {
+   "at_2_polls": 0.98,
+   "at_8_polls": 0.98
+  },
+  "median_fee": {
+   "at_2_polls": 0.02837,
+   "at_8_polls": 0.0284
+  },
+  "intra_venue_violations": {
+   "at_2_polls": "0/204",
+   "at_8_polls": "0/834"
+  },
+  "reading": "Stable. Not evidence of sufficiency -- 8 polls over ~30 minutes is one market state, not seven days. Stability within a single state says nothing about across states."
+ }
+}

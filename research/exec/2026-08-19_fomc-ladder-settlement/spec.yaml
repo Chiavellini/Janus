@@ -1,0 +1,93 @@
+experiment_id: "janus-track-b-fomc-ladder-settlement"
+date_registered: "2026-08-19"
+track: exec
+program: track_b_hft
+ledger_ref: "snooping_ledger.md row L18 (descriptive settlement-reference characterization -- costs no test look)"
+status_at_registration: PENDING
+
+# IMMUTABLE AFTER THE FIRST KALSHI MARKET REQUEST UNDER THIS ROW.
+
+purpose: >
+  Characterize the KALSHI SIDE of the settlement-map pair KALSHI_FOMC_LADDER_vs_CME_ZQ, completing
+  the Kalshi half of all three live pairs (L15 = index, L17 = BTC, this = FOMC). Two questions,
+  reported separately:
+    (1) INTRA-VENUE: do KXFED (target-range upper bound) and KXFEDDECISION (move-size buckets)
+        settle CONSISTENTLY for the same FOMC meeting -- i.e. does the implied move from
+        KXFEDDECISION reconcile with the level KXFED reports?
+    (2) COVERAGE: how many settled FOMC meetings are recoverable from Kalshi at all?
+
+stated_expectation_before_running: >
+  I expect (2) to FAIL the coverage gate and for this row to report INSUFFICIENT_COVERAGE. L17
+  established (M1) that Kalshi's settled-market enumeration reaches back only ~68 days -- two
+  independent series families both floored at 2026-06-12. The FOMC meets roughly 8 times a year, so
+  a ~68-day window can contain at most about two settled meetings. Stating the expectation up front
+  is the point of pre-registration: if the data instead shows many meetings, that falsifies the
+  retention finding from L17 and IS the result.
+
+why_this_is_not_a_test_look: >
+  Published settlement values and a coverage count. No PnL, no signal, no candidate ranking, no
+  parameter any later strategy selects on. L-row under snooping_ledger.md rule 5.
+
+what_this_CANNOT_do: >
+  It CANNOT move KALSHI_FOMC_LADDER_vs_CME_ZQ out of BLOCK. That pair is blocked because ZQ prices a
+  MONTHLY AVERAGE of daily EFFR while Kalshi prices the target-range upper bound after ONE meeting;
+  extraction needs the meeting date, pre/post-meeting day counts, the EFFR-minus-upper-bound spread,
+  a move-size grid, and any second event in the month. None of that is touched here.
+
+references_and_evidence_tiers:
+  kalshi_settlement:
+    field: "expiration_value / result on settled markets"
+    source: "GET https://api.elections.kalshi.com/trade-api/v2 (public, unauthenticated)"
+    tier: M1
+  fed_target_range:
+    source: "federalreserve.gov published target range upper bound after the named meeting"
+    tier: R
+    note: >
+      Consulted only if the coverage gate passes. If it does not, the external comparison is NOT
+      attempted and is reported as NOT_REACHED -- not as agreement, and not as failure.
+
+FORBIDDEN_SUBSTITUTION: >
+  No proxy for the Fed's published target range (no ZQ-implied rate, no news summary, no
+  survey/probability aggregator). An unreachable or unattempted reference is an ACCESS result.
+
+inclusion_rules:
+  series: [KXFED, KXFEDDECISION]
+  status: settled
+  meeting_key: "the meeting identifier embedded in the ticker (e.g. KXFED-27APR -> 27APR), NOT close_time"
+  per_series_dedupe: >
+    One (series, meeting, expiration_value) per series. Two markets of the SAME series sharing a
+    meeting must agree; a disagreement is a STOP for that (series, meeting). Disagreement ACROSS
+    series is the measured quantity, not an error. L15's design, adopted deliberately.
+  enumeration_channels: "both the markets cursor and the events with_nested_markets cursor; union; per-channel counts reported"
+  truncation_disclosure: "page counts, market counts, and the covered meeting set are reported whether or not the crawl terminates naturally"
+
+coverage_gate:
+  min_settled_meetings: 5
+  justification: >
+    Not copied from L15/L17's 20. The FOMC meets ~8 times a year, so 20 meetings would be 2.5 years
+    of history and is unreachable by construction. 5 is most of a year and is the smallest n at which
+    a consistency claim is worth stating. Below 5: INSUFFICIENT_COVERAGE, count reported, no
+    distribution quoted, and NO external comparison attempted.
+
+verdict_rule:
+  intra_venue:
+    CONSISTENT: "n >= 5 AND every meeting's KXFED level reconciles with KXFEDDECISION's bucket"
+    INCONSISTENT: "n >= 5 AND any meeting fails to reconcile -- the mismatch is the result"
+    INSUFFICIENT_COVERAGE: "n < 5"
+  pair_status: "UNCHANGED (BLOCK) regardless of outcome; see what_this_CANNOT_do"
+  immutability: "Fixed now. Not adjusted after seeing the data."
+
+not_estimated_here:
+  - zq_monthly_average_effr_extraction
+  - effr_minus_upper_bound_spread
+  - meeting_day_counts_or_move_size_grid
+  - any_kalshi_price_vs_ibkr_price_comparison
+
+privacy_and_disk:
+  identifiers_persisted: none
+  raw_rows: "/Volumes/Kilos/janus/fomc_settlement/ (never the root disk)"
+  disk_floor: "abort below 2 GB free on internal /"
+
+outputs:
+  results: "research/exec/2026-08-19_fomc-ladder-settlement/results.json"
+  verdict: "research/exec/2026-08-19_fomc-ladder-settlement/verdict.md"

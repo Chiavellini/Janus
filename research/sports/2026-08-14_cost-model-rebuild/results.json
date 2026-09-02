@@ -1,0 +1,42 @@
+{
+ "generated_utc": "2026-08-14",
+ "kind": "characterization_arithmetic_only",
+ "note": "Pure arithmetic on published/pinned fee schedules. No market data read. No test look.",
+ "screening_coefficients_k": {
+  "kalshi": 0.07,
+  "polymarket": 0.07,
+  "robinhood": 0.0,
+  "betfair": 0.05,
+  "smarkets": 0.02,
+  "matchbook": 0.02,
+  "sporttrade": 0.02,
+  "sxbet": 0.0,
+  "pinnacle": 0.0,
+  "circa": 0.0,
+  "forecastex": 0.0
+ },
+ "screening_coefficient_overrides": {
+  "kalshi_maker": 0.0175,
+  "kalshi_index_series": 0.035,
+  "polymarket_sports": 0.05,
+  "polymarket_maker": 0.0
+ },
+ "two_leg_fee_floor_cents_at_p50_n1": {
+  "kalshi+pm_crypto": 3.75,
+  "kalshi+pm_sports": 3.25,
+  "kalshi+betfair": 3.25,
+  "kalshi+smarkets": 2.5,
+  "kalshi+pinnacle": 2.0,
+  "pm_sports+smarkets": 1.75,
+  "smarkets+sporttrade": 1.0,
+  "smarkets+pinnacle": 0.5
+ },
+ "ratio_worst_to_best": 7.5,
+ "kalshi_ceil_tax_n1": {
+  "0.1": 1.587,
+  "0.25": 1.524,
+  "0.5": 1.143,
+  "0.75": 1.524,
+  "0.9": 1.587
+ }
+}

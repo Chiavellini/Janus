@@ -1,0 +1,33 @@
+{
+  "name": "New York Yankees V Boston Red Sox",
+  "key": "c10-yankees-v-c2-red-sox",
+  "id": 7001001,
+  "status": "TRADING_LIVE",
+  "startTime": "2026-09-02T23:05:00Z",
+  "cutoffTime": "2026-09-02T23:05:00Z",
+  "home": {"name": "Boston Red Sox", "key": "c2-boston-red-sox", "abbreviation": "BOS"},
+  "away": {"name": "New York Yankees", "key": "c10-new-york-yankees", "abbreviation": "NYY"},
+  "markets": {
+    "baseball.moneyline": {
+      "submarkets": {
+        "period=ot&period=ft": {
+          "sequence": "1",
+          "selections": [
+            {"outcome": "home", "params": "", "price": 2.10, "minStake": 1, "maxStake": 50, "status": "SELECTION_ENABLED", "side": "BACK"},
+            {"outcome": "away", "params": "", "price": 1.82, "minStake": 1, "maxStake": 50, "status": "SELECTION_ENABLED", "side": "BACK"}
+          ]
+        }
+      }
+    },
+    "baseball.totals": {
+      "submarkets": {
+        "period=ot&period=ft": {
+          "selections": [
+            {"outcome": "over", "params": "total=8.5", "price": 1.91, "minStake": 1, "maxStake": 20, "status": "SELECTION_ENABLED", "side": "BACK"},
+            {"outcome": "under", "params": "total=8.5", "price": 1.91, "minStake": 1, "maxStake": 20, "status": "SELECTION_ENABLED", "side": "BACK"}
+          ]
+        }
+      }
+    }
+  }
+}

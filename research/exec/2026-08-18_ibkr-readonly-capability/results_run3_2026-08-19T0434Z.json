@@ -1,0 +1,209 @@
+{
+  "account": {
+    "count": 1,
+    "identifiers_archived": false,
+    "is_paper": false
+  },
+  "evidence_tier": "M1 capability",
+  "families": {
+    "crypto_futures": {
+      "contracts": [
+        {
+          "conid": 859040577,
+          "exchange": null,
+          "expiry": "2026-08-28",
+          "quote": {
+            "ask": 64405.0,
+            "ask_size": 22.0,
+            "availability": "RB",
+            "bid": 64390.0,
+            "bid_size": 4.0,
+            "conid": 859040577,
+            "exchange": null,
+            "expiry": null,
+            "last": 64395.0,
+            "security_type": "FUT",
+            "status": "HFT_READY",
+            "symbol": "MBT",
+            "updated_ms": 1787114077467
+          },
+          "root": "MBT",
+          "symbol": "MBT"
+        }
+      ],
+      "status": "HFT_READY"
+    },
+    "fed_funds": {
+      "contracts": [
+        {
+          "conid": 511851937,
+          "exchange": null,
+          "expiry": "2026-09-01",
+          "quote": {
+            "ask": 96.37,
+            "ask_size": 169452.0,
+            "availability": "RB",
+            "bid": 96.3675,
+            "bid_size": 706231.0,
+            "conid": 511851937,
+            "exchange": null,
+            "expiry": null,
+            "last": 96.3675,
+            "security_type": "FUT",
+            "status": "HFT_READY",
+            "symbol": "ZQ",
+            "updated_ms": 1787114076967
+          },
+          "root": "ZQ",
+          "symbol": "ZQ"
+        }
+      ],
+      "status": "HFT_READY"
+    },
+    "index_options": {
+      "status": "HFT_READY",
+      "underlyings": [
+        {
+          "contracts": [
+            {
+              "conid": 884192466,
+              "quote": {
+                "ask": 64.3,
+                "ask_size": 10.0,
+                "availability": "RpBd",
+                "bid": 63.6,
+                "bid_size": 10.0,
+                "conid": 884192466,
+                "exchange": null,
+                "expiry": null,
+                "last": 68.7,
+                "security_type": "OPT",
+                "status": "HFT_READY",
+                "symbol": "SPX",
+                "updated_ms": 1787114083470
+              },
+              "right": "C"
+            },
+            {
+              "conid": 884194442,
+              "quote": {
+                "ask": 66.5,
+                "ask_size": 10.0,
+                "availability": "RpBd",
+                "bid": 65.8,
+                "bid_size": 16.0,
+                "conid": 884194442,
+                "exchange": null,
+                "expiry": null,
+                "last": 62.3,
+                "security_type": "OPT",
+                "status": "HFT_READY",
+                "symbol": "SPX",
+                "updated_ms": 1787114083971
+              },
+              "right": "P"
+            }
+          ],
+          "expiration_day_status": "NEAR_EXPIRY_UNRESOLVED",
+          "month": "AUG26",
+          "status": "HFT_READY",
+          "strike": 7695.0,
+          "symbol": "SPX",
+          "underlying_conid": 416904,
+          "underlying_quote": {
+            "ask": null,
+            "ask_size": null,
+            "availability": "Z",
+            "bid": null,
+            "bid_size": null,
+            "conid": 416904,
+            "exchange": null,
+            "expiry": null,
+            "last": 7693.26,
+            "security_type": "IND",
+            "status": "BLOCKED_FROZEN",
+            "symbol": "SPX",
+            "updated_ms": 1787114079969
+          }
+        },
+        {
+          "contracts": [
+            {
+              "conid": 885910373,
+              "quote": {
+                "ask": 3.07,
+                "ask_size": 102.0,
+                "availability": "RpBd",
+                "bid": 2.86,
+                "bid_size": 101.0,
+                "conid": 885910373,
+                "exchange": null,
+                "expiry": null,
+                "last": 3.25,
+                "security_type": "OPT",
+                "status": "HFT_READY",
+                "symbol": "XSP",
+                "updated_ms": 1787114089186
+              },
+              "right": "C"
+            },
+            {
+              "conid": 885910835,
+              "quote": {
+                "ask": 3.29,
+                "ask_size": 99.0,
+                "availability": "RpBd",
+                "bid": 3.11,
+                "bid_size": 101.0,
+                "conid": 885910835,
+                "exchange": null,
+                "expiry": null,
+                "last": 2.96,
+                "security_type": "OPT",
+                "status": "HFT_READY",
+                "symbol": "XSP",
+                "updated_ms": 1787114089186
+              },
+              "right": "P"
+            }
+          ],
+          "expiration_day_status": "NEAR_EXPIRY_UNRESOLVED",
+          "month": "AUG26",
+          "status": "HFT_READY",
+          "strike": 769.0,
+          "symbol": "XSP",
+          "underlying_conid": 137851301,
+          "underlying_quote": {
+            "ask": null,
+            "ask_size": null,
+            "availability": "Z",
+            "bid": null,
+            "bid_size": null,
+            "conid": 137851301,
+            "exchange": null,
+            "expiry": null,
+            "last": 769.33,
+            "security_type": "IND",
+            "status": "BLOCKED_FROZEN",
+            "symbol": "XSP",
+            "updated_ms": 1787114086472
+          }
+        }
+      ]
+    }
+  },
+  "generated_utc": "2026-08-19T04:34:34.939272+00:00",
+  "orders_placed": 0,
+  "program_ready": true,
+  "registered_spec": "research/exec/2026-08-18_ibkr-readonly-capability/spec.yaml",
+  "safety_gate": "PASS",
+  "session": {
+    "authenticated": true,
+    "competing": false,
+    "connected": true,
+    "established": true
+  },
+  "session_gate": "PASS",
+  "test_looks_spent": 0,
+  "verdict": "PASS_HFT_READY"
+}

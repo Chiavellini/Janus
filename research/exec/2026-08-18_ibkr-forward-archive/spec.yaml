@@ -1,0 +1,113 @@
+# REGISTERED 2026-08-19T04:50Z as snooping_ledger.md row L16, after L13 run 3 returned
+# PASS_HFT_READY. IMMUTABLE FROM THE FIRST CONTINUOUS QUOTE.
+
+experiment_id: "janus-track-b-ibkr-forward-archive"
+date_registered: "2026-08-19"
+track: exec
+program: track_b_hft
+ledger_ref: "snooping_ledger.md row L16 (descriptive capture characterization -- costs no test look)"
+status_at_registration: PENDING
+depends_on: >
+  L13 run 3 (2026-08-19T04:34Z, research/exec/2026-08-18_ibkr-readonly-capability):
+  PASS_HFT_READY, program_ready=true. All three families returned R* codes, so all three
+  are included. Runs 1-2 (pre-subscription) were D* and are preserved there.
+
+# IMMUTABLE AFTER THE FIRST CONTINUOUS QUOTE IS WRITTEN.
+
+purpose: >
+  Build a small, targeted forward archive of IBKR hedge-instrument top-of-book quotes so that the
+  Track-B IBKR-dependent investigations (Kalshi ladder vs option-implied digitals; BTC/MBT futures as
+  hedges; FOMC ladder vs ZQ) can later be specified against MEASURED data quality, staleness,
+  hours coverage, roll behaviour and missingness. This is capture characterization only: no
+  settlement outcome, PnL, signal, or strategy parameter is read, fitted or selected.
+
+why_this_is_not_a_test_look: >
+  The archive records quotes and reason-coded gaps. Its gate is operational (coverage, privacy,
+  timestamps, disk, alarms). Registered as an L-row under snooping_ledger.md rule 5. Any later
+  strategy-return or outcome evaluation gets its own numbered row and immutable spec.
+
+scope:
+  transport: "lib/ibkr_readonly.py IBKRReadOnlyClient only; REST /iserver/marketdata/snapshot polling; NO websocket in this version; NO login automation"
+  gateway: "https://localhost:5055/v1/api (com.janus.ibkr-gateway, ProcessType Interactive, JAVA_TOOL_OPTIONS trimmed JVM)"
+  research_only: true
+  live_order_placement: false
+  families_included: "crypto_futures (MBT, code RB), fed_funds (ZQ, code RB), index_options (SPX + XSP calls and puts, code RpBd) -- all R* at L13 run 3"
+  families_excluded_and_why: >
+    No family excluded. Two INSTRUMENTS are excluded from the R* criterion rather than from
+    capture: the bare SPX and XSP IND underlyings (see index_underlyings below). Also still
+    absent: the BTC root, which returns 0 contracts on /trsrv/futures under symbol BTC
+    (likely listed as BRR -- R, unverified, outside the registered roots and NOT substituted).
+  time_surface: "IBKR Web API is a ~500 ms surface; polled at 1 Hz. This is SECONDS-scale microstructure research, not colocated HFT."
+
+sampling:
+  poll_period_s: 1.0
+  fields: [31, 55, 84, 85, 86, 88, 6004, 6008, 6070, 6073, 6119, 6509]
+  denominator_rule: "every poll slot writes exactly one polls row (ok or reason-coded); a failed poll writes one GAP row per active conid"
+  delta_rule: "snapshot responses are deltas: a conid with no quote field in a successful poll is NO_CHANGE (no message), written as an explicit heartbeat row at least every 30 s; a conid absent from a successful response is GAP:NO_MESSAGE"
+  gap_reasons: [NO_MESSAGE, DISCONNECTED, AUTH_INVALID, AUTH_EXPIRED_MANUAL_LOGIN_REQUIRED, EXPIRED_CONTRACT, DELAYED_OR_FROZEN, MARKET_CLOSED, UNKNOWN_RESPONSE, DISK_FLOOR, GATEWAY_ERROR, GATEWAY_TIMEOUT, SAFETY_REFUSED, NOT_SELECTED]
+  session_labels: "pinned exchange clocks via zoneinfo (CME Globex CT: GLOBEX/MAINTENANCE/CLOSED; CBOE ET: RTH/GTH/CLOSED); holidays NOT pinned -- labels are hints, observed availability is truth"
+  timestamps: [recv_ts (epoch s, local receive), ibkr_updated_ms (IBKR _updated), staleness_ms (recv - _updated)]
+  session_keepalive: "/tickle and POST /iserver/auth/status every 60 s; responses NEVER persisted; on invalid auth write reason-coded rows and an alarm file, never log in"
+
+selection_rules:
+  futures: "for each root in the included families (BTC, MBT; ZQ if fed_funds included): earliest unexpired contract from /trsrv/futures; re-evaluated daily at 00:05 UTC and at collector start; a change writes a contract_roll row and retires the old conid"
+  index_underlyings: >
+    SPX and XSP as secType IND by exact symbol. THESE ARE SELECTION AIDS AND REFERENCE ROWS, NOT
+    entitled quote instruments: CME S&P Indices (USD 6.50/mo, no waiver) was deliberately not
+    bought, so they return availability Z with a frozen `last` and are EXEMPT from the R* criterion
+    below. They are still archived, because the gap between the frozen print and the parity forward
+    is itself worth characterizing. The frozen `last` MUST NOT be used as an underlying level in any
+    computation: at L13 run 3 it read 7693.26, the identical print from 26 hours earlier and 1.50
+    index points from the official 2026-08-18 close of 7691.76 that L15 measured.
+  underlying_level_method: >
+    Strike selection is two-pass. Pass 1 picks a provisional strike from the frozen index `last`.
+    Pass 2 quotes that strike's call and put and derives the underlying FORWARD by put-call parity,
+    F = K + (C_mid - P_mid), from the ENTITLED (R*) option quotes; if a different strike is nearer
+    F, it is re-selected once and a contract_roll row is written. Both levels and the refined strike
+    are recorded in `health` as PARITY_FORWARD. The discount factor e^(rT) is dropped, so this is a
+    FORWARD and never spot -- over the near expiries selected, the omitted term is well under one
+    strike increment. If either leg lacks a two-sided book, parity returns nothing, PARITY_UNAVAILABLE
+    is recorded, and the strike stands on the frozen print rather than on a guessed mid.
+  index_options: >
+    per underlying: earliest option month >= current month; strike nearest the underlying's last
+    at selection time, ties to the lower strike; one call and one put; among /iserver/secdef/info
+    contracts, the earliest maturityDate whose 16:15 ET has not passed (exact expiry day PINNED;
+    if it cannot be pinned the row is marked expiry_pinned=0). Re-selected daily at 13:35 UTC and
+    at collector start; changes write contract_roll rows.
+  strike_neighbourhood: "K=0 (near-ATM call+put only, ATM per the parity forward) in stage 1. K=2 is PRE-DECLARED as stage 2 and may be enabled only after this gate passes; it will be recorded as an appended note, not a new criterion."
+  spx_vs_xsp: "both archived; NO post-hoc choice -- any later comparison must pre-register the instrument or treat SPX/XSP as one predefined comparison"
+
+storage:
+  db: "/Volumes/Kilos/janus/ibkr/archive.sqlite (never the system disk)"
+  tables: [instruments, contract_roll, polls, quotes, health]
+  version_stamps: "spec_ref + collector_version on every instrument row"
+  privacy: "rows built only from an explicit quote/identity allowlist; a denylist regex refuses acctId/U#######/session/cookie/MAC/hardware/user text at write time; raw /accounts and /tickle bodies never persisted"
+
+checkpoint:
+  duration_min_h: 24
+  criteria:
+    - "at least one complete CBOE session (RTH) OR one 24 h futures period captured"
+    - "zero account/session/user/hardware/MAC identifiers persisted (report scan == 0 rows)"
+    - "zero forbidden-endpoint attempts (client raises before network; count == 0)"
+    - "availability code remains R* on every QUOTED instrument that produced messages
+       (MBT, ZQ, and the SPX/XSP calls and puts). The bare SPX/XSP IND underlyings are
+       EXEMPT and expected to stay Z -- their feed was deliberately not purchased; a Z on
+       them is the registered expectation, not a gate failure."
+    - "explicit reason-coded gap rows whenever polls fail; no silent missing observations"
+    - "recv_ts always present; ibkr_updated_ms present on every MSG row"
+    - "no duplicate active contract identity per slot across rolls; every roll has a lineage row"
+    - "disk consumption measured and <= 150 MB/day"
+    - "restart and authentication failures reason-coded in health"
+    - "fake liveness / disk-floor / capture-gap / auth alarms demonstrated firing in the hermetic tests"
+  states_that_must_stay_distinct: [no_quote_change, no_message, disconnected_feed, expired_contract, delayed_or_frozen, unknown_response]
+  on_fail: >
+    STOP the archive; report which criterion failed. Do not reinterpret a capture failure as an
+    edge result. Do not widen the client allowlist to work around it.
+
+not_estimated_here: [queue_position, own_market_impact, realized_maker_fills, cancel_replace_latency, resting_fill_probability, unobserved_ladder_depth]
+
+outputs:
+  results: "research/exec/2026-08-18_ibkr-forward-archive/results.json"
+  verdict: "research/exec/2026-08-18_ibkr-forward-archive/verdict.md"
+  characterization: "research/exec/2026-08-18_ibkr-forward-archive/characterization.md (L15, after the gate)"
+  settlement_map: "research/exec/2026-08-18_ibkr-forward-archive/settlement_reference_map.yaml (all pairs BLOCK until measured)"

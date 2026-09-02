@@ -1,0 +1,138 @@
+experiment_id: "janus-sports-stage2-matching"
+date_registered: "2026-08-17"
+track: sports
+ledger_ref: "snooping_ledger.md row L9 (descriptive characterization -- costs no test look)"
+status_at_registration: PENDING
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# THIS FILE IS IMMUTABLE ONCE THE FIRST MATCH RUN EXECUTES.
+# Criteria below were written BEFORE any matcher existed and BEFORE any pair was
+# scored. Changing a threshold after seeing a result is a STOP-grade violation.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+purpose: >
+  Phase 1's central negative -- "no tradeable cross-venue arbitrage exists" -- rested on n=35
+  title-matched pairs out of ~100k markets, with the rules verifier never written and blocking
+  recall capped at 12 candidates per market. That is a statement about the matcher, not about the
+  venues. Stage 2 rebuilds matching on a canonical key anchored to an external schedule and asks
+  whether the pair count was a tooling artifact or a venue fact. NO PRICES ARE READ.
+
+why_this_is_not_a_test_look: >
+  Descriptive characterization of listing overlap between venues. It fits nothing, selects no
+  strategy config, sets no threshold that a trade depends on, and produces no promotable rule.
+  Registered as an L-row per snooping_ledger.md rule 5. The economic screen that could eventually
+  trade is Stage 3+ and carries its own separate registration.
+
+depends_on:
+  stage_1: "research/sports/2026-08-17_entity-schedule-spine/ (ledger L8) -- resolution validated
+            at 100.0%, 280/280 venue events, 0 failures. Stage 2 does NOT re-litigate resolution."
+
+# ── scope ────────────────────────────────────────────────────────────────────
+scope:
+  league: mlb
+  league_rationale: >
+    Corrected from the plan's [nfl, nba] at L8. Measured 2026-08-17 over an 8-day window: MLB 99
+    games, WNBA 20, NFL 16 (preseason only), EPL 10, NBA 0, NHL 0. MLB is the only dense
+    in-season league. The spine is league-agnostic so this costs nothing.
+  market_type: moneyline
+  market_type_rationale: >
+    Moneyline is the only market type both venues express as a plain two-outcome contract with no
+    line parameter. Spreads and totals require the line to match EXACTLY (a -1.5 on one venue and
+    a -1.5 on the other are the same contract; -1.5 vs -2.5 are not), which is a strictly harder
+    key and is deliberately deferred. Scope is not widened mid-experiment.
+  venues: [kalshi, polymarket]
+  prices_read: false
+  orderbooks_fetched: false
+
+# ── the canonical key under test ─────────────────────────────────────────────
+key:
+  definition: "league + {SORTED participant entity_ids} + start_utc(+/-tolerance) + market_type + period + side"
+  participants_are_sorted: true
+  participants_sorted_rationale: >
+    Home/away orientation is NOT reliable across venues -- PM's sport.ordering is 'away' while
+    Kalshi's ticker is not consistently ordered. Trusting orientation silently drops half the
+    candidates. Orientation is carried separately, not used for blocking.
+  start_tolerance_s: 5400
+  start_tolerance_rationale: >
+    90 minutes. MLB doubleheaders are ~3.5h apart, so the tolerance must stay well under that or
+    G1 and G2 become ambiguous. Fixed here; NOT tunable after the run.
+  time_field_kalshi: "rules_primary (English, exact clock time on MLB). NOT close_time, which is
+                      start + exactly 3 days -- a postponement buffer (L8)."
+  time_field_pm: "markets[].gameStartTime. NOT the slug date, which is the ORIGINAL date and is
+                  wrong for every postponed game (L8)."
+  max_per_market: null
+  max_per_market_rationale: >
+    Phase 1 capped blocking recall at 12 candidates per market, which caps measurable coverage
+    below 100% by construction. An exact composite key needs no recall cap. Deleted, not raised.
+
+# ── THE GATE. Immutable. ─────────────────────────────────────────────────────
+gate:
+  coverage:
+    metric: "matched_games / eligible_games"
+    numerator: >
+      Games for which the matcher emits a COMPLETE outcome pairing -- both sides of the Kalshi
+      binary paired to both sides of the PM binary, with the two participant sets identical.
+    denominator: >
+      Games in the ESPN schedule for which BOTH venues independently have >=1 resolved moneyline
+      market. Resolution uses the Stage-1 spine, which was validated separately at 100% and whose
+      failures are individually inspectable. The denominator therefore does NOT come from the
+      matcher's own output -- a matcher scored on the pairs it managed to find always reports
+      ~100%.
+    threshold: 0.80
+    direction: ">="
+  precision:
+    metric: "correct_pairs / emitted_pairs, judged against match/gold/mlb_moneyline.csv"
+    threshold: 0.98
+    direction: ">="
+    gold_n_target: 150
+    gold_labelled_before_tuning: true
+    gold_rule: >
+      The gold file is written and frozen BEFORE the matcher is run even once. Labels are made
+      from venue payloads (team names, dates, rules text) WITHOUT reference to matcher output. A
+      label is never revised because the matcher disagreed with it; a genuine labelling error is
+      corrected by appending a dated correction row, never by editing in place.
+  on_fail: >
+    If coverage < 0.80: report the coverage figure and the named reason buckets, and do NOT tune
+    to reach the threshold. Investigate the largest bucket and re-register a NEW spec if a fix is
+    warranted. If precision < 0.98: STOP. A matcher that emits false pairs is worse than one that
+    emits none -- a wrong entity produces two unrelated markets whose price gap reads as an
+    enormous edge and sorts to the top of any ranked list. That is the phase-1 "+97.94c golfer vs
+    cyclist" failure and it is the failure this whole design exists to prevent.
+
+# ── descriptive measurements (NOT gated) ─────────────────────────────────────
+descriptive:
+  listing_horizon:
+    question: >
+      Stage 1 observed Kalshi listing 41 of 99 scheduled MLB games. Is that a LISTING HORIZON
+      (Kalshi opens markets ~2 days out, so a snapshot sees only near games) or a genuine
+      coverage limit (Kalshi never lists some games)? These have opposite consequences: the first
+      is harmless, the second halves the addressable set.
+    method: >
+      Daily listing snapshots over >=7 days, then coverage as a function of hours-to-start. A
+      horizon effect appears as coverage rising to ~1.0 as time-to-start falls; a genuine limit
+      appears as a flat ceiling below 1.0.
+    not_a_gate: true
+  near_miss_buckets:
+    rule: >
+      EVERY eligible game that fails to match gets a NAMED reason bucket in near_miss.csv. No
+      silent drops. "Other" is capped at 5% of failures; above that the bucket must be split.
+  postponement_rate:
+    rationale: >
+      Postponed games are the subset where venue rulesets diverge most (LFMP vs void-at-par) and
+      the subset a naive slug/ticker-date join would silently drop. Counted here so Stage 4 knows
+      the base rate it is working against.
+
+outputs:
+  - results.json
+  - verdict.md
+  - pairs.csv            # every emitted pair, with the key that produced it
+  - near_miss.csv        # every eligible game that did not match, with a named reason
+  - match/gold/mlb_moneyline.csv   # frozen BEFORE the run
+
+determinism:
+  requirement: "byte-identical output on re-run from the same frozen payloads"
+  rationale: "the phase-1 determinism gate; normalize() is pure so this is reachable"
+
+disk:
+  writes: "/Volumes/Kilos/janus + repo-local CSVs (kilobytes)"
+  never: "root disk bulk writes -- 11 GB free, 95% full as of 2026-08-17"

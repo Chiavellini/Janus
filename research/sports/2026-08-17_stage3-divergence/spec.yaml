@@ -1,0 +1,149 @@
+experiment_id: "janus-sports-stage3-fee-net-divergence"
+date_registered: "2026-08-17"
+track: sports
+ledger_ref: "snooping_ledger.md row L12 (descriptive characterization -- costs no test look)"
+status_at_registration: PENDING
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMMUTABLE ONCE THE FIRST MEASUREMENT RUN EXECUTES.
+# This is THE CORE RESULT of Track A and it carries a KILL CRITERION. Written
+# before any price was joined to any pair. Never weaken a threshold after seeing
+# a number -- that is a STOP-grade violation, not a judgement call.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+purpose: >
+  Stage 2 established that the venues co-list densely (41 paired games / 82 outcome pairs in one
+  league-week, precision 1.00) and therefore that phase 1's n=35 was a tooling artifact. That is
+  filter ONE of the phase-1 criterion -- "the price is wrong AND both sides tradeable AND the edge
+  exceeds the fee floor AND depth is non-trivial". Stage 3 tests filters two through four together,
+  by measuring the FEE-NET COST OF COVERING EVERY OUTCOME across venues, with real depth, on real
+  books, repeatedly, over time.
+
+why_this_is_not_a_test_look: >
+  It measures a property of the venues (the distribution of net cover cost), not the performance
+  of a strategy. It fits nothing, selects no config, and promotes no rule. Registered as an L-row
+  per snooping_ledger.md rule 5. Any rule that eventually trades is registered separately as a
+  NUMBERED look with its own immutable criteria.
+
+depends_on:
+  stage_1: "research/sports/2026-08-17_entity-schedule-spine/ (L8)"
+  stage_2: "research/sports/2026-08-17_stage2-matching/ (L9) -- pairs come from its canonical key"
+
+# ── venue availability, MEASURED 2026-08-17, not assumed ─────────────────────
+venues:
+  available:
+    kalshi:
+      book: "GET /markets/{ticker}/orderbook -- BIDS ONLY. `yes_dollars` and `no_dollars` are both
+             BID ladders; there are no asks. YES asks are derived by folding NO bids: ask(p) =
+             1 - bid_no(1-p). lib/schema.fold_complement_bids is the single implementation."
+      screening_k: 0.07
+      coverage: "every scheduled game inside a 72h listing horizon (L9)"
+    polymarket:
+      book: "GET clob.polymarket.com/book?token_id=... -- genuinely two-sided. NOTE both ladders
+             put the BEST price LAST; naive [0] indexing takes the worst level."
+      screening_k: 0.05
+      note: "sports fee rate is per-market and must be read from the payload, never the pin (L7)"
+    sxbet:
+      book: "GET /orders?marketHashes=... -- order-based, not a ladder. MLB leagueId=171,
+             moneyline is type=226."
+      screening_k: 0.0
+      note: "0% commission on SINGLES is the cheapest coefficient in the registry. But THIN:
+             measured 100 active MLB markets, only 7 moneyline, 153 resting orders total, 24
+             markets with >=1 order. Include as a leg; expect depth, not breadth, to bind."
+  unavailable:
+    smarkets:
+      status: "HTTP 403 on api.smarkets.com/v3 and smarkets.com/api/v3, three header variants"
+      consequence: >
+        MATERIAL. L7's headline that the two-leg fee floor spans 7.5x (3.75c -> 0.50c) rested on
+        Smarkets (k=0.02), Sporttrade and Pinnacle as the cheap legs. NONE of those three is
+        currently readable. The cheapest READABLE pair is PM+SXBet at 1.25c and Kalshi+SXBet at
+        1.75c. L7's arithmetic is unchanged and correct; its practical reach is narrower than it
+        implied, and that is recorded here rather than quietly dropped.
+    sporttrade: "no public API; aggregator only"
+    pinnacle: "public API closed Jul 2025"
+    betfair: "deferred by operator decision; GBP 499 App Key, read-only use not permitted"
+
+# ── what is measured ─────────────────────────────────────────────────────────
+measurement:
+  unit_of_observation: "one (game, market_type, period) at one poll instant"
+  cover_cost:
+    definition: "sum over outcomes of the CHEAPEST fee-inclusive ask across available venues,
+                 for a common contract quantity, both legs sized to the same payout"
+    formula: "cover = SUM_o min_v [ ask_v(o, q) + fee_v(o, q) ] / q"
+    separability_caveat: >
+      Cost is separable across outcomes ONLY before fees; Kalshi's per-ORDER ceil and net-winnings
+      commission break separability. Greedy min-per-outcome GENERATES candidates; the top
+      candidates are then RE-PRICED EXACTLY with the full fee engine. A greedy number is never
+      reported as a result.
+    depth_aware: true
+    depth_aware_note: "ask is the volume-weighted price to fill q contracts, walking the ladder --
+                       NOT the touch. A touch-only cover cost is fiction at these sizes."
+  quantities_tested: [50, 100, 200, 500]      # contracts = $1 payout units
+  arb_threshold: 0.995                        # cover < this = a candidate
+  min_depth_usd: 200
+  persistence_recheck_s: 60
+  max_leg_quote_age_s: 30
+  max_leg_quote_age_note: >
+    PM's rate limiter QUEUES rather than rejects, so a slow response is a STALE quote wearing a
+    FRESH timestamp. Every Book carries fetched_utc and any cover whose oldest leg exceeds the
+    threshold is HARD-REJECTED, not down-weighted.
+  liquidity_source_guard: >
+    Two legs sharing a liquidity_source are rejected as an accounting error, never scored. Kalshi,
+    Robinhood, Webull and IBKR are one book.
+  exhaustiveness: >
+    A cover is only a cover if the outcome set is PROVEN exhaustive. `mutually_exclusive` does not
+    mean exhaustive. Moneyline in MLB has no draw, so the two-outcome set is exhaustive by the
+    sport's rules -- that is the justification, and it is sport-specific, not a default.
+
+# ── THE KILL CRITERION. Immutable. ───────────────────────────────────────────
+kill_criterion:
+  statement: >
+    If FEWER THAN 0.5% of observations show a fee-net cover cost < 0.995 at >= $200 of depth, AND
+    NONE of the candidates that do appear survives a 60-second re-fetch, then no tradeable pure
+    cross-venue arbitrage exists on this corpus and the Track A thesis is DEAD.
+  observation_rate_threshold: 0.005
+  survival_requirement: "at least one candidate must persist a 60s re-fetch at >= $200 depth"
+  both_must_fail: true
+  both_must_fail_note: >
+    The thesis dies only if BOTH the rate test and the persistence test fail. A rare-but-real
+    persistent arb is a different finding from a frequent-but-evaporating one, and they must not
+    be collapsed.
+  on_kill: >
+    STOP. Report it plainly as the answer, not as a setback. Phase 1 reached the same conclusion
+    on weaker evidence and over-generalized from one expensive venue pair; this would be the same
+    conclusion reached properly, on an exact matcher, with depth, across three venues. Do not
+    reach for spreads/totals or another league to rescue it without a NEW registered spec.
+  on_survive: >
+    Proceed to Stage 4 (settlement wedge). A surviving candidate is NOT a trade -- the wedge is
+    unmeasured and an unmeasured wedge is a BLOCK, not zero. This is exactly the error that made
+    the crypto two-leg look like 100c when it was worth 94.30c.
+
+# ── collection ───────────────────────────────────────────────────────────────
+collection:
+  cadence_s: 300
+  duration_days: 7
+  window: "games inside 72h of first pitch -- outside that Kalshi lists nothing (L9)"
+  polling_note: >
+    MUST poll continuously rather than snapshot. Kalshi's 72h listing horizon means a single
+    snapshot sees only part of the slate, which would read as a coverage failure.
+  settlement_logging: true
+  settlement_logging_rationale: >
+    Stage 4 measures the settlement wedge FOR FREE, but only if Stage 3 records what each venue
+    actually paid, from day one. Wiring it in later means re-collecting. Nothing is traded; this
+    is pure observation.
+  storage: "/Volumes/Kilos/janus/sports/ -- NEVER the root disk (11 GB free, 95% full)"
+
+outputs:
+  - results.json
+  - verdict.md
+  - observations.parquet   # every poll, every pair, fee-net cover cost
+  - candidates.csv         # every cover < 0.995, with the 60s recheck outcome
+  - depth_curve.csv        # cover cost as a function of quantity
+
+determinism:
+  requirement: "re-running the screen over frozen books reproduces byte-identical output"
+
+governance:
+  test_looks_spent: 0
+  arming_allowed: false
+  holdout_touched: false

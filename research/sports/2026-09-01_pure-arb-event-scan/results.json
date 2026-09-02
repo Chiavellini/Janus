@@ -1,0 +1,85 @@
+{
+  "blocked": [],
+  "candidates": [],
+  "finished_utc": "2026-09-02T04:37:12.947180+00:00",
+  "games": [
+    {
+      "book_latency_ms": {
+        "kalshi:KXMLBGAME-26SEP012210STLLAD-LAD": 409.45,
+        "kalshi:KXMLBGAME-26SEP012210STLLAD-STL": 402.38,
+        "polymarket:mlb-stl-lad-2026-09-01:lad": 452.17,
+        "polymarket:mlb-stl-lad-2026-09-01:stl": 444.26
+      },
+      "book_quote_skew_s": 0.0491,
+      "game_id": "espn:mlb:401816772",
+      "league": "mlb",
+      "matched_outcomes": 2,
+      "observations": [
+        {
+          "cost_per_contract": 1.018,
+          "edge_per_contract": -0.018000000000000016,
+          "game_id": "espn:mlb:401816772",
+          "quantity": 5.0,
+          "quote_skew_s": 0.04913783073425293,
+          "return_locked": -0.017681728880157187,
+          "short_name": "STL @ LAD",
+          "status": "NO_EDGE",
+          "transition_recorded": false
+        },
+        {
+          "cost_per_contract": 1.0164,
+          "edge_per_contract": -0.01639999999999997,
+          "game_id": "espn:mlb:401816772",
+          "quantity": 25.0,
+          "quote_skew_s": 0.04913783073425293,
+          "return_locked": -0.01613537977174338,
+          "short_name": "STL @ LAD",
+          "status": "NO_EDGE",
+          "transition_recorded": false
+        },
+        {
+          "cost_per_contract": 1.0161,
+          "edge_per_contract": -0.016100000000000003,
+          "game_id": "espn:mlb:401816772",
+          "quantity": 100.0,
+          "quote_skew_s": 0.04913783073425293,
+          "return_locked": -0.015844897155791755,
+          "short_name": "STL @ LAD",
+          "status": "NO_EDGE",
+          "transition_recorded": false
+        }
+      ],
+      "short_name": "STL @ LAD",
+      "start_utc": "2026-09-02T02:10:00+00:00",
+      "state": "in"
+    }
+  ],
+  "leagues": [
+    "mlb"
+  ],
+  "mode": "live",
+  "spec_ref": "research/sports/2026-09-01_pure-arb-event-scan/spec.yaml",
+  "started_utc": "2026-09-02T04:37:09.003965+00:00",
+  "status": "OK",
+  "summary": {
+    "actionability_hurdle": 0.01,
+    "blocked": 0,
+    "book_rtt_ms": [
+      402.38,
+      409.45,
+      444.26,
+      452.17
+    ],
+    "candidate_observations": 0,
+    "discovered_outcome_legs": 4,
+    "games_with_exact_matches": 1,
+    "material_quote_changes": 2,
+    "max_quote_skew_s": 5.0,
+    "quote_skew_s": [
+      0.0491
+    ],
+    "scheduled_live_or_near_games": 1,
+    "watched_outcome_legs": 4
+  },
+  "sweep_id": "20260902T043709Z"
+}

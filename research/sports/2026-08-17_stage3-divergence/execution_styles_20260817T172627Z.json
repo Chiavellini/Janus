@@ -1,0 +1,121 @@
+{
+ "contracts": 200.0,
+ "games": 48,
+ "summary": {
+  "taker_taker__at_mid": {
+   "n": 48,
+   "median_cover": 1.0339,
+   "min_cover": 1.01963,
+   "clears_0995": 0,
+   "clears_rate": 0.0,
+   "median_edge_cents": -3.39,
+   "evidence": "MEASURED (executable asks)"
+  },
+  "taker_taker__improve": {
+   "n": 48,
+   "median_cover": 1.0339,
+   "min_cover": 1.01963,
+   "clears_0995": 0,
+   "clears_rate": 0.0,
+   "median_edge_cents": -3.39,
+   "evidence": "MEASURED (executable asks)"
+  },
+  "taker_taker__at_bid": {
+   "n": 48,
+   "median_cover": 1.0339,
+   "min_cover": 1.01963,
+   "clears_0995": 0,
+   "clears_rate": 0.0,
+   "median_edge_cents": -3.39,
+   "evidence": "MEASURED (executable asks)"
+  },
+  "maker_taker__at_mid": {
+   "n": 48,
+   "median_cover": 1.0086,
+   "min_cover": 0.9688,
+   "clears_0995": 5,
+   "clears_rate": 0.1042,
+   "median_edge_cents": -0.86,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "maker_taker__improve": {
+   "n": 48,
+   "median_cover": 1.01681,
+   "min_cover": 0.2843,
+   "clears_0995": 8,
+   "clears_rate": 0.1667,
+   "median_edge_cents": -1.681,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "maker_taker__at_bid": {
+   "n": 48,
+   "median_cover": 0.9983,
+   "min_cover": 0.264,
+   "clears_0995": 19,
+   "clears_rate": 0.3958,
+   "median_edge_cents": 0.17,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "taker_maker__at_mid": {
+   "n": 48,
+   "median_cover": 1.0,
+   "min_cover": 0.99725,
+   "clears_0995": 0,
+   "clears_rate": 0.0,
+   "median_edge_cents": 0.0,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "taker_maker__improve": {
+   "n": 48,
+   "median_cover": 1.01,
+   "min_cover": 0.55,
+   "clears_0995": 9,
+   "clears_rate": 0.1875,
+   "median_edge_cents": -1.0,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "taker_maker__at_bid": {
+   "n": 48,
+   "median_cover": 0.99,
+   "min_cover": 0.53,
+   "clears_0995": 48,
+   "clears_rate": 1.0,
+   "median_edge_cents": 1.0,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "maker_maker__at_mid": {
+   "n": 48,
+   "median_cover": 0.99925,
+   "min_cover": 0.9644,
+   "clears_0995": 22,
+   "clears_rate": 0.4583,
+   "median_edge_cents": 0.075,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "maker_maker__improve": {
+   "n": 48,
+   "median_cover": 1.00208,
+   "min_cover": 0.2843,
+   "clears_0995": 20,
+   "clears_rate": 0.4167,
+   "median_edge_cents": -0.208,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "maker_maker__at_bid": {
+   "n": 48,
+   "median_cover": 0.98208,
+   "min_cover": 0.264,
+   "clears_0995": 48,
+   "clears_rate": 1.0,
+   "median_edge_cents": 1.792,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  }
+ },
+ "dislocation": {
+  "median_cover_at_mid": 0.995,
+  "min_cover_at_mid": 0.96,
+  "below_1_of_n": "27/48"
+ },
+ "evidence_tier": "MOD - only taker_taker is MEASURED",
+ "correction": "An earlier +1.56c figure paired the BEST observed dislocation (0.98) with the cheapest fee treatment. Median maker/maker edge at mid is +0.07c."
+}

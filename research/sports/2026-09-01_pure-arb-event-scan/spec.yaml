@@ -1,0 +1,69 @@
+experiment_id: "janus-sports-pure-arb-event-scan-2026-09-01"
+date_registered: "2026-09-01"
+track: "sports/pure-arb"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row 2"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE FIRST SPORTS SCAN.
+purpose: >
+  Find exact cross-venue sports event tuples whose complementary executable legs lock a positive
+  return after fees and visible depth. This is pure arbitrage/coherence, not a forecast of the
+  winner and not a midpoint divergence strategy.
+
+universe:
+  venues: [kalshi, polymarket]
+  sports_priority: true
+  event_states: [live, newborn, recently_born, short_term]
+  newborn_window_hours: 6
+  recently_born_window_hours: 24
+  short_term_close_within_days: 30
+  long_term_exception:
+    maximum_days_to_close: 240
+    minimum_conservative_net_return: 0.40
+    return_definition: "worst-case net holding-period return on locked capital, not annualized"
+  ranking: [live, newborn, recently_born, short_term, long_term_exception]
+  market_types: [moneyline, spread, total]
+  exclude: [parlays, unknown_rules, unmatched_participants, mismatched_periods, shared_liquidity_source]
+
+semantic_gate:
+  required: true
+  match_key: "league + sorted participants + scheduled start time + market type + period + line + side"
+  schedule_anchor: "external schedule or venue-structured event metadata"
+  settlement_evidence: [rules_text, settlement_reference, overtime_or_regulation_period, cancellation_policy]
+  unknown_is: BLOCK
+  settlement_reference_basis: "must be measured or explicitly identical before pricing"
+  fuzzy_title_match: "candidate generation only, never proof"
+
+pricing:
+  structure: "buy YES on one venue and NO on the other, or the reverse; payout must be guaranteed by the proven tuple"
+  prices: "executable asks only"
+  depth: "walk both visible ladders to each tested quantity"
+  fees: "venue and market-specific models from lib/fees/"
+  tested_quantities_contracts: [5, 25, 100]
+  primary_hurdle: "conservative net return >= 0.01 on locked capital at one tested quantity"
+  below_hurdle: "not actionable"
+  synchronization: "quotes must be fetched within one bounded sweep and stale legs rejected"
+  output_unit: "one event-level opportunity, not one row per duplicated venue leg"
+
+storage:
+  root: "/Volumes/Kilos/janus/tuples"
+  policy:
+    - "latest_state is one upserted row per watched market"
+    - "quote_history appends only on >=1 tick price, >=10% visible-depth, or state change"
+    - "tuple_opportunities appends only on actionability/return-capacity transition"
+    - "sweep_runs stores one aggregate row per bounded sweep"
+    - "discovery is metadata-only; full books are fetched only for shortlisted live/newborn/short-term tuples"
+    - "no periodic unchanged full-universe snapshots"
+    - "raw venue payloads are never retained"
+
+primary_criterion:
+  statement: "Produce an audited list of exact sports event tuples with >=1% conservative executable return after fees at one tested quantity."
+  promotion_rule: "No live order promotion; a candidate remains research-only until settlement, execution, and fee reconciliation gates are separately passed."
+  stop_condition: "Any missing schedule, rules, settlement, period, depth, fee, or freshness evidence is BLOCK, not zero risk."
+
+outputs:
+  spec: "research/sports/2026-09-01_pure-arb-event-scan/spec.yaml"
+  results: "research/sports/2026-09-01_pure-arb-event-scan/results.json"
+  verdict: "research/sports/2026-09-01_pure-arb-event-scan/verdict.md"
+  database: "/Volumes/Kilos/janus/tuples/tuples.sqlite"

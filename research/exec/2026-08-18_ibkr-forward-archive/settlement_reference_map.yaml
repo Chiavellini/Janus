@@ -1,0 +1,312 @@
+# Settlement-reference map — Track B IBKR program.
+# RULE (AGENTS.md amendment 2026-08-14): never compare two prices without first measuring the basis
+# between their settlement references. An UNMEASURED basis is a BLOCK, not zero.
+#
+# Evidence labels: R = researched from published rules/specs (not verified against a live rulebook
+# fetch in this pass unless stated), M1 = measured directly by Janus, U = unknown.
+# Status vocabulary: BLOCK (basis unmeasured or mismatch unresolved), MEASURING (archive running,
+# basis period open), OK (basis measured over the stated period), OK_FOR_<X>_ONLY (measured, and it
+# holds only for the named instrument -- the block survives for everything else in the pair).
+#
+# Every entry below was BLOCK at v2. At v3 exactly one has moved: the SPX pair is OK for the
+# NAMED series KXINX and remains BLOCK for KXINXU and for any unnamed-series comparison.
+
+version: 8
+date: "2026-08-19"
+changelog:
+  v8: >
+    FIRST PAIR TO CLEAR ON THE PROJECT'S ACTUAL OBJECTIVE. Adds the commodity pair
+    KALSHI_KXWTI_vs_NYMEX_CL_OPTIONS, measured OK by L20: Kalshi's KXWTI settles on exactly the NYMEX
+    CL settlement for the named contract month (24/24 sessions, max|diff| 4e-06 = float noise, 5/5
+    exchange-corroborated). Also records why the 15-minute commodity series -- the founding idea's
+    original form -- remain BLOCK: their Pyth index settlement feeds are absent from Pyth's public API.
+  v7: >
+    CORRECTION to v4, plus two structural findings on the KXINX/KXINXU wedge. v4 said the Source
+    Agency clause is "NOT a record of a past modification". That was wrong as stated: it conflated
+    two different texts. The PDF's Rule 7.2 language IS a standing right, but the MARKET-level
+    rules_secondary -- the text the map flagged back in v2 -- says the Exchange "has modified" the
+    Source Agency and Underlying for indices markets. Past tense. A modification HAS occurred, and
+    the replacement is not named. See kalshi_source_agency_clause.correction_v7.
+  v6: >
+    L18 completed the Kalshi half of all three live pairs. The FOMC pair could not be characterized:
+    only 2 settled meetings are recoverable (gate was 5), which is the THIRD independent confirmation
+    of the ~68-day Kalshi retention floor. FOMC must be collected FORWARD; backfill is impossible.
+    No pair status changed.
+  v5: >
+    L17 characterized the Kalshi HALF of the BTC pair. KXBTC and KXBTCD agree EXACTLY on 1,603/1,603
+    shared strike hours -- the opposite of the KXINX/KXINXU wedge, which makes that wedge specific to
+    the index ladders rather than systemic. The Kalshi-vs-BRTI basis remains UNMEASURED (no CF
+    Benchmarks source reachable; nothing substituted). The BTC pair status is UNCHANGED at BLOCK.
+  v4: >
+    The Kalshi indices rulebook clause -- flagged unread since v2 and named as a residual blocker by
+    L15 -- has now been READ from the source document (Kalshi/KalshiEX LLC CFTC Rule 40.2(a)
+    self-certification for $INX, filed 2022-04-26,
+    https://assets.kalshi.com/regulatory/product-certifications/INX.pdf, reached via the KXINX and
+    KXINXU series `contract_url`). It is NOT a record of a past modification; it is a standing
+    discretionary right, and it comes with two facts that bound what any measurement can establish.
+    See kalshi_source_agency_clause below. No pair status changed.
+  v3: >
+    L15 measured the Kalshi side of KALSHI_SPX_LADDER_vs_CBOE_SPX_XSP_OPTIONS. That pair is now
+    SPLIT BY SERIES: KXINX is OK, KXINXU stays BLOCK. No other pair changed. L14 (superseded)
+    stopped on the discovery that "the Kalshi S&P settlement value" was not one number.
+  v2: "Kalshi rules text pinned from the venue (M1); every pair BLOCK."
+kalshi_rules_read_utc: "2026-08-19T01:35Z via GET /trade-api/v2/markets?series_ticker=... (rules_primary, rules_secondary, time fields) -- M1"
+looks_spent: 0    # L14 and L15 are L-rows: descriptive, no test look
+note: >
+  Instrument names that share a word ("Bitcoin", "Fed Funds", "S&P 500") are not economically
+  identical. Each pair lists the exact reference on both sides and what is still unresolved.
+  Kalshi rules text must be fetched from the venue and quoted before any pair leaves BLOCK; the
+  Kalshi-side entries here are R/U placeholders pending that fetch. 15-minute Kalshi binaries are
+  NOT eligible for any option-expiry comparison regardless of underlying (expiry/payoff mismatch).
+
+pairs:
+
+  - id: KALSHI_KXWTI_vs_NYMEX_CL_OPTIONS
+    kalshi:
+      contracts: "M1: KXWTI (daily). KXWTIW (weekly) is NOT included -- L20 reported INSUFFICIENT_COVERAGE at 5 sessions."
+      settlement_source: >
+        M1 (rules_primary): "the daily settlement price for WTI crude oil (<named month> contract)".
+        Series settlement_sources names ICE WTI Crude Futures (ICE product 213). Rounded to 2 dp;
+        rules_secondary declares a stale-data fallback to the most recently published value.
+      observation_and_settlement_time: "M1: the settlement date is named in rules_primary; close_time 18:30Z"
+    ibkr:
+      instrument: "NYMEX Light Sweet Crude Oil (CL) futures options, SAME delivery month Kalshi names"
+      underlying_reference: "the CL daily settlement for that delivery month"
+      exercise_style: "American (futures option)"
+      cash_or_physical: "physically settled into the future"
+      multiplier: "1,000 bbl"
+    known_basis: >
+      M1 (L20, 2026-08-19): ZERO. Kalshi's published expiration_value equals the NYMEX CL settlement
+      for the named contract month on 24/24 sessions, max|diff| 4e-06 USD/Bbl (float representation
+      noise; identical at 2 dp), CI [0.0, 2e-06]. Five of those sessions were independently checked
+      against CME's own published settlement and all five agreed. Economically expected: ICE WTI is
+      cash-settled against NYMEX CL. So a KXWTI binary and a CL option reference the SAME terminal
+      value and there is NO settlement-reference basis to carry.
+    measured_basis_period: "24 KXWTI sessions inside 2026-06-12..2026-08-18 (the most recent contiguous window; see coverage_limitation)"
+    coverage_limitation: >
+      Yahoo delists expired contracts, so 22 older KXWTI sessions are NO_CL_SETTLE -- counted, never
+      imputed. The sample is the most RECENT contiguous window, not a random draw from Kalshi's ~68-day
+      retention. The relationship is structural, so drift is unlikely, but it is NOT established here.
+    CONTRACT_MONTH_MATCHING_IS_MANDATORY: >
+      The CL month compared must be the month Kalshi names. A front-month CONTINUOUS series is
+      FORBIDDEN: the reference rolled SEP26 -> OCT26 between 2026-08-14 and 2026-08-17, and on
+      2026-08-18 CME's SEP settle was 84.94 against Kalshi's OCT-contract 84.06. A continuous series
+      manufactures ~0.9 USD/Bbl of fake basis at every roll.
+    unresolved_mismatch: >
+      NONE on the settlement reference. Still required before any edge claim: NYMEX Real-Time (NP,L1)
+      $1.55/mo (not yet purchased); a registered commodity capability probe (the L13 spec is immutable
+      and contains no commodity roots); tick-error propagation at digital extraction (trap 9); the
+      flat-2c/leg fee control (trap 3) -- commodity series are fee_multiplier 1, the 0.07 tier, NOT
+      the 0.035 index tier; and American-exercise/futures-option effects, which SPX/XSP European
+      intuition does not carry over.
+    status: OK
+
+  - id: KALSHI_15M_COMMODITIES_vs_ANY_OPTION
+    status: BLOCK
+    reason: >
+      The founding idea's ORIGINAL form, blocked on oracle access rather than on economics. KXGOLD15M,
+      KXSILVER15M and KXWTI15M settle on Pyth INDEX feeds (Metal.Index.GOLD/USD,
+      Metal.Index.SILVER/USD, Commodities.Index.PYTHOIL/USD). Of 3,056 feeds on Pyth's public Hermes
+      API exactly one matches (PYTHOIL) and it is 142 days stale; the two metal index feeds are absent
+      entirely. The collector's existing path relays Pyth via Polymarket's RTDS websocket, which times
+      out -- every 15m commodity window is captured but flagged reference_missing. Until the actual
+      settlement feed is obtained NO settlement-relative quantity can be computed, and substituting a
+      different reference (LBMA, spot, GLD/SLV, a futures price) is FORBIDDEN. Separately, a
+      15-minute binary has no matching option expiry, so even with the oracle this form needs a
+      distributional model and inherits its error -- unlike the daily KXWTI pair above.
+
+  - id: KALSHI_BTC_LADDER_vs_CME_BTC_MBT_FUT
+    kalshi:
+      contracts: "M1: series KXBTC (hourly, 'Bitcoin range' ladder, fee_multiplier 1) and KXBTCD (hourly above/below); tickers like KXBTC-26AUG1917-T73749.99 = Aug 19 17:00 ET; KXBTCMAXD (daily) had 0 open markets at read time. NOT KXBTC15M."
+      settlement_source: "M1 (rules_primary): 'the simple average of the sixty seconds of CF Benchmarks Bitcoin Real-Time Index (BRTI) before 5 PM EDT' -- i.e. a 60 x 1 s BRTI TWAP over the last minute before the strike hour"
+      observation_and_settlement_time: "M1: close_time == the settlement instant (2026-08-19T21:00Z for the 17:00 ET market); expected_expiration_time = +5 min; expiration_time = +7 d deadline; settlement_timer_seconds 60. So on these series close_time IS the event time (unlike sports, where it is +3 d)."
+    ibkr:
+      instrument: "CME BTC (5 BTC multiplier) and MBT (0.1 BTC) futures, front unexpired contract"
+      underlying_reference: "R: CME CF Bitcoin Reference Rate (BRR), 16:00 London, for FINAL settlement; intraday price is a traded futures price with carry/basis, not an index"
+      expiry_and_settlement: "R: last Friday of the contract month, cash-settled to BRR; Globex 17:00 CT Sun - 16:00 CT Fri, daily 16:00-17:00 CT maintenance"
+      exercise_style: "n/a (future)"
+      cash_or_physical: "cash"
+      multiplier: "BTC 5, MBT 0.1"
+    timezone_and_holidays: "Kalshi ET; CME CT; BRR London; CME holiday calendar not pinned"
+    known_basis: "R: BRTI (real-time) vs BRR (daily 16:00 London fix) are different indices; futures carry adds a term-structure component; both unmeasured by Janus. R (CME hours): crypto futures halt daily 16:00-17:00 CT = 17:00-18:00 ET, so the KXBTC 17:00 ET settlement minute (16:59-17:00 ET) is the LAST tradable minute before a one-hour halt -- the hedge cannot be adjusted through Kalshi settlement/expiry for that hour. Other hourly strikes (e.g. 18:00 ET onward) fall inside Globex hours."
+    kalshi_side_intra_venue:
+      measured_utc: "2026-08-19T06:20Z (L17)"
+      evidence_tier: M1
+      result: >
+        KXBTC and KXBTCD publish the SAME expiration_value on 1,603/1,603 shared strike hours over
+        2026-06-12T00:00Z..2026-08-19T06:00Z, to the cent (max|diff| 0.00, CI [0.00, 0.00]), with
+        zero within-series disagreements and zero strike hours present in only one series. So on the
+        BTC ladders -- unlike the index ladders -- "the Kalshi settlement value for this hour" DOES
+        name a single number.
+      contrast_with_the_index_pair: >
+        KXINX vs KXINXU disagree on 25/39 shared dates (max|diff| 0.44). 1,603 consecutive exact
+        hours here shows Kalshi's machinery is capable of exact cross-series consistency, so the
+        index wedge is SPECIFIC, not systemic -- evidence for, though not proof of, the v4 hypothesis
+        that hourly KXINXU runs on a different Source Agency or certification.
+    kalshi_vs_brti_basis: >
+      UNMEASURED. All three pre-declared CF Benchmarks endpoints failed (api.cfbenchmarks.com does
+      not resolve from this host; www returns HTTP 400). Per the L17 spec no exchange spot,
+      aggregator, or futures price was substituted -- that swap would be the exact category error the
+      AGENTS.md 2026-08-14 amendment forbids. An unreachable reference is an ACCESS result.
+    measured_basis_period: null
+    unresolved_mismatch: "BRTI-vs-futures basis at the settlement minute (measurable only with real-time MBT quotes -- currently DELAYED, see L13); index definition (BRTI TWAP vs BRR); carry; hedge delta of a binary vs a linear future; the 17:00 ET halt"
+    status: BLOCK
+
+  - id: KALSHI_SPX_LADDER_vs_CBOE_SPX_XSP_OPTIONS
+    kalshi:
+      contracts: "M1: KXINX (daily 'S&P 500 range' ladder, e.g. KXINX-26AUG21H1600-T8124.9999), KXINXU (hourly above/below, e.g. KXINXU-26AUG19H1600-T7869.9999); KXINXAB/KXINXI had 0 open markets at read time. Series settlement_sources field says 'For example, Google Finance'; rules_secondary notes the Exchange 'modified the Source Agency and Underlying for indices markets' -- rulebook must be read."
+      settlement_source: "M1 (rules_primary): 'the end-of-day S&P 500 index value on <date>' -- the official S&P 500 close, NOT an intraday print"
+      observation_and_settlement_time: "M1: close_time 20:00Z (16:00 ET) on the stated date; expected_expiration_time 23:00Z; expiration_time = +7 d deadline; settlement_timer_seconds 60"
+    ibkr:
+      instrument: "SPX (100 multiplier) / XSP (10 multiplier) options; deterministic near-ATM call+put at the earliest unexpired expiry"
+      underlying_reference: "R: S&P 500 index (SPX); XSP = 1/10 SPX"
+      expiry_and_settlement: "R: SPXW/XSP weeklies & dailies are PM-settled on the SPX closing value; standard third-Friday SPX is AM-settled (SET, opening prices). Cash, European. RTH 09:30-16:15 ET; GTH 20:15-09:25 ET"
+      exercise_style: "European"
+      cash_or_physical: "cash"
+      multiplier: "SPX 100, XSP 10"
+    timezone_and_holidays: "ET; CBOE holiday and early-close calendar not pinned"
+    known_basis: >
+      M1 (L15, 2026-08-19): the Kalshi side is NOT one reference -- it is two, and they differ.
+      KXINX (daily range ladder) equals the official S&P 500 close on 42/42 settlement dates
+      (2026-06-12 -> 2026-08-18) to the cent: median 0.00, max|diff| 0.00, block-bootstrap CI
+      [0.00, 0.00]. KXINXU (hourly above/below) does NOT: 15/37 exact, median 0.00 with CI
+      [-0.019, +0.068] (centred and unbiased on average) but max|diff| 0.44 index points. The
+      series wedge KXINX-KXINXU is 14/39 exact, range -0.44..+0.19, not single-signed, despite
+      identical rules text and a common 16:00 ET close.
+      CBOE PM-settled SPXW/XSP exercise-settle on the official closing index value BY RULE, and
+      CBOE publishes no independent print for them (the SET ticker is AM-settled third-Friday SPX,
+      a NON-match, unchanged from v2). So the option side and KXINX are the same number.
+      Official-close side is tier R: FRED's redistribution of the S&P DJI series, cross-checked
+      against Yahoo ^GSPC with 0 disagreements. Equality with the S&P DJI PRIMARY publication is U.
+    measured_basis_period: "2026-06-12 .. 2026-08-18 (42 settlement dates for KXINX, 37 for KXINXU)"
+    status_by_series:
+      KXINX: OK        # settlement reference matches the option side exactly; L15 verdict MATCHES_OFFICIAL_CLOSE
+      KXINXU: BLOCK    # L15 verdict WEDGE_MEASURED; max|diff| 0.44 pt against .9999 strikes
+      unnamed_series: BLOCK   # a comparison that does not NAME its series mixes two references on 64% of shared dates
+    kalshi_source_agency_clause:
+      read_utc: "2026-08-19T05:35Z"
+      source: "Kalshi $INX product certification, Appendix-bearing letter, p.3 (public CFTC filing)"
+      evidence_tier: R
+      what_it_actually_says: >
+        Under Rulebook Rule 7.2, if any event or circumstance materially impacts the reliability or
+        transparency of a Contract's Source Agency or Underlying, Kalshi retains authority to
+        designate a NEW Source Agency and Underlying for that Contract and to change associated
+        contract specifications AFTER the first day of trading, with the replacement required to be
+        "objective and verifiable" and announced on Kalshi's website. So the phrase that worried v2
+        describes a STANDING UNILATERAL RIGHT, not a modification already made.
+      the_two_facts_that_bound_any_measurement:
+        - >
+          THE BINDING SOURCE AGENCY IS CONFIDENTIAL. The filing lists "Appendix C (Confidential) -
+          Source Agency" and "Appendix E (Confidential) - Agreement with Quandl Data" as withheld
+          under a FOIA confidential-treatment request. The identity of the feed that actually
+          determines settlement is therefore NOT publicly verifiable. (Quandl -> Nasdaq Data Link is
+          an inference from the appendix TITLE only -- U, not R.)
+        - >
+          THE PUBLISHED SOURCE IS EXPLICITLY NON-BINDING. The filing states that instructions on how
+          to access the Underlying are provided for convenience only and are NOT part of the binding
+          Terms and Conditions, and may be clarified at any time. The API `settlement_sources` field
+          ("For example, Google Finance", .INX on Google Finance) is therefore decorative, not
+          contractual -- it must never be cited as the settlement reference.
+      correction_v7: >
+        v4 OVERREACHED. Two distinct texts were conflated:
+          - the $INX product certification (2022) states Rule 7.2's STANDING RIGHT to substitute a
+            Source Agency after listing -- v4 read this correctly;
+          - every settled KXINX and KXINXU market's own rules_secondary states, in the PAST TENSE,
+            that "the Exchange has modified the Source Agency and Underlying for indices markets.
+            See the rules for more information." It names no replacement.
+        So a modification HAS been made to indices markets, not merely reserved. Combined with the
+        confidential Appendix C, the settlement source for these series is opaque twice over:
+        originally filed confidentially, and since changed to something unnamed. The v4 conclusion
+        ("empirical, not contractual; needs rolling re-measurement") is UNCHANGED and if anything
+        strengthened -- but the sentence claiming no modification had occurred is retracted.
+      structural_differences_measured_v7:
+        evidence_tier: M1
+        expiration_value_precision: >
+          KXINX publishes expiration_value at 2 decimal places on all 1,350 included markets;
+          KXINXU publishes 4 decimal places on all 2,489. Uniform within each series, different
+          between them.
+        strike_conventions: >
+          KXINX uses strike_type between (1,260) / greater (45) / less (45), with .9999 floors on
+          the `greater` markets. KXINXU uses ONLY greater_or_equal with INTEGER floors (2,489).
+        series_metadata_is_otherwise_identical: >
+          contract_url, contract_terms_url, fee_type, fee_multiplier, settlement_sources,
+          exchange_index, category, tags and additional_prohibitions are byte-identical, and the two
+          series' last_updated_ts differ by 26 microseconds -- created by the same batch process.
+          Only frequency/ticker/title differ.
+        what_it_implies: >
+          KXINXU is not a more-precise rendering of the same number. If it were, its 4 dp value would
+          round to KXINX's 2 dp value; instead the two differ by up to 0.44 index points. Uniform
+          per-series precision plus different strike semantics indicates two DIFFERENT computation
+          paths, which is consistent with -- though it does not prove -- two different underlying
+          sources. This supersedes the v4 hypothesis that KXINXU might run under a separate
+          CERTIFICATION: it does not (same contract_url); the difference is downstream of the filing.
+      consequence_for_this_pair: >
+        L15's 42/42 exact match between KXINX and the official close stands, but it is an EMPIRICAL
+        REGULARITY over 2026-06-12..2026-08-18, not a contractual guarantee. The contract does not
+        publicly commit to the S&P official close, the binding source is sealed, and Kalshi may
+        change it after listing with website-only notice. KXINX therefore stays OK on MEASURED
+        basis, with a named, unhedgeable, non-measurable residual: silent source substitution.
+        Any live use of this pair should re-measure the basis on a rolling window rather than
+        treating v3's 42/42 as permanent.
+      scope_caveat_superseded_by_v7: >
+        (v4 text retained for the record; its "separate certification" hypothesis is now refuted by
+        the shared contract_url, and the live explanation is the different computation path measured
+        in structural_differences_measured_v7.)
+        The certification is dated 2022-04-26 and self-certifies "Will $INX close
+        <above/below/between> <value> on <date>?" listed "on a daily and weekly basis". It predates
+        the HOURLY KXINXU series and does not describe it. Whether KXINXU trades under an amended or
+        separate certification is UNKNOWN -- and it is a live candidate explanation for the wedge
+        L15 measured (KXINXU 15/37 exact, max|diff| 0.44 pt) despite identical rules_primary text
+        and a shared contract_url. Stated as a hypothesis, NOT a finding; it is not tested here.
+    resolved_n1_observation: >
+      The v2 entry recorded Kalshi 7691.76 vs IBKR SPX last 7693.26 on 2026-08-18 with "which is
+      official" U. RESOLVED (L15): the official close was 7691.76 and KXINX matched it exactly.
+      The 1.50-point error was the IBKR print, read with the index feed FROZEN (code Z) outside
+      RTH. The IBKR side of this pair therefore remains unmeasured, not merely disputed.
+    unresolved_mismatch: >
+      STILL BLOCKING even for KXINX, and none of it is a settlement-reference question:
+      (a) IBKR real-time option quotes are DELAYED -- L13 entitlement, unchanged by L15;
+      (b) tick-error propagation at digital extraction (Track B trap 9);
+      (c) RESOLVED as to text (v4, tier R): the clause is a standing discretionary substitution
+          right under Rule 7.2, not a past modification. But it RESOLVES INTO A HARDER BLOCK, not
+          out of one: the binding Source Agency is filed CONFIDENTIALLY and the published source is
+          explicitly non-binding, so no public document can confirm what determines settlement.
+          The measured 42/42 is empirical, not contractual, and needs rolling re-measurement;
+      (d) SPX vs XSP must still be pre-registered rather than chosen.
+    status: OK_FOR_KXINX_ONLY
+
+
+  - id: KALSHI_FOMC_LADDER_vs_CME_ZQ
+    kalshi:
+      contracts: "M1: KXFED (e.g. KXFED-27APR-T4.25: 'upper bound of the target federal funds rate ... following the Apr 28, 2027 meeting' greater than 4.25%) and KXFEDDECISION (e.g. KXFEDDECISION-28JAN-H26: hike/cut size buckets, mutually exclusive; a cancelled meeting maps to 'maintains')"
+      settlement_source: "M1: the target range UPPER BOUND published on federalreserve.gov after the named meeting (KXFED); the size of the move (KXFEDDECISION)"
+      observation_and_settlement_time: "M1: close_time 17:55Z/18:59Z on meeting day; expires 'the first 2:05 PM ET following the release of a Federal Reserve statement'; settlement_timer_seconds 300"
+    ibkr:
+      instrument: "CME 30-Day Fed Funds (ZQ), front unexpired month"
+      underlying_reference: "R: arithmetic monthly average of daily EFFR (NY Fed); price = 100 - average"
+      expiry_and_settlement: "R: last business day of the contract month, cash"
+      exercise_style: "n/a"
+      cash_or_physical: "cash"
+      multiplier: "R: $4,167 per 1.000 (100 - rate) point; tick 0.0025 = $10.4175 (verify)"
+    timezone_and_holidays: "ET; FOMC calendar to be pinned per contract month"
+    known_basis: "R: ZQ encodes an average EFFR over the month, not a probability; extraction requires meeting date, days before/after, EFFR-vs-target-range spread, move-size grid, and other events in the month"
+    measured_basis_period: null
+    kalshi_side_coverage:
+      measured_utc: "2026-08-19T06:52Z (L18)"
+      evidence_tier: M1
+      result: >
+        Only 2 settled FOMC meetings are recoverable from Kalshi (26JUN, 26JUL) out of 32 settled
+        markets; both series cover the identical 2. Against L18's pre-registered gate of 5 this is
+        INSUFFICIENT_COVERAGE, so KXFED/KXFEDDECISION intra-venue consistency is UNANSWERED and the
+        comparison against the Fed's published target range was NOT ATTEMPTED (NOT_REACHED).
+      consequence: >
+        This pair can never be characterized by backfill. At ~8 FOMC meetings a year, reaching n=5
+        needs ~7-8 months of FORWARD collection, starting whenever someone begins recording. Any
+        study whose unit of observation is sparser than ~1/week is permanently uncharacterizable
+        from Kalshi backfill -- a program-wide design constraint, established here.
+    unresolved_mismatch: "ZQ = monthly average EFFR vs Kalshi = target-range upper bound / move size after ONE meeting: needs meeting date, pre/post-meeting day counts, EFFR-minus-upper-bound spread (EFFR sits inside the range, typically ~upper-bound minus 7 bp), move-size grid, and any second event in the month; low prior; direct Kalshi-vs-raw-ZQ comparison forbidden; ZQ real-time DELAYED (L13)"
+    status: BLOCK
+
+  - id: KALSHI_15M_CRYPTO_vs_ANY_OPTION
+    status: FORBIDDEN
+    reason: "No matching option expiry exists for 15-minute binaries; the underlying-name match is not a payoff match."

@@ -1,0 +1,83 @@
+experiment_id: "janus-track-b-commodity-term-structure"
+date_registered: "2026-08-19"
+track: exec
+program: track_b_hft
+ledger_ref: "snooping_ledger.md row L23 (descriptive characterization -- costs no test look)"
+status_at_registration: PENDING
+
+# IMMUTABLE AFTER THE FIRST KALSHI REQUEST UNDER THIS ROW.
+
+purpose: >
+  Open strategy family 5.6 of the operator's source document ("Commodities: fundamentals-driven
+  systematic trading" -- calendar spreads, locational/basis spreads, seasonality, storage arbitrage)
+  by establishing the ONE thing every idea in it depends on: across Kalshi's commodity complex, WHICH
+  cadences of the same underlying share a settlement reference and are therefore comparable at all.
+
+why_this_and_not_the_calendar_spread_itself: >
+  Kalshi lists the same commodity at up to eight cadences (fifteen_min, hourly, daily, weekly,
+  monthly, quarterly/custom, annual, one_off). That is a term structure, and a calendar spread across
+  it is the obvious 5.6 trade. But AGENTS.md's 2026-08-14 amendment and Track B trap 5 both warn that
+  an INTRA-venue comparison can be the identical category error, and WTI has already proved it: KXWTI
+  daily settles on a NAMED-month ICE WTI futures settlement (L19/L20), far-dated KXWTI events settle
+  on the FRONT-MONTH price (L21), and KXWTI15M settles on the Pyth PYTHOIL index. Three references,
+  one commodity, one venue. A calendar spread across mismatched references is not an arbitrage; it is
+  the phase-1 "efficient open" error in new clothes. This row maps the references FIRST.
+
+why_this_is_not_a_test_look: >
+  Enumeration of published series metadata and rules text, plus a liquidity census of quoted spreads
+  and depth. No price is compared to another price, no distribution is extracted, no strategy return
+  is computed. L-row under snooping_ledger.md rule 5, same class as L1 and L3.
+
+series_level_metadata_is_NOT_TRUSTED:
+  rule: >
+    The series `settlement_sources` field is treated as a HINT and never as the reference. Observed
+    mislabels while scoping: KXWHEATW carries "Trading Economics - Corn" and KXGOLDEOY carries
+    "Trading Economics - Copper". The binding reference is read from each market's own rules_primary,
+    and where the two disagree BOTH are recorded and the series is flagged METADATA_CONFLICT.
+
+what_is_enumerated:
+  scope: "every Kalshi series in category Commodities"
+  per_series: "ticker, title, frequency, fee_type, fee_multiplier, settlement_sources, contract_url"
+  per_series_rules: "rules_primary and rules_secondary sampled from its markets, open first, settled as fallback"
+  reference_extraction: >
+    The settlement reference is classified from rules_primary into one of: NAMED_MONTH_FUTURES,
+    FRONT_MONTH_FUTURES, PYTH_INDEX, AGENCY_PUBLICATION, THIRD_PARTY_QUOTE, OTHER, UNPARSEABLE.
+    UNPARSEABLE is reported, never guessed.
+  underlying_grouping: "series grouped by the underlying commodity parsed from title/ticker; groups are reported with their per-cadence references side by side"
+
+part_B_liquidity_census:
+  metrics: "per series with open markets: n rungs, median spread, min/max spread, total open interest, rungs with two-sided depth"
+  purpose: >
+    Family C (capacity) as a FREE first-pass kill. Most of the 134 commodity series are almost
+    certainly untradeable; knowing which is worth more than any signal, and costs nothing.
+  reporting_rule: "per series, never pooled across cadences or underlyings"
+
+verdict_rule:
+  per_underlying_group:
+    COMPARABLE: "every cadence in the group resolves to the SAME reference class AND the same named instrument"
+    CROSS_CADENCE_BLOCK: "cadences in the group resolve to DIFFERENT references -- a calendar spread across them is forbidden until the basis between those references is measured"
+    INSUFFICIENT_RULES: "the reference could not be read for one or more cadences"
+  no_edge_claim: >
+    This row reports structure and liquidity only. It does NOT claim any calendar spread, seasonal
+    effect, or relative value exists. Those require their own rows, and any of them that reads prices
+    against each other must first clear the reference map produced here.
+
+fee_reality_recorded: >
+  Commodity series carry fee_multiplier 1 -- the 0.07 tier, not the 0.035 index tier. With Kalshi's
+  ceil(), the round-trip floor on a $1 contract is order 1-2 cents, so the minimum viable signal in
+  this complex is roughly 100-200 bp. Recorded here so no later row in family 5.6 forgets it.
+
+not_estimated_here:
+  - any_calendar_spread_or_seasonal_effect
+  - implied_distributions
+  - the_basis_between_two_different_references
+  - anything_requiring_IBKR
+
+privacy_and_disk:
+  identifiers_persisted: none
+  raw_rows: "/Volumes/Kilos/janus/commodity_map/ (never the root disk)"
+  disk_floor: "abort below 2 GB free on internal /"
+
+outputs:
+  results: "research/exec/2026-08-20_commodity-term-structure/results.json"
+  verdict: "research/exec/2026-08-20_commodity-term-structure/verdict.md"

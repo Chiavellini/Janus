@@ -1,0 +1,1207 @@
+{
+  "caveats": [
+    "The official-close side is FRED's redistribution of the S&P DJI series, tier R. Equality with the S&P DJI OFFICIAL close remains U.",
+    "CBOE publishes no independent PM exercise-settlement print; for SPXW/XSP it IS the official closing index value by rule. Declared in the spec before the run.",
+    "No IBKR value appears anywhere in this measurement. The L13 entitlement block is separate and unaffected by any outcome here.",
+    "A Kalshi-vs-option comparison that does not NAME its series stays BLOCK regardless of how either series scores here."
+  ],
+  "channel_counts": {
+    "events:KXINX": 1410,
+    "events:KXINXAB": 0,
+    "events:KXINXI": 0,
+    "events:KXINXU": 48120,
+    "markets:KXINX": 1410,
+    "markets:KXINXAB": 0,
+    "markets:KXINXI": 0,
+    "markets:KXINXU": 48120
+  },
+  "evidence_tiers": {
+    "equals_sp_dji_official_close": "U",
+    "kalshi_side": "M1",
+    "official_close_side": "R (FRED redistribution of S&P DJI; not primary)"
+  },
+  "experiment_id": "janus-track-b-spx-settlement-basis-per-series",
+  "fetch_stats": {
+    "429s": 0,
+    "cache_hits": 77,
+    "offset_caps": 0,
+    "requests": 0,
+    "retries": 0
+  },
+  "ledger_row": "L15",
+  "markets_seen_union": 49530,
+  "per_series": {
+    "KXINX": {
+      "rows": [
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7431.46,
+          "kalshi": 7431.46,
+          "official_close": 7431.46,
+          "settlement_date": "2026-06-12",
+          "status": "CONFIRMED",
+          "yahoo": 7431.4599609375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7554.29,
+          "kalshi": 7554.29,
+          "official_close": 7554.29,
+          "settlement_date": "2026-06-15",
+          "status": "CONFIRMED",
+          "yahoo": 7554.2900390625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7511.35,
+          "kalshi": 7511.35,
+          "official_close": 7511.35,
+          "settlement_date": "2026-06-16",
+          "status": "CONFIRMED",
+          "yahoo": 7511.35009765625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7420.1,
+          "kalshi": 7420.1,
+          "official_close": 7420.1,
+          "settlement_date": "2026-06-17",
+          "status": "CONFIRMED",
+          "yahoo": 7420.10009765625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7500.58,
+          "kalshi": 7500.58,
+          "official_close": 7500.58,
+          "settlement_date": "2026-06-18",
+          "status": "CONFIRMED",
+          "yahoo": 7500.580078125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7472.79,
+          "kalshi": 7472.79,
+          "official_close": 7472.79,
+          "settlement_date": "2026-06-22",
+          "status": "CONFIRMED",
+          "yahoo": 7472.7900390625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7365.46,
+          "kalshi": 7365.46,
+          "official_close": 7365.46,
+          "settlement_date": "2026-06-23",
+          "status": "CONFIRMED",
+          "yahoo": 7365.4599609375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7358.22,
+          "kalshi": 7358.22,
+          "official_close": 7358.22,
+          "settlement_date": "2026-06-24",
+          "status": "CONFIRMED",
+          "yahoo": 7358.22021484375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7357.49,
+          "kalshi": 7357.49,
+          "official_close": 7357.49,
+          "settlement_date": "2026-06-25",
+          "status": "CONFIRMED",
+          "yahoo": 7357.490234375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7354.02,
+          "kalshi": 7354.02,
+          "official_close": 7354.02,
+          "settlement_date": "2026-06-26",
+          "status": "CONFIRMED",
+          "yahoo": 7354.02001953125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7440.43,
+          "kalshi": 7440.43,
+          "official_close": 7440.43,
+          "settlement_date": "2026-06-29",
+          "status": "CONFIRMED",
+          "yahoo": 7440.43017578125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7499.36,
+          "kalshi": 7499.36,
+          "official_close": 7499.36,
+          "settlement_date": "2026-06-30",
+          "status": "CONFIRMED",
+          "yahoo": 7499.35986328125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7483.23,
+          "kalshi": 7483.23,
+          "official_close": 7483.23,
+          "settlement_date": "2026-07-01",
+          "status": "CONFIRMED",
+          "yahoo": 7483.22998046875
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7537.43,
+          "kalshi": 7537.43,
+          "official_close": 7537.43,
+          "settlement_date": "2026-07-06",
+          "status": "CONFIRMED",
+          "yahoo": 7537.43017578125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7503.85,
+          "kalshi": 7503.85,
+          "official_close": 7503.85,
+          "settlement_date": "2026-07-07",
+          "status": "CONFIRMED",
+          "yahoo": 7503.85009765625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7482.71,
+          "kalshi": 7482.71,
+          "official_close": 7482.71,
+          "settlement_date": "2026-07-08",
+          "status": "CONFIRMED",
+          "yahoo": 7482.7099609375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7543.64,
+          "kalshi": 7543.64,
+          "official_close": 7543.64,
+          "settlement_date": "2026-07-09",
+          "status": "CONFIRMED",
+          "yahoo": 7543.64013671875
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7575.39,
+          "kalshi": 7575.39,
+          "official_close": 7575.39,
+          "settlement_date": "2026-07-10",
+          "status": "CONFIRMED",
+          "yahoo": 7575.39013671875
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7515.34,
+          "kalshi": 7515.34,
+          "official_close": 7515.34,
+          "settlement_date": "2026-07-13",
+          "status": "CONFIRMED",
+          "yahoo": 7515.33984375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7543.59,
+          "kalshi": 7543.59,
+          "official_close": 7543.59,
+          "settlement_date": "2026-07-14",
+          "status": "CONFIRMED",
+          "yahoo": 7543.58984375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7572.4,
+          "kalshi": 7572.4,
+          "official_close": 7572.4,
+          "settlement_date": "2026-07-15",
+          "status": "CONFIRMED",
+          "yahoo": 7572.39990234375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7533.77,
+          "kalshi": 7533.77,
+          "official_close": 7533.77,
+          "settlement_date": "2026-07-16",
+          "status": "CONFIRMED",
+          "yahoo": 7533.77001953125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7457.69,
+          "kalshi": 7457.69,
+          "official_close": 7457.69,
+          "settlement_date": "2026-07-17",
+          "status": "CONFIRMED",
+          "yahoo": 7457.68994140625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7443.28,
+          "kalshi": 7443.28,
+          "official_close": 7443.28,
+          "settlement_date": "2026-07-20",
+          "status": "CONFIRMED",
+          "yahoo": 7443.27978515625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7509.2,
+          "kalshi": 7509.2,
+          "official_close": 7509.2,
+          "settlement_date": "2026-07-21",
+          "status": "PRIMARY_ONLY",
+          "yahoo": null
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7498.96,
+          "kalshi": 7498.96,
+          "official_close": 7498.96,
+          "settlement_date": "2026-07-22",
+          "status": "PRIMARY_ONLY",
+          "yahoo": null
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7408.3,
+          "kalshi": 7408.3,
+          "official_close": 7408.3,
+          "settlement_date": "2026-07-23",
+          "status": "CONFIRMED",
+          "yahoo": 7408.2998046875
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7411.98,
+          "kalshi": 7411.98,
+          "official_close": 7411.98,
+          "settlement_date": "2026-07-24",
+          "status": "CONFIRMED",
+          "yahoo": 7411.97998046875
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7413.18,
+          "kalshi": 7413.18,
+          "official_close": 7413.18,
+          "settlement_date": "2026-07-27",
+          "status": "CONFIRMED",
+          "yahoo": 7413.18017578125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7428.78,
+          "kalshi": 7428.78,
+          "official_close": 7428.78,
+          "settlement_date": "2026-07-28",
+          "status": "CONFIRMED",
+          "yahoo": 7428.77978515625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7316.15,
+          "kalshi": 7316.15,
+          "official_close": 7316.15,
+          "settlement_date": "2026-07-29",
+          "status": "CONFIRMED",
+          "yahoo": 7316.14990234375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7437.63,
+          "kalshi": 7437.63,
+          "official_close": 7437.63,
+          "settlement_date": "2026-07-30",
+          "status": "CONFIRMED",
+          "yahoo": 7437.6298828125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7489.72,
+          "kalshi": 7489.72,
+          "official_close": 7489.72,
+          "settlement_date": "2026-07-31",
+          "status": "PRIMARY_ONLY",
+          "yahoo": null
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7600.5,
+          "kalshi": 7600.5,
+          "official_close": 7600.5,
+          "settlement_date": "2026-08-03",
+          "status": "CONFIRMED",
+          "yahoo": 7600.5
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7736.52,
+          "kalshi": 7736.52,
+          "official_close": 7736.52,
+          "settlement_date": "2026-08-04",
+          "status": "CONFIRMED",
+          "yahoo": 7736.52001953125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7723.55,
+          "kalshi": 7723.55,
+          "official_close": 7723.55,
+          "settlement_date": "2026-08-05",
+          "status": "CONFIRMED",
+          "yahoo": 7723.5498046875
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7709.96,
+          "kalshi": 7709.96,
+          "official_close": 7709.96,
+          "settlement_date": "2026-08-06",
+          "status": "CONFIRMED",
+          "yahoo": 7709.9599609375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7757.64,
+          "kalshi": 7757.64,
+          "official_close": 7757.64,
+          "settlement_date": "2026-08-07",
+          "status": "CONFIRMED",
+          "yahoo": 7757.64013671875
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7753.11,
+          "kalshi": 7753.11,
+          "official_close": 7753.11,
+          "settlement_date": "2026-08-10",
+          "status": "CONFIRMED",
+          "yahoo": 7753.10986328125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7728.2,
+          "kalshi": 7728.2,
+          "official_close": 7728.2,
+          "settlement_date": "2026-08-11",
+          "status": "CONFIRMED",
+          "yahoo": 7728.2001953125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7748.5,
+          "kalshi": 7748.5,
+          "official_close": 7748.5,
+          "settlement_date": "2026-08-12",
+          "status": "CONFIRMED",
+          "yahoo": 7748.5
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7798.99,
+          "kalshi": 7798.99,
+          "official_close": 7798.99,
+          "settlement_date": "2026-08-13",
+          "status": "CONFIRMED",
+          "yahoo": 7798.990234375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7785.76,
+          "kalshi": 7785.76,
+          "official_close": 7785.76,
+          "settlement_date": "2026-08-14",
+          "status": "CONFIRMED",
+          "yahoo": 7785.759765625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7745.06,
+          "kalshi": 7745.06,
+          "official_close": 7745.06,
+          "settlement_date": "2026-08-17",
+          "status": "CONFIRMED",
+          "yahoo": 7745.06005859375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7691.76,
+          "kalshi": 7691.76,
+          "official_close": 7691.76,
+          "settlement_date": "2026-08-18",
+          "status": "CONFIRMED",
+          "yahoo": 7691.759765625
+        }
+      ],
+      "stops": [],
+      "summary": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "frac_exactly_equal": 1.0,
+        "iqr": [
+          0.0,
+          0.0
+        ],
+        "max_abs": 0.0,
+        "mean": 0.0,
+        "median": 0.0,
+        "median_abs_bp": 0.0,
+        "n_dates_headline": 42,
+        "n_exactly_equal": 42,
+        "n_no_primary_close": 0,
+        "n_primary_only": 3,
+        "n_reference_disagree": 0
+      },
+      "verdict": {
+        "status": "OK",
+        "verdict": "MATCHES_OFFICIAL_CLOSE",
+        "why": "42/42 exactly equal at 2 dp, max|diff| 0.0 <= 0.01"
+      }
+    },
+    "KXINXU": {
+      "rows": [
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7431.46,
+          "kalshi": 7431.46,
+          "official_close": 7431.46,
+          "settlement_date": "2026-06-12",
+          "status": "CONFIRMED",
+          "yahoo": 7431.4599609375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7554.29,
+          "kalshi": 7554.29,
+          "official_close": 7554.29,
+          "settlement_date": "2026-06-15",
+          "status": "CONFIRMED",
+          "yahoo": 7554.2900390625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7511.35,
+          "kalshi": 7511.35,
+          "official_close": 7511.35,
+          "settlement_date": "2026-06-16",
+          "status": "CONFIRMED",
+          "yahoo": 7511.35009765625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7420.1,
+          "kalshi": 7420.1,
+          "official_close": 7420.1,
+          "settlement_date": "2026-06-17",
+          "status": "CONFIRMED",
+          "yahoo": 7420.10009765625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7500.58,
+          "kalshi": 7500.58,
+          "official_close": 7500.58,
+          "settlement_date": "2026-06-18",
+          "status": "CONFIRMED",
+          "yahoo": 7500.580078125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7472.79,
+          "kalshi": 7472.79,
+          "official_close": 7472.79,
+          "settlement_date": "2026-06-22",
+          "status": "CONFIRMED",
+          "yahoo": 7472.7900390625
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7365.46,
+          "kalshi": 7365.46,
+          "official_close": 7365.46,
+          "settlement_date": "2026-06-23",
+          "status": "CONFIRMED",
+          "yahoo": 7365.4599609375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7358.22,
+          "kalshi": 7358.22,
+          "official_close": 7358.22,
+          "settlement_date": "2026-06-24",
+          "status": "CONFIRMED",
+          "yahoo": 7358.22021484375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7357.49,
+          "kalshi": 7357.49,
+          "official_close": 7357.49,
+          "settlement_date": "2026-06-25",
+          "status": "CONFIRMED",
+          "yahoo": 7357.490234375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7354.02,
+          "kalshi": 7354.02,
+          "official_close": 7354.02,
+          "settlement_date": "2026-06-26",
+          "status": "CONFIRMED",
+          "yahoo": 7354.02001953125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7440.43,
+          "kalshi": 7440.43,
+          "official_close": 7440.43,
+          "settlement_date": "2026-06-29",
+          "status": "CONFIRMED",
+          "yahoo": 7440.43017578125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7499.36,
+          "kalshi": 7499.36,
+          "official_close": 7499.36,
+          "settlement_date": "2026-06-30",
+          "status": "CONFIRMED",
+          "yahoo": 7499.35986328125
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7483.23,
+          "kalshi": 7483.23,
+          "official_close": 7483.23,
+          "settlement_date": "2026-07-01",
+          "status": "CONFIRMED",
+          "yahoo": 7483.22998046875
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7483.24,
+          "kalshi": 7483.24,
+          "official_close": 7483.24,
+          "settlement_date": "2026-07-02",
+          "status": "CONFIRMED",
+          "yahoo": 7483.240234375
+        },
+        {
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "fred": 7537.43,
+          "kalshi": 7537.43,
+          "official_close": 7537.43,
+          "settlement_date": "2026-07-06",
+          "status": "CONFIRMED",
+          "yahoo": 7537.43017578125
+        },
+        {
+          "diff": -0.11,
+          "diff_bp": -0.1466,
+          "fred": 7503.85,
+          "kalshi": 7503.74,
+          "official_close": 7503.85,
+          "settlement_date": "2026-07-07",
+          "status": "CONFIRMED",
+          "yahoo": 7503.85009765625
+        },
+        {
+          "diff": -0.14,
+          "diff_bp": -0.1871,
+          "fred": 7482.71,
+          "kalshi": 7482.57,
+          "official_close": 7482.71,
+          "settlement_date": "2026-07-08",
+          "status": "CONFIRMED",
+          "yahoo": 7482.7099609375
+        },
+        {
+          "diff": -0.13,
+          "diff_bp": -0.1723,
+          "fred": 7543.64,
+          "kalshi": 7543.51,
+          "official_close": 7543.64,
+          "settlement_date": "2026-07-09",
+          "status": "CONFIRMED",
+          "yahoo": 7543.64013671875
+        },
+        {
+          "diff": -0.13,
+          "diff_bp": -0.1716,
+          "fred": 7575.39,
+          "kalshi": 7575.26,
+          "official_close": 7575.39,
+          "settlement_date": "2026-07-10",
+          "status": "CONFIRMED",
+          "yahoo": 7575.39013671875
+        },
+        {
+          "diff": 0.29,
+          "diff_bp": 0.3844,
+          "fred": 7543.59,
+          "kalshi": 7543.88,
+          "official_close": 7543.59,
+          "settlement_date": "2026-07-14",
+          "status": "CONFIRMED",
+          "yahoo": 7543.58984375
+        },
+        {
+          "diff": 0.02,
+          "diff_bp": 0.0264,
+          "fred": 7572.4,
+          "kalshi": 7572.42,
+          "official_close": 7572.4,
+          "settlement_date": "2026-07-15",
+          "status": "CONFIRMED",
+          "yahoo": 7572.39990234375
+        },
+        {
+          "diff": 0.12,
+          "diff_bp": 0.1593,
+          "fred": 7533.77,
+          "kalshi": 7533.89,
+          "official_close": 7533.77,
+          "settlement_date": "2026-07-16",
+          "status": "CONFIRMED",
+          "yahoo": 7533.77001953125
+        },
+        {
+          "diff": -0.02,
+          "diff_bp": -0.0268,
+          "fred": 7457.69,
+          "kalshi": 7457.67,
+          "official_close": 7457.69,
+          "settlement_date": "2026-07-17",
+          "status": "CONFIRMED",
+          "yahoo": 7457.68994140625
+        },
+        {
+          "diff": 0.01,
+          "diff_bp": 0.0133,
+          "fred": 7509.2,
+          "kalshi": 7509.21,
+          "official_close": 7509.2,
+          "settlement_date": "2026-07-21",
+          "status": "PRIMARY_ONLY",
+          "yahoo": null
+        },
+        {
+          "diff": 0.09,
+          "diff_bp": 0.12,
+          "fred": 7498.96,
+          "kalshi": 7499.05,
+          "official_close": 7498.96,
+          "settlement_date": "2026-07-22",
+          "status": "PRIMARY_ONLY",
+          "yahoo": null
+        },
+        {
+          "diff": -0.19,
+          "diff_bp": -0.2565,
+          "fred": 7408.3,
+          "kalshi": 7408.11,
+          "official_close": 7408.3,
+          "settlement_date": "2026-07-23",
+          "status": "CONFIRMED",
+          "yahoo": 7408.2998046875
+        },
+        {
+          "diff": -0.02,
+          "diff_bp": -0.027,
+          "fred": 7411.98,
+          "kalshi": 7411.96,
+          "official_close": 7411.98,
+          "settlement_date": "2026-07-24",
+          "status": "CONFIRMED",
+          "yahoo": 7411.97998046875
+        },
+        {
+          "diff": 0.44,
+          "diff_bp": 0.5923,
+          "fred": 7428.78,
+          "kalshi": 7429.22,
+          "official_close": 7428.78,
+          "settlement_date": "2026-07-28",
+          "status": "CONFIRMED",
+          "yahoo": 7428.77978515625
+        },
+        {
+          "diff": 0.24,
+          "diff_bp": 0.328,
+          "fred": 7316.15,
+          "kalshi": 7316.39,
+          "official_close": 7316.15,
+          "settlement_date": "2026-07-29",
+          "status": "CONFIRMED",
+          "yahoo": 7316.14990234375
+        },
+        {
+          "diff": 0.36,
+          "diff_bp": 0.484,
+          "fred": 7437.63,
+          "kalshi": 7437.99,
+          "official_close": 7437.63,
+          "settlement_date": "2026-07-30",
+          "status": "CONFIRMED",
+          "yahoo": 7437.6298828125
+        },
+        {
+          "diff": 0.09,
+          "diff_bp": 0.1202,
+          "fred": 7489.72,
+          "kalshi": 7489.81,
+          "official_close": 7489.72,
+          "settlement_date": "2026-07-31",
+          "status": "PRIMARY_ONLY",
+          "yahoo": null
+        },
+        {
+          "diff": -0.03,
+          "diff_bp": -0.0388,
+          "fred": 7736.52,
+          "kalshi": 7736.49,
+          "official_close": 7736.52,
+          "settlement_date": "2026-08-04",
+          "status": "CONFIRMED",
+          "yahoo": 7736.52001953125
+        },
+        {
+          "diff": -0.02,
+          "diff_bp": -0.0259,
+          "fred": 7723.55,
+          "kalshi": 7723.53,
+          "official_close": 7723.55,
+          "settlement_date": "2026-08-05",
+          "status": "CONFIRMED",
+          "yahoo": 7723.5498046875
+        },
+        {
+          "diff": 0.02,
+          "diff_bp": 0.0259,
+          "fred": 7709.96,
+          "kalshi": 7709.98,
+          "official_close": 7709.96,
+          "settlement_date": "2026-08-06",
+          "status": "CONFIRMED",
+          "yahoo": 7709.9599609375
+        },
+        {
+          "diff": -0.18,
+          "diff_bp": -0.232,
+          "fred": 7757.64,
+          "kalshi": 7757.46,
+          "official_close": 7757.64,
+          "settlement_date": "2026-08-07",
+          "status": "CONFIRMED",
+          "yahoo": 7757.64013671875
+        },
+        {
+          "diff": -0.11,
+          "diff_bp": -0.1423,
+          "fred": 7728.2,
+          "kalshi": 7728.09,
+          "official_close": 7728.2,
+          "settlement_date": "2026-08-11",
+          "status": "CONFIRMED",
+          "yahoo": 7728.2001953125
+        },
+        {
+          "diff": 0.04,
+          "diff_bp": 0.0516,
+          "fred": 7748.5,
+          "kalshi": 7748.54,
+          "official_close": 7748.5,
+          "settlement_date": "2026-08-12",
+          "status": "CONFIRMED",
+          "yahoo": 7748.5
+        },
+        {
+          "diff": 0.2,
+          "diff_bp": 0.2564,
+          "fred": 7798.99,
+          "kalshi": 7799.19,
+          "official_close": 7798.99,
+          "settlement_date": "2026-08-13",
+          "status": "CONFIRMED",
+          "yahoo": 7798.990234375
+        },
+        {
+          "diff": -0.03,
+          "diff_bp": -0.0385,
+          "fred": 7785.76,
+          "kalshi": 7785.73,
+          "official_close": 7785.76,
+          "settlement_date": "2026-08-14",
+          "status": "CONFIRMED",
+          "yahoo": 7785.759765625
+        },
+        {
+          "diff": 0.21,
+          "diff_bp": 0.273,
+          "fred": 7691.76,
+          "kalshi": 7691.97,
+          "official_close": 7691.76,
+          "settlement_date": "2026-08-18",
+          "status": "CONFIRMED",
+          "yahoo": 7691.759765625
+        }
+      ],
+      "stops": [],
+      "summary": {
+        "ci95": [
+          -0.019189,
+          0.068378
+        ],
+        "frac_exactly_equal": 0.405405,
+        "iqr": [
+          -0.025,
+          0.02
+        ],
+        "max_abs": 0.44,
+        "mean": 0.022432,
+        "median": 0.0,
+        "median_abs_bp": 0.0268,
+        "n_dates_headline": 37,
+        "n_exactly_equal": 15,
+        "n_no_primary_close": 0,
+        "n_primary_only": 3,
+        "n_reference_disagree": 0
+      },
+      "verdict": {
+        "status": "BLOCK",
+        "verdict": "WEDGE_MEASURED",
+        "why": "frac_exactly_equal 0.405405 / max|diff| 0.44 fails the pre-registered rule; the wedge is the result"
+      }
+    }
+  },
+  "reference_sources": {
+    "errors": {},
+    "fred_rows": 2512,
+    "stooq": "DROPPED (L14: JS anti-bot page as 200)",
+    "yahoo_rows": 498
+  },
+  "selection": {
+    "hourly_excluded": 90,
+    "included": 3839,
+    "rejected": 45601
+  },
+  "series_wedge_KXINX_minus_KXINXU": {
+    "a": "KXINX",
+    "b": "KXINXU",
+    "max": 0.19,
+    "max_abs": 0.44,
+    "mean": -0.026154,
+    "median": 0.0,
+    "min": -0.44,
+    "n_exactly_equal": 14,
+    "n_shared_dates": 39,
+    "rows": [
+      {
+        "KXINX": 7431.46,
+        "KXINXU": 7431.46,
+        "diff": 0.0,
+        "settlement_date": "2026-06-12"
+      },
+      {
+        "KXINX": 7554.29,
+        "KXINXU": 7554.29,
+        "diff": 0.0,
+        "settlement_date": "2026-06-15"
+      },
+      {
+        "KXINX": 7511.35,
+        "KXINXU": 7511.35,
+        "diff": 0.0,
+        "settlement_date": "2026-06-16"
+      },
+      {
+        "KXINX": 7420.1,
+        "KXINXU": 7420.1,
+        "diff": 0.0,
+        "settlement_date": "2026-06-17"
+      },
+      {
+        "KXINX": 7500.58,
+        "KXINXU": 7500.58,
+        "diff": 0.0,
+        "settlement_date": "2026-06-18"
+      },
+      {
+        "KXINX": 7472.79,
+        "KXINXU": 7472.79,
+        "diff": 0.0,
+        "settlement_date": "2026-06-22"
+      },
+      {
+        "KXINX": 7365.46,
+        "KXINXU": 7365.46,
+        "diff": 0.0,
+        "settlement_date": "2026-06-23"
+      },
+      {
+        "KXINX": 7358.22,
+        "KXINXU": 7358.22,
+        "diff": 0.0,
+        "settlement_date": "2026-06-24"
+      },
+      {
+        "KXINX": 7357.49,
+        "KXINXU": 7357.49,
+        "diff": 0.0,
+        "settlement_date": "2026-06-25"
+      },
+      {
+        "KXINX": 7354.02,
+        "KXINXU": 7354.02,
+        "diff": 0.0,
+        "settlement_date": "2026-06-26"
+      },
+      {
+        "KXINX": 7440.43,
+        "KXINXU": 7440.43,
+        "diff": 0.0,
+        "settlement_date": "2026-06-29"
+      },
+      {
+        "KXINX": 7499.36,
+        "KXINXU": 7499.36,
+        "diff": 0.0,
+        "settlement_date": "2026-06-30"
+      },
+      {
+        "KXINX": 7483.23,
+        "KXINXU": 7483.23,
+        "diff": 0.0,
+        "settlement_date": "2026-07-01"
+      },
+      {
+        "KXINX": 7537.43,
+        "KXINXU": 7537.43,
+        "diff": 0.0,
+        "settlement_date": "2026-07-06"
+      },
+      {
+        "KXINX": 7503.85,
+        "KXINXU": 7503.74,
+        "diff": 0.11,
+        "settlement_date": "2026-07-07"
+      },
+      {
+        "KXINX": 7482.71,
+        "KXINXU": 7482.57,
+        "diff": 0.14,
+        "settlement_date": "2026-07-08"
+      },
+      {
+        "KXINX": 7543.64,
+        "KXINXU": 7543.51,
+        "diff": 0.13,
+        "settlement_date": "2026-07-09"
+      },
+      {
+        "KXINX": 7575.39,
+        "KXINXU": 7575.26,
+        "diff": 0.13,
+        "settlement_date": "2026-07-10"
+      },
+      {
+        "KXINX": 7543.59,
+        "KXINXU": 7543.88,
+        "diff": -0.29,
+        "settlement_date": "2026-07-14"
+      },
+      {
+        "KXINX": 7572.4,
+        "KXINXU": 7572.42,
+        "diff": -0.02,
+        "settlement_date": "2026-07-15"
+      },
+      {
+        "KXINX": 7533.77,
+        "KXINXU": 7533.89,
+        "diff": -0.12,
+        "settlement_date": "2026-07-16"
+      },
+      {
+        "KXINX": 7457.69,
+        "KXINXU": 7457.67,
+        "diff": 0.02,
+        "settlement_date": "2026-07-17"
+      },
+      {
+        "KXINX": 7509.2,
+        "KXINXU": 7509.21,
+        "diff": -0.01,
+        "settlement_date": "2026-07-21"
+      },
+      {
+        "KXINX": 7498.96,
+        "KXINXU": 7499.05,
+        "diff": -0.09,
+        "settlement_date": "2026-07-22"
+      },
+      {
+        "KXINX": 7408.3,
+        "KXINXU": 7408.11,
+        "diff": 0.19,
+        "settlement_date": "2026-07-23"
+      },
+      {
+        "KXINX": 7411.98,
+        "KXINXU": 7411.96,
+        "diff": 0.02,
+        "settlement_date": "2026-07-24"
+      },
+      {
+        "KXINX": 7428.78,
+        "KXINXU": 7429.22,
+        "diff": -0.44,
+        "settlement_date": "2026-07-28"
+      },
+      {
+        "KXINX": 7316.15,
+        "KXINXU": 7316.39,
+        "diff": -0.24,
+        "settlement_date": "2026-07-29"
+      },
+      {
+        "KXINX": 7437.63,
+        "KXINXU": 7437.99,
+        "diff": -0.36,
+        "settlement_date": "2026-07-30"
+      },
+      {
+        "KXINX": 7489.72,
+        "KXINXU": 7489.81,
+        "diff": -0.09,
+        "settlement_date": "2026-07-31"
+      },
+      {
+        "KXINX": 7736.52,
+        "KXINXU": 7736.49,
+        "diff": 0.03,
+        "settlement_date": "2026-08-04"
+      },
+      {
+        "KXINX": 7723.55,
+        "KXINXU": 7723.53,
+        "diff": 0.02,
+        "settlement_date": "2026-08-05"
+      },
+      {
+        "KXINX": 7709.96,
+        "KXINXU": 7709.98,
+        "diff": -0.02,
+        "settlement_date": "2026-08-06"
+      },
+      {
+        "KXINX": 7757.64,
+        "KXINXU": 7757.46,
+        "diff": 0.18,
+        "settlement_date": "2026-08-07"
+      },
+      {
+        "KXINX": 7728.2,
+        "KXINXU": 7728.09,
+        "diff": 0.11,
+        "settlement_date": "2026-08-11"
+      },
+      {
+        "KXINX": 7748.5,
+        "KXINXU": 7748.54,
+        "diff": -0.04,
+        "settlement_date": "2026-08-12"
+      },
+      {
+        "KXINX": 7798.99,
+        "KXINXU": 7799.19,
+        "diff": -0.2,
+        "settlement_date": "2026-08-13"
+      },
+      {
+        "KXINX": 7785.76,
+        "KXINXU": 7785.73,
+        "diff": 0.03,
+        "settlement_date": "2026-08-14"
+      },
+      {
+        "KXINX": 7691.76,
+        "KXINXU": 7691.97,
+        "diff": -0.21,
+        "settlement_date": "2026-08-18"
+      }
+    ],
+    "single_signed": false
+  },
+  "spec": "research/exec/2026-08-19_spx-settlement-basis-per-series/spec.yaml",
+  "supersedes": "L14",
+  "test_looks_spent": 0
+}

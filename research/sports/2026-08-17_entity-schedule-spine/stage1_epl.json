@@ -1,0 +1,35 @@
+{
+ "league": "epl",
+ "window_utc": [
+  "2026-08-17T00:00:00+00:00",
+  "2026-08-25T00:00:00+00:00"
+ ],
+ "scheduled_games": 10,
+ "kalshi": {
+  "events_seen": 20,
+  "in_window": 10,
+  "resolved_to_game": 10,
+  "resolution_rate": 1.0,
+  "entity_fail": 0,
+  "no_start": 0,
+  "no_game": 0,
+  "via_exact_time": 0,
+  "via_local_date": 10
+ },
+ "polymarket": {
+  "events_seen": 131,
+  "in_window": 70,
+  "resolved_to_game": 70,
+  "resolution_rate": 1.0,
+  "entity_fail": 0,
+  "no_start": 0,
+  "no_game": 0
+ },
+ "context_colisting": {
+  "games_with_kalshi": 10,
+  "games_with_pm": 10,
+  "games_with_both": 10
+ },
+ "failures": [],
+ "failure_total": 0
+}

@@ -1,0 +1,4 @@
+asset,n_matched,n_disagree,p_disagree,p_disagree_ci,n_days,hedge_value_cents,required_nominal_edge_cents
+btc,2860,163,0.05699,"[0.04887, 0.06549]",43,94.301,5.699
+eth,1063,65,0.06115,"[0.0478, 0.07281]",21,93.885,6.115
+sol,1064,79,0.07425,"[0.05198, 0.09558]",21,92.575,7.425

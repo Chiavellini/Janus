@@ -1,0 +1,73 @@
+experiment_id: "janus-track-b-wti-ladder-forward"
+date_registered: "2026-08-19"
+track: exec
+program: track_b_hft
+ledger_ref: "snooping_ledger.md row L22 (capture characterization -- costs no test look)"
+status_at_registration: PENDING
+depends_on: "L21 (research/exec/2026-08-20_wti-ladder-coherence) -- one snapshot, Part C was n=1"
+
+# IMMUTABLE AFTER THE FIRST PERSISTED SNAPSHOT.
+
+purpose: >
+  Turn L21's n=1 observation into a series by snapshotting the KXWTI ladder and the delayed NYMEX CL
+  futures on a fixed cadence. This row registers the CAPTURE ONLY. Its gate is operational --
+  coverage, staleness, reason-coded gaps, privacy, disk. It draws NO conclusion about the
+  ladder-vs-futures relationship.
+
+why_the_analysis_is_deliberately_NOT_registered_here: >
+  The question the data will answer -- "does an executable, fee-surviving gap between the Kalshi
+  ladder and the CL futures price ever appear, and how often" -- is close in kind to L12, which this
+  project registered as a NUMBERED row. Spending the project's FIRST test look is the operator's
+  decision, not this row's, and it must not be smuggled in behind a collector. The analysis therefore
+  gets its own row, registered separately, after the operator chooses L-row versus numbered.
+  This spec exists so that collection can start now without prejudging that.
+
+what_is_captured:
+  kalshi: "every open KXWTI market: strike, yes_bid/yes_ask and sizes, no_bid/no_ask, open interest, volume, event, contract-month text"
+  ibkr: "delayed NYMEX CL futures (availability D*) for the contract month(s) the ladder names, via /trsrv/futures + /iserver/marketdata/snapshot"
+  derived_per_snapshot: "ladder implied mean on bid/ask/mid via L21's estimator, capacity metrics, executable no-arb count -- all recomputed from stored raw rows, never trusted from memory"
+  timestamps: "kalshi recv_ts, ibkr recv_ts, ibkr _updated, and the derived staleness on every row"
+
+cadence_and_scope:
+  period_s: 300
+  rationale: >
+    KXWTI is DAILY-settled; this is not a microstructure study and a 5-minute grid is ample. Three
+    HTTP requests per cycle (one Kalshi page walk, two IBKR snapshot calls including the required
+    preflight) keeps load negligible on a host that has already had QoS trouble.
+  process_type: >
+    launchd ProcessType Interactive, NO Nice/LowPriorityIO. Background QoS pinned two earlier Janus
+    jobs at runtime priority 4 and broke both (the IBKR gateway's TLS timeouts, and Phase A's 19,843
+    scheduler_late gaps). Not repeating it a third time.
+  scope: "KXWTI only. KXWTIW and the 15-minute commodity series are out of scope for this row."
+
+denominator_and_gap_rules:
+  rule: "every scheduled slot writes exactly one snapshot row -- ok or reason-coded. No silent absences."
+  gap_reasons: [KALSHI_ERROR, KALSHI_EMPTY, IBKR_AUTH_INVALID, IBKR_ERROR, IBKR_NO_CONTRACT,
+                MONTH_UNPARSEABLE, FRONT_MONTH_RULE, DISK_FLOOR, MARKET_CLOSED, UNKNOWN]
+  front_month_rule_is_a_distinct_reason: >
+    L21 measured that far-dated KXWTI events settle on "the FRONT-MONTH settle price" rather than a
+    named month -- a time-varying reference L20's equivalence result does NOT cover. Those events are
+    captured but flagged FRONT_MONTH_RULE and must never be pooled with named-month events.
+
+checkpoint:
+  duration_min_sessions: 10
+  criteria:
+    - "at least 10 distinct settlement sessions captured"
+    - ">= 90% of scheduled slots produce a row (ok or reason-coded); zero silent absences"
+    - "ibkr staleness recorded on every row that carries a futures quote"
+    - "zero account/session/user/hardware identifiers persisted (report scan == 0)"
+    - "zero forbidden-endpoint attempts (client raises before network; count == 0)"
+    - "named-month and front-month events stored distinguishably"
+    - "disk consumption measured and <= 50 MB/day"
+  on_fail: >
+    STOP and report which criterion failed. A capture failure is NEVER reinterpreted as an edge
+    result, and the collector is not widened to work around it.
+
+privacy_and_disk:
+  identifiers_persisted: none
+  db: "/Volumes/Kilos/janus/wti_ladder/forward.sqlite (never the root disk)"
+  disk_floor: "abort below 2 GB free on internal /"
+
+outputs:
+  results: "research/exec/2026-08-20_wti-ladder-forward/results.json"
+  verdict: "research/exec/2026-08-20_wti-ladder-forward/verdict.md"

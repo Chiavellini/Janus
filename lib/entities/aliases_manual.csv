@@ -1,0 +1,71 @@
+league,alias,entity_id,source,note
+epl,BRI,epl:eng.brighton,cooccurrence_2026-08-17,derived from venue id agreement n=2
+epl,CFC,epl:eng.chelsea,cooccurrence_2026-08-17,derived from venue id agreement n=2
+epl,Forest,epl:eng.nottm_forest,cooccurrence_2026-08-17,derived from venue id agreement n=14
+epl,LFC,epl:eng.liverpool,cooccurrence_2026-08-17,derived from venue id agreement n=2
+epl,MCI,epl:eng.man_city,cooccurrence_2026-08-17,derived from venue id agreement n=2
+epl,MUN,epl:eng.man_utd,cooccurrence_2026-08-17,derived from venue id agreement n=2
+epl,Man Utd,epl:eng.man_utd,cooccurrence_2026-08-17,derived from venue id agreement n=14
+epl,Nottingham,epl:eng.nottm_forest,cooccurrence_2026-08-17,derived from venue id agreement n=2
+epl,Palace,epl:eng.crystal_palace,cooccurrence_2026-08-17,derived from venue id agreement n=14
+epl,Tottenham,epl:eng.tottenham,cooccurrence_2026-08-17,derived from venue id agreement n=2
+epl,Villa,epl:eng.aston_villa,cooccurrence_2026-08-17,derived from venue id agreement n=7
+epl,ast,epl:eng.aston_villa,cooccurrence_2026-08-17,derived from venue id agreement n=7
+epl,bri,epl:eng.brighton,cooccurrence_2026-08-17,derived from venue id agreement n=13
+epl,mac,epl:eng.man_city,cooccurrence_2026-08-17,derived from venue id agreement n=14
+epl,mun,epl:eng.man_utd,cooccurrence_2026-08-17,derived from venue id agreement n=14
+epl,not,epl:eng.nottm_forest,cooccurrence_2026-08-17,derived from venue id agreement n=14
+mlb,A's,mlb:athletics,cooccurrence_2026-08-17,derived from venue id agreement n=3
+mlb,AZ,mlb:arizona-diamondbacks,cooccurrence_2026-08-17,derived from venue id agreement n=3
+mlb,CWS,mlb:chicago-white-sox,manual_2026-08-17,"HUMAN-VERIFIED: Kalshi emits CWS for White Sox and CHC for Cubs; observed directly in xref_conflicts. Exempt from the shared-location guard, which gates auto-derived rows only."
+mlb,Chicago C,mlb:chicago-cubs,cooccurrence_2026-08-17,derived from venue id agreement n=3
+mlb,Chicago WS,mlb:chicago-white-sox,manual_2026-08-17,Kalshi yes_sub_title form
+mlb,Chicago White Sox,mlb:chicago-white-sox,manual_2026-08-17,defensive duplicate of the ESPN row
+mlb,Los Angeles A,mlb:los-angeles-angels,cooccurrence_2026-08-17,derived from venue id agreement n=2
+mlb,Los Angeles D,mlb:los-angeles-dodgers,cooccurrence_2026-08-17,derived from venue id agreement n=3
+mlb,New York M,mlb:new-york-mets,cooccurrence_2026-08-17,derived from venue id agreement n=3
+mlb,New York Y,mlb:new-york-yankees,cooccurrence_2026-08-17,derived from venue id agreement n=2
+mlb,oak,mlb:athletics,cooccurrence_2026-08-17,derived from venue id agreement n=8
+nfl,ARI Cardinals,nfl:arizona-cardinals,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,ATL Falcons,nfl:atlanta-falcons,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,BAL Ravens,nfl:baltimore-ravens,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,BUF Bills,nfl:buffalo-bills,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,CAR Panthers,nfl:carolina-panthers,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,CHI Bears,nfl:chicago-bears,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,CIN Bengals,nfl:cincinnati-bengals,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,CLE Browns,nfl:cleveland-browns,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,DAL Cowboys,nfl:dallas-cowboys,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,DEN Broncos,nfl:denver-broncos,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,DET Lions,nfl:detroit-lions,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,GB Packers,nfl:green-bay-packers,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,HOU Texans,nfl:houston-texans,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,IND Colts,nfl:indianapolis-colts,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,JAC,nfl:jacksonville-jaguars,manual_2026-08-17,Kalshi uses JAC; ESPN uses JAX
+nfl,JAC Jaguars,nfl:jacksonville-jaguars,manual_2026-08-17,Kalshi yes_sub_title form
+nfl,KC Chiefs,nfl:kansas-city-chiefs,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,LA Chargers,nfl:los-angeles-chargers,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,LA Rams,nfl:los-angeles-rams,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,LV Raiders,nfl:las-vegas-raiders,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,Los Angeles C,nfl:los-angeles-chargers,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,Los Angeles R,nfl:los-angeles-rams,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,MIA Dolphins,nfl:miami-dolphins,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,MIN Vikings,nfl:minnesota-vikings,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,NE Patriots,nfl:new-england-patriots,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,NO Saints,nfl:new-orleans-saints,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,NY Giants,nfl:new-york-giants,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,NY Jets,nfl:new-york-jets,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,New York G,nfl:new-york-giants,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,New York J,nfl:new-york-jets,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,PHI Eagles,nfl:philadelphia-eagles,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,PIT Steelers,nfl:pittsburgh-steelers,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,SEA Seahawks,nfl:seattle-seahawks,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,SF 49ers,nfl:san-francisco-49ers,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,TB Buccaneers,nfl:tampa-bay-buccaneers,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,TEN Titans,nfl:tennessee-titans,cooccurrence_2026-08-17,derived from venue id agreement n=1
+nfl,WAS,nfl:washington-commanders,manual_2026-08-17,Kalshi uses WAS; ESPN uses WSH
+nfl,WAS Commanders,nfl:washington-commanders,manual_2026-08-17,Kalshi yes_sub_title form
+wnba,CONN,wnba:connecticut-sun,cooccurrence_2026-08-17,derived from venue id agreement n=1
+wnba,conn,wnba:connecticut-sun,cooccurrence_2026-08-17,derived from venue id agreement n=6
+wnba,gsv,wnba:golden-state-valkyries,cooccurrence_2026-08-17,derived from venue id agreement n=6
+wnba,las,wnba:las-vegas-aces,cooccurrence_2026-08-17,derived from venue id agreement n=4
+wnba,nyl,wnba:new-york-liberty,cooccurrence_2026-08-17,derived from venue id agreement n=4

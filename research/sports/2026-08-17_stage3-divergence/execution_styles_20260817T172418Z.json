@@ -1,0 +1,78 @@
+{
+ "contracts": 200.0,
+ "games": 48,
+ "summary": {
+  "taker_taker__join": {
+   "n": 48,
+   "median_cover": 1.0339,
+   "min_cover": 1.01963,
+   "clears_0995": 0,
+   "clears_rate": 0.0,
+   "median_edge_cents": -3.39,
+   "evidence": "MEASURED (executable asks)"
+  },
+  "taker_taker__improve": {
+   "n": 48,
+   "median_cover": 1.0339,
+   "min_cover": 1.01963,
+   "clears_0995": 0,
+   "clears_rate": 0.0,
+   "median_edge_cents": -3.39,
+   "evidence": "MEASURED (executable asks)"
+  },
+  "maker_taker__join": {
+   "n": 48,
+   "median_cover": 0.9984,
+   "min_cover": 0.88865,
+   "clears_0995": 17,
+   "clears_rate": 0.3542,
+   "median_edge_cents": 0.16,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "maker_taker__improve": {
+   "n": 48,
+   "median_cover": 1.01755,
+   "min_cover": 0.9087,
+   "clears_0995": 6,
+   "clears_rate": 0.125,
+   "median_edge_cents": -1.755,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "taker_maker__join": {
+   "n": 48,
+   "median_cover": 0.99,
+   "min_cover": 0.53,
+   "clears_0995": 48,
+   "clears_rate": 1.0,
+   "median_edge_cents": 1.0,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "taker_maker__improve": {
+   "n": 48,
+   "median_cover": 1.01,
+   "min_cover": 0.55,
+   "clears_0995": 9,
+   "clears_rate": 0.1875,
+   "median_edge_cents": -1.0,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "maker_maker__join": {
+   "n": 48,
+   "median_cover": 0.98208,
+   "min_cover": 0.53,
+   "clears_0995": 48,
+   "clears_rate": 1.0,
+   "median_edge_cents": 1.792,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  },
+  "maker_maker__improve": {
+   "n": 48,
+   "median_cover": 1.00208,
+   "min_cover": 0.55,
+   "clears_0995": 20,
+   "clears_rate": 0.4167,
+   "median_edge_cents": -0.208,
+   "evidence": "MODELLED - resting price, NO FILL ASSUMED"
+  }
+ }
+}

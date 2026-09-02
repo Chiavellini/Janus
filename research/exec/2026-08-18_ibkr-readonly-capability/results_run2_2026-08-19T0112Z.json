@@ -1,0 +1,209 @@
+{
+  "account": {
+    "count": 1,
+    "identifiers_archived": false,
+    "is_paper": false
+  },
+  "evidence_tier": "M1 capability",
+  "families": {
+    "crypto_futures": {
+      "contracts": [
+        {
+          "conid": 859040577,
+          "exchange": null,
+          "expiry": "2026-08-28",
+          "quote": {
+            "ask": 64535.0,
+            "ask_size": 19.0,
+            "availability": "DPB",
+            "bid": 64520.0,
+            "bid_size": 2.0,
+            "conid": 859040577,
+            "exchange": null,
+            "expiry": null,
+            "last": 64525.0,
+            "security_type": "FUT",
+            "status": "BLOCKED_DELAYED",
+            "symbol": "MBT",
+            "updated_ms": 1787101924056
+          },
+          "root": "MBT",
+          "symbol": "MBT"
+        }
+      ],
+      "status": "BLOCKED_DELAYED"
+    },
+    "fed_funds": {
+      "contracts": [
+        {
+          "conid": 511851937,
+          "exchange": null,
+          "expiry": "2026-09-01",
+          "quote": {
+            "ask": 96.37,
+            "ask_size": 148671.0,
+            "availability": "DPB",
+            "bid": 96.3675,
+            "bid_size": 706271.0,
+            "conid": 511851937,
+            "exchange": null,
+            "expiry": null,
+            "last": 96.37,
+            "security_type": "FUT",
+            "status": "BLOCKED_DELAYED",
+            "symbol": "ZQ",
+            "updated_ms": 1787101919046
+          },
+          "root": "ZQ",
+          "symbol": "ZQ"
+        }
+      ],
+      "status": "BLOCKED_DELAYED"
+    },
+    "index_options": {
+      "status": "BLOCKED_DELAYED",
+      "underlyings": [
+        {
+          "contracts": [
+            {
+              "conid": 884192466,
+              "quote": {
+                "ask": 68.5,
+                "ask_size": 15.0,
+                "availability": "DPBd",
+                "bid": 67.6,
+                "bid_size": 10.0,
+                "conid": 884192466,
+                "exchange": null,
+                "expiry": null,
+                "last": 68.7,
+                "security_type": "OPT",
+                "status": "BLOCKED_DELAYED",
+                "symbol": "SPX",
+                "updated_ms": 1787101931704
+              },
+              "right": "C"
+            },
+            {
+              "conid": 884194442,
+              "quote": {
+                "ask": 63.2,
+                "ask_size": 10.0,
+                "availability": "DPBd",
+                "bid": 62.3,
+                "bid_size": 16.0,
+                "conid": 884194442,
+                "exchange": null,
+                "expiry": null,
+                "last": 62.3,
+                "security_type": "OPT",
+                "status": "BLOCKED_DELAYED",
+                "symbol": "SPX",
+                "updated_ms": 1787101932205
+              },
+              "right": "P"
+            }
+          ],
+          "expiration_day_status": "NEAR_EXPIRY_UNRESOLVED",
+          "month": "AUG26",
+          "status": "BLOCKED_DELAYED",
+          "strike": 7695.0,
+          "symbol": "SPX",
+          "underlying_conid": 416904,
+          "underlying_quote": {
+            "ask": null,
+            "ask_size": null,
+            "availability": "Z",
+            "bid": null,
+            "bid_size": null,
+            "conid": 416904,
+            "exchange": null,
+            "expiry": null,
+            "last": 7693.26,
+            "security_type": "IND",
+            "status": "BLOCKED_FROZEN",
+            "symbol": "SPX",
+            "updated_ms": 1787101786865
+          }
+        },
+        {
+          "contracts": [
+            {
+              "conid": 885910373,
+              "quote": {
+                "ask": 3.56,
+                "ask_size": 96.0,
+                "availability": "DPBd",
+                "bid": 3.31,
+                "bid_size": 98.0,
+                "conid": 885910373,
+                "exchange": null,
+                "expiry": null,
+                "last": 3.25,
+                "security_type": "OPT",
+                "status": "BLOCKED_DELAYED",
+                "symbol": "XSP",
+                "updated_ms": 1787101937265
+              },
+              "right": "C"
+            },
+            {
+              "conid": 885910835,
+              "quote": {
+                "ask": 2.98,
+                "ask_size": 95.0,
+                "availability": "DPBd",
+                "bid": 2.75,
+                "bid_size": 99.0,
+                "conid": 885910835,
+                "exchange": null,
+                "expiry": null,
+                "last": 2.9,
+                "security_type": "OPT",
+                "status": "BLOCKED_DELAYED",
+                "symbol": "XSP",
+                "updated_ms": 1787101937265
+              },
+              "right": "P"
+            }
+          ],
+          "expiration_day_status": "NEAR_EXPIRY_UNRESOLVED",
+          "month": "AUG26",
+          "status": "BLOCKED_DELAYED",
+          "strike": 769.0,
+          "symbol": "XSP",
+          "underlying_conid": 137851301,
+          "underlying_quote": {
+            "ask": null,
+            "ask_size": null,
+            "availability": "Z",
+            "bid": null,
+            "bid_size": null,
+            "conid": 137851301,
+            "exchange": null,
+            "expiry": null,
+            "last": 769.33,
+            "security_type": "IND",
+            "status": "BLOCKED_FROZEN",
+            "symbol": "XSP",
+            "updated_ms": 1787101933705
+          }
+        }
+      ]
+    }
+  },
+  "generated_utc": "2026-08-19T01:12:04.147672+00:00",
+  "orders_placed": 0,
+  "program_ready": false,
+  "registered_spec": "research/exec/2026-08-18_ibkr-readonly-capability/spec.yaml",
+  "safety_gate": "PASS",
+  "session": {
+    "authenticated": true,
+    "competing": false,
+    "connected": true,
+    "established": true
+  },
+  "session_gate": "PASS",
+  "test_looks_spent": 0,
+  "verdict": "BLOCKED_ENTITLEMENT_OR_CONTRACT"
+}

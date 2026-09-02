@@ -1,0 +1,114 @@
+experiment_id: "janus-shadow-kalshi-open-vs-pm"
+date_registered: "2026-08-20"
+track: exec
+program: cross_venue_kalshi_pm
+ledger_ref: "snooping_ledger.md row F1 -- FORWARD EVAL"
+test_looks_spent: 0
+
+budget_status: >
+  AGENTS.md: "One test look = one new row ... Forward eval rows do not count." This is a forward-eval
+  row and costs NOTHING from the snooping budget, on one condition: THE RULE BELOW IS PINNED BEFORE
+  THE FIRST OBSERVATION AND IS NEVER TUNED. Looking at results and then changing an entry threshold,
+  a gate, or a size rule converts this into dev selection and costs a test look. The 10-event
+  checkpoint is a GO / NO-GO on the pinned rule, never a tuning opportunity.
+
+# IMMUTABLE AFTER THE FIRST SHADOW DECISION.
+
+hypothesis: >
+  Polymarket lists an MLB game ~82 h before Kalshi opens its market for the same game (measured
+  2026-08-20 on 7 paired games: +81.9h to +83.4h, PM created in a 13:00 UTC batch). By the time
+  Kalshi OPENS, PM has been trading the same question for three and a half days and carries an
+  established price -- measured median move of 0.085 off its 0.500 listing default. Kalshi's opening
+  price is the one that has not been properly calculated yet. If Kalshi opens away from PM's
+  established price by more than the round-trip cost, that gap is takeable.
+
+why_sports: >
+  Non-sports was tried first and was the wrong scope. Hand adjudication of 40 survivors of the full
+  deterministic matcher found 2 strict equivalents in the first 22 and ZERO in the next 18 -- the
+  venues are almost never asking the same question there. A baseball game is unambiguous, so both
+  venues are forced onto the same question: match/sports_match.py pairs 47 of 47 eligible games on a
+  canonical ESPN key (coverage 1.00). Binding two-leg touch capacity is ~7x deeper
+  (p50 $21.84 vs ~$3; p90 $563 vs ~$100).
+
+# ── THE PINNED RULE ────────────────────────────────────────────────────────────────────────
+rule:
+  universe: "MLB moneyline outcome pairs emitted by match/sports_match.py (canonical ESPN key)"
+  t0: >
+    First observation of the Kalshi market after it opens. MEASURED 2026-08-20: Kalshi does NOT
+    expose MLB game markets before they open -- zero markets with a future `open_time`, zero in any
+    pre-open status -- so unlike KXECONSTATU3 (created three weeks before it opens) the decision
+    instant must be DISCOVERED, not scheduled. Detection latency therefore equals the poll interval,
+    pinned at 60 s, and `lag_s` (t_decision - open_time) is recorded on every row so the cost of
+    that latency is measurable rather than assumed. The REFERENCE side is indexed ahead, which is
+    possible precisely because Polymarket lists ~82 h earlier.
+  reference_leg: "Polymarket. Executable quote from the CLOB book at t0 (best bid / best ask)."
+  newborn_leg: "Kalshi. Executable quote from /markets/{ticker}/orderbook at t0."
+
+  reference_quality_gate:
+    - "PM book must be two-sided at t0"
+    - "PM mid must differ from 0.500 by >= 0.02 -- an unmoved market carries no information and is
+       not an established price. 2 of the 8 games measured on 2026-08-20 would fail this."
+    - "PM spread <= 0.10 -- a 0.01/0.99 placeholder is not a reference"
+    - "failing any gate is recorded as NO_TRADE / REFERENCE_UNPRICED, never as a missing row"
+
+  entry:
+    long_kalshi: "if kalshi_ask + fees(kalshi_ask) < pm_bid - fees(pm_bid)  -> BUY Kalshi YES"
+    long_pm: "if pm_ask + fees(pm_ask) < kalshi_bid - fees(kalshi_bid)  -> BUY PM YES"
+    both_directions_recorded: >
+      MANDATORY. The inherited mirror was SPENT AND FAILED (-2.375c, p=0.772). Testing only the
+      direction we hope works is a free parameter, so both arms are pinned and both are reported
+      whatever they do.
+    prices_are_EXECUTABLE_ONLY: >
+      Never mid. Mid-price scoring produced phase 1's 47c ghost and L21's 24 fictional arbitrages.
+    fees: "per-market, via match/screen.py -- Kalshi quadratic on the series fee_type/fee_multiplier,
+           Polymarket on the per-market feeSchedule rate (NOT the 0.07 pin)"
+
+  size: "shadow notional $100 per leg, capped at the binding touch depth min(kalshi_usd, pm_usd).
+         Recorded, never scaled by anything observed."
+  exit: "hold to settlement. No discretionary exit, no stop, no re-entry."
+  one_observation_per_GAME: >
+    The two outcomes of a game are the same bet mirrored. n counts GAMES, not outcome rows -- 94
+    outcome pairs is n=47, not n=94. Counting outcomes as independent would double apparent n and
+    halve every p-value.
+
+# ── WHAT THE 10-EVENT CHECKPOINT CAN AND CANNOT SAY ────────────────────────────────────────
+checkpoint:
+  after: "10 games with a completed shadow decision"
+  primary_gate_is_GAP_EXISTENCE_not_pnl:
+    statistic: "count of games where an executable, fee-surviving gap existed at t0"
+    why: >
+      This is observable AT t0 and needs no settlement. It is the only thing 10 events can actually
+      answer. 0/10 means stop; a high count is worth continuing on.
+  pnl_is_recorded_but_UNDERPOWERED:
+    why: >
+      Binary settlement has ~50c standard deviation, so at n=10 the standard error on mean PnL is
+      ~16c. Detecting a 4c edge needs order-1,000 trades. NO PnL-based claim may be made at the
+      checkpoint, and "10 games were profitable" is not evidence of an edge.
+  go_live_decision: >
+    Going live after 10 events means going live on an UNPROVEN edge whose gap existence has been
+    demonstrated and whose profitability has not. That is the operator's call to make knowingly.
+
+denominator_and_gap_rules:
+  rule: "every scheduled Kalshi open in the universe produces exactly one decision row -- TRADE or
+         NO_TRADE with a reason. No silent absences."
+  no_trade_reasons: [REFERENCE_UNPRICED, PM_ONE_SIDED, PM_SPREAD_WIDE, PM_UNMOVED, KALSHI_NO_BOOK,
+                     KALSHI_ONE_SIDED, NO_EDGE_AFTER_FEES, BELOW_MIN_DEPTH, BOOK_ERROR, DISK_FLOOR,
+                     MISSED_OPEN, UNKNOWN]
+  missed_open_is_a_reason: "if the collector was not polling at t0 the row is MISSED_OPEN. A missed
+                            decision must never look like a NO_TRADE."
+
+known_limitations_stated_before_the_run:
+  - "sports_match.py precision is UNEVALUATED, not passed: its gold file is frozen for 2026-08-17
+     games so a current-window run has zero overlap. Coverage 1.00 on a canonical key is strong but
+     is not a measured precision."
+  - "direction is an open question. AGENTS.md's 'truth sits at Kalshi' was measured on crypto 15m
+     where Kalshi LEADS; here Kalshi is the LATE lister and the asymmetry may run the other way."
+  - "shadow fills assume the touch quote is takeable at t0. No queue model, no slippage beyond the
+     touch, no partial fills. Live will be worse; AGENTS.md records +3.05c live against a +4.45c
+     backtest for exactly this reason."
+  - "MLB only. One league, one market type (moneyline)."
+
+outputs:
+  db: "<data volume>/shadow/kalshi_open.sqlite"
+  results: "research/exec/2026-08-21_shadow-kalshi-open/results.json"
+  verdict: "research/exec/2026-08-21_shadow-kalshi-open/verdict.md"

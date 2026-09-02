@@ -1,0 +1,197 @@
+{
+ "spec": "research/sports/2026-08-17_stage2-matching/spec.yaml",
+ "ledger_row": "L9",
+ "prices_read": false,
+ "league": "mlb",
+ "window_utc": [
+  "2026-08-20T00:00:00+00:00",
+  "2026-08-28T00:00:00+00:00"
+ ],
+ "scheduled_games": 103,
+ "kalshi": {
+  "events": 47,
+  "markets": 94,
+  "games": 47,
+  "reasons": {}
+ },
+ "polymarket": {
+  "events": 121,
+  "markets": 178,
+  "games": 89,
+  "reasons": {
+   "no_schedule_match": 5,
+   "derivative_event_not_full_game_moneyline": 27
+  }
+ },
+ "coverage": {
+  "eligible_games_both_venues": 47,
+  "completely_paired_games": 47,
+  "coverage": 1.0,
+  "threshold": 0.8,
+  "pass": true
+ },
+ "precision": {
+  "gold_rows": 129,
+  "gold_correction_rows_applied": 1,
+  "emitted_event_pairs": 47,
+  "judged_against_gold": 0,
+  "not_in_gold": 47,
+  "true_positives": 0,
+  "false_positives": 0,
+  "false_positive_pairs": [],
+  "precision": null,
+  "gold_positives": 36,
+  "gold_positives_recovered": 0,
+  "gold_recall": 0.0,
+  "gold_positives_missed": [
+   [
+    "KXMLBGAME-26AUG171340STLCING1",
+    "mlb-stl-cin-2026-05-24"
+   ],
+   [
+    "KXMLBGAME-26AUG171805BALTB",
+    "mlb-bal-tb-2026-08-17"
+   ],
+   [
+    "KXMLBGAME-26AUG171840MIAPHI",
+    "mlb-mia-phi-2026-08-17"
+   ],
+   [
+    "KXMLBGAME-26AUG171840STLCING2",
+    "mlb-stl-cin-2026-08-17"
+   ],
+   [
+    "KXMLBGAME-26AUG171905DETPIT",
+    "mlb-det-pit-2026-08-17"
+   ],
+   [
+    "KXMLBGAME-26AUG171910AZBOS",
+    "mlb-ari-bos-2026-08-17"
+   ],
+   [
+    "KXMLBGAME-26AUG171910SDNYM",
+    "mlb-sd-nym-2026-08-17"
+   ],
+   [
+    "KXMLBGAME-26AUG171940ATLMIN",
+    "mlb-atl-min-2026-08-17"
+   ],
+   [
+    "KXMLBGAME-26AUG172040LADCOL",
+    "mlb-lad-col-2026-08-17"
+   ],
+   [
+    "KXMLBGAME-26AUG181835NYYBAL",
+    "mlb-nyy-bal-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG181840DETPIT",
+    "mlb-det-pit-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG181840MIAPHI",
+    "mlb-mia-phi-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG181840SFCLE",
+    "mlb-sf-cle-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG181840STLCIN",
+    "mlb-stl-cin-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG181840TORTB",
+    "mlb-tor-tb-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG181910AZBOS",
+    "mlb-ari-bos-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG181910SDNYM",
+    "mlb-sd-nym-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG181940ATLMIN",
+    "mlb-atl-min-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG181940SEAMIL",
+    "mlb-sea-mil-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG182005WSHTEX",
+    "mlb-wsh-tex-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG182010LAAHOU",
+    "mlb-laa-hou-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG182040LADCOL",
+    "mlb-lad-col-2026-08-18"
+   ],
+   [
+    "KXMLBGAME-26AUG191235DETPIT",
+    "mlb-det-pit-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG191310SDNYM",
+    "mlb-sd-nym-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG191340ATLMIN",
+    "mlb-atl-min-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG191420CWSCHC",
+    "mlb-cws-chc-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG191610AZBOS",
+    "mlb-ari-bos-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG191805MIAPHI",
+    "mlb-mia-phi-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG191835NYYBAL",
+    "mlb-nyy-bal-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG191840SFCLE",
+    "mlb-sf-cle-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG191840STLCIN",
+    "mlb-stl-cin-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG191840TORTB",
+    "mlb-tor-tb-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG191940SEAMIL",
+    "mlb-sea-mil-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG192005WSHTEX",
+    "mlb-wsh-tex-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG192010LAAHOU",
+    "mlb-laa-hou-2026-08-19"
+   ],
+   [
+    "KXMLBGAME-26AUG192040LADCOL",
+    "mlb-lad-col-2026-08-19"
+   ]
+  ],
+  "threshold": 0.98,
+  "pass": false
+ },
+ "outcome_pairs_emitted": 94,
+ "gate_pass": false
+}

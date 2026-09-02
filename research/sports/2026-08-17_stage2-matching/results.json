@@ -1,0 +1,96 @@
+{
+ "spec": "research/sports/2026-08-17_stage2-matching/spec.yaml",
+ "ledger_row": "L9",
+ "prices_read": false,
+ "league": "mlb",
+ "window_utc": [
+  "2026-08-17T00:00:00+00:00",
+  "2026-08-25T00:00:00+00:00"
+ ],
+ "scheduled_games": 99,
+ "kalshi": {
+  "events": 41,
+  "markets": 82,
+  "games": 41,
+  "reasons": {}
+ },
+ "polymarket": {
+  "events": 112,
+  "markets": 160,
+  "games": 80,
+  "reasons": {
+   "no_schedule_match": 5,
+   "derivative_event_not_full_game_moneyline": 27
+  }
+ },
+ "coverage": {
+  "eligible_games_both_venues": 41,
+  "completely_paired_games": 41,
+  "coverage": 1.0,
+  "threshold": 0.8,
+  "pass": true
+ },
+ "precision": {
+  "gold_rows": 129,
+  "gold_correction_rows_applied": 1,
+  "emitted_event_pairs": 41,
+  "judged_against_gold": 36,
+  "not_in_gold": 5,
+  "true_positives": 36,
+  "false_positives": 0,
+  "false_positive_pairs": [],
+  "precision": 1.0,
+  "gold_positives": 36,
+  "gold_positives_recovered": 36,
+  "gold_recall": 1.0,
+  "gold_positives_missed": [],
+  "threshold": 0.98,
+  "pass": true,
+  "as_run_before_gold_correction": 0.9722,
+  "as_run_false_positive": "KXMLBGAME-26AUG191420CWSCHC <-> mlb-cws-chc-2026-08-19",
+  "correction_note": "The as-run figure FAILED the 0.98 gate on one pair. Investigation showed the GOLD LABEL was wrong, not the matcher: both venues' own text gives identical participants at an identical start instant (2026-08-19T18:20:00Z). The prose labeller used substring containment and Kalshi's crosstown rendering 'Chicago WS' is an ACRONYM of 'White Sox'. A corrected labeller was applied UNIFORMLY to all 128 rows and produced exactly ONE change (0->1); it still refuses to cross-match Cubs<->White Sox. The correction was APPENDED as row g0129 with supersedes=g0102; g0102 is intact. Both figures are reported."
+ },
+ "outcome_pairs_emitted": 82,
+ "gate_pass": true,
+ "descriptive": {
+  "listing_horizon": {
+   "question": "Is Kalshi's 41-of-99 a listing horizon or a genuine coverage limit?",
+   "answer": "LISTING HORIZON - a clean step function at 72 hours",
+   "by_hours_to_start": {
+    "<24h": {
+     "listed": 11,
+     "scheduled": 11,
+     "rate": 1.0
+    },
+    "24-48h": {
+     "listed": 15,
+     "scheduled": 15,
+     "rate": 1.0
+    },
+    "48-72h": {
+     "listed": 15,
+     "scheduled": 15,
+     "rate": 1.0
+    },
+    "72-96h": {
+     "listed": 0,
+     "scheduled": 9,
+     "rate": 0.0
+    },
+    ">96h": {
+     "listed": 0,
+     "scheduled": 49,
+     "rate": 0.0
+    }
+   },
+   "consequence": "Inside 72h Kalshi lists EVERY scheduled game. The addressable set is not halved; it is time-shifted. Any forward collector must poll continuously rather than snapshot, and Stage 3 sampling must start inside 72h of first pitch."
+  },
+  "gold_set_limitation": "The gold file under-represents ABBREVIATED renderings. Its candidate generator used substring containment, so \"A's\"/'Athletics' and 'Chicago C'/'Chicago Cubs' pairs largely never entered it as positives - 5 correctly-emitted pairs fell outside the gold set entirely and are scored as 'not judged', not as errors. The matcher resolved all of them correctly via exact venue ids. Precision is therefore measured on a sample that is if anything EASIER than the live distribution on this specific axis.",
+  "postponement_observed": "The STL/CIN doubleheader on 2026-08-17 pairs Kalshi G1 to PM slug mlb-stl-cin-2026-05-24 (the May makeup game, slug date 3 months stale) and Kalshi G2 to mlb-stl-cin-2026-08-17. Both correct, separated only by start time."
+ },
+ "comparison_to_phase1": {
+  "phase1": "35 high-quality title-matched pairs across the ENTIRE ~100k-market corpus, all categories",
+  "stage2": "41 completely-paired games / 82 outcome pairs from ONE league in ONE 8-day window",
+  "reading": "n=35 was a TOOLING artifact, not a venue fact. The venues co-list densely; phase 1 could not see it. This does NOT establish that any edge exists - only that the corpus phase 1 declared empty is populated."
+ }
+}

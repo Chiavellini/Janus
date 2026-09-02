@@ -1,0 +1,773 @@
+{
+  "channel_counts": {
+    "events:KXWTI": 1178,
+    "events:KXWTIW": 198,
+    "markets:KXWTI": 1178,
+    "markets:KXWTIW": 198
+  },
+  "contract_months_seen": [
+    "AUG 26",
+    "JUL 26",
+    "OCT 26",
+    "SEP 26"
+  ],
+  "evidence_tiers": {
+    "cl_side": "R (CME's own published settlements endpoint)",
+    "kalshi_side": "M1 (the operative settlement value)",
+    "yahoo_crosscheck": "R, WEAK -- daily close is the last trade, not by definition the exchange settlement"
+  },
+  "experiment_id": "janus-track-b-wti-settle-basis",
+  "fetch_stats": {
+    "429s": 0,
+    "cache_hits": 0,
+    "offset_caps": 0,
+    "requests": 9,
+    "retries": 0
+  },
+  "intra_venue_KXWTI_vs_KXWTIW": {
+    "a": "KXWTI",
+    "b": "KXWTIW",
+    "frac_exactly_equal": 1.0,
+    "max_abs": 0.0,
+    "median": 0.0,
+    "n_exactly_equal": 9,
+    "n_same_session_different_month": 0,
+    "n_shared": 9
+  },
+  "ledger_row": "L19",
+  "markets_seen_union": 1376,
+  "per_series": {
+    "KXWTI": {
+      "rows": [
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 84.88,
+          "month": "JUL 26",
+          "session": "2026-06-12",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 76.05,
+          "month": "JUL 26",
+          "session": "2026-06-15",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 75.27,
+          "month": "AUG 26",
+          "session": "2026-06-16",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 76.01,
+          "month": "AUG 26",
+          "session": "2026-06-17",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 75.85,
+          "month": "AUG 26",
+          "session": "2026-06-18",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 73.86,
+          "month": "AUG 26",
+          "session": "2026-06-22",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 73.21,
+          "month": "AUG 26",
+          "session": "2026-06-23",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 70.34,
+          "month": "AUG 26",
+          "session": "2026-06-24",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 71.92,
+          "month": "AUG 26",
+          "session": "2026-06-25",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 69.23,
+          "month": "AUG 26",
+          "session": "2026-06-26",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 70.75,
+          "month": "AUG 26",
+          "session": "2026-06-29",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 69.5,
+          "month": "AUG 26",
+          "session": "2026-06-30",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 68.58,
+          "month": "AUG 26",
+          "session": "2026-07-01",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 68.69,
+          "month": "AUG 26",
+          "session": "2026-07-02",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 68.55,
+          "month": "AUG 26",
+          "session": "2026-07-06",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 70.44,
+          "month": "AUG 26",
+          "session": "2026-07-07",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 73.52,
+          "month": "AUG 26",
+          "session": "2026-07-08",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 72.08,
+          "month": "AUG 26",
+          "session": "2026-07-09",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 71.41,
+          "month": "AUG 26",
+          "session": "2026-07-10",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 78.14,
+          "month": "AUG 26",
+          "session": "2026-07-13",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 79.34,
+          "month": "AUG 26",
+          "session": "2026-07-14",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 79.6,
+          "month": "AUG 26",
+          "session": "2026-07-15",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 78.28,
+          "month": "SEP 26",
+          "session": "2026-07-16",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 78.27999877929688
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 81.78,
+          "month": "SEP 26",
+          "session": "2026-07-17",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 81.77999877929688
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 82.48,
+          "month": "SEP 26",
+          "session": "2026-07-20",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 82.4800033569336
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 84.34,
+          "month": "SEP 26",
+          "session": "2026-07-21",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 84.33999633789062
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 86.83,
+          "month": "SEP 26",
+          "session": "2026-07-22",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 86.83000183105469
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 92.19,
+          "month": "SEP 26",
+          "session": "2026-07-23",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 92.19000244140625
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 89.31,
+          "month": "SEP 26",
+          "session": "2026-07-24",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 89.30999755859375
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 82.61,
+          "month": "SEP 26",
+          "session": "2026-07-27",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 82.61000061035156
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 79.26,
+          "month": "SEP 26",
+          "session": "2026-07-28",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 79.26000213623047
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 84.46,
+          "month": "SEP 26",
+          "session": "2026-07-29",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 84.45999908447266
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 83.59,
+          "month": "SEP 26",
+          "session": "2026-07-30",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 83.58999633789062
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 84.67,
+          "month": "SEP 26",
+          "session": "2026-07-31",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 84.66999816894531
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 80.34,
+          "month": "SEP 26",
+          "session": "2026-08-03",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 80.33999633789062
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 75.77,
+          "month": "SEP 26",
+          "session": "2026-08-04",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 75.7699966430664
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 75.22,
+          "month": "SEP 26",
+          "session": "2026-08-05",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 75.22000122070312
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 77.29,
+          "month": "SEP 26",
+          "session": "2026-08-06",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 77.29000091552734
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 78.18,
+          "month": "SEP 26",
+          "session": "2026-08-07",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 78.18000030517578
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 82.13,
+          "month": "SEP 26",
+          "session": "2026-08-10",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 82.12999725341797
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 83.2,
+          "month": "SEP 26",
+          "session": "2026-08-11",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 83.19999694824219
+        },
+        {
+          "cme_cl": 83.27,
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "kalshi": 83.27,
+          "month": "SEP 26",
+          "session": "2026-08-12",
+          "status": "OK",
+          "yahoo_agrees": true,
+          "yahoo_cl": 83.2699966430664
+        },
+        {
+          "cme_cl": 81.25,
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "kalshi": 81.25,
+          "month": "SEP 26",
+          "session": "2026-08-13",
+          "status": "OK",
+          "yahoo_agrees": true,
+          "yahoo_cl": 81.25
+        },
+        {
+          "cme_cl": 82.4,
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "kalshi": 82.4,
+          "month": "SEP 26",
+          "session": "2026-08-14",
+          "status": "OK",
+          "yahoo_agrees": true,
+          "yahoo_cl": 82.4000015258789
+        },
+        {
+          "cme_cl": 83.74,
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "kalshi": 83.74,
+          "month": "OCT 26",
+          "session": "2026-08-17",
+          "status": "OK",
+          "yahoo_agrees": true,
+          "yahoo_cl": 83.73999786376953
+        },
+        {
+          "cme_cl": 84.06,
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "kalshi": 84.06,
+          "month": "OCT 26",
+          "session": "2026-08-18",
+          "status": "OK",
+          "yahoo_agrees": true,
+          "yahoo_cl": 84.05999755859375
+        }
+      ],
+      "summary": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "frac_exactly_equal": 1.0,
+        "iqr": [
+          0.0,
+          0.0
+        ],
+        "max_abs": 0.0,
+        "mean": 0.0,
+        "median": 0.0,
+        "median_abs_bp": 0.0,
+        "n_exactly_equal": 5,
+        "n_no_cl_settle": 41,
+        "n_sessions": 5,
+        "yahoo_corroborated": 5,
+        "yahoo_differed": 0
+      },
+      "verdict": {
+        "pair_status": "BLOCK",
+        "verdict": "INSUFFICIENT_COVERAGE",
+        "why": "5 sessions < the pre-registered 20; no distribution quoted"
+      }
+    },
+    "KXWTIW": {
+      "rows": [
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 84.88,
+          "month": "JUL 26",
+          "session": "2026-06-12",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 75.85,
+          "month": "AUG 26",
+          "session": "2026-06-19",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 69.23,
+          "month": "AUG 26",
+          "session": "2026-06-26",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 68.69,
+          "month": "AUG 26",
+          "session": "2026-07-02",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 71.41,
+          "month": "AUG 26",
+          "session": "2026-07-10",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": null
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 81.78,
+          "month": "SEP 26",
+          "session": "2026-07-17",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 81.77999877929688
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 89.31,
+          "month": "SEP 26",
+          "session": "2026-07-24",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 89.30999755859375
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 84.67,
+          "month": "SEP 26",
+          "session": "2026-07-31",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 84.66999816894531
+        },
+        {
+          "cme_cl": null,
+          "diff": null,
+          "diff_bp": null,
+          "kalshi": 78.18,
+          "month": "SEP 26",
+          "session": "2026-08-07",
+          "status": "NO_CL_SETTLE",
+          "yahoo_agrees": null,
+          "yahoo_cl": 78.18000030517578
+        },
+        {
+          "cme_cl": 82.4,
+          "diff": 0.0,
+          "diff_bp": 0.0,
+          "kalshi": 82.4,
+          "month": "SEP 26",
+          "session": "2026-08-14",
+          "status": "OK",
+          "yahoo_agrees": true,
+          "yahoo_cl": 82.4000015258789
+        }
+      ],
+      "summary": {
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "frac_exactly_equal": 1.0,
+        "max_abs": 0.0,
+        "mean": 0.0,
+        "median": 0.0,
+        "median_abs_bp": 0.0,
+        "n_exactly_equal": 1,
+        "n_no_cl_settle": 9,
+        "n_sessions": 1,
+        "yahoo_corroborated": 1,
+        "yahoo_differed": 0
+      },
+      "verdict": {
+        "pair_status": "BLOCK",
+        "verdict": "INSUFFICIENT_COVERAGE",
+        "why": "1 sessions < the pre-registered 20; no distribution quoted"
+      }
+    }
+  },
+  "selection": {
+    "included": 1376,
+    "rejected": 0,
+    "rejected_reasons": {}
+  },
+  "sessions_per_series": {
+    "KXWTI": 46,
+    "KXWTIW": 10
+  },
+  "source_errors": {
+    "cme": {
+      "2026-06-12": "no settlements array",
+      "2026-06-15": "no settlements array",
+      "2026-06-16": "no settlements array",
+      "2026-06-17": "no settlements array",
+      "2026-06-18": "no settlements array",
+      "2026-06-19": "no settlements array",
+      "2026-06-22": "no settlements array",
+      "2026-06-23": "no settlements array",
+      "2026-06-24": "no settlements array",
+      "2026-06-25": "no settlements array",
+      "2026-06-26": "no settlements array",
+      "2026-06-29": "no settlements array",
+      "2026-06-30": "no settlements array",
+      "2026-07-01": "no settlements array",
+      "2026-07-02": "no settlements array",
+      "2026-07-06": "no settlements array",
+      "2026-07-07": "no settlements array",
+      "2026-07-08": "no settlements array",
+      "2026-07-09": "no settlements array",
+      "2026-07-10": "no settlements array",
+      "2026-07-13": "no settlements array",
+      "2026-07-14": "no settlements array",
+      "2026-07-15": "no settlements array",
+      "2026-07-16": "no settlements array",
+      "2026-07-17": "no settlements array",
+      "2026-07-20": "no settlements array",
+      "2026-07-21": "no settlements array",
+      "2026-07-22": "no settlements array",
+      "2026-07-23": "no settlements array",
+      "2026-07-24": "no settlements array",
+      "2026-07-27": "no settlements array",
+      "2026-07-28": "no settlements array",
+      "2026-07-29": "no settlements array",
+      "2026-07-30": "no settlements array",
+      "2026-07-31": "no settlements array",
+      "2026-08-03": "no settlements array",
+      "2026-08-04": "no settlements array",
+      "2026-08-05": "no settlements array",
+      "2026-08-06": "no settlements array",
+      "2026-08-07": "no settlements array",
+      "2026-08-10": "no settlements array",
+      "2026-08-11": "no settlements array"
+    },
+    "yahoo": {
+      "AUG 26": "HTTPError: HTTP Error 404: Not Found",
+      "JUL 26": "HTTPError: HTTP Error 404: Not Found"
+    }
+  },
+  "spec": "research/exec/2026-08-20_wti-settle-basis/spec.yaml",
+  "test_looks_spent": 0,
+  "within_series_stops": {}
+}

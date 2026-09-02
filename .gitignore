@@ -1,0 +1,32 @@
+# ── Python ────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ── macOS ─────────────────────────────────────────────────────────────
+.DS_Store
+
+# ── Secrets. Janus credentials live at /Volumes/Kilos/janus/credentials/
+# and are read from the environment only. Nothing secret belongs in the
+# tree; these patterns are a backstop, not the policy.
+.env
+.env.*
+*.pem
+*.key
+
+# ── Runtime state. All Janus data goes to data -> /Volumes/Kilos/janus.
+# The `data` SYMLINK ITSELF IS TRACKED (a 20-byte blob documenting the
+# storage contract); a broken link on a fresh host is a loud, correct
+# failure. Its CONTENTS are never in git.
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.log
+/runs/
+/captures/
+
+# ── Agent coordination (see docs/OWNERS.md) ───────────────────────────
+/.claims/
+.claude/scheduled_tasks.lock

@@ -1,0 +1,1407 @@
+{
+ "n_taped": 12684,
+ "coverage": {
+  "n": 12684,
+  "px_0s": 0,
+  "px_300s": 662,
+  "px_900s": 1719,
+  "px_1800s": 2934,
+  "px_3600s": 4613,
+  "px_7200s": 6384,
+  "px_21600s": 9120,
+  "first_trade_lag_s_median": 7112.6,
+  "first_trade_lag_s_p90": 58610.8,
+  "pct_first_trade_within_5min": 5.2
+ },
+ "calibration": {
+  "first_trade_price": [
+   {
+    "bucket": "0.00-0.05",
+    "n": 648,
+    "mean_price": 0.0188,
+    "realized": 0.0463,
+    "gap_pp": 2.75,
+    "ev_buy_yes_c": 1.752,
+    "ev_yes_ci": [
+     0.06,
+     3.66
+    ],
+    "ev_buy_no_c": -3.752,
+    "ev_no_ci": [
+     -5.66,
+     -2.06
+    ]
+   },
+   {
+    "bucket": "0.05-0.10",
+    "n": 475,
+    "mean_price": 0.0709,
+    "realized": 0.1368,
+    "gap_pp": 6.6,
+    "ev_buy_yes_c": 5.596,
+    "ev_yes_ci": [
+     1.71,
+     9.2
+    ],
+    "ev_buy_no_c": -7.596,
+    "ev_no_ci": [
+     -11.2,
+     -3.71
+    ]
+   },
+   {
+    "bucket": "0.10-0.20",
+    "n": 1112,
+    "mean_price": 0.1471,
+    "realized": 0.2464,
+    "gap_pp": 9.93,
+    "ev_buy_yes_c": 8.694,
+    "ev_yes_ci": [
+     4.97,
+     12.36
+    ],
+    "ev_buy_no_c": -11.164,
+    "ev_no_ci": [
+     -14.79,
+     -7.45
+    ]
+   },
+   {
+    "bucket": "0.20-0.35",
+    "n": 1955,
+    "mean_price": 0.2661,
+    "realized": 0.2885,
+    "gap_pp": 2.24,
+    "ev_buy_yes_c": 0.235,
+    "ev_yes_ci": [
+     -2.37,
+     3.0
+    ],
+    "ev_buy_no_c": -4.235,
+    "ev_no_ci": [
+     -7.0,
+     -1.63
+    ]
+   },
+   {
+    "bucket": "0.35-0.50",
+    "n": 2299,
+    "mean_price": 0.4201,
+    "realized": 0.3706,
+    "gap_pp": -4.95,
+    "ev_buy_yes_c": -6.954,
+    "ev_yes_ci": [
+     -9.34,
+     -4.6
+    ],
+    "ev_buy_no_c": 2.954,
+    "ev_no_ci": [
+     0.6,
+     5.34
+    ]
+   },
+   {
+    "bucket": "0.50-0.65",
+    "n": 1793,
+    "mean_price": 0.5672,
+    "realized": 0.473,
+    "gap_pp": -9.43,
+    "ev_buy_yes_c": -11.427,
+    "ev_yes_ci": [
+     -13.33,
+     -9.32
+    ],
+    "ev_buy_no_c": 7.427,
+    "ev_no_ci": [
+     5.32,
+     9.33
+    ]
+   },
+   {
+    "bucket": "0.65-0.80",
+    "n": 2056,
+    "mean_price": 0.7256,
+    "realized": 0.6007,
+    "gap_pp": -12.49,
+    "ev_buy_yes_c": -14.488,
+    "ev_yes_ci": [
+     -16.94,
+     -12.22
+    ],
+    "ev_buy_no_c": 10.488,
+    "ev_no_ci": [
+     8.22,
+     12.94
+    ]
+   },
+   {
+    "bucket": "0.80-0.90",
+    "n": 1799,
+    "mean_price": 0.8363,
+    "realized": 0.6954,
+    "gap_pp": -14.09,
+    "ev_buy_yes_c": -15.442,
+    "ev_yes_ci": [
+     -18.36,
+     -12.62
+    ],
+    "ev_buy_no_c": 12.745,
+    "ev_no_ci": [
+     9.94,
+     15.69
+    ]
+   },
+   {
+    "bucket": "0.90-0.95",
+    "n": 495,
+    "mean_price": 0.9047,
+    "realized": 0.7455,
+    "gap_pp": -15.93,
+    "ev_buy_yes_c": -16.929,
+    "ev_yes_ci": [
+     -20.79,
+     -12.81
+    ],
+    "ev_buy_no_c": 14.929,
+    "ev_no_ci": [
+     10.81,
+     18.79
+    ]
+   },
+   {
+    "bucket": "0.95-1.01",
+    "n": 52,
+    "mean_price": 0.9735,
+    "realized": 0.6346,
+    "gap_pp": -33.88,
+    "ev_buy_yes_c": -34.885,
+    "ev_yes_ci": [
+     -47.52,
+     -21.44
+    ],
+    "ev_buy_no_c": 32.885,
+    "ev_no_ci": [
+     19.44,
+     45.52
+    ]
+   }
+  ],
+  "px_300s": [
+   {
+    "bucket": "0.00-0.05",
+    "n": 114,
+    "mean_price": 0.0122,
+    "realized": 0.0088,
+    "gap_pp": -0.34,
+    "ev_buy_yes_c": -1.342,
+    "ev_yes_ci": [
+     -2.28,
+     0.52
+    ],
+    "ev_buy_no_c": -0.658,
+    "ev_no_ci": [
+     -2.52,
+     0.28
+    ]
+   },
+   {
+    "bucket": "0.20-0.35",
+    "n": 27,
+    "mean_price": 0.2581,
+    "realized": 0.2963,
+    "gap_pp": 3.81,
+    "ev_buy_yes_c": 1.815,
+    "ev_yes_ci": [
+     -11.78,
+     16.4
+    ],
+    "ev_buy_no_c": -5.815,
+    "ev_no_ci": [
+     -20.4,
+     7.78
+    ]
+   },
+   {
+    "bucket": "0.35-0.50",
+    "n": 27,
+    "mean_price": 0.4207,
+    "realized": 0.4444,
+    "gap_pp": 2.37,
+    "ev_buy_yes_c": 0.37,
+    "ev_yes_ci": [
+     -20.95,
+     21.43
+    ],
+    "ev_buy_no_c": -4.37,
+    "ev_no_ci": [
+     -25.43,
+     16.95
+    ]
+   },
+   {
+    "bucket": "0.50-0.65",
+    "n": 43,
+    "mean_price": 0.5567,
+    "realized": 0.5814,
+    "gap_pp": 2.47,
+    "ev_buy_yes_c": 0.465,
+    "ev_yes_ci": [
+     -9.95,
+     12.89
+    ],
+    "ev_buy_no_c": -4.465,
+    "ev_no_ci": [
+     -16.89,
+     5.95
+    ]
+   },
+   {
+    "bucket": "0.65-0.80",
+    "n": 82,
+    "mean_price": 0.7332,
+    "realized": 0.6341,
+    "gap_pp": -9.9,
+    "ev_buy_yes_c": -11.902,
+    "ev_yes_ci": [
+     -23.29,
+     -0.84
+    ],
+    "ev_buy_no_c": 7.902,
+    "ev_no_ci": [
+     -3.16,
+     19.29
+    ]
+   },
+   {
+    "bucket": "0.80-0.90",
+    "n": 84,
+    "mean_price": 0.8485,
+    "realized": 0.8214,
+    "gap_pp": -2.7,
+    "ev_buy_yes_c": -3.988,
+    "ev_yes_ci": [
+     -12.84,
+     5.01
+    ],
+    "ev_buy_no_c": 1.417,
+    "ev_no_ci": [
+     -7.79,
+     10.33
+    ]
+   },
+   {
+    "bucket": "0.90-0.95",
+    "n": 200,
+    "mean_price": 0.9069,
+    "realized": 0.77,
+    "gap_pp": -13.69,
+    "ev_buy_yes_c": -14.685,
+    "ev_yes_ci": [
+     -21.9,
+     -7.68
+    ],
+    "ev_buy_no_c": 12.685,
+    "ev_no_ci": [
+     5.68,
+     19.9
+    ]
+   },
+   {
+    "bucket": "0.95-1.01",
+    "n": 49,
+    "mean_price": 0.9688,
+    "realized": 0.7347,
+    "gap_pp": -23.41,
+    "ev_buy_yes_c": -24.408,
+    "ev_yes_ci": [
+     -36.2,
+     -12.52
+    ],
+    "ev_buy_no_c": 22.408,
+    "ev_no_ci": [
+     10.52,
+     34.2
+    ]
+   }
+  ],
+  "px_900s": [
+   {
+    "bucket": "0.00-0.05",
+    "n": 179,
+    "mean_price": 0.0158,
+    "realized": 0.0223,
+    "gap_pp": 0.65,
+    "ev_buy_yes_c": -0.346,
+    "ev_yes_ci": [
+     -2.11,
+     1.83
+    ],
+    "ev_buy_no_c": -1.654,
+    "ev_no_ci": [
+     -3.83,
+     0.11
+    ]
+   },
+   {
+    "bucket": "0.05-0.10",
+    "n": 46,
+    "mean_price": 0.0624,
+    "realized": 0.087,
+    "gap_pp": 2.46,
+    "ev_buy_yes_c": 1.457,
+    "ev_yes_ci": [
+     -7.23,
+     12.28
+    ],
+    "ev_buy_no_c": -3.457,
+    "ev_no_ci": [
+     -14.28,
+     5.23
+    ]
+   },
+   {
+    "bucket": "0.10-0.20",
+    "n": 66,
+    "mean_price": 0.148,
+    "realized": 0.3333,
+    "gap_pp": 18.53,
+    "ev_buy_yes_c": 17.258,
+    "ev_yes_ci": [
+     3.46,
+     30.83
+    ],
+    "ev_buy_no_c": -19.803,
+    "ev_no_ci": [
+     -33.39,
+     -5.89
+    ]
+   },
+   {
+    "bucket": "0.20-0.35",
+    "n": 125,
+    "mean_price": 0.2577,
+    "realized": 0.408,
+    "gap_pp": 15.03,
+    "ev_buy_yes_c": 13.032,
+    "ev_yes_ci": [
+     2.94,
+     24.15
+    ],
+    "ev_buy_no_c": -17.032,
+    "ev_no_ci": [
+     -28.15,
+     -6.94
+    ]
+   },
+   {
+    "bucket": "0.35-0.50",
+    "n": 160,
+    "mean_price": 0.4205,
+    "realized": 0.4188,
+    "gap_pp": -0.17,
+    "ev_buy_yes_c": -2.175,
+    "ev_yes_ci": [
+     -10.77,
+     7.51
+    ],
+    "ev_buy_no_c": -1.825,
+    "ev_no_ci": [
+     -11.51,
+     6.77
+    ]
+   },
+   {
+    "bucket": "0.50-0.65",
+    "n": 175,
+    "mean_price": 0.5628,
+    "realized": 0.5257,
+    "gap_pp": -3.71,
+    "ev_buy_yes_c": -5.709,
+    "ev_yes_ci": [
+     -15.77,
+     3.47
+    ],
+    "ev_buy_no_c": 1.709,
+    "ev_no_ci": [
+     -7.47,
+     11.77
+    ]
+   },
+   {
+    "bucket": "0.65-0.80",
+    "n": 255,
+    "mean_price": 0.7308,
+    "realized": 0.6118,
+    "gap_pp": -11.9,
+    "ev_buy_yes_c": -13.902,
+    "ev_yes_ci": [
+     -20.61,
+     -7.99
+    ],
+    "ev_buy_no_c": 9.902,
+    "ev_no_ci": [
+     3.99,
+     16.61
+    ]
+   },
+   {
+    "bucket": "0.80-0.90",
+    "n": 363,
+    "mean_price": 0.8463,
+    "realized": 0.7603,
+    "gap_pp": -8.6,
+    "ev_buy_yes_c": -9.796,
+    "ev_yes_ci": [
+     -15.32,
+     -4.95
+    ],
+    "ev_buy_no_c": 7.399,
+    "ev_no_ci": [
+     2.54,
+     12.95
+    ]
+   },
+   {
+    "bucket": "0.90-0.95",
+    "n": 291,
+    "mean_price": 0.9074,
+    "realized": 0.7663,
+    "gap_pp": -14.11,
+    "ev_buy_yes_c": -15.107,
+    "ev_yes_ci": [
+     -19.65,
+     -10.56
+    ],
+    "ev_buy_no_c": 13.107,
+    "ev_no_ci": [
+     8.56,
+     17.65
+    ]
+   },
+   {
+    "bucket": "0.95-1.01",
+    "n": 59,
+    "mean_price": 0.9656,
+    "realized": 0.8136,
+    "gap_pp": -15.2,
+    "ev_buy_yes_c": -16.203,
+    "ev_yes_ci": [
+     -27.54,
+     -7.37
+    ],
+    "ev_buy_no_c": 14.203,
+    "ev_no_ci": [
+     5.37,
+     25.54
+    ]
+   }
+  ],
+  "px_1800s": [
+   {
+    "bucket": "0.00-0.05",
+    "n": 243,
+    "mean_price": 0.0174,
+    "realized": 0.0206,
+    "gap_pp": 0.31,
+    "ev_buy_yes_c": -0.687,
+    "ev_yes_ci": [
+     -2.17,
+     0.93
+    ],
+    "ev_buy_no_c": -1.313,
+    "ev_no_ci": [
+     -2.93,
+     0.17
+    ]
+   },
+   {
+    "bucket": "0.05-0.10",
+    "n": 92,
+    "mean_price": 0.0663,
+    "realized": 0.163,
+    "gap_pp": 9.67,
+    "ev_buy_yes_c": 8.674,
+    "ev_yes_ci": [
+     -0.82,
+     18.4
+    ],
+    "ev_buy_no_c": -10.674,
+    "ev_no_ci": [
+     -20.4,
+     -1.18
+    ]
+   },
+   {
+    "bucket": "0.10-0.20",
+    "n": 137,
+    "mean_price": 0.1482,
+    "realized": 0.3066,
+    "gap_pp": 15.83,
+    "ev_buy_yes_c": 14.584,
+    "ev_yes_ci": [
+     5.05,
+     24.04
+    ],
+    "ev_buy_no_c": -17.08,
+    "ev_no_ci": [
+     -26.51,
+     -7.55
+    ]
+   },
+   {
+    "bucket": "0.20-0.35",
+    "n": 270,
+    "mean_price": 0.2661,
+    "realized": 0.3074,
+    "gap_pp": 4.13,
+    "ev_buy_yes_c": 2.126,
+    "ev_yes_ci": [
+     -5.29,
+     9.52
+    ],
+    "ev_buy_no_c": -6.126,
+    "ev_no_ci": [
+     -13.52,
+     1.29
+    ]
+   },
+   {
+    "bucket": "0.35-0.50",
+    "n": 355,
+    "mean_price": 0.4182,
+    "realized": 0.369,
+    "gap_pp": -4.92,
+    "ev_buy_yes_c": -6.921,
+    "ev_yes_ci": [
+     -12.84,
+     -1.06
+    ],
+    "ev_buy_no_c": 2.921,
+    "ev_no_ci": [
+     -2.94,
+     8.84
+    ]
+   },
+   {
+    "bucket": "0.50-0.65",
+    "n": 359,
+    "mean_price": 0.5652,
+    "realized": 0.4708,
+    "gap_pp": -9.44,
+    "ev_buy_yes_c": -11.443,
+    "ev_yes_ci": [
+     -17.18,
+     -5.73
+    ],
+    "ev_buy_no_c": 7.443,
+    "ev_no_ci": [
+     1.73,
+     13.18
+    ]
+   },
+   {
+    "bucket": "0.65-0.80",
+    "n": 469,
+    "mean_price": 0.7256,
+    "realized": 0.597,
+    "gap_pp": -12.86,
+    "ev_buy_yes_c": -14.857,
+    "ev_yes_ci": [
+     -19.96,
+     -9.73
+    ],
+    "ev_buy_no_c": 10.857,
+    "ev_no_ci": [
+     5.73,
+     15.96
+    ]
+   },
+   {
+    "bucket": "0.80-0.90",
+    "n": 612,
+    "mean_price": 0.8453,
+    "realized": 0.719,
+    "gap_pp": -12.63,
+    "ev_buy_yes_c": -13.824,
+    "ev_yes_ci": [
+     -17.34,
+     -10.32
+    ],
+    "ev_buy_no_c": 11.441,
+    "ev_no_ci": [
+     7.97,
+     14.96
+    ]
+   },
+   {
+    "bucket": "0.90-0.95",
+    "n": 318,
+    "mean_price": 0.9078,
+    "realized": 0.7862,
+    "gap_pp": -12.17,
+    "ev_buy_yes_c": -13.167,
+    "ev_yes_ci": [
+     -18.08,
+     -8.38
+    ],
+    "ev_buy_no_c": 11.167,
+    "ev_no_ci": [
+     6.38,
+     16.08
+    ]
+   },
+   {
+    "bucket": "0.95-1.01",
+    "n": 79,
+    "mean_price": 0.9668,
+    "realized": 0.8734,
+    "gap_pp": -9.34,
+    "ev_buy_yes_c": -10.342,
+    "ev_yes_ci": [
+     -19.18,
+     -3.67
+    ],
+    "ev_buy_no_c": 8.342,
+    "ev_no_ci": [
+     1.67,
+     17.18
+    ]
+   }
+  ],
+  "px_3600s": [
+   {
+    "bucket": "0.00-0.05",
+    "n": 344,
+    "mean_price": 0.0187,
+    "realized": 0.0349,
+    "gap_pp": 1.62,
+    "ev_buy_yes_c": 0.622,
+    "ev_yes_ci": [
+     -0.95,
+     2.42
+    ],
+    "ev_buy_no_c": -2.622,
+    "ev_no_ci": [
+     -4.42,
+     -1.05
+    ]
+   },
+   {
+    "bucket": "0.05-0.10",
+    "n": 131,
+    "mean_price": 0.067,
+    "realized": 0.145,
+    "gap_pp": 7.8,
+    "ev_buy_yes_c": 6.802,
+    "ev_yes_ci": [
+     0.84,
+     13.13
+    ],
+    "ev_buy_no_c": -8.802,
+    "ev_no_ci": [
+     -15.13,
+     -2.84
+    ]
+   },
+   {
+    "bucket": "0.10-0.20",
+    "n": 235,
+    "mean_price": 0.1491,
+    "realized": 0.2511,
+    "gap_pp": 10.2,
+    "ev_buy_yes_c": 8.953,
+    "ev_yes_ci": [
+     1.79,
+     16.56
+    ],
+    "ev_buy_no_c": -11.447,
+    "ev_no_ci": [
+     -19.08,
+     -4.29
+    ]
+   },
+   {
+    "bucket": "0.20-0.35",
+    "n": 493,
+    "mean_price": 0.2728,
+    "realized": 0.2556,
+    "gap_pp": -1.73,
+    "ev_buy_yes_c": -3.726,
+    "ev_yes_ci": [
+     -8.61,
+     1.15
+    ],
+    "ev_buy_no_c": -0.274,
+    "ev_no_ci": [
+     -5.15,
+     4.61
+    ]
+   },
+   {
+    "bucket": "0.35-0.50",
+    "n": 640,
+    "mean_price": 0.4184,
+    "realized": 0.3516,
+    "gap_pp": -6.69,
+    "ev_buy_yes_c": -8.686,
+    "ev_yes_ci": [
+     -12.22,
+     -4.73
+    ],
+    "ev_buy_no_c": 4.686,
+    "ev_no_ci": [
+     0.73,
+     8.22
+    ]
+   },
+   {
+    "bucket": "0.50-0.65",
+    "n": 649,
+    "mean_price": 0.5659,
+    "realized": 0.4607,
+    "gap_pp": -10.52,
+    "ev_buy_yes_c": -12.519,
+    "ev_yes_ci": [
+     -17.24,
+     -7.72
+    ],
+    "ev_buy_no_c": 8.519,
+    "ev_no_ci": [
+     3.72,
+     13.24
+    ]
+   },
+   {
+    "bucket": "0.65-0.80",
+    "n": 773,
+    "mean_price": 0.7233,
+    "realized": 0.5783,
+    "gap_pp": -14.5,
+    "ev_buy_yes_c": -16.503,
+    "ev_yes_ci": [
+     -20.45,
+     -12.58
+    ],
+    "ev_buy_no_c": 12.503,
+    "ev_no_ci": [
+     8.58,
+     16.45
+    ]
+   },
+   {
+    "bucket": "0.80-0.90",
+    "n": 844,
+    "mean_price": 0.8406,
+    "realized": 0.7109,
+    "gap_pp": -12.97,
+    "ev_buy_yes_c": -14.22,
+    "ev_yes_ci": [
+     -18.4,
+     -10.61
+    ],
+    "ev_buy_no_c": 11.718,
+    "ev_no_ci": [
+     8.11,
+     15.93
+    ]
+   },
+   {
+    "bucket": "0.90-0.95",
+    "n": 331,
+    "mean_price": 0.9072,
+    "realized": 0.7915,
+    "gap_pp": -11.56,
+    "ev_buy_yes_c": -12.565,
+    "ev_yes_ci": [
+     -17.35,
+     -7.44
+    ],
+    "ev_buy_no_c": 10.565,
+    "ev_no_ci": [
+     5.44,
+     15.35
+    ]
+   },
+   {
+    "bucket": "0.95-1.01",
+    "n": 173,
+    "mean_price": 0.974,
+    "realized": 0.9075,
+    "gap_pp": -6.65,
+    "ev_buy_yes_c": -7.653,
+    "ev_yes_ci": [
+     -12.86,
+     -3.58
+    ],
+    "ev_buy_no_c": 5.653,
+    "ev_no_ci": [
+     1.58,
+     10.86
+    ]
+   }
+  ],
+  "px_7200s": [
+   {
+    "bucket": "0.00-0.05",
+    "n": 554,
+    "mean_price": 0.0172,
+    "realized": 0.0217,
+    "gap_pp": 0.45,
+    "ev_buy_yes_c": -0.551,
+    "ev_yes_ci": [
+     -1.62,
+     0.66
+    ],
+    "ev_buy_no_c": -1.449,
+    "ev_no_ci": [
+     -2.66,
+     -0.38
+    ]
+   },
+   {
+    "bucket": "0.05-0.10",
+    "n": 169,
+    "mean_price": 0.0704,
+    "realized": 0.1183,
+    "gap_pp": 4.8,
+    "ev_buy_yes_c": 3.799,
+    "ev_yes_ci": [
+     -2.4,
+     11.35
+    ],
+    "ev_buy_no_c": -5.799,
+    "ev_no_ci": [
+     -13.35,
+     0.4
+    ]
+   },
+   {
+    "bucket": "0.10-0.20",
+    "n": 365,
+    "mean_price": 0.1459,
+    "realized": 0.2384,
+    "gap_pp": 9.25,
+    "ev_buy_yes_c": 7.995,
+    "ev_yes_ci": [
+     1.8,
+     14.58
+    ],
+    "ev_buy_no_c": -10.499,
+    "ev_no_ci": [
+     -17.05,
+     -4.32
+    ]
+   },
+   {
+    "bucket": "0.20-0.35",
+    "n": 734,
+    "mean_price": 0.2714,
+    "realized": 0.2384,
+    "gap_pp": -3.3,
+    "ev_buy_yes_c": -5.3,
+    "ev_yes_ci": [
+     -7.96,
+     -2.74
+    ],
+    "ev_buy_no_c": 1.3,
+    "ev_no_ci": [
+     -1.26,
+     3.96
+    ]
+   },
+   {
+    "bucket": "0.35-0.50",
+    "n": 950,
+    "mean_price": 0.4214,
+    "realized": 0.3368,
+    "gap_pp": -8.45,
+    "ev_buy_yes_c": -10.454,
+    "ev_yes_ci": [
+     -13.74,
+     -7.02
+    ],
+    "ev_buy_no_c": 6.454,
+    "ev_no_ci": [
+     3.02,
+     9.74
+    ]
+   },
+   {
+    "bucket": "0.50-0.65",
+    "n": 980,
+    "mean_price": 0.5685,
+    "realized": 0.4663,
+    "gap_pp": -10.22,
+    "ev_buy_yes_c": -12.22,
+    "ev_yes_ci": [
+     -15.97,
+     -8.51
+    ],
+    "ev_buy_no_c": 8.22,
+    "ev_no_ci": [
+     4.51,
+     11.97
+    ]
+   },
+   {
+    "bucket": "0.65-0.80",
+    "n": 1038,
+    "mean_price": 0.722,
+    "realized": 0.5886,
+    "gap_pp": -13.33,
+    "ev_buy_yes_c": -15.334,
+    "ev_yes_ci": [
+     -18.67,
+     -12.17
+    ],
+    "ev_buy_no_c": 11.334,
+    "ev_no_ci": [
+     8.17,
+     14.67
+    ]
+   },
+   {
+    "bucket": "0.80-0.90",
+    "n": 969,
+    "mean_price": 0.8389,
+    "realized": 0.7317,
+    "gap_pp": -10.72,
+    "ev_buy_yes_c": -12.022,
+    "ev_yes_ci": [
+     -14.78,
+     -9.3
+    ],
+    "ev_buy_no_c": 9.421,
+    "ev_no_ci": [
+     6.71,
+     12.16
+    ]
+   },
+   {
+    "bucket": "0.90-0.95",
+    "n": 359,
+    "mean_price": 0.9102,
+    "realized": 0.8301,
+    "gap_pp": -8.01,
+    "ev_buy_yes_c": -9.011,
+    "ev_yes_ci": [
+     -13.94,
+     -4.66
+    ],
+    "ev_buy_no_c": 7.011,
+    "ev_no_ci": [
+     2.66,
+     11.94
+    ]
+   },
+   {
+    "bucket": "0.95-1.01",
+    "n": 266,
+    "mean_price": 0.9785,
+    "realized": 0.9586,
+    "gap_pp": -1.99,
+    "ev_buy_yes_c": -2.989,
+    "ev_yes_ci": [
+     -5.99,
+     -0.84
+    ],
+    "ev_buy_no_c": 0.989,
+    "ev_no_ci": [
+     -1.16,
+     3.99
+    ]
+   }
+  ],
+  "px_21600s": [
+   {
+    "bucket": "0.00-0.05",
+    "n": 1496,
+    "mean_price": 0.0131,
+    "realized": 0.008,
+    "gap_pp": -0.5,
+    "ev_buy_yes_c": -1.505,
+    "ev_yes_ci": [
+     -1.94,
+     -0.99
+    ],
+    "ev_buy_no_c": -0.495,
+    "ev_no_ci": [
+     -1.01,
+     -0.06
+    ]
+   },
+   {
+    "bucket": "0.05-0.10",
+    "n": 261,
+    "mean_price": 0.0706,
+    "realized": 0.069,
+    "gap_pp": -0.16,
+    "ev_buy_yes_c": -1.165,
+    "ev_yes_ci": [
+     -4.27,
+     2.28
+    ],
+    "ev_buy_no_c": -0.835,
+    "ev_no_ci": [
+     -4.28,
+     2.27
+    ]
+   },
+   {
+    "bucket": "0.10-0.20",
+    "n": 632,
+    "mean_price": 0.1454,
+    "realized": 0.182,
+    "gap_pp": 3.66,
+    "ev_buy_yes_c": 2.449,
+    "ev_yes_ci": [
+     -1.71,
+     6.57
+    ],
+    "ev_buy_no_c": -4.864,
+    "ev_no_ci": [
+     -8.96,
+     -0.72
+    ]
+   },
+   {
+    "bucket": "0.20-0.35",
+    "n": 997,
+    "mean_price": 0.2707,
+    "realized": 0.2277,
+    "gap_pp": -4.3,
+    "ev_buy_yes_c": -6.3,
+    "ev_yes_ci": [
+     -9.14,
+     -3.27
+    ],
+    "ev_buy_no_c": 2.3,
+    "ev_no_ci": [
+     -0.73,
+     5.14
+    ]
+   },
+   {
+    "bucket": "0.35-0.50",
+    "n": 1119,
+    "mean_price": 0.4187,
+    "realized": 0.3503,
+    "gap_pp": -6.84,
+    "ev_buy_yes_c": -8.841,
+    "ev_yes_ci": [
+     -11.88,
+     -5.61
+    ],
+    "ev_buy_no_c": 4.841,
+    "ev_no_ci": [
+     1.61,
+     7.88
+    ]
+   },
+   {
+    "bucket": "0.50-0.65",
+    "n": 1024,
+    "mean_price": 0.5677,
+    "realized": 0.5068,
+    "gap_pp": -6.08,
+    "ev_buy_yes_c": -8.084,
+    "ev_yes_ci": [
+     -11.03,
+     -5.02
+    ],
+    "ev_buy_no_c": 4.084,
+    "ev_no_ci": [
+     1.02,
+     7.03
+    ]
+   },
+   {
+    "bucket": "0.65-0.80",
+    "n": 1166,
+    "mean_price": 0.7212,
+    "realized": 0.6141,
+    "gap_pp": -10.71,
+    "ev_buy_yes_c": -12.709,
+    "ev_yes_ci": [
+     -15.87,
+     -9.5
+    ],
+    "ev_buy_no_c": 8.709,
+    "ev_no_ci": [
+     5.5,
+     11.87
+    ]
+   },
+   {
+    "bucket": "0.80-0.90",
+    "n": 1059,
+    "mean_price": 0.8385,
+    "realized": 0.7753,
+    "gap_pp": -6.32,
+    "ev_buy_yes_c": -7.672,
+    "ev_yes_ci": [
+     -10.91,
+     -4.64
+    ],
+    "ev_buy_no_c": 4.975,
+    "ev_no_ci": [
+     1.89,
+     8.27
+    ]
+   },
+   {
+    "bucket": "0.90-0.95",
+    "n": 387,
+    "mean_price": 0.9113,
+    "realized": 0.8372,
+    "gap_pp": -7.41,
+    "ev_buy_yes_c": -8.406,
+    "ev_yes_ci": [
+     -12.82,
+     -4.07
+    ],
+    "ev_buy_no_c": 6.406,
+    "ev_no_ci": [
+     2.07,
+     10.82
+    ]
+   },
+   {
+    "bucket": "0.95-1.01",
+    "n": 979,
+    "mean_price": 0.9865,
+    "realized": 0.9888,
+    "gap_pp": 0.23,
+    "ev_buy_yes_c": -0.769,
+    "ev_yes_ci": [
+     -1.48,
+     -0.21
+    ],
+    "ev_buy_no_c": -1.231,
+    "ev_no_ci": [
+     -1.79,
+     -0.52
+    ]
+   }
+  ]
+ },
+ "by_series": [
+  {
+   "series": "KXLOVEISLMENTION",
+   "n": 534,
+   "mean_price": 0.5463,
+   "realized": 0.2978,
+   "gap_pp": -24.86
+  },
+  {
+   "series": "KXMADDOWMENTION",
+   "n": 159,
+   "mean_price": 0.4965,
+   "realized": 0.3145,
+   "gap_pp": -18.21
+  },
+  {
+   "series": "KXSTARMERMENTIONB",
+   "n": 67,
+   "mean_price": 0.466,
+   "realized": 0.3134,
+   "gap_pp": -15.25
+  },
+  {
+   "series": "KXVANCEMENTION",
+   "n": 381,
+   "mean_price": 0.4539,
+   "realized": 0.315,
+   "gap_pp": -13.89
+  },
+  {
+   "series": "KXFIGHTMENTION",
+   "n": 294,
+   "mean_price": 0.3116,
+   "realized": 0.1735,
+   "gap_pp": -13.82
+  },
+  {
+   "series": "KXWORLDNEWSMENTION",
+   "n": 169,
+   "mean_price": 0.5563,
+   "realized": 0.426,
+   "gap_pp": -13.03
+  },
+  {
+   "series": "KXLASTWORDMENTION",
+   "n": 268,
+   "mean_price": 0.4835,
+   "realized": 0.3545,
+   "gap_pp": -12.9
+  },
+  {
+   "series": "KXFOXNEWSMENTION",
+   "n": 179,
+   "mean_price": 0.4801,
+   "realized": 0.3687,
+   "gap_pp": -11.14
+  },
+  {
+   "series": "KXTRUMPMENTIONB",
+   "n": 507,
+   "mean_price": 0.4371,
+   "realized": 0.3294,
+   "gap_pp": -10.77
+  },
+  {
+   "series": "KXPERSONMENTION",
+   "n": 252,
+   "mean_price": 0.4433,
+   "realized": 0.3413,
+   "gap_pp": -10.2
+  },
+  {
+   "series": "KXATHLETEMENTION",
+   "n": 167,
+   "mean_price": 0.4578,
+   "realized": 0.3593,
+   "gap_pp": -9.85
+  },
+  {
+   "series": "KXLATENIGHTMENTION",
+   "n": 311,
+   "mean_price": 0.441,
+   "realized": 0.3473,
+   "gap_pp": -9.37
+  },
+  {
+   "series": "KXCARNEYMENTION",
+   "n": 169,
+   "mean_price": 0.4771,
+   "realized": 0.3846,
+   "gap_pp": -9.25
+  },
+  {
+   "series": "KXPOLITICSMENTION",
+   "n": 315,
+   "mean_price": 0.497,
+   "realized": 0.4063,
+   "gap_pp": -9.07
+  },
+  {
+   "series": "KXMAMDANIMENTION",
+   "n": 468,
+   "mean_price": 0.4494,
+   "realized": 0.359,
+   "gap_pp": -9.04
+  },
+  {
+   "series": "KXNBAMENTION",
+   "n": 214,
+   "mean_price": 0.5352,
+   "realized": 0.4673,
+   "gap_pp": -6.79
+  },
+  {
+   "series": "KXNHLMENTION",
+   "n": 123,
+   "mean_price": 0.5835,
+   "realized": 0.5203,
+   "gap_pp": -6.32
+  },
+  {
+   "series": "KXTRUMPSAY",
+   "n": 288,
+   "mean_price": 0.5575,
+   "realized": 0.5139,
+   "gap_pp": -4.36
+  },
+  {
+   "series": "KXALLINMENTION",
+   "n": 83,
+   "mean_price": 0.5366,
+   "realized": 0.494,
+   "gap_pp": -4.27
+  },
+  {
+   "series": "KXATPMENTION",
+   "n": 132,
+   "mean_price": 0.4902,
+   "realized": 0.4697,
+   "gap_pp": -2.05
+  },
+  {
+   "series": "KXTRUMPMENTION",
+   "n": 1124,
+   "mean_price": 0.4858,
+   "realized": 0.4671,
+   "gap_pp": -1.87
+  },
+  {
+   "series": "KXHEARINGMENTION",
+   "n": 567,
+   "mean_price": 0.5554,
+   "realized": 0.5379,
+   "gap_pp": -1.75
+  },
+  {
+   "series": "KXHOCHULMENTION",
+   "n": 154,
+   "mean_price": 0.4119,
+   "realized": 0.4026,
+   "gap_pp": -0.93
+  },
+  {
+   "series": "KXTRUMPMENTIONDURATION",
+   "n": 81,
+   "mean_price": 0.484,
+   "realized": 0.4815,
+   "gap_pp": -0.25
+  },
+  {
+   "series": "KXMLBMENTION",
+   "n": 863,
+   "mean_price": 0.5582,
+   "realized": 0.5562,
+   "gap_pp": -0.2
+  },
+  {
+   "series": "KXWCMENTION",
+   "n": 2375,
+   "mean_price": 0.4622,
+   "realized": 0.4695,
+   "gap_pp": 0.73
+  },
+  {
+   "series": "KXPSAKIMENTION",
+   "n": 224,
+   "mean_price": 0.4652,
+   "realized": 0.4732,
+   "gap_pp": 0.8
+  },
+  {
+   "series": "KXLASTWORDCOUNT",
+   "n": 60,
+   "mean_price": 0.4182,
+   "realized": 0.45,
+   "gap_pp": 3.18
+  },
+  {
+   "series": "KXBERNIEMENTION",
+   "n": 189,
+   "mean_price": 0.487,
+   "realized": 0.5291,
+   "gap_pp": 4.21
+  },
+  {
+   "series": "KXWNBAMENTION",
+   "n": 148,
+   "mean_price": 0.3918,
+   "realized": 0.5068,
+   "gap_pp": 11.5
+  },
+  {
+   "series": "KXBESSENTMTPMENTION",
+   "n": 117,
+   "mean_price": 0.5639,
+   "realized": 0.6838,
+   "gap_pp": 11.98
+  }
+ ]
+}

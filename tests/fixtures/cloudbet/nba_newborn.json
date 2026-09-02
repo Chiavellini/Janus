@@ -1,0 +1,20 @@
+{
+  "id": 7003001,
+  "name": "Los Angeles Lakers V Miami Heat",
+  "status": "TRADING",
+  "startTime": "2026-10-21T23:30:00+00:00",
+  "home": {"name": "Miami Heat", "key": "c672-miami-heat"},
+  "away": {"name": "Los Angeles Lakers", "key": "c655-los-angeles-lakers"},
+  "markets": {
+    "basketball.moneyline": {
+      "submarkets": {
+        "period=ot&period=ft": {
+          "selections": [
+            {"outcome": "home", "params": "", "price": 2.55, "minStake": 0.1, "maxStake": 30, "status": "SELECTION_ENABLED", "side": "BACK"},
+            {"outcome": "away", "params": "", "price": 1.55, "minStake": 0.1, "maxStake": 30, "status": "SELECTION_ENABLED", "side": "BACK"}
+          ]
+        }
+      }
+    }
+  }
+}

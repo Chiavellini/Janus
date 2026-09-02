@@ -1,0 +1,46 @@
+{
+  "channel_counts": {
+    "events:KXFED": 22,
+    "events:KXFEDDECISION": 10,
+    "markets:KXFED": 22,
+    "markets:KXFEDDECISION": 10
+  },
+  "experiment_id": "janus-track-b-fomc-ladder-settlement",
+  "fetch_stats": {
+    "429s": 0,
+    "cache_hits": 0,
+    "offset_caps": 0,
+    "requests": 4,
+    "retries": 0
+  },
+  "ledger_row": "L18",
+  "markets_seen_union": 32,
+  "meetings_per_series": {
+    "KXFED": [
+      "26JUL",
+      "26JUN"
+    ],
+    "KXFEDDECISION": [
+      "26JUL",
+      "26JUN"
+    ]
+  },
+  "pages_fetched": 4,
+  "pair_status": "BLOCK (UNCHANGED) -- ZQ monthly-average-EFFR extraction untouched",
+  "selection": {
+    "included": 32,
+    "rejected": 0
+  },
+  "shared_meetings": [
+    "26JUL",
+    "26JUN"
+  ],
+  "spec": "research/exec/2026-08-19_fomc-ladder-settlement/spec.yaml",
+  "test_looks_spent": 0,
+  "verdict": {
+    "external_comparison": "NOT_REACHED",
+    "n_shared_meetings": 2,
+    "verdict": "INSUFFICIENT_COVERAGE",
+    "why": "2 settled meetings shared by both series < the pre-registered 5; no distribution quoted and NO external comparison attempted"
+  }
+}

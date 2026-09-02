@@ -1,0 +1,44 @@
+track: sports
+slug: three-venue-pure-arb
+registered_utc: "2026-09-01T00:00:00Z"
+status: pending
+question: >-
+  Does adding Cloudbet BACK selections to the exact schedule-anchored Kalshi/Polymarket sports
+  corpus produce executable, settlement-safe two-leg covers after venue fees and Cloudbet
+  acceptance, with a locked return of at least 1%?
+scope:
+  venues: [kalshi, polymarket, cloudbet]
+  priority: [live, newborn, short_term]
+  market_types: [moneyline, spread, total]
+  horizon_hours: 192
+  live_poll_seconds: 2
+  pregame_poll_seconds: 15
+  max_quote_skew_seconds: 5
+  quantities_usd: [5, 25, 100]
+  min_locked_return: 0.01
+  cloudbet_acceptance_required: true
+  cloudbet_no_side: never_synthesize
+inclusion:
+  - canonical key is anchored to the external schedule and exact period/line/market type
+  - all settlement, cancellation, tie, overtime, and retirement rules are known for both legs
+  - Cloudbet selection is BACK and the exact requested stake is accepted by the trading API
+  - both legs have sufficient executable depth and quote skew is within the pinned limit
+exclusion:
+  - any title-only or fuzzy match
+  - Cloudbet feed-only displayed limits without a successful acceptance response
+  - unknown rulesets treated as zero risk
+  - two legs sharing a liquidity source
+primary_metric: locked_return_after_entry_and_settlement_fees
+secondary_metrics: [accepted_stake, fill_latency_ms, quote_skew_seconds, rejection_rate, capacity]
+success_criteria:
+  - at least 20 independently accepted two-leg opportunities across at least 3 leagues
+  - median locked return >= 0.01 after all pinned fees
+  - zero settlement-rule blocks among claimed opportunities
+  - at least 95% of accepted legs reconcile to the accepted odds and stake
+stop_conditions:
+  - any candidate relies on a synthetic Cloudbet NO side
+  - any displayed Cloudbet max stake is used as accepted capacity without acceptance
+  - any settlement rule remains unknown for a claimed opportunity
+  - any liquidity-source deduplication failure
+arming_allowed: false
+no_orders_in_this_run: true

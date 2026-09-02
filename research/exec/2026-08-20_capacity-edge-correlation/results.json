@@ -1,0 +1,44 @@
+{
+ "spec": "research/exec/2026-08-20_capacity-edge-correlation/spec.yaml",
+ "ledger_row": "L25",
+ "test_looks_spent": 1,
+ "n_unique_markets_scored": 509,
+ "excluded": {
+  "no_kalshi_size": 0,
+  "no_pm_token": 0,
+  "pm_book_error": 0,
+  "pm_one_sided": 15
+ },
+ "primary": {
+  "tag": "all",
+  "n_markets": 494,
+  "decile_cut_usd": 18.15,
+  "n_top": 50,
+  "n_rest": 444,
+  "median_edge_top_decile_c": 43.758,
+  "median_edge_rest_c": 24.471,
+  "primary_diff_c": 19.287,
+  "primary_p": 0.12839,
+  "spearman_rho": -0.0646,
+  "spearman_p": 0.15378,
+  "alpha": 0.004,
+  "primary_significant": false,
+  "spearman_significant": false
+ },
+ "robustness_trimmed_20c": {
+  "tag": "abs_edge_le_20c",
+  "n_markets": 193,
+  "decile_cut_usd": 15.16,
+  "n_top": 20,
+  "n_rest": 173,
+  "median_edge_top_decile_c": 2.358,
+  "median_edge_rest_c": 0.299,
+  "primary_diff_c": 2.059,
+  "primary_p": 0.36516,
+  "spearman_rho": -0.1128,
+  "spearman_p": 0.12049,
+  "alpha": 0.004,
+  "primary_significant": false,
+  "spearman_significant": false
+ }
+}

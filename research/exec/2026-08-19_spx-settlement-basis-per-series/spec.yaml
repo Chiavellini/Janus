@@ -1,0 +1,137 @@
+experiment_id: "janus-track-b-spx-settlement-basis-per-series"
+date_registered: "2026-08-19"
+track: exec
+program: track_b_hft
+ledger_ref: "snooping_ledger.md row L15 (descriptive settlement-reference characterization -- costs no test look)"
+status_at_registration: PENDING
+supersedes: "L14 (research/exec/2026-08-19_spx-settlement-basis) -- STOP WITHIN_DATE_DISAGREEMENT"
+
+# IMMUTABLE AFTER THE FIRST KALSHI MARKET OR REFERENCE-SOURCE REQUEST UNDER THIS ROW.
+
+purpose: >
+  Measure, PER KALSHI SERIES, the basis between that series' published S&P 500 settlement value and
+  the official end-of-day S&P 500 close. Reads no quote, computes no strategy return, extracts no
+  implied distribution, and never places a Kalshi price next to an IBKR price.
+
+what_L14_established_and_why_this_row_exists:
+  finding: >
+    M1: KXINX (daily range ladder) and KXINXU (hourly above/below) publish DIFFERENT
+    expiration_value for the same settlement date, the same 16:00 ET instant, and the same
+    rules_primary sentence ("the end-of-day S&P 500 index value"), on 25 of 39 shared dates --
+    median 0.0000, mean -0.0262, range -0.4400 to +0.1900 index points, not single-signed.
+    L14's within-EVENT consistency check passed everywhere (0 stops / 3,839 markets), so the field
+    is read correctly and the two series genuinely disagree with each other.
+  consequence: >
+    "The Kalshi S&P settlement value for date D" does not identify a number, so L14's dedupe rule
+    was not well-defined and L14 STOPPED. Per snooping_ledger.md rule 6 the correction is a NEW
+    row, not an edit: L14's criteria stand untouched and its dedupe assumption is not repaired in
+    place.
+  design_change: >
+    Each series is measured SEPARATELY against the close and reported separately. There is no
+    pooling, and no post-hoc choice of "the good series" -- every series that clears the coverage
+    gate is reported whatever its result.
+
+disclosure_before_registration: >
+  While looking for a second reference source after L14 stopped, FRED series SP500 was fetched for
+  reachability and its most recent row was visible: 2026-08-18 -> 7691.76, equal to Kalshi's
+  expiration_value for that date. This is n=1, it was seen BEFORE this row was registered, and it
+  is disclosed here rather than used. It sets no criterion below: every gate is structural, fixed
+  now, and cannot be tuned by one observation.
+
+references_and_evidence_tiers:
+  kalshi_settlement:
+    field: "expiration_value on settled markets"
+    source: "GET https://api.elections.kalshi.com/trade-api/v2 (public, unauthenticated)"
+    tier: M1
+  official_close_primary:
+    source: "FRED series SP500 (https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500)"
+    tier: R
+    note: >
+      FRED redistributes this series from S&P Dow Jones Indices, which makes it closer to primary
+      than a scraped quote page, but it is still a redistribution and 2 dp. "Equals the S&P DJI
+      OFFICIAL close" therefore remains U, and every output must say so.
+  official_close_crosscheck:
+    source: "Yahoo chart ^GSPC"
+    tier: R
+    note: "independent of FRED; rounded to 2 dp before comparison, the precision FRED publishes"
+  stooq:
+    status: DROPPED
+    why: >
+      L14 measured it serving a JavaScript anti-bot page as HTTP 200 from three URL variants. An
+      unreachable source is an access result, recorded, not retried into the design.
+  cboe_pm_exercise_settlement:
+    tier: R
+    structural_note: >
+      Unchanged from L14 and still declared before the run: for PM-settled SPXW/XSP, CBOE publishes
+      no independent exercise-settlement print -- the exercise settlement value IS the official
+      closing index value by rule. The separately published SET ticker is AM-settled third-Friday
+      SPX, which the settlement map already records as a NON-match.
+
+source_integrity_guard:
+  rule: >
+    A reference fetch whose body does not parse as the expected format raises SOURCE_UNPARSEABLE
+    and is reported as such. Zero parsed rows from a 200 response is NEVER reported as an empty
+    series. This closes the reporting defect L14 exposed with stooq.
+
+inclusion_rules:
+  series: [KXINX, KXINXU, KXINXAB, KXINXI]
+  status: settled
+  market_filter: >
+    Unchanged from L14: include a settled market only if (a) its rules_primary states an end-of-day
+    / closing S&P 500 index value and (b) its close_time falls at 16:00 America/New_York. Non-16:00
+    markets are collected, counted, and reported separately; never in a headline.
+  within_series_date_consistency: >
+    Every included market of ONE series sharing a settlement date must report the same
+    expiration_value. A disagreement is a STOP for that (series, date), reported with the values.
+    Across series, disagreement is the measured quantity, not an error.
+  enumeration_channels: >
+    Both channels from L14 (markets cursor; events with_nested_markets cursor), union, per-channel
+    counts reported.
+
+coverage_gate:
+  min_settlement_dates_per_series: 20
+  rule: >
+    A series with fewer than 20 confirmed dates is reported INSUFFICIENT_COVERAGE and quotes no
+    distribution. Series are never merged to reach the threshold.
+
+statistics:
+  primary: "per series: diff = expiration_value - official_close, index points and bp"
+  reported: [n_dates, frac_exactly_equal, median, iqr, mean, max_abs, full_distribution]
+  ci: "lib.stats.block_bootstrap_ci over the diffs, blocked by settlement date"
+  exact_equality: "operationalized at 2 dp -- the precision both sides publish; stricter than the 0.01 bound"
+  crosscheck: >
+    A date whose FRED and Yahoo values differ by more than 0.01 after rounding to 2 dp is labelled
+    REFERENCE_DISAGREE, excluded from that series' headline, and counted. Never averaged.
+  series_wedge: >
+    KXINX - KXINXU on shared dates is a first-class REPORTED output, not a diagnostic, since it is
+    the quantity that stopped L14.
+
+verdict_rule:
+  per_series: >
+    Series S clears to OK iff n_dates(S) >= 20 AND frac_exactly_equal(S) >= 0.95 AND
+    max_abs(S) <= 0.01. Otherwise S stays BLOCK with its measured wedge recorded.
+  pair_status_in_the_settlement_map: >
+    The map pair moves to OK only for a NAMED series that cleared, and the map must name it. If the
+    two series disagree with each other, the map records that as the pair's known_basis regardless
+    of how either scores against the close -- a comparison that does not name its series stays
+    BLOCK.
+  immutability: "Fixed now. Not adjusted after seeing any distribution."
+
+not_estimated_here:
+  - option_implied_digitals
+  - any_kalshi_price_vs_ibkr_price_comparison
+  - tick_error_propagation_to_implied_vol
+  - ibkr_index_print_accuracy
+  - sp_dji_official_close_as_a_primary_source
+  - which_series_is_correct   # only whether each matches the close, never an adjudication
+  - the_other_three_pairs_in_the_settlement_map
+
+privacy_and_disk:
+  identifiers_persisted: none
+  raw_rows: "/Volumes/Kilos/janus/spx_basis/ (never the root disk)"
+  disk_floor: "abort below 2 GB free on internal /"
+
+outputs:
+  results: "research/exec/2026-08-19_spx-settlement-basis-per-series/results.json"
+  verdict: "research/exec/2026-08-19_spx-settlement-basis-per-series/verdict.md"
+  map_amendment: "research/exec/2026-08-18_ibkr-forward-archive/settlement_reference_map.yaml (v3, one pair)"

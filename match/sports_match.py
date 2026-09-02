@@ -1,0 +1,311 @@
+#!/usr/bin/env python3
+"""Stage 2 — cross-venue matching on a canonical key. NO PRICES ARE READ.
+
+Registered spec: research/sports/2026-08-17_stage2-matching/spec.yaml (ledger L9, PENDING).
+The gate was written before this file existed and is NOT tunable:
+    coverage  >= 0.80   (denominator from the schedule, not from this matcher's output)
+    precision >= 0.98   (against match/gold/mlb_moneyline.csv, frozen before the first run)
+
+WHAT REPLACED WHAT
+──────────────────
+Phase 1 blocked on title tokens and capped recall at 12 candidates per market, then scored the
+survivors by Jaccard. On sports that is worse than useless: "Lakers vs Celtics Nov 3" and
+"Lakers vs Celtics Nov 17" share nearly every token and are different games.
+
+Here both venues are resolved INDEPENDENTLY onto an external schedule (`lib/schedule/espn.py`),
+and two markets pair iff they land on the same `game_id` AND agree on every component of the
+canonical key. There is no similarity score, no threshold, and no recall cap — an exact key needs
+none.
+
+THE THREE DISCRIMINATIONS THAT MATTER
+─────────────────────────────────────
+1. **period / market_type.** Polymarket lists `-first-five-winner`, `-player-props`, `-nrfi`,
+   spreads and totals as SEPARATE events sharing the parent's teams and `gameStartTime`. They are
+   not the same contract. Fifteen of them sit in the gold file as hard negatives precisely because
+   participants-plus-time is NOT sufficient.
+2. **start time, not date.** MLB doubleheaders put two games of one matchup on one date. G1 and G2
+   are separated only by the clock, which Kalshi states in `rules_primary` and PM in
+   `gameStartTime`.
+3. **the slug lies.** PM keeps a game's ORIGINAL slug when it is postponed. In the current slate
+   the STL/CIN doubleheader resolves to `mlb-stl-cin-2026-05-24` (G1, the May makeup) and
+   `mlb-stl-cin-2026-08-17` (G2). Anything keyed on the slug date gets G1 wrong by three months.
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import re
+from collections import Counter, defaultdict
+from dataclasses import dataclass, asdict
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+from catalog.stage1_checkpoint import (
+    KALSHI_BASE, PM_GAMMA, games_on_local_date, kalshi_date_from_rules,
+    kalshi_start_from_rules, pull_kalshi, pull_pm, _pm_start,
+)
+from lib.entities.resolve import Resolver, normalize
+from lib.entities.seed import NON_TEAM_OUTCOMES
+from lib.schedule import espn
+
+#: A PM FULL-GAME moneyline slug is exactly `mlb-{away}-{home}-{YYYY-MM-DD}`. Any further suffix
+#: marks a derivative event — a different period (`-first-five-winner`) or a different market type
+#: (`-player-props`, `-nrfi`, `-total-9pt5`, `-spread-away-1pt5`).
+PM_FULLGAME_SLUG = re.compile(r"^mlb-[a-z0-9]{2,4}-[a-z0-9]{2,4}-\d{4}-\d{2}-\d{2}$")
+
+
+@dataclass(frozen=True)
+class VenueMarket:
+    """One venue's rendering of one tradeable side. Deliberately price-free at this stage."""
+    venue: str
+    venue_id: str            # ticker (Kalshi) / slug (Polymarket)
+    outcome_id: str          # the specific contract
+    game_id: str
+    entity_id: str           # which participant this side backs
+    market_type: str         # "moneyline"
+    period: str              # "full_game"
+    start_utc: int
+    label: str               # the venue's own text, kept for auditing
+
+
+def _reason(bucket: Counter, key: str) -> None:
+    bucket[key] += 1
+
+
+# ── venue normalization (no prices) ──────────────────────────────────────────
+
+def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> list[VenueMarket]:
+    lo, hi = window
+    out: list[VenueMarket] = []
+    for ev in pull_kalshi(league, _client("kalshi")):
+        tick = ev.get("event_ticker", "")
+        mkts = [m for m in (ev.get("markets") or [])
+                if normalize(m.get("yes_sub_title") or "") not in NON_TEAM_OUTCOMES]
+        if not mkts:
+            continue
+        stats["kalshi_events"] += 1
+        sides = []
+        for m in mkts:
+            cs = m.get("custom_strike") or {}
+            uuid = next((v for v in cs.values() if isinstance(v, str) and len(v) >= 32), None)
+            res = r.resolve(league, text=m.get("yes_sub_title"), venue="kalshi", venue_team_id=uuid)
+            if res.ok:
+                sides.append((m, res.entity_id))
+        if len({e for _, e in sides}) != 2:
+            _reason(stats["k_reason"], "entity_resolution")
+            near_miss.append({"venue": "kalshi", "id": tick, "reason": "entity_resolution"})
+            continue
+        rules = (mkts[0].get("rules_primary") or "") + " " + (mkts[0].get("rules_secondary") or "")
+        espn_ids = tuple(sorted(r.teams[e].espn_id for _, e in sides if e in r.teams))
+        cands = by_pair.get(espn_ids, [])
+        st = kalshi_start_from_rules(rules)
+        g = (espn.nearest_game(cands, st) if st is not None
+             else games_on_local_date(cands, kalshi_date_from_rules(rules) or datetime.now().date()))
+        if g is None:
+            if cands:
+                _reason(stats["k_reason"], "no_schedule_match")
+                near_miss.append({"venue": "kalshi", "id": tick, "reason": "no_schedule_match"})
+            else:
+                _reason(stats["k_reason"], "outside_window")
+            continue
+        if not (lo <= g.start_utc < hi):
+            _reason(stats["k_reason"], "outside_window")
+            continue
+        for m, eid in sides:
+            out.append(VenueMarket("kalshi", tick, m["ticker"], g.game_id, eid,
+                                   "moneyline", "full_game", g.start_utc,
+                                   m.get("yes_sub_title") or ""))
+    return out
+
+
+def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> list[VenueMarket]:
+    lo, hi = window
+    out: list[VenueMarket] = []
+    for ev in pull_pm(league, _client("polymarket")):
+        slug = ev.get("slug", "")
+        teams = ev.get("teams") or []
+        if len(teams) != 2:
+            continue
+        stats["pm_events"] += 1
+        # DISCRIMINATION 1: derivative events share teams and start time but are not the same
+        # contract. Rejecting them here is what the 15 hard negatives in the gold file test.
+        if not PM_FULLGAME_SLUG.match(slug):
+            _reason(stats["p_reason"], "derivative_event_not_full_game_moneyline")
+            continue
+        ents = []
+        for t in teams:
+            res = r.resolve(league, text=t.get("name"), venue="polymarket",
+                            venue_team_id=str(t.get("id") or ""))
+            if res.ok:
+                ents.append((t, res.entity_id))
+        if len({e for _, e in ents}) != 2:
+            _reason(stats["p_reason"], "entity_resolution")
+            near_miss.append({"venue": "polymarket", "id": slug, "reason": "entity_resolution"})
+            continue
+        st = _pm_start(ev)
+        if st is None:
+            _reason(stats["p_reason"], "no_start_time")
+            continue
+        espn_ids = tuple(sorted(r.teams[e].espn_id for _, e in ents if e in r.teams))
+        g = espn.nearest_game(by_pair.get(espn_ids, []), st)
+        if g is None:
+            _reason(stats["p_reason"], "no_schedule_match")
+            continue
+        if not (lo <= g.start_utc < hi):
+            _reason(stats["p_reason"], "outside_window")
+            continue
+        for t, eid in ents:
+            out.append(VenueMarket("polymarket", slug, f"{slug}:{t.get('abbreviation')}",
+                                   g.game_id, eid, "moneyline", "full_game", g.start_utc,
+                                   t.get("name") or ""))
+    return out
+
+
+def _client(name: str):
+    from lib.fetch import Client
+    return Client(name, rate=4.0, burst=8.0)
+
+
+# ── the join ─────────────────────────────────────────────────────────────────
+
+def pair(kalshi: list[VenueMarket], pm: list[VenueMarket]) -> list[dict]:
+    """Exact join on the canonical key. No score, no threshold, no recall cap."""
+    idx: dict[tuple, list[VenueMarket]] = defaultdict(list)
+    for m in pm:
+        idx[(m.game_id, m.market_type, m.period, m.entity_id)].append(m)
+    pairs = []
+    for k in kalshi:
+        for p in idx.get((k.game_id, k.market_type, k.period, k.entity_id), []):
+            pairs.append({"game_id": k.game_id, "entity_id": k.entity_id,
+                          "market_type": k.market_type, "period": k.period,
+                          "start_utc": k.start_utc,
+                          "kalshi_event": k.venue_id, "kalshi_outcome": k.outcome_id,
+                          "pm_event": p.venue_id, "pm_outcome": p.outcome_id,
+                          "kalshi_label": k.label, "pm_label": p.label})
+    return sorted(pairs, key=lambda r: (r["game_id"], r["entity_id"], r["kalshi_outcome"]))
+
+
+def score_precision(pairs: list[dict], gold_path: Path) -> dict:
+    """Score EVENT-level pairings against the frozen gold file.
+
+    The gold file pairs a Kalshi event to a PM event. This matcher emits OUTCOME-level rows, so
+    they are collapsed to the distinct (kalshi_event, pm_event) set before scoring — otherwise a
+    single correct game would be double-counted and precision would be flattered.
+    """
+    if not gold_path.exists():
+        return {"error": "gold file missing"}
+    with gold_path.open(newline="", encoding="utf-8") as fh:
+        gold = list(csv.DictReader(fh))
+    # LAST ROW WINS: a correction row carries `supersedes` and is appended after the row it
+    # replaces, per the spec's append-never-edit rule. Iterating in file order therefore lets the
+    # correction take effect while the original label stays visible and auditable in the file.
+    truth = {}
+    corrections = 0
+    for g in gold:
+        key = (g["kalshi_ticker"], g["pm_slug"])
+        if g.get("supersedes"):
+            corrections += 1
+        truth[key] = int(g["label"])
+    emitted = {(p["kalshi_event"], p["pm_event"]) for p in pairs}
+    judged = [(k, truth[k]) for k in emitted if k in truth]
+    tp = sum(1 for _, lab in judged if lab == 1)
+    fp = sum(1 for _, lab in judged if lab == 0)
+    gold_pos = {k for k, lab in truth.items() if lab == 1}
+    return {
+        "gold_rows": len(gold),
+        "gold_correction_rows_applied": corrections,
+        "emitted_event_pairs": len(emitted),
+        "judged_against_gold": len(judged),
+        "not_in_gold": len(emitted) - len(judged),
+        "true_positives": tp,
+        "false_positives": fp,
+        "false_positive_pairs": sorted(k for k, lab in judged if lab == 0)[:20],
+        "precision": round(tp / len(judged), 4) if judged else None,
+        "gold_positives": len(gold_pos),
+        "gold_positives_recovered": len(gold_pos & emitted),
+        "gold_recall": round(len(gold_pos & emitted) / len(gold_pos), 4) if gold_pos else None,
+        "gold_positives_missed": sorted(gold_pos - emitted),
+    }
+
+
+def run(league: str, days: int, out_dir: Path) -> dict:
+    now = datetime.now(timezone.utc)
+    start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    end = start + timedelta(days=days)
+    window = (int(start.timestamp()), int(end.timestamp()))
+
+    games = espn.fetch_range(league, start, end, use_cache=False)
+    by_pair = espn.index_by_participants(games)
+
+    r = Resolver.load()
+    stats = Counter()
+    stats["k_reason"] = Counter()
+    stats["p_reason"] = Counter()
+    near_miss: list[dict] = []
+
+    kms = kalshi_markets(league, r, by_pair, window, stats, near_miss)
+    pms = pm_markets(league, r, by_pair, window, stats, near_miss)
+    pairs = pair(kms, pms)
+
+    # ── coverage, with the denominator taken from the SCHEDULE ───────────────
+    k_games = {m.game_id for m in kms}
+    p_games = {m.game_id for m in pms}
+    eligible = k_games & p_games                     # both venues independently list it
+    matched = defaultdict(set)
+    for p in pairs:
+        matched[p["game_id"]].add(p["entity_id"])
+    complete = {g for g, ents in matched.items() if len(ents) == 2}   # BOTH sides paired
+    coverage = round(len(complete) / len(eligible), 4) if eligible else None
+
+    for g in sorted(eligible - complete):
+        near_miss.append({"venue": "both", "id": g, "reason": "eligible_but_not_completely_paired"})
+
+    prec = score_precision(pairs, Path("match/gold/mlb_moneyline.csv"))
+
+    result = {
+        "spec": "research/sports/2026-08-17_stage2-matching/spec.yaml",
+        "ledger_row": "L9",
+        "prices_read": False,
+        "league": league,
+        "window_utc": [start.isoformat(), end.isoformat()],
+        "scheduled_games": len(games),
+        "kalshi": {"events": stats["kalshi_events"], "markets": len(kms),
+                   "games": len(k_games), "reasons": dict(stats["k_reason"])},
+        "polymarket": {"events": stats["pm_events"], "markets": len(pms),
+                       "games": len(p_games), "reasons": dict(stats["p_reason"])},
+        "coverage": {
+            "eligible_games_both_venues": len(eligible),
+            "completely_paired_games": len(complete),
+            "coverage": coverage,
+            "threshold": 0.80,
+            "pass": (coverage is not None and coverage >= 0.80),
+        },
+        "precision": {**prec, "threshold": 0.98,
+                      "pass": (prec.get("precision") is not None and prec["precision"] >= 0.98)},
+        "outcome_pairs_emitted": len(pairs),
+    }
+    result["gate_pass"] = bool(result["coverage"]["pass"] and result["precision"]["pass"])
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "results.json").write_text(json.dumps(result, indent=1))
+    with (out_dir / "pairs.csv").open("w", newline="", encoding="utf-8") as fh:
+        if pairs:
+            w = csv.DictWriter(fh, fieldnames=list(pairs[0])); w.writeheader(); w.writerows(pairs)
+    with (out_dir / "near_miss.csv").open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh); w.writerow(["venue", "id", "reason"])
+        for n in near_miss:
+            w.writerow([n["venue"], n["id"], n["reason"]])
+    print(json.dumps(result, indent=1))
+    return result
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--league", default="mlb")
+    ap.add_argument("--days", type=int, default=8)
+    ap.add_argument("--out", type=Path,
+                    default=Path("research/sports/2026-08-17_stage2-matching"))
+    a = ap.parse_args()
+    run(a.league, a.days, a.out)

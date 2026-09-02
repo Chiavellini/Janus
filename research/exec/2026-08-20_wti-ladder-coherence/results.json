@@ -1,0 +1,525 @@
+{
+  "contract_months": [
+    "OCT 26"
+  ],
+  "controls": {
+    "flat_fee_per_leg": 0.02,
+    "tick_band_usd": 0.01,
+    "truncation_guard": [
+      0.98,
+      0.02
+    ]
+  },
+  "events": [
+    "KXWTI-26AUG2014",
+    "KXWTI-26NOV03"
+  ],
+  "experiment_id": "janus-track-b-wti-ladder-coherence",
+  "ibkr_errors": {},
+  "ledger_row": "L21",
+  "markets_seen": 95,
+  "n_is_one_for_part_C": true,
+  "per_event": {
+    "KXWTI-26AUG2014": {
+      "capacity": {
+        "depth_at_touch_median_ask": 300.0,
+        "depth_at_touch_median_bid": 344.94,
+        "n_rungs": 30,
+        "rungs_with_oi": 18,
+        "rungs_with_two_sided_depth": 26,
+        "spread_max": 0.03,
+        "spread_median": 0.01,
+        "spread_min": 0.01,
+        "total_oi": 26460.69
+      },
+      "close_time": null,
+      "contract_month": "OCT 26",
+      "futures": {
+        "ask": 84.22,
+        "availability": "DB",
+        "bid": 84.2,
+        "conid": 304037496,
+        "ibkr_updated_ms": 1787171207428,
+        "last": 84.21,
+        "recv_ts": 1787171210.596257,
+        "staleness_s": 3.2
+      },
+      "implied_mean_ask": {
+        "k_high": 90.99,
+        "k_low": 76.49,
+        "p_at_highest_strike": 0.03,
+        "p_at_lowest_strike": 0.99,
+        "status": "TRUNCATION_MATERIAL",
+        "why": "needs p_low >= 0.98 and p_high <= 0.02; the omitted tails are material so no point estimate is quoted"
+      },
+      "implied_mean_bid": {
+        "implied_mean": 84.135,
+        "k_high": 90.99,
+        "k_low": 76.49,
+        "p_at_highest_strike": 0.0,
+        "p_at_lowest_strike": 0.98,
+        "status": "OK"
+      },
+      "implied_mean_mid": {
+        "implied_mean": 84.2475,
+        "k_high": 90.99,
+        "k_low": 76.49,
+        "p_at_highest_strike": 0.015,
+        "p_at_lowest_strike": 0.985,
+        "status": "OK"
+      },
+      "monotonicity": {
+        "ask": {
+          "examples": [
+            {
+              "increase": 0.01,
+              "k_lower": 89.49,
+              "k_upper": 89.99,
+              "lower": "KXWTI-26AUG2014-T89.49",
+              "p_lower": 0.02,
+              "p_upper": 0.03,
+              "upper": "KXWTI-26AUG2014-T89.99"
+            }
+          ],
+          "n_violations": 1,
+          "worst": 0.01
+        },
+        "bid": {
+          "examples": [
+            {
+              "increase": 0.01,
+              "k_lower": 78.99,
+              "k_upper": 79.49,
+              "lower": "KXWTI-26AUG2014-T78.99",
+              "p_lower": 0.97,
+              "p_upper": 0.98,
+              "upper": "KXWTI-26AUG2014-T79.49"
+            }
+          ],
+          "n_violations": 1,
+          "worst": 0.01
+        },
+        "mid": {
+          "examples": [
+            {
+              "increase": 0.005,
+              "k_lower": 78.99,
+              "k_upper": 79.49,
+              "lower": "KXWTI-26AUG2014-T78.99",
+              "p_lower": 0.98,
+              "p_upper": 0.985,
+              "upper": "KXWTI-26AUG2014-T79.49"
+            },
+            {
+              "increase": 0.005,
+              "k_lower": 89.49,
+              "k_upper": 89.99,
+              "lower": "KXWTI-26AUG2014-T89.49",
+              "p_lower": 0.01,
+              "p_upper": 0.015,
+              "upper": "KXWTI-26AUG2014-T89.99"
+            }
+          ],
+          "n_violations": 2,
+          "worst": 0.005
+        }
+      },
+      "no_arb_adjacent": {
+        "executable_surviving_flat_2c": [],
+        "executable_violations": [],
+        "mid_only_not_counted": [
+          {
+            "buy": "KXWTI-26AUG2014-T78.99",
+            "buy_ask": 0.99,
+            "fee_net_flat2c": -0.05,
+            "gross": -0.01,
+            "gross_mid": 0.005,
+            "k_buy": 78.99,
+            "k_sell": 79.49,
+            "sell": "KXWTI-26AUG2014-T79.49",
+            "sell_bid": 0.98
+          },
+          {
+            "buy": "KXWTI-26AUG2014-T89.49",
+            "buy_ask": 0.02,
+            "fee_net_flat2c": -0.06,
+            "gross": -0.02,
+            "gross_mid": 0.005,
+            "k_buy": 89.49,
+            "k_sell": 89.99,
+            "sell": "KXWTI-26AUG2014-T89.99",
+            "sell_bid": 0.0
+          }
+        ],
+        "n_mid_only": 2,
+        "n_pairs": 29,
+        "within_tick_noise": []
+      },
+      "no_arb_all_pairs": {
+        "executable_surviving_flat_2c": [],
+        "n_executable": 0,
+        "n_pairs": 435
+      },
+      "no_side_identity": {
+        "checked": 30,
+        "identity_violations": 0
+      },
+      "part_C": {
+        "failed_sides": {
+          "ask": "TRUNCATION_MATERIAL"
+        },
+        "ok_sides": {
+          "bid": "OK"
+        },
+        "status": "NO_INTERVAL",
+        "why": "an interval needs both the bid- and ask-side implied means; ['ask'] truncated"
+      },
+      "part_C_mid": {
+        "basis": "MID -- not executable; the crossed comparison is the interval",
+        "futures_mid": 84.21,
+        "gap_bp": 4.45,
+        "gap_usd_bbl": 0.0375,
+        "implied_mean_mid": 84.2475,
+        "status": "OK"
+      }
+    },
+    "KXWTI-26NOV03": {
+      "capacity": {
+        "depth_at_touch_median_ask": 51.0,
+        "depth_at_touch_median_bid": 50.0,
+        "n_rungs": 65,
+        "rungs_with_oi": 64,
+        "rungs_with_two_sided_depth": 65,
+        "spread_max": 0.85,
+        "spread_median": 0.1,
+        "spread_min": 0.03,
+        "total_oi": 324238.99
+      },
+      "close_time": null,
+      "contract_month": null,
+      "futures": {},
+      "implied_mean_ask": {
+        "k_high": 116.99,
+        "k_low": 62.99,
+        "p_at_highest_strike": 0.08,
+        "p_at_lowest_strike": 0.99,
+        "status": "TRUNCATION_MATERIAL",
+        "why": "needs p_low >= 0.98 and p_high <= 0.02; the omitted tails are material so no point estimate is quoted"
+      },
+      "implied_mean_bid": {
+        "k_high": 116.99,
+        "k_low": 62.99,
+        "p_at_highest_strike": 0.04,
+        "p_at_lowest_strike": 0.73,
+        "status": "TRUNCATION_MATERIAL",
+        "why": "needs p_low >= 0.98 and p_high <= 0.02; the omitted tails are material so no point estimate is quoted"
+      },
+      "implied_mean_mid": {
+        "k_high": 116.99,
+        "k_low": 62.99,
+        "p_at_highest_strike": 0.06,
+        "p_at_lowest_strike": 0.86,
+        "status": "TRUNCATION_MATERIAL",
+        "why": "needs p_low >= 0.98 and p_high <= 0.02; the omitted tails are material so no point estimate is quoted"
+      },
+      "monotonicity": {
+        "ask": {
+          "examples": [
+            {
+              "increase": 0.02,
+              "k_lower": 64.49,
+              "k_upper": 64.99,
+              "lower": "KXWTI-26NOV0314-T64.49",
+              "p_lower": 0.95,
+              "p_upper": 0.97,
+              "upper": "KXWTI-26NOV0314-T64.99"
+            },
+            {
+              "increase": 0.16,
+              "k_lower": 68.99,
+              "k_upper": 69.49,
+              "lower": "KXWTI-26NOV0314-T68.99",
+              "p_lower": 0.81,
+              "p_upper": 0.97,
+              "upper": "KXWTI-26NOV0314-T69.49"
+            },
+            {
+              "increase": 0.02,
+              "k_lower": 69.99,
+              "k_upper": 70.49,
+              "lower": "KXWTI-26NOV0314-T69.99",
+              "p_lower": 0.85,
+              "p_upper": 0.87,
+              "upper": "KXWTI-26NOV0314-T70.49"
+            },
+            {
+              "increase": 0.01,
+              "k_lower": 70.99,
+              "k_upper": 71.49,
+              "lower": "KXWTI-26NOV0314-T70.99",
+              "p_lower": 0.75,
+              "p_upper": 0.76,
+              "upper": "KXWTI-26NOV0314-T71.49"
+            },
+            {
+              "increase": 0.02,
+              "k_lower": 72.99,
+              "k_upper": 73.99,
+              "lower": "KXWTI-26NOV03-T72.99",
+              "p_lower": 0.7,
+              "p_upper": 0.72,
+              "upper": "KXWTI-26NOV03-T73.99"
+            }
+          ],
+          "n_violations": 15,
+          "worst": 0.16
+        },
+        "bid": {
+          "examples": [
+            {
+              "increase": 0.08,
+              "k_lower": 63.49,
+              "k_upper": 63.99,
+              "lower": "KXWTI-26NOV0314-T63.49",
+              "p_lower": 0.12,
+              "p_upper": 0.2,
+              "upper": "KXWTI-26NOV0314-T63.99"
+            },
+            {
+              "increase": 0.36,
+              "k_lower": 64.49,
+              "k_upper": 64.99,
+              "lower": "KXWTI-26NOV0314-T64.49",
+              "p_lower": 0.2,
+              "p_upper": 0.56,
+              "upper": "KXWTI-26NOV0314-T64.99"
+            },
+            {
+              "increase": 0.1,
+              "k_lower": 66.49,
+              "k_upper": 66.99,
+              "lower": "KXWTI-26NOV0314-T66.49",
+              "p_lower": 0.2,
+              "p_upper": 0.3,
+              "upper": "KXWTI-26NOV0314-T66.99"
+            },
+            {
+              "increase": 0.22,
+              "k_lower": 67.49,
+              "k_upper": 67.99,
+              "lower": "KXWTI-26NOV0314-T67.49",
+              "p_lower": 0.23,
+              "p_upper": 0.45,
+              "upper": "KXWTI-26NOV0314-T67.99"
+            },
+            {
+              "increase": 0.08,
+              "k_lower": 67.99,
+              "k_upper": 68.49,
+              "lower": "KXWTI-26NOV0314-T67.99",
+              "p_lower": 0.45,
+              "p_upper": 0.53,
+              "upper": "KXWTI-26NOV0314-T68.49"
+            }
+          ],
+          "n_violations": 24,
+          "worst": 0.36
+        },
+        "mid": {
+          "examples": [
+            {
+              "increase": 0.03,
+              "k_lower": 63.49,
+              "k_upper": 63.99,
+              "lower": "KXWTI-26NOV0314-T63.49",
+              "p_lower": 0.545,
+              "p_upper": 0.575,
+              "upper": "KXWTI-26NOV0314-T63.99"
+            },
+            {
+              "increase": 0.19,
+              "k_lower": 64.49,
+              "k_upper": 64.99,
+              "lower": "KXWTI-26NOV0314-T64.49",
+              "p_lower": 0.575,
+              "p_upper": 0.765,
+              "upper": "KXWTI-26NOV0314-T64.99"
+            },
+            {
+              "increase": 0.05,
+              "k_lower": 66.49,
+              "k_upper": 66.99,
+              "lower": "KXWTI-26NOV0314-T66.49",
+              "p_lower": 0.575,
+              "p_upper": 0.625,
+              "upper": "KXWTI-26NOV0314-T66.99"
+            },
+            {
+              "increase": 0.05,
+              "k_lower": 67.49,
+              "k_upper": 67.99,
+              "lower": "KXWTI-26NOV0314-T67.49",
+              "p_lower": 0.59,
+              "p_upper": 0.64,
+              "upper": "KXWTI-26NOV0314-T67.99"
+            },
+            {
+              "increase": 0.03,
+              "k_lower": 67.99,
+              "k_upper": 68.49,
+              "lower": "KXWTI-26NOV0314-T67.99",
+              "p_lower": 0.64,
+              "p_upper": 0.67,
+              "upper": "KXWTI-26NOV0314-T68.49"
+            }
+          ],
+          "n_violations": 22,
+          "worst": 0.19
+        }
+      },
+      "no_arb_adjacent": {
+        "executable_surviving_flat_2c": [],
+        "executable_violations": [],
+        "mid_only_not_counted": [
+          {
+            "buy": "KXWTI-26NOV0314-T63.49",
+            "buy_ask": 0.97,
+            "fee_net_flat2c": -0.81,
+            "gross": -0.77,
+            "gross_mid": 0.03,
+            "k_buy": 63.49,
+            "k_sell": 63.99,
+            "sell": "KXWTI-26NOV0314-T63.99",
+            "sell_bid": 0.2
+          },
+          {
+            "buy": "KXWTI-26NOV0314-T64.49",
+            "buy_ask": 0.95,
+            "fee_net_flat2c": -0.43,
+            "gross": -0.39,
+            "gross_mid": 0.19,
+            "k_buy": 64.49,
+            "k_sell": 64.99,
+            "sell": "KXWTI-26NOV0314-T64.99",
+            "sell_bid": 0.56
+          },
+          {
+            "buy": "KXWTI-26NOV0314-T66.49",
+            "buy_ask": 0.95,
+            "fee_net_flat2c": -0.69,
+            "gross": -0.65,
+            "gross_mid": 0.05,
+            "k_buy": 66.49,
+            "k_sell": 66.99,
+            "sell": "KXWTI-26NOV0314-T66.99",
+            "sell_bid": 0.3
+          },
+          {
+            "buy": "KXWTI-26NOV0314-T67.49",
+            "buy_ask": 0.95,
+            "fee_net_flat2c": -0.54,
+            "gross": -0.5,
+            "gross_mid": 0.05,
+            "k_buy": 67.49,
+            "k_sell": 67.99,
+            "sell": "KXWTI-26NOV0314-T67.99",
+            "sell_bid": 0.45
+          },
+          {
+            "buy": "KXWTI-26NOV0314-T67.99",
+            "buy_ask": 0.83,
+            "fee_net_flat2c": -0.34,
+            "gross": -0.3,
+            "gross_mid": 0.03,
+            "k_buy": 67.99,
+            "k_sell": 68.49,
+            "sell": "KXWTI-26NOV0314-T68.49",
+            "sell_bid": 0.53
+          },
+          {
+            "buy": "KXWTI-26NOV0314-T68.99",
+            "buy_ask": 0.81,
+            "fee_net_flat2c": -0.39,
+            "gross": -0.35,
+            "gross_mid": 0.05,
+            "k_buy": 68.99,
+            "k_sell": 69.49,
+            "sell": "KXWTI-26NOV0314-T69.49",
+            "sell_bid": 0.46
+          },
+          {
+            "buy": "KXWTI-26NOV0314-T69.99",
+            "buy_ask": 0.85,
+            "fee_net_flat2c": -0.65,
+            "gross": -0.61,
+            "gross_mid": 0.01,
+            "k_buy": 69.99,
+            "k_sell": 70.49,
+            "sell": "KXWTI-26NOV0314-T70.49",
+            "sell_bid": 0.24
+          },
+          {
+            "buy": "KXWTI-26NOV0314-T70.99",
+            "buy_ask": 0.75,
+            "fee_net_flat2c": -0.36,
+            "gross": -0.32,
+            "gross_mid": 0.05,
+            "k_buy": 70.99,
+            "k_sell": 71.49,
+            "sell": "KXWTI-26NOV0314-T71.49",
+            "sell_bid": 0.43
+          },
+          {
+            "buy": "KXWTI-26NOV0314-T71.99",
+            "buy_ask": 0.72,
+            "fee_net_flat2c": -0.25,
+            "gross": -0.21,
+            "gross_mid": 0.08,
+            "k_buy": 71.99,
+            "k_sell": 72.49,
+            "sell": "KXWTI-26NOV0314-T72.49",
+            "sell_bid": 0.51
+          },
+          {
+            "buy": "KXWTI-26NOV0314-T72.49",
+            "buy_ask": 0.72,
+            "fee_net_flat2c": -0.15,
+            "gross": -0.11,
+            "gross_mid": 0.04,
+            "k_buy": 72.49,
+            "k_sell": 72.99,
+            "sell": "KXWTI-26NOV03-T72.99",
+            "sell_bid": 0.61
+          }
+        ],
+        "n_mid_only": 22,
+        "n_pairs": 64,
+        "within_tick_noise": []
+      },
+      "no_arb_all_pairs": {
+        "executable_surviving_flat_2c": [],
+        "n_executable": 0,
+        "n_pairs": 2080
+      },
+      "no_side_identity": {
+        "checked": 65,
+        "identity_violations": 0
+      },
+      "part_C": {
+        "failed_sides": {
+          "ask": "TRUNCATION_MATERIAL",
+          "bid": "TRUNCATION_MATERIAL"
+        },
+        "ok_sides": {},
+        "status": "NO_INTERVAL",
+        "why": "an interval needs both the bid- and ask-side implied means; ['ask', 'bid'] truncated"
+      },
+      "part_C_mid": {
+        "status": "TRUNCATION_MATERIAL"
+      }
+    }
+  },
+  "snapshot_utc": "2026-08-19T20:26:46.678569+00:00",
+  "spec": "research/exec/2026-08-20_wti-ladder-coherence/spec.yaml",
+  "test_looks_spent": 0
+}

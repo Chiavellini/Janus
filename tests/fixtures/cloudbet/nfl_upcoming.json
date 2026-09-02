@@ -1,0 +1,24 @@
+{
+  "events": [
+    {
+      "id": 7002001,
+      "name": "Dallas Cowboys V Philadelphia Eagles",
+      "status": "TRADING",
+      "startTime": "2026-09-10T00:20:00Z",
+      "home": {"name": "Dallas Cowboys", "key": "c6-dallas-cowboys"},
+      "away": {"name": "Philadelphia Eagles", "key": "c12-philadelphia-eagles"},
+      "markets": {
+        "american_football.moneyline": {
+          "submarkets": {
+            "period=ot&period=ft": {
+              "selections": [
+                {"outcome": "home", "price": 1.70, "minStake": 0.1, "maxStake": 100, "status": "SELECTION_ENABLED", "side": "BACK"},
+                {"outcome": "away", "price": 2.20, "minStake": 0.1, "maxStake": 100, "status": "SELECTION_ENABLED", "side": "BACK"}
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": 7005001,
+  "status": "INTERRUPTED",
+  "markets": {
+    "baseball.moneyline": {
+      "submarkets": {
+        "period=ot&period=ft": {
+          "selections": [
+            {"outcome": "home", "price": 2.0, "minStake": 1, "maxStake": 10, "status": "SELECTION_DISABLED", "side": "BACK"},
+            {"outcome": "away", "price": 2.0, "minStake": 1, "maxStake": 10, "status": "SELECTION_ENABLED", "side": "LAY"},
+            {"outcome": "home", "price": 2.0, "minStake": 1, "status": "SELECTION_ENABLED", "side": "BACK"},
+            {"outcome": "away", "price": 1.0, "minStake": 1, "maxStake": 10, "status": "FUTURE_STATUS", "side": "BACK"}
+          ]
+        }
+      }
+    }
+  }
+}

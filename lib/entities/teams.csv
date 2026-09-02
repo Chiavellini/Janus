@@ -1,0 +1,160 @@
+entity_id,league,espn_id,abbrev,location,nickname,display_name
+epl:eng.arsenal,epl,359,ARS,Arsenal,Arsenal,Arsenal
+epl:eng.aston_villa,epl,362,AVL,Aston Villa,Aston Villa,Aston Villa
+epl:eng.bournemouth,epl,349,BOU,AFC Bournemouth,AFC Bournemouth,AFC Bournemouth
+epl:eng.brentford,epl,337,BRE,Brentford,Brentford,Brentford
+epl:eng.brighton,epl,331,BHA,Brighton & Hove Albion,Brighton & Hove Albion,Brighton & Hove Albion
+epl:eng.chelsea,epl,363,CHE,Chelsea,Chelsea,Chelsea
+epl:eng.coventry,epl,388,COV,Coventry City,Coventry City,Coventry City
+epl:eng.crystal_palace,epl,384,CRY,Crystal Palace,Crystal Palace,Crystal Palace
+epl:eng.everton,epl,368,EVE,Everton,Everton,Everton
+epl:eng.fulham,epl,370,FUL,Fulham,Fulham,Fulham
+epl:eng.hull,epl,306,HUL,Hull City,Hull City,Hull City
+epl:eng.ipswich,epl,373,IPS,Ipswich Town,Ipswich Town,Ipswich Town
+epl:eng.leeds,epl,357,LEE,Leeds United,Leeds United,Leeds United
+epl:eng.liverpool,epl,364,LIV,Liverpool,Liverpool,Liverpool
+epl:eng.man_city,epl,382,MNC,Manchester City,Manchester City,Manchester City
+epl:eng.man_utd,epl,360,MAN,Manchester United,Manchester United,Manchester United
+epl:eng.newcastle,epl,361,NEW,Newcastle United,Newcastle United,Newcastle United
+epl:eng.nottm_forest,epl,393,NFO,Nottingham Forest,Nottingham Forest,Nottingham Forest
+epl:eng.sunderland,epl,366,SUN,Sunderland,Sunderland,Sunderland
+epl:eng.tottenham,epl,367,TOT,Tottenham Hotspur,Tottenham Hotspur,Tottenham Hotspur
+mlb:arizona-diamondbacks,mlb,29,ARI,Arizona,Diamondbacks,Arizona Diamondbacks
+mlb:athletics,mlb,11,ATH,Athletics,Athletics,Athletics
+mlb:atlanta-braves,mlb,15,ATL,Atlanta,Braves,Atlanta Braves
+mlb:baltimore-orioles,mlb,1,BAL,Baltimore,Orioles,Baltimore Orioles
+mlb:boston-red-sox,mlb,2,BOS,Boston,Red Sox,Boston Red Sox
+mlb:chicago-cubs,mlb,16,CHC,Chicago,Cubs,Chicago Cubs
+mlb:chicago-white-sox,mlb,4,CHW,Chicago,White Sox,Chicago White Sox
+mlb:cincinnati-reds,mlb,17,CIN,Cincinnati,Reds,Cincinnati Reds
+mlb:cleveland-guardians,mlb,5,CLE,Cleveland,Guardians,Cleveland Guardians
+mlb:colorado-rockies,mlb,27,COL,Colorado,Rockies,Colorado Rockies
+mlb:detroit-tigers,mlb,6,DET,Detroit,Tigers,Detroit Tigers
+mlb:houston-astros,mlb,18,HOU,Houston,Astros,Houston Astros
+mlb:kansas-city-royals,mlb,7,KC,Kansas City,Royals,Kansas City Royals
+mlb:los-angeles-angels,mlb,3,LAA,Los Angeles,Angels,Los Angeles Angels
+mlb:los-angeles-dodgers,mlb,19,LAD,Los Angeles,Dodgers,Los Angeles Dodgers
+mlb:miami-marlins,mlb,28,MIA,Miami,Marlins,Miami Marlins
+mlb:milwaukee-brewers,mlb,8,MIL,Milwaukee,Brewers,Milwaukee Brewers
+mlb:minnesota-twins,mlb,9,MIN,Minnesota,Twins,Minnesota Twins
+mlb:new-york-mets,mlb,21,NYM,New York,Mets,New York Mets
+mlb:new-york-yankees,mlb,10,NYY,New York,Yankees,New York Yankees
+mlb:philadelphia-phillies,mlb,22,PHI,Philadelphia,Phillies,Philadelphia Phillies
+mlb:pittsburgh-pirates,mlb,23,PIT,Pittsburgh,Pirates,Pittsburgh Pirates
+mlb:san-diego-padres,mlb,25,SD,San Diego,Padres,San Diego Padres
+mlb:san-francisco-giants,mlb,26,SF,San Francisco,Giants,San Francisco Giants
+mlb:seattle-mariners,mlb,12,SEA,Seattle,Mariners,Seattle Mariners
+mlb:st-louis-cardinals,mlb,24,STL,St. Louis,Cardinals,St. Louis Cardinals
+mlb:tampa-bay-rays,mlb,30,TB,Tampa Bay,Rays,Tampa Bay Rays
+mlb:texas-rangers,mlb,13,TEX,Texas,Rangers,Texas Rangers
+mlb:toronto-blue-jays,mlb,14,TOR,Toronto,Blue Jays,Toronto Blue Jays
+mlb:washington-nationals,mlb,20,WSH,Washington,Nationals,Washington Nationals
+nba:atlanta-hawks,nba,1,ATL,Atlanta,Hawks,Atlanta Hawks
+nba:boston-celtics,nba,2,BOS,Boston,Celtics,Boston Celtics
+nba:brooklyn-nets,nba,17,BKN,Brooklyn,Nets,Brooklyn Nets
+nba:charlotte-hornets,nba,30,CHA,Charlotte,Hornets,Charlotte Hornets
+nba:chicago-bulls,nba,4,CHI,Chicago,Bulls,Chicago Bulls
+nba:cleveland-cavaliers,nba,5,CLE,Cleveland,Cavaliers,Cleveland Cavaliers
+nba:dallas-mavericks,nba,6,DAL,Dallas,Mavericks,Dallas Mavericks
+nba:denver-nuggets,nba,7,DEN,Denver,Nuggets,Denver Nuggets
+nba:detroit-pistons,nba,8,DET,Detroit,Pistons,Detroit Pistons
+nba:golden-state-warriors,nba,9,GS,Golden State,Warriors,Golden State Warriors
+nba:houston-rockets,nba,10,HOU,Houston,Rockets,Houston Rockets
+nba:indiana-pacers,nba,11,IND,Indiana,Pacers,Indiana Pacers
+nba:la-clippers,nba,12,LAC,LA,Clippers,LA Clippers
+nba:los-angeles-lakers,nba,13,LAL,Los Angeles,Lakers,Los Angeles Lakers
+nba:memphis-grizzlies,nba,29,MEM,Memphis,Grizzlies,Memphis Grizzlies
+nba:miami-heat,nba,14,MIA,Miami,Heat,Miami Heat
+nba:milwaukee-bucks,nba,15,MIL,Milwaukee,Bucks,Milwaukee Bucks
+nba:minnesota-timberwolves,nba,16,MIN,Minnesota,Timberwolves,Minnesota Timberwolves
+nba:new-orleans-pelicans,nba,3,NO,New Orleans,Pelicans,New Orleans Pelicans
+nba:new-york-knicks,nba,18,NY,New York,Knicks,New York Knicks
+nba:oklahoma-city-thunder,nba,25,OKC,Oklahoma City,Thunder,Oklahoma City Thunder
+nba:orlando-magic,nba,19,ORL,Orlando,Magic,Orlando Magic
+nba:philadelphia-76ers,nba,20,PHI,Philadelphia,76ers,Philadelphia 76ers
+nba:phoenix-suns,nba,21,PHX,Phoenix,Suns,Phoenix Suns
+nba:portland-trail-blazers,nba,22,POR,Portland,Trail Blazers,Portland Trail Blazers
+nba:sacramento-kings,nba,23,SAC,Sacramento,Kings,Sacramento Kings
+nba:san-antonio-spurs,nba,24,SA,San Antonio,Spurs,San Antonio Spurs
+nba:toronto-raptors,nba,28,TOR,Toronto,Raptors,Toronto Raptors
+nba:utah-jazz,nba,26,UTAH,Utah,Jazz,Utah Jazz
+nba:washington-wizards,nba,27,WSH,Washington,Wizards,Washington Wizards
+nfl:arizona-cardinals,nfl,22,ARI,Arizona,Cardinals,Arizona Cardinals
+nfl:atlanta-falcons,nfl,1,ATL,Atlanta,Falcons,Atlanta Falcons
+nfl:baltimore-ravens,nfl,33,BAL,Baltimore,Ravens,Baltimore Ravens
+nfl:buffalo-bills,nfl,2,BUF,Buffalo,Bills,Buffalo Bills
+nfl:carolina-panthers,nfl,29,CAR,Carolina,Panthers,Carolina Panthers
+nfl:chicago-bears,nfl,3,CHI,Chicago,Bears,Chicago Bears
+nfl:cincinnati-bengals,nfl,4,CIN,Cincinnati,Bengals,Cincinnati Bengals
+nfl:cleveland-browns,nfl,5,CLE,Cleveland,Browns,Cleveland Browns
+nfl:dallas-cowboys,nfl,6,DAL,Dallas,Cowboys,Dallas Cowboys
+nfl:denver-broncos,nfl,7,DEN,Denver,Broncos,Denver Broncos
+nfl:detroit-lions,nfl,8,DET,Detroit,Lions,Detroit Lions
+nfl:green-bay-packers,nfl,9,GB,Green Bay,Packers,Green Bay Packers
+nfl:houston-texans,nfl,34,HOU,Houston,Texans,Houston Texans
+nfl:indianapolis-colts,nfl,11,IND,Indianapolis,Colts,Indianapolis Colts
+nfl:jacksonville-jaguars,nfl,30,JAX,Jacksonville,Jaguars,Jacksonville Jaguars
+nfl:kansas-city-chiefs,nfl,12,KC,Kansas City,Chiefs,Kansas City Chiefs
+nfl:las-vegas-raiders,nfl,13,LV,Las Vegas,Raiders,Las Vegas Raiders
+nfl:los-angeles-chargers,nfl,24,LAC,Los Angeles,Chargers,Los Angeles Chargers
+nfl:los-angeles-rams,nfl,14,LAR,Los Angeles,Rams,Los Angeles Rams
+nfl:miami-dolphins,nfl,15,MIA,Miami,Dolphins,Miami Dolphins
+nfl:minnesota-vikings,nfl,16,MIN,Minnesota,Vikings,Minnesota Vikings
+nfl:new-england-patriots,nfl,17,NE,New England,Patriots,New England Patriots
+nfl:new-orleans-saints,nfl,18,NO,New Orleans,Saints,New Orleans Saints
+nfl:new-york-giants,nfl,19,NYG,New York,Giants,New York Giants
+nfl:new-york-jets,nfl,20,NYJ,New York,Jets,New York Jets
+nfl:philadelphia-eagles,nfl,21,PHI,Philadelphia,Eagles,Philadelphia Eagles
+nfl:pittsburgh-steelers,nfl,23,PIT,Pittsburgh,Steelers,Pittsburgh Steelers
+nfl:san-francisco-49ers,nfl,25,SF,San Francisco,49ers,San Francisco 49ers
+nfl:seattle-seahawks,nfl,26,SEA,Seattle,Seahawks,Seattle Seahawks
+nfl:tampa-bay-buccaneers,nfl,27,TB,Tampa Bay,Buccaneers,Tampa Bay Buccaneers
+nfl:tennessee-titans,nfl,10,TEN,Tennessee,Titans,Tennessee Titans
+nfl:washington-commanders,nfl,28,WSH,Washington,Commanders,Washington Commanders
+nhl:anaheim-ducks,nhl,25,ANA,Anaheim,Ducks,Anaheim Ducks
+nhl:boston-bruins,nhl,1,BOS,Boston,Bruins,Boston Bruins
+nhl:buffalo-sabres,nhl,2,BUF,Buffalo,Sabres,Buffalo Sabres
+nhl:calgary-flames,nhl,3,CGY,Calgary,Flames,Calgary Flames
+nhl:carolina-hurricanes,nhl,7,CAR,Carolina,Hurricanes,Carolina Hurricanes
+nhl:chicago-blackhawks,nhl,4,CHI,Chicago,Blackhawks,Chicago Blackhawks
+nhl:colorado-avalanche,nhl,17,COL,Colorado,Avalanche,Colorado Avalanche
+nhl:columbus-blue-jackets,nhl,29,CBJ,Columbus,Blue Jackets,Columbus Blue Jackets
+nhl:dallas-stars,nhl,9,DAL,Dallas,Stars,Dallas Stars
+nhl:detroit-red-wings,nhl,5,DET,Detroit,Red Wings,Detroit Red Wings
+nhl:edmonton-oilers,nhl,6,EDM,Edmonton,Oilers,Edmonton Oilers
+nhl:florida-panthers,nhl,26,FLA,Florida,Panthers,Florida Panthers
+nhl:los-angeles-kings,nhl,8,LA,Los Angeles,Kings,Los Angeles Kings
+nhl:minnesota-wild,nhl,30,MIN,Minnesota,Wild,Minnesota Wild
+nhl:montreal-canadiens,nhl,10,MTL,Montreal,Canadiens,Montreal Canadiens
+nhl:nashville-predators,nhl,27,NSH,Nashville,Predators,Nashville Predators
+nhl:new-jersey-devils,nhl,11,NJ,New Jersey,Devils,New Jersey Devils
+nhl:new-york-islanders,nhl,12,NYI,New York,Islanders,New York Islanders
+nhl:new-york-rangers,nhl,13,NYR,New York,Rangers,New York Rangers
+nhl:ottawa-senators,nhl,14,OTT,Ottawa,Senators,Ottawa Senators
+nhl:philadelphia-flyers,nhl,15,PHI,Philadelphia,Flyers,Philadelphia Flyers
+nhl:pittsburgh-penguins,nhl,16,PIT,Pittsburgh,Penguins,Pittsburgh Penguins
+nhl:san-jose-sharks,nhl,18,SJ,San Jose,Sharks,San Jose Sharks
+nhl:seattle-kraken,nhl,124292,SEA,Seattle,Kraken,Seattle Kraken
+nhl:st-louis-blues,nhl,19,STL,St. Louis,Blues,St. Louis Blues
+nhl:tampa-bay-lightning,nhl,20,TB,Tampa Bay,Lightning,Tampa Bay Lightning
+nhl:toronto-maple-leafs,nhl,21,TOR,Toronto,Maple Leafs,Toronto Maple Leafs
+nhl:utah-mammoth,nhl,129764,UTAH,Utah,Mammoth,Utah Mammoth
+nhl:vancouver-canucks,nhl,22,VAN,Vancouver,Canucks,Vancouver Canucks
+nhl:vegas-golden-knights,nhl,37,VGK,Vegas,Golden Knights,Vegas Golden Knights
+nhl:washington-capitals,nhl,23,WSH,Washington,Capitals,Washington Capitals
+nhl:winnipeg-jets,nhl,28,WPG,Winnipeg,Jets,Winnipeg Jets
+wnba:atlanta-dream,wnba,20,ATL,Atlanta,Dream,Atlanta Dream
+wnba:chicago-sky,wnba,19,CHI,Chicago,Sky,Chicago Sky
+wnba:connecticut-sun,wnba,18,CON,Connecticut,Sun,Connecticut Sun
+wnba:dallas-wings,wnba,3,DAL,Dallas,Wings,Dallas Wings
+wnba:golden-state-valkyries,wnba,129689,GS,Golden State,Valkyries,Golden State Valkyries
+wnba:indiana-fever,wnba,5,IND,Indiana,Fever,Indiana Fever
+wnba:las-vegas-aces,wnba,17,LV,Las Vegas,Aces,Las Vegas Aces
+wnba:los-angeles-sparks,wnba,6,LA,Los Angeles,Sparks,Los Angeles Sparks
+wnba:minnesota-lynx,wnba,8,MIN,Minnesota,Lynx,Minnesota Lynx
+wnba:new-york-liberty,wnba,9,NY,New York,Liberty,New York Liberty
+wnba:phoenix-mercury,wnba,11,PHX,Phoenix,Mercury,Phoenix Mercury
+wnba:portland-fire,wnba,132052,POR,Portland,Fire,Portland Fire
+wnba:seattle-storm,wnba,14,SEA,Seattle,Storm,Seattle Storm
+wnba:toronto-tempo,wnba,131935,TOR,Toronto,Tempo,Toronto Tempo
+wnba:washington-mystics,wnba,16,WSH,Washington,Mystics,Washington Mystics

@@ -1,0 +1,69 @@
+experiment_id: "janus-settlement-agreement"
+date_registered: "2026-07-24"
+track: basis
+ledger_ref: "Janus/snooping_ledger.md row L2 (descriptive characterization -- costs no test look)"
+
+purpose: >
+  Phase-1 GO/NO-GO. A cross-venue two-leg position (buy Kalshi YES + buy Polymarket DOWN on the
+  same window) pays 100c only when the two venues settle the same direction. They use different
+  oracles and different reference levels, so they do not always agree. This study measures the
+  disagreement rate, explains its mechanism, and produces the EV surface that says whether any
+  entry state is profitable after both fees and measured oracle risk.
+
+why_this_is_not_a_test_look: >
+  Purely descriptive characterization of the settlement relationship between two venues. It
+  fits nothing, selects no strategy config, and produces no promotable rule. Registered as an
+  L-row per Janus/snooping_ledger.md rule 5. The rule that eventually trades will be registered
+  separately as a numbered test look with its own immutable criteria.
+
+data:
+  source: "Kilos, read-only (mode=ro) via Janus/lib/kilos_data.py"
+  pm_settlements: "pm_data.db (btc) + pm_xa_data.db (eth/sol), pm_markets.resolution"
+  kalshi_settlements: "market_data.db (post-2026-07-17) UNION the frozen shard (pre-rotation)"
+  pm_oracle: "pm_data.db pm_oracle_prices, source='chainlink' (PM's settlement feed)"
+  kalshi_reference: "kalshi_markets.floor_strike"
+  join_key: "exact close time (Kalshi close_time -> unix == PM window_end_ts)"
+  holdout_touched: false
+  requires_user_approval: false
+
+acceptance_tests:
+  # These must reproduce EXACTLY or the engine is wrong. Measured 2026-07-24 ad hoc; this study
+  # is the re-runnable version of that measurement.
+  - "btc: 2859 matched windows, 163 disagreements, 5.70%"
+  - "eth: 1063 matched, 65 disagreements, 6.11%"
+  - "sol: 1064 matched, 79 disagreements, 7.42%"
+  - "btc disagreement is roughly symmetric: 86 (pm=down,k=yes) vs 77 (pm=up,k=no)"
+
+hypotheses:
+  H1_mechanism: >
+    Disagreement is a SMALL-MOVE phenomenon. The two venues carry different reference levels
+    (Kalshi floor_strike vs PM's window-open Chainlink print). They settle oppositely exactly
+    when the closing price lands BETWEEN the two references. Prediction: |realized move| <
+    |reference wedge| should account for the large majority of disagreements.
+  H2_gate: >
+    Because the wedge is observable in real time (Kalshi publishes floor_strike; the Chainlink
+    stream is live), a dual-reference moneyness gate computed AT ENTRY should separate
+    near-certain-agreement windows from toxic ones -- observing, not predicting.
+  H3_adverse_selection: >
+    The nominal arb is widest exactly where oracle risk is worst (both are driven by the two
+    venues disagreeing about a close call). If so, a naive "take the biggest divergence" rule
+    selects into the toxic bucket and loses.
+
+gate:
+  description: >
+    A region of entry states must exist with net EV > 0 after BOTH venues' fees and the measured
+    conditional oracle risk, on n large enough to be more than noise.
+  min_n_in_region: 200
+  min_ev_cents: 1.0
+  ci_must_exclude_zero: true
+  ci_method: "day-block bootstrap, seed 0, by open_date"
+  on_fail: >
+    STOP. Do not build the collector. The honest answer is that the cross-venue price difference
+    is oracle risk premium and is priced correctly. Record it and close the project.
+
+outputs:
+  - results.json
+  - verdict.md
+  - agreement_by_asset.csv
+  - mechanism.csv
+  - ev_surface.csv

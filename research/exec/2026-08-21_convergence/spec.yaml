@@ -1,0 +1,67 @@
+experiment_id: "janus-kalshi-pm-convergence"
+date_registered: "2026-08-21"
+track: exec
+program: cross_venue_kalshi_pm
+ledger_ref: "snooping_ledger.md row F2 -- FORWARD EVAL"
+test_looks_spent: 0
+
+budget_status: >
+  AGENTS.md: "Forward eval rows do not count." Free while the measurement stays pinned. The
+  statistic, the cohort split and the tradeability condition below are fixed BEFORE the first sample
+  is read; changing any of them after seeing results is dev selection and costs a test look.
+
+# IMMUTABLE AFTER THE FIRST SAMPLE IS READ.
+
+question: >
+  When Kalshi and Polymarket disagree on the same MLB game, WHO MOVES? If Kalshi does most of the
+  closing, Kalshi is the follower and the operator's thesis holds. If Polymarket does, PM follows
+  Kalshi -- which is what AGENTS.md's inherited "truth sits at Kalshi" predicts, though that was
+  measured on crypto where Kalshi LEADS and here Kalshi is the late lister by ~82 h.
+
+why_this_and_not_F1: >
+  F1 asked whether an executable gap exists AT Kalshi's open and answered on its first observation:
+  Kalshi opened ATL@MIL at 0.25/0.95 -- a 70c spread -- so the two-leg round trip cost 143.9c for a
+  100c payoff. Arbitrage is dead. But a ONE-LEGGED convergence bet pays only one spread, and its
+  condition is exact:  edge = |mid_error| - half_spread,  i.e.  spread < 2 x |mid_error|.
+  At that open the error was 6.5c against a 35c half-spread. Five hours later the same market quoted
+  0.50/0.58: the spread had collapsed to 8c. So the question is a RACE -- does the spread fall below
+  2x the error before the error decays?
+
+why_it_answers_fast: >
+  Convergence needs NO SETTLEMENT. An observation is one poll, not one settled game, so the ~50c
+  binary variance that makes n=10 useless for PnL never enters. Both venues expose BATCH
+  top-of-book -- Kalshi returns all 90 open MLB markets in a single call -- so a full sweep is a
+  handful of requests and 90 markets are sampled every 60 s.
+
+# ── THE PINNED MEASUREMENT ─────────────────────────────────────────────────────────────────
+measurement:
+  unit: "one (market, sample) pair, sampled every 60 s"
+  error_c: "(kalshi_mid - pm_mid) * 100, signed"
+  tradeable: "abs(error_c) - k_spread_c/2 > 0   -- the one-legged condition, stated once"
+  cohort: "newborn if age since Kalshi open < 6 h, else mature. BOTH are sampled; the split is for
+           reporting and is fixed now so it cannot be chosen later to flatter a result."
+  primary_statistic_is_ATTRIBUTION: >
+    Over an interval in which |error| shrinks, decompose the closure into the Kalshi move and the PM
+    move: d_error = d_kalshi_mid - d_pm_mid. Report the share of closure contributed by each venue.
+    Correlation is NOT the statistic -- two series can be correlated with either one leading.
+  mids_are_used_for_CONVERGENCE_only: >
+    Convergence is a statement about where the market is, so mids are the right instrument. Any
+    TRADEABILITY claim uses executable prices and the `tradeable` flag, never the mid gap. Mid-price
+    scoring is what produced phase 1's 47c ghost and L21's 24 fictional arbitrages.
+  no_outcome_is_read: "this row records quotes only. No settlement, no PnL, no result."
+
+denominator_and_gap_rules:
+  rule: "every market in the Kalshi open set writes exactly one sample row per sweep -- quoted or
+         reason-coded. No silent absences."
+  gap_reasons: [KALSHI_ERROR, PM_ERROR, KALSHI_ONE_SIDED, PM_ONE_SIDED, NO_PAIR, DISK_FLOOR, UNKNOWN]
+
+known_limitations_stated_before_the_run:
+  - "MLB moneyline only; pairing via lib/entities, validated 94/94 against the sports matcher."
+  - "sports_match.py precision is UNEVALUATED (its gold file is frozen for 2026-08-17 games)."
+  - "gamma's bestBid/bestAsk is top-of-book only; no depth is captured on the PM side here."
+  - "60 s sampling cannot see intra-minute leadership. It can see who closes a gap over minutes."
+
+outputs:
+  db: "<data volume>/convergence/track.sqlite"
+  results: "research/exec/2026-08-21_convergence/results.json"
+  verdict: "research/exec/2026-08-21_convergence/verdict.md"

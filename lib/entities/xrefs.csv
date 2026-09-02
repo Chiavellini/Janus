@@ -1,0 +1,192 @@
+venue,league,venue_team_id,entity_id,source,label
+kalshi,epl,0a9eca41-bd4f-415c-b804-58214e97a77f,epl:eng.ipswich,custom_strike,IPS
+kalshi,epl,244308db-fa16-4065-905e-9053d68370e6,epl:eng.brentford,custom_strike,BRE
+kalshi,epl,246a91c5-f145-401f-bf0d-2a436e25a5f6,epl:eng.arsenal,custom_strike,ARS
+kalshi,epl,2f4b2ba6-f0dd-4d68-96eb-96cff8389c1a,epl:eng.newcastle,custom_strike,NEW
+kalshi,epl,56d3f546-aa7e-436d-a7f3-0d71a96a5168,epl:eng.hull,custom_strike,HUL
+kalshi,epl,664077ba-242b-43e3-975d-cd754a774727,epl:eng.fulham,custom_strike,FUL
+kalshi,epl,6fe2874c-1926-4182-b52c-c223bf8b4c2c,epl:eng.coventry,custom_strike,COV
+kalshi,epl,75575478-e8c9-4d59-ae3b-b117c1d42890,epl:eng.brighton,custom_strike,BRI
+kalshi,epl,7abb495c-193e-4baf-b3d3-108e99eab8ed,epl:eng.everton,custom_strike,EVE
+kalshi,epl,7e273345-6669-4db7-8a38-7f3ccb608937,epl:eng.man_utd,custom_strike,MUN
+kalshi,epl,7fd3376e-2256-4010-95a5-5b2a29a73e09,epl:eng.crystal_palace,custom_strike,CRY
+kalshi,epl,845da653-13fc-4d80-b0e0-a48179c37ffa,epl:eng.bournemouth,custom_strike,BOU
+kalshi,epl,894cf22a-8360-49a1-812c-7556fb97cbcd,epl:eng.chelsea,custom_strike,CFC
+kalshi,epl,8d0773c5-7765-4da5-9be1-84707ae9ddce,epl:eng.nottm_forest,custom_strike,NFO
+kalshi,epl,95c3aaf8-3f26-4129-b67c-c99562cb3dc9,epl:eng.tottenham,custom_strike,TOT
+kalshi,epl,98aa1226-ef50-4226-9216-33a1096b597f,epl:eng.leeds,custom_strike,LEE
+kalshi,epl,bfb98900-9759-436c-bc1f-8bf8c5ae249f,epl:eng.aston_villa,custom_strike,AVL
+kalshi,epl,cfd4b999-b080-4c2b-8a5b-640c992aff6e,epl:eng.liverpool,custom_strike,LFC
+kalshi,epl,f0a69f43-b3c4-4049-bf6d-4717809000a1,epl:eng.sunderland,custom_strike,SUN
+kalshi,epl,f5d3f1b2-8ff6-4165-835f-45406eae5fb6,epl:eng.man_city,custom_strike,MCI
+kalshi,mlb,00ca8318-b0fe-45c4-82c7-f43901a96114,mlb:seattle-mariners,custom_strike,SEA
+kalshi,mlb,087f0ae7-c231-4dcd-b7e5-f026c1769e40,mlb:milwaukee-brewers,custom_strike,MIL
+kalshi,mlb,19c3bb01-8748-4127-9d1e-8554951bebd9,mlb:colorado-rockies,custom_strike,COL
+kalshi,mlb,1fd1359b-d478-46ab-9ea7-612d671951d6,mlb:kansas-city-royals,custom_strike,KC
+kalshi,mlb,2101af91-b334-4db1-b859-0cc50c1e2d4a,mlb:chicago-cubs,custom_strike,CHC
+kalshi,mlb,38fca57a-f2cb-43b2-9e84-cc250972ac17,mlb:arizona-diamondbacks,custom_strike,AZ
+kalshi,mlb,517134f6-9c3a-4fbe-bad5-3fbe925f9a02,mlb:washington-nationals,custom_strike,WSH
+kalshi,mlb,576dc9ee-9a05-4610-8e9d-efa2a046582d,mlb:new-york-yankees,custom_strike,NYY
+kalshi,mlb,5ee3dc32-f192-4b80-ac4a-fd285f36dc1a,mlb:los-angeles-dodgers,custom_strike,LAD
+kalshi,mlb,60097777-bab8-4215-8d29-b92466b5bb65,mlb:cleveland-guardians,custom_strike,CLE
+kalshi,mlb,6e285aea-d5a3-419f-89e7-7061016abf87,mlb:boston-red-sox,custom_strike,BOS
+kalshi,mlb,7f7b33bd-0aa9-4128-a9ba-94adc9bacc29,mlb:pittsburgh-pirates,custom_strike,PIT
+kalshi,mlb,8068b1da-6725-4883-a163-885111c4f717,mlb:st-louis-cardinals,custom_strike,STL
+kalshi,mlb,807fa239-87eb-4e89-a969-649ab2027bc4,mlb:san-diego-padres,custom_strike,SD
+kalshi,mlb,80d1713b-a45b-42f8-ba94-a634aaa9a0e2,mlb:miami-marlins,custom_strike,MIA
+kalshi,mlb,8905d233-d4fc-485d-9df7-3092bb192b3e,mlb:detroit-tigers,custom_strike,DET
+kalshi,mlb,942f3f85-869a-4f7a-8e5a-336365c5294b,mlb:tampa-bay-rays,custom_strike,TB
+kalshi,mlb,9f4268d7-a294-4698-98c5-c16e37e4ac3d,mlb:houston-astros,custom_strike,HOU
+kalshi,mlb,a2e0a7af-4208-4889-b60c-7c9254c67d5b,mlb:minnesota-twins,custom_strike,MIN
+kalshi,mlb,aa47177d-346b-4467-b8d2-dc49e284a2e6,mlb:atlanta-braves,custom_strike,ATL
+kalshi,mlb,ad64d981-5e58-4988-8e7e-7cac4ff4960c,mlb:texas-rangers,custom_strike,TEX
+kalshi,mlb,bf277158-b28d-4a0e-aa3b-54fd3acd3009,mlb:philadelphia-phillies,custom_strike,PHI
+kalshi,mlb,c4a480e0-1cf0-4326-981f-dcf507692bf6,mlb:new-york-mets,custom_strike,NYM
+kalshi,mlb,cd1bf455-5181-4740-9e7c-d88eb72baa3e,mlb:athletics,custom_strike,ATH
+kalshi,mlb,cef5e9c6-0724-4524-bdd1-000f92a91c40,mlb:san-francisco-giants,custom_strike,SF
+kalshi,mlb,d237086c-19b8-4f27-9efb-ae6f5b915332,mlb:toronto-blue-jays,custom_strike,TOR
+kalshi,mlb,db7094b8-5481-4780-9763-51a66dfaf091,mlb:chicago-white-sox,custom_strike,CWS
+kalshi,mlb,e0a64786-0b17-4f7c-a8b5-425d52debb2d,mlb:baltimore-orioles,custom_strike,BAL
+kalshi,mlb,ed037614-6769-4195-9d5f-776b26a7fe62,mlb:los-angeles-angels,custom_strike,LAA
+kalshi,mlb,ed1fa89d-04cc-4a5d-9e87-9a89c0142724,mlb:cincinnati-reds,custom_strike,CIN
+kalshi,nfl,05cc62a4-bd74-4b2c-ab7b-1b177b9f6790,nfl:cleveland-browns,custom_strike,CLE
+kalshi,nfl,08c52d1f-7ce1-445f-be72-97de0554ecc8,nfl:green-bay-packers,custom_strike,GB
+kalshi,nfl,0aa02fd7-1bb1-474b-98e1-5379d0a191e3,nfl:denver-broncos,custom_strike,DEN
+kalshi,nfl,1105fa0d-c798-4020-9e24-f377a334b3d9,nfl:tampa-bay-buccaneers,custom_strike,TB
+kalshi,nfl,2279efa0-9284-4224-9647-09b14f6983ce,nfl:minnesota-vikings,custom_strike,MIN
+kalshi,nfl,422d5fd7-ad18-4c96-902d-6f7c50e4660f,nfl:los-angeles-rams,custom_strike,LAR
+kalshi,nfl,4cba614d-2d32-48ef-a066-1524437fbaff,nfl:miami-dolphins,custom_strike,MIA
+kalshi,nfl,4fa3f3ec-f7e7-41ec-9383-a40af2d26297,nfl:new-york-giants,custom_strike,NYG
+kalshi,nfl,611e3786-3bfe-4919-bbd5-bc70fc13d827,nfl:los-angeles-chargers,custom_strike,LAC
+kalshi,nfl,61a75ab7-eaf0-4601-b920-86b1e165007d,nfl:jacksonville-jaguars,custom_strike,JAC
+kalshi,nfl,62b97b7c-5503-461c-b328-fd8543219b22,nfl:dallas-cowboys,custom_strike,DAL
+kalshi,nfl,64f72720-2e4a-4cc8-a39b-ca148aecb389,nfl:kansas-city-chiefs,custom_strike,KC
+kalshi,nfl,6aa76797-7833-45e1-85e3-96e0122801e1,nfl:pittsburgh-steelers,custom_strike,PIT
+kalshi,nfl,75685be6-4388-4bba-8bcb-d0b0c24feb50,nfl:atlanta-falcons,custom_strike,ATL
+kalshi,nfl,7c86629b-eafc-47b4-9204-b46a2d0e9cbb,nfl:tennessee-titans,custom_strike,TEN
+kalshi,nfl,8b1ce23e-7d64-4213-85e9-7d12bc8c4d85,nfl:las-vegas-raiders,custom_strike,LV
+kalshi,nfl,8e52cc75-cba8-4373-9b62-b535b53b3be8,nfl:seattle-seahawks,custom_strike,SEA
+kalshi,nfl,96edbad3-1be5-4528-a3ed-c6e0c28c5fa0,nfl:houston-texans,custom_strike,HOU
+kalshi,nfl,9a77500a-1945-495e-b6f5-5c35bedaa8b9,nfl:chicago-bears,custom_strike,CHI
+kalshi,nfl,a69a57af-f1a1-4d44-ab62-e220ebaa2a5c,nfl:baltimore-ravens,custom_strike,BAL
+kalshi,nfl,aa65dda6-9cb8-4c8b-812b-d0c1feaae54f,nfl:washington-commanders,custom_strike,WAS
+kalshi,nfl,b007a1ab-bca6-42c7-8706-62607a605866,nfl:cincinnati-bengals,custom_strike,CIN
+kalshi,nfl,bc65405b-5bda-425c-b7c5-681c382e6a5a,nfl:philadelphia-eagles,custom_strike,PHI
+kalshi,nfl,bfaa7639-8bdf-47b2-8d28-98d2cdbefbcb,nfl:san-francisco-49ers,custom_strike,SF
+kalshi,nfl,ccc2af2d-5c4d-4717-8036-5ba6bec5cfbd,nfl:new-york-jets,custom_strike,NYJ
+kalshi,nfl,d1d64188-5cd5-4feb-97ff-8542c9dbeb43,nfl:new-england-patriots,custom_strike,NE
+kalshi,nfl,d73dae4f-1f08-4b5e-bf23-4e25e9b6a69c,nfl:arizona-cardinals,custom_strike,ARI
+kalshi,nfl,e37050ce-354f-4dd0-b2d8-0bd1e9650eb7,nfl:carolina-panthers,custom_strike,CAR
+kalshi,nfl,f7c2cd06-61bf-469e-984f-3ef56cb8f3d7,nfl:new-orleans-saints,custom_strike,NO
+kalshi,nfl,f95a55a7-8472-4ffa-be20-14547e3c32ff,nfl:detroit-lions,custom_strike,DET
+kalshi,nfl,f9acd396-ba35-4cae-a431-a44b2af707b0,nfl:buffalo-bills,custom_strike,BUF
+kalshi,nfl,fe5f8219-fef4-4498-83d5-f6cc6f2cb7bf,nfl:indianapolis-colts,custom_strike,IND
+kalshi,wnba,249eb221-9551-49f8-be0e-e0364a897126,wnba:washington-mystics,custom_strike,WSH
+kalshi,wnba,3512bac1-d718-416b-bd86-697f361f6e68,wnba:chicago-sky,custom_strike,CHI
+kalshi,wnba,351f76ac-34e9-40cc-97ec-1d880c3b56ad,wnba:toronto-tempo,custom_strike,TOR
+kalshi,wnba,3b8c40d9-1fac-4fb2-b861-dc3e2331d799,wnba:las-vegas-aces,custom_strike,LV
+kalshi,wnba,3da59c6b-c58b-4900-88cf-cf8382611868,wnba:golden-state-valkyries,custom_strike,GS
+kalshi,wnba,4a9939f7-dd96-474a-a036-525722701370,wnba:indiana-fever,custom_strike,IND
+kalshi,wnba,604e3820-06da-4bec-911b-63b33d203d42,wnba:new-york-liberty,custom_strike,NY
+kalshi,wnba,a7cfa9e6-9741-48f0-a041-18915949e1c4,wnba:minnesota-lynx,custom_strike,MIN
+kalshi,wnba,b981c23e-ac45-4e4f-b2b3-cf434a4b1eb3,wnba:atlanta-dream,custom_strike,ATL
+kalshi,wnba,d42bc7b5-1ebd-472d-b74b-ffacfe4eea18,wnba:los-angeles-sparks,custom_strike,LA
+kalshi,wnba,e1f8423b-aac4-4be1-a81e-934ca854f69c,wnba:dallas-wings,custom_strike,DAL
+kalshi,wnba,f3080452-0b28-45e8-adf6-5b0cfa8347bd,wnba:connecticut-sun,custom_strike,CONN
+polymarket,epl,100000,epl:eng.newcastle,teams[].id,Newcastle United FC
+polymarket,epl,100004,epl:eng.man_city,teams[].id,Manchester City FC
+polymarket,epl,100005,epl:eng.arsenal,teams[].id,Arsenal FC
+polymarket,epl,100006,epl:eng.crystal_palace,teams[].id,Crystal Palace FC
+polymarket,epl,100007,epl:eng.nottm_forest,teams[].id,Nottingham Forest FC
+polymarket,epl,100008,epl:eng.brentford,teams[].id,Brentford FC
+polymarket,epl,100009,epl:eng.aston_villa,teams[].id,Aston Villa FC
+polymarket,epl,100010,epl:eng.bournemouth,teams[].id,AFC Bournemouth
+polymarket,epl,100011,epl:eng.fulham,teams[].id,Fulham FC
+polymarket,epl,100013,epl:eng.everton,teams[].id,Everton FC
+polymarket,epl,100014,epl:eng.chelsea,teams[].id,Chelsea FC
+polymarket,epl,100015,epl:eng.brighton,teams[].id,Brighton & Hove Albion FC
+polymarket,epl,100016,epl:eng.man_utd,teams[].id,Manchester United FC
+polymarket,epl,100017,epl:eng.liverpool,teams[].id,Liverpool FC
+polymarket,epl,100018,epl:eng.tottenham,teams[].id,Tottenham Hotspur FC
+polymarket,epl,100019,epl:eng.ipswich,teams[].id,Ipswich Town FC
+polymarket,epl,114263,epl:eng.sunderland,teams[].id,Sunderland AFC
+polymarket,epl,114264,epl:eng.leeds,teams[].id,Leeds United FC
+polymarket,epl,3284766,epl:eng.coventry,teams[].id,Coventry City FC
+polymarket,epl,3284806,epl:eng.hull,teams[].id,Hull City AFC
+polymarket,mlb,114201,mlb:philadelphia-phillies,teams[].id,Philadelphia Phillies
+polymarket,mlb,114202,mlb:los-angeles-angels,teams[].id,Los Angeles Angels
+polymarket,mlb,114203,mlb:pittsburgh-pirates,teams[].id,Pittsburgh Pirates
+polymarket,mlb,114204,mlb:boston-red-sox,teams[].id,Boston Red Sox
+polymarket,mlb,114205,mlb:san-francisco-giants,teams[].id,San Francisco Giants
+polymarket,mlb,114206,mlb:atlanta-braves,teams[].id,Atlanta Braves
+polymarket,mlb,114207,mlb:new-york-mets,teams[].id,New York Mets
+polymarket,mlb,114208,mlb:kansas-city-royals,teams[].id,Kansas City Royals
+polymarket,mlb,114209,mlb:milwaukee-brewers,teams[].id,Milwaukee Brewers
+polymarket,mlb,114210,mlb:colorado-rockies,teams[].id,Colorado Rockies
+polymarket,mlb,114211,mlb:minnesota-twins,teams[].id,Minnesota Twins
+polymarket,mlb,114212,mlb:chicago-cubs,teams[].id,Chicago Cubs
+polymarket,mlb,114213,mlb:texas-rangers,teams[].id,Texas Rangers
+polymarket,mlb,114214,mlb:detroit-tigers,teams[].id,Detroit Tigers
+polymarket,mlb,114215,mlb:seattle-mariners,teams[].id,Seattle Mariners
+polymarket,mlb,114216,mlb:st-louis-cardinals,teams[].id,St. Louis Cardinals
+polymarket,mlb,114217,mlb:baltimore-orioles,teams[].id,Baltimore Orioles
+polymarket,mlb,114218,mlb:san-diego-padres,teams[].id,San Diego Padres
+polymarket,mlb,114219,mlb:cincinnati-reds,teams[].id,Cincinnati Reds
+polymarket,mlb,114220,mlb:miami-marlins,teams[].id,Miami Marlins
+polymarket,mlb,114221,mlb:arizona-diamondbacks,teams[].id,Arizona Diamondbacks
+polymarket,mlb,114222,mlb:athletics,teams[].id,Athletics
+polymarket,mlb,114223,mlb:los-angeles-dodgers,teams[].id,Los Angeles Dodgers
+polymarket,mlb,114224,mlb:toronto-blue-jays,teams[].id,Toronto Blue Jays
+polymarket,mlb,114225,mlb:washington-nationals,teams[].id,Washington Nationals
+polymarket,mlb,114226,mlb:new-york-yankees,teams[].id,New York Yankees
+polymarket,mlb,114227,mlb:cleveland-guardians,teams[].id,Cleveland Guardians
+polymarket,mlb,114228,mlb:tampa-bay-rays,teams[].id,Tampa Bay Rays
+polymarket,mlb,114229,mlb:chicago-white-sox,teams[].id,Chicago White Sox
+polymarket,mlb,114230,mlb:houston-astros,teams[].id,Houston Astros
+polymarket,nfl,100020,nfl:new-england-patriots,teams[].id,New England Patriots
+polymarket,nfl,100021,nfl:green-bay-packers,teams[].id,Green Bay Packers
+polymarket,nfl,100022,nfl:indianapolis-colts,teams[].id,Indianapolis Colts
+polymarket,nfl,100023,nfl:new-orleans-saints,teams[].id,New Orleans Saints
+polymarket,nfl,100024,nfl:baltimore-ravens,teams[].id,Baltimore Ravens
+polymarket,nfl,100025,nfl:cleveland-browns,teams[].id,Cleveland Browns
+polymarket,nfl,100026,nfl:arizona-cardinals,teams[].id,Arizona Cardinals
+polymarket,nfl,100027,nfl:san-francisco-49ers,teams[].id,San Francisco 49ers
+polymarket,nfl,100028,nfl:miami-dolphins,teams[].id,Miami Dolphins
+polymarket,nfl,100029,nfl:jacksonville-jaguars,teams[].id,Jacksonville Jaguars
+polymarket,nfl,100030,nfl:cincinnati-bengals,teams[].id,Cincinnati Bengals
+polymarket,nfl,100031,nfl:denver-broncos,teams[].id,Denver Broncos
+polymarket,nfl,100032,nfl:los-angeles-rams,teams[].id,Los Angeles Rams
+polymarket,nfl,100033,nfl:minnesota-vikings,teams[].id,Minnesota Vikings
+polymarket,nfl,100034,nfl:new-york-giants,teams[].id,New York Giants
+polymarket,nfl,100035,nfl:tennessee-titans,teams[].id,Tennessee Titans
+polymarket,nfl,100036,nfl:chicago-bears,teams[].id,Chicago Bears
+polymarket,nfl,100037,nfl:carolina-panthers,teams[].id,Carolina Panthers
+polymarket,nfl,100038,nfl:las-vegas-raiders,teams[].id,Las Vegas Raiders
+polymarket,nfl,100039,nfl:atlanta-falcons,teams[].id,Atlanta Falcons
+polymarket,nfl,100040,nfl:kansas-city-chiefs,teams[].id,Kansas City Chiefs
+polymarket,nfl,100041,nfl:buffalo-bills,teams[].id,Buffalo Bills
+polymarket,nfl,100042,nfl:pittsburgh-steelers,teams[].id,Pittsburgh Steelers
+polymarket,nfl,100043,nfl:philadelphia-eagles,teams[].id,Philadelphia Eagles
+polymarket,nfl,100044,nfl:new-york-jets,teams[].id,New York Jets
+polymarket,nfl,100045,nfl:washington-commanders,teams[].id,Washington Commanders
+polymarket,nfl,100046,nfl:seattle-seahawks,teams[].id,Seattle Seahawks
+polymarket,nfl,100047,nfl:los-angeles-chargers,teams[].id,Los Angeles Chargers
+polymarket,nfl,100048,nfl:houston-texans,teams[].id,Houston Texans
+polymarket,nfl,100049,nfl:dallas-cowboys,teams[].id,Dallas Cowboys
+polymarket,nfl,100050,nfl:detroit-lions,teams[].id,Detroit Lions
+polymarket,nfl,100051,nfl:tampa-bay-buccaneers,teams[].id,Tampa Bay Buccaneers
+polymarket,wnba,114248,wnba:atlanta-dream,teams[].id,Atlanta Dream
+polymarket,wnba,114249,wnba:chicago-sky,teams[].id,Chicago Sky
+polymarket,wnba,114250,wnba:connecticut-sun,teams[].id,Connecticut Sun
+polymarket,wnba,114251,wnba:dallas-wings,teams[].id,Dallas Wings
+polymarket,wnba,114252,wnba:golden-state-valkyries,teams[].id,Golden State Valkyries
+polymarket,wnba,114253,wnba:indiana-fever,teams[].id,Indiana Fever
+polymarket,wnba,114254,wnba:las-vegas-aces,teams[].id,Las Vegas Aces
+polymarket,wnba,114255,wnba:los-angeles-sparks,teams[].id,Los Angeles Sparks
+polymarket,wnba,114256,wnba:minnesota-lynx,teams[].id,Minnesota Lynx
+polymarket,wnba,114257,wnba:new-york-liberty,teams[].id,New York Liberty
+polymarket,wnba,114258,wnba:phoenix-mercury,teams[].id,Phoenix Mercury
+polymarket,wnba,114259,wnba:seattle-storm,teams[].id,Seattle Storm
+polymarket,wnba,114260,wnba:washington-mystics,teams[].id,Washington Mystics
+polymarket,wnba,3270681,wnba:toronto-tempo,teams[].id,Toronto Tempo
+polymarket,wnba,3270682,wnba:portland-fire,teams[].id,Portland Fire

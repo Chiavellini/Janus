@@ -1,0 +1,61 @@
+league,source,reason,query,count
+epl,text,unknown,mac,14
+epl,text,unknown,not,14
+epl,text,unknown,bri,13
+epl,text,unknown,mun,13
+mlb,text,unknown,oak,8
+epl,text,unknown,ast,7
+wnba,text,unknown,conn,6
+wnba,text,unknown,gsv,6
+nfl,text,unknown,la,4
+wnba,text,unknown,las,4
+wnba,text,unknown,nyl,4
+mlb,text,unknown,A's,3
+mlb,text,unknown,AZ,3
+mlb,text,unknown,Chicago C,3
+mlb,text,unknown,Los Angeles D,3
+mlb,text,unknown,New York M,3
+epl,text,unknown,BRI,2
+epl,text,unknown,CFC,2
+epl,text,unknown,LFC,2
+epl,text,unknown,MCI,2
+epl,text,unknown,MUN,2
+epl,text,unknown,Nottingham,2
+epl,text,unknown,Tottenham,2
+mlb,text,unknown,Los Angeles A,2
+mlb,text,unknown,New York Y,2
+nfl,text,unknown,ARI Cardinals,1
+nfl,text,unknown,ATL Falcons,1
+nfl,text,unknown,BAL Ravens,1
+nfl,text,unknown,BUF Bills,1
+nfl,text,unknown,CAR Panthers,1
+nfl,text,unknown,CHI Bears,1
+nfl,text,unknown,CIN Bengals,1
+nfl,text,unknown,CLE Browns,1
+nfl,text,unknown,DAL Cowboys,1
+nfl,text,unknown,DEN Broncos,1
+nfl,text,unknown,DET Lions,1
+nfl,text,unknown,GB Packers,1
+nfl,text,unknown,HOU Texans,1
+nfl,text,unknown,IND Colts,1
+nfl,text,unknown,KC Chiefs,1
+nfl,text,unknown,LA Chargers,1
+nfl,text,unknown,LA Rams,1
+nfl,text,unknown,LV Raiders,1
+nfl,text,unknown,Los Angeles C,1
+nfl,text,unknown,Los Angeles R,1
+nfl,text,unknown,MIA Dolphins,1
+nfl,text,unknown,MIN Vikings,1
+nfl,text,unknown,NE Patriots,1
+nfl,text,unknown,NO Saints,1
+nfl,text,unknown,NY Giants,1
+nfl,text,unknown,NY Jets,1
+nfl,text,unknown,New York G,1
+nfl,text,unknown,New York J,1
+nfl,text,unknown,PHI Eagles,1
+nfl,text,unknown,PIT Steelers,1
+nfl,text,unknown,SEA Seahawks,1
+nfl,text,unknown,SF 49ers,1
+nfl,text,unknown,TB Buccaneers,1
+nfl,text,unknown,TEN Titans,1
+wnba,text,unknown,CONN,1

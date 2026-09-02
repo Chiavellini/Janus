@@ -1,0 +1,21 @@
+{
+  "id": 7004001,
+  "name": "Arsenal V Chelsea",
+  "status": "TRADING_LIVE",
+  "startTime": "2026-09-12T16:30:00Z",
+  "home": {"name": "Arsenal", "key": "c1-arsenal"},
+  "away": {"name": "Chelsea", "key": "c2-chelsea"},
+  "markets": {
+    "soccer.match_odds": {
+      "submarkets": {
+        "period=ft": {
+          "selections": [
+            {"outcome": "home", "params": "", "price": 1.80, "minStake": 0.1, "maxStake": 100, "status": "SELECTION_ENABLED", "side": "BACK"},
+            {"outcome": "draw", "params": "", "price": 3.60, "minStake": 0.1, "maxStake": 100, "status": "SELECTION_ENABLED", "side": "BACK"},
+            {"outcome": "away", "params": "", "price": 4.20, "minStake": 0.1, "maxStake": 100, "status": "SELECTION_ENABLED", "side": "BACK"}
+          ]
+        }
+      }
+    }
+  }
+}
