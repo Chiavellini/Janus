@@ -92,6 +92,10 @@ switch on a fake-arbitrage generator:
    NFL. Replace the bool with a token only a citation-checked rule table can mint.
 2. Only then, per-league Polymarket slug patterns in `nodes/match_sports`.
 
+## History
+
+`CHANGELOG.md` — dated, append-only. What changed and why.
+
 ## Next
 
 `NEXT.md` — one file, overwritten, explicitly an opinion. Never a second handoff document.
