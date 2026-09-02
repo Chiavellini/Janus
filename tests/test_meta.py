@@ -5,7 +5,7 @@ WHY
 ───
 tests/test_cover.py and tests/test_spine.py used a homemade `@check(name)` harness that ran at
 IMPORT time and caught every exception into a list. Under pytest they collected ZERO items and
-reported ZERO failures, so 28 assertions covering screen/cover.py -- the module that decides
+reported ZERO failures, so 28 assertions covering nodes/cover/cover.py -- the module that decides
 whether money is on the table -- and the entire schedule/entity spine were invisible. The
 "156 passed" figure quoted in HANDOFF_LIVE_SPORTS_CLOUDBET_2026-09-02.md excluded both files.
 Every one of those 28 assertions passed once made visible; the defect was never a broken test, it

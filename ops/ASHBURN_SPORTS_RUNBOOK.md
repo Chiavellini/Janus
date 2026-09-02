@@ -40,7 +40,7 @@ successful Trading API acceptance response before the Cloudbet leg is executable
 cd /opt/janus
 df -h / /Volumes/Kilos
 python3 -m pytest -q
-python3 collectors/live_sports_arb.py \
+python3 grids/live_sports/grid.py \
   --leagues mlb,nfl,nba,wnba,nhl,epl \
   --include-near \
   --db /Volumes/Kilos/janus/tuples/tuples.sqlite \

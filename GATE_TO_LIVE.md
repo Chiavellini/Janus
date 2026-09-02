@@ -32,7 +32,7 @@ alarm demonstrated firing against a fake target** (a monitor that has never emit
 Kilos found three silent monitor bugs this way on 2026-07-24).
 
 ### Step 3 — Seal the forward era
-The Janus holdout era is declared in `state.yaml`, its start timestamp recorded, and it becomes
+The Janus holdout era is declared in `NEXT.md`, its start timestamp recorded, and it becomes
 unreadable. From that moment, reading outcomes from it requires the Step-6 ritual.
 
 ### Step 4 — Faithfulness
@@ -64,7 +64,7 @@ nothing. Decide the required n from a power calculation **before** starting, not
 ### Step 8 — Execution proof
 Battery green. Kalshi demo round-trip proven end-to-end (place → poll → cancel → settle). One $5
 live fill on each venue, reconciled against a wallet delta / statement, with the **charged fee
-matching the pinned curve** in `lib/venue_costs.py`. A fee above the pinned curve is a STOP and a
+matching the pinned curve** in `nodes/fees/venue_costs.py`. A fee above the pinned curve is a STOP and a
 re-pin, not a rounding note.
 
 ### Step 9 — Arming

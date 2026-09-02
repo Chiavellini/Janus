@@ -29,7 +29,7 @@ if str(ROOT) not in sys.path:
 def _no_network(request, monkeypatch):
     """Purity, enforced rather than asserted.
 
-    lib/venues/base.py declares normalize() PURE and lib/fees/registry.py is a pure lookup, but
+    kernel/venue_protocol.py declares normalize() PURE and nodes/fees/registry.py is a pure lookup, but
     nothing checked. A test that quietly reaches a venue is both slow and non-deterministic, and
     it turns a regression suite into an outage detector. Mark a test `@pytest.mark.network` to opt
     out; it is deselected by default via addopts in pyproject.toml.

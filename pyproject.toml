@@ -4,7 +4,7 @@
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-testpaths = ["tests"]
+testpaths = ["kernel", "nodes", "grids", "ops", "tests"]
 addopts = "-q --strict-markers -m 'not network'"
 markers = [
     "network: hits a real venue API; deselected by default",
