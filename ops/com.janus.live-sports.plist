@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.janus.live-sports</string>
+
+  <!-- Through the wrapper, never straight into python: the wrapper writes the start row BEFORE
+       the interpreter runs, so a crash at import or argparse still leaves a trace. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/bernardodelrio/Code/Janus/ops/run_node.sh</string>
+    <string>live_sports</string>
+    <string>-m</string><string>grids.live_sports.grid</string>
+    <string>--leagues</string><string>mlb,nfl,nba,wnba,nhl,epl</string>
+    <string>--include-near</string>
+    <string>--pre-hours</string><string>6</string>
+    <string>--loop</string>
+    <string>--period</string><string>10</string>
+    <string>--discovery-period</string><string>300</string>
+  </array>
+
+  <key>WorkingDirectory</key><string>/Users/bernardodelrio/Code/Janus</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key>
+  <dict><key>SuccessfulExit</key><false/></dict>
+
+  <!-- 60s, not 30. com.janus.convergence restarted every 30s for thirteen days; the watchdog now
+       alerts on restart RATE, and this leaves room above the noise floor. -->
+  <key>ThrottleInterval</key><integer>60</integer>
+
+  <!-- Interactive, NOT Background. Background QoS pins the process at priority 4, which is what
+       paged out the IBKR gateway's JVM and made a latency-sensitive collector miss its sampling
+       targets. A lane that measures quote skew must not be descheduled. -->
+  <key>ProcessType</key><string>Interactive</string>
+  <key>Nice</key><integer>0</integer>
+</dict>
+</plist>

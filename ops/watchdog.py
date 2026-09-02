@@ -50,6 +50,10 @@ class Sla:
 #: Registered jobs. A job absent here is reported as UNREGISTERED rather than ignored --
 #: silently skipping unknown jobs is how a monitor stops covering what it was built for.
 SLAS: dict[str, Sla] = {
+    # The observation lane. It is a long-lived daemon, so "healthy" means the process is still
+    # running and its last row is a start, not a finish. A finish row means it stopped -- which is
+    # fine when deliberate and an alert when not.
+    "live_sports": Sla(kind="daemon", max_age_s=1800, max_starts_per_hour=6),
     # Nothing is currently scheduled except this watchdog. Every Janus collector was stopped on
     # 2026-09-02 (see CHANGELOG.md); the sports lane has never had a plist. Entries return here
     # when a lane is actually deployed -- registering an SLA for a job that does not run is
@@ -61,9 +65,8 @@ SLAS: dict[str, Sla] = {
 #: forever trains the operator to ignore the watchdog, which is how the convergence loop survived
 #: thirteen days of a perfectly visible `launchctl list` exit status.
 DISABLED: dict[str, str] = {
-    "live_sports_arb": "not deployed — no launchd plist exists for the sports lane and the "
-                       "Ashburn instance is stopped. Its SLA (oneshot, 300s) activates when the "
-                       "lane is actually scheduled.",
+    "probe_test": "one-off probe of run_index start/finish on 2026-09-02. The index is append-only, so the row stays; this entry stops it alerting forever.",
+
     "shadow": "stopped 2026-09-02; ledger F1 closed unscored. Collector removed. Plist preserved; restore with launchctl bootstrap.",
     "convergence": "stopped 2026-09-02 after a 13-day crash loop; ledger F2 closed unscored. Collector removed. Plist preserved; restore with launchctl bootstrap.",
     "newborn": "stopped 2026-09-02; ledger L24 closed, 960 MB capture archived. Collector removed. Plist preserved; restore with launchctl bootstrap.",

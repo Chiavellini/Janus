@@ -11,14 +11,18 @@ connection; the local run is useful for validating matching and economics first.
 from __future__ import annotations
 
 import argparse
+import os
+import signal
+import sys
+import traceback
 import csv
 import json
 import time
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -32,6 +36,7 @@ from nodes.venue_polymarket.books import pm_book, pm_token_map  # noqa: E402
 from nodes.cover.cover import Leg, best_cover  # noqa: E402
 from nodes.rules_exhaustive.rules import NotExhaustive, prove  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
+from ops import run_index  # noqa: E402
 
 KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
 PM_CLOB = "https://clob.polymarket.com"
@@ -118,8 +123,51 @@ def _match_live(league: str, games: list, now: datetime):
                                                                "polymarket": dict(stats["p_reason"])}}, resolver
 
 
+@dataclass
+class Discovery:
+    """The slate: which markets to watch, on which venue, for which canonical outcome.
+
+    Discovery is SLOW (ESPN per league, a paginated Kalshi pull, a paginated PM Gamma pull, then
+    one Gamma call per slug) and changes on the order of minutes -- games start, games end, new
+    markets list. Book polling is FAST and is the only thing that needs to run every few seconds.
+    Recomputing the slate on every sweep hammered three APIs to re-derive a nearly identical
+    answer; this splits the two clocks.
+    """
+    made_utc: float
+    games: list
+    schedule_failures: dict[str, str]
+    per_league: dict            # league -> (matches, match_stats, resolver)
+    tokens: dict                # slug -> ({outcome_label: token}, event)
+    token_errors: dict[str, str]
+
+    def age_s(self, now: float | None = None) -> float:
+        return (now or time.time()) - self.made_utc
+
+
+def discover(leagues: list[str], now: datetime, include_near: bool, pre_hours: float,
+             pclient: Client) -> Discovery:
+    """Build the watch set. Every failure is recorded, none is fatal."""
+    games, meta = _live_games(leagues, now, include_near, pre_hours)
+    per_league, slugs = {}, set()
+    for league in leagues:
+        lg_games = [g for g in games if g.league == league]
+        if not lg_games:
+            continue
+        try:
+            matches, stats, resolver = _match_live(league, lg_games, now)
+        except Exception as exc:  # noqa: BLE001 -- one league must not take the slate down
+            meta["schedule_failures"][league] = f"match: {type(exc).__name__}: {exc}"
+            continue
+        per_league[league] = (matches, stats, resolver)
+        slugs |= {m["pm_event"] for m in matches}
+    tokens = pm_token_map(sorted(slugs), pclient) if slugs else {}
+    token_errors = tokens.pop("__errors__", {})
+    return Discovery(time.time(), games, meta["schedule_failures"], per_league, tokens, token_errors)
+
+
 def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
-         pre_hours: float = DEFAULT_PRE_HOURS) -> dict:
+         pre_hours: float = DEFAULT_PRE_HOURS,
+         discovery: Discovery | None = None) -> dict:
     started = time.time(); now = datetime.now(timezone.utc)
     sweep_id = now.strftime("%Y%m%dT%H%M%SZ")
     result = {"spec_ref": SPEC_REF, "sweep_id": sweep_id, "mode": "live_plus_near" if include_near else "live",
@@ -129,14 +177,16 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
     kclient, pclient = Client("kalshi", rate=8, burst=8, cache_dir=None), Client("polymarket", rate=8, burst=8, cache_dir=None)
     discovered = watched = changed = opportunities = 0
     try:
-        games, meta = _live_games(leagues, now, include_near, pre_hours)
-        for lg, err in meta["schedule_failures"].items():
+        d = discovery or discover(leagues, now, include_near, pre_hours, pclient)
+        result["discovery_age_s"] = round(d.age_s(), 1)
+        games = d.games
+        for lg, err in d.schedule_failures.items():
             result["blocked"].append({"league": lg, "reason": "SCHEDULE_FETCH", "detail": err})
         for league in leagues:
             league_games = [g for g in games if g.league == league]
-            if not league_games:
+            if not league_games or league not in d.per_league:
                 continue
-            matches, match_stats, resolver = _match_live(league, league_games, now)
+            matches, match_stats, resolver = d.per_league[league]
             by_game: dict[str, list[dict]] = defaultdict(list)
             for m in matches: by_game[m["game_id"]].append(m)
             for g in league_games:
@@ -149,8 +199,7 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                                               "matched_outcomes": sorted({x["entity_id"] for x in rows})})
                     result["games"].append(game_out); continue
                 slugs = sorted({m["pm_event"] for m in rows})
-                tokmap = pm_token_map(slugs, pclient)
-                tok_errors = tokmap.pop("__errors__", {})
+                tokmap, tok_errors = d.tokens, d.token_errors
                 token_by_entity = {}
                 for slug in slugs:
                     entry = tokmap.get(slug)
@@ -293,6 +342,35 @@ def write_artifacts(result: dict) -> Path:
     return out
 
 
+#: How often the slate is rebuilt. Games start and end on the order of minutes; markets do not
+#: appear every ten seconds. Book polling runs on its own, much faster clock.
+DEFAULT_DISCOVERY_PERIOD = 300
+
+_STOP = False
+
+
+def _on_signal(signum, _frame):
+    """SIGTERM/SIGINT set a flag; the loop finishes its sweep and records an outcome.
+
+    Dying mid-sweep is what leaves a start row with no finish row, which the watchdog then has to
+    report as CRASHED. A clean stop should look clean.
+    """
+    global _STOP
+    _STOP = True
+    print(f"\n[signal {signum}] finishing the current sweep, then stopping", flush=True)
+
+
+def _interesting(result: dict) -> bool:
+    """Does this sweep deserve a durable artifact directory?
+
+    At a 10 s period an unconditional write is 8,640 directories a day, almost all identical. The
+    SQLite store already keeps change-gated history, so the run directory is for sweeps a human
+    would want to open: a candidate, a block, or a failure.
+    """
+    return bool(result.get("candidates") or result.get("blocked")
+                or result.get("status") != "OK")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--leagues", default="mlb,nfl,nba,wnba,nhl,epl")
@@ -300,22 +378,103 @@ def main() -> None:
     ap.add_argument("--pre-hours", type=float, default=DEFAULT_PRE_HOURS,
                     help="watch pre-game markets starting within N hours (default 6)")
     ap.add_argument("--db", type=Path, default=DB)
-    ap.add_argument("--loop", action="store_true", help="repeat discovery/book polling; storage remains change-only")
-    ap.add_argument("--period", type=int, default=10, help="seconds between live sweeps in --loop mode")
+    ap.add_argument("--loop", action="store_true", help="repeat book polling; storage stays change-only")
+    ap.add_argument("--period", type=int, default=10, help="seconds between book sweeps in --loop mode")
+    ap.add_argument("--discovery-period", type=int, default=DEFAULT_DISCOVERY_PERIOD,
+                    help="seconds between slate rebuilds (default 300)")
+    ap.add_argument("--heartbeat", type=int, default=900,
+                    help="write an artifact at least this often even when nothing is interesting")
+    ap.add_argument("--max-sweeps", type=int, default=0, help="stop after N sweeps (0 = unbounded)")
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
+
     if a.self_test:
-        assert MIN_RETURN == 0.01 and MAX_QUOTE_SKEW == 5.0
-        print("live_sports_arb selftest OK")
+        from nodes.rules_exhaustive.rules import NotExhaustive, prove
+        assert isinstance(prove("epl", "moneyline", "game", ["a", "b"]), NotExhaustive), \
+            "3-way EPL must not prove exhaustive"
+        assert isinstance(prove("nfl", "moneyline", "game", ["a", "b"]), NotExhaustive), \
+            "NFL can tie; it must not prove exhaustive"
+        assert prove("mlb", "moneyline", "game", ["a", "b"]).rule_id == "mlb_no_draw"
+        d = discover(["mlb"], datetime.now(timezone.utc), True, 6.0,
+                     Client("polymarket", rate=3, burst=6, cache_dir=None))
+        assert d.games, "no MLB games discovered; the slate is empty"
+        print(f"live_sports selftest OK — {len(d.games)} games, "
+              f"{sum(len(v[0]) for v in d.per_league.values())} matched legs, "
+              f"{len(d.tokens)} PM token maps")
         return
+
     leagues = [x.strip() for x in a.leagues.split(",") if x.strip()]
-    while True:
-        result = scan(leagues, include_near=a.include_near, db=a.db, pre_hours=a.pre_hours)
-        write_artifacts(result)
-        print(json.dumps(result["summary"], indent=2, sort_keys=True))
-        if not a.loop:
+    signal.signal(signal.SIGTERM, _on_signal)
+    signal.signal(signal.SIGINT, _on_signal)
+
+    # A start row BEFORE any work, so a crash during discovery still leaves a trace. ops/watchdog.py
+    # reads this; a job that starts and never finishes is exactly the shape convergence had for
+    # thirteen undetected days.
+    # ops/run_node.sh already opened a run and exported its id. Writing a second pair of rows
+    # would give the watchdog two run_ids for one process; defer to the wrapper when it is there.
+    ambient = os.environ.get("JANUS_RUN_ID")
+    run_id = ambient or run_index.start("live_sports", argv=sys.argv[1:])
+    owns_row = ambient is None
+    exit_code, final_status = 0, "OK"
+
+    pclient = Client("polymarket", rate=8, burst=8, cache_dir=None)
+    d: Discovery | None = None
+    sweeps = consecutive_errors = 0
+    last_artifact = 0.0
+
+    while not _STOP:
+        try:
+            if d is None or d.age_s() > a.discovery_period:
+                d = discover(leagues, datetime.now(timezone.utc), a.include_near, a.pre_hours, pclient)
+                print(f"[slate] {len(d.games)} games, {len(d.tokens)} token maps"
+                      f"{', failures: ' + str(d.schedule_failures) if d.schedule_failures else ''}",
+                      flush=True)
+            result = scan(leagues, include_near=a.include_near, db=a.db,
+                          pre_hours=a.pre_hours, discovery=d)
+            consecutive_errors = 0
+        except Exception as exc:  # noqa: BLE001 -- a sweep must never take the loop down
+            consecutive_errors += 1
+            print(f"[sweep FAILED {consecutive_errors}] {type(exc).__name__}: {exc}", flush=True)
+            traceback.print_exc()
+            d = None                                   # rebuild the slate; it may be the cause
+            if consecutive_errors >= 10:
+                print("[fatal] 10 consecutive sweep failures; stopping rather than spinning",
+                      flush=True)
+                if owns_row:
+                    run_index.finish("live_sports", run_id, exit_code=1, status="FAILED",
+                                     sweeps=sweeps, error=f"{type(exc).__name__}: {exc}")
+                raise
+            time.sleep(min(60, 2 ** consecutive_errors))
+            continue
+
+        sweeps += 1
+        s = result["summary"]
+        due = (time.time() - last_artifact) > a.heartbeat
+        if _interesting(result) or due:
+            out = write_artifacts(result)
+            last_artifact = time.time()
+        else:
+            out = None
+        print(f"[{result['sweep_id']}] games={s['scheduled_live_or_near_games']} "
+              f"matched={s['games_with_exact_matches']} legs={s['watched_outcome_legs']} "
+              f"blocked={s['blocked']} candidates={s['candidate_observations']} "
+              f"changed={s['material_quote_changes']}"
+              f"{'  -> ' + out.name if out else ''}", flush=True)
+        for c in result.get("candidates", []):
+            print(f"  *** CANDIDATE {c['short_name']} q={c['quantity']} "
+                  f"cost={c['cost_per_contract']:.4f} return={c['return_locked']:+.3%}", flush=True)
+
+        if not a.loop or (a.max_sweeps and sweeps >= a.max_sweeps):
             break
-        time.sleep(max(5, a.period))
+        for _ in range(max(1, a.period)):              # responsive to a signal
+            if _STOP:
+                break
+            time.sleep(1)
+
+    if owns_row:
+        run_index.finish("live_sports", run_id, exit_code=exit_code, status=final_status,
+                         sweeps=sweeps, leagues=",".join(leagues))
+    print(f"[stopped] {sweeps} sweeps, recorded as {final_status} (run {run_id})", flush=True)
 
 
 if __name__ == "__main__":
