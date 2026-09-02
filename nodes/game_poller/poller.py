@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from typing import Mapping
 from enum import Enum
 
 from nodes.book_replica.replica import BookReplica, Fault
@@ -48,6 +49,9 @@ class Evaluation:
     blocked_by: str | None
     evaluated_utc: float
     latency_ms: float          # event arrival -> decision
+    #: The exact legs this was priced from, so a consumer can solve the size frontier without
+    #: re-reading the replicas (which will have moved by then).
+    offers: Mapping[str, tuple] = field(default_factory=dict)
 
     @property
     def actionable_return(self) -> float | None:
@@ -149,7 +153,8 @@ class GamePoller:
                 cov = best_cover(offers, q, now_utc=t,
                                  max_leg_age_s=self.max_book_age_s, exhaustive=self.proof)
             ev = Evaluation(self.game_id, market_id, q, cov, blocked, t,
-                            latency_ms=(time.time() - t) * 1000.0)
+                            latency_ms=(time.time() - t) * 1000.0,
+                            offers={k: tuple(v) for k, v in offers.items()} if ready else {})
             self.evaluations += 1
             r = ev.actionable_return
             if r is not None and r >= self.min_return and cov is not None and not cov.single_venue:
