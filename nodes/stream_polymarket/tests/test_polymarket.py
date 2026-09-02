@@ -214,3 +214,28 @@ def test_a_slate_change_uses_an_operation_frame_not_a_reconnect():
     frames = [f for f in sent if isinstance(f, dict)]
     assert frames[0] == {"assets_ids": [A], "type": "market"}
     assert any(f.get("operation") == "subscribe" and f["assets_ids"] == ["b"] for f in frames)
+
+
+def test_a_passing_check_keeps_an_actively_traded_market_verified():
+    """Caught in production: quiet PM markets hit UNVERIFIED_TOO_LONG while the stream was
+    actively verifying them on every message. An outside check IS verification."""
+    s = PolymarketStream()
+    r = BookReplica("polymarket", A, verification="external", max_unverified_s=30.0,
+                    heartbeat_timeout_s=120.0)
+    s.register(A, r)
+    s.handle(BOOK, now=T)
+    for i in range(1, 60):
+        s.handle(change(0.18, 4, bb=0.19, ba=0.20), now=T + i)
+    assert r.check(T + 59, max_age_s=1e9) is None, "its own traffic proved it"
+
+
+def test_a_genuinely_quiet_market_still_decays_and_forces_a_resnapshot():
+    """The other half: nothing verified it, so it must not serve forever on a stale snapshot."""
+    s = PolymarketStream()
+    r = BookReplica("polymarket", A, verification="external", max_unverified_s=30.0,
+                    heartbeat_timeout_s=120.0)
+    s.register(A, r)
+    s.handle(BOOK, now=T)
+    for i in range(1, 60):
+        s.handle("PONG", now=T + i)                 # socket alive, no book traffic at all
+    assert r.check(T + 59, max_age_s=1e9) is Fault.UNVERIFIED_TOO_LONG

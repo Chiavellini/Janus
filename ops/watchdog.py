@@ -53,7 +53,9 @@ SLAS: dict[str, Sla] = {
     # The observation lane. It is a long-lived daemon, so "healthy" means the process is still
     # running and its last row is a start, not a finish. A finish row means it stopped -- which is
     # fine when deliberate and an alert when not.
-    "live_sports": Sla(kind="daemon", max_age_s=1800, max_starts_per_hour=6),
+    # The streaming observation lane. A daemon: healthy means still running, and its last row
+    # should be a start rather than a finish.
+    "live_stream": Sla(kind="daemon", max_age_s=1800, max_starts_per_hour=6),
     # Nothing is currently scheduled except this watchdog. Every Janus collector was stopped on
     # 2026-09-02 (see CHANGELOG.md); the sports lane has never had a plist. Entries return here
     # when a lane is actually deployed -- registering an SLA for a job that does not run is
@@ -65,6 +67,7 @@ SLAS: dict[str, Sla] = {
 #: forever trains the operator to ignore the watchdog, which is how the convergence loop survived
 #: thirteen days of a perfectly visible `launchctl list` exit status.
 DISABLED: dict[str, str] = {
+    "live_sports": "superseded 2026-09-02 by live_stream, which replaces 17s REST polling with two websockets at ~200 evaluations/sec. The grid remains for offline replay.",
     "probe_test": "one-off probe of run_index start/finish on 2026-09-02. The index is append-only, so the row stays; this entry stops it alerting forever.",
 
     "shadow": "stopped 2026-09-02; ledger F1 closed unscored. Collector removed. Plist preserved; restore with launchctl bootstrap.",

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.janus.live-stream</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/bernardodelrio/Code/Janus/ops/run_node.sh</string>
+    <string>live_stream</string>
+    <string>-m</string><string>grids.live_stream.grid</string>
+    <string>--leagues</string><string>mlb,nfl,nba,wnba,nhl</string>
+    <string>--pre-hours</string><string>2</string>
+    <string>--discovery-period</string><string>300</string>
+    <string>--report-period</string><string>60</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/bernardodelrio/Code/Janus</string>
+
+  <!-- Kalshi authenticates EVERY socket, even for public market data, so the lane cannot start
+       without these. The wrapper sources them; they are never written into this file. -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>JANUS_CREDS</key><string>/Volumes/Kilos/janus/credentials/track_b.env</string>
+  </dict>
+
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
+  <key>ThrottleInterval</key><integer>60</integer>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>Nice</key><integer>0</integer>
+</dict>
+</plist>

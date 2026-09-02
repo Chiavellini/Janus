@@ -22,6 +22,13 @@ cd "$ROOT"
 export PYTHONPATH="$ROOT"
 mkdir -p "$LOGDIR"
 
+# Credentials are sourced here, never written into a plist, a command line or a log. Kalshi
+# authenticates every socket -- even for public market data -- so a lane that needs them cannot
+# start without them, and failing loudly here beats a confusing auth error 30 frames in.
+if [ -n "${JANUS_CREDS:-}" ] && [ -f "$JANUS_CREDS" ]; then
+  set -a; . "$JANUS_CREDS"; set +a
+fi
+
 # Rotate on start. No sudo, no newsyslog, no logrotate -- one generation is enough to debug a
 # crash and bounded enough that a loop cannot fill the volume.
 if [ -f "$LOG" ] && [ "$(stat -f%z "$LOG")" -gt "$MAXBYTES" ]; then

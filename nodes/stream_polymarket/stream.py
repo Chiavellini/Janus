@@ -130,6 +130,11 @@ class PolymarketStream:
                         self.checks += 1
                         if book.agrees_with(p.claimed_bid, p.claimed_ask):
                             self.agreed += 1
+                            # The venue just confirmed our top of book. That is an outside check,
+                            # so the replica does not need to decay toward UNVERIFIED_TOO_LONG
+                            # while its own traffic keeps proving it.
+                            for reg in self.regs.get(p.asset_id, ()):
+                                reg.replica.stream_verified(t)
                         else:
                             self.drift += 1
                             self.last_error = (

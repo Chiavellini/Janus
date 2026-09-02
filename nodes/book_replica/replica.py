@@ -232,6 +232,21 @@ class BookReplica:
             return False
         return all(abs(a[k] - b[k]) <= tol for k in a)
 
+    def stream_verified(self, now: float | None = None) -> None:
+        """The TRANSPORT proved this replica is still correct, without a fresh snapshot.
+
+        Polymarket needs this. It has no sequence number, so the replica is in "external" mode and
+        decays to UNVERIFIED_TOO_LONG on a timer -- correct as a default, because nothing in the
+        stream proves anything. But every price_change carries the venue's own best_bid/best_ask,
+        and when the local top of book matches it, the replica HAS been verified from outside. The
+        stream calls this on a passing check so an actively traded market stays alive on its own
+        traffic, while a genuinely quiet one still decays and forces a resnapshot.
+
+        This verifies the TOP of book only. A level drifting deeper is invisible to it, so a
+        periodic REST reconcile remains the backstop for depth.
+        """
+        self.verified_utc = now or time.time()
+
     def invalidate(self, fault: Fault) -> None:
         """Public: the TRANSPORT found a problem this replica cannot see.
 

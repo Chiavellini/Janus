@@ -1,0 +1,73 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "NeverTouchEarshot",
+      "Effect": "Deny",
+      "Action": "*",
+      "Resource": [
+        "arn:aws:ec2:us-east-1:986420598115:instance/i-04c50d76572aa092e",
+        "arn:aws:ssm:us-east-1:986420598115:parameter/earshot/*"
+      ]
+    },
+    {
+      "Sid": "NoPrivilegeEscalationAndNoAuditTampering",
+      "Effect": "Deny",
+      "Action": ["iam:*", "organizations:*", "account:*",
+                 "cloudtrail:StopLogging", "cloudtrail:DeleteTrail",
+                 "budgets:DeleteBudget", "ce:*"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "OneRegionOnly",
+      "Effect": "Deny",
+      "Action": "*",
+      "Resource": "*",
+      "Condition": {"StringNotEquals": {"aws:RequestedRegion": ["us-east-1"]}}
+    },
+    {
+      "Sid": "ReadEverythingInEC2SoWeCanSeeWhatWeMade",
+      "Effect": "Allow",
+      "Action": ["ec2:Describe*", "ssm:DescribeParameters", "cloudwatch:GetMetric*",
+                 "cloudwatch:ListMetrics", "logs:Describe*", "logs:GetLogEvents"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "LaunchOnlyTaggedJanusAndOnlySmallInstances",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:us-east-1:986420598115:instance/*",
+      "Condition": {
+        "StringEquals": {"aws:RequestTag/Project": "janus"},
+        "ForAnyValue:StringEquals": {
+          "ec2:InstanceType": ["t4g.small", "c7g.medium", "c7g.large", "c6in.large"]
+        }
+      }
+    },
+    {
+      "Sid": "RunInstancesNeedsTheseSupportingResources",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": ["arn:aws:ec2:us-east-1::image/*",
+                   "arn:aws:ec2:us-east-1:986420598115:subnet/*",
+                   "arn:aws:ec2:us-east-1:986420598115:security-group/*",
+                   "arn:aws:ec2:us-east-1:986420598115:network-interface/*",
+                   "arn:aws:ec2:us-east-1:986420598115:volume/*",
+                   "arn:aws:ec2:us-east-1:986420598115:key-pair/*"]
+    },
+    {
+      "Sid": "LifecycleOnJanusTaggedInstancesOnly",
+      "Effect": "Allow",
+      "Action": ["ec2:StartInstances", "ec2:StopInstances", "ec2:TerminateInstances",
+                 "ec2:ModifyInstanceAttribute", "ec2:CreateTags"],
+      "Resource": "arn:aws:ec2:us-east-1:986420598115:*",
+      "Condition": {"StringEquals": {"ec2:ResourceTag/Project": "janus"}}
+    },
+    {
+      "Sid": "JanusSecretsOnly",
+      "Effect": "Allow",
+      "Action": ["ssm:GetParameter", "ssm:GetParameters", "ssm:PutParameter"],
+      "Resource": "arn:aws:ssm:us-east-1:986420598115:parameter/janus/*"
+    }
+  ]
+}
