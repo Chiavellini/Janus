@@ -102,3 +102,31 @@ as a Janus *test look* is not, and would be double-dipping the same data.
 | # | Date | Arm | Window | Result |
 |---|---|---|---|---|
 | — | — | — | — | — |
+
+---
+
+## Closures — 2026-09-02
+
+Appended under rule 6 (*"Correct a row with a new row or an appended note, never in place"*). No
+row above is edited, no criterion is changed, and no result is read. These record that forward
+accrual **stopped**; they do not report an outcome, and none of them spends a test look.
+
+The project narrowed to executable two-leg pure arbitrage on sports across independent venues.
+The rows below belong to lanes that no longer serve that objective, or that had already stopped
+accruing without anyone noticing.
+
+| Row | Arm | Accrual window | Disposition |
+|---|---|---|---|
+| **F1** | Kalshi-open vs PM established price (MLB moneyline) | 2026-08-20T22:04:58Z → 2026-09-02 | **CLOSED, unscored.** `com.janus.shadow` unloaded 2026-09-02; `collectors/collect_shadow.py` removed. Data preserved at `/Volumes/Kilos/janus/shadow/kalshi_open.sqlite` (WAL checkpointed, 4.1 MB merged before shutdown). **No outcome was read and none is claimed.** |
+| **F2** | Kalshi↔PM convergence attribution (MLB moneyline) | 2026-08-21 → **2026-08-27 (de facto)** | **CLOSED, unscored.** Accrual in fact ended 2026-08-27: `com.janus.convergence` had been crash-looping every 30 s since 2026-08-20 on a `TypeError` in `game_key`, and its last write to `convergence/track.sqlite` was 2026-08-27T09:10. The failure was invisible for 13 days (15,207 identical tracebacks, 11.9 MB unrotated). Job unloaded 2026-09-02, collector removed, log archived gzipped under `logs/archive/`. **F2 is additionally superseded by scope**: it registers a *one-legged convergence* bet, and the current objective is explicitly two-leg pure arbitrage. **No outcome was read.** |
+| **L24** | Newborn Kalshi/PM market + book capture | 2026-08-20 → 2026-09-02 | **CLOSED, capture retained.** `com.janus.newborn` unloaded; collector removed. ~1.4 M book rows with raw ladders archived intact at `/Volumes/Kilos/janus/archive/newborn_L24_closed_2026-09-02/` (WAL checkpointed, 21.6 MB merged). Cross-venue crypto/PM, not sports. Kept as the **shape reference** for the sports capture store — reuse its schema, never its contents as a sports result. |
+
+Resuming any of these requires a **new row and a new forward clock**. The old clocks are spent:
+a forward eval whose collector stopped cannot be silently continued later, because the gap is
+indistinguishable from a period of no signal.
+
+**Method note, recorded because it changes how future forward rows must be run.** F2 shows that a
+registered forward evaluation can accrue nothing for six days while its row still reads `PENDING`.
+Pre-registration guarantees the *criteria* are honest; it guarantees nothing about whether the
+data is arriving. Forward rows from here carry an SLA in `ops/watchdog.py`, whose alerts are
+demonstrated firing against a fake target per `GATE_TO_LIVE.md` step 2.
