@@ -12,6 +12,7 @@ Not a node. Operational surface: it answers *"is this job healthy?"*, which noth
 | `arming_override.py` | Writes the signed arming override (GATE step 9): the operator's verbatim statement, runner and limits sha pins, caps, expiry. Refuses to overwrite without `--force`. |
 | `kalshi_live_proof.py` | GATE step 8 on Kalshi, tiny, through the same nodes a trade uses: dry run, `--arm`, `--settle`, `--check`. The operator runs it; the agent never passes `--arm`. |
 | `polymarket_live_proof.py` | GATE step 8 on Polymarket, tiny, the venue's first real order (no demo exists): dry run, `--arm`, `--settle`, `--check`. Needs the wallet key file (600) named by `JANUS_PM_WALLET_KEY_PATH` and an override whose statement names Polymarket. Matched is not settled: the fill counts once the trade is CONFIRMED on-chain. |
+| `kalshi_shards.py` | Kalshi exchange shards: `--show` prints the balance per shard and which shard each registered game series is on; `--move --to N --usd X` plans an intra-account transfer and sends it only with `--confirm` (the operator's). Collateral lives per shard since 2026-08-24; an order on an unfunded shard is refused `user_not_found`. |
 | `proof_check.py` | The post-proof checklist as code, shared by every venue's proof script: resting → canceled, IOC final, fees at the pin, balance delta, settled PnL arithmetic, reservation released. Reads the ledger read-only; never echoes an ack. |
 
 ## Why the start row exists

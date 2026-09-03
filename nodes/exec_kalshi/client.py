@@ -48,8 +48,14 @@ def sign(private_key, method: str, path: str, ts_ms: int | None = None) -> tuple
     return ts, base64.b64encode(sig).decode()
 
 
-def order_body(req: OrderRequest) -> dict:
-    """The v2 body. YES terms only: buy_no is an ask at 1 - price."""
+#: "Use -1 to require auto-routing by ticker" (Create Order V2). Never 0: 0 is a shard, and an order
+#: for a market on shard 3 posted to shard 0 is answered `user_not_found` (measured 2026-09-03).
+AUTO_ROUTE = -1
+
+
+def order_body(req: OrderRequest, exchange_index: int = AUTO_ROUTE) -> dict:
+    """The v2 body. YES terms only: buy_no is an ask at 1 - price. `exchange_index` is the market's
+    shard as its own record states it, or AUTO_ROUTE when that could not be read."""
     if req.side == "buy_yes":
         side, price = "bid", req.price
     else:
@@ -57,7 +63,7 @@ def order_body(req: OrderRequest) -> dict:
     return {"ticker": req.market_id, "side": side, "count": f"{req.contracts:.2f}",
             "price": f"{price:.4f}", "time_in_force": TIF[req.time_in_force],
             "self_trade_prevention_type": "taker_at_cross", "client_order_id": req.client_order_id,
-            "post_only": False, "cancel_order_on_pause": True}
+            "post_only": False, "cancel_order_on_pause": True, "exchange_index": int(exchange_index)}
 
 
 def _f(v, default=0.0) -> float:
@@ -90,6 +96,9 @@ class KalshiExecution:
     unconfirmed: int = 0
     last_error: str = ""
     _requests: dict[str, OrderRequest] = field(default_factory=dict)
+    #: ticker -> exchange_index, read once from the market record (KXMLBGAME sits on shard 3 since
+    #: 2026-08-24; basketball moves to 3 on 2026-09-10; the market record is the authority).
+    _shards: dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.client is None:
@@ -104,6 +113,23 @@ class KalshiExecution:
         return {"KALSHI-ACCESS-KEY": self.api_key, "KALSHI-ACCESS-TIMESTAMP": ts,
                 "KALSHI-ACCESS-SIGNATURE": sig, "Accept": "application/json"}
 
+    # ── the shard ────────────────────────────────────────────────────────
+    def shard_of(self, ticker: str) -> int:
+        """The market's `exchange_index` from GET /markets/{ticker}, cached; AUTO_ROUTE if unreadable.
+        Read BEFORE the first order on a ticker, never guessed: collateral lives per shard."""
+        if ticker in self._shards:
+            return self._shards[ticker]
+        path = f"{API}/markets/{ticker}"
+        try:
+            d = self.client.get_json(self.base_url + path, use_cache=False, headers=self._headers("GET", path))
+            m = d.get("market", d) if isinstance(d, dict) else {}
+            idx = int(m["exchange_index"]) if m.get("exchange_index") is not None else AUTO_ROUTE
+        except Exception as exc:  # noqa: BLE001
+            self.last_error = brief_error(exc)
+            idx = AUTO_ROUTE
+        self._shards[ticker] = idx
+        return idx
+
     # ── the order path ───────────────────────────────────────────────────
     def submit(self, req: OrderRequest, clearance) -> Ack:
         t = self.clock()
@@ -111,12 +137,13 @@ class KalshiExecution:
                          now_mono=self.mono(), hedge=req.hedge)
         if refused is not None:
             return refused
+        shard = self.shard_of(req.market_id)
         self.journal.pending(req, mode=self.mode.value, now=t)       # BEFORE the POST
         self._requests[req.client_order_id] = req
         path = f"{API}/portfolio/events/orders"
         self.submits += 1
         try:
-            d = self.client.post_json_once(self.base_url + path, order_body(req), headers=self._headers("POST", path))
+            d = self.client.post_json_once(self.base_url + path, order_body(req, shard), headers=self._headers("POST", path))
         except urllib.error.HTTPError as e:
             body = ""
             try:
@@ -240,13 +267,36 @@ class KalshiExecution:
         return out
 
     def balance(self) -> Balance | None:
+        """The member's available balance across every shard (the venue's default)."""
+        d = self._balance_payload()
+        return None if d is None else Balance(self.venue, _f(d.get("balance_dollars")), self.clock())
+
+    def balances_by_shard(self) -> dict[int, float] | None:
+        """exchange_index -> available USD, from `balance_breakdown` (cents, or `balance_dollars` when
+        the venue sends it). An order on a shard that holds less than its stake is refused by the
+        venue with `user_not_found`, so the caller checks this before it posts."""
+        d = self._balance_payload()
+        if d is None:
+            return None
+        out: dict[int, float] = {}
+        for row in d.get("balance_breakdown") or []:
+            try:
+                idx = int(row.get("exchange_index", 0))
+            except (TypeError, ValueError):
+                continue
+            usd = _f(row.get("balance_dollars")) if row.get("balance_dollars") is not None else _f(row.get("balance")) / 100.0
+            out[idx] = out.get(idx, 0.0) + usd
+        if not out:
+            out[0] = _f(d.get("balance_dollars"))
+        return out
+
+    def _balance_payload(self) -> dict | None:
         path = f"{API}/portfolio/balance"
         try:
-            d = self.client.get_json(self.base_url + path, use_cache=False, headers=self._headers("GET", path))
+            return self.client.get_json(self.base_url + path, use_cache=False, headers=self._headers("GET", path))
         except Exception as exc:  # noqa: BLE001
             self.last_error = brief_error(exc)
             return None
-        return Balance(self.venue, _f(d.get("balance_dollars")), self.clock())
 
     def cancel_all(self) -> int:
         path = f"{API}/portfolio/orders"

@@ -8,8 +8,8 @@
     <string>/Users/bernardodelrio/Code/Janus/ops/run_node.sh</string>
     <string>live_stream</string>
     <string>-m</string><string>grids.live_stream.grid</string>
-    <string>--leagues</string><string>mlb,nfl,nba,wnba,nhl</string>
-    <string>--pre-hours</string><string>2</string>
+    <string>--leagues</string><string>enabled</string>
+    <string>--pre-hours</string><string>6</string>
     <string>--discovery-period</string><string>300</string>
     <string>--report-period</string><string>60</string>
   </array>

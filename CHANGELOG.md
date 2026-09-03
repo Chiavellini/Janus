@@ -374,3 +374,10 @@ the runner sha, so nothing merges to main before that run).
 - **College football certifies.** Ledger L32: ESPN completed games (FBS + FCS, 2019 and 2021–2025)
   as the denominator, a cited table of 28 schedule changes as the numerator. 6 of 9,529 moved
   more than 48 h, 17 cancelled; FLOOR for FCS. `default_leagues()` adds cfb.
+- **Kalshi exchange shards.** The first armed proof was refused by the venue: `user_not_found`,
+  because baseball lives on exchange shard 3 since 2026-08-24 and collateral is per shard. The
+  adapter now reads each market's `exchange_index` once and sends it (or `-1`, auto-route, never a
+  silent 0); `balances_by_shard()` reads the breakdown; the proof refuses `SHARD_UNFUNDED` with the
+  move command; `ops/kalshi_shards.py` shows and moves collateral (`--confirm` is the operator's).
+- **The lane watches the enabled set.** `--leagues enabled` resolves to `default_leagues()`; the
+  plist uses it with a six-hour pre-game horizon instead of a stale five-league list.

@@ -44,7 +44,7 @@ from kernel.fetch import Client  # noqa: E402
 from kernel.redact import brief_error  # noqa: E402
 from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
 from nodes.cover.capacity import frontier  # noqa: E402
-from nodes.entities.leagues import LEAGUES  # noqa: E402
+from nodes.entities.leagues import LEAGUES, default_leagues  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, first_seen, record_events  # noqa: E402
 from nodes.slate.slate import next_transition, windows_for  # noqa: E402
 from nodes.execute.coordinator import Coordinator  # noqa: E402
@@ -366,11 +366,19 @@ def _runner_sha() -> str:
         return "unknown"
 
 
+def _leagues_arg(text: str) -> list[str]:
+    """'enabled' -> every registered league that lacks nothing today; otherwise the list as given."""
+    if text.strip() == "enabled":
+        return default_leagues()
+    return [x.strip() for x in text.split(",") if x.strip()]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--leagues", default=",".join(LEAGUES),
-                    help="registered leagues (nodes/entities/leagues.py); a league lacking a cited rule or "
-                         "reviewed templates blocks downstream, it is not filtered here")
+                    help="registered leagues (nodes/entities/leagues.py), or the word 'enabled' for the ones that "
+                         "lack nothing (default_leagues()); a named league lacking a cited rule or reviewed "
+                         "templates blocks downstream, it is not filtered here")
     ap.add_argument("--pre-hours", type=float, default=2.0)
     ap.add_argument("--db", type=Path, default=DB)
     ap.add_argument("--discovery-period", type=float, default=300.0)
@@ -389,7 +397,7 @@ def main() -> int:
     a = ap.parse_args()
 
     if a.self_test:
-        s = Supervisor([x.strip() for x in a.leagues.split(",") if x.strip()],
+        s = Supervisor(_leagues_arg(a.leagues),
                        pre_hours=a.pre_hours)
         slate = s.discover()
         print(f"live_stream selftest OK — {len(slate)} co-listed live games, "
@@ -409,7 +417,7 @@ def main() -> int:
     run_id = ambient or run_index.start("live_stream", argv=sys.argv[1:])
     owns_row = ambient is None
 
-    sup = Supervisor([x.strip() for x in a.leagues.split(",") if x.strip()],
+    sup = Supervisor(_leagues_arg(a.leagues),
                      pre_hours=a.pre_hours, db=a.db, max_book_age_s=a.max_book_age)
     sup.store = TupleStore(a.db)
     sup.opportunities = OpportunityStore(sup.store)

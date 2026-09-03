@@ -20,7 +20,12 @@ soccer name resolves.
 
 ## Now — what is left, and whose it is
 
-**Yours, because I am not permitted to place orders:**
+**Yours, because I am not permitted to place orders or move money:**
+0. **Fund Kalshi's shard 3.** Kalshi sharded its exchange (baseball on shard 3 since 2026-08-24;
+   basketball follows on 2026-09-10) and an order on an unfunded shard is refused `user_not_found`,
+   which is what the first armed proof met. `python3 ops/kalshi_shards.py --show`, then
+   `--move --to 3 --usd 20 --confirm`; the proof reads the market's shard and refuses
+   `SHARD_UNFUNDED` until the money is there.
 1. **The Kalshi proof on the production account.** The override is already written at the
    current main sha (`4c2e923`) and expires 2026-09-04T06:45Z. From the main checkout, with the
    credentials sourced: the dry run, then `--arm`, on any active two-sided `KXMLBGAME-*`; after

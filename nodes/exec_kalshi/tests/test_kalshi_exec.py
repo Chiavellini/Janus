@@ -29,8 +29,14 @@ class FakeClient:
         out = self.posts.pop(0)
         if isinstance(out, Exception): raise out
         return out
+    #: The market record the adapter reads once per ticker for its exchange shard; None = the venue
+    #: could not be read (the adapter then asks for auto-routing with -1).
+    market: dict | Exception | None = {"market": {"exchange_index": 3}}
     def get_json(self, url, *, params=None, use_cache=True, headers=None):
         self.calls.append(("GET", url, params, headers))
+        if "/markets/" in url:
+            if isinstance(self.market, Exception): raise self.market
+            return self.market or {}
         out = self.gets.pop(0)
         if isinstance(out, Exception): raise out
         return out
@@ -155,3 +161,30 @@ def test_the_key_never_reaches_a_log_field_and_the_mode_gate_holds(tmp_path):
     assert paper.submit(req(), clearance_for(tmp_path / "p")).raw_status == "MODE"
     with pytest.raises(ValueError):
         venue(tmp_path / "q", FakeClient(), mode=Mode.LIMITED_LIVE, base=DEMO_BASE)
+
+
+def test_every_order_carries_the_markets_exchange_shard_or_asks_for_auto_routing(tmp_path):
+    """Kalshi sharded its exchange; an order posted to the wrong shard is `user_not_found` (the first
+    armed proof, 2026-09-03). The shard is read from the market record once per ticker; unreadable
+    means -1 (require auto-routing by ticker), never a silent 0."""
+    fc = FakeClient(posts=[{"order": {"order_id": "k1", "status": "executed"}}, {"order": {"order_id": "k2", "status": "executed"}}])
+    v, _ = venue(tmp_path, fc)
+    v.submit(req(), clearance_for(tmp_path, mode=Mode.DEMO_EXECUTION))
+    v.submit(req(client_order_id="c2", opportunity_id="o2"), clearance_for(tmp_path, mode=Mode.DEMO_EXECUTION, opportunity_id="o2"))
+    posts = [c for c in fc.calls if c[0] == "POST"]
+    assert [c[2]["exchange_index"] for c in posts] == [3, 3]
+    assert sum(1 for c in fc.calls if c[0] == "GET" and "/markets/" in c[1]) == 1, "read once per ticker"
+    fc2 = FakeClient(posts=[{"order": {"order_id": "k3", "status": "executed"}}])
+    fc2.market = RuntimeError("venue down")
+    v2, _ = venue(tmp_path, fc2)
+    v2.submit(req(client_order_id="c3", opportunity_id="o3"), clearance_for(tmp_path, mode=Mode.DEMO_EXECUTION, opportunity_id="o3"))
+    assert [c[2]["exchange_index"] for c in fc2.calls if c[0] == "POST"] == [-1]
+
+
+def test_balances_by_shard_reads_the_breakdown_in_cents_or_dollars(tmp_path):
+    fc = FakeClient(gets=[{"balance_dollars": "61.24", "balance_breakdown": [{"exchange_index": 0, "balance": 4124},
+                                                                              {"exchange_index": 3, "balance_dollars": "20.00"}]},
+                          {"balance_dollars": "61.24"}])
+    v, _ = venue(tmp_path, fc)
+    assert v.balances_by_shard() == {0: 41.24, 3: 20.0}
+    assert v.balances_by_shard() == {0: 61.24}, "no breakdown: everything is on shard 0"

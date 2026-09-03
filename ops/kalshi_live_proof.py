@@ -127,6 +127,14 @@ def run_proof(a, venue_factory=None) -> int:
     if bal0 is None:
         print("balance could not be confirmed; refusing", file=sys.stderr)
         return 2
+    # Collateral lives per exchange shard (Kalshi sharded baseball on 2026-08-24). The market says
+    # which shard it is on; an order there is refused `user_not_found` unless that shard is funded.
+    shard, by_shard = venue.shard_of(a.ticker), venue.balances_by_shard() or {}
+    print(f"[shard  ] {a.ticker} is on exchange shard {shard}; balances by shard {by_shard} (total {bal0.available_usd:.2f})")
+    if shard >= 0 and by_shard.get(shard, 0.0) < stake:
+        print(f"SHARD_UNFUNDED: shard {shard} holds {by_shard.get(shard, 0.0):.2f}, the proof stakes {stake:.2f}. Move collateral first:\n"
+              f"  python3 ops/kalshi_shards.py --move --to {shard} --usd 20 --confirm", file=sys.stderr)
+        return 2
     ledger, breaker = ExposureLedger(store), LossBreaker(kill=kill)
     event_id = f"proof:{a.ticker}"
     cand = Candidate(f"proof:{uuid.uuid4().hex[:8]}", event_id, league, (("kalshi", float(a.contracts), ask),),
