@@ -50,35 +50,50 @@ class Reconciler:
     last_run_utc: float = 0.0
     drifted: list[str] = field(default_factory=list)
 
-    def once(self, now: float | None = None, mono: float | None = None) -> list[str]:
-        """One pass, synchronous. Returns the asset ids reconciled."""
+    def fetch_due(self, now: float | None = None) -> tuple[float, dict[str, tuple[list, list]]]:
+        """The network half: fetch every due replica's book. Safe in a worker thread; touches no
+        replica and no callback."""
         t = now or time.time()
-        m = mono if mono is not None else time.monotonic()
-        done = []
+        books: dict[str, tuple[list, list]] = {}
         for asset_id in due(self.stream.regs, t):
             try:
-                bids, asks = self.fetch(asset_id)
+                books[asset_id] = self.fetch(asset_id)
             except Exception as exc:  # noqa: BLE001 -- one failed fetch must not stop the pass
                 self.errors += 1
                 self.last_error = brief_error(exc)
-                continue
+        return t, books
+
+    def apply(self, books: dict[str, tuple[list, list]], *, now: float, mono: float | None = None) -> list[str]:
+        """The state half: adopt each fetched book and tell the poller. MUST run on the event-loop
+        thread: `on_update` records to the tuple store, whose sqlite connection belongs to that
+        thread (2026-09-03: run in the worker thread, every reconciled evaluation died on
+        ProgrammingError and was lost)."""
+        m = mono if mono is not None else time.monotonic()
+        done = []
+        for asset_id, (bids, asks) in books.items():
             for reg in self.stream.regs.get(asset_id, ()):
-                fault = reg.replica.reconcile(bids, asks, now=t, mono=m)
+                fault = reg.replica.reconcile(bids, asks, now=now, mono=m)
                 self.reconciles += 1
                 if fault is Fault.HASH_MISMATCH:
                     self.rest_drift += 1
                     self.drifted.append(asset_id)
                     self.drifted = self.drifted[-20:]
                 if reg.on_update:
-                    reg.on_update(asset_id, t)
+                    reg.on_update(asset_id, now)
             done.append(asset_id)
-        self.last_run_utc = t
+        self.last_run_utc = now
         return done
+
+    def once(self, now: float | None = None, mono: float | None = None) -> list[str]:
+        """One pass, synchronous, on the calling thread. Returns the asset ids reconciled."""
+        t, books = self.fetch_due(now)
+        return self.apply(books, now=t, mono=mono)
 
     async def run(self, stop: asyncio.Event) -> None:
         while not stop.is_set():
             try:
-                await asyncio.to_thread(self.once)
+                t, books = await asyncio.to_thread(self.fetch_due)
+                self.apply(books, now=t)
             except Exception as exc:  # noqa: BLE001
                 self.errors += 1
                 self.last_error = brief_error(exc)

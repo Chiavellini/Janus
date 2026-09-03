@@ -61,3 +61,41 @@ def test_a_failed_fetch_is_counted_and_the_pass_continues():
     rc = Reconciler(s, fetch)
     assert rc.once(now=T + 20) == ["b"]
     assert rc.errors == 1 and "503" in rc.last_error and calls == ["a", "b"]
+
+
+def test_run_fetches_off_the_loop_and_applies_on_it():
+    """The fetch may block in a worker thread; the adoption and the poller callback must not.
+    The callback records to sqlite, whose connection belongs to the loop's thread."""
+    import asyncio
+    import threading
+
+    s, reps = stream_with("a")
+    main = threading.get_ident()
+    threads = {}
+    stop = asyncio.Event()
+
+    def fetch(aid):
+        threads["fetch"] = threading.get_ident()
+        return [(0.40, 10)], [(0.45, 10)]
+
+    def on_update(m, t):
+        threads["apply"] = threading.get_ident()
+        stop.set()
+
+    s.regs["a"][0].on_update = on_update
+    reps["a"].verified_utc = 0.0                      # due now
+    rc = Reconciler(s, fetch, period_s=0.01)
+
+    async def go():
+        task = asyncio.create_task(rc.run(stop))
+        await asyncio.wait_for(stop.wait(), 5.0)
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+    asyncio.run(go())
+    assert threads["fetch"] != main, "the network half runs in a worker"
+    assert threads["apply"] == main, "the state half runs on the loop"
+    assert rc.reconciles == 1
