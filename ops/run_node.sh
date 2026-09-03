@@ -54,7 +54,7 @@ if [ -f "$LOG" ]; then
   if [ "$size" -gt "$MAXBYTES" ]; then mv -f "$LOG" "$LOG.1"; fi
 fi
 
-RUN_ID=$("$PY" ops/run_index.py start "$JOB" --pid $$ "$@")   # $$ = this wrapper, alive for the whole job
+RUN_ID=$("$PY" ops/run_index.py start --pid $$ "$JOB" "$@")   # $$ = this wrapper, alive for the whole job; the option precedes the job because the rest is REMAINDER
 if [ -z "$RUN_ID" ]; then
   echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') $JOB: ABORT -- no run row was written (ops/run_index.py start failed); a job the watchdog cannot see does not run" >> "$LOG"
   exit 70
