@@ -61,6 +61,9 @@ from nodes.venue_kalshi.books import KALSHI_BASE, fetch_kalshi_series, kalshi_bo
 from ops.proof_check import run_check  # noqa: E402
 
 PROOFS = Path("/Volumes/Kilos/janus/proofs")
+#: The proofs' own journal, ledger and reservations. Not the lane's file: the lane holds write locks on
+#: it for the length of a report period, and a proof must never wait on, or race, the observation lane.
+PROOF_DB = Path("/Volumes/Kilos/janus/tuples/proofs.sqlite")
 
 
 def _runner_sha() -> str:
@@ -244,7 +247,7 @@ def main() -> int:
     ap.add_argument("--arm", action="store_true", help="actually send; without it this is a dry run")
     ap.add_argument("--settle", help="a proof file to settle and reconcile")
     ap.add_argument("--check", help="a proof file to run the post-proof checklist over (no network)")
-    ap.add_argument("--db", type=Path, default=DEFAULT_DB)
+    ap.add_argument("--db", type=Path, default=PROOF_DB, help="the proofs' own database (journal, reservations); --check and --settle read the same file")
     a = ap.parse_args()
     if a.check:
         return run_check(a.check, a.db)

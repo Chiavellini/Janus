@@ -87,7 +87,10 @@ class TupleStore:
         if enforce_volume and not str(p).startswith("/Volumes/Kilos/"):
             raise ValueError("tuple data must live on /Volumes/Kilos, never the root disk")
         p.parent.mkdir(parents=True, exist_ok=True)
-        self.con = sqlite3.connect(str(p))
+        # The live lane holds write transactions on the shared file; a second writer (a proof, a
+        # settle) must wait for it, not die with "database is locked" (seen 2026-09-03 on the
+        # first armed proof attempt). 30 s is far longer than any lane transaction.
+        self.con = sqlite3.connect(str(p), timeout=30.0)
         self.con.execute("PRAGMA journal_mode=WAL")
         self.con.execute("PRAGMA synchronous=NORMAL")
         self.con.executescript(DDL)

@@ -33,7 +33,9 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)"
+#: A COMPLETE browser string. clob.polymarket.com (Cloudflare) answered 403 to the truncated
+#: "...(KHTML, like Gecko)" string on 2026-09-03 while curl's default and a full Safari string passed.
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15"
 DEFAULT_TIMEOUT = 40.0
 MAX_RETRIES = 4
 BASE_BACKOFF = 1.5
