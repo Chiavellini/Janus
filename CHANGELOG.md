@@ -355,3 +355,9 @@ the runner sha, so nothing merges to main before that run).
   through the token map, both matchers, the exact join and the slate. Every soccer pair blocks at
   `EVIDENCE_UNMEASURED` on per-competition postponement and cancellation rates. UCL waits on a club
   being one entity across competitions. Execution stays two-leg.
+- **NFL certifies.** Ledger L30 (L29 closed INCOMPLETE when its Friday gate met the scheduled São
+  Paulo games): nflverse denominator, a cited table of every schedule change 2015–2025 excluding
+  2020, strict >48 h, a completeness gate over Tue/Wed/Fri games. `nfl.postponed_gt48h_rate`
+  0.001515 (4 of 2,640), `nfl.cancelled_rate` 0.000379 (1). NFL now lacks nothing.
+- **College football registered** (FBS + FCS from ESPN, both texts pinned, NCAA no-tie rule cited);
+  blocks on `cfb.*` rates.

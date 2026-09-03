@@ -151,7 +151,11 @@ def test_the_registry_carries_l26_and_mlb_certifies_from_it():
     from nodes.settle_wedge.evidence import EVIDENCE
     assert EVIDENCE["mlb.postponed_gt2d_rate"].value == pytest.approx(10 / 2100, abs=1e-6)
     assert EVIDENCE["mlb.cancelled_rate"].value == 0.0
-    assert all(e.research_ref.startswith("research/sports/2026-09-02_mlb-settlement-wedge-rates") for e in EVIDENCE.values())
+    assert all(e.research_ref.startswith("research/sports/2026-09-02_mlb-settlement-wedge-rates")
+               for k, e in EVIDENCE.items() if k.startswith("mlb."))
+    assert all(e.research_ref.startswith("research/sports/2026-09-03_nfl-settlement-wedge-rates-v2")
+               for k, e in EVIDENCE.items() if k.startswith("nfl."))
+    assert set(EVIDENCE) == {"mlb.postponed_gt2d_rate", "mlb.cancelled_rate", "nfl.postponed_gt48h_rate", "nfl.cancelled_rate"}
     k, p = records()
     eq = certify(k, p, league="mlb")
     assert isinstance(eq, SettlementEquivalence)
@@ -182,8 +186,19 @@ def test_nfl_blocks_on_unmeasured_evidence_not_on_an_unknown_template():
                        participants=KALSHI_NFL_GAME_V1.sample_participants, retrieved_at=T)
     p = harvest_polymarket({"slug": "s", "description": POLYMARKET_NFL_GAME_V1.sample_text},
                            participants=POLYMARKET_NFL_GAME_V1.sample_participants, retrieved_at=T)
-    got = certify(k, p, league="nfl")
-    assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED" and got.context["evidence_key"].startswith("nfl.")
+    from nodes.settle_wedge import evidence
+    saved = dict(evidence.EVIDENCE)
+    try:
+        evidence.EVIDENCE.clear()                  # the world before L30: the templates match, the rates do not exist
+        got = certify(k, p, league="nfl")
+        assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED" and got.context["evidence_key"].startswith("nfl.")
+    finally:
+        evidence.EVIDENCE.update(saved)
+    # the registry (L30): 4 of 2,640 games moved more than 48 h, 1 cancelled
+    live = certify(k, p, league="nfl")
+    assert isinstance(live, SettlementEquivalence)
+    assert live.settlement_buffer([("kalshi", 0.30), ("polymarket", 0.70)]) == pytest.approx(
+        2 * (4 / 2640) * 0.70 + (1 / 2640) * 0.20, abs=1e-6)
     eq = certify(k, p, league="nfl", rates={"nfl.postponed_gt48h_rate": 0.001, "nfl.cancelled_rate": 0.0005})
     assert isinstance(eq, SettlementEquivalence)
     assert {v.dimension: v.outcome for v in eq.verdicts}["tie"] == "SAME", "both venues pay $0.50 a side: a full $1 cover"

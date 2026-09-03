@@ -1,0 +1,69 @@
+{
+  "cancelled_absent_from_nflverse": 1,
+  "completeness": {
+    "complete": false,
+    "problems": [],
+    "unexplained_odd_weekday_games": [
+      "2024 wk1 GB@PHI 2024-09-06 (Friday)",
+      "2025 wk1 KC@LAC 2025-09-05 (Friday)"
+    ]
+  },
+  "counts": {
+    "cancelled": 1,
+    "events_rows": 5,
+    "postponed_gt48h": 4
+  },
+  "denominator": 2640,
+  "nflverse_reg_rows": 2639,
+  "per_season": {
+    "2015": {},
+    "2016": {},
+    "2017": {
+      "postponed_gt48h": 1
+    },
+    "2018": {},
+    "2019": {},
+    "2021": {
+      "postponed_gt48h": 3
+    },
+    "2022": {
+      "cancelled": 1
+    },
+    "2023": {},
+    "2024": {},
+    "2025": {}
+  },
+  "rates": {
+    "cancelled_rate": 0.000379,
+    "postponed_gt48h_rate": 0.001515
+  },
+  "reg_rows_per_season": {
+    "2015": 256,
+    "2016": 256,
+    "2017": 256,
+    "2018": 256,
+    "2019": 256,
+    "2021": 272,
+    "2022": 271,
+    "2023": 272,
+    "2024": 272,
+    "2025": 272
+  },
+  "retrieved_at": "2026-09-03T17:20:39.774442+00:00",
+  "seasons": [
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "source": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+  "spec": "research/sports/2026-09-03_nfl-settlement-wedge-rates/spec.yaml",
+  "sufficient": true,
+  "verdict": "INCOMPLETE"
+}

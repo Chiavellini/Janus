@@ -33,16 +33,14 @@ def test_an_unregistered_league_still_blocks_at_the_rule():
 
 
 def test_enablement_names_what_each_league_lacks():
-    # MLB has a cited rule, both templates and measured rates; NFL lacks only the rates (ledger row
-    # pending); NBA/WNBA/NHL have a rule but no templates;
-    # Nothing here is a status: it is
+    # MLB and NFL lack nothing; soccer and college football wait on their rates. Nothing here is a status: it is
     # computed from the rule and template registries at call time.
     assert enablement("mlb") == []
-    assert enablement("nfl") == ["EVIDENCE_UNMEASURED:nfl.cancelled_rate", "EVIDENCE_UNMEASURED:nfl.postponed_gt48h_rate"]
+    assert enablement("nfl") == []                 # L30 registered both rates on 2026-09-03
     assert enablement("cfb") == ["EVIDENCE_UNMEASURED:cfb.cancelled_rate", "EVIDENCE_UNMEASURED:cfb.postponed_gt48h_rate"]
     for c in ("nba", "wnba", "nhl"):
         assert enablement(c) == ["NO_KALSHI_TEMPLATE", "NO_POLYMARKET_TEMPLATE"], c
     # soccer: rule cited, both templates reviewed 2026-09-03, rates unmeasured per competition
     for c in ("epl", "lal", "bun", "mls"):
         assert enablement(c) == [f"EVIDENCE_UNMEASURED:soccer.{c}.cancelled_rate", f"EVIDENCE_UNMEASURED:soccer.{c}.postponed_gt48h_rate"], c
-    assert default_leagues() == ["mlb"]
+    assert default_leagues() == ["mlb", "nfl"]

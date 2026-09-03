@@ -1,0 +1,56 @@
+experiment_id: "janus-sports-nfl-settlement-wedge-rates-v2-2026-09-03"
+supersedes: "snooping_ledger.md row L29 (INCOMPLETE: its Friday gate did not anticipate the scheduled Week 1 Friday games in Sao Paulo, 2024 GB@PHI and 2025 KC@LAC)"
+date_registered: "2026-09-03"
+track: "sports/settlement"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L30"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE RUN.
+purpose: >
+  Measure the two probabilities the NFL settlement wedge is priced with. nodes/settle_wedge rules
+  the Kalshi KXNFLGAME / Polymarket NFL game pair BOUNDED on two dimensions: a game not started
+  within 48 hours of its originally scheduled kickoff (Kalshi resolves to a fair market price;
+  Polymarket waits for the result) and a cancellation (Kalshi fair price; Polymarket 50-50).
+  Without a registered measurement both dimensions are UNKNOWN and every NFL cover blocks
+  (EVIDENCE_UNMEASURED). MLB's row (L26) read the league's own schedule API; the NFL has none that
+  keeps the original date, and ESPN drops a postponed game from its original date (L26), so this
+  row counts a denominator from nflverse and a numerator from a cited table of schedule changes,
+  with a mechanical completeness check between them.
+
+source:
+  denominator: "nflverse-data schedules release, games.csv (https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv), rows with game_type == REG in the window; cached once under /Volumes/Kilos/janus/catalog/nflverse/"
+  numerator: "events.csv in this directory: one row per regular-season game whose kickoff moved from its originally scheduled date, or which was cancelled, with the original and actual local kickoffs and a citation URL (NFL.com / team sites / ESPN / AP). Compiled 2026-09-03 from the sources cited per row and cross-checked against the Wikipedia list of canceled and rescheduled NFL games, the AP/Fox Sports list and Quirky Research's history. not_counted.csv lists same-date venue relocations, kept separate."
+  probe: "nflverse old_game_id is re-issued to the played date (PIT-TEN 2020 -> 2020102512) and the cancelled 2022 BUF-CIN game is absent (271 rows), so nflverse alone cannot supply the numerator; probed 2026-09-03 before registration."
+
+window:
+  seasons: [2015, 2016, 2017, 2018, 2019, 2021, 2022, 2023, 2024, 2025]
+  excluded: "2020, by the operator's decision (2026-09-03): the pandemic season carries most of the league's >48-hour moves and is not the regime the reserve prices; the exclusion makes the reserve SMALLER and is stated here rather than hidden."
+  game_type: "REG only"
+
+definitions:
+  game_unit: "one scheduled regular-season game; counted once"
+  denominator: "nflverse REG rows in the window plus every cancelled game in events.csv that nflverse omits"
+  postponed_gt48h: "actual kickoff minus originally scheduled kickoff, in absolute hours, strictly greater than 48.0 (a venue relocation on the same date and kickoff is 0 h and not counted)"
+  cancelled: "a game never completed and declared cancelled or no contest by the league, with no make-up"
+  rates: "postponed_gt48h_rate = postponed_gt48h / denominator; cancelled_rate = cancelled / denominator; registered verbatim, including zero"
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no look. No outcome is read."
+  - "Completeness gate: every nflverse REG game in the window played on a Tuesday or Wednesday, or on a Friday that is neither Black Friday nor a Week 1 game, must correspond to an events.csv row (a game on those weekdays is a rescheduled game, or a scheduled holiday or international game: Dec 24-26, Thanksgiving-week Friday and Week 1 Friday are excluded from the gate). Any unexplained game -> verdict INCOMPLETE and nothing is registered. The Week 1 exemption is the one change from L29, whose gate flagged the scheduled Friday games in Sao Paulo (2024 GB@PHI, 2025 KC@LAC)."
+  - "Every events.csv row must match exactly one nflverse REG row on (season, away, home) or be a cancellation absent from nflverse; otherwise INCOMPLETE."
+  - "Fewer than 2,000 games in the denominator -> INSUFFICIENT, nothing registered."
+  - "The numerator table pre-dates this registration and the rates it implies were foreseeable from it; the row is registered for the definitions, the gate and the audit trail, not for surprise."
+
+outputs:
+  rates: ["nfl.postponed_gt48h_rate", "nfl.cancelled_rate"]
+  evidence_registration: "nodes/settle_wedge/evidence.py, citing this spec"
+  files:
+    results: "research/sports/2026-09-03_nfl-settlement-wedge-rates-v2/results.json"
+    verdict: "research/sports/2026-09-03_nfl-settlement-wedge-rates-v2/verdict.md"
+
+what_this_does_not_establish:
+  - "Anything about 2020, or about a season with a pandemic-shaped schedule."
+  - "That the venues' rules texts are what they were on 2026-09-03; the templates are hashed and a change blocks."
+  - "Any edge. A reserve is a cost."

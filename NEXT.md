@@ -41,10 +41,8 @@ soccer name resolves.
    `soccer.<code>.cancelled_rate`): a registered row per competition with a data source that
    keeps the original fixture date (ESPN drops postponed games; the football-data / league
    fixture archives are the candidates). Until measured, soccer blocks by name.
-3. NFL rates, 2015–2019 and 2021–2025 (2020 excluded by decision): nflverse for the denominator,
-   a cited schedule-change table for the numerator, a completeness gate over Tue/Wed games.
-4. College football (`cfb`, two outcomes, ESPN `college-football`): register, cite the NCAA
-   overtime rule, harvest both texts (Kalshi's 48-hour clause is the NFL shape).
+3. ~~NFL rates~~ done (L30). ~~College football registration~~ done; its `cfb.*` rates need the
+   same shape of row (a cited schedule-change table over ESPN's college schedule).
 5. Three-leg execution: `nodes/execute/plan.py` plans two legs; a soccer cover is priced and
    recorded but not planned. Polymarket-first for two legs then the Kalshi hedge, or refuse.
 6. UCL and every non-ESPN competition (UFC, tennis, cricket, esports): a club or fighter as one

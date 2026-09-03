@@ -33,6 +33,7 @@ class Evidence:
 
 #: key -> Evidence. Filled ONLY from a registered measurement. See research/sports/.
 _L26 = "research/sports/2026-09-02_mlb-settlement-wedge-rates/spec.yaml"
+_L30 = "research/sports/2026-09-03_nfl-settlement-wedge-rates-v2/spec.yaml"
 EVIDENCE: dict[str, Evidence] = {
     "mlb.postponed_gt2d_rate": Evidence(
         "mlb.postponed_gt2d_rate", 0.004762, 2100,
@@ -45,6 +46,19 @@ EVIDENCE: dict[str, Evidence] = {
         "0 cancellations in 2100 games. Registered verbatim per the spec; the rule-of-three "
         "upper bound at this n is ~0.0014, and a re-measurement over more seasons is the honest way to "
         "raise it, not an edit here."),
+    "nfl.postponed_gt48h_rate": Evidence(
+        "nfl.postponed_gt48h_rate", 0.001515, 2640,
+        "nflverse games.csv REG rows (denominator) + cited schedule-change table (numerator), seasons "
+        "2015-2019 and 2021-2025; 2020 excluded by the operator's decision", "2026-09-03", _L30,
+        "4 of 2640 games started more than 48 h after the original kickoff (2017 TB@MIA, 2021 LV@CLE at 48.5 h, "
+        "SEA@LA, WAS@PHI); strict >48.0 h; completeness gate over Tue/Wed/Fri games passed. With 2020 the "
+        "count would be far higher: the exclusion is stated, not hidden."),
+    "nfl.cancelled_rate": Evidence(
+        "nfl.cancelled_rate", 0.000379, 2640,
+        "nflverse games.csv REG rows (denominator) + cited schedule-change table (numerator), seasons "
+        "2015-2019 and 2021-2025", "2026-09-03", _L30,
+        "1 of 2640: 2022 week 17 BUF@CIN, suspended in the first quarter and declared cancelled; the game is "
+        "absent from nflverse and added to the denominator."),
 }
 
 
