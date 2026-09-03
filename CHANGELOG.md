@@ -386,3 +386,35 @@ the runner sha, so nothing merges to main before that run).
   Premiership, Belgian Pro League), Gamma events pulled by tag id where the slug is not the sport
   code. L35 measures the Championship, League One and Serie A with L33's proxy (FLOOR); the other
   five have no openfootball archive and block by name. `default_leagues()` is nine leagues.
+
+## 2026-09-03 (night) — the lane was flapping, and the watchdog could not see it
+
+Found on taking the handoff. `python3 ops/watchdog.py` said "all registered jobs healthy" while
+both sockets reconnected five to six times a minute (eighteen to twenty a minute for two hours in
+the afternoon). Nothing crashed, so nothing alerted.
+
+- **The opportunity state machine could not move between blocks.** `TRANSITIONS` was built by
+  reading itself mid-loop, so `BLOCKED_MATCH` (the first block, and the default for any unknown
+  refusal) could reach no other block. A disconnect turns every evaluation `NOT_SYNCED`, the store
+  tried `BLOCKED_MATCH -> BLOCKED_STALE`, `IllegalTransition` escaped the socket callback, the
+  transport's blanket handler tore the socket down, resubscribed, and the first frame raised
+  again. 3,302 such lines today. The block set is now fixed before the loop; every block reaches
+  every other.
+- **A record error can no longer reach the socket.** The supervisor's callback runs inside the
+  venue's receive loop; it now catches, counts per (game, exception) and says so once, the same
+  doctrine `_execute` already had. A reconnect now also counts in the stream's `errors`, so
+  `socket_health.errors` climbs with it.
+- **Capacity was never sized.** The grid called `frontier(exhaustive=...)`; the keyword is
+  `proof=`. Every `PROFITABLE_UNEXECUTED` print today ended `(capacity failed: TypeError)` and no
+  frontier row was written. Fixed; the size frontier lands beside the record again.
+- **The lane now honours the arming override's caps.** `resolve_mode()` returned them and the
+  grid dropped them; only the proof scripts checked `CAP_STAKE`. `clear()` refuses a
+  capital-risking order without caps (`NO_CAPS`), beyond the stake (`CAP_STAKE`), beyond the
+  contracts (`CAP_CONTRACTS`), and beyond the day (`CAP_DAY_NOTIONAL`, from the ledger's
+  reservations since 00:00 UTC, released or not). PAPER ignores caps. Not changed:
+  `nodes/risk/limits.toml` lists no per-league cap for cfb or any soccer league, so the ledger
+  refuses those at `LEAGUE_EXPOSURE` until the operator adds rows.
+- **Two socket alarms in the watchdog**, both demonstrated firing in `--selftest`:
+  `SOCKET_FLAPPING` (five or more reconnects or connect flips over the last fifteen health rows)
+  and `SOCKET_ERROR` (the last error names one of our own exception classes and the socket was
+  seen down). Against tonight's live store the second fires on both venues.
