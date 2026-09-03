@@ -4,57 +4,64 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-03, after P9 of the v1 plan.
+Updated 2026-09-03, evening, on branch `claude/system-build-handoff-c80a2b` (not yet merged: the
+arming override pins the runner sha, and nothing merges to main until the armed Kalshi proof has
+written its file).
 
 ## Done
 
-Substrate (git, watchdog, visible suite, node grid). The streaming lane: two shared sockets, book
-replicas with liveness ≠ freshness, one actor per game, the size frontier. Exhaustiveness as an
-unforgeable proof. **P0–P3 of the v1 plan** (2026-09-02/03): fees from the venues' own payloads;
-the vocabulary enums; raw-frame capture and a replay whose parity against live is zero mismatches
-on real traffic; provenance and server time on every book; one Kalshi subscription per socket
-with per-sid sequencing; a REST backstop for quiet Polymarket books; the complementary NO ladder
-streamed; `nodes/settle_wedge` — settlement equivalence as a second proof, priced from a measured
-rate (ledger L26), certified live on real MLB text; `CanonicalKey` as the join key; `nodes/risk` —
-limits, kill files, the latching breaker, the exposure ledger, the `RiskClearance` token and the
-mode gate, with three watchdog alarms; the total-cost model (per-level fills, min order, balance,
-fixed cost, a labelled slippage term) and the `Opportunity` record with persisted frontiers; the
-order path (`kernel/execution_protocol`, `nodes/execution`, `exec_kalshi`, `exec_polymarket`), disarmed:
-journal before the wire, no retry after an ambiguous send, a `RiskClearance` on every submit; the
-coordinator (`nodes/execute`, Polymarket first, Kalshi hedge, every transition persisted) and
-`nodes/reconcile`; `grids/live_stream --mode PAPER_EXECUTION` runs the machine against live books;
-offline execution over captured frames; settlement-result ingestion; the 48 h registry with tiers,
-wake/drain and a registry alarm. Everything in the plan that code alone can deliver is delivered.
+Substrate, the streaming lane, exhaustiveness as a proof, P0–P9 of the v1 plan (see
+`CHANGELOG.md`). Today: the post-proof checklist as code (`ops/proof_check.py`, `--check`); the
+co-listing census (ledger L28, `nodes/discovery/census.py`, daily under `com.janus.census`); the
+league registry as one table (`nodes/entities/leagues.py`, `enablement()`); three-way soccer
+(epl, lal, bun, mls) carried through as a third outcome with the rule cited and both venues'
+texts reviewed, blocking only on unmeasured rates. Entities re-seeded for nine leagues; every
+soccer name resolves.
 
 ## Now — what is left, and whose it is
 
-Done since the merge: NFL templates reviewed and the tie rule cited; slippage measured (L27) and
-registered; the Polymarket client installed; real-order modes wired into the grid.
-
 **Yours, because I am not permitted to place orders:**
-1. **The Kalshi proof on the production account** (demo waived, your decision, logged in GATE):
-   write the override with `ops/arming_override.py`, dry-run `ops/kalshi_live_proof.py --ticker …`,
-   then `--arm`. Two contracts by default. `--settle` after the game reconciles PnL and balance.
-2. **A funded Polymarket wallet.** Its private key in a 600-mode file named by
-   `JANUS_PM_WALLET_KEY_PATH` (never in `JANUS_CREDS`); `JANUS_PM_FUNDER` / `JANUS_PM_SIGNATURE_TYPE`
-   if a proxy wallet.
-3. **The $5 fills and the arming override** (`kill/arming_override.json`: your verbatim statement,
-   `signed_by`, mode, runner and limits shas, caps, expiry). Real-money orders are yours to
-   authorise; the coordinator then runs them under `LIMITED_LIVE`.
-4. **Approval to start Ashburn** (billable). Another agent has begun provisioning in `infra/`.
+1. **The Kalshi proof on the production account.** The override is already written at the
+   current main sha (`4c2e923`) and expires 2026-09-04T06:45Z. From the main checkout, with the
+   credentials sourced: the dry run, then `--arm`, on any active two-sided `KXMLBGAME-*`; after
+   the game, `--settle <file>`; then `--check <file>` (on this branch, or after the merge).
+   If it slips past the expiry, rewrite the override with `--force` (HANDOFF.md).
+2. **The merge.** After the armed run: `git merge --ff-only claude/system-build-handoff-c80a2b`
+   on main, `launchctl kickstart -k gui/$(id -u)/com.janus.live-stream`, and load
+   `ops/com.janus.census.plist` so the census runs daily (`launchctl bootstrap gui/$(id -u) …`).
+3. **A funded Polymarket wallet** (key file 600, `JANUS_PM_WALLET_KEY_PATH`), and a new override
+   whose statement names Polymarket, when the PM proof script exists (below).
+4. **Approval to start Ashburn** (billable). Another agent's `infra/` work is on main, uncommitted.
+
+**Mine, in order (the operator's decision: coverage first):**
+1. The census runs six more days; the rank from the median decides the unblock order
+   (`nodes/settle_wedge/README.md`, "Unblocking a competition"). Day one says La Liga, college
+   football, EPL, UFC, EFL Championship — and CS2/LoL where the join is weak.
+2. Per-competition bounded rates for soccer (`soccer.<code>.postponed_gt48h_rate`,
+   `soccer.<code>.cancelled_rate`): a registered row per competition with a data source that
+   keeps the original fixture date (ESPN drops postponed games; the football-data / league
+   fixture archives are the candidates). Until measured, soccer blocks by name.
+3. NFL rates, 2015–2019 and 2021–2025 (2020 excluded by decision): nflverse for the denominator,
+   a cited schedule-change table for the numerator, a completeness gate over Tue/Wed games.
+4. College football (`cfb`, two outcomes, ESPN `college-football`): register, cite the NCAA
+   overtime rule, harvest both texts (Kalshi's 48-hour clause is the NFL shape).
+5. Three-leg execution: `nodes/execute/plan.py` plans two legs; a soccer cover is priced and
+   recorded but not planned. Polymarket-first for two legs then the Kalshi hedge, or refuse.
+6. UCL and every non-ESPN competition (UFC, tennis, cricket, esports): a club or fighter as one
+   entity across competitions, and a `venue_structured` anchor with its own blind gold file.
+7. The Polymarket proof script (`ops/polymarket_live_proof.py`), sharing `ops/proof_check.py`.
+8. The generic verifier for threshold/date events, recovered from `5eac384^` into
+   `nodes/match_generic/`, behind a pre-declared precision bar over its blind gold set.
 
 **Time:** shadow evidence accrues under launchd; re-run L27 after a week of NFL traffic.
-**Code, when data allows:** an NFL postponement/cancellation rate (a registered row) unblocks NFL;
-NHL waits for Kalshi to list.
 
 ## Not now, deliberately
 
-Any order path before `nodes/risk` exists. Ashburn/EC2 before everything is proven locally.
-`venue_cloudbet` (acceptance before pricing makes its leg a naked directional bet) and
-`venue_sxbet` (size convention unverified against a fill). Makers on Polymarket (`rebateRate`
-semantics unverified). The `kernel/grid.py` typed-faults runtime: dropped in favour of the enums.
+Any order before the risk node clears it. Ashburn before everything is proven locally.
+`venue_cloudbet`, `venue_sxbet`, makers on Polymarket. Registering a league by editing a flag:
+a league trades only when the rule, both templates and every bounded rate exist.
 
 ## The question that actually matters
 
-Unchanged: **what is the distribution of cover cost**, per league and quantity, with every blocked
-reason kept distinct. Capture, replay and a CDF answer it, under a new pre-registered row.
+Unchanged: **what is the distribution of cover cost**, per competition and quantity, with every
+blocked reason kept distinct — now over every competition the census says both venues list.

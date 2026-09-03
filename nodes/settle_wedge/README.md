@@ -72,3 +72,28 @@ fill price, summed over bounded dimensions. It is not an expectation; it is a re
 `tests/test_settle_wedge.py` — the verbatim templates hash to the registered ones, a reworded
 template blocks, each block code is reachable, the buffer arithmetic, the composite proof refuses
 mismatched leagues, the audit tables are append-on-change.
+
+## Unblocking a competition (the workflow, 2026-09-03)
+
+Every competition trades only when three registries agree, and each step is a file a reader can
+audit. In census order (`research/sports/2026-09-03_co-listing-census/`, ledger L28):
+
+1. **Register the league** — one row in `nodes/entities/leagues.py` (Kalshi series, Polymarket tag
+   and slug prefix, ESPN path or a `venue_structured` anchor, outcome cardinality). Re-seed the
+   entity tables (`python3 -m nodes.entities.seed`); add `aliases_manual.csv` rows for the names a
+   venue renders differently from ESPN (`unresolved.csv` lists them with counts).
+2. **Cite the rule** — `nodes/rules_exhaustive/rules.py`: the sport's own law that makes the outcome
+   set a partition, with the period both venues settle on. Uncited blocks; wrong count blocks.
+3. **Harvest and review both texts** — read one live market's `rules_primary`/`rules_secondary`
+   (Kalshi) and `description` (Polymarket), record them VERBATIM as `Template`s in `policy.py`
+   with the participant names to strip, and rule on the twelve dimensions in `PAIR_POLICY`.
+   Kalshi names the competition in its sentence (one template per competition); Polymarket's
+   soccer text does not (one template for every soccer league).
+4. **Measure every BOUNDED rate** — a `research/sports/…` row registered before the run, a
+   results file, a verdict, then the `Evidence` entry in `evidence.py` citing the row. Until then
+   the pair blocks at `EVIDENCE_UNMEASURED` and `nodes/entities/leagues.enablement()` says so.
+5. **Certify on a fixture pair** in tests, then the league runs unasked (`default_leagues()`).
+
+Soccer (epl, lal, bun, mls) sits at step 4 on 2026-09-03: keys `soccer.<code>.postponed_gt48h_rate`
+and `soccer.<code>.cancelled_rate`. NFL sits at step 4 too (`nfl.postponed_gt48h_rate`,
+`nfl.cancelled_rate`). NBA/WNBA/NHL sit at step 3. UCL and every non-ESPN competition sit at step 1.

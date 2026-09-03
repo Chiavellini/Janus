@@ -1,7 +1,6 @@
 league,alias,entity_id,source
 bun,1. FC Union Berlin,bun:ger.fc_union_berlin,espn
 bun,1. FC Union Berlin 1. FC Union Berlin,bun:ger.fc_union_berlin,espn
-bun,Augsburg,bun:ger.fc_augsburg,espn
 bun,B04,bun:ger.leverkusen,espn
 bun,BMG,bun:ger.borussia_mgladbach,espn
 bun,Bayer Leverkusen,bun:ger.leverkusen,espn
@@ -20,6 +19,7 @@ bun,ELV,bun:ger.sv_07_elversberg,espn
 bun,Eintracht Frankfurt,bun:ger.frankfurt,espn
 bun,Eintracht Frankfurt Eintracht Frankfurt,bun:ger.frankfurt,espn
 bun,Elversberg,bun:ger.sv_07_elversberg,espn
+bun,FC Augsburg,bun:ger.fc_augsburg,espn
 bun,FC Augsburg FC Augsburg,bun:ger.fc_augsburg,espn
 bun,FC Cologne,bun:ger.1_fc_kln,espn
 bun,FC Cologne FC Cologne,bun:ger.1_fc_kln,espn
@@ -84,6 +84,7 @@ bun,ger.stuttgart,bun:ger.stuttgart,espn
 bun,ger.sv_07_elversberg,bun:ger.sv_07_elversberg,espn
 bun,ger.tsg_hoffenheim,bun:ger.tsg_hoffenheim,espn
 bun,ger.werder_bremen,bun:ger.werder_bremen,espn
+epl,AFC Bournemouth,epl:eng.bournemouth,espn
 epl,AFC Bournemouth AFC Bournemouth,epl:eng.bournemouth,espn
 epl,ARS,epl:eng.arsenal,espn
 epl,AVL,epl:eng.aston_villa,espn
@@ -94,7 +95,6 @@ epl,Aston Villa Aston Villa,epl:eng.aston_villa,espn
 epl,BHA,epl:eng.brighton,espn
 epl,BOU,epl:eng.bournemouth,espn
 epl,BRE,epl:eng.brentford,espn
-epl,Bournemouth,epl:eng.bournemouth,espn
 epl,Brentford,epl:eng.brentford,espn
 epl,Brentford Brentford,epl:eng.brentford,espn
 epl,Brighton,epl:eng.brighton,espn
@@ -269,13 +269,13 @@ mlb,Astros,mlb:houston-astros,espn
 mlb,Athletics,mlb:athletics,espn
 mlb,Athletics Athletics,mlb:athletics,espn
 mlb,Atlanta,mlb:atlanta-braves,espn
-mlb,Atlanta Braves,mlb:atlanta-braves,espn
 mlb,BAL,mlb:baltimore-orioles,espn
 mlb,BOS,mlb:boston-red-sox,espn
 mlb,Baltimore,mlb:baltimore-orioles,espn
 mlb,Baltimore Orioles,mlb:baltimore-orioles,espn
 mlb,Blue Jays,mlb:toronto-blue-jays,espn
 mlb,Boston,mlb:boston-red-sox,espn
+mlb,Boston Red Sox,mlb:boston-red-sox,espn
 mlb,Braves,mlb:atlanta-braves,espn
 mlb,Brewers,mlb:milwaukee-brewers,espn
 mlb,CHC,mlb:chicago-cubs,espn
@@ -286,12 +286,12 @@ mlb,COL,mlb:colorado-rockies,espn
 mlb,Cardinals,mlb:st-louis-cardinals,espn
 mlb,Chicago,mlb:chicago-cubs,espn
 mlb,Chicago,mlb:chicago-white-sox,espn
-mlb,Chicago Cubs,mlb:chicago-cubs,espn
-mlb,Chicago White Sox,mlb:chicago-white-sox,espn
 mlb,Cincinnati,mlb:cincinnati-reds,espn
+mlb,Cincinnati Reds,mlb:cincinnati-reds,espn
 mlb,Cleveland,mlb:cleveland-guardians,espn
 mlb,Cleveland Guardians,mlb:cleveland-guardians,espn
 mlb,Colorado,mlb:colorado-rockies,espn
+mlb,Colorado Rockies,mlb:colorado-rockies,espn
 mlb,Cubs,mlb:chicago-cubs,espn
 mlb,DET,mlb:detroit-tigers,espn
 mlb,Detroit,mlb:detroit-tigers,espn
@@ -301,6 +301,7 @@ mlb,Giants,mlb:san-francisco-giants,espn
 mlb,Guardians,mlb:cleveland-guardians,espn
 mlb,HOU,mlb:houston-astros,espn
 mlb,Houston,mlb:houston-astros,espn
+mlb,Houston Astros,mlb:houston-astros,espn
 mlb,KC,mlb:kansas-city-royals,espn
 mlb,Kansas City,mlb:kansas-city-royals,espn
 mlb,Kansas City Royals,mlb:kansas-city-royals,espn
@@ -308,7 +309,7 @@ mlb,LAA,mlb:los-angeles-angels,espn
 mlb,LAD,mlb:los-angeles-dodgers,espn
 mlb,Los Angeles,mlb:los-angeles-angels,espn
 mlb,Los Angeles,mlb:los-angeles-dodgers,espn
-mlb,Los Angeles Dodgers,mlb:los-angeles-dodgers,espn
+mlb,Los Angeles Angels,mlb:los-angeles-angels,espn
 mlb,MIA,mlb:miami-marlins,espn
 mlb,MIL,mlb:milwaukee-brewers,espn
 mlb,MIN,mlb:minnesota-twins,espn
@@ -316,6 +317,7 @@ mlb,Mariners,mlb:seattle-mariners,espn
 mlb,Marlins,mlb:miami-marlins,espn
 mlb,Mets,mlb:new-york-mets,espn
 mlb,Miami,mlb:miami-marlins,espn
+mlb,Miami Marlins,mlb:miami-marlins,espn
 mlb,Milwaukee,mlb:milwaukee-brewers,espn
 mlb,Minnesota,mlb:minnesota-twins,espn
 mlb,NYM,mlb:new-york-mets,espn
@@ -332,7 +334,6 @@ mlb,Philadelphia,mlb:philadelphia-phillies,espn
 mlb,Phillies,mlb:philadelphia-phillies,espn
 mlb,Pirates,mlb:pittsburgh-pirates,espn
 mlb,Pittsburgh,mlb:pittsburgh-pirates,espn
-mlb,Pittsburgh Pirates,mlb:pittsburgh-pirates,espn
 mlb,Rangers,mlb:texas-rangers,espn
 mlb,Rays,mlb:tampa-bay-rays,espn
 mlb,Red Sox,mlb:boston-red-sox,espn
@@ -344,8 +345,8 @@ mlb,SEA,mlb:seattle-mariners,espn
 mlb,SF,mlb:san-francisco-giants,espn
 mlb,STL,mlb:st-louis-cardinals,espn
 mlb,San Diego,mlb:san-diego-padres,espn
-mlb,San Diego Padres,mlb:san-diego-padres,espn
 mlb,San Francisco,mlb:san-francisco-giants,espn
+mlb,San Francisco Giants,mlb:san-francisco-giants,espn
 mlb,Seattle,mlb:seattle-mariners,espn
 mlb,Seattle Mariners,mlb:seattle-mariners,espn
 mlb,St. Louis,mlb:st-louis-cardinals,espn
@@ -364,18 +365,17 @@ mlb,Washington,mlb:washington-nationals,espn
 mlb,White Sox,mlb:chicago-white-sox,espn
 mlb,Yankees,mlb:new-york-yankees,espn
 mlb,arizona diamondbacks,mlb:arizona-diamondbacks,espn
-mlb,boston red sox,mlb:boston-red-sox,espn
-mlb,cincinnati reds,mlb:cincinnati-reds,espn
-mlb,colorado rockies,mlb:colorado-rockies,espn
+mlb,atlanta braves,mlb:atlanta-braves,espn
+mlb,chicago cubs,mlb:chicago-cubs,espn
+mlb,chicago white sox,mlb:chicago-white-sox,espn
 mlb,detroit tigers,mlb:detroit-tigers,espn
-mlb,houston astros,mlb:houston-astros,espn
-mlb,los angeles angels,mlb:los-angeles-angels,espn
-mlb,miami marlins,mlb:miami-marlins,espn
+mlb,los angeles dodgers,mlb:los-angeles-dodgers,espn
 mlb,milwaukee brewers,mlb:milwaukee-brewers,espn
 mlb,minnesota twins,mlb:minnesota-twins,espn
 mlb,new york yankees,mlb:new-york-yankees,espn
 mlb,philadelphia phillies,mlb:philadelphia-phillies,espn
-mlb,san francisco giants,mlb:san-francisco-giants,espn
+mlb,pittsburgh pirates,mlb:pittsburgh-pirates,espn
+mlb,san diego padres,mlb:san-diego-padres,espn
 mlb,tampa bay rays,mlb:tampa-bay-rays,espn
 mlb,texas rangers,mlb:texas-rangers,espn
 mlb,washington nationals,mlb:washington-nationals,espn
@@ -384,7 +384,7 @@ mls,ATX,mls:austin_fc,espn
 mls,Atlanta,mls:usa.atlanta_united_fc,espn
 mls,Atlanta United FC,mls:usa.atlanta_united_fc,espn
 mls,Atlanta United FC Atlanta United FC,mls:usa.atlanta_united_fc,espn
-mls,Austin FC,mls:austin_fc,espn
+mls,Austin,mls:austin_fc,espn
 mls,Austin FC Austin FC,mls:austin_fc,espn
 mls,CF Montréal,mls:usa.usl.1.montreal,espn
 mls,CF Montréal CF Montréal,mls:usa.usl.1.montreal,espn
@@ -393,12 +393,11 @@ mls,CIN,mls:fc_cincinnati,espn
 mls,CLB,mls:usa.columbus,espn
 mls,CLT,mls:charlotte_fc,espn
 mls,COL,mls:usa.colorado,espn
-mls,Charlotte,mls:charlotte_fc,espn
+mls,Charlotte FC,mls:charlotte_fc,espn
 mls,Charlotte FC Charlotte FC,mls:charlotte_fc,espn
 mls,Chicago,mls:usa.chicago,espn
 mls,Chicago Fire FC,mls:usa.chicago,espn
 mls,Chicago Fire FC Chicago Fire FC,mls:usa.chicago,espn
-mls,Cincinnati,mls:fc_cincinnati,espn
 mls,Colorado,mls:usa.colorado,espn
 mls,Colorado Rapids,mls:usa.colorado,espn
 mls,Colorado Rapids Colorado Rapids,mls:usa.colorado,espn
@@ -409,6 +408,7 @@ mls,D.C. United,mls:usa.dc_united,espn
 mls,D.C. United D.C. United,mls:usa.dc_united,espn
 mls,DAL,mls:usa.dallas,espn
 mls,DC,mls:usa.dc_united,espn
+mls,FC Cincinnati,mls:fc_cincinnati,espn
 mls,FC Cincinnati FC Cincinnati,mls:fc_cincinnati,espn
 mls,FC Dallas,mls:usa.dallas,espn
 mls,FC Dallas FC Dallas,mls:usa.dallas,espn
@@ -467,7 +467,7 @@ mls,SJ,mls:usa.san_jose,espn
 mls,SKC,mls:usa.kansas_city,espn
 mls,STL,mls:st._louis_city_sc,espn
 mls,Salt Lake,mls:usa.real_salt_lake,espn
-mls,San Diego FC,mls:san_diego_fc,espn
+mls,San Diego,mls:san_diego_fc,espn
 mls,San Diego FC San Diego FC,mls:san_diego_fc,espn
 mls,San Jose,mls:usa.san_jose,espn
 mls,San Jose Earthquakes,mls:usa.san_jose,espn
@@ -520,6 +520,7 @@ mls,usa.vancouver,mls:usa.vancouver,espn
 nba,76ers,nba:philadelphia-76ers,espn
 nba,ATL,nba:atlanta-hawks,espn
 nba,Atlanta,nba:atlanta-hawks,espn
+nba,Atlanta Hawks,nba:atlanta-hawks,espn
 nba,BKN,nba:brooklyn-nets,espn
 nba,BOS,nba:boston-celtics,espn
 nba,Boston,nba:boston-celtics,espn
@@ -533,10 +534,9 @@ nba,CLE,nba:cleveland-cavaliers,espn
 nba,Cavaliers,nba:cleveland-cavaliers,espn
 nba,Celtics,nba:boston-celtics,espn
 nba,Charlotte,nba:charlotte-hornets,espn
+nba,Charlotte Hornets,nba:charlotte-hornets,espn
 nba,Chicago,nba:chicago-bulls,espn
-nba,Chicago Bulls,nba:chicago-bulls,espn
 nba,Cleveland,nba:cleveland-cavaliers,espn
-nba,Cleveland Cavaliers,nba:cleveland-cavaliers,espn
 nba,Clippers,nba:la-clippers,espn
 nba,DAL,nba:dallas-mavericks,espn
 nba,DEN,nba:denver-nuggets,espn
@@ -544,8 +544,8 @@ nba,DET,nba:detroit-pistons,espn
 nba,Dallas,nba:dallas-mavericks,espn
 nba,Dallas Mavericks,nba:dallas-mavericks,espn
 nba,Denver,nba:denver-nuggets,espn
+nba,Denver Nuggets,nba:denver-nuggets,espn
 nba,Detroit,nba:detroit-pistons,espn
-nba,Detroit Pistons,nba:detroit-pistons,espn
 nba,GS,nba:golden-state-warriors,espn
 nba,Golden State,nba:golden-state-warriors,espn
 nba,Grizzlies,nba:memphis-grizzlies,espn
@@ -554,6 +554,7 @@ nba,Hawks,nba:atlanta-hawks,espn
 nba,Heat,nba:miami-heat,espn
 nba,Hornets,nba:charlotte-hornets,espn
 nba,Houston,nba:houston-rockets,espn
+nba,Houston Rockets,nba:houston-rockets,espn
 nba,IND,nba:indiana-pacers,espn
 nba,Indiana,nba:indiana-pacers,espn
 nba,Indiana Pacers,nba:indiana-pacers,espn
@@ -565,7 +566,6 @@ nba,LAC,nba:la-clippers,espn
 nba,LAL,nba:los-angeles-lakers,espn
 nba,Lakers,nba:los-angeles-lakers,espn
 nba,Los Angeles,nba:los-angeles-lakers,espn
-nba,Los Angeles Lakers,nba:los-angeles-lakers,espn
 nba,MEM,nba:memphis-grizzlies,espn
 nba,MIA,nba:miami-heat,espn
 nba,MIL,nba:milwaukee-bucks,espn
@@ -573,23 +573,19 @@ nba,MIN,nba:minnesota-timberwolves,espn
 nba,Magic,nba:orlando-magic,espn
 nba,Mavericks,nba:dallas-mavericks,espn
 nba,Memphis,nba:memphis-grizzlies,espn
-nba,Memphis Grizzlies,nba:memphis-grizzlies,espn
 nba,Miami,nba:miami-heat,espn
 nba,Milwaukee,nba:milwaukee-bucks,espn
-nba,Milwaukee Bucks,nba:milwaukee-bucks,espn
 nba,Minnesota,nba:minnesota-timberwolves,espn
+nba,Minnesota Timberwolves,nba:minnesota-timberwolves,espn
 nba,NO,nba:new-orleans-pelicans,espn
 nba,NY,nba:new-york-knicks,espn
 nba,Nets,nba:brooklyn-nets,espn
 nba,New Orleans,nba:new-orleans-pelicans,espn
-nba,New Orleans Pelicans,nba:new-orleans-pelicans,espn
 nba,New York,nba:new-york-knicks,espn
-nba,New York Knicks,nba:new-york-knicks,espn
 nba,Nuggets,nba:denver-nuggets,espn
 nba,OKC,nba:oklahoma-city-thunder,espn
 nba,ORL,nba:orlando-magic,espn
 nba,Oklahoma City,nba:oklahoma-city-thunder,espn
-nba,Oklahoma City Thunder,nba:oklahoma-city-thunder,espn
 nba,Orlando,nba:orlando-magic,espn
 nba,PHI,nba:philadelphia-76ers,espn
 nba,PHX,nba:phoenix-suns,espn
@@ -598,7 +594,6 @@ nba,Pacers,nba:indiana-pacers,espn
 nba,Pelicans,nba:new-orleans-pelicans,espn
 nba,Philadelphia,nba:philadelphia-76ers,espn
 nba,Phoenix,nba:phoenix-suns,espn
-nba,Phoenix Suns,nba:phoenix-suns,espn
 nba,Pistons,nba:detroit-pistons,espn
 nba,Portland,nba:portland-trail-blazers,espn
 nba,Raptors,nba:toronto-raptors,espn
@@ -617,32 +612,35 @@ nba,Timberwolves,nba:minnesota-timberwolves,espn
 nba,Toronto,nba:toronto-raptors,espn
 nba,Trail Blazers,nba:portland-trail-blazers,espn
 nba,Utah,nba:utah-jazz,espn
+nba,Utah Jazz,nba:utah-jazz,espn
 nba,WSH,nba:washington-wizards,espn
 nba,Warriors,nba:golden-state-warriors,espn
 nba,Washington,nba:washington-wizards,espn
 nba,Washington Wizards,nba:washington-wizards,espn
 nba,Wizards,nba:washington-wizards,espn
-nba,atlanta hawks,nba:atlanta-hawks,espn
 nba,boston celtics,nba:boston-celtics,espn
-nba,charlotte hornets,nba:charlotte-hornets,espn
-nba,denver nuggets,nba:denver-nuggets,espn
+nba,chicago bulls,nba:chicago-bulls,espn
+nba,cleveland cavaliers,nba:cleveland-cavaliers,espn
+nba,detroit pistons,nba:detroit-pistons,espn
 nba,golden state warriors,nba:golden-state-warriors,espn
-nba,houston rockets,nba:houston-rockets,espn
 nba,la clippers,nba:la-clippers,espn
+nba,los angeles lakers,nba:los-angeles-lakers,espn
+nba,memphis grizzlies,nba:memphis-grizzlies,espn
 nba,miami heat,nba:miami-heat,espn
-nba,minnesota timberwolves,nba:minnesota-timberwolves,espn
+nba,milwaukee bucks,nba:milwaukee-bucks,espn
+nba,new orleans pelicans,nba:new-orleans-pelicans,espn
+nba,new york knicks,nba:new-york-knicks,espn
+nba,oklahoma city thunder,nba:oklahoma-city-thunder,espn
 nba,orlando magic,nba:orlando-magic,espn
 nba,philadelphia 76ers,nba:philadelphia-76ers,espn
+nba,phoenix suns,nba:phoenix-suns,espn
 nba,portland trail blazers,nba:portland-trail-blazers,espn
 nba,toronto raptors,nba:toronto-raptors,espn
-nba,utah jazz,nba:utah-jazz,espn
 nfl,49ers,nfl:san-francisco-49ers,espn
 nfl,ARI,nfl:arizona-cardinals,espn
 nfl,ATL,nfl:atlanta-falcons,espn
 nfl,Arizona,nfl:arizona-cardinals,espn
-nfl,Arizona Cardinals,nfl:arizona-cardinals,espn
 nfl,Atlanta,nfl:atlanta-falcons,espn
-nfl,Atlanta Falcons,nfl:atlanta-falcons,espn
 nfl,BAL,nfl:baltimore-ravens,espn
 nfl,BUF,nfl:buffalo-bills,espn
 nfl,Baltimore,nfl:baltimore-ravens,espn
@@ -660,13 +658,13 @@ nfl,CIN,nfl:cincinnati-bengals,espn
 nfl,CLE,nfl:cleveland-browns,espn
 nfl,Cardinals,nfl:arizona-cardinals,espn
 nfl,Carolina,nfl:carolina-panthers,espn
-nfl,Carolina Panthers,nfl:carolina-panthers,espn
 nfl,Chargers,nfl:los-angeles-chargers,espn
 nfl,Chicago,nfl:chicago-bears,espn
+nfl,Chicago Bears,nfl:chicago-bears,espn
 nfl,Chiefs,nfl:kansas-city-chiefs,espn
 nfl,Cincinnati,nfl:cincinnati-bengals,espn
-nfl,Cincinnati Bengals,nfl:cincinnati-bengals,espn
 nfl,Cleveland,nfl:cleveland-browns,espn
+nfl,Cleveland Browns,nfl:cleveland-browns,espn
 nfl,Colts,nfl:indianapolis-colts,espn
 nfl,Commanders,nfl:washington-commanders,espn
 nfl,Cowboys,nfl:dallas-cowboys,espn
@@ -674,11 +672,9 @@ nfl,DAL,nfl:dallas-cowboys,espn
 nfl,DEN,nfl:denver-broncos,espn
 nfl,DET,nfl:detroit-lions,espn
 nfl,Dallas,nfl:dallas-cowboys,espn
-nfl,Dallas Cowboys,nfl:dallas-cowboys,espn
 nfl,Denver,nfl:denver-broncos,espn
 nfl,Denver Broncos,nfl:denver-broncos,espn
 nfl,Detroit,nfl:detroit-lions,espn
-nfl,Detroit Lions,nfl:detroit-lions,espn
 nfl,Dolphins,nfl:miami-dolphins,espn
 nfl,Eagles,nfl:philadelphia-eagles,espn
 nfl,Falcons,nfl:atlanta-falcons,espn
@@ -688,36 +684,36 @@ nfl,Green Bay,nfl:green-bay-packers,espn
 nfl,Green Bay Packers,nfl:green-bay-packers,espn
 nfl,HOU,nfl:houston-texans,espn
 nfl,Houston,nfl:houston-texans,espn
-nfl,Houston Texans,nfl:houston-texans,espn
 nfl,IND,nfl:indianapolis-colts,espn
 nfl,Indianapolis,nfl:indianapolis-colts,espn
+nfl,Indianapolis Colts,nfl:indianapolis-colts,espn
 nfl,JAX,nfl:jacksonville-jaguars,espn
 nfl,Jacksonville,nfl:jacksonville-jaguars,espn
 nfl,Jaguars,nfl:jacksonville-jaguars,espn
 nfl,Jets,nfl:new-york-jets,espn
 nfl,KC,nfl:kansas-city-chiefs,espn
 nfl,Kansas City,nfl:kansas-city-chiefs,espn
+nfl,Kansas City Chiefs,nfl:kansas-city-chiefs,espn
 nfl,LAC,nfl:los-angeles-chargers,espn
 nfl,LAR,nfl:los-angeles-rams,espn
 nfl,LV,nfl:las-vegas-raiders,espn
 nfl,Las Vegas,nfl:las-vegas-raiders,espn
+nfl,Las Vegas Raiders,nfl:las-vegas-raiders,espn
 nfl,Lions,nfl:detroit-lions,espn
 nfl,Los Angeles,nfl:los-angeles-chargers,espn
 nfl,Los Angeles,nfl:los-angeles-rams,espn
-nfl,Los Angeles Chargers,nfl:los-angeles-chargers,espn
 nfl,Los Angeles Rams,nfl:los-angeles-rams,espn
 nfl,MIA,nfl:miami-dolphins,espn
 nfl,MIN,nfl:minnesota-vikings,espn
 nfl,Miami,nfl:miami-dolphins,espn
-nfl,Miami Dolphins,nfl:miami-dolphins,espn
 nfl,Minnesota,nfl:minnesota-vikings,espn
 nfl,NE,nfl:new-england-patriots,espn
 nfl,NO,nfl:new-orleans-saints,espn
 nfl,NYG,nfl:new-york-giants,espn
 nfl,NYJ,nfl:new-york-jets,espn
 nfl,New England,nfl:new-england-patriots,espn
+nfl,New England Patriots,nfl:new-england-patriots,espn
 nfl,New Orleans,nfl:new-orleans-saints,espn
-nfl,New Orleans Saints,nfl:new-orleans-saints,espn
 nfl,New York,nfl:new-york-giants,espn
 nfl,New York,nfl:new-york-jets,espn
 nfl,New York Giants,nfl:new-york-giants,espn
@@ -728,8 +724,8 @@ nfl,Packers,nfl:green-bay-packers,espn
 nfl,Panthers,nfl:carolina-panthers,espn
 nfl,Patriots,nfl:new-england-patriots,espn
 nfl,Philadelphia,nfl:philadelphia-eagles,espn
+nfl,Philadelphia Eagles,nfl:philadelphia-eagles,espn
 nfl,Pittsburgh,nfl:pittsburgh-steelers,espn
-nfl,Pittsburgh Steelers,nfl:pittsburgh-steelers,espn
 nfl,Raiders,nfl:las-vegas-raiders,espn
 nfl,Rams,nfl:los-angeles-rams,espn
 nfl,Ravens,nfl:baltimore-ravens,espn
@@ -746,26 +742,31 @@ nfl,TEN,nfl:tennessee-titans,espn
 nfl,Tampa Bay,nfl:tampa-bay-buccaneers,espn
 nfl,Tampa Bay Buccaneers,nfl:tampa-bay-buccaneers,espn
 nfl,Tennessee,nfl:tennessee-titans,espn
+nfl,Tennessee Titans,nfl:tennessee-titans,espn
 nfl,Texans,nfl:houston-texans,espn
 nfl,Titans,nfl:tennessee-titans,espn
 nfl,Vikings,nfl:minnesota-vikings,espn
 nfl,WSH,nfl:washington-commanders,espn
 nfl,Washington,nfl:washington-commanders,espn
+nfl,Washington Commanders,nfl:washington-commanders,espn
+nfl,arizona cardinals,nfl:arizona-cardinals,espn
+nfl,atlanta falcons,nfl:atlanta-falcons,espn
 nfl,buffalo bills,nfl:buffalo-bills,espn
-nfl,chicago bears,nfl:chicago-bears,espn
-nfl,cleveland browns,nfl:cleveland-browns,espn
-nfl,indianapolis colts,nfl:indianapolis-colts,espn
+nfl,carolina panthers,nfl:carolina-panthers,espn
+nfl,cincinnati bengals,nfl:cincinnati-bengals,espn
+nfl,dallas cowboys,nfl:dallas-cowboys,espn
+nfl,detroit lions,nfl:detroit-lions,espn
+nfl,houston texans,nfl:houston-texans,espn
 nfl,jacksonville jaguars,nfl:jacksonville-jaguars,espn
-nfl,kansas city chiefs,nfl:kansas-city-chiefs,espn
-nfl,las vegas raiders,nfl:las-vegas-raiders,espn
+nfl,los angeles chargers,nfl:los-angeles-chargers,espn
+nfl,miami dolphins,nfl:miami-dolphins,espn
 nfl,minnesota vikings,nfl:minnesota-vikings,espn
-nfl,new england patriots,nfl:new-england-patriots,espn
-nfl,philadelphia eagles,nfl:philadelphia-eagles,espn
+nfl,new orleans saints,nfl:new-orleans-saints,espn
+nfl,pittsburgh steelers,nfl:pittsburgh-steelers,espn
 nfl,seattle seahawks,nfl:seattle-seahawks,espn
-nfl,tennessee titans,nfl:tennessee-titans,espn
-nfl,washington commanders,nfl:washington-commanders,espn
 nhl,ANA,nhl:anaheim-ducks,espn
 nhl,Anaheim,nhl:anaheim-ducks,espn
+nhl,Anaheim Ducks,nhl:anaheim-ducks,espn
 nhl,Avalanche,nhl:colorado-avalanche,espn
 nhl,BOS,nhl:boston-bruins,espn
 nhl,BUF,nhl:buffalo-sabres,espn
@@ -773,7 +774,6 @@ nhl,Blackhawks,nhl:chicago-blackhawks,espn
 nhl,Blue Jackets,nhl:columbus-blue-jackets,espn
 nhl,Blues,nhl:st-louis-blues,espn
 nhl,Boston,nhl:boston-bruins,espn
-nhl,Boston Bruins,nhl:boston-bruins,espn
 nhl,Bruins,nhl:boston-bruins,espn
 nhl,Buffalo,nhl:buffalo-sabres,espn
 nhl,Buffalo Sabres,nhl:buffalo-sabres,espn
@@ -783,11 +783,11 @@ nhl,CGY,nhl:calgary-flames,espn
 nhl,CHI,nhl:chicago-blackhawks,espn
 nhl,COL,nhl:colorado-avalanche,espn
 nhl,Calgary,nhl:calgary-flames,espn
+nhl,Calgary Flames,nhl:calgary-flames,espn
 nhl,Canadiens,nhl:montreal-canadiens,espn
 nhl,Canucks,nhl:vancouver-canucks,espn
 nhl,Capitals,nhl:washington-capitals,espn
 nhl,Carolina,nhl:carolina-hurricanes,espn
-nhl,Carolina Hurricanes,nhl:carolina-hurricanes,espn
 nhl,Chicago,nhl:chicago-blackhawks,espn
 nhl,Chicago Blackhawks,nhl:chicago-blackhawks,espn
 nhl,Colorado,nhl:colorado-avalanche,espn
@@ -796,13 +796,12 @@ nhl,Columbus,nhl:columbus-blue-jackets,espn
 nhl,DAL,nhl:dallas-stars,espn
 nhl,DET,nhl:detroit-red-wings,espn
 nhl,Dallas,nhl:dallas-stars,espn
-nhl,Dallas Stars,nhl:dallas-stars,espn
 nhl,Detroit,nhl:detroit-red-wings,espn
+nhl,Detroit Red Wings,nhl:detroit-red-wings,espn
 nhl,Devils,nhl:new-jersey-devils,espn
 nhl,Ducks,nhl:anaheim-ducks,espn
 nhl,EDM,nhl:edmonton-oilers,espn
 nhl,Edmonton,nhl:edmonton-oilers,espn
-nhl,Edmonton Oilers,nhl:edmonton-oilers,espn
 nhl,FLA,nhl:florida-panthers,espn
 nhl,Flames,nhl:calgary-flames,espn
 nhl,Florida,nhl:florida-panthers,espn
@@ -816,6 +815,7 @@ nhl,Kraken,nhl:seattle-kraken,espn
 nhl,LA,nhl:los-angeles-kings,espn
 nhl,Lightning,nhl:tampa-bay-lightning,espn
 nhl,Los Angeles,nhl:los-angeles-kings,espn
+nhl,Los Angeles Kings,nhl:los-angeles-kings,espn
 nhl,MIN,nhl:minnesota-wild,espn
 nhl,MTL,nhl:montreal-canadiens,espn
 nhl,Mammoth,nhl:utah-mammoth,espn
@@ -827,11 +827,11 @@ nhl,NSH,nhl:nashville-predators,espn
 nhl,NYI,nhl:new-york-islanders,espn
 nhl,NYR,nhl:new-york-rangers,espn
 nhl,Nashville,nhl:nashville-predators,espn
-nhl,Nashville Predators,nhl:nashville-predators,espn
 nhl,New Jersey,nhl:new-jersey-devils,espn
 nhl,New Jersey Devils,nhl:new-jersey-devils,espn
 nhl,New York,nhl:new-york-islanders,espn
 nhl,New York,nhl:new-york-rangers,espn
+nhl,New York Islanders,nhl:new-york-islanders,espn
 nhl,OTT,nhl:ottawa-senators,espn
 nhl,Oilers,nhl:edmonton-oilers,espn
 nhl,Ottawa,nhl:ottawa-senators,espn
@@ -842,6 +842,7 @@ nhl,Penguins,nhl:pittsburgh-penguins,espn
 nhl,Philadelphia,nhl:philadelphia-flyers,espn
 nhl,Philadelphia Flyers,nhl:philadelphia-flyers,espn
 nhl,Pittsburgh,nhl:pittsburgh-penguins,espn
+nhl,Pittsburgh Penguins,nhl:pittsburgh-penguins,espn
 nhl,Predators,nhl:nashville-predators,espn
 nhl,Rangers,nhl:new-york-rangers,espn
 nhl,Red Wings,nhl:detroit-red-wings,espn
@@ -854,7 +855,6 @@ nhl,Seattle,nhl:seattle-kraken,espn
 nhl,Senators,nhl:ottawa-senators,espn
 nhl,Sharks,nhl:san-jose-sharks,espn
 nhl,St. Louis,nhl:st-louis-blues,espn
-nhl,St. Louis Blues,nhl:st-louis-blues,espn
 nhl,Stars,nhl:dallas-stars,espn
 nhl,TB,nhl:tampa-bay-lightning,espn
 nhl,TOR,nhl:toronto-maple-leafs,espn
@@ -862,34 +862,34 @@ nhl,Tampa Bay,nhl:tampa-bay-lightning,espn
 nhl,Tampa Bay Lightning,nhl:tampa-bay-lightning,espn
 nhl,Toronto,nhl:toronto-maple-leafs,espn
 nhl,Utah,nhl:utah-mammoth,espn
+nhl,Utah Mammoth,nhl:utah-mammoth,espn
 nhl,VAN,nhl:vancouver-canucks,espn
 nhl,VGK,nhl:vegas-golden-knights,espn
 nhl,Vancouver,nhl:vancouver-canucks,espn
+nhl,Vancouver Canucks,nhl:vancouver-canucks,espn
 nhl,Vegas,nhl:vegas-golden-knights,espn
-nhl,Vegas Golden Knights,nhl:vegas-golden-knights,espn
 nhl,WPG,nhl:winnipeg-jets,espn
 nhl,WSH,nhl:washington-capitals,espn
 nhl,Washington,nhl:washington-capitals,espn
-nhl,Washington Capitals,nhl:washington-capitals,espn
 nhl,Wild,nhl:minnesota-wild,espn
 nhl,Winnipeg,nhl:winnipeg-jets,espn
-nhl,anaheim ducks,nhl:anaheim-ducks,espn
-nhl,calgary flames,nhl:calgary-flames,espn
+nhl,boston bruins,nhl:boston-bruins,espn
+nhl,carolina hurricanes,nhl:carolina-hurricanes,espn
 nhl,columbus blue jackets,nhl:columbus-blue-jackets,espn
-nhl,detroit red wings,nhl:detroit-red-wings,espn
+nhl,dallas stars,nhl:dallas-stars,espn
+nhl,edmonton oilers,nhl:edmonton-oilers,espn
 nhl,florida panthers,nhl:florida-panthers,espn
-nhl,los angeles kings,nhl:los-angeles-kings,espn
 nhl,minnesota wild,nhl:minnesota-wild,espn
 nhl,montreal canadiens,nhl:montreal-canadiens,espn
-nhl,new york islanders,nhl:new-york-islanders,espn
+nhl,nashville predators,nhl:nashville-predators,espn
 nhl,new york rangers,nhl:new-york-rangers,espn
 nhl,ottawa senators,nhl:ottawa-senators,espn
-nhl,pittsburgh penguins,nhl:pittsburgh-penguins,espn
 nhl,san jose sharks,nhl:san-jose-sharks,espn
 nhl,seattle kraken,nhl:seattle-kraken,espn
+nhl,st louis blues,nhl:st-louis-blues,espn
 nhl,toronto maple leafs,nhl:toronto-maple-leafs,espn
-nhl,utah mammoth,nhl:utah-mammoth,espn
-nhl,vancouver canucks,nhl:vancouver-canucks,espn
+nhl,vegas golden knights,nhl:vegas-golden-knights,espn
+nhl,washington capitals,nhl:washington-capitals,espn
 nhl,winnipeg jets,nhl:winnipeg-jets,espn
 wnba,ATL,wnba:atlanta-dream,espn
 wnba,Aces,wnba:las-vegas-aces,espn
@@ -898,9 +898,11 @@ wnba,Atlanta Dream,wnba:atlanta-dream,espn
 wnba,CHI,wnba:chicago-sky,espn
 wnba,CON,wnba:connecticut-sun,espn
 wnba,Chicago,wnba:chicago-sky,espn
+wnba,Chicago Sky,wnba:chicago-sky,espn
 wnba,Connecticut,wnba:connecticut-sun,espn
 wnba,DAL,wnba:dallas-wings,espn
 wnba,Dallas,wnba:dallas-wings,espn
+wnba,Dallas Wings,wnba:dallas-wings,espn
 wnba,Dream,wnba:atlanta-dream,espn
 wnba,Fever,wnba:indiana-fever,espn
 wnba,Fire,wnba:portland-fire,espn
@@ -914,14 +916,15 @@ wnba,LV,wnba:las-vegas-aces,espn
 wnba,Las Vegas,wnba:las-vegas-aces,espn
 wnba,Liberty,wnba:new-york-liberty,espn
 wnba,Los Angeles,wnba:los-angeles-sparks,espn
+wnba,Los Angeles Sparks,wnba:los-angeles-sparks,espn
 wnba,Lynx,wnba:minnesota-lynx,espn
 wnba,MIN,wnba:minnesota-lynx,espn
 wnba,Mercury,wnba:phoenix-mercury,espn
 wnba,Minnesota,wnba:minnesota-lynx,espn
+wnba,Minnesota Lynx,wnba:minnesota-lynx,espn
 wnba,Mystics,wnba:washington-mystics,espn
 wnba,NY,wnba:new-york-liberty,espn
 wnba,New York,wnba:new-york-liberty,espn
-wnba,New York Liberty,wnba:new-york-liberty,espn
 wnba,PHX,wnba:phoenix-mercury,espn
 wnba,POR,wnba:portland-fire,espn
 wnba,Phoenix,wnba:phoenix-mercury,espn
@@ -929,6 +932,7 @@ wnba,Phoenix Mercury,wnba:phoenix-mercury,espn
 wnba,Portland,wnba:portland-fire,espn
 wnba,SEA,wnba:seattle-storm,espn
 wnba,Seattle,wnba:seattle-storm,espn
+wnba,Seattle Storm,wnba:seattle-storm,espn
 wnba,Sky,wnba:chicago-sky,espn
 wnba,Sparks,wnba:los-angeles-sparks,espn
 wnba,Storm,wnba:seattle-storm,espn
@@ -936,18 +940,14 @@ wnba,Sun,wnba:connecticut-sun,espn
 wnba,TOR,wnba:toronto-tempo,espn
 wnba,Tempo,wnba:toronto-tempo,espn
 wnba,Toronto,wnba:toronto-tempo,espn
+wnba,Toronto Tempo,wnba:toronto-tempo,espn
 wnba,Valkyries,wnba:golden-state-valkyries,espn
 wnba,WSH,wnba:washington-mystics,espn
 wnba,Washington,wnba:washington-mystics,espn
 wnba,Washington Mystics,wnba:washington-mystics,espn
 wnba,Wings,wnba:dallas-wings,espn
-wnba,chicago sky,wnba:chicago-sky,espn
 wnba,connecticut sun,wnba:connecticut-sun,espn
-wnba,dallas wings,wnba:dallas-wings,espn
 wnba,indiana fever,wnba:indiana-fever,espn
 wnba,las vegas aces,wnba:las-vegas-aces,espn
-wnba,los angeles sparks,wnba:los-angeles-sparks,espn
-wnba,minnesota lynx,wnba:minnesota-lynx,espn
+wnba,new york liberty,wnba:new-york-liberty,espn
 wnba,portland fire,wnba:portland-fire,espn
-wnba,seattle storm,wnba:seattle-storm,espn
-wnba,toronto tempo,wnba:toronto-tempo,espn

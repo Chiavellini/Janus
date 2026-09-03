@@ -74,8 +74,11 @@ python3 -m grids.live_stream.grid --leagues mlb --once     # one discovery pass,
   reviewed templates, and prices the bounded residual (MLB: a makeup more than two days out, a
   cancellation) from a registered measurement (ledger L26: 10 of 2,100 games, 0 cancellations).
   MLB certifies; NFL and NHL block until their Polymarket game text is harvested and reviewed.
-- **Coverage is six leagues, live plus up to `--pre-hours` before start.** The `^mlb-` slug
-  hardcode and the ±30 min window are gone (`f8a187e`).
+- **Coverage is nine registered leagues (`nodes/entities/leagues.py`), one of which lacks nothing.**
+  MLB certifies. NFL and the four soccer leagues (epl, lal, bun, mls; three outcomes, the draw
+  carried through) have cited rules and reviewed templates and block on unmeasured postponement /
+  cancellation rates. NBA/WNBA/NHL have rules and no templates. The co-listing census (L28,
+  daily) ranks every competition both venues list; it found 1,021 co-listed events on day one.
 
 ## History
 

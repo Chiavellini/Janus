@@ -1,86 +1,8 @@
 league,source,reason,query,count
-mls,text,unknown,vwh,30
-lal,text,unknown,RC Celta de Vigo,28
-lal,text,unknown,Real Sociedad de Fútbol,28
-lal,text,unknown,Club Atlético de Madrid,25
-lal,text,unknown,RC Deportivo A Coruña,25
-lal,text,unknown,bil,25
-lal,text,unknown,mad,25
-lal,text,unknown,rea,25
-mls,text,unknown,Los Angeles FC,25
-mls,text,unknown,laf,25
-lal,text,unknown,CA Osasuna,24
-lal,text,unknown,Deportivo Alavés,24
-lal,text,unknown,Levante UD,24
-lal,text,unknown,RCD Espanyol de Barcelona,24
-lal,text,unknown,Rayo Vallecano de Madrid,24
-lal,text,unknown,Real Racing Club,24
-lal,text,unknown,rrc,24
-mls,text,unknown,New York Red Bulls,23
-mls,text,unknown,mim,23
-mls,text,unknown,ner,23
-mls,text,unknown,nyr,23
-mls,text,unknown,Los Angeles Galaxy,22
-mls,text,unknown,aus,22
-mls,text,unknown,dcu,22
-mls,text,unknown,fcc,22
-mls,text,unknown,lag,22
-mls,text,unknown,nas,22
-mls,text,unknown,sdg,22
-mls,text,unknown,sje,22
-bun,text,unknown,1. FC Köln,18
-bun,text,unknown,1. FSV Mainz 05,18
-bun,text,unknown,BV Borussia 09 Dortmund,18
-bun,text,unknown,Bayer 04 Leverkusen,18
-bun,text,unknown,FC Bayern München,18
-bun,text,unknown,Hamburger SV,18
-bun,text,unknown,SV 07 Elversberg,18
-bun,text,unknown,SV Werder Bremen,18
-bun,text,unknown,TSG 1899 Hoffenheim,18
-bun,text,unknown,aug,18
-bun,text,unknown,bay,18
-bun,text,unknown,ein,18
-bun,text,unknown,fre,18
-bun,text,unknown,hof,18
-bun,text,unknown,lei,18
-bun,text,unknown,mai,18
-bun,text,unknown,moe,18
-bun,text,unknown,stu,18
-bun,text,unknown,uni,18
-bun,text,unknown,wer,18
-lal,text,unknown,Real Betis Balompié,18
-lal,text,unknown,mala,17
 nfl,text,unknown,la,6
 nhl,text,unknown,las,5
 nhl,text,unknown,cal,4
 nhl,text,unknown,lak,4
 nhl,text,unknown,mon,4
-lal,text,unknown,Bilbao,3
-lal,text,unknown,Deportivo De La Coruna,3
-lal,text,unknown,RBB,3
-lal,text,unknown,RCC,3
-lal,text,unknown,RVC,3
-lal,text,unknown,SAN,3
-lal,text,unknown,Santander,3
-lal,text,unknown,VCF,3
-lal,text,unknown,Vallecano,3
-mls,text,unknown,DC United,3
-mls,text,unknown,DCU,3
-mls,text,unknown,LAG,3
-mls,text,unknown,Los Angeles F,3
-mls,text,unknown,Los Angeles G,3
-mls,text,unknown,NYRB,3
-mls,text,unknown,New York RB,3
-mls,text,unknown,Saint Louis,3
-bun,text,unknown,BMU,2
-bun,text,unknown,BVB,2
-bun,text,unknown,FC Köln,2
-bun,text,unknown,LEV,2
-bun,text,unknown,Leipzig,2
-bun,text,unknown,M´gladbach,2
-bun,text,unknown,PAD,2
-bun,text,unknown,SCH,2
-bun,text,unknown,SVE,2
-bun,text,unknown,UNI,2
 nba,text,unknown,NYK,1
 nba,text,unknown,SAS,1

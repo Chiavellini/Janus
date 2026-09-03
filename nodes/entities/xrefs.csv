@@ -42,6 +42,7 @@ kalshi,lal,1858f693-87a8-4102-86c0-aa65c04f56ad,lal:esp.real_madrid,custom_strik
 kalshi,lal,2c274499-d0e5-4b6c-83df-c1f0e424c899,lal:esp.levante,custom_strike,LEV
 kalshi,lal,2f51845c-cdac-431c-9f0f-1ee7c8878331,lal:esp.atletico_madrid,custom_strike,ATM
 kalshi,lal,34675e44-3b3c-4368-bb4d-03acabb2082a,lal:esp.real_sociedad,custom_strike,RSO
+kalshi,lal,4f47af29-e06e-4759-8f0d-1501be7a41c3,lal:esp.racing_santander,custom_strike,SAN
 kalshi,lal,55086684-5ead-4dea-ace6-4a82500856f2,lal:esp.alaves,custom_strike,ALA
 kalshi,lal,70be5c42-f4eb-4f08-b9a3-fc2339d1b23d,lal:esp.malaga,custom_strike,MCF
 kalshi,lal,89015507-cd78-404d-a89c-edc2bc270e29,lal:esp.deportivo_coruna,custom_strike,DEP
@@ -55,6 +56,7 @@ kalshi,lal,cc146246-6569-4093-89e7-205fd21d7d17,lal:esp.betis_sevilla,custom_str
 kalshi,lal,d8edf5f1-fafb-4875-8587-d8b5f5829e57,lal:esp.getafe,custom_strike,GET
 kalshi,lal,e16880b0-2ac2-476a-8b82-6ef29655175c,lal:esp.villarreal,custom_strike,VIL
 kalshi,lal,e26ffd15-b6c7-440b-859c-0693ac1d0a5c,lal:esp.fc_sevilla,custom_strike,SEV
+kalshi,lal,f52bf332-d290-4b44-9a13-4217f88f7c00,lal:esp.rayo_vallecano,custom_strike,RVC
 kalshi,mlb,00ca8318-b0fe-45c4-82c7-f43901a96114,mlb:seattle-mariners,custom_strike,SEA
 kalshi,mlb,087f0ae7-c231-4dcd-b7e5-f026c1769e40,mlb:milwaukee-brewers,custom_strike,MIL
 kalshi,mlb,19c3bb01-8748-4127-9d1e-8554951bebd9,mlb:colorado-rockies,custom_strike,COL
@@ -99,6 +101,8 @@ kalshi,mls,670bb865-5dea-407a-8735-e47df87367ae,mls:nashville_sc,custom_strike,N
 kalshi,mls,699450d2-1880-4f9d-bf7e-0ee9e83560dd,mls:usa.kansas_city,custom_strike,SKC
 kalshi,mls,6c3994b0-7002-442c-b86e-9e95b3d48826,mls:usa.portland,custom_strike,POR
 kalshi,mls,7e243b87-074f-4c80-8e50-5981c78a79a9,mls:usa.inter_miami,custom_strike,MIA
+kalshi,mls,81c226ef-e71a-41bd-ab9f-28d0ba555f71,mls:usa.new_york,custom_strike,NYRB
+kalshi,mls,889fe1d4-492d-42a2-8b3e-d9cbffc4d405,mls:usa.dc_united,custom_strike,DCU
 kalshi,mls,9600f0ab-7854-4067-8692-77a3ee22128a,mls:usa.lafc,custom_strike,LAFC
 kalshi,mls,96b9bb0a-dac0-44cd-98f7-6a1b093eb9e9,mls:usa.seattle,custom_strike,SEA
 kalshi,mls,974e0cbb-3dd1-43fe-ab90-065438c293d6,mls:usa.philadelphia,custom_strike,PHI
@@ -106,6 +110,7 @@ kalshi,mls,9c798f74-bee5-48d2-989b-5017f0b41d20,mls:usa.minnesota_united_fc,cust
 kalshi,mls,a0d8250b-a13f-4849-9844-4106ae45671f,mls:charlotte_fc,custom_strike,CLT
 kalshi,mls,a24c84e6-5d57-4cc9-a8ef-d7ea2f6a3750,mls:austin_fc,custom_strike,ATX
 kalshi,mls,a6f918b2-1142-4bd5-93b5-241aeb00c0d1,mls:usa.chicago,custom_strike,CHI
+kalshi,mls,a6ffe9ab-8773-4003-b3e6-e5b2a85f3922,mls:usa.los_angeles,custom_strike,LAG
 kalshi,mls,a88c1376-454e-46d0-a974-1d9639dd6a18,mls:usa.columbus,custom_strike,CLB
 kalshi,mls,b1edeac7-1e58-4473-b9ec-19bb827c10bf,mls:san_diego_fc,custom_strike,SD
 kalshi,mls,b3fea460-61a1-48c7-a27e-9a01c39cd113,mls:usa.vancouver,custom_strike,VAN
@@ -150,12 +155,16 @@ kalshi,nfl,f7c2cd06-61bf-469e-984f-3ef56cb8f3d7,nfl:new-orleans-saints,custom_st
 kalshi,nfl,f95a55a7-8472-4ffa-be20-14547e3c32ff,nfl:detroit-lions,custom_strike,DET
 kalshi,nfl,f9acd396-ba35-4cae-a431-a44b2af707b0,nfl:buffalo-bills,custom_strike,BUF
 kalshi,nfl,fe5f8219-fef4-4498-83d5-f6cc6f2cb7bf,nfl:indianapolis-colts,custom_strike,IND
+polymarket,bun,101129,bun:ger.bayern_munich,teams[].id,FC Bayern München
 polymarket,bun,101130,bun:ger.freiburg,teams[].id,SC Freiburg
+polymarket,bun,101132,bun:ger.mainz,teams[].id,1. FSV Mainz 05
 polymarket,bun,101133,bun:ger.stuttgart,teams[].id,VfB Stuttgart
 polymarket,bun,101134,bun:ger.rb_leipzig,teams[].id,RB Leipzig
 polymarket,bun,101135,bun:ger.dortmund,teams[].id,BV Borussia 09 Dortmund
+polymarket,bun,101136,bun:ger.tsg_hoffenheim,teams[].id,TSG 1899 Hoffenheim
 polymarket,bun,101137,bun:ger.fc_augsburg,teams[].id,FC Augsburg
 polymarket,bun,101139,bun:ger.fc_union_berlin,teams[].id,1. FC Union Berlin
+polymarket,bun,101140,bun:ger.werder_bremen,teams[].id,SV Werder Bremen
 polymarket,bun,101141,bun:ger.borussia_mgladbach,teams[].id,Borussia Mönchengladbach
 polymarket,bun,101143,bun:ger.frankfurt,teams[].id,Eintracht Frankfurt
 polymarket,bun,101255,bun:ger.leverkusen,teams[].id,Bayer 04 Leverkusen
@@ -193,6 +202,7 @@ polymarket,lal,101036,lal:esp.osasuna,teams[].id,CA Osasuna
 polymarket,lal,101038,lal:esp.villarreal,teams[].id,Villarreal CF
 polymarket,lal,101040,lal:esp.fc_sevilla,teams[].id,Sevilla FC
 polymarket,lal,101042,lal:esp.barcelona,teams[].id,FC Barcelona
+polymarket,lal,101043,lal:esp.atletico_madrid,teams[].id,Club Atlético de Madrid
 polymarket,lal,101044,lal:esp.celta_vigo,teams[].id,RC Celta de Vigo
 polymarket,lal,101045,lal:esp.real_sociedad,teams[].id,Real Sociedad de Fútbol
 polymarket,lal,101046,lal:esp.rayo_vallecano,teams[].id,Rayo Vallecano de Madrid
@@ -200,6 +210,7 @@ polymarket,lal,101047,lal:esp.athletic_club,teams[].id,Athletic Club
 polymarket,lal,101095,lal:esp.valencia,teams[].id,Valencia CF
 polymarket,lal,114297,lal:esp.elche,teams[].id,Elche CF
 polymarket,lal,114298,lal:esp.levante,teams[].id,Levante UD
+polymarket,lal,3284301,lal:esp.racing_santander,teams[].id,Real Racing Club
 polymarket,lal,3284602,lal:esp.deportivo_coruna,teams[].id,RC Deportivo A Coruña
 polymarket,lal,3284681,lal:esp.malaga,teams[].id,Málaga CF
 polymarket,mlb,114201,mlb:philadelphia-phillies,teams[].id,Philadelphia Phillies
@@ -238,9 +249,10 @@ polymarket,mls,115057,mls:usa.columbus,teams[].id,Columbus Crew
 polymarket,mls,115058,mls:usa.dc_united,teams[].id,D.C. United SC
 polymarket,mls,115059,mls:usa.dallas,teams[].id,FC Dallas
 polymarket,mls,115060,mls:usa.houston,teams[].id,Houston Dynamo
-polymarket,mls,115062,mls:usa.usl.1.montreal,teams[].id,CF Montréal
+polymarket,mls,115061,mls:usa.los_angeles,teams[].id,Los Angeles Galaxy
 polymarket,mls,115063,mls:usa.new_england,teams[].id,New England Revolution
 polymarket,mls,115064,mls:usa.nyc_fc,teams[].id,New York City FC
+polymarket,mls,115065,mls:usa.new_york,teams[].id,New York Red Bulls
 polymarket,mls,115066,mls:usa.orlando_city_sc,teams[].id,Orlando City SC
 polymarket,mls,115067,mls:usa.philadelphia,teams[].id,Philadelphia Union
 polymarket,mls,115068,mls:usa.portland,teams[].id,Portland Timbers
@@ -252,6 +264,7 @@ polymarket,mls,115073,mls:usa.toronto_fc,teams[].id,Toronto FC
 polymarket,mls,115074,mls:usa.vancouver,teams[].id,Vancouver Whitecaps FC
 polymarket,mls,115075,mls:usa.atlanta_united_fc,teams[].id,Atlanta United FC
 polymarket,mls,115076,mls:usa.minnesota_united_fc,teams[].id,Minnesota United FC
+polymarket,mls,115077,mls:usa.lafc,teams[].id,Los Angeles FC
 polymarket,mls,115078,mls:fc_cincinnati,teams[].id,FC Cincinnati
 polymarket,mls,115079,mls:usa.inter_miami,teams[].id,Inter Miami CF
 polymarket,mls,115080,mls:nashville_sc,teams[].id,Nashville SC

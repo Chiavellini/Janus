@@ -69,3 +69,81 @@ wnba,conn,wnba:connecticut-sun,cooccurrence_2026-08-17,derived from venue id agr
 wnba,gsv,wnba:golden-state-valkyries,cooccurrence_2026-08-17,derived from venue id agreement n=6
 wnba,las,wnba:las-vegas-aces,cooccurrence_2026-08-17,derived from venue id agreement n=4
 wnba,nyl,wnba:new-york-liberty,cooccurrence_2026-08-17,derived from venue id agreement n=4
+mls,vwh,mls:usa.vancouver,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,RC Celta de Vigo,lal:esp.celta_vigo,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,Real Sociedad de Fútbol,lal:esp.real_sociedad,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,Club Atlético de Madrid,lal:esp.atletico_madrid,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,RC Deportivo A Coruña,lal:esp.deportivo_coruna,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,bil,lal:esp.athletic_club,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,mad,lal:esp.atletico_madrid,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,rea,lal:esp.real_madrid,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,Los Angeles FC,mls:usa.lafc,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,laf,mls:usa.lafc,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,CA Osasuna,lal:esp.osasuna,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,Deportivo Alavés,lal:esp.alaves,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,Levante UD,lal:esp.levante,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,RCD Espanyol de Barcelona,lal:esp.espanyol,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,Rayo Vallecano de Madrid,lal:esp.rayo_vallecano,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,Real Racing Club,lal:esp.racing_santander,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,rrc,lal:esp.racing_santander,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,New York Red Bulls,mls:usa.new_york,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,mim,mls:usa.inter_miami,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,ner,mls:usa.new_england,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,nyr,mls:usa.new_york,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,Los Angeles Galaxy,mls:usa.los_angeles,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,aus,mls:austin_fc,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,dcu,mls:usa.dc_united,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,fcc,mls:fc_cincinnati,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,lag,mls:usa.los_angeles,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,nas,mls:nashville_sc,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,sdg,mls:san_diego_fc,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+mls,sje,mls:usa.san_jose,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,1. FC Köln,bun:ger.1_fc_kln,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,1. FSV Mainz 05,bun:ger.mainz,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,BV Borussia 09 Dortmund,bun:ger.dortmund,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,Bayer 04 Leverkusen,bun:ger.leverkusen,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,FC Bayern München,bun:ger.bayern_munich,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,Hamburger SV,bun:ger.hamburg,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,SV 07 Elversberg,bun:ger.sv_07_elversberg,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,SV Werder Bremen,bun:ger.werder_bremen,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,TSG 1899 Hoffenheim,bun:ger.tsg_hoffenheim,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,bay,bun:ger.bayern_munich,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,fre,bun:ger.freiburg,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,hof,bun:ger.tsg_hoffenheim,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,lei,bun:ger.rb_leipzig,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,mai,bun:ger.mainz,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,stu,bun:ger.stuttgart,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,uni,bun:ger.fc_union_berlin,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,wer,bun:ger.werder_bremen,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+lal,Real Betis Balompié,lal:esp.betis_sevilla,manual_2026-09-03,Polymarket full club name or slug abbreviation; ESPN uses the short name
+bun,aug,bun:ger.fc_augsburg,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,ein,bun:ger.frankfurt,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,moe,bun:ger.borussia_mgladbach,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+lal,mala,lal:esp.malaga,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+lal,Bilbao,lal:esp.athletic_club,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+lal,Deportivo De La Coruna,lal:esp.deportivo_coruna,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+lal,RBB,lal:esp.betis_sevilla,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+lal,RCC,lal:esp.celta_vigo,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+lal,RVC,lal:esp.rayo_vallecano,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+lal,SAN,lal:esp.racing_santander,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+lal,Santander,lal:esp.racing_santander,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+lal,VCF,lal:esp.valencia,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+lal,Vallecano,lal:esp.rayo_vallecano,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+mls,DC United,mls:usa.dc_united,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+mls,DCU,mls:usa.dc_united,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+mls,LAG,mls:usa.los_angeles,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+mls,Los Angeles F,mls:usa.lafc,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+mls,Los Angeles G,mls:usa.los_angeles,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+mls,NYRB,mls:usa.new_york,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+mls,New York RB,mls:usa.new_york,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+mls,Saint Louis,mls:st._louis_city_sc,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,BMU,bun:ger.bayern_munich,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,BVB,bun:ger.dortmund,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,FC Köln,bun:ger.1_fc_kln,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,LEV,bun:ger.leverkusen,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,Leipzig,bun:ger.rb_leipzig,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,M´gladbach,bun:ger.borussia_mgladbach,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,PAD,bun:ger.sc_paderborn_07,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,SCH,bun:ger.schalke_04,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,SVE,bun:ger.sv_07_elversberg,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+bun,UNI,bun:ger.fc_union_berlin,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"

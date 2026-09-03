@@ -328,3 +328,30 @@ Main carries the v1 build and `com.janus.live-stream` runs it in SHADOW_LIVE wit
   `JANUS_KALSHI_DEMO_*`; LIMITED_LIVE/PRODUCTION build both real adapters. Each refuses to start
   with a named reason when its credentials are absent.
 - Streams no longer connect with nothing to subscribe; the registry alarm is silent on a fresh table.
+
+---
+
+## 2026-09-03 — coverage first: the census, the registry, three-way soccer
+
+The operator's scope is every competition and every live event both venues list; sports were
+chosen because contract life is short and arbitrage may appear, a property of a market and not
+of a sport. Built on the branch while the Kalshi proof waits for its armed run (the override pins
+the runner sha, so nothing merges to main before that run).
+
+- **The post-proof checklist as code.** `ops/proof_check.py` and `--check` on the proof script;
+  the armed flow driven offline by a scripted venue in `ops/tests/test_proofs.py`, including the
+  fee-above-pin latch, which had never fired in a test.
+- **The co-listing census (ledger L28).** `nodes/discovery/census.py`: both venues enumerate
+  themselves (Kalshi `/series?category=Sports`; Polymarket `/sports`, its own league table), events
+  are joined on date and participants, competitions are scored by co-listed capacity at the touch
+  over contract life. Run 1: 1,021 co-listed events across 81 competitions; the 48-hour window led
+  by La Liga, college football (39 games), CS2, EPL, UFC, EFL Championship. Daily under
+  `com.janus.census` for seven days; rank from the median.
+- **The league registry as one table.** `nodes/entities/leagues.py`; the seed, the ESPN map, the
+  grid default and the proof script read it. `enablement()` names what a league lacks (a cited rule,
+  both templates, a measured rate per bounded dimension); MLB alone lacks nothing.
+- **Three-way soccer.** epl, lal, bun, mls registered with three outcomes; IFAB Law 10.1 cited;
+  Kalshi's per-competition texts and Polymarket's one soccer text pinned verbatim; the draw carried
+  through the token map, both matchers, the exact join and the slate. Every soccer pair blocks at
+  `EVIDENCE_UNMEASURED` on per-competition postponement and cancellation rates. UCL waits on a club
+  being one entity across competitions. Execution stays two-leg.
