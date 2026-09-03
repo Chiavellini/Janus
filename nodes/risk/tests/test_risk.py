@@ -232,3 +232,35 @@ def test_a_proof_clearance_needs_a_live_mode_an_override_cap_and_bounds_the_stak
     assert isinstance(ok, RiskClearance) and ok.consume(100.5) and ok.consume(130.0, hedge=True)
     kill.latch("live", "t")
     assert clear_proof(c, mode=Mode.LIMITED_LIVE, caps={"stake_usd": 10}, **{**base, "ledger": ExposureLedger()}).code == "KILL_SWITCH"
+
+
+def test_the_lane_is_bound_by_the_override_caps_in_a_capital_risking_mode(kill, breaker):
+    """Until 2026-09-03 only clear_proof() read the caps; the lane's clear() would have let
+    LIMITED_LIVE run on limits.toml alone. A live mode without caps is refused, beyond them refused,
+    and the day cap counts what was already reserved today. PAPER ignores caps."""
+    L = ExposureLedger()
+    live = ok_env(mode=Mode.LIMITED_LIVE, kill=kill, breaker=breaker, ledger=L)
+    c = cand()                                                   # 100 + 100 contracts, $88 stake
+    assert clear(c, **live).code == "NO_CAPS"
+    assert clear(c, **live, caps={"stake_usd": 10}).code == "CAP_STAKE"
+    assert clear(c, **live, caps={"stake_usd": 100, "max_contracts": 10}).code == "CAP_CONTRACTS"
+    assert clear(c, **live, caps={"stake_usd": 100, "max_contracts": 100, "day_notional_usd": 50}).code == "CAP_DAY_NOTIONAL"
+    ok = clear(c, **live, caps={"stake_usd": 100, "max_contracts": 100, "day_notional_usd": 200})
+    assert isinstance(ok, RiskClearance)
+    assert L.day_notional_usd(1000.0) == 88.0
+    c2 = cand(opportunity_id="o2", event_id="espn:mlb:2")
+    assert clear(c2, **live, caps={"stake_usd": 100, "max_contracts": 100, "day_notional_usd": 150}).code == "CAP_DAY_NOTIONAL"
+    L.release(ok.reservation.reservation_id, reason="filled and reconciled", now=1001.0)
+    assert L.day_notional_usd(1000.0) == 0.0, "an in-memory ledger forgets a released reservation"
+    paper = ok_env(kill=kill, breaker=breaker, ledger=ExposureLedger())
+    assert isinstance(clear(cand(), **paper), RiskClearance), "paper needs no override"
+
+
+def test_the_day_notional_survives_a_release_when_the_ledger_is_durable(tmp_path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    L = ExposureLedger(store)
+    r = L.reserve(event_id="e1", league="mlb", per_venue_usd={"kalshi": 4.0, "polymarket": 4.0}, limits=LIMITS, now=1000.0)
+    assert not isinstance(r, Refused)
+    L.release(r.reservation_id, reason="filled", now=1001.0)
+    assert L.day_notional_usd(1002.0) == 8.0, "a filled-and-released order still spent the day's notional"
+    assert L.day_notional_usd(86400.0 + 1.0) == 0.0, "yesterday's rows do not count"

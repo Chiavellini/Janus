@@ -110,6 +110,9 @@ class Supervisor:
     coordinator: Coordinator | None = None
     venues: dict = field(default_factory=dict)
     limits: object | None = None
+    #: The arming override's caps (stake_usd, max_contracts, day_notional_usd), as the risk gate
+    #: resolved them. Empty below LIMITED_LIVE. clear() refuses a capital-risking order without them.
+    caps: dict = field(default_factory=dict)
     ledger: ExposureLedger | None = None
     kill: KillSwitches | None = None
     breaker: LossBreaker | None = None
@@ -303,7 +306,7 @@ class Supervisor:
                           breaker=self.breaker, fills_today=(), clock_healthy=all(
                               st_.clock.healthy for st_ in (self.ks, self.ps) if st_ is not None),
                           fee_schedules_ok=bool(sup.fee_params.get("kalshi") and sup.fee_params.get("polymarket")),
-                          balances=balances, venues_connected=connected)
+                          balances=balances, venues_connected=connected, caps=self.caps or None)
         if hasattr(clearance, "code"):
             print(f"  [risk] refused {sup.short_name}: {clearance.code} {clearance.detail}", flush=True)
             return
@@ -471,6 +474,7 @@ def main() -> int:
         print(f"mode refused: {resolved.code}: {resolved.detail}", file=sys.stderr)
         return 2
     sup.mode = resolved.mode
+    sup.caps = dict(getattr(resolved, "caps", None) or {})
     if sup.mode.rank >= Mode.PAPER_EXECUTION.rank:
         journal = Journal(sup.store)
         # Real venues, built only for the modes that need them, from credentials that are named

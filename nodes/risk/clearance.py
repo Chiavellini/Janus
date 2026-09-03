@@ -133,8 +133,13 @@ def clear(cand: Candidate, *, mode: Mode, limits: RiskLimits, ledger: ExposureLe
           kill: KillSwitches, breaker: LossBreaker, fills_today: Sequence[RealizedFill],
           clock_healthy: bool, fee_schedules_ok: bool, balances: Mapping[str, float] | None,
           venues_connected: Mapping[str, bool], now_mono: float | None = None,
-          now: float | None = None) -> RiskClearance | Refused:
-    """Every fail-closed condition, in order. The first failure is the answer."""
+          now: float | None = None, caps: Mapping[str, float] | None = None) -> RiskClearance | Refused:
+    """Every fail-closed condition, in order. The first failure is the answer.
+
+    `caps` is the arming override's bound (GATE step 9: stake_usd, max_contracts,
+    day_notional_usd). A capital-risking mode is refused without it and refused beyond it; below
+    LIMITED_LIVE it is ignored. Until 2026-09-03 only `clear_proof()` read the caps, so the lane
+    itself would have been bounded by limits.toml alone."""
     t_mono = now_mono if now_mono is not None else time.monotonic()
     venues = tuple(sorted({v for v, _c, _p in cand.legs}))
     if not mode.executes:
@@ -159,6 +164,19 @@ def clear(cand: Candidate, *, mode: Mode, limits: RiskLimits, ledger: ExposureLe
     if cand.locked_return < limits.min_locked_return:
         return Refused("MIN_RETURN", f"{cand.locked_return:.4f} < {limits.min_locked_return:.4f}")
     need = cand.per_venue_usd()
+    if mode.risks_capital:
+        if not caps or "stake_usd" not in caps:
+            return Refused("NO_CAPS", f"{mode.value} needs the arming override's caps")
+        stake = sum(need.values())
+        if stake > float(caps["stake_usd"]):
+            return Refused("CAP_STAKE", f"{stake:.2f} > override stake cap {float(caps['stake_usd']):.2f}")
+        if "max_contracts" in caps and any(c > float(caps["max_contracts"]) for _v, c, _p in cand.legs):
+            return Refused("CAP_CONTRACTS", f"more than {caps['max_contracts']} contracts")
+        if "day_notional_usd" in caps:
+            spent = ledger.day_notional_usd(now)
+            if spent + stake > float(caps["day_notional_usd"]):
+                return Refused("CAP_DAY_NOTIONAL", f"{spent:.2f} today + {stake:.2f} > override day cap "
+                                                   f"{float(caps['day_notional_usd']):.2f}")
     if mode.sends_real_orders:
         if balances is None:
             return Refused("BALANCE_UNCONFIRMED", "venue balances could not be confirmed")

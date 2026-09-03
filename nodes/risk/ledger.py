@@ -131,6 +131,20 @@ class ExposureLedger:
             self.store.con.commit()
         return True
 
+    def day_notional_usd(self, now: float | None = None) -> float:
+        """Everything reserved since 00:00 UTC today, released or not. A reservation that was
+        filled and released still spent the day's notional; only the arming override's
+        `day_notional_usd` cap reads this, and it must count what was sent, not what is open."""
+        t = now or time.time()
+        midnight = t - (t % 86400.0)
+        total = sum(r.total_usd for r in self.open.values() if r.created_utc >= midnight)
+        if self.store is not None:
+            row = self.store.con.execute(
+                "SELECT per_venue_json FROM capital_reservations WHERE created_utc >= ? AND released_utc IS NOT NULL",
+                (midnight,)).fetchall()
+            total += sum(sum(float(v) for v in json.loads(r[0]).values()) for r in row)
+        return float(total)
+
     def oldest_open_age_s(self, now: float | None = None) -> float | None:
         if not self.open:
             return None

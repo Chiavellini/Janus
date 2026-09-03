@@ -20,6 +20,8 @@ def clearance_for(tmp_path, *, opportunity_id="o1", event_id="espn:mlb:1", mode=
     c = clear(cand, mode=mode, limits=load_limits(), ledger=ExposureLedger(), kill=kill, breaker=breaker,
               fills_today=(), clock_healthy=True, fee_schedules_ok=True,
               balances={"kalshi": 500.0, "polymarket": 500.0},
-              venues_connected={"kalshi": True, "polymarket": True}, now_mono=now_mono, now=1000.0)
+              venues_connected={"kalshi": True, "polymarket": True}, now_mono=now_mono, now=1000.0,
+              # a capital-risking clearance needs the arming override's caps, like the lane's does
+              caps={"stake_usd": 100.0, "max_contracts": 100.0, "day_notional_usd": 1000.0} if mode.risks_capital else None)
     assert not hasattr(c, "code"), c
     return c
