@@ -117,6 +117,8 @@ class Supervisor:
     spawned: int = 0
     reaped: int = 0
     blocked: dict[str, str] = field(default_factory=dict)
+    #: (game_id, exception class) -> count of evaluations whose record raised; see _on_update.
+    record_errors: dict[tuple[str, str], int] = field(default_factory=dict)
     tiers: dict[str, int] = field(default_factory=dict)
     wake_state: tuple = ("WAKE", None, None)
     #: Capture-only subscriptions for what the slate cannot co-list yet (tennis has no ESPN anchor):
@@ -213,7 +215,18 @@ class Supervisor:
                 return
             for ev in sup.poller.on_event("stream", _market_id, now=now):
                 sup.evaluations += 1
-                self._record(sup, ev)
+                try:
+                    self._record(sup, ev)
+                except Exception as exc:  # noqa: BLE001 -- a record bug must never reach the socket loop
+                    # The callback runs inside the venue socket's receive loop. An exception here
+                    # was caught by the transport's blanket handler, which tore the socket down,
+                    # resubscribed, and raised again on the first frame: 5-20 reconnects a minute
+                    # on 2026-09-03, invisible to the watchdog. Count it, say it once per cause,
+                    # keep pumping.
+                    key = (gid, type(exc).__name__)
+                    self.record_errors[key] = self.record_errors.get(key, 0) + 1
+                    if self.record_errors[key] == 1:
+                        print(f"  [record] {sup.short_name} {brief_error(exc)}", flush=True)
         return cb
 
     # ── persistence ─────────────────────────────────────────────────────
@@ -229,7 +242,7 @@ class Supervisor:
             try:
                 if ev.offers and sup.poller.proof is not None:
                     fr = frontier({o: list(v) for o, v in ev.offers.items()},
-                                  now_utc=ev.evaluated_utc, exhaustive=sup.poller.proof,
+                                  now_utc=ev.evaluated_utc, proof=sup.poller.proof,
                                   max_leg_age_s=self.max_book_age_s, hurdle=MIN_RETURN)
                     if fr.actionable:
                         cap = (f"  N_max={fr.n_max:.0f} N*={fr.n_star:.0f} "
@@ -304,6 +317,7 @@ class Supervisor:
     def stats(self) -> dict:
         return {"live": len(self.live), "mode": self.mode.value, "executions": self.executions, "spawned": self.spawned, "reaped": self.reaped,
                 "evaluations": sum(s.evaluations for s in self.live.values()),
+                "record_errors": sum(self.record_errors.values()),
                 "rows": sum(s.written for s in self.live.values()),
                 "kalshi": self.ks.stats() if self.ks else None,
                 "polymarket": self.ps.stats() if self.ps else None}

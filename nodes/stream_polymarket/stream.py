@@ -248,6 +248,7 @@ class PolymarketStream:
                 raise
             except Exception as exc:  # noqa: BLE001 -- reconnect is the whole job
                 self.connected = False
+                self.errors += 1          # a reconnect is an error: socket_health.errors must climb with it
                 self.last_error = brief_error(exc)
                 if on_state:
                     on_state("reconnect", self.last_error)
