@@ -19,6 +19,15 @@ WHAT IT DETECTS, and why each check is here rather than an obvious alternative:
   FAILED        last terminal row is FAILED.
   STALE         a `oneshot` job has not completed within its SLA.
   NEVER_RAN     a registered job has no rows at all.
+  SOCKET_FLAPPING  a venue socket reconnected `max_reconnects` or more times over the last
+                `window_rows` health rows (~15 minutes). A lane whose sockets tear down every
+                ten seconds still writes a start row once and keeps its pid, so CRASH_LOOP and
+                CRASHED are blind to it: on 2026-09-03 both sockets reconnected 5-20 times a
+                minute for hours while this file printed "all registered jobs healthy".
+  SOCKET_ERROR  the socket's last error names one of OUR exception classes (IllegalTransition,
+                TypeError, ...) and the socket was seen down or its error count rose in the
+                window: a bug in the record or pricing path reaching the transport, not the
+                venue hanging up.
 
 PER GATE_TO_LIVE.md:29-32 -- "every alarm demonstrated firing against a fake target; a monitor
 that has never emitted is untested (Kilos found three silent monitor bugs this way)" -- selftest()
@@ -108,6 +117,53 @@ def _rows(index: Path) -> list[dict]:
     return out
 
 
+#: An exception class in socket_health.last_error that is ours, not the venue's. A transport error
+#: reads "ConnectionClosedError: ..." or "TimeoutError: "; these read like a traceback's last line.
+_OUR_EXCEPTIONS = ("IllegalTransition", "TypeError", "KeyError", "AttributeError", "ValueError",
+                   "AssertionError", "IndexError", "ZeroDivisionError")
+
+
+def socket_alerts(db_path: Path | str, *, now: float | None = None, window_rows: int = 15,
+                  max_reconnects: int = 5, max_row_age_s: float = 3600.0) -> list[str]:
+    """Reads the lane's own socket_health rows (one per report tick per venue). Silent when the
+    table is absent, when a venue has fewer than two rows, or when the newest row is older than
+    `max_row_age_s` (a stopped lane is the daemon check's business, not this one's)."""
+    import sqlite3
+    t = time.time() if now is None else now
+    out: list[str] = []
+    dbp = Path(db_path)
+    if not dbp.exists():
+        return out
+    try:
+        con = sqlite3.connect(f"file:{dbp}?mode=ro", uri=True)
+        if not con.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='socket_health'").fetchall():
+            con.close()
+            return out
+        venues = [r[0] for r in con.execute("SELECT DISTINCT venue FROM socket_health").fetchall()]
+        for venue in sorted(venues):
+            rows = con.execute("SELECT seen_ts, connected, errors, last_error FROM socket_health WHERE venue=? "
+                               "ORDER BY seen_ts DESC LIMIT ?", (venue, window_rows)).fetchall()
+            if len(rows) < 2 or t - rows[0][0] > max_row_age_s:
+                continue
+            rows = rows[::-1]                                     # oldest first
+            errs = [r[2] for r in rows if r[2] is not None]
+            rose = (errs[-1] - errs[0]) if len(errs) >= 2 else 0
+            toggles = sum(1 for a, b in zip(rows, rows[1:]) if (a[1] or 0) != (b[1] or 0))
+            span = int(rows[-1][0] - rows[0][0])
+            if rose >= max_reconnects or toggles >= max_reconnects:
+                out.append(f"socket {venue}: SOCKET_FLAPPING — {rose} errors and {toggles} connect/disconnect "
+                           f"flips over the last {len(rows)} health rows ({span}s); last: {rows[-1][3] or '?'}")
+            last = rows[-1][3] or ""
+            seen_down = any(not (r[1] or 0) for r in rows)
+            if (rose > 0 or seen_down) and last.split(":")[0].strip() in _OUR_EXCEPTIONS:
+                out.append(f"socket {venue}: SOCKET_ERROR — our own exception reached the transport and "
+                           f"tore the socket down: {last}")
+        con.close()
+    except sqlite3.Error as exc:
+        out.append(f"socket: HEALTH_UNREADABLE — {type(exc).__name__}")
+    return out
+
+
 def check(index: Path = INDEX, *, now: float | None = None,
           slas: dict[str, Sla] | None = None, risk: dict | None = None) -> list[str]:
     """`risk` is the keyword set for nodes/risk/health.risk_alerts (paths); None uses the
@@ -172,6 +228,7 @@ def check(index: Path = INDEX, *, now: float | None = None,
                     st = TupleStore(path, enforce_volume=not db)
                     alerts.extend(registry_health(st, now=now, in_season=(risk or {}).get("in_season", True)))
                     st.close()
+                    alerts.extend(socket_alerts(path, now=now))
             except Exception as exc:  # noqa: BLE001 -- the watchdog must report, never crash
                 alerts.append(f"registry: UNREADABLE — {type(exc).__name__}")
     return alerts
@@ -264,7 +321,39 @@ def selftest() -> None:
         con.commit(); con.close()
         assert any("NO_CO_LISTED_GAMES" in a for a in check(fresh("q"), now=NOW, slas={}, risk={**R, "in_season": True})), "REGISTRY"
         assert not any("registry" in a for a in check(fresh("q"), now=NOW, slas={}, risk={**R, "in_season": False}))
-    print("watchdog selftest OK — 7 job branches, 3 risk branches and the registry branch fired, healthy cases stayed quiet")
+        # ── sockets (socket_health, written by the lane's report tick) ───
+        from nodes.store_tuples.store import TupleStore as _TS
+        con = sqlite3.connect(db); con.executescript(_TS.SOCKET_HEALTH_DDL)
+
+        def health(venue, i, connected, errors, last):
+            con.execute("INSERT INTO socket_health VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (NOW - (15 - i) * 60, venue, connected, 10, 100 * i, 0, 0, 0, 0, 0.99, errors, 0.0, 1, 1.0, last))
+        for i in range(15):                                          # a quiet, connected socket
+            health("kalshi", i, 1, 0, None)
+        con.commit()
+        assert not any("socket" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "quiet socket must be silent"
+        # the 2026-09-03 signature: connected flips every row, errors climb, last_error is ours
+        for i in range(15):
+            health("polymarket", i, i % 2, i, "IllegalTransition: espn:cfb:1:moneyline:v1:5: BLOCKED_MATCH -> BLOCKED_STALE")
+        con.commit()
+        got = check(fresh("q"), now=NOW, slas={}, risk=R)
+        assert any("polymarket: SOCKET_FLAPPING" in a for a in got), got
+        assert any("polymarket: SOCKET_ERROR" in a for a in got), got
+        assert not any("kalshi: SOCKET" in a for a in got), "the healthy venue must not be dragged in"
+        # a venue that hung up (transport error, few reconnects) is neither
+        con.execute("DELETE FROM socket_health WHERE venue='polymarket'")
+        for i in range(15):
+            health("polymarket", i, 1, 1 if i > 7 else 0, "ConnectionClosedError: no close frame received or sent")
+        con.commit()
+        assert not any("socket" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "one venue hang-up is not an alert"
+        # rows older than an hour belong to a stopped lane: the daemon check owns that
+        con.execute("DELETE FROM socket_health WHERE venue='polymarket'")
+        for i in range(15):
+            health("polymarket", i, i % 2, i, "TypeError: x")
+        con.execute("UPDATE socket_health SET seen_ts = seen_ts - 7200 WHERE venue='polymarket'"); con.commit()
+        assert not any("socket" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "stale health rows are silent"
+        con.close()
+    print("watchdog selftest OK — 7 job branches, 3 risk branches, the registry branch and 2 socket branches fired; healthy cases stayed quiet")
 
 
 def main() -> int:
