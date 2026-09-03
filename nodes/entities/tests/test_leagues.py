@@ -37,11 +37,11 @@ def test_enablement_names_what_each_league_lacks():
     # computed from the rule and template registries at call time.
     assert enablement("mlb") == []
     assert enablement("nfl") == []                 # L30 registered both rates on 2026-09-03
-    assert enablement("cfb") == ["EVIDENCE_UNMEASURED:cfb.cancelled_rate", "EVIDENCE_UNMEASURED:cfb.postponed_gt48h_rate"]
+    assert enablement("cfb") == []                 # L32 (a FLOOR for FCS, said so in the evidence note)
     for c in ("nba", "wnba", "nhl"):
         assert enablement(c) == ["NO_KALSHI_TEMPLATE", "NO_POLYMARKET_TEMPLATE"], c
     # soccer: rule cited, both templates reviewed 2026-09-03, rates unmeasured per competition
     for c in ("epl", "lal", "bun"):
         assert enablement(c) == [], c                # L33 (a proxy, labelled FLOOR in the evidence note)
     assert enablement("mls") == ["EVIDENCE_UNMEASURED:soccer.mls.cancelled_rate", "EVIDENCE_UNMEASURED:soccer.mls.postponed_gt48h_rate"]
-    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun"]
+    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "cfb"]

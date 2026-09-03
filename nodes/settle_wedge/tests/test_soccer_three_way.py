@@ -107,8 +107,16 @@ def test_college_football_texts_hash_to_their_templates_and_the_tie_cannot_fire(
     p = harvest_polymarket({"slug": "s", "description": POLYMARKET_CFB_GAME_V1.sample_text},
                            participants=POLYMARKET_CFB_GAME_V1.sample_participants, retrieved_at=T)
     assert k.template_hash == KALSHI_CFB_GAME_V1.template_hash and p.template_hash == POLYMARKET_CFB_GAME_V1.template_hash
-    got = certify(k, p, league="cfb")
-    assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED" and got.context["evidence_key"].startswith("cfb.")
+    from nodes.settle_wedge import evidence
+    saved = dict(evidence.EVIDENCE)
+    try:
+        evidence.EVIDENCE.clear()                  # before L32
+        got = certify(k, p, league="cfb")
+        assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED" and got.context["evidence_key"].startswith("cfb.")
+    finally:
+        evidence.EVIDENCE.update(saved)
+    live = certify(k, p, league="cfb")
+    assert isinstance(live, SettlementEquivalence) and set(live.rates) == {"cfb.postponed_gt48h_rate", "cfb.cancelled_rate"}
     eq = certify(k, p, league="cfb", rates={"cfb.postponed_gt48h_rate": 0.002, "cfb.cancelled_rate": 0.001})
     assert isinstance(eq, SettlementEquivalence)
     assert {v.dimension: v.outcome for v in eq.verdicts}["tie"] == "NA"

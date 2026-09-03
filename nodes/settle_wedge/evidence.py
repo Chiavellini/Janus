@@ -35,6 +35,7 @@ class Evidence:
 _L26 = "research/sports/2026-09-02_mlb-settlement-wedge-rates/spec.yaml"
 _L30 = "research/sports/2026-09-03_nfl-settlement-wedge-rates-v2/spec.yaml"
 _L33 = "research/sports/2026-09-03_soccer-settlement-wedge-rates/spec.yaml"
+_L32 = "research/sports/2026-09-03_cfb-settlement-wedge-rates/spec.yaml"
 EVIDENCE: dict[str, Evidence] = {
     "mlb.postponed_gt2d_rate": Evidence(
         "mlb.postponed_gt2d_rate", 0.004762, 2100,
@@ -96,6 +97,18 @@ EVIDENCE: dict[str, Evidence] = {
         "openfootball La Liga season files 2021-22..2024-25: scheduled N(N-1) minus played", "2026-09-03", _L33,
         "0 of 1520: every season parsed to exactly N(N-1) matches. Registered verbatim; the rule-of-three bound at "
         "this n is ~0.002 and a re-measurement over more seasons is the honest way to raise it."),
+    "cfb.postponed_gt48h_rate": Evidence(
+        "cfb.postponed_gt48h_rate", 0.000630, 9529,
+        "ESPN college-football scoreboard, FBS + FCS, seasons 2019 and 2021-2025 (denominator) + cited "
+        "schedule-change table (numerator); 2020 excluded by the same decision as the NFL row", "2026-09-03", _L32,
+        "6 of 9529 games started more than 48 h late (FBS 3, FCS 3: hurricanes Ida, Ian, Helene, a snowstorm, "
+        "two deaths in a program). FLOOR for FCS: the table rests on press coverage and FCS moves are poorly indexed; "
+        "FBS is near-complete (FBS-only rate 0.000552)."),
+    "cfb.cancelled_rate": Evidence(
+        "cfb.cancelled_rate", 0.001784, 9529,
+        "ESPN college-football scoreboard, FBS + FCS, seasons 2019 and 2021-2025 + cited schedule-change table", "2026-09-03", _L32,
+        "17 of 9529: 13 FCS and 4 FBS games cancelled, forfeited or ruled no contest (hurricanes, two campus "
+        "shootings, a player's death, a lightning no-contest). FLOOR for FCS for the same reason as above."),
 }
 
 

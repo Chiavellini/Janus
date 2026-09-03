@@ -1,49 +1,69 @@
 {
-  "cancelled_added": 0,
+  "cancelled_added": 17,
   "completeness": {
     "complete": true,
     "problems": []
   },
   "counts": {
     "by_division": {
-      "cancelled": {},
-      "postponed_gt48h": {}
+      "cancelled": {
+        "FBS": 4,
+        "FCS": 13
+      },
+      "postponed_gt48h": {
+        "FBS": 3,
+        "FCS": 3
+      }
     },
-    "cancelled": 0,
-    "postponed_gt48h": 0
+    "cancelled": 17,
+    "postponed_gt48h": 6
   },
-  "denominator": 9523,
+  "denominator": 9529,
   "per_season": {
     "2019": {
-      "played": 1685
+      "cancelled": 2,
+      "played": 1683,
+      "postponed_gt48h": 1
     },
     "2021": {
-      "played": 1595
+      "cancelled": 1,
+      "moved_le48h": 1,
+      "played": 1593,
+      "postponed_gt48h": 1
     },
     "2022": {
-      "played": 1480
+      "cancelled": 4,
+      "moved_le48h": 2,
+      "played": 1478,
+      "postponed_gt48h": 2
     },
     "2023": {
-      "played": 1486
+      "cancelled": 6,
+      "played": 1481
     },
     "2024": {
-      "played": 1634
+      "cancelled": 3,
+      "moved_le48h": 2,
+      "played": 1634,
+      "postponed_gt48h": 1
     },
     "2025": {
-      "played": 1643
+      "cancelled": 1,
+      "played": 1643,
+      "postponed_gt48h": 1
     }
   },
-  "played": 9523,
-  "played_fbs": 5431,
+  "played": 9512,
+  "played_fbs": 5427,
   "rates": {
-    "cancelled_rate": 0.0,
+    "cancelled_rate": 0.001784,
     "fbs_only": {
-      "cancelled_rate": 0.0,
-      "postponed_gt48h_rate": 0.0
+      "cancelled_rate": 0.000737,
+      "postponed_gt48h_rate": 0.000552
     },
-    "postponed_gt48h_rate": 0.0
+    "postponed_gt48h_rate": 0.00063
   },
-  "retrieved_at": "2026-09-03T17:35:38.991006+00:00",
+  "retrieved_at": "2026-09-03T17:45:08.291949+00:00",
   "seasons": [
     2019,
     2021,
@@ -54,5 +74,5 @@
   ],
   "spec": "research/sports/2026-09-03_cfb-settlement-wedge-rates/spec.yaml",
   "sufficient": true,
-  "verdict": "NO_TABLE"
+  "verdict": "REGISTERED"
 }

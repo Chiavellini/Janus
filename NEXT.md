@@ -45,8 +45,7 @@ soccer name resolves.
    the EPL reserve it implies is ~1.9¢ at a 0.50 Polymarket price — large). The truer, smaller
    number needs a forward snapshotter of true original dates (`DESIGN.md`): a free football-data.org
    token (yours) and a daily job like the census. MLS has no rounds and stays blocked.
-3. ~~NFL rates~~ done (L30). ~~College football registration~~ done; its `cfb.*` rates need the
-   same shape of row (a cited schedule-change table over ESPN's college schedule).
+3. ~~NFL rates~~ done (L30). ~~College football~~ registered and measured (L32; a FLOOR for FCS).
 5. Three-way execution WITHOUT a three-leg order: every Polymarket market is Yes/No, so NO on
    the home market pays on {draw, away} and a soccer cover is two legs again (Polymarket NO on one
    side + Kalshi YES on that side, or the mirror). That needs `nodes/cover` to price a leg that

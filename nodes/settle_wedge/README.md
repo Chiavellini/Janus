@@ -94,6 +94,7 @@ audit. In census order (`research/sports/2026-09-03_co-listing-census/`, ledger 
    the pair blocks at `EVIDENCE_UNMEASURED` and `nodes/entities/leagues.enablement()` says so.
 5. **Certify on a fixture pair** in tests, then the league runs unasked (`default_leagues()`).
 
-Soccer (epl, lal, bun, mls) sits at step 4 on 2026-09-03: keys `soccer.<code>.postponed_gt48h_rate`
-and `soccer.<code>.cancelled_rate`. NFL sits at step 4 too (`nfl.postponed_gt48h_rate`,
-`nfl.cancelled_rate`). NBA/WNBA/NHL sit at step 3. UCL and every non-ESPN competition sit at step 1.
+By the evening of 2026-09-03: MLB, NFL (L30), EPL / La Liga / Bundesliga (L33, a proxy labelled
+FLOOR) and college football (L32, FLOOR for FCS) pass step 5 and run unasked. MLS sits at step 4
+(no round structure, no original-date source). NBA/WNBA/NHL sit at step 3. UCL and every
+competition ESPN does not schedule as team games sit at step 1.

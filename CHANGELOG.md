@@ -371,3 +371,6 @@ the runner sha, so nothing merges to main before that run).
 - **The generic verifier** (`nodes/match_generic`) recovered from `5eac384^`, reproducing the
   archived 51,306 verdicts; ledger L31 declares its precision bar before any label exists.
 - **The Polymarket proof script** (`ops/polymarket_live_proof.py`), driven offline by a scripted CLOB.
+- **College football certifies.** Ledger L32: ESPN completed games (FBS + FCS, 2019 and 2021–2025)
+  as the denominator, a cited table of 28 schedule changes as the numerator. 6 of 9,529 moved
+  more than 48 h, 17 cancelled; FLOOR for FCS. `default_leagues()` adds cfb.

@@ -33,9 +33,19 @@ def season_games(cl: Client, season: int) -> dict[str, dict]:
                 if (e.get("season") or {}).get("type") != 2:
                     continue                  # bowls / postseason
                 comps = (e.get("competitions") or [{}])[0]
-                teams = [c["team"].get("displayName", "") for c in comps.get("competitors") or []]
-                out.setdefault(e["id"], {"id": e["id"], "date": e.get("date"), "teams": teams, "group": g,
-                                         "status": ((e.get("status") or {}).get("type") or {}).get("name")})
+                status = ((e.get("status") or {}).get("type") or {}).get("name")
+                # ESPN keeps a postponed/cancelled event beside the rescheduled one: only a completed
+                # game is a played game. The numerator table carries the moves and cancellations.
+                if status != "STATUS_FINAL":
+                    continue
+                teams, forms = [], []
+                for c in comps.get("competitors") or []:
+                    t = c.get("team") or {}
+                    teams.append(t.get("displayName", ""))
+                    forms.append({team_key(x) for x in (t.get("displayName"), t.get("shortDisplayName"), t.get("location"),
+                                                       f"{t.get('location', '')} {t.get('name', '')}") if x})
+                out.setdefault(e["id"], {"id": e["id"], "date": e.get("date"), "teams": teams, "forms": forms, "group": g,
+                                         "status": status})
     return out
 
 
@@ -57,8 +67,23 @@ def main() -> int:
         if cancelled:
             n_canc[div] += 1; per_season[s]["cancelled"] += 1; extra += 1
             continue
-        want = {team_key(e["away"]), team_key(e["home"])}
-        hits = [g for g in played[s].values() if {team_key(t) for t in g["teams"]} == want]
+        def names(x: str) -> set[str]:
+            # ESPN abbreviates directions ("SE Louisiana Lions" for Southeastern Louisiana); try both.
+            out = set()
+            for y in (x, x.replace("Southeastern", "SE").replace("Southwestern", "SW").replace("Northwestern", "NW")
+                      .replace("Northeastern", "NE")):
+                k = team_key(y)
+                out |= {k, team_key(y.rsplit(" ", 1)[0]) if " " in y else k}
+            return out
+        want = [names(e["away"]), names(e["home"])]
+        hits = [g for g in played[s].values() if len(g["forms"]) == 2 and
+                ((want[0] & g["forms"][0] and want[1] & g["forms"][1]) or (want[0] & g["forms"][1] and want[1] & g["forms"][0]))]
+        if len(hits) > 1:
+            # two teams can meet twice in a season (a rescheduled game and the return fixture):
+            # the played date names the one that moved
+            actual = datetime.strptime(e["actual_date_or_CANCELLED"].strip(), "%Y-%m-%d")
+            # ESPN dates are UTC: an evening kickoff in the US is the next calendar day there
+            hits = [g for g in hits if abs((datetime.strptime(str(g["date"])[:10], "%Y-%m-%d") - actual).days) <= 1]
         if len(hits) != 1:
             problems.append(f"{s} {e['away']} @ {e['home']}: {len(hits)} ESPN games match")
             continue

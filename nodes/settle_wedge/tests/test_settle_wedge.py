@@ -157,7 +157,8 @@ def test_the_registry_carries_l26_and_mlb_certifies_from_it():
                for k, e in EVIDENCE.items() if k.startswith("nfl."))
     assert all(e.research_ref.startswith("research/sports/2026-09-03_soccer-settlement-wedge-rates")
                for k, e in EVIDENCE.items() if k.startswith("soccer."))
-    assert {k.split(".")[0] for k in EVIDENCE} == {"mlb", "nfl", "soccer"}
+    assert {k.split(".")[0] for k in EVIDENCE} == {"mlb", "nfl", "soccer", "cfb"}
+    assert all(e.research_ref.startswith("research/sports/2026-09-03_cfb-settlement-wedge-rates") for k, e in EVIDENCE.items() if k.startswith("cfb."))
     assert all("FLOOR" in e.note for k, e in EVIDENCE.items() if k.startswith("soccer.") and k.endswith("postponed_gt48h_rate"))
     k, p = records()
     eq = certify(k, p, league="mlb")
