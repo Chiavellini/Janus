@@ -84,6 +84,51 @@ class RiskClearance:
         return self._first_used
 
 
+def clear_proof(cand: Candidate, *, mode: Mode, limits: RiskLimits, ledger: ExposureLedger,
+                kill: KillSwitches, breaker: LossBreaker, fills_today: Sequence[RealizedFill],
+                balances: Mapping[str, float] | None, venues_connected: Mapping[str, bool],
+                caps: Mapping[str, float], now_mono: float | None = None,
+                now: float | None = None) -> RiskClearance | Refused:
+    """Clearance for an EXECUTION PROOF (GATE step 8): a deliberately tiny, single-venue, non-arbitrage
+    order whose purpose is to reconcile fills, fees and balance against the venue. Every fail-closed
+    check in `clear()` applies except the profit thresholds, and the override's caps bound the stake.
+    Only a capital-risking mode may mint one, and only with an override (`caps`) present."""
+    t_mono = now_mono if now_mono is not None else time.monotonic()
+    venues = tuple(sorted({v for v, _c, _p in cand.legs}))
+    if not mode.risks_capital:
+        return Refused("MODE", f"a proof is a real order; {mode.value} does not risk capital")
+    if not caps or "stake_usd" not in caps:
+        return Refused("NO_CAPS", "a proof needs the arming override's stake_usd cap")
+    hit = kill.active(event_id=cand.event_id, strategy=cand.strategy_version, live=True, venues=venues)
+    if hit:
+        return Refused("KILL_SWITCH", f"active: {', '.join(hit)}")
+    closed = breaker.evaluate(fills_today, max_daily_loss_usd=limits.max_daily_realized_loss_usd)
+    if closed:
+        return Refused("BREAKER", closed)
+    for v in venues:
+        if not venues_connected.get(v, False):
+            return Refused("VENUE_DISCONNECTED", f"{v} is not connected")
+    need = cand.per_venue_usd()
+    stake = sum(need.values())
+    if stake > float(caps["stake_usd"]):
+        return Refused("CAP_STAKE", f"{stake:.2f} > override stake cap {float(caps['stake_usd']):.2f}")
+    if "max_contracts" in caps and any(c > float(caps["max_contracts"]) for _v, c, _p in cand.legs):
+        return Refused("CAP_CONTRACTS", f"more than {caps['max_contracts']} contracts")
+    if balances is None:
+        return Refused("BALANCE_UNCONFIRMED", "venue balances could not be confirmed")
+    for v, usd in need.items():
+        if balances.get(v, 0.0) < usd:
+            return Refused("BALANCE", f"{v}: need {usd:.2f}, have {balances.get(v, 0.0):.2f}")
+    res = ledger.reserve(event_id=cand.event_id, league=cand.league, per_venue_usd=need, limits=limits,
+                         opportunity_id=cand.opportunity_id, now=now)
+    if isinstance(res, Refused):
+        return res
+    return RiskClearance(opportunity_id=cand.opportunity_id, event_id=cand.event_id, mode=mode,
+                         reservation=res, limits_sha=limits.sha, issued_mono=t_mono,
+                         expires_mono=t_mono + 60.0,                      # an operator command, not a race
+                         hedge_deadline_mono=t_mono + 60.0, max_hedge_submits=2, _mint=_MINT)
+
+
 def clear(cand: Candidate, *, mode: Mode, limits: RiskLimits, ledger: ExposureLedger,
           kill: KillSwitches, breaker: LossBreaker, fills_today: Sequence[RealizedFill],
           clock_healthy: bool, fee_schedules_ok: bool, balances: Mapping[str, float] | None,

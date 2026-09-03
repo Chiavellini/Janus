@@ -31,10 +31,10 @@ wake/drain and a registry alarm. Everything in the plan that code alone can deli
 Done since the merge: NFL templates reviewed and the tie rule cited; slippage measured (L27) and
 registered; the Polymarket client installed; real-order modes wired into the grid.
 
-**Yours, because I am not permitted to do them:**
-1. **A Kalshi demo account** (a signup, separate from production). Put its key and PEM path in
-   `JANUS_KALSHI_DEMO_API_KEY` / `JANUS_KALSHI_DEMO_PRIVATE_KEY_PATH` in the credentials env file;
-   then `--mode DEMO_EXECUTION` runs the round-trip.
+**Yours, because I am not permitted to place orders:**
+1. **The Kalshi proof on the production account** (demo waived, your decision, logged in GATE):
+   write the override with `ops/arming_override.py`, dry-run `ops/kalshi_live_proof.py --ticker …`,
+   then `--arm`. Two contracts by default. `--settle` after the game reconciles PnL and balance.
 2. **A funded Polymarket wallet.** Its private key in a 600-mode file named by
    `JANUS_PM_WALLET_KEY_PATH` (never in `JANUS_CREDS`); `JANUS_PM_FUNDER` / `JANUS_PM_SIGNATURE_TYPE`
    if a proxy wallet.

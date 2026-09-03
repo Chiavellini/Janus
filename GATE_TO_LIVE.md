@@ -144,3 +144,5 @@ sports arm keeps every step and every clause; only the nouns change. Appended, n
   the same game differently — cancellation, postponement, suspension, tie — from
   `nodes/settle_wedge`, priced into the settlement-risk buffer. Until measured the label is
   `settlement_risk_modelled=False` and the mode is capped at `PAPER_EXECUTION`.
+
+| 2026-09-03 | Step 8 for Kalshi: the demo round-trip is **waived** at the operator's decision; replaced by a live fill of 1–10 contracts on the production account. Operator statement, verbatim: *"i dont care if we test with the actual kalshi account (as long as the fills are very small) Theres no need for a kalshi demo account."* The proof stays reconciled against fills, the pinned fee curve at the series multiplier, and the balance delta; it runs under `LIMITED_LIVE` with a signed override whose caps bound it. The $5 figure in step 8 was a pre-committed floor with nothing depending on it; the cap is now "≥ 1 contract, ≤ $10 stake". | Only production Kalshi credentials exist on the box; no fill has been placed. Polymarket unchanged (no demo exists; wallet not yet created). |

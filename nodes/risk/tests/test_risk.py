@@ -9,7 +9,7 @@ import pytest
 
 from kernel.schema import FillState, Mode
 from nodes.risk.breaker import LossBreaker, RealizedFill
-from nodes.risk.clearance import Candidate, RiskClearance, clear
+from nodes.risk.clearance import Candidate, RiskClearance, clear, clear_proof
 from nodes.risk.gate import Refused as GateRefused, resolve_mode
 from nodes.risk.kill import KillSwitches
 from nodes.risk.ledger import ExposureLedger, Refused
@@ -216,3 +216,18 @@ def test_a_live_mode_needs_a_complete_matching_unexpired_override(kill, tmp_path
     assert r.mode is Mode.LIMITED_LIVE and r.caps == {"stake_usd": 5.0, "day_notional_usd": 20.0} and r.override_sha
     kill.latch("live", "breaker")
     assert resolve_mode("LIMITED_LIVE", **args).code == "KILL_LIVE"
+
+
+def test_a_proof_clearance_needs_a_live_mode_an_override_cap_and_bounds_the_stake(kill, breaker):
+    c = cand(legs=(("kalshi", 2.0, 0.44),), net_profit_usd=-1.0, locked_return=-1.0)   # not an arbitrage, on purpose
+    base = dict(limits=LIMITS, ledger=ExposureLedger(), kill=kill, breaker=breaker, fills_today=(),
+                balances={"kalshi": 50.0}, venues_connected={"kalshi": True}, now_mono=100.0, now=1000.0)
+    assert clear_proof(c, mode=Mode.PAPER_EXECUTION, caps={"stake_usd": 10}, **base).code == "MODE"
+    assert clear_proof(c, mode=Mode.LIMITED_LIVE, caps={}, **base).code == "NO_CAPS"
+    assert clear_proof(c, mode=Mode.LIMITED_LIVE, caps={"stake_usd": 0.5}, **base).code == "CAP_STAKE"
+    assert clear_proof(c, mode=Mode.LIMITED_LIVE, caps={"stake_usd": 10, "max_contracts": 1}, **base).code == "CAP_CONTRACTS"
+    assert clear_proof(c, mode=Mode.LIMITED_LIVE, caps={"stake_usd": 10}, **{**base, "balances": None}).code == "BALANCE_UNCONFIRMED"
+    ok = clear_proof(c, mode=Mode.LIMITED_LIVE, caps={"stake_usd": 10, "max_contracts": 10}, **base)
+    assert isinstance(ok, RiskClearance) and ok.consume(100.5) and ok.consume(130.0, hedge=True)
+    kill.latch("live", "t")
+    assert clear_proof(c, mode=Mode.LIMITED_LIVE, caps={"stake_usd": 10}, **{**base, "ledger": ExposureLedger()}).code == "KILL_SWITCH"
