@@ -24,6 +24,9 @@ WHAT IT DETECTS, and why each check is here rather than an obvious alternative:
                 ten seconds still writes a start row once and keeps its pid, so CRASH_LOOP and
                 CRASHED are blind to it: on 2026-09-03 both sockets reconnected 5-20 times a
                 minute for hours while this file printed "all registered jobs healthy".
+  LANE_SILENT   the lane's own report tick has not written a socket_health row for
+                `max_silence_s` while the daemon is up: the process lives, the data stopped.
+                The F2 lesson as a rule -- a forward row's collector must be seen writing.
   SOCKET_ERROR  the socket's last error names one of OUR exception classes (IllegalTransition,
                 TypeError, ...) and the socket was seen down or its error count rose in the
                 window: a bug in the record or pricing path reaching the transport, not the
@@ -124,7 +127,8 @@ _OUR_EXCEPTIONS = ("IllegalTransition", "TypeError", "KeyError", "AttributeError
 
 
 def socket_alerts(db_path: Path | str, *, now: float | None = None, window_rows: int = 15,
-                  max_reconnects: int = 5, max_row_age_s: float = 3600.0) -> list[str]:
+                  max_reconnects: int = 5, max_row_age_s: float = 3600.0,
+                  max_silence_s: float | None = None) -> list[str]:
     """Reads the lane's own socket_health rows (one per report tick per venue). Silent when the
     table is absent, when a venue has fewer than two rows, or when the newest row is older than
     `max_row_age_s` (a stopped lane is the daemon check's business, not this one's)."""
@@ -140,6 +144,10 @@ def socket_alerts(db_path: Path | str, *, now: float | None = None, window_rows:
             con.close()
             return out
         venues = [r[0] for r in con.execute("SELECT DISTINCT venue FROM socket_health").fetchall()]
+        newest = con.execute("SELECT MAX(seen_ts) FROM socket_health").fetchone()[0]
+        if max_silence_s is not None and newest is not None and t - newest > max_silence_s:
+            out.append(f"lane: LANE_SILENT — no socket_health row for {int(t - newest)}s (limit {int(max_silence_s)}s); "
+                       f"the report tick stopped writing")
         for venue in sorted(venues):
             rows = con.execute("SELECT seen_ts, connected, errors, last_error FROM socket_health WHERE venue=? "
                                "ORDER BY seen_ts DESC LIMIT ?", (venue, window_rows)).fetchall()
@@ -228,7 +236,9 @@ def check(index: Path = INDEX, *, now: float | None = None,
                     st = TupleStore(path, enforce_volume=not db)
                     alerts.extend(registry_health(st, now=now, in_season=(risk or {}).get("in_season", True)))
                     st.close()
-                    alerts.extend(socket_alerts(path, now=now))
+                    lane_up = any(r.get("job") == "live_stream" and r.get("status") == "started" and _pid_alive(r.get("pid"))
+                                  for r in rows)
+                    alerts.extend(socket_alerts(path, now=now, max_silence_s=900.0 if lane_up else None))
             except Exception as exc:  # noqa: BLE001 -- the watchdog must report, never crash
                 alerts.append(f"registry: UNREADABLE — {type(exc).__name__}")
     return alerts
@@ -346,6 +356,11 @@ def selftest() -> None:
             health("polymarket", i, 1, 1 if i > 7 else 0, "ConnectionClosedError: no close frame received or sent")
         con.commit()
         assert not any("socket" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "one venue hang-up is not an alert"
+        # LANE_SILENT: the lane is up but its report tick stopped writing (only when asked to watch for it)
+        from ops.watchdog import socket_alerts as _sa
+        assert any("LANE_SILENT" in a for a in _sa(db, now=NOW + 1000, max_silence_s=900.0)), "LANE_SILENT"
+        assert not any("LANE_SILENT" in a for a in _sa(db, now=NOW + 1000)), "silence is only judged when the lane is up"
+        assert not any("LANE_SILENT" in a for a in _sa(db, now=NOW + 100, max_silence_s=900.0)), "fresh rows are quiet"
         # rows older than an hour belong to a stopped lane: the daemon check owns that
         con.execute("DELETE FROM socket_health WHERE venue='polymarket'")
         for i in range(15):
@@ -353,7 +368,7 @@ def selftest() -> None:
         con.execute("UPDATE socket_health SET seen_ts = seen_ts - 7200 WHERE venue='polymarket'"); con.commit()
         assert not any("socket" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "stale health rows are silent"
         con.close()
-    print("watchdog selftest OK — 7 job branches, 3 risk branches, the registry branch and 2 socket branches fired; healthy cases stayed quiet")
+    print("watchdog selftest OK — 7 job branches, 3 risk branches, the registry branch and 3 socket branches fired; healthy cases stayed quiet")
 
 
 def main() -> int:
