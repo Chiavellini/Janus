@@ -246,3 +246,21 @@ net profit ≥ $0.50, as importable constants), `opportunity.py` (the record, th
 table, `opportunities` / `opportunity_transitions` / `frontiers` with the priced books kept when
 the edge goes away). The supervisor and the replay both write through it. The fee registry pins
 are re-verified to 2026-09-02 with what the venues reported.
+
+---
+
+## 2026-09-03 — P6: the order path, disarmed by construction
+
+`kernel/execution_protocol.py` is the contract: `OrderRequest`, the three-way `Ack`/`OrderState`
+(FILLED / PARTIAL / UNFILLED as the venue says, UNCONFIRMED when it did not, REJECTED when it
+refused), `FillRecord` with a venue-final flag, `Balance`, and the `ExecutionVenue` Protocol whose
+`submit()` takes a `RiskClearance` and consumes it. `nodes/execution` holds the shared journal
+(a row before the wire; duplicate client ids refused; `venue_fills` is the breaker's FIFO), the
+gate, `PaperVenue` (fills against the priced book) and `RefusingVenue` (SHADOW). `nodes/exec_kalshi`
+signs REST the way the socket does (verified read-only against production), speaks the v2 order
+API in YES terms (buying NO is an ask at 1 − price), and recovers an unanswered POST by client id
+rather than resubmitting. `nodes/exec_polymarket` treats every outcome as its own token, calls a
+matched FOK FILLED-but-settlement-pending until the trade is CONFIRMED on-chain, and delegates
+signing to `py_clob_client` through a lazily imported transport that names the install step when
+absent; the wallet key is a separate 600-mode file. Nothing runs below DEMO on Kalshi or
+LIMITED_LIVE on Polymarket, and nothing has been sent to either venue.

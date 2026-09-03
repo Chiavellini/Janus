@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""The paper venue: fills against the SAME book the opportunity was priced from, with a latency
+and an adverse-move model. Same journal, same three-way state, same clearance gate as a real
+venue -- the coordinator cannot tell them apart, which is the point (spec §14: no mode may
+silently escalate; the state machine is byte-identical across modes).
+
+`RefusingVenue` is SHADOW_LIVE: it journals the intent and returns REJECTED("SHADOW").
+"""
+
+from __future__ import annotations
+
+import random
+import time
+from dataclasses import dataclass, field
+from typing import Callable, Sequence
+
+from kernel.execution_protocol import Ack, Balance, FillRecord, OrderRequest, OrderState
+from kernel.schema import Book, FillState, Mode
+from nodes.execution.gate import admit
+from nodes.execution.journal import Journal
+
+
+@dataclass
+class PaperVenue:
+    venue: str
+    journal: Journal
+    mode: Mode = Mode.PAPER_EXECUTION
+    #: market_id -> the Book to fill against. The coordinator sets it from the priced offers.
+    books: dict[str, Book] = field(default_factory=dict)
+    latency_s: float = 0.0
+    #: Adverse move applied to every ask level at fill time, in price. 0.0 until measured
+    #: (nodes/cover.Frontier.slippage_modelled); a test may set it.
+    adverse_move: float = 0.0
+    balance_usd: float = 1_000.0
+    seed: int = 0
+    clock: Callable[[], float] = time.time
+    _orders: dict[str, Ack] = field(default_factory=dict)
+    _fills: list[FillRecord] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        self._rng = random.Random(self.seed)
+
+    def submit(self, req: OrderRequest, clearance) -> Ack:
+        t = self.clock()
+        refused = admit(req, clearance, venue=self.venue, mode=self.mode, needs=Mode.PAPER_EXECUTION, now=t)
+        if refused is not None:
+            return refused
+        self.journal.pending(req, mode=self.mode.value, now=t)
+        book = self.books.get(req.market_id)
+        if book is None:
+            ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None, "NO_BOOK", t,
+                      detail="paper venue has no book for this market")
+            self.journal.record(ack, kind="ack", now=t)
+            return ack
+        need, gross, filled = req.contracts, 0.0, 0.0
+        for q in book.asks:
+            px = min(0.99, q.price + self.adverse_move)
+            if px > req.price + 1e-9:
+                break
+            take = min(need, q.size)
+            gross += take * px
+            filled += take
+            need -= take
+            if need <= 1e-9:
+                break
+        if req.time_in_force == "fok" and need > 1e-9:
+            filled, gross = 0.0, 0.0
+        state = (FillState.FILLED if filled >= req.contracts - 1e-9 else
+                 FillState.PARTIAL if filled > 0 else FillState.UNFILLED)
+        avg = gross / filled if filled else None
+        oid = f"paper-{req.client_order_id}"
+        ack = Ack(self.venue, req.client_order_id, oid, state, filled, avg, 0.0, state.value.lower(),
+                  t + self.latency_s, open=(req.time_in_force == "gtc" and need > 1e-9))
+        self.balance_usd -= gross
+        self._orders[req.client_order_id] = ack
+        if filled:
+            self._fills.append(FillRecord(self.venue, oid, f"{oid}-f1", filled, avg, 0.0, True, t, True))
+            self.journal.record_fill(self._fills[-1])
+        self.journal.record(ack, kind="ack", now=t)
+        return ack
+
+    def cancel(self, client_order_id: str) -> Ack:
+        a = self._orders.get(client_order_id)
+        t = self.clock()
+        if a is None:
+            return Ack(self.venue, client_order_id, None, FillState.UNCONFIRMED, 0.0, None, None, "UNKNOWN", t)
+        ack = Ack(self.venue, client_order_id, a.venue_order_id, a.state if a.filled_contracts else FillState.UNFILLED,
+                  a.filled_contracts, a.avg_price, a.fee_usd, "canceled", t, open=False)
+        self._orders[client_order_id] = ack
+        self.journal.record(ack, kind="cancel", now=t)
+        return ack
+
+    def status(self, client_order_id: str) -> OrderState:
+        a = self._orders.get(client_order_id)
+        t = self.clock()
+        if a is None:
+            return OrderState(self.venue, client_order_id, None, FillState.UNCONFIRMED, 0.0, None, None, "UNKNOWN", t)
+        return OrderState(self.venue, client_order_id, a.venue_order_id, a.state, a.filled_contracts, a.avg_price,
+                          a.fee_usd, a.raw_status, t, open=a.open, final=not a.open)
+
+    def fills(self, *, since_utc: float) -> Sequence[FillRecord]:
+        return [f for f in self._fills if f.ts >= since_utc]
+
+    def balance(self) -> Balance | None:
+        return Balance(self.venue, self.balance_usd, self.clock())
+
+    def cancel_all(self) -> int:
+        n = 0
+        for cid, a in list(self._orders.items()):
+            if a.open:
+                self.cancel(cid); n += 1
+        return n
+
+
+@dataclass
+class RefusingVenue:
+    """SHADOW_LIVE: records what would have been sent, sends nothing."""
+    venue: str
+    journal: Journal
+    mode: Mode = Mode.SHADOW_LIVE
+    clock: Callable[[], float] = time.time
+    intents: int = 0
+
+    def submit(self, req: OrderRequest, clearance) -> Ack:
+        t = self.clock()
+        self.intents += 1
+        try:
+            self.journal.pending(req, mode=self.mode.value, now=t)
+        except ValueError:
+            pass
+        ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None, "SHADOW", t,
+                  detail="shadow mode: intent recorded, nothing sent")
+        self.journal.record(ack, kind="refused", now=t)
+        return ack
+
+    def cancel(self, client_order_id: str) -> Ack:
+        return Ack(self.venue, client_order_id, None, FillState.UNFILLED, 0.0, None, None, "SHADOW", self.clock())
+
+    def status(self, client_order_id: str) -> OrderState:
+        return OrderState(self.venue, client_order_id, None, FillState.REJECTED, 0.0, None, None, "SHADOW", self.clock(), final=True)
+
+    def fills(self, *, since_utc: float) -> Sequence[FillRecord]:
+        return []
+
+    def balance(self) -> Balance | None:
+        return None
+
+    def cancel_all(self) -> int:
+        return 0

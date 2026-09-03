@@ -197,6 +197,18 @@ class Client:
         with urllib.request.urlopen(req, timeout=self.timeout) as r:
             return json.loads(r.read().decode())
 
+    def delete_json(self, url: str, *, headers: dict | None = None):
+        """One non-retried DELETE (order cancellation). A cancel is idempotent at the venue, but a
+        retry here would hide whether the FIRST attempt reached it; the caller reconciles."""
+        self.bucket.take()
+        self.stats["requests"] += 1
+        req = urllib.request.Request(url, method="DELETE",
+                                     headers={"User-Agent": USER_AGENT, "Accept": "application/json",
+                                              **(headers or {})})
+        with urllib.request.urlopen(req, timeout=self.timeout) as r:
+            body = r.read().decode()
+            return json.loads(body) if body.strip() else {}
+
     def paginate_cursor(self, url: str, params: dict, key: str, *, max_pages: int = 500,
                         use_cache: bool = True):
         """Kalshi-style cursor walk. Yields each page's list; stops on empty page or no cursor."""

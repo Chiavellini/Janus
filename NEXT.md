@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-03, after P4 of the v1 plan.
+Updated 2026-09-03, after P6 of the v1 plan.
 
 ## Done
 
@@ -18,16 +18,21 @@ streamed; `nodes/settle_wedge` — settlement equivalence as a second proof, pri
 rate (ledger L26), certified live on real MLB text; `CanonicalKey` as the join key; `nodes/risk` —
 limits, kill files, the latching breaker, the exposure ledger, the `RiskClearance` token and the
 mode gate, with three watchdog alarms; the total-cost model (per-level fills, min order, balance,
-fixed cost, a labelled slippage term) and the `Opportunity` record with persisted frontiers.
+fixed cost, a labelled slippage term) and the `Opportunity` record with persisted frontiers; the
+order path (`kernel/execution_protocol`, `nodes/execution`, `exec_kalshi`, `exec_polymarket`), disarmed:
+journal before the wire, no retry after an ambiguous send, a `RiskClearance` on every submit.
 
 ## Now
 
-1. **P6 execution adapters** (disarmed): `kernel/execution_protocol`, `nodes/exec_kalshi`
-   (REST signing generalised from the socket's, demo host), `nodes/exec_polymarket` (CLOB auth,
-   EIP-712, wallet key in its own 600-mode file). Both journal-first, `post_json_once`,
-   three-way fill state, and both require a `RiskClearance`.
-2. Then P7 coordinator, P8 paper simulator and battery, P9 control-plane polish, P10 Ashburn
-   (gated), P11 promotion.
+1. **P7 coordinator** (`nodes/execute`): the DETECTED → RECONCILED machine over two
+   `ExecutionVenue`s and a clearance; Polymarket leg first (FOK), Kalshi hedge (IOC) for exactly
+   the filled quantity; cancel the remainder after the hedge deadline; UNCONFIRMED → reconcile,
+   never retry; both venues reconciled before the ledger releases; every transition persisted
+   with the priced books. A `venues.py` factory picks adapters by mode. `nodes/reconcile` for
+   fills, charged-vs-pinned fees, settlement results, realized PnL into the breaker's FIFO.
+2. Then P8 (the pre-capital battery over captured frames), P9 control-plane polish, P10 Ashburn
+   (gated), P11 promotion. Before any DEMO run: demo credentials for Kalshi; before any
+   LIMITED_LIVE Polymarket leg: `pip install py-clob-client` and a 600-mode wallet key file.
 
 Harvest and review the Polymarket NFL and NHL game templates when they list; until then those
 leagues block at `TEMPLATE_UNKNOWN`, which is correct. Measure the slippage buffer (the distribution
