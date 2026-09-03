@@ -112,7 +112,8 @@ def test_reservations_survive_a_restart_and_release_records_why(tmp_path):
     L = ExposureLedger(store)
     r = L.reserve(event_id="e1", league="mlb", per_venue_usd={"kalshi": 10.0}, limits=LIMITS, now=1000.0)
     store.commit()
-    L2 = ExposureLedger(store)
+    # A restart is a NEW connection: it sees only what was committed, which is the whole point.
+    L2 = ExposureLedger(TupleStore(tmp_path / "t.sqlite", enforce_volume=False))
     assert L2.has_event("e1") and L2.oldest_open_age_s(now=1600.0) == 600.0
     assert L2.release(r.reservation_id, reason="both venues reconciled", now=1700.0)
     assert not L2.release(r.reservation_id, reason="twice")

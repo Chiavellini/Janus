@@ -114,6 +114,10 @@ class ExposureLedger:
                 "INSERT INTO capital_reservations(reservation_id, event_id, league, per_venue_json, "
                 "opportunity_id, created_utc) VALUES(?,?,?,?,?,?)",
                 (r.reservation_id, event_id, league, json.dumps(add, sort_keys=True), opportunity_id, r.created_utc))
+            # Durable NOW. A reservation that only lives in an uncommitted transaction vanishes with the
+            # process, and a crash between the reservation and the first journal commit is exactly
+            # the moment the exposure must be on disk.
+            self.store.con.commit()
         return r
 
     def release(self, reservation_id: str, *, reason: str, now: float | None = None) -> bool:
@@ -124,6 +128,7 @@ class ExposureLedger:
         if self.store is not None:
             self.store.con.execute("UPDATE capital_reservations SET released_utc=?, release_reason=? "
                                    "WHERE reservation_id=?", (now or time.time(), reason, reservation_id))
+            self.store.con.commit()
         return True
 
     def oldest_open_age_s(self, now: float | None = None) -> float | None:
