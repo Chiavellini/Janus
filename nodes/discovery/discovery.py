@@ -39,6 +39,8 @@ from nodes.entities.resolve import Resolver
 from nodes.entities.seed import KALSHI_GAME_SERIES
 from nodes.match_sports.sports_match import kalshi_markets, pair, pm_markets
 from nodes.schedule_espn import espn
+from nodes.settle_wedge.pair import certify_from_spec, records_from_spec, summary
+from nodes.settle_wedge.records import record_equivalence, record_rules
 from nodes.venue_kalshi.books import fetch_kalshi_series, kalshi_fee_params
 from nodes.venue_polymarket.books import (pm_fee_params, pm_market_for_slug, pm_order_limits,
                                           pm_token_map)
@@ -97,8 +99,10 @@ def match_live(league: str, games: list, now: datetime):
 
 
 # ── the fee half ─────────────────────────────────────────────────────────────
-def kalshi_league_fees(leagues: list[str], kclient: Client) -> tuple[dict[str, dict], dict[str, str]]:
-    """league -> {fee_type, fee_multiplier} from the league's game series. Failures are named."""
+def kalshi_league_fees(leagues: list[str], kclient: Client,
+                       series_out: dict | None = None) -> tuple[dict[str, dict], dict[str, str]]:
+    """league -> {fee_type, fee_multiplier} from the league's game series. Failures are named.
+    The raw series record lands in `series_out` (settlement_sources ride with the rules)."""
     out, errors = {}, {}
     for league in leagues:
         ticker = KALSHI_GAME_SERIES.get(league)
@@ -106,7 +110,10 @@ def kalshi_league_fees(leagues: list[str], kclient: Client) -> tuple[dict[str, d
             errors[league] = "no game series registered for league"
             continue
         try:
-            fp = kalshi_fee_params(fetch_kalshi_series(ticker, kclient))
+            raw = fetch_kalshi_series(ticker, kclient)
+            if series_out is not None:
+                series_out[league] = raw
+            fp = kalshi_fee_params(raw)
         except (OSError, RuntimeError, ValueError, KeyError) as exc:
             errors[league] = brief_error(exc)
             continue
@@ -131,6 +138,7 @@ class Discovery:
     #: SLUG (one schedule per market). Absent = never fetched = the poller blocks that leg.
     fee_params: dict[str, dict[str, dict]] = field(default_factory=lambda: {"kalshi": {}, "polymarket": {}})
     fee_errors: dict[str, dict[str, str]] = field(default_factory=dict)
+    series: dict[str, dict] = field(default_factory=dict)    # league -> raw Kalshi series record
 
     def age_s(self, now: float | None = None) -> float:
         return (now or time.time()) - self.made_utc
@@ -163,11 +171,12 @@ def discover(leagues: list[str], now: datetime, include_near: bool, pre_hours: f
             pm_fee_errors[slug] = "gamma market carries no feeSchedule"
         else:
             pm_fees[slug] = fp
+    series: dict[str, dict] = {}
     k_fees, k_errors = ({}, {}) if not per_league else kalshi_league_fees(
-        sorted(per_league), kclient or Client("kalshi", rate=4, burst=8, cache_dir=None))
+        sorted(per_league), kclient or Client("kalshi", rate=4, burst=8, cache_dir=None), series)
     return Discovery(time.time(), games, meta["schedule_failures"], per_league, tokens, token_errors,
                      fee_params={"kalshi": k_fees, "polymarket": pm_fees},
-                     fee_errors={"kalshi": k_errors, "polymarket": pm_fee_errors})
+                     fee_errors={"kalshi": k_errors, "polymarket": pm_fee_errors}, series=series)
 
 
 def co_listed(d: Discovery) -> tuple[dict[str, dict], dict[str, str]]:
@@ -215,11 +224,23 @@ def co_listed(d: Discovery) -> tuple[dict[str, dict], dict[str, str]]:
             if slug in d.fee_params.get("polymarket", {}):
                 fees["polymarket"] = dict(d.fee_params["polymarket"][slug])
             ev = d.tokens.get(slug, (None, {}))[1]
-            slate[gid] = {"league": league, "short_name": g.short_name, "state": g.state,
-                          "start_utc": g.start_utc, "outcomes": outcomes, "fee_params": fees,
-                          "pm_slug": slug,
-                          "kalshi_event": next(iter(rows.values()))["kalshi_event"],
-                          "pm_limits": pm_order_limits(pm_market_for_slug(ev, slug) or {})}
+            # The venues' settlement text rides with the spec, so the supervisor and the replay
+            # certify from the same words discovery read, and the store keeps them.
+            first = next(iter(rows.values()))
+            names = sorted({x for m in rows.values() for x in (m.get("kalshi_label"), m.get("pm_label"))
+                            if x} | {g.home_name, g.away_name})
+            k_rules = dict(first.get("kalshi_rules") or {})
+            p_rules = dict(first.get("pm_rules") or {})
+            spec = {"league": league, "short_name": g.short_name, "state": g.state,
+                    "start_utc": g.start_utc, "outcomes": outcomes, "fee_params": fees,
+                    "pm_slug": slug, "kalshi_event": first["kalshi_event"],
+                    "pm_limits": pm_order_limits(pm_market_for_slug(ev, slug) or {}),
+                    "rules": {"kalshi": {"market": k_rules, "participants": names,
+                                         "series": d.series.get(league)},
+                              "polymarket": {"market": p_rules, "participants": names},
+                              "retrieved_at": d.made_utc}}
+            spec["settlement"] = summary(certify_from_spec(spec, league))
+            slate[gid] = spec
     return slate, blocked
 
 
@@ -271,6 +292,12 @@ def record_events(store, d: Discovery, slate: Mapping[str, dict], blocked: Mappi
             con.execute("INSERT INTO event_transitions(seen_ts, event_id, phase, block_reason) "
                         "VALUES(?,?,?,?)", (t, g.game_id, phase, reason))
             written += 1
+        if spec:
+            recs = records_from_spec(spec)
+            if recs is not None:
+                record_rules(store, recs[0]); record_rules(store, recs[1])
+                record_equivalence(store, event_id=g.game_id, league=g.league, rec_a=recs[0],
+                                   rec_b=recs[1], result=certify_from_spec(spec, g.league), now=t)
     return written
 
 

@@ -118,7 +118,9 @@ class PolymarketStream:
         for ev in events_in(raw):
             for p in parse_event(ev, self.books):
                 kinds.append(p.kind)
-                self.clock.observe(t, p.server_utc)
+                if p.kind == "change":
+                    # A `book` carries the ladder's last-change time, not the send time.
+                    self.clock.observe(t, p.server_utc)
                 if p.kind == "error":
                     self.errors += 1
                     self.last_error = p.detail

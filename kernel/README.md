@@ -15,9 +15,10 @@ require. Nodes depend on the kernel. The kernel depends on nothing in `nodes/` o
 
 ## Invariants that live here and are not yet enforced
 
-`schema.py` states that a `SettleRef` whose `provenance` is `"assumed"` *"makes the classifier
-BLOCK, not shrug."* **There is no such classifier.** `VoidPolicy`/`TiePolicy` are populated by
-`nodes/venue_cloudbet` and read by nothing. Building `nodes/settle_wedge` closes this.
+`schema.py`'s `SettleRef`, `VoidPolicy` and `TiePolicy` are populated per reviewed template in
+`nodes/settle_wedge/policy.py` and the equivalence verdicts are ruled per pair of templates there;
+the classifier the schema always described exists as of 2026-09-02. `CanonicalKey` is constructed
+by `nodes/match_sports` and is the join key.
 
 `venue_protocol.py` declares `normalize()` pure. That is now enforced mechanically by the
 `_no_network` autouse fixture in the repo-root `conftest.py`, not merely asserted in prose.

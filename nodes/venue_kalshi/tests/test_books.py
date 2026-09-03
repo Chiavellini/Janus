@@ -7,11 +7,11 @@ import pytest
 from kernel.schema import liquidity_source_for
 from nodes.cover.capacity import frontier
 from nodes.cover.cover import Leg, best_cover
-from nodes.rules_exhaustive.rules import prove
+from nodes.settle_wedge.fixtures import mlb_cover_proof
 from nodes.venue_kalshi.books import kalshi_book
 
 T = 1000.0
-PROOF = prove("mlb", "moneyline", "game", ["ath", "tex"])
+PROOF = mlb_cover_proof(["ath", "tex"])
 
 #: One market's payload. BOTH arrays are bid ladders -- there are no asks on the wire.
 PAYLOAD = {"orderbook_fp": {"yes_dollars": [[0.40, 100], [0.39, 200]],
@@ -60,8 +60,8 @@ def test_the_complementary_no_ladder_deepens_capacity():
                            kalshi_book(tex, "no", T), {"fee_multiplier": 0.0})],
                "tex": [pm_tex]}
 
-    a = frontier(yes_only, now_utc=T, exhaustive=PROOF, cross_venue_only=False)
-    b = frontier(with_no, now_utc=T, exhaustive=PROOF, cross_venue_only=False)
+    a = frontier(yes_only, now_utc=T, proof=PROOF, cross_venue_only=False)
+    b = frontier(with_no, now_utc=T, proof=PROOF, cross_venue_only=False)
     assert b.n_max > a.n_max, "the extra book must raise capacity, not just prices"
 
 
@@ -70,7 +70,7 @@ def test_a_no_leg_keeps_its_own_ticker_so_double_counting_is_still_caught():
     same = kalshi_book(PAYLOAD, "yes", T)
     offers = {"ath": [Leg("kalshi", "kalshi_clob", "ATH", "e", same)],
               "tex": [Leg("kalshi", "kalshi_clob", "ATH", "e", same)]}
-    got = best_cover(offers, 10, now_utc=T, exhaustive=PROOF)
+    got = best_cover(offers, 10, now_utc=T, proof=PROOF)
     assert got.reject_reason == "shared_liquidity_source"
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from nodes.game_poller.poller import Evaluation, GamePoller, PollerState
+from nodes.settle_wedge.fixtures import mlb_equivalence
 
 T = 1000.0
 OUT = {"home": {"kalshi": "K_H", "polymarket": "P_H"},
@@ -18,6 +19,7 @@ FEES = {"kalshi": {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 0.
 
 def mlb(**kw) -> GamePoller:
     kw.setdefault("fee_params", FEES)
+    kw.setdefault("equivalence", mlb_equivalence())
     return GamePoller("g1", "mlb", OUT, quantities=(100.0,), **kw)
 
 
@@ -212,3 +214,25 @@ def test_a_rest_sourced_book_is_held_to_the_stricter_bound():
     assert e.cover is None and e.blocked_by == "polymarket:home:STALE", "3 s old: fine for ws, stale for rest"
     r.snapshot_in([(0.01, 5000)], [(0.48, 5000)], now=T + 3)     # a socket snapshot relabels it ws
     assert p.on_event("kalshi", "K_H", now=T + 3)[0].cover.ok
+
+
+def test_no_settlement_proof_means_no_poller():
+    """The second refusal at spawn: an unproven settlement basis spends no subscription."""
+    p = GamePoller("g", "mlb", OUT, fee_params=FEES)
+    assert p.state is PollerState.BLOCKED and p.block_reason == "SETTLEMENT_UNPROVEN"
+    assert p.replicas == {} and p.registrations() == []
+
+
+def test_the_settlement_reserve_is_inside_the_cost():
+    from nodes.settle_wedge.fixtures import RATES_FOR_TESTS
+    free = mlb(); reserved = mlb(equivalence=mlb_equivalence(RATES_FOR_TESTS))
+    for p in (free, reserved):
+        # cross-venue is the only fillable cover: Kalshi home 0.30 + Polymarket away 0.70 (the favourite)
+        sync_all(p, kh=0.30, ka=0.99, ph=0.99, pa=0.70)
+    a = free.on_event("kalshi", "K_H", now=T)[0].cover
+    b = reserved.on_event("kalshi", "K_H", now=T)[0].cover
+    assert a.cover_ok if hasattr(a, 'cover_ok') else a.ok
+    assert not b.single_venue and a.settlement_buffer_per_contract == 0.0
+    # cancellation 0.002*(0.70-0.5) + (postponed+suspended) 2*0.01*0.70, per contract
+    assert abs(b.settlement_buffer_per_contract - (0.002 * 0.2 + 0.02 * 0.70)) < 1e-9
+    assert abs((b.cost_per_contract - a.cost_per_contract) - b.settlement_buffer_per_contract) < 1e-9

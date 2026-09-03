@@ -43,3 +43,12 @@ and records key provenance per venue.
 
 `tests/test_match.py` — the per-league slug, the exact join, determinism, no prices.
 `tests/integration/test_spine.py` covers `stage1_checkpoint`.
+
+## The key (2026-09-02)
+
+Every `VenueMarket` carries the kernel's `CanonicalKey` — league, sorted ESPN participant ids,
+external start time, market type, period — built from the schedule game the venue resolved onto,
+and `pair()` joins on `(key, entity_id)`. A market that resolved onto no game has no key and pairs
+with nothing. `key_provenance` records how the start time was obtained: Kalshi from rules text
+(`ticker_parse`), Polymarket from `gameStartTime` (`api_structured`). Rules text rides on
+`rules` for `nodes/settle_wedge`.

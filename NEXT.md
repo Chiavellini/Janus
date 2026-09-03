@@ -4,36 +4,41 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-02, after P0a of the v1 plan.
+Updated 2026-09-03, after P3 of the v1 plan.
 
 ## Done
 
-Substrate (git, watchdog, visible suite, node grid). The streaming lane: two shared sockets,
-book replicas with liveness ≠ freshness, one actor per game, the size frontier, the
-complementary NO ladder (REST lane only so far). Exhaustiveness as an unforgeable proof.
-P0a: fees from the venues' own payloads, the PM drift resnapshot fix, `nodes/discovery` (no grid
-imports a grid), credential redaction, dead grids removed, tests for every node that had none.
+Substrate (git, watchdog, visible suite, node grid). The streaming lane: two shared sockets, book
+replicas with liveness ≠ freshness, one actor per game, the size frontier. Exhaustiveness as an
+unforgeable proof. **P0–P3 of the v1 plan** (2026-09-02/03): fees from the venues' own payloads;
+the vocabulary enums; raw-frame capture and a replay whose parity against live is zero mismatches
+on real traffic; provenance and server time on every book; one Kalshi subscription per socket
+with per-sid sequencing; a REST backstop for quiet Polymarket books; the complementary NO ladder
+streamed; `nodes/settle_wedge` — settlement equivalence as a second proof, priced from a measured
+rate (ledger L26), certified live on real MLB text; `CanonicalKey` as the join key.
 
-## Now — in this order, then fan out
+## Now
 
-1. **P0b kernel vocabulary** (one commit, before anything parallel): `OpportunityStatus`,
-   `ExecutionState`, `Mode`, `FillState` enums in `kernel/schema.py`; `Book.source/server_utc/
-   received_mono`; period vocabulary unified on `"game"`; status literals in `grids/live_stream`
-   replaced by the enum. These names are the faithfulness contract — name once, never rename.
-2. **P1 frame capture + replay** (`nodes/capture`, `nodes/replay`): raw frames to disk BEFORE parse;
-   drive `KalshiStream.handle` / `PolymarketStream.handle` offline. Every later test needs this.
-3. **P2 market-data completion**: Book provenance and timestamps, periodic REST reconcile for
-   Polymarket (`BookReplica.reconcile` has no caller), the complementary NO ladder in the streaming
-   lane, socket health persisted, `depth_truncated`, clock health.
-4. **P3 `nodes/settle_wedge`**: harvest → reviewed policy table → `SettlementEquivalence` token →
-   `CoverProof`. Unknown = BLOCKED_RULES. Expect the MLB cancellation wedge to bite.
-5. **P5 `nodes/risk`** (pure, before any adapter): limits, reservation ledger, latching breaker,
-   kill files, `RiskClearance` token, mode gate.
+1. **P5 `nodes/risk`** (pure, before any adapter): `RiskLimits` from a checked-in YAML with a sha
+   pin; the reservation ledger (release only after both legs reconcile); the latching daily
+   realized-loss breaker fed by a FIFO ledger that re-polls UNCONFIRMED fills; kill files under
+   `/Volumes/Kilos/janus/kill/` (all / live / venue / event / strategy); `RiskClearance` — a minted,
+   single-use, short-expiry token every adapter's `submit()` will require; the mode gate that
+   refuses to start on any inconsistency. Watchdog alarms for kill-file-present, breaker-latched,
+   unreconciled-too-long, each with a firing test.
+2. **P4 opportunity records + total-cost model**: the `Opportunity` record and allowed
+   transitions, per-level fills in `cover._fill_for`, min order size / balance / all-levels-
+   executable in `capacity`, the slippage buffer MEASURED from captured frames (until then
+   `slippage_modelled=False` caps the mode at PAPER), the frontier persisted.
+3. **P6 execution adapters** (disarmed): `kernel/execution_protocol`, `nodes/exec_kalshi`
+   (REST signing generalised from the socket's, demo host), `nodes/exec_polymarket` (CLOB auth,
+   EIP-712, wallet key in its own 600-mode file). Both journal-first, `post_json_once`,
+   three-way fill state, and both require a `RiskClearance`.
+4. Then P7 coordinator, P8 paper simulator and battery, P9 control-plane polish, P10 Ashburn
+   (gated), P11 promotion.
 
-P1, P2, P3 and P5 touch disjoint files and can run in parallel once P0b has landed. Then P4
-(opportunity records, total-cost model), P6 (execution adapters, disarmed), P7 (coordinator), P8
-(paper simulator + battery), P9 (control-plane polish), P10 (Ashburn, gated), P11 (promotion).
-The full plan is in the operator's plan file; this file tracks only the head of it.
+Harvest and review the Polymarket NFL and NHL game templates when they list; until then those
+leagues block at `TEMPLATE_UNKNOWN`, which is correct.
 
 ## Not now, deliberately
 

@@ -24,9 +24,9 @@ settlement state rather than the expected one, hard-rejects stale legs, and dedu
 
 ## Contract
 
-`best_cover(offers, contracts, *, now_utc, max_leg_age_s, exhaustive, top_k)` → `Cover`, where
-`exhaustive` is an `ExhaustiveOutcomeSet` minted by `nodes/rules_exhaustive` — a bool is
-rejected with `outcome_set_not_proven_exhaustive`.
+`best_cover(offers, contracts, *, now_utc, max_leg_age_s, proof, top_k)` → `Cover`, where `proof`
+is a `CoverProof` minted by `nodes/settle_wedge.certify_cover` from an `ExhaustiveOutcomeSet` and a
+`SettlementEquivalence` — anything else is rejected with `cover_proof_missing`.
 `edge_per_contract = 1.0 − cost_per_contract`. Return is on **capital deployed across both legs**.
 
 Five named reject reasons — `stale_leg`, `shared_liquidity_source`,
@@ -69,9 +69,11 @@ pair in the universe.
 Polymarket by 5–10 s, with 36% of ≥10 bps jumps unrepriced on PM within 60 s. The buffer must be
 *measured* from captured frames (plan P1/P4), never chosen. `GATE_TO_LIVE.md` already requires it.
 
-**No settlement gate.** `SettleRef`/`VoidPolicy`/`TiePolicy` exist in `kernel/schema.py` and are
-never consulted; there is no `settlement` reject reason. `nodes/settle_wedge` (plan P3) adds a
-second proof, composed with `ExhaustiveOutcomeSet` into a `CoverProof` this module will require.
+**The settlement gate is the proof itself.** `price_combination` takes a `CoverProof` — the
+exhaustiveness proof composed with `nodes/settle_wedge`'s equivalence proof — and rejects anything
+else with `cover_proof_missing`. The proof also supplies the settlement-risk reserve (probability ×
+worst-case loss on each bounded dimension, at the fill prices, Polymarket legs only), which is
+inside `cost_per_contract` and reported as `settlement_buffer_per_contract`.
 
 **Fees are only as good as the params on the `Leg`.** `Leg.fee_overrides` must carry the venue's
 own schedule (Kalshi series `fee_type`/`fee_multiplier`, Polymarket `feeSchedule`); with an empty

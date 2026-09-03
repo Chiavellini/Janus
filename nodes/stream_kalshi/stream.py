@@ -132,7 +132,8 @@ class KalshiStream:
         self.frames += 1
         self.last_frame_utc = t
         p = parse(msg, self.books)
-        self.clock.observe(t, p.server_utc)
+        if p.kind == "delta":
+            self.clock.observe(t, p.server_utc)
 
         # ANY frame proves the SOCKET is alive, so it refreshes liveness for every replica on it --
         # not just the ticker that moved. The connection is shared; a market with no activity is

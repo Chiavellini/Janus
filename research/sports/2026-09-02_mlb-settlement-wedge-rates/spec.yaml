@@ -1,0 +1,52 @@
+experiment_id: "janus-sports-mlb-settlement-wedge-rates-2026-09-02"
+date_registered: "2026-09-02"
+track: "sports/settlement"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L26"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE RUN.
+purpose: >
+  Measure the probabilities that price the two BOUNDED settlement dimensions between Kalshi
+  KXMLBGAME and Polymarket MLB game markets (nodes/settle_wedge/policy.py, pair
+  kalshi_mlb_game_v1 / polymarket_mlb_game_v1): (a) a game postponed and NOT completed within two
+  days of its original start, where Kalshi resolves to a fair price and Polymarket waits for the
+  result; (b) a game cancelled with no makeup, where Kalshi resolves to a fair price and Polymarket
+  resolves 50-50. Until these exist every MLB cover blocks with EVIDENCE_UNMEASURED.
+
+source:
+  primary: "MLB Stats API, GET https://statsapi.mlb.com/api/v1/schedule?sportId=1&gameType=R"
+  fields: [status.detailedState, status.reason, gameDate, rescheduleDate, rescheduleGameDate, resumeDate, doubleHeader]
+  window: "2026 regular season, 2026-03-25 through 2026-09-02 (the registration date), inclusive"
+  cross_check: "ESPN scoreboard drops postponed games from their original date (probed 2026-04-10..23: 189 events, all STATUS_FINAL), so it cannot serve as the source; it is not used."
+
+definitions:
+  game_unit: "one scheduled game (gamePk) on its ORIGINAL date; a makeup appears as a separate game and is not double-counted"
+  postponed: "detailedState == 'Postponed'"
+  postponed_gt2d: "postponed AND (rescheduleDate is null OR rescheduleDate - original gameDate > 2 days)"
+  cancelled: "detailedState in ('Cancelled', 'Canceled')"
+  suspended: "resumeDate is not null OR detailedState == 'Suspended'"
+  completed_early: "detailedState == 'Completed Early' -- an OFFICIAL result on both venues; reported, not a wedge"
+  denominator: "all games in the window whose detailedState is not a future/pre-game state"
+
+outputs:
+  rates:
+    mlb.postponed_rate: "postponed / denominator"
+    mlb.postponed_gt2d_rate: "postponed_gt2d / denominator  (UPPER BOUND when rescheduleDate is null)"
+    mlb.cancelled_rate: "cancelled / denominator"
+    mlb.suspended_rate: "suspended / denominator"
+  evidence_registration: "nodes/settle_wedge/evidence.py takes mlb.postponed_gt2d_rate and mlb.cancelled_rate verbatim from results.json, with this spec as research_ref"
+  files:
+    results: "research/sports/2026-09-02_mlb-settlement-wedge-rates/results.json"
+    verdict: "research/sports/2026-09-02_mlb-settlement-wedge-rates/verdict.md"
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no test look."
+  - "Every game in the window is counted in exactly one state; the state distribution is reported in full."
+  - "If postponed_gt2d relies on any null rescheduleDate, the rate is labelled an UPPER BOUND in the verdict."
+  - "A denominator under 1,500 games is reported as INSUFFICIENT and the evidence is NOT registered."
+
+what_this_does_not_establish:
+  - "Whether Kalshi's 'fair price' equals its last price (assumed ~its own leg price in the buffer model; conservative because the worst case is charged)."
+  - "Anything about NFL or NHL; each needs its own harvested template and its own row."

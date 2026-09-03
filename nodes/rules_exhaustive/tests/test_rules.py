@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import pytest
 
-from nodes.cover.cover import REJECT_NOT_EXHAUSTIVE, Leg, best_cover
+from nodes.cover.cover import REJECT_NO_PROOF, Leg, best_cover
+from nodes.settle_wedge.fixtures import mlb_cover_proof
 from nodes.rules_exhaustive.rules import (RULES, ExhaustiveOutcomeSet, NotExhaustive, prove)
 from kernel.schema import Book, Quote
 
@@ -69,12 +70,12 @@ def test_every_cited_rule_names_a_real_source():
 
 
 def test_cover_refuses_a_bool_where_a_proof_is_required():
-    """The original bug in one line: exhaustive=True must no longer buy you a price."""
+    """The original bug in one line: proof=True must no longer buy you a price."""
     offers = {"home": [Leg("kalshi", "kalshi_clob", "home", "m", _bk(0.46))],
               "away": [Leg("polymarket", "pm_clob", "away", "m2", _bk(0.30))]}
-    cov = best_cover(offers, 100, now_utc=1000.0, exhaustive=True)
+    cov = best_cover(offers, 100, now_utc=1000.0, proof=True)
     assert not cov.ok
-    assert cov.reject_reason == REJECT_NOT_EXHAUSTIVE
+    assert cov.reject_reason == REJECT_NO_PROOF
 
 
 def test_the_epl_bug_end_to_end():
@@ -84,5 +85,5 @@ def test_the_epl_bug_end_to_end():
     assert isinstance(prove("epl", "moneyline", "game", sorted(offers)), NotExhaustive)
     # and the same books under a league that IS two-way do price, so the block is the rule
     # doing its job rather than the cover engine being broken.
-    mlb = prove("mlb", "moneyline", "game", sorted(offers))
-    assert best_cover(offers, 100, now_utc=1000.0, exhaustive=mlb).ok
+    mlb = mlb_cover_proof(sorted(offers))
+    assert best_cover(offers, 100, now_utc=1000.0, proof=mlb).ok

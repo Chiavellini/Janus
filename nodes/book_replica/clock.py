@@ -9,6 +9,11 @@ on fiction either way. Both venues stamp their frames (Kalshi deltas `ts_ms`, Po
 Measured 2026-09-02 on both sockets: the venue stamp runs 30-70 ms AHEAD of local receipt (the
 venue stamps late, or the clocks differ by that much). That is the normal band. A skew of seconds
 is a fault, and the supervisor halts pricing on it (spec §13: fail closed on an unhealthy clock).
+
+ONLY EVENTS STAMPED AT SEND TIME ARE EVIDENCE. A Polymarket `book` snapshot carries the book's
+LAST-CHANGE time, which on a quiet pre-game market is hours old (found live 2026-09-03: three
+pre-game pollers halted on it). `price_change` and Kalshi deltas are stamped when they happen;
+snapshots are not fed to the monitor, and a verdict needs `min_samples` first.
 """
 
 from __future__ import annotations
@@ -21,6 +26,8 @@ class ClockMonitor:
     """EWMA of (received - server) per socket. Pure; the stream feeds it."""
     alpha: float = 0.05
     max_skew_s: float = 5.0
+    #: No verdict on fewer samples than this: one stale stamp must not halt the lane.
+    min_samples: int = 20
     samples: int = 0
     offset_s: float | None = None
     worst_s: float = 0.0
@@ -36,8 +43,10 @@ class ClockMonitor:
 
     @property
     def healthy(self) -> bool:
-        """Unknown is healthy: a venue that never stamps cannot be judged by this check."""
-        return self.offset_s is None or abs(self.offset_s) <= self.max_skew_s
+        """Unknown is healthy: a venue that never stamps cannot be judged by this check, and
+        neither can one that has stamped only a few frames."""
+        return (self.offset_s is None or self.samples < self.min_samples
+                or abs(self.offset_s) <= self.max_skew_s)
 
     def stats(self) -> dict:
         return {"samples": self.samples,

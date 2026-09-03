@@ -7,6 +7,7 @@ from pathlib import Path
 from nodes.discovery.discovery import (Discovery, co_listed, load_specs, record_events, select_live)
 from nodes.entities.resolve import Resolver
 from nodes.schedule_espn.espn import ScheduledGame
+from nodes.settle_wedge.policy import KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1
 from nodes.store_tuples.store import TupleStore
 
 NOW = 1_800_000_000
@@ -35,12 +36,17 @@ def _discovery(*, pm_fee=True, k_fee=True, token_for_both=True) -> Discovery:
                       "Yankees", "Red Sox", "in", False, False, False, "regular-season",
                       "BOS @ NYY", "x")
     slug = "mlb-bos-nyy-2026-09-02"
+    k_rules = {"ticker": "KXMLBGAME-26SEP02BOSNYY-NYY",
+               "rules_primary": KALSHI_MLB_GAME_V1.sample_text.split("\n")[0].replace("St. Louis", "New York").replace("Los Angeles D", "Boston"),
+               "rules_secondary": "\n".join(KALSHI_MLB_GAME_V1.sample_text.split("\n")[1:]).replace("St. Louis", "New York").replace("Los Angeles D", "Boston")}
+    p_rules = {"slug": slug, "description": POLYMARKET_MLB_GAME_V1.sample_text.replace("St. Louis Cardinals", "New York Yankees").replace("Los Angeles Dodgers", "Boston Red Sox"),
+               "resolutionSource": "https://www.mlb.com/"}
     rows = [{"game_id": g.game_id, "entity_id": nyy, "market_type": "moneyline", "period": "game",
              "start_utc": NOW, "kalshi_event": "KXMLBGAME-26SEP02BOSNYY", "kalshi_outcome": "KXMLBGAME-26SEP02BOSNYY-NYY",
-             "pm_event": slug, "pm_outcome": "New York Yankees", "kalshi_label": "Yankees", "pm_label": "New York Yankees"},
+             "pm_event": slug, "pm_outcome": "New York Yankees", "kalshi_label": "New York", "pm_label": "New York Yankees", "kalshi_rules": k_rules, "pm_rules": p_rules},
             {"game_id": g.game_id, "entity_id": bos, "market_type": "moneyline", "period": "game",
              "start_utc": NOW, "kalshi_event": "KXMLBGAME-26SEP02BOSNYY", "kalshi_outcome": "KXMLBGAME-26SEP02BOSNYY-BOS",
-             "pm_event": slug, "pm_outcome": "Boston Red Sox", "kalshi_label": "Red Sox", "pm_label": "Boston Red Sox"}]
+             "pm_event": slug, "pm_outcome": "Boston Red Sox", "kalshi_label": "Boston", "pm_label": "Boston Red Sox", "kalshi_rules": k_rules, "pm_rules": p_rules}]
     names = {"New York Yankees": "tok-nyy"}
     if token_for_both:
         names["Boston Red Sox"] = "tok-bos"
@@ -60,6 +66,8 @@ def test_a_co_listed_game_carries_four_ids_and_both_fee_schedules():
                                   "polymarket": {"fee_rate": 0.03}}
     assert spec["pm_limits"] == {"min_order_contracts": 5.0, "tick": 0.01}
     assert spec["state"] == "in" and spec["league"] == "mlb"
+    assert spec["settlement"]["result"] == "EQUIVALENT", spec["settlement"]
+    assert spec["rules"]["kalshi"]["market"]["rules_secondary"].startswith("The following market")
 
 
 def test_a_missing_fee_schedule_is_absent_from_the_spec_not_defaulted():
@@ -100,4 +108,20 @@ def test_the_spec_is_persisted_so_a_replay_can_rebuild_the_pollers(tmp_path: Pat
     specs = load_specs(store)
     assert specs == slate
     assert load_specs(store, game_ids=["nope"]) == {}
+    store.close()
+
+
+def test_a_reworded_venue_template_blocks_the_game_and_is_recorded(tmp_path: Path):
+    d = _discovery()
+    rows = d.per_league["mlb"][0]
+    for r in rows:
+        r["pm_rules"] = {**r["pm_rules"], "description": r["pm_rules"]["description"].replace("50-50", "at the last price")}
+    slate, blocked = co_listed(d)
+    spec = slate["espn:mlb:7"]
+    assert spec["settlement"]["result"] == "BLOCKED" and spec["settlement"]["code"] == "TEMPLATE_UNKNOWN"
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    record_events(store, d, slate, blocked, now=NOW)
+    rows = store.con.execute("SELECT result, block_code FROM equivalence_records").fetchall()
+    assert rows == [("BLOCKED", "TEMPLATE_UNKNOWN")]
+    assert store.con.execute("SELECT COUNT(*) FROM settlement_records").fetchone()[0] == 2
     store.close()

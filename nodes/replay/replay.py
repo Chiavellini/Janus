@@ -32,6 +32,8 @@ from kernel.redact import brief_error
 from nodes.capture.capture import FRAMES_ROOT, Frame, iter_capture, merge
 from nodes.discovery.discovery import load_specs
 from nodes.game_poller.poller import GamePoller, PollerState
+from nodes.settle_wedge.equivalence import SettlementEquivalence
+from nodes.settle_wedge.pair import certify_from_spec
 from nodes.opportunity.record import record_evaluation
 from nodes.store_tuples.store import TupleStore
 from nodes.stream_kalshi.stream import KalshiStream
@@ -48,6 +50,8 @@ class Harness:
     quantities: tuple[float, ...] = QUANTITIES
     max_book_age_s: float = 5.0
     min_return: float = MIN_RETURN
+    #: Settlement rates; None = the evidence registry, exactly as the supervisor uses it.
+    rates: dict | None = None
 
     ks: KalshiStream = field(init=False)
     ps: PolymarketStream = field(init=False)
@@ -68,11 +72,13 @@ class Harness:
     def spawn(self, game_id: str, spec: dict) -> bool:
         if game_id in self.pollers:
             return True
+        eq = certify_from_spec(spec, spec["league"], rates=self.rates)
         p = GamePoller(game_id, spec["league"], spec["outcomes"], quantities=self.quantities,
                        max_book_age_s=self.max_book_age_s, min_return=self.min_return,
-                       fee_params=spec["fee_params"])
+                       fee_params=spec["fee_params"],
+                       equivalence=eq if isinstance(eq, SettlementEquivalence) else None)
         if p.state is PollerState.BLOCKED:
-            self.blocked[game_id] = f"EXHAUSTIVE:{p.block_reason}"
+            self.blocked[game_id] = f"SPAWN:{p.block_reason}"
             return False
         cb = self._on_update(game_id)
         for venue, market_id, side, rep in p.registrations():

@@ -51,9 +51,10 @@ The sports settlement wedge — cancellation → LFMP vs void-at-par; tie → $0
 retirement; OT included except soccer — is the direct analogue of the measured 5.70%
 opposite-settle rate that killed the crypto two-leg.
 
-**This rule is currently enforced in prose only.** `kernel/schema.py` claims a classifier BLOCKs on
-`provenance == "assumed"`; there is no such classifier. Building `nodes/settle_wedge` is on the
-critical path.
+Enforced in code since 2026-09-02: `nodes/settle_wedge` harvests both venues' rules text, matches it
+against reviewed templates, rules on twelve settlement dimensions per pair, prices the bounded ones
+from registered measurements, and mints the `CoverProof` that `nodes/cover` requires. A template
+nobody has read, a dimension nobody has ruled on, or a rate nobody has measured is a BLOCK.
 
 ### Match on a canonical key, never on title similarity
 `league + {sorted participants} + start_time(±window) + market_type + period + line + side`. Both

@@ -31,7 +31,7 @@ it owns and how it connects. A **grid** wires nodes into a runnable pipeline.
 
    grids/live_stream composes all of it (the supervisor). grids/live_sports is the REST lane, disabled.
    parked:  venue_cloudbet (sportsbook; acceptance precedes pricing), venue_sxbet (size convention unverified)
-   missing: settle_wedge ── the settlement-equivalence gate; an unknown rule is a BLOCK, not zero
+   settle_wedge: reviewed venue templates + measured rates ──▶ CoverProof (exhaustive × equivalent) ──▶ cover
 ```
 
 ## Layout
@@ -69,10 +69,11 @@ python3 -m grids.live_stream.grid --leagues mlb --once     # one discovery pass,
   hardcoded rather than read from the market's `feeSchedule`. Every "cents from actionable" number
   before this date overstates the Kalshi fee by 2×. Fees now come from the venues' own payloads,
   and a leg whose schedule was not fetched is blocked (`FEE_SCHEDULE_MISSING`), never defaulted.
-- **Exhaustiveness is proven, settlement equivalence is not.** `nodes/rules_exhaustive` mints an
-  unforgeable proof per (league, market type, period); EPL (3-way) and NFL (ties) are blocked.
-  There is no settlement-equivalence gate yet (`SettleRef` is declared and read by nothing), so no
-  candidate carries a resolution-basis label. That is the next critical-path node.
+- **Both proofs gate every cover.** `nodes/rules_exhaustive` proves the outcome set is complete;
+  `nodes/settle_wedge` proves the two venues pay equivalently, from their own rules text against
+  reviewed templates, and prices the bounded residual (MLB: a makeup more than two days out, a
+  cancellation) from a registered measurement (ledger L26: 10 of 2,100 games, 0 cancellations).
+  MLB certifies; NFL and NHL block until their Polymarket game text is harvested and reviewed.
 - **Coverage is six leagues, live plus up to `--pre-hours` before start.** The `^mlb-` slug
   hardcode and the ±30 min window are gone (`f8a187e`).
 

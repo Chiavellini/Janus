@@ -8,6 +8,8 @@ from pathlib import Path
 from kernel.schema import OpportunityStatus as S
 from nodes.capture.capture import Frame, merge
 from nodes.replay.replay import Harness, compare, replay
+from nodes.settle_wedge.fixtures import NO_WEDGE
+from nodes.settle_wedge.policy import KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1
 from nodes.store_tuples.store import TupleStore
 
 T = 1_800_000_000.0
@@ -16,7 +18,13 @@ FEES = {"kalshi": {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 0.
 SPEC = {"league": "mlb", "short_name": "AWY @ HOM", "state": "in", "start_utc": T,
         "outcomes": {"home": {"kalshi": "K_H", "polymarket": "P_H"},
                      "away": {"kalshi": "K_A", "polymarket": "P_A"}},
-        "fee_params": FEES, "pm_slug": "s", "kalshi_event": "e", "pm_limits": {}}
+        "fee_params": FEES, "pm_slug": "s", "kalshi_event": "e", "pm_limits": {},
+        "rules": {"kalshi": {"market": {"ticker": "K_H", "rules_primary": KALSHI_MLB_GAME_V1.sample_text.split("\n")[0],
+                                        "rules_secondary": "\n".join(KALSHI_MLB_GAME_V1.sample_text.split("\n")[1:])},
+                             "participants": list(KALSHI_MLB_GAME_V1.sample_participants)},
+                  "polymarket": {"market": {"slug": "s", "description": POLYMARKET_MLB_GAME_V1.sample_text},
+                                 "participants": list(POLYMARKET_MLB_GAME_V1.sample_participants)},
+                  "retrieved_at": T}}
 
 
 def k_snap(ticker, seq, yes, no):
@@ -49,7 +57,7 @@ def frames() -> list[Frame]:
 
 def run(tmp_path: Path, name: str) -> tuple[TupleStore, dict]:
     store = TupleStore(tmp_path / f"{name}.sqlite", enforce_volume=False)
-    h = Harness(store, quantities=(100.0,))
+    h = Harness(store, quantities=(100.0,), rates=NO_WEDGE)
     assert h.spawn("espn:mlb:1", SPEC)
     st = replay(h, frames())
     return store, st
@@ -83,15 +91,23 @@ def test_parity_names_a_drift(tmp_path: Path):
 
 def test_a_three_way_league_is_blocked_at_spawn_not_priced(tmp_path: Path):
     store = TupleStore(tmp_path / "c.sqlite", enforce_volume=False)
-    h = Harness(store)
+    h = Harness(store, rates=NO_WEDGE)
     assert not h.spawn("espn:epl:1", {**SPEC, "league": "epl"})
-    assert h.blocked == {"espn:epl:1": "EXHAUSTIVE:RULE_UNCITED"}
+    assert h.blocked == {"espn:epl:1": "SPAWN:RULE_UNCITED"}
     assert h.ks.tickers == [] and h.ps.asset_ids == []
 
 
 def test_a_non_json_kalshi_frame_is_counted_and_skipped(tmp_path: Path):
     store = TupleStore(tmp_path / "d.sqlite", enforce_volume=False)
-    h = Harness(store)
+    h = Harness(store, rates=NO_WEDGE)
     h.spawn("espn:mlb:1", SPEC)
     h.feed(Frame("kalshi", T, 1.0, "garbage{"))
     assert h.parse_errors == 1 and h.frames["kalshi"] == 1
+
+
+def test_a_spec_without_rules_is_blocked_at_spawn_not_priced(tmp_path: Path):
+    store = TupleStore(tmp_path / "e.sqlite", enforce_volume=False)
+    h = Harness(store)
+    spec = {k: v for k, v in SPEC.items() if k != "rules"}
+    assert not h.spawn("espn:mlb:9", spec)
+    assert h.blocked == {"espn:mlb:9": "SPAWN:SETTLEMENT_UNPROVEN"}

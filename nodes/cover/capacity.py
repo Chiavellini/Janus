@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from typing import Mapping, Sequence
 
 from nodes.cover.cover import Cover, Leg, best_cover
-from nodes.rules_exhaustive.rules import ExhaustiveOutcomeSet
+from nodes.settle_wedge.equivalence import CoverProof
 
 
 @dataclass(frozen=True)
@@ -85,7 +85,7 @@ def _breakpoints(offers: Mapping[str, Sequence[Leg]], cap: float) -> list[float]
 
 
 def frontier(offers: Mapping[str, Sequence[Leg]], *, now_utc: float,
-             exhaustive: ExhaustiveOutcomeSet, max_leg_age_s: float = 5.0,
+             proof: CoverProof, max_leg_age_s: float = 5.0,
              hurdle: float = 0.0, cap: float = 100_000.0,
              cross_venue_only: bool = True) -> Frontier:
     """Solve N_max and N_star by walking the ladders' own breakpoints.
@@ -97,7 +97,7 @@ def frontier(offers: Mapping[str, Sequence[Leg]], *, now_utc: float,
     reason = "cap_reached"
     for n in _breakpoints(offers, cap):
         cov: Cover = best_cover(offers, n, now_utc=now_utc,
-                                max_leg_age_s=max_leg_age_s, exhaustive=exhaustive)
+                                max_leg_age_s=max_leg_age_s, proof=proof)
         if not cov.ok:
             reason = cov.reject_reason or "not_priced"
             break
@@ -126,7 +126,7 @@ def frontier(offers: Mapping[str, Sequence[Leg]], *, now_utc: float,
 def selftest() -> None:
     from kernel.schema import Book, Quote
     from kernel.schema import liquidity_source_for
-    from nodes.rules_exhaustive.rules import prove
+    from nodes.settle_wedge.fixtures import mlb_cover_proof
 
     def bk(levels):
         return Book(asks=tuple(Quote(p, s) for p, s in levels), fetched_utc=1000.0)
@@ -140,8 +140,7 @@ def selftest() -> None:
                          bk([(0.32, 1000), (0.34, 2000), (0.38, 5000), (0.41, 10000)]),
                          {"fee_multiplier": 0.0})],
     }
-    f = frontier(offers, now_utc=1000.0, exhaustive=prove("mlb", "moneyline", "game",
-                                                          ["floyd", "pacquiao"]))
+    f = frontier(offers, now_utc=1000.0, proof=mlb_cover_proof(["floyd", "pacquiao"]))
     print(f"  {'N':>8} {'cost':>8} {'edge':>8} {'profit':>10} {'capital':>10}")
     for r in f.rungs:
         print(f"  {r.contracts:8.0f} {r.cost_per_contract:8.4f} {r.edge_per_contract:+8.4f} "

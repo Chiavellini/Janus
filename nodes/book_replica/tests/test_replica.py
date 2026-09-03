@@ -174,7 +174,7 @@ def test_a_reconciled_book_is_labelled_rest_and_a_streamed_one_ws():
 
 def test_the_clock_monitor_is_unknown_healthy_and_tracks_the_worst_sample():
     from nodes.book_replica.clock import ClockMonitor
-    c = ClockMonitor(max_skew_s=1.0)
+    c = ClockMonitor(max_skew_s=1.0, min_samples=2)
     assert c.healthy and c.stats()["offset_s"] is None
     c.observe(10.0, None)
     assert c.samples == 0, "a frame without a stamp is not evidence"
@@ -182,3 +182,15 @@ def test_the_clock_monitor_is_unknown_healthy_and_tracks_the_worst_sample():
     assert c.healthy and c.stats()["offset_s"] == pytest.approx(0.05)
     c.observe(12.0, 5.0)
     assert c.stats()["worst_s"] == pytest.approx(7.0)
+
+
+def test_a_few_stale_stamps_cannot_halt_the_lane():
+    """Found live: pre-game Polymarket books carry hours-old stamps. Snapshots are no longer fed,
+    and even a stamped event needs company before the monitor may judge."""
+    from nodes.book_replica.clock import ClockMonitor
+    c = ClockMonitor(max_skew_s=5.0, min_samples=20)
+    for _ in range(19):
+        c.observe(10_000.0, 100.0)                 # hours of apparent skew
+    assert c.healthy, "19 samples: no verdict yet"
+    c.observe(10_000.0, 100.0)
+    assert not c.healthy

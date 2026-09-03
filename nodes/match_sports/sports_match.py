@@ -38,7 +38,7 @@ import csv
 import json
 import re
 from collections import Counter, defaultdict
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -46,6 +46,7 @@ from nodes.match_sports.stage1_checkpoint import (
     KALSHI_BASE, PM_GAMMA, games_on_local_date, kalshi_date_from_rules,
     kalshi_start_from_rules, pull_kalshi, pull_pm, _pm_start,
 )
+from kernel.schema import CanonicalKey, KeyProvenance
 from nodes.entities.resolve import Resolver, normalize
 from nodes.entities.seed import NON_TEAM_OUTCOMES
 from nodes.schedule_espn import espn
@@ -76,10 +77,25 @@ class VenueMarket:
     period: str              # "game" -- kernel/schema.PERIODS vocabulary, as rules_exhaustive keys it
     start_utc: int
     label: str               # the venue's own text, kept for auditing
+    #: The venue's settlement text, raw, for nodes/settle_wedge. Price-free, like everything here.
+    rules: dict = field(default_factory=dict)
+    #: The kernel's canonical identity: league + SORTED ESPN participant ids + external start +
+    #: market type + period. Orientation is `entity_id`, never in the key. Built from the
+    #: schedule game both venues resolved onto, so two markets pair iff their keys are equal.
+    key: CanonicalKey | None = None
+    #: How this venue's start time was obtained. Kalshi parses it from rules text
+    #: (TICKER_PARSE grade); Polymarket exposes gameStartTime (API_STRUCTURED).
+    key_provenance: KeyProvenance = KeyProvenance.TITLE_REGEX
 
 
 def _reason(bucket: Counter, key: str) -> None:
     bucket[key] += 1
+
+
+def canonical_key(g, league: str) -> CanonicalKey:
+    """The kernel key for a scheduled game. Participants are ESPN team ids, sorted."""
+    return CanonicalKey(league=league, participants=g.participants_espn, start_utc=int(g.start_utc),
+                        market_type="moneyline", period="game")
 
 
 # ── venue normalization (no prices) ──────────────────────────────────────────
@@ -124,7 +140,12 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
         for m, eid in sides:
             out.append(VenueMarket("kalshi", tick, m["ticker"], g.game_id, eid,
                                    "moneyline", "game", g.start_utc,
-                                   m.get("yes_sub_title") or ""))
+                                   m.get("yes_sub_title") or "",
+                                   rules={"ticker": m["ticker"], "rules_primary": m.get("rules_primary") or "",
+                                          "rules_secondary": m.get("rules_secondary") or ""},
+                                   key=canonical_key(g, league),
+                                   key_provenance=(KeyProvenance.TICKER_PARSE if st is not None
+                                                   else KeyProvenance.TITLE_REGEX)))
     return out
 
 
@@ -164,10 +185,14 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> l
         if not (lo <= g.start_utc < hi):
             _reason(stats["p_reason"], "outside_window")
             continue
+        mk = next((x for x in ev.get("markets") or [] if x.get("slug") == slug), {})
+        pm_rules = {"slug": slug, "description": mk.get("description") or "",
+                    "resolutionSource": mk.get("resolutionSource") or ev.get("resolutionSource") or ""}
         for t, eid in ents:
             out.append(VenueMarket("polymarket", slug, f"{slug}:{t.get('abbreviation')}",
                                    g.game_id, eid, "moneyline", "game", g.start_utc,
-                                   t.get("name") or ""))
+                                   t.get("name") or "", rules=pm_rules,
+                                   key=canonical_key(g, league), key_provenance=KeyProvenance.API_STRUCTURED))
     return out
 
 
@@ -180,18 +205,28 @@ def _client(name: str):
 
 def pair(kalshi: list[VenueMarket], pm: list[VenueMarket]) -> list[dict]:
     """Exact join on the canonical key. No score, no threshold, no recall cap."""
+    # The join is on the kernel's CanonicalKey plus the side. `key` already carries league,
+    # sorted participants, the external start time, market type and period; a market that
+    # resolved onto no schedule game has no key and can pair with nothing.
     idx: dict[tuple, list[VenueMarket]] = defaultdict(list)
     for m in pm:
-        idx[(m.game_id, m.market_type, m.period, m.entity_id)].append(m)
+        if m.key is not None:
+            idx[(m.key, m.entity_id)].append(m)
     pairs = []
     for k in kalshi:
-        for p in idx.get((k.game_id, k.market_type, k.period, k.entity_id), []):
+        if k.key is None:
+            continue
+        for p in idx.get((k.key, k.entity_id), []):
             pairs.append({"game_id": k.game_id, "entity_id": k.entity_id,
                           "market_type": k.market_type, "period": k.period,
                           "start_utc": k.start_utc,
                           "kalshi_event": k.venue_id, "kalshi_outcome": k.outcome_id,
                           "pm_event": p.venue_id, "pm_outcome": p.outcome_id,
-                          "kalshi_label": k.label, "pm_label": p.label})
+                          "kalshi_label": k.label, "pm_label": p.label,
+                          "kalshi_rules": dict(k.rules), "pm_rules": dict(p.rules),
+                          "canonical_key": {**asdict(k.key), "participants": list(k.key.participants)},
+                          "key_provenance": {"kalshi": k.key_provenance.value,
+                                             "polymarket": p.key_provenance.value}})
     return sorted(pairs, key=lambda r: (r["game_id"], r["entity_id"], r["kalshi_outcome"]))
 
 

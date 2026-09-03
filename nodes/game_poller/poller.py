@@ -28,7 +28,8 @@ from enum import Enum
 
 from nodes.book_replica.replica import BookReplica, Fault
 from nodes.cover.cover import Cover, Leg, best_cover
-from nodes.rules_exhaustive.rules import ExhaustiveOutcomeSet, NotExhaustive, prove
+from nodes.rules_exhaustive.rules import NotExhaustive, prove
+from nodes.settle_wedge.equivalence import CoverProof, NotEquivalent, SettlementEquivalence, certify_cover
 from kernel.schema import liquidity_source_for
 
 
@@ -79,6 +80,10 @@ class GamePoller:
     #: FEE_SCHEDULE_MISSING. Never a constant: KXMLBGAME is 0.5x and PM sports was 0.03 on the
     #: day this was measured, against the 1.0x and 0.05 the lane had been charging.
     fee_params: dict[str, Mapping[str, Any]] = field(default_factory=dict)
+    #: The settlement-equivalence proof for this pair, minted by nodes/settle_wedge from the
+    #: venues' own rules text. None blocks the poller at spawn: an unproven settlement basis
+    #: is how two venues pay differently on the same game.
+    equivalence: SettlementEquivalence | None = None
 
     #: Set by the supervisor to stop pricing for a reason the poller cannot see (an unhealthy
     #: clock today; a kill switch or a venue disconnect later). Evaluations are still emitted,
@@ -87,7 +92,7 @@ class GamePoller:
 
     state: PollerState = PollerState.WARMING
     replicas: dict[tuple[str, str], BookReplica] = field(default_factory=dict)
-    proof: ExhaustiveOutcomeSet | None = None
+    proof: CoverProof | None = None
     block_reason: str | None = None
 
     events: int = 0
@@ -102,7 +107,16 @@ class GamePoller:
             self.state = PollerState.BLOCKED
             self.block_reason = got.code
             return
-        self.proof = got
+        if self.equivalence is None:
+            self.state = PollerState.BLOCKED
+            self.block_reason = "SETTLEMENT_UNPROVEN"
+            return
+        cp = certify_cover(got, self.equivalence)
+        if isinstance(cp, NotEquivalent):
+            self.state = PollerState.BLOCKED
+            self.block_reason = cp.code
+            return
+        self.proof = cp
         for outcome, venues in self.outcomes.items():
             for venue, market_id in venues.items():
                 # Kalshi's seq is per SUBSCRIPTION, so its replicas are verified by the stream.
@@ -197,7 +211,7 @@ class GamePoller:
             cov = None
             if ready:
                 cov = best_cover(offers, q, now_utc=t,
-                                 max_leg_age_s=self.max_book_age_s, exhaustive=self.proof)
+                                 max_leg_age_s=self.max_book_age_s, proof=self.proof)
             ev = Evaluation(self.game_id, market_id, q, cov, blocked, t,
                             latency_ms=(time.time() - t) * 1000.0,
                             offers={k: tuple(v) for k, v in offers.items()} if ready else {})

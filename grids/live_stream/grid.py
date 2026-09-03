@@ -45,6 +45,8 @@ from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
 from nodes.cover.capacity import frontier  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, record_events  # noqa: E402
 from nodes.game_poller.poller import GamePoller, PollerState  # noqa: E402
+from nodes.settle_wedge.equivalence import SettlementEquivalence  # noqa: E402
+from nodes.settle_wedge.pair import certify_from_spec  # noqa: E402
 from nodes.opportunity.record import record_evaluation  # noqa: E402
 from kernel.schema import OpportunityStatus  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
@@ -110,12 +112,14 @@ class Supervisor:
         for gid, spec in slate.items():
             if gid in self.live:
                 continue
+            eq = certify_from_spec(spec, spec["league"])
             p = GamePoller(gid, spec["league"], spec["outcomes"],
                            quantities=QUANTITIES, max_book_age_s=self.max_book_age_s,
-                           min_return=MIN_RETURN, fee_params=spec["fee_params"])
+                           min_return=MIN_RETURN, fee_params=spec["fee_params"],
+                           equivalence=eq if isinstance(eq, SettlementEquivalence) else None)
             if p.state is PollerState.BLOCKED:
-                # An unproven outcome set never gets a subscription spent on it.
-                self.blocked[gid] = f"EXHAUSTIVE:{p.block_reason}"
+                # An unproven outcome set or settlement basis never gets a subscription spent on it.
+                self.blocked[gid] = f"SPAWN:{p.block_reason}"
                 continue
             sup = Supervised(p, spec["short_name"], time.time(),
                              tuple(p.market_ids("kalshi")), tuple(p.market_ids("polymarket")),
@@ -252,6 +256,7 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
         for t in tasks:
             t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        sup.on_report_tick()          # a --once run must still leave a health row
         sup.store.commit()
 
 

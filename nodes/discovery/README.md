@@ -48,3 +48,12 @@ series: each lands in `schedule_failures` / `fee_errors` and the other leagues p
 
 `tests/test_discovery.py` — window selection, the slate from a frozen Discovery, fee params reaching
 the spec and their absence being visible, the events table and its change-gated transitions.
+
+## Settlement (2026-09-02)
+
+Each spec carries both venues' raw rules text (`rules`) — Kalshi `rules_primary`/`rules_secondary`
+with the league's series record, Polymarket `description`/`resolutionSource` — plus the
+participant names the normaliser strips, and `settlement`, the verdict `nodes/settle_wedge`
+reached from exactly those words. `record_events` writes the `settlement_records` (the text, by
+hash) and `equivalence_records` (the verdict, append-on-change). The supervisor and the replay
+re-certify from the same spec, so what was priced and what was recorded cannot diverge.

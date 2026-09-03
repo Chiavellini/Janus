@@ -97,6 +97,10 @@ as a Janus *test look* is not, and would be double-dipping the same data.
 
 ---
 
+| L26 | 2026-09-02 | sports / settlement | **PENDING — MLB settlement-wedge rates (descriptive).** Registered BEFORE the run. `nodes/settle_wedge` classifies the Kalshi KXMLBGAME / Polymarket MLB game pair as BOUNDED on two dimensions: a postponement not completed within two days (Kalshi resolves to a fair price, Polymarket waits for the result) and a cancellation (Kalshi fair price, Polymarket 50-50). A BOUNDED dimension is priced as probability × worst-case loss, and the probability must come from a registered measurement or the dimension is UNKNOWN and every MLB cover blocks. This row measures those probabilities from the MLB Stats API schedule (2026 regular season through the registration date), counting every game exactly once in one state; `postponed_gt2d` is an UPPER BOUND wherever the reschedule date is null. ESPN cannot serve: it drops postponed games from their original date (probed 2026-04-10..23, 189 events all STATUS_FINAL). **Claims nothing about edge**; it prices a reserve. NFL/NHL need their own harvested templates and their own rows. | `research/sports/2026-09-02_mlb-settlement-wedge-rates/spec.yaml` |
+
+| | | | **[APPENDED 2026-09-03 — EXECUTED. Descriptive; no look spent.]** MLB Stats API regular-season schedule 2026-03-25 → 2026-09-02: games seen 2101, denominator **2100** (sufficient). States: Final 2071, Postponed 27, Completed Early 2. **postponed_rate 0.01286** (27; reasons: rain 17, inclement weather 9, air quality 1); **postponed_gt2d_rate 0.00476** (10 — EXACT, every postponement carried a reschedule date, so this is not an upper bound); **cancelled_rate 0.00000** (0 — registered verbatim per the spec; rule-of-three bound ~0.0014 noted in `evidence.py`, to be raised only by a new measurement); suspended_rate 0.00048 (1). Both bounded rates registered in `nodes/settle_wedge/evidence.py` with this row as `research_ref`. Claims nothing about edge. | `research/sports/2026-09-02_mlb-settlement-wedge-rates/verdict.md` |
+
 ## `F#` — forward-eval rows (no budget cost)
 
 | # | Date | Arm | Window | Result |

@@ -36,6 +36,8 @@ from nodes.cover.cover import Leg, best_cover  # noqa: E402
 from nodes.opportunity.status import status_for  # noqa: E402
 from kernel.schema import OpportunityStatus  # noqa: E402
 from nodes.rules_exhaustive.rules import NotExhaustive, prove  # noqa: E402
+from nodes.settle_wedge.equivalence import NotEquivalent, certify_cover  # noqa: E402
+from nodes.settle_wedge.pair import certify_from_spec  # noqa: E402
 from nodes.fees.targeting import hurdle_for  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
 from ops import run_index  # noqa: E402
@@ -210,16 +212,30 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                 # BLOCK: pricing a 3-way EPL match as a two-leg cover reports ~+31% for what is
                 # really a bet the match is not drawn. `prove` mints the only token best_cover
                 # accepts, so an uncited league cannot reach the pricer at all.
-                proof = prove(g.league, "moneyline", "game", sorted(offers))
-                if isinstance(proof, NotExhaustive):
-                    result["blocked"].append({"game_id": g.game_id, "reason": proof.code,
-                                              "detail": proof.detail, **dict(proof.context)})
-                    game_out["exhaustive_block"] = proof.code
+                exh = prove(g.league, "moneyline", "game", sorted(offers))
+                if isinstance(exh, NotExhaustive):
+                    result["blocked"].append({"game_id": g.game_id, "reason": exh.code,
+                                              "detail": exh.detail, **dict(exh.context)})
+                    game_out["exhaustive_block"] = exh.code
+                    result["games"].append(game_out); continue
+                first = rows[0]
+                names = sorted({x for m in rows for x in (m.get("kalshi_label"), m.get("pm_label")) if x}
+                               | {g.home_name, g.away_name})
+                spec = {"rules": {"kalshi": {"market": first.get("kalshi_rules") or {}, "participants": names,
+                                             "series": d.series.get(league)},
+                                  "polymarket": {"market": first.get("pm_rules") or {}, "participants": names},
+                                  "retrieved_at": d.made_utc}}
+                eq = certify_from_spec(spec, g.league)
+                proof = certify_cover(exh, eq) if not isinstance(eq, NotEquivalent) else eq
+                if isinstance(proof, NotEquivalent):
+                    result["blocked"].append({"game_id": g.game_id, "reason": f"SETTLEMENT:{proof.code}",
+                                              "detail": proof.detail})
+                    game_out["settlement_block"] = proof.code
                     result["games"].append(game_out); continue
 
                 for q in QUANTITIES:
                     cov = best_cover(offers, q, now_utc=latest, max_leg_age_s=MAX_QUOTE_SKEW,
-                                     exhaustive=proof)
+                                     proof=proof)
                     edge = cov.edge_per_contract
                     cross = cov.ok and not cov.single_venue and {l.venue for l in cov.legs} == {"kalshi", "polymarket"}
                     ret = edge / cov.cost_per_contract if (edge is not None and cov.cost_per_contract and cov.cost_per_contract > 0) else None

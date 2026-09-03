@@ -23,6 +23,7 @@ _REJECT = {
     "stale_leg": S.BLOCKED_STALE,
     "insufficient_depth": S.BLOCKED_DEPTH,
     "outcome_set_not_proven_exhaustive": S.BLOCKED_RULES,
+    "cover_proof_missing": S.BLOCKED_RULES,
     "settlement_not_equivalent": S.BLOCKED_RULES,
     "shared_liquidity_source": S.BLOCKED_MATCH,
     "quote_not_accepted": S.BLOCKED_DEPTH,

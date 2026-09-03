@@ -7,10 +7,10 @@ import pytest
 from kernel.schema import Book, Quote, liquidity_source_for
 from nodes.cover.capacity import frontier
 from nodes.cover.cover import Leg
-from nodes.rules_exhaustive.rules import prove
+from nodes.settle_wedge.fixtures import mlb_cover_proof
 
 T = 1000.0
-PROOF = prove("mlb", "moneyline", "game", ["a", "b"])
+PROOF = mlb_cover_proof(["a", "b"])
 
 
 def bk(levels):
@@ -26,7 +26,7 @@ def two(a_levels, b_levels, *, free=True):
 
 
 def f(offers, **kw):
-    return frontier(offers, now_utc=T, exhaustive=PROOF, **kw)
+    return frontier(offers, now_utc=T, proof=PROOF, **kw)
 
 
 def test_the_worked_example_reproduces():
@@ -97,9 +97,9 @@ def test_the_hurdle_truncates_the_frontier():
 
 def test_an_unproven_outcome_set_yields_nothing():
     offers = two([(0.40, 5000)], [(0.40, 5000)])
-    got = frontier(offers, now_utc=T, exhaustive=None)
+    got = frontier(offers, now_utc=T, proof=None)
     assert not got.actionable
-    assert got.limit_reason == "outcome_set_not_proven_exhaustive"
+    assert got.limit_reason == "cover_proof_missing"
 
 
 def test_capacity_is_reported_in_capital_not_just_contracts():

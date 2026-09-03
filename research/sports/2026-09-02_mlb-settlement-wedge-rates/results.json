@@ -1,0 +1,38 @@
+{
+  "counts": {
+    "cancelled": 0,
+    "completed_early": 2,
+    "postponed": 27,
+    "postponed_gt2d": 10,
+    "postponed_gt2d_with_null_reschedule": 0,
+    "suspended": 1
+  },
+  "denominator": 2100,
+  "games_seen": 2101,
+  "postponed_gt2d_is_upper_bound": false,
+  "rates": {
+    "mlb.cancelled_rate": 0.0,
+    "mlb.postponed_gt2d_rate": 0.004761904761904762,
+    "mlb.postponed_rate": 0.012857142857142857,
+    "mlb.suspended_rate": 0.0004761904761904762
+  },
+  "reasons": {
+    "Completed Early | Rain": 2,
+    "Postponed | Air Quality": 1,
+    "Postponed | Inclement Weather": 9,
+    "Postponed | Rain": 17
+  },
+  "retrieved_at": "2026-09-03T05:12:42.678946+00:00",
+  "source": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&gameType=R",
+  "spec": "research/sports/2026-09-02_mlb-settlement-wedge-rates/spec.yaml",
+  "states": {
+    "Completed Early": 2,
+    "Final": 2071,
+    "Postponed": 27
+  },
+  "sufficient": true,
+  "window": [
+    "2026-03-25",
+    "2026-09-02"
+  ]
+}

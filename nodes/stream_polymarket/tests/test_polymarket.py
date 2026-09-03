@@ -303,4 +303,4 @@ def test_the_event_timestamp_reaches_the_book_and_the_clock():
     ch = change(0.18, 4, bb=0.19, ba=0.20); ch["timestamp"] = str(int((T + 1 - 0.03) * 1000))
     s.handle(ch, now=T + 1, mono=8.0)
     assert r.snapshot(T + 1).received_mono == 8.0
-    assert s.clock.stats()["samples"] == 2 and s.clock.healthy
+    assert s.clock.stats()["samples"] == 1 and s.clock.healthy, "the book's stamp is not clock evidence"

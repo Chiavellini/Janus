@@ -23,11 +23,11 @@ from nodes.venue_polymarket.books import pm_book  # noqa: E402
 from nodes.venue_sxbet.books import sx_book  # noqa: E402
 from kernel.schema import Book, Quote  # noqa: E402
 from nodes.cover import cover as C  # noqa: E402
-from nodes.rules_exhaustive.rules import prove  # noqa: E402
+from nodes.settle_wedge.fixtures import mlb_cover_proof  # noqa: E402
 
 #: A genuine proof from the mlb_no_draw rule. `ExhaustiveOutcomeSet` cannot be forged, so a test
 #: asserting exhaustiveness goes through the same gate production does.
-MLB2 = prove("mlb", "moneyline", "game", ["a", "b"])
+MLB2 = mlb_cover_proof(["a", "b"])
 
 
 def test_cover_selftest():
@@ -115,7 +115,7 @@ def test_a_real_divergence_survives_only_if_it_beats_the_fee_floor():
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.47, 10_000)]))],
               "B": [C.Leg("polymarket", "pm_clob", "b", "m", _bk([(0.51, 10_000)]),
                           {"fee_rate": 0.05})]}
-    cov = C.best_cover(offers, 500, now_utc=1000.0, exhaustive=MLB2)
+    cov = C.best_cover(offers, 500, now_utc=1000.0, proof=MLB2)
     assert cov.ok
     assert abs(cov.gross_per_contract - 0.98) < 1e-9, cov.gross_per_contract
     assert cov.gross_per_contract < 1.0, "the raw divergence is real"
@@ -132,7 +132,7 @@ def test_cover_would_clear_on_a_zero_fee_venue_pair():
     """
     offers = {"A": [C.Leg("sxbet", "sxbet_clob", "a", "m", _bk([(0.47, 10_000)]))],
               "B": [C.Leg("sxbet", "sxbet_clob", "b", "m2", _bk([(0.51, 10_000)]))]}
-    cov = C.best_cover(offers, 500, now_utc=1000.0, exhaustive=MLB2)
+    cov = C.best_cover(offers, 500, now_utc=1000.0, proof=MLB2)
     assert cov.ok and cov.cost_per_contract < 0.995, cov.cost_per_contract
     assert cov.single_venue is True
 
@@ -142,7 +142,7 @@ def test_worst_case_settlement_state_is_used_not_the_average():
     offers = {"A": [C.Leg("betfair", "betfair_exchange", "a", "m", _bk([(0.10, 10_000)]))],
               "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.88, 10_000)]),
                           {"fee_rate": 0.05})]}
-    cov = C.best_cover(offers, 100, now_utc=1000.0, exhaustive=MLB2)
+    cov = C.best_cover(offers, 100, now_utc=1000.0, proof=MLB2)
     assert cov.ok
     # Betfair commission is on NET WINNINGS, so it bites hardest when the 0.10 leg wins.
     assert cov.worst_settlement_state == "a", cov.worst_settlement_state
@@ -152,7 +152,7 @@ def test_depth_binds_before_price():
     """Phase 1's mentions track found capacity ($4 median at touch) binding before edge did."""
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.01, 3)]))],
               "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.50, 10_000)]))]}
-    cov = C.best_cover(offers, 500, now_utc=1000.0, exhaustive=MLB2)
+    cov = C.best_cover(offers, 500, now_utc=1000.0, proof=MLB2)
     assert not cov.ok and cov.reject_reason == C.REJECT_NO_DEPTH
 
 
@@ -160,7 +160,7 @@ def test_stale_leg_is_rejected_not_discounted():
     """PM's limiter QUEUES, so a slow response is a stale quote wearing a fresh timestamp."""
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.40, 10_000)], age=300))],
               "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.40, 10_000)]))]}
-    cov = C.best_cover(offers, 100, now_utc=1000.0, exhaustive=MLB2, max_leg_age_s=30)
+    cov = C.best_cover(offers, 100, now_utc=1000.0, proof=MLB2, max_leg_age_s=30)
     assert not cov.ok and cov.reject_reason == C.REJECT_STALE
 
 
@@ -170,12 +170,12 @@ def test_soccer_three_way_is_not_covered_by_two_legs():
                     "AWAY": [C.Leg("polymarket", "pm_clob", "a", "m2",
                                    _bk([(0.35, 10_000)]))]}
     assert C.best_cover(two_of_three, 100, now_utc=1000.0,
-                        exhaustive=None).reject_reason == C.REJECT_NOT_EXHAUSTIVE
+                        proof=None).reject_reason == C.REJECT_NO_PROOF
 
 
 def test_screen_is_deterministic_over_frozen_books():
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.47, 10_000)]))],
               "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.51, 10_000)]))]}
-    a = C.best_cover(offers, 200, now_utc=1000.0, exhaustive=MLB2)
-    b = C.best_cover(offers, 200, now_utc=1000.0, exhaustive=MLB2)
+    a = C.best_cover(offers, 200, now_utc=1000.0, proof=MLB2)
+    b = C.best_cover(offers, 200, now_utc=1000.0, proof=MLB2)
     assert a == b

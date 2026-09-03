@@ -188,3 +188,26 @@ market's ticker, offered as extra depth, never required. `GamePoller.registratio
 definition of what a game is priced from; supervisor and replay both use it.
 
 `depth_truncated` is set on a Kalshi REST ladder as long as the request.
+
+---
+
+## 2026-09-03 — P3: settlement equivalence as a proof, priced from a measurement
+
+`nodes/settle_wedge` (new). Both venues' rules text is harvested per game and hashed twice: the
+text as served (the audit trail) and the text with participants, dates and times stripped (the
+template a human has reviewed). Reviewed templates and, per pair of templates, a verdict on all
+twelve settlement dimensions live in `policy.py`. `certify()` mints `SettlementEquivalence`;
+`certify_cover()` composes it with the exhaustiveness proof into `CoverProof`, which `nodes/cover`
+now requires and which supplies the settlement-risk reserve inside every cost.
+
+**The MLB wedge, measured.** Kalshi stays open only if a makeup finishes within two days and
+otherwise resolves to a fair price; Polymarket stays open until the game is completed and
+resolves a cancellation 50-50. Ledger **L26** (descriptive, pre-registered): 2,100 regular-season
+games, 27 postponed, **10 made up more than two days later (0.476%, exact)**, **0 cancelled**.
+Those two rates are the evidence registry; a 0.70 Polymarket favourite now reserves ~0.67¢ per
+contract. NFL and NHL block at `TEMPLATE_UNKNOWN` until their Polymarket game text exists and
+is reviewed.
+
+`nodes/match_sports` constructs the kernel's `CanonicalKey` and joins on it, recording key
+provenance per venue. Discovery carries the rules text in every spec and records the settlement
+and equivalence tables; the supervisor and the replay certify from the same words.

@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""Unknown is a block; bounded is priced; the templates are the ones we read."""
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from nodes.rules_exhaustive.rules import prove
+from nodes.settle_wedge.equivalence import (CoverProof, NotEquivalent, SettlementEquivalence, certify,
+                                            certify_cover)
+from nodes.settle_wedge.harvest import harvest_kalshi, harvest_polymarket, normalise_template
+from nodes.settle_wedge.policy import KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1
+from nodes.settle_wedge.records import record_equivalence, record_rules
+from nodes.store_tuples.store import TupleStore
+
+T = 1_800_000_000.0
+#: Verbatim from the APIs on 2026-09-02 (KXMLBGAME-26SEP022210STLLAD-STL, mlb-stl-lad-2026-09-02).
+K_MARKET = {
+    "ticker": "KXMLBGAME-26SEP022210STLLAD-STL",
+    "rules_primary": "If St. Louis wins the St. Louis vs Los Angeles D professional baseball game "
+                     "originally scheduled for Sep 2, 2026 at 10:10 PM EDT, then the market resolves to Yes.",
+    "rules_secondary": "The following market refers to the St. Louis vs Los Angeles D professional baseball "
+                       "game originally scheduled for Sep 2, 2026 at 10:10 PM EDT. If this game is postponed "
+                       "or delayed, the market will remain open and close after the rescheduled game has "
+                       "finished (within two days). If the game is cancelled or rescheduled to over two days "
+                       "away, the market will resolve to a fair price in accordance with the rules.\n\n"
+                       "Kalshi is not affiliated, associated, authorized, endorsed by, or in any way officially "
+                       "connected with the Governing League. All trademarks, logos, and brand names are the "
+                       "property of their respective owners."}
+K_SERIES = {"series": {"ticker": "KXMLBGAME", "settlement_sources": [{"name": "ESPN"}, {"name": "Fox Sports"},
+                                                                     {"name": "the Governing League"}],
+                       "contract_url": "https://kalshi.com/c/KXMLBGAME"}}
+PM_MARKET = {
+    "slug": "mlb-stl-lad-2026-09-02", "resolutionSource": "https://www.mlb.com/",
+    "description": "In the upcoming MLB game between the St. Louis Cardinals and Los Angeles Dodgers, "
+                   "scheduled for September 2 at 10:10PM ET:\n\nThis market will resolve to \"St. Louis "
+                   "Cardinals\" if the St. Louis Cardinals win the game.\n\nThis market will resolve to \"Los "
+                   "Angeles Dodgers\" if the Los Angeles Dodgers win the game.\n\nIf the game is postponed, "
+                   "this market will remain open until the game has been completed. If the game is canceled "
+                   "entirely, with no make-up game, or ends in a tie, this market will resolve 50-50.\n\nThe "
+                   "primary resolution source for this market is the official final statistics of the event "
+                   "as recognized by the governing body or event organizers. However, if the governing body "
+                   "or event organizers have not published final match statistics within 24 hours after the "
+                   "event's conclusion, a consensus of credible reporting may be used instead."}
+NAMES = ["St. Louis", "Los Angeles D", "St. Louis Cardinals", "Los Angeles Dodgers"]
+RATES = {"mlb.cancelled_rate": 0.002, "mlb.postponed_gt2d_rate": 0.01}
+
+
+def records():
+    return (harvest_kalshi(K_MARKET, participants=NAMES, retrieved_at=T, series=K_SERIES),
+            harvest_polymarket(PM_MARKET, participants=NAMES, retrieved_at=T))
+
+
+def test_the_verbatim_texts_hash_to_the_reviewed_templates():
+    k, p = records()
+    assert k.template_hash == KALSHI_MLB_GAME_V1.template_hash, k.template_text
+    assert p.template_hash == POLYMARKET_MLB_GAME_V1.template_hash, p.template_text
+    assert k.settlement_sources == ("ESPN", "Fox Sports", "the Governing League")
+    assert p.source_url == "https://www.mlb.com/" and k.rules_hash != k.template_hash
+
+
+def test_another_game_of_the_same_league_shares_the_template():
+    other = {**K_MARKET, "ticker": "KXMLBGAME-26SEP031235SFPIT-SF",
+             "rules_primary": K_MARKET["rules_primary"].replace("St. Louis", "San Francisco").replace(
+                 "Los Angeles D", "Pittsburgh").replace("Sep 2, 2026 at 10:10 PM EDT", "Sep 3, 2026 at 12:35 PM EDT"),
+             "rules_secondary": K_MARKET["rules_secondary"].replace("St. Louis", "San Francisco").replace(
+                 "Los Angeles D", "Pittsburgh").replace("Sep 2, 2026 at 10:10 PM EDT", "Sep 3, 2026 at 12:35 PM EDT")}
+    r = harvest_kalshi(other, participants=["San Francisco", "Pittsburgh"], retrieved_at=T)
+    assert r.template_hash == KALSHI_MLB_GAME_V1.template_hash
+    assert r.rules_hash != records()[0].rules_hash
+
+
+def test_a_reworded_template_blocks_as_unknown():
+    k, p = records()
+    p2 = harvest_polymarket({**PM_MARKET, "description": PM_MARKET["description"].replace("50-50", "at the last traded price")},
+                            participants=NAMES, retrieved_at=T)
+    got = certify(k, p2, league="mlb", rates=RATES)
+    assert isinstance(got, NotEquivalent) and got.code == "TEMPLATE_UNKNOWN" and got.context["venue"] == "polymarket"
+
+
+def test_bounded_dimensions_block_until_their_rate_is_measured(monkeypatch):
+    from nodes.settle_wedge import evidence
+    monkeypatch.setattr(evidence, "EVIDENCE", {})              # before L26 measured anything
+    k, p = records()
+    got = certify(k, p, league="mlb")
+    assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED"
+    assert got.context["evidence_key"] in RATES
+
+
+def test_a_wrong_league_for_a_known_template_blocks():
+    k, p = records()
+    got = certify(k, p, league="nfl", rates=RATES)
+    assert isinstance(got, NotEquivalent) and got.code == "LEAGUE_MISMATCH"
+
+
+def test_with_measured_rates_mlb_certifies_and_the_buffer_charges_the_pm_favourite():
+    k, p = records()
+    eq = certify(k, p, league="mlb", rates=RATES)
+    assert isinstance(eq, SettlementEquivalence)
+    assert {v.dimension for v in eq.verdicts} == {"official_source", "winner_determination", "overtime", "tie",
+                                                    "postponement", "cancellation", "suspended", "abandoned",
+                                                    "player_non_participation", "retirement", "dispute_revision",
+                                                    "settlement_timing"}
+    # PM leg at 0.70: cancellation 0.002*(0.70-0.50) + (postponed+suspended) 2*0.01*0.70
+    assert eq.settlement_buffer([("kalshi", 0.28), ("polymarket", 0.70)]) == pytest.approx(0.002 * 0.2 + 0.02 * 0.70)
+    # PM leg the longshot: only the late-makeup term bites
+    assert eq.settlement_buffer([("kalshi", 0.72), ("polymarket", 0.26)]) == pytest.approx(0.02 * 0.26)
+    assert eq.settlement_buffer([("kalshi", 0.5), ("kalshi", 0.5)]) == 0.0
+
+
+def test_the_token_cannot_be_forged_and_the_cover_proof_checks_the_key():
+    k, p = records()
+    eq = certify(k, p, league="mlb", rates=RATES)
+    with pytest.raises(TypeError):
+        SettlementEquivalence("mlb", "moneyline", "game", "kalshi", "polymarket", "a", "b", "h", "h", (), {})
+    with pytest.raises(TypeError):
+        CoverProof(prove("mlb", "moneyline", "game", ["a", "b"]), eq)
+    proof = certify_cover(prove("mlb", "moneyline", "game", ["a", "b"]), eq)
+    assert isinstance(proof, CoverProof)
+    bad = certify_cover(prove("nba", "moneyline", "game", ["a", "b"]), eq)
+    assert isinstance(bad, NotEquivalent) and bad.code == "LEAGUE_MISMATCH"
+    assert certify_cover(True, eq).code == "PROOF_MISSING"
+
+
+def test_records_are_append_on_change_and_keep_the_text(tmp_path: Path, monkeypatch):
+    from nodes.settle_wedge import evidence
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    k, p = records()
+    record_rules(store, k); record_rules(store, p); record_rules(store, k)
+    assert store.con.execute("SELECT COUNT(*) FROM settlement_records").fetchone()[0] == 2
+    with monkeypatch.context() as m:
+        m.setattr(evidence, "EVIDENCE", {})
+        blocked = certify(k, p, league="mlb")
+    record_equivalence(store, event_id="e", league="mlb", rec_a=k, rec_b=p, result=blocked, now=T)
+    record_equivalence(store, event_id="e", league="mlb", rec_a=k, rec_b=p, result=blocked, now=T + 1)
+    ok = certify(k, p, league="mlb", rates=RATES)
+    record_equivalence(store, event_id="e", league="mlb", rec_a=k, rec_b=p, result=ok, now=T + 2)
+    rows = store.con.execute("SELECT result, block_code, template_a FROM equivalence_records ORDER BY id").fetchall()
+    assert rows == [("BLOCKED", "EVIDENCE_UNMEASURED", None), ("EQUIVALENT", None, "kalshi_mlb_game_v1")]
+    store.close()
+
+
+def test_normalisation_strips_what_varies_and_keeps_what_rules():
+    s = normalise_template('If "St. Louis" wins on Sep 2, 2026 at 10:10 PM EDT (within two days).', ["St. Louis"])
+    assert s == "if wins on at within two days"
+
+
+def test_the_registry_carries_l26_and_mlb_certifies_from_it():
+    """The measured rates: 10 of 2,100 games made up more than two days out, zero cancellations."""
+    from nodes.settle_wedge.evidence import EVIDENCE
+    assert EVIDENCE["mlb.postponed_gt2d_rate"].value == pytest.approx(10 / 2100, abs=1e-6)
+    assert EVIDENCE["mlb.cancelled_rate"].value == 0.0
+    assert all(e.research_ref.startswith("research/sports/2026-09-02_mlb-settlement-wedge-rates") for e in EVIDENCE.values())
+    k, p = records()
+    eq = certify(k, p, league="mlb")
+    assert isinstance(eq, SettlementEquivalence)
+    # at the measured rates a 0.70 Polymarket favourite reserves ~0.67c/contract
+    assert eq.settlement_buffer([("kalshi", 0.30), ("polymarket", 0.70)]) == pytest.approx(2 * (10 / 2100) * 0.70, abs=1e-6)

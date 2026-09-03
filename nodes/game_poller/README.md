@@ -43,7 +43,7 @@ fed**. It is still an actor — it owns state and a lifecycle — it simply is n
 Nothing runs on a timer. A timer samples a market, and a market that moves 28¢ between samples
 cannot be sampled into an answer.
 
-## The three refusals
+## The four refusals
 
 1. **Every replica must be SYNCED and fresh.** Three good replicas do not make a fourth
    trustworthy — one drifted book blocks the whole cover.
@@ -51,7 +51,11 @@ cannot be sampled into an answer.
    never gets a poller at all, so no subscription is spent on it. An EPL poller is `BLOCKED` before
    it opens a single book.
 
-3. **A leg without its venue's fee schedule is blocked** (`FEE_SCHEDULE_MISSING`). `fee_params`
+3. **Settlement equivalence is certified once, at spawn.** The supervisor certifies the pair from
+   the rules text discovery carried in the spec; a `NotEquivalent` (unknown template, unmeasured
+   rate, differing dimension) blocks the poller before any subscription, as exhaustiveness does.
+   The `CoverProof` then supplies the settlement reserve inside every cover's cost.
+4. **A leg without its venue's fee schedule is blocked** (`FEE_SCHEDULE_MISSING`). `fee_params`
    comes from `nodes/discovery` — Kalshi's series multiplier and Polymarket's `feeSchedule` —
    never a constant. The lane charged 1.0× and 0.05 for a month; the venues said 0.5× and 0.05.
 
