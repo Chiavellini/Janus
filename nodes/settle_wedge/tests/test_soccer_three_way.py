@@ -165,3 +165,14 @@ def test_tennis_texts_hash_to_their_templates_across_tournaments_and_block_on_un
                        participants=("Anastasia Potapova", "Amanda Anisimova"), retrieved_at=T, scrub=LEAGUES["wta"].template_scrub)
     assert w.template_hash == KALSHI_TENNIS_MATCH_V1.template_hash
     assert isinstance(certify(w, p, league="wta", rates=rates), SettlementEquivalence)
+
+
+def test_polymarket_has_two_tennis_texts_and_both_certify():
+    from nodes.entities.leagues import LEAGUES
+    from nodes.settle_wedge.policy import KALSHI_TENNIS_MATCH_V1, POLYMARKET_TENNIS_MATCH_V2, verdicts_for
+    scrub = LEAGUES["wta"].template_scrub
+    a, b = POLYMARKET_TENNIS_MATCH_V2.sample_participants
+    text = POLYMARKET_TENNIS_MATCH_V2.sample_text.replace(a, "Iga Swiatek").replace(b, "Coco Gauff").replace("US Open", "Wimbledon")
+    p = harvest_polymarket({"slug": "s", "description": text}, participants=("Iga Swiatek", "Coco Gauff"), retrieved_at=T, scrub=scrub)
+    assert p.template_hash == POLYMARKET_TENNIS_MATCH_V2.template_hash, p.template_text
+    assert verdicts_for(KALSHI_TENNIS_MATCH_V1.template_id, "polymarket_tennis_match_v2") == verdicts_for(KALSHI_TENNIS_MATCH_V1.template_id, "polymarket_tennis_match_v1")

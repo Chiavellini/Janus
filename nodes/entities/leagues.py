@@ -73,11 +73,11 @@ LEAGUES: dict[str, League] = {
     # Polymarket's `tennis` tag; the slug prefix says which. Kalshi settles tennis on exchange shard 3.
     "atp":  League("atp", "ATP Tour", "KXATPMATCH", "tennis", "atp", None, anchor="venue_structured",
                    template_scrub=(r"in the \d{4} .*? (?:Men|Women)(?:'s)? Singles [A-Za-z0-9 ]+? (?=after a ball)",
-                                   r"in the [A-Z][A-Za-z0-9 .'-]*? (?:ATP|WTA)\b,",
+                                   r"in the [A-Z][A-Za-z0-9 .'-]*?(?: (?:ATP|WTA))?,",
                                    r"official information from (?:the )?[A-Z][A-Za-z0-9 .'-]*?\.")),
     "wta":  League("wta", "WTA Tour", "KXWTAMATCH", "tennis", "wta", None, anchor="venue_structured",
                    template_scrub=(r"in the \d{4} .*? (?:Men|Women)(?:'s)? Singles [A-Za-z0-9 ]+? (?=after a ball)",
-                                   r"in the [A-Z][A-Za-z0-9 .'-]*? (?:ATP|WTA)\b,",
+                                   r"in the [A-Z][A-Za-z0-9 .'-]*?(?: (?:ATP|WTA))?,",
                                    r"official information from (?:the )?[A-Z][A-Za-z0-9 .'-]*?\.")),
     # Not yet: UCL. Entities are keyed per league (lal:esp.real_madrid) and a club plays in its domestic
     # league AND the Champions League, so its one Kalshi team id would map to two entities and the

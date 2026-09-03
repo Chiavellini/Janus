@@ -52,21 +52,24 @@ def normalise_template(text: str, participants: Sequence[str], scrub: Sequence[s
         text = re.sub(pat, " ", text)
     s = text.lower()
     names = {p.lower() for p in participants if p}
-    # A venue may name a team by its nickname alone (Polymarket NFL: "Patriots"); strip the last
-    # word of every multi-word name too. Short tails ("D" in "Los Angeles D") are left alone.
     for n in list(names):
-        tail = n.split()[-1] if " " in n else ""
-        # A venue may name a participant by the last word alone (Polymarket NFL "Patriots"; a tennis
-        # text "Wu vs Alcaraz"); one-letter tails ("D" in "Los Angeles D") are left alone.
-        if len(tail) >= 2:
-            names.add(tail)
+        words = n.split()
+        # A venue may name a participant by a trailing part of the name alone (Polymarket NFL
+        # "Patriots"; a tennis text "Wu vs Alcaraz", "Van De Zandschulp", "Bouzas Maneiro"): every
+        # suffix of the name of two or more characters. One-letter tails ("D" in "Los Angeles D")
+        # are left alone.
+        for i in range(1, len(words)):
+            tail = " ".join(words[i:])
+            if len(tail) >= 2:
+                names.add(tail)
         # ... and by the name without its nickname (Polymarket college football: "Morehead State"
         # for "Morehead State Eagles"). Short heads ("St.") are left alone.
         head = n.rsplit(" ", 1)[0] if " " in n else ""
         if len(head) > 3:
             names.add(head)
+    # Whole words only: "Bu" must not turn "but" into "t" (measured 2026-09-03, Yunchaokete Bu).
     for name in sorted(names, key=len, reverse=True):
-        s = s.replace(name, " ")
+        s = re.sub(r"(?<![a-z0-9])" + re.escape(name) + r"(?![a-z0-9])", " ", s)
     s = _STRIP.sub(" ", s)
     toks = []
     for tok in s.split():

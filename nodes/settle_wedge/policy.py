@@ -593,6 +593,29 @@ POLYMARKET_TENNIS_MATCH_V1 = Template(
               terms_url=None, provenance="api_field"),
     scrub=TENNIS_SCRUB)
 
+POLYMARKET_TENNIS_MATCH_V2 = Template(
+    "polymarket_tennis_match_v2", "polymarket", frozenset({"atp", "wta"}), "2026-09-03",
+    # wta-bucsa-sakatsu-2026-09-02, market.description -- the text on the 2026 US Open events ("originally
+    # scheduled", full names as outcomes, "a winner has not been determined by 7 days after the
+    # originally scheduled start"); the same rules as V1 (the January text) in different words.
+    "This market refers to the tennis match between Cristina Bucsa and Himeno Sakatsume in the US Open "
+    "WTA, originally scheduled for September 2, 2026 at 11:00AM ET.\n\nThis market will resolve to "
+    "'Cristina Bucsa' if Cristina Bucsa advances against Himeno Sakatsume.\n\nThis market will resolve to "
+    "'Himeno Sakatsume' if Himeno Sakatsume advances against Cristina Bucsa.\n\nIf the match is canceled "
+    "(not played at all), ends in a tie, or a winner has not been determined by September 16, 2026, 11:59"
+    " PM ET (14 days after the scheduled start), this market will resolve to 50-50.\n\nIf the match begins "
+    "but is not completed, and one player advances due to the opponent's retirement, default, or "
+    "disqualification, this market will resolve to the player who advances.\n\nIf the match ends in a "
+    "walkover (player withdraws before the start and the other advances automatically), this market will "
+    "resolve to 50-50.\n\nThe primary resolution source will be official information from the WTA Tour. A "
+    "consensus of credible reporting may also be used.",
+    ('Cristina Bucsa', 'Himeno Sakatsume'),
+    SettleRef(source_agency="the tournament's official information", oracle="uma", void_policy=VoidPolicy.RESOLVE_FIFTY,
+              tie_policy=TiePolicy.RESOLVE_FIFTY, ot_included=True, dnp_policy=VoidPolicy.RESOLVE_FIFTY,
+              retirement_policy="the player who advances after a retirement, default or disqualification; a walkover is 50-50",
+              revision_policy="consensus of credible reporting", dispute_mechanism="uma", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"),
+    scrub=TENNIS_SCRUB)
 
 def _tennis_verdicts() -> tuple[Verdict, ...]:
     """Kalshi tennis match (either tour) vs Polymarket tennis match. Both venues advance the opponent
@@ -634,7 +657,8 @@ TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V
                                                               KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1,
                                                               *_SOCCER_PM, *_SOCCER_KALSHI.values(),
                                                               KALSHI_CFB_GAME_V1, POLYMARKET_CFB_GAME_V1,
-                                                              KALSHI_TENNIS_MATCH_V1, POLYMARKET_TENNIS_MATCH_V1)}
+                                                              KALSHI_TENNIS_MATCH_V1, POLYMARKET_TENNIS_MATCH_V1,
+                                                              POLYMARKET_TENNIS_MATCH_V2)}
 
 
 def template_for(template_hash: str) -> Template | None:
@@ -707,6 +731,7 @@ PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
     ("kalshi_nfl_game_v1", "polymarket_nfl_game_v1"): _NFL_K_PM,
     ("kalshi_cfb_game_v1", "polymarket_cfb_game_v1"): _CFB_K_PM,
     ("kalshi_tennis_match_v1", "polymarket_tennis_match_v1"): _TENNIS_K_PM,
+    ("kalshi_tennis_match_v1", "polymarket_tennis_match_v2"): _TENNIS_K_PM,
     **{(t.template_id, pm.template_id): _soccer_verdicts(code) for code, t in _SOCCER_KALSHI.items() for pm in _SOCCER_PM},
 }
 
