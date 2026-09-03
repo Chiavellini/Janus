@@ -290,7 +290,7 @@ def normalize_event_market(item: CloudbetEventMarket, *, fetched_utc: float) -> 
             terms_url="https://www.cloudbet.com/en/help/rules?section=settlement_and_cancellation_rules",
         ), raw_title=_text(event.get("name", event.get("key"))) or event_id,
         fetched_utc=float(fetched_utc), close_utc=_timestamp(event.get("cutoffTime")),
-        exhaustive=False, rules_url="https://www.cloudbet.com/en/help/rules?section=settlement_and_cancellation_rules",
+        rules_url="https://www.cloudbet.com/en/help/rules?section=settlement_and_cancellation_rules",
     )
 
 

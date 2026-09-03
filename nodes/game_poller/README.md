@@ -37,7 +37,8 @@ fed**. It is still an actor — it owns state and a lifecycle — it simply is n
 
 `on_event(venue, market_id)` → one `Evaluation` per tested quantity, **including blocked ones**.
 "We could not price this, and here is why" is the observation that separates *no edge* from
-*no data*; recording only ACTIONABLE/NO_EDGE collapses them.
+*no data*; a binary actionable/no-edge collapses them. `nodes/opportunity` maps each one to an
+`OpportunityStatus`.
 
 Nothing runs on a timer. A timer samples a market, and a market that moves 28¢ between samples
 cannot be sampled into an answer.

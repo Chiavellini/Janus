@@ -92,7 +92,7 @@ def test_cloudbet_normalizes_without_inventing_exhaustiveness_or_rules():
     normalized = CloudbetAdapter().normalize({**EVENT, "_janus_fetched_utc": 1000.0})
     assert normalized is not None
     assert normalized.venue_market_id == "cb-1:baseball.moneyline:game"
-    assert normalized.exhaustive is False
+    assert normalized.proof is None
     assert normalized.key is None
     assert normalized.settle_ref.provenance == "assumed"
     assert all(outcome.book.one_sided for outcome in normalized.outcomes)

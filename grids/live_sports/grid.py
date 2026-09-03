@@ -33,6 +33,8 @@ from nodes.venue_kalshi.books import kalshi_book  # noqa: E402
 from nodes.venue_polymarket.books import pm_book  # noqa: E402
 from nodes.discovery.discovery import DEFAULT_PRE_HOURS, Discovery, discover  # noqa: E402
 from nodes.cover.cover import Leg, best_cover  # noqa: E402
+from nodes.opportunity.status import status_for  # noqa: E402
+from kernel.schema import OpportunityStatus  # noqa: E402
 from nodes.rules_exhaustive.rules import NotExhaustive, prove  # noqa: E402
 from nodes.fees.targeting import hurdle_for  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
@@ -221,7 +223,12 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                     edge = cov.edge_per_contract
                     cross = cov.ok and not cov.single_venue and {l.venue for l in cov.legs} == {"kalshi", "polymarket"}
                     ret = edge / cov.cost_per_contract if (edge is not None and cov.cost_per_contract and cov.cost_per_contract > 0) else None
-                    status = "ACTIONABLE" if cross and ret is not None and ret >= MIN_RETURN else ("NO_EDGE" if cov.ok else (cov.reject_reason or "NO_PRICE"))
+                    st = status_for(cover_ok=cov.ok, reject_reason=cov.reject_reason, blocked_by=None,
+                                    gross_per_contract=cov.gross_per_contract if cov.ok else None,
+                                    cost_per_contract=cov.cost_per_contract if cov.ok else None,
+                                    single_venue=bool(cov.ok and (cov.single_venue or not cross)),
+                                    hurdle=MIN_RETURN)
+                    status = st.value
                     oid = f"{g.game_id}:moneyline:cross_venue:{int(q)}"
                     transition = store.opportunity(tuple_id=oid, relation_type="cross_venue_live_moneyline", status=status,
                         gross_cost=cov.gross_per_contract * q if cov.ok and cov.gross_per_contract is not None else None,
@@ -250,7 +257,7 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                            "cents_from_actionable": (round((gross - hd.required_ask_sum) * 100.0, 3)
                                                      if (hd and gross is not None) else None)}
                     game_out["observations"].append(opp)
-                    if status == "ACTIONABLE": result["candidates"].append(opp); opportunities += 1
+                    if st is OpportunityStatus.PROFITABLE_UNEXECUTED: result["candidates"].append(opp); opportunities += 1
                 result["games"].append(game_out)
         result["summary"] = {"scheduled_live_or_near_games": len(games), "games_with_exact_matches": sum(1 for g in result["games"] if g["matched_outcomes"] == 2),
                               "candidate_observations": len(result["candidates"]), "blocked": len(result["blocked"]),

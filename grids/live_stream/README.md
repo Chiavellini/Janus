@@ -13,7 +13,7 @@ poller when the game settles.
 ## Shape
 
 ```
-   slate (nodes/schedule_espn + match_sports + venue_polymarket tokens)
+   slate (nodes/discovery: schedule + match + tokens + each venue's fee schedule)
                         │  spawn / reap
                         ▼
    ┌──────────────────────────────────────────────┐
@@ -46,10 +46,13 @@ that carrying the series forward does not.
 **Blocked evaluations are written too**, with the reason. That is what separates *no edge* from
 *no data* — and it is the channel that was a header-only CSV all August. A first run over 9 games
 recorded 162 priced rows alongside `HASH_MISMATCH` (Polymarket drift, correctly blocking),
-`NOT_SYNCED`, `HEARTBEAT_LOST` and `STALE`.
+`NOT_SYNCED`, `HEARTBEAT_LOST` and `STALE`. Since 2026-09-02 the `status` column is a
+`kernel.schema.OpportunityStatus` (`nodes/opportunity.status_for`) and `blocked_by` keeps the
+fine-grained reason: `BLOCKED_STALE`, `BLOCKED_DEPTH`, `BLOCKED_FEES`, `BLOCKED_RULES`, `NO_EDGE`,
+`DISCOVERED` (positive but under the hurdle) and `PROFITABLE_UNEXECUTED` are never collapsed.
 
-When something is actionable, the size frontier is solved **on the same books that produced the
-edge** — computing it from the replicas a moment later would price a different instant, because the
+When a cover is `PROFITABLE_UNEXECUTED`, the size frontier is solved **on the same books that
+produced the edge** — computing it from the replicas a moment later would price a different instant, because the
 books move in milliseconds.
 
 ## Refusals inherited from the nodes

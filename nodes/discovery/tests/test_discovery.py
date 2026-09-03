@@ -35,10 +35,10 @@ def _discovery(*, pm_fee=True, k_fee=True, token_for_both=True) -> Discovery:
                       "Yankees", "Red Sox", "in", False, False, False, "regular-season",
                       "BOS @ NYY", "x")
     slug = "mlb-bos-nyy-2026-09-02"
-    rows = [{"game_id": g.game_id, "entity_id": nyy, "market_type": "moneyline", "period": "full_game",
+    rows = [{"game_id": g.game_id, "entity_id": nyy, "market_type": "moneyline", "period": "game",
              "start_utc": NOW, "kalshi_event": "KXMLBGAME-26SEP02BOSNYY", "kalshi_outcome": "KXMLBGAME-26SEP02BOSNYY-NYY",
              "pm_event": slug, "pm_outcome": "New York Yankees", "kalshi_label": "Yankees", "pm_label": "New York Yankees"},
-            {"game_id": g.game_id, "entity_id": bos, "market_type": "moneyline", "period": "full_game",
+            {"game_id": g.game_id, "entity_id": bos, "market_type": "moneyline", "period": "game",
              "start_utc": NOW, "kalshi_event": "KXMLBGAME-26SEP02BOSNYY", "kalshi_outcome": "KXMLBGAME-26SEP02BOSNYY-BOS",
              "pm_event": slug, "pm_outcome": "Boston Red Sox", "kalshi_label": "Red Sox", "pm_label": "Boston Red Sox"}]
     names = {"New York Yankees": "tok-nyy"}

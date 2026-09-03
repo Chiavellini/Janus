@@ -55,8 +55,125 @@ MARKET_TYPES = frozenset({"moneyline", "spread", "total", "btts", "prop", "outri
 PERIODS = frozenset({"game", "reg", "h1", "h2", "q1", "q2", "q3", "q4",
                      "p1", "p2", "p3", "set1", "set2", "set3", "set4", "set5"})
 
+#: Where a Book's ladder came from. A REST fallback is labelled, never silently equal to a socket.
+BOOK_SOURCES = frozenset({"ws", "rest", "unknown"})
+
 #: Non-participant sides. Participant sides carry a canonical entity id instead.
 GENERIC_SIDES = frozenset({"over", "under", "draw", "yes", "no"})
+
+
+class OpportunityStatus(str, Enum):
+    """Where one candidate cover stands. NEVER collapse these: NO_EDGE, BLOCKED_DEPTH,
+    BLOCKED_STALE and BLOCKED_RULES are four different conclusions, and a lane that reports one
+    uninformative null for all of them cannot say whether the edge exists.
+
+    These names are the faithfulness contract (GATE_TO_LIVE step 4 rebuilds every logged decision
+    by importing the runner's own constants). Name once; never rename.
+    """
+    DISCOVERED = "DISCOVERED"                      # gross edge > 0 but below the execution threshold
+    BLOCKED_MATCH = "BLOCKED_MATCH"                # identity not proven (two books are one, no pair)
+    BLOCKED_RULES = "BLOCKED_RULES"                # exhaustiveness or settlement equivalence unproven
+    BLOCKED_STALE = "BLOCKED_STALE"                # a book is not SYNCED, fresh, and verified
+    BLOCKED_DEPTH = "BLOCKED_DEPTH"                # the ladder cannot fill the size
+    BLOCKED_FEES = "BLOCKED_FEES"                  # gross edge > 0, fee-net edge <= 0
+    BLOCKED_BALANCE = "BLOCKED_BALANCE"            # capital or venue balance cannot cover it
+    NO_EDGE = "NO_EDGE"                            # the venues agree: gross cost >= 1
+    PROFITABLE_UNEXECUTED = "PROFITABLE_UNEXECUTED"  # clears the execution threshold; not sent
+    EXECUTION_PENDING = "EXECUTION_PENDING"
+    PARTIALLY_FILLED = "PARTIALLY_FILLED"
+    HEDGED = "HEDGED"
+    FAILED_HEDGE = "FAILED_HEDGE"
+    SETTLED = "SETTLED"
+    RECONCILED = "RECONCILED"
+
+    @property
+    def is_block(self) -> bool:
+        return self.value.startswith("BLOCKED_")
+
+
+class ExecutionState(str, Enum):
+    """The two-leg state machine. A trade is arbitrage only once it reaches HEDGED; everything
+    before that is an unhedged position that was never authorised."""
+    DETECTED = "DETECTED"
+    VALIDATED = "VALIDATED"
+    CAPITAL_RESERVED = "CAPITAL_RESERVED"
+    LEG_A_SUBMITTED = "LEG_A_SUBMITTED"
+    LEG_A_PARTIAL = "LEG_A_PARTIAL"
+    LEG_A_FILLED = "LEG_A_FILLED"
+    LEG_B_SUBMITTED = "LEG_B_SUBMITTED"
+    LEG_B_PARTIAL = "LEG_B_PARTIAL"
+    LEG_B_FILLED = "LEG_B_FILLED"
+    HEDGED = "HEDGED"
+    SETTLED = "SETTLED"
+    RECONCILED = "RECONCILED"
+    # failure states -- each is a distinct fact about the venue, never a retry hint
+    ORDER_REJECTED = "ORDER_REJECTED"
+    ORDER_TIMEOUT = "ORDER_TIMEOUT"
+    UNKNOWN_PROVIDER_STATE = "UNKNOWN_PROVIDER_STATE"
+    PARTIAL_FILL = "PARTIAL_FILL"
+    HEDGE_UNAVAILABLE = "HEDGE_UNAVAILABLE"
+    HEDGE_SLIPPAGE_EXCEEDED = "HEDGE_SLIPPAGE_EXCEEDED"
+    MARKET_SUSPENDED = "MARKET_SUSPENDED"
+    VENUE_DISCONNECTED = "VENUE_DISCONNECTED"
+    BALANCE_CHANGED = "BALANCE_CHANGED"
+
+    @property
+    def is_failure(self) -> bool:
+        return self in _EXECUTION_FAILURES
+
+    @property
+    def is_terminal(self) -> bool:
+        return self is ExecutionState.RECONCILED or self in _EXECUTION_FAILURES
+
+
+_EXECUTION_FAILURES = frozenset({
+    ExecutionState.ORDER_REJECTED, ExecutionState.ORDER_TIMEOUT,
+    ExecutionState.UNKNOWN_PROVIDER_STATE, ExecutionState.PARTIAL_FILL,
+    ExecutionState.HEDGE_UNAVAILABLE, ExecutionState.HEDGE_SLIPPAGE_EXCEEDED,
+    ExecutionState.MARKET_SUSPENDED, ExecutionState.VENUE_DISCONNECTED,
+    ExecutionState.BALANCE_CHANGED,
+})
+
+
+class FillState(str, Enum):
+    """Three-way, never two. An unresolved or errored poll is UNCONFIRMED, not UNFILLED:
+    collapsing them overstates PnL, blinds the loss breaker, and makes retries double-buy."""
+    FILLED = "FILLED"
+    PARTIAL = "PARTIAL"
+    UNFILLED = "UNFILLED"        # the venue AUTHORITATIVELY reports nothing filled
+    UNCONFIRMED = "UNCONFIRMED"  # no answer, a timeout, an ambiguous answer
+    REJECTED = "REJECTED"
+
+
+class Mode(str, Enum):
+    """How much a process is allowed to do. Ordered; a process asserts it never runs above the mode
+    it was started with, and NO mode may silently escalate to the next (spec §14)."""
+    OFFLINE_REPLAY = "OFFLINE_REPLAY"        # captured frames, paper venues
+    SHADOW_LIVE = "SHADOW_LIVE"              # live books, refusing venues: records intent only
+    PAPER_EXECUTION = "PAPER_EXECUTION"      # live books, simulated fills against the same books
+    DEMO_EXECUTION = "DEMO_EXECUTION"        # Kalshi demo host; Polymarket has no demo -> paper
+    LIMITED_LIVE = "LIMITED_LIVE"            # real venues under hard caps from a signed override
+    PRODUCTION = "PRODUCTION"
+
+    @property
+    def rank(self) -> int:
+        return _MODE_ORDER.index(self)
+
+    def allows(self, needed: "Mode") -> bool:
+        """True if a process in this mode may perform an action that needs `needed`."""
+        return self.rank >= needed.rank
+
+    @property
+    def sends_real_orders(self) -> bool:
+        return self.rank >= Mode.DEMO_EXECUTION.rank
+
+    @property
+    def risks_capital(self) -> bool:
+        return self.rank >= Mode.LIMITED_LIVE.rank
+
+
+_MODE_ORDER = (Mode.OFFLINE_REPLAY, Mode.SHADOW_LIVE, Mode.PAPER_EXECUTION,
+               Mode.DEMO_EXECUTION, Mode.LIMITED_LIVE, Mode.PRODUCTION)
 
 
 class KeyProvenance(str, Enum):
@@ -222,12 +339,24 @@ class Book:
     rejects, so a throttled response is a STALE quote wearing a fresh wall-clock timestamp. Two
     legs fetched seconds apart, one of them minutes stale, fabricates divergence out of nothing.
     The cover screen hard-rejects on `max_leg_quote_age_s`.
+
+    PROVENANCE. `source` says whether the ladder came off the socket or a REST fallback; a REST
+    book is visibly labelled and held to a stricter freshness bound (spec §8). `server_utc` is
+    the venue's own timestamp when the frame carries one, else None -- never a local guess.
+    `received_mono` is the local monotonic receive clock, immune to wall-clock steps.
     """
     bids: tuple[Quote, ...] = ()        # descending price — liquidity to SELL this outcome into
     asks: tuple[Quote, ...] = ()        # ascending price  — liquidity to BUY this outcome from
     fetched_utc: float = 0.0
     depth_truncated: bool = False
     one_sided: bool = False             # bookmaker: bids empty by construction, not by chance
+    source: str = "unknown"             # "ws" | "rest" | "unknown"
+    server_utc: float | None = None
+    received_mono: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.source not in BOOK_SOURCES:
+            raise ValueError(f"Book.source must be one of {sorted(BOOK_SOURCES)}, got {self.source!r}")
 
     @property
     def best_bid(self) -> Quote | None:
@@ -314,7 +443,11 @@ class NormMarket:
     # resting at ask 1.00 (nobel-peace-prize-winner-2026 sampled 20 of 71 actual legs). Buying all
     # legs of a non-exhaustive set guarantees nothing. A partition scan that does not verify
     # exhaustiveness FROM THE RULES TEXT is a random-number generator.
-    exhaustive: bool = False
+    #
+    # This used to be `exhaustive: bool`. A bool can be asserted by any caller; that is what let a
+    # grid price 3-way EPL as a two-leg cover. It is now the PROOF itself -- an
+    # `ExhaustiveOutcomeSet` minted by `nodes/rules_exhaustive`, opaque to the kernel -- or None.
+    proof: object | None = None
 
     fee_params: Mapping[str, Any] = field(default_factory=dict)
     tick: float = 0.01
@@ -420,11 +553,11 @@ def selftest() -> None:
         except ValueError:
             pass
 
-    # exhaustive defaults to False — you must PROVE it
+    # there is no proof by default — you must MINT one
     m = NormMarket(venue="kalshi", liquidity_source="kalshi_clob", venue_market_id="X",
                    outcomes=(), fee_model_id="kalshi_quadratic", settle_ref=SettleRef(),
                    raw_title="t", fetched_utc=0.0)
-    assert m.exhaustive is False
+    assert m.proof is None
     assert m.settle_ref.provenance == "assumed"
     assert m.settle_ref.void_policy is VoidPolicy.UNKNOWN
 

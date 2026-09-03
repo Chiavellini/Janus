@@ -64,12 +64,12 @@ def test_sportsbook_becomes_an_ask_level():
     assert contracts > 1000.0            # you buy more than $1000 of payout at a sub-1 price
 
 
-def test_exhaustive_defaults_false_and_settleref_defaults_unknown():
+def test_no_proof_by_default_and_settleref_defaults_unknown():
     """Phase 1 burned four scans inferring exhaustiveness. Both defaults must be pessimistic."""
     m = NormMarket(venue="kalshi", liquidity_source="kalshi_clob", venue_market_id="X",
                    outcomes=(), fee_model_id="kalshi_quadratic", settle_ref=SettleRef(),
                    raw_title="t", fetched_utc=0.0)
-    assert m.exhaustive is False
+    assert m.proof is None
     assert m.settle_ref.void_policy is VoidPolicy.UNKNOWN
     assert m.settle_ref.provenance == "assumed"
 

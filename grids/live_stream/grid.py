@@ -45,6 +45,8 @@ from nodes.cover.capacity import frontier  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, record_events  # noqa: E402
 from nodes.fees.targeting import hurdle_for  # noqa: E402
 from nodes.game_poller.poller import GamePoller, PollerState  # noqa: E402
+from nodes.opportunity.status import status_for  # noqa: E402
+from kernel.schema import OpportunityStatus  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
 from nodes.stream_kalshi.stream import KalshiStream, load_private_key  # noqa: E402
 from nodes.stream_polymarket.stream import PolymarketStream  # noqa: E402
@@ -165,12 +167,14 @@ class Supervisor:
             hd = hurdle_for(fav, hurdle=MIN_RETURN,
                             overrides_a=sup.fee_params.get("kalshi"),
                             overrides_b=sup.fee_params.get("polymarket"))
-        status = ("ACTIONABLE" if (ret is not None and ret >= MIN_RETURN
-                                   and cov is not None and not cov.single_venue)
-                  else ("NO_EDGE" if cov and cov.ok
-                        else (ev.blocked_by or (cov.reject_reason if cov else "NO_PRICE"))))
+        status = status_for(cover_ok=bool(cov and cov.ok),
+                            reject_reason=cov.reject_reason if cov else None,
+                            blocked_by=ev.blocked_by, gross_per_contract=gross,
+                            cost_per_contract=cost,
+                            single_venue=bool(cov and cov.ok and cov.single_venue),
+                            hurdle=MIN_RETURN)
         wrote = self.store.evaluation(
-            game_id=ev.game_id, league=sup.poller.league, quantity=ev.quantity, status=status,
+            game_id=ev.game_id, league=sup.poller.league, quantity=ev.quantity, status=status.value,
             cost=cost, gross=gross, fees=fee, return_locked=ret,
             required_ask_sum=hd.required_ask_sum if hd else None,
             cents_from_actionable=(round((gross - hd.required_ask_sum) * 100.0, 4)
@@ -180,7 +184,7 @@ class Supervisor:
                   for l in (cov.legs if cov and cov.ok else ())],
             seen_ts=ev.evaluated_utc)
         sup.written += int(wrote)
-        if status == "ACTIONABLE":
+        if status is OpportunityStatus.PROFITABLE_UNEXECUTED:
             # Solve the size frontier on the SAME books that produced the edge. Doing it from the
             # replicas afterwards would price a different instant -- the books move in milliseconds.
             cap = ""
@@ -194,7 +198,7 @@ class Supervisor:
                                f"profit=${fr.best.profit:.2f} on ${fr.best.capital:.0f}")
             except Exception as exc:  # noqa: BLE001 -- reporting must never break the loop
                 cap = f"  (capacity failed: {type(exc).__name__})"
-            print(f"  *** ACTIONABLE {sup.short_name} q={ev.quantity} cost={cost:.4f} "
+            print(f"  *** {status.value} {sup.short_name} q={ev.quantity} cost={cost:.4f} "
                   f"return={ret:+.3%}{cap}", flush=True)
 
     def stats(self) -> dict:

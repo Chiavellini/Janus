@@ -25,9 +25,9 @@ tables (idempotent); `nodes/discovery` uses it for `events`.
 
 ## Failure modes
 
-`status` values mix casing — `ACTIONABLE`/`NO_EDGE` (literals) vs `insufficient_depth` (a
-`reject_reason`), so a downstream `== "INSUFFICIENT_DEPTH"` filter silently misses rows. The
-`OpportunityStatus` enum (plan P0b) replaces both.
+`status` is a `kernel.schema.OpportunityStatus` value as of 2026-09-02 (`nodes/opportunity`
+classifies every evaluation). Rows written before that date mix `ACTIONABLE`/`NO_EDGE`/`NO_PRICE`
+with lowercase reject reasons and replica fault strings; read them with that in mind.
 
 **Sub-tick drift can accumulate unrecorded.** `latest_quotes` is updated on every call, but a
 history row lands only when the move from the *last stored* value is ≥ 1 tick — so a run of

@@ -5,7 +5,7 @@ from __future__ import annotations
 from nodes.match_sports.sports_match import VenueMarket, _fullgame_slug, pair
 
 
-def vm(venue, gid, ent, *, vid="e", oid="o", period="full_game", mtype="moneyline"):
+def vm(venue, gid, ent, *, vid="e", oid="o", period="game", mtype="moneyline"):
     return VenueMarket(venue, vid, oid, gid, ent, mtype, period, 1_800_000_000, "label")
 
 

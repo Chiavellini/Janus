@@ -73,7 +73,7 @@ class VenueMarket:
     game_id: str
     entity_id: str           # which participant this side backs
     market_type: str         # "moneyline"
-    period: str              # "full_game"
+    period: str              # "game" -- kernel/schema.PERIODS vocabulary, as rules_exhaustive keys it
     start_utc: int
     label: str               # the venue's own text, kept for auditing
 
@@ -123,7 +123,7 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
             continue
         for m, eid in sides:
             out.append(VenueMarket("kalshi", tick, m["ticker"], g.game_id, eid,
-                                   "moneyline", "full_game", g.start_utc,
+                                   "moneyline", "game", g.start_utc,
                                    m.get("yes_sub_title") or ""))
     return out
 
@@ -166,7 +166,7 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> l
             continue
         for t, eid in ents:
             out.append(VenueMarket("polymarket", slug, f"{slug}:{t.get('abbreviation')}",
-                                   g.game_id, eid, "moneyline", "full_game", g.start_utc,
+                                   g.game_id, eid, "moneyline", "game", g.start_utc,
                                    t.get("name") or ""))
     return out
 

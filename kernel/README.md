@@ -6,7 +6,7 @@ require. Nodes depend on the kernel. The kernel depends on nothing in `nodes/` o
 
 | File | What it is |
 |---|---|
-| `schema.py` | `CanonicalKey`, `NormMarket`, `Book`, `Quote`, `SettleRef`, `VoidPolicy`, `TiePolicy`, `LIQUIDITY_SOURCES`. These are the edge types of the dataflow graph. |
+| `schema.py` | `CanonicalKey`, `NormMarket`, `Book` (with `source`/`server_utc`/`received_mono`), `Quote`, `SettleRef`, `VoidPolicy`, `TiePolicy`, `LIQUIDITY_SOURCES`, and the shared vocabulary: `OpportunityStatus`, `ExecutionState`, `FillState`, `Mode`. These are the edge types of the dataflow graph and the faithfulness contract — name once, never rename. |
 | `fetch.py` | Per-host token-bucket rate limiter, `Retry-After` handling on 429, exponential backoff with jitter on 5xx, and a deliberately **non-retrying** `post_json_once` for trading endpoints. |
 | `stats.py` | Permutation, block bootstrap, deflated Sharpe, BH-FDR. Required by the five gates in `GATE_TO_LIVE.md`. Copied from Kilos, not imported. |
 | `venue_protocol.py` | The venue adapter `Protocol`. `normalize()` is declared PURE. |
