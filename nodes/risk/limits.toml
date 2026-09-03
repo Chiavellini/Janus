@@ -1,0 +1,36 @@
+# Janus risk limits. Checked in; the sha of this file is pinned into every RiskClearance and into
+# the arming override, so a limit cannot change under a running arm without the pin moving.
+#
+# These are PAPER/DEMO-scale numbers. LIMITED_LIVE caps come from the signed override file and
+# may only be LOWER than these; nothing here is a licence to trade.
+
+[capital]
+max_total_usd = 500.0            # across both venues, reserved + unresolved
+max_unresolved_usd = 250.0       # exposure whose two legs have not both reconciled
+
+[capital.per_venue_usd]
+kalshi = 250.0
+polymarket = 250.0
+
+[events]
+max_simultaneous = 3
+max_event_notional_usd = 200.0
+
+[events.per_league_usd]
+mlb = 400.0
+nba = 200.0
+wnba = 200.0
+nhl = 200.0
+nfl = 200.0
+
+[loss]
+max_daily_realized_usd = 25.0    # the latching breaker; human reset
+
+[execution]
+max_hedge_latency_ms = 3000
+max_unhedged_contracts = 100
+max_unhedged_duration_ms = 5000
+max_stale_book_age_s = 5.0
+min_net_profit_usd = 0.50
+min_locked_return = 0.01
+clearance_ttl_ms = 500           # a clearance is good for one submit, within this window

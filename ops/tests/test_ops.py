@@ -59,7 +59,7 @@ def test_start_row_precedes_the_outcome(index):
     assert row["pid"] == os.getpid()
     assert row["argv"] == ["--once"]
     # a live pid with a start row and no outcome is a healthy daemon, not an alert
-    assert wd.check(index, now=NOW, slas={"j": wd.Sla("daemon", 3600)}) == []
+    assert wd.check(index, now=NOW, slas={"j": wd.Sla("daemon", 3600)}, risk={}) == []
 
 
 def test_watchdog_fires_on_the_real_convergence_signature(index):
@@ -73,7 +73,7 @@ def test_watchdog_fires_on_the_real_convergence_signature(index):
 def test_watchdog_is_quiet_for_a_healthy_daemon(index):
     """A monitor that always fires trains the operator to ignore it."""
     ri._append(index, {"ts": NOW - 60, "job": "j", "status": "started", "pid": os.getpid()})
-    assert wd.check(index, now=NOW, slas={"j": wd.Sla("daemon", 3600)}) == []
+    assert wd.check(index, now=NOW, slas={"j": wd.Sla("daemon", 3600)}, risk={}) == []
 
 
 def test_watchdog_survives_a_torn_line(index):

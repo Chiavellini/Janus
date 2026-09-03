@@ -106,7 +106,9 @@ def _rows(index: Path) -> list[dict]:
 
 
 def check(index: Path = INDEX, *, now: float | None = None,
-          slas: dict[str, Sla] | None = None) -> list[str]:
+          slas: dict[str, Sla] | None = None, risk: dict | None = None) -> list[str]:
+    """`risk` is the keyword set for nodes/risk/health.risk_alerts (paths); None uses the
+    real ones, {} disables the risk checks (tests of the job branches alone)."""
     now = time.time() if now is None else now
     slas = SLAS if slas is None else slas
     rows = _rows(index)
@@ -153,6 +155,9 @@ def check(index: Path = INDEX, *, now: float | None = None,
         elif sla.kind == "oneshot" and last.get("status") in TERMINAL and age > sla.max_age_s:
             alerts.append(f"{job}: STALE — last completion {int(age)}s ago, SLA "
                           f"{int(sla.max_age_s)}s")
+    if risk is None or risk:
+        from nodes.risk.health import risk_alerts
+        alerts.extend(risk_alerts(now=now, **(risk or {})))
     return alerts
 
 
@@ -171,50 +176,68 @@ def selftest() -> None:
             return Path(d) / f"{name}.jsonl"
 
         # NEVER_RAN
-        assert any("NEVER_RAN" in a for a in check(fresh("a"), now=NOW, slas=S)), "NEVER_RAN"
+        assert any("NEVER_RAN" in a for a in check(fresh("a"), now=NOW, slas=S, risk={})), "NEVER_RAN"
 
         # CRASH_LOOP — the convergence signature: a start row every 30s
         p = fresh("b")
         for i in range(20):
             _append(p, {"ts": NOW - i * 30, "job": "j", "status": "started", "pid": dead_pid})
-        assert any("CRASH_LOOP" in a for a in check(p, now=NOW, slas=S)), "CRASH_LOOP"
+        assert any("CRASH_LOOP" in a for a in check(p, now=NOW, slas=S, risk={})), "CRASH_LOOP"
 
         # CRASHED — started, pid gone, no outcome
         p = fresh("c")
         _append(p, {"ts": NOW - 60, "job": "j", "status": "started", "pid": dead_pid})
-        assert any("CRASHED" in a for a in check(p, now=NOW, slas=S)), "CRASHED"
+        assert any("CRASHED" in a for a in check(p, now=NOW, slas=S, risk={})), "CRASHED"
 
         # FAILED
         p = fresh("d")
         _append(p, {"ts": NOW - 100, "job": "j", "run_id": "r", "status": "started", "pid": dead_pid})
         _append(p, {"ts": NOW - 90, "job": "j", "run_id": "r", "status": "FAILED", "exit": 1})
-        assert any("FAILED" in a for a in check(p, now=NOW, slas=S)), "FAILED"
+        assert any("FAILED" in a for a in check(p, now=NOW, slas=S, risk={})), "FAILED"
 
         # STALE — oneshot completed too long ago
         p = fresh("e")
         _append(p, {"ts": NOW - 9999, "job": "j", "run_id": "r", "status": "OK", "exit": 0})
-        assert any("STALE" in a for a in check(p, now=NOW, slas=S1)), "STALE"
+        assert any("STALE" in a for a in check(p, now=NOW, slas=S1, risk={})), "STALE"
 
         # HUNG — oneshot still running past SLA, pid alive
         p = fresh("f")
         _append(p, {"ts": NOW - 9999, "job": "j", "status": "started", "pid": os.getpid()})
-        assert any("HUNG" in a for a in check(p, now=NOW, slas=S1)), "HUNG"
+        assert any("HUNG" in a for a in check(p, now=NOW, slas=S1, risk={})), "HUNG"
 
         # UNREGISTERED
         p = fresh("g")
         _append(p, {"ts": NOW, "job": "stranger", "status": "OK", "exit": 0})
-        assert any("UNREGISTERED" in a for a in check(p, now=NOW, slas={})), "UNREGISTERED"
+        assert any("UNREGISTERED" in a for a in check(p, now=NOW, slas={}, risk={})), "UNREGISTERED"
 
         # QUIET: a healthy daemon must produce NO alert (a monitor that always fires is noise)
         p = fresh("h")
         _append(p, {"ts": NOW - 120, "job": "j", "status": "started", "pid": os.getpid()})
-        assert check(p, now=NOW, slas=S) == [], check(p, now=NOW, slas=S)
+        assert check(p, now=NOW, slas=S, risk={}) == [], check(p, now=NOW, slas=S, risk={})
 
         # a torn line must not blind it
         with p.open("a") as fh:
             fh.write("{not json\n")
-        assert check(p, now=NOW, slas=S) == []
-    print("watchdog selftest OK — 7 alert branches fired, healthy case stayed quiet")
+        assert check(p, now=NOW, slas=S, risk={}) == []
+        # ── risk branches (nodes/risk/health) ────────────────────────────
+        import sqlite3
+        kill = Path(d) / "kill"; kill.mkdir()
+        brk = kill / "breaker.json"; db = Path(d) / "t.sqlite"
+        R = dict(kill_root=kill, breaker_path=brk, db_path=db, max_unreconciled_s=60)
+        assert check(fresh("q"), now=NOW, slas={}, risk=R) == [], "quiet risk state must be silent"
+        (kill / "venue-kalshi").write_text("{}")
+        assert any("KILL_FILE_PRESENT" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "KILL_FILE"
+        (kill / "venue-kalshi").unlink()
+        brk.write_text(json.dumps({"latched": True, "reason": "test"}))
+        assert any("BREAKER_LATCHED" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "BREAKER"
+        brk.unlink()
+        con = sqlite3.connect(db)
+        con.execute("CREATE TABLE capital_reservations(reservation_id TEXT, event_id TEXT, league TEXT, "
+                    "per_venue_json TEXT, opportunity_id TEXT, created_utc REAL, released_utc REAL, release_reason TEXT)")
+        con.execute("INSERT INTO capital_reservations VALUES('r','e','mlb','{}',NULL,?,NULL,NULL)", (NOW - 3600,))
+        con.commit(); con.close()
+        assert any("UNRECONCILED_TOO_LONG" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "UNRECONCILED"
+    print("watchdog selftest OK — 7 job branches and 3 risk branches fired, healthy cases stayed quiet")
 
 
 def main() -> int:

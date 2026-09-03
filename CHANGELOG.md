@@ -211,3 +211,22 @@ is reviewed.
 `nodes/match_sports` constructs the kernel's `CanonicalKey` and joins on it, recording key
 provenance per venue. Discovery carries the rules text in every spec and records the settlement
 and equivalence tables; the supervisor and the replay certify from the same words.
+
+---
+
+## 2026-09-03 — P5: the risk manager, before any adapter exists
+
+`nodes/risk` (new). `RiskClearance` is the token every order adapter's `submit()` will require:
+minted only by `clear()` after every fail-closed condition in spec §13 is checked in order (mode,
+kill switches, breaker, clock, fee schedules, venue connectivity, book age, minimum profit and
+return, balances, then the ledger's caps), single-use, expiring in half a second, carrying the
+reservation it was cleared against and the sha of the limits it was cleared under. Limits live in
+a checked-in `limits.toml`; absent is zero. Kill switches are files under `/Volumes/Kilos/janus/kill/`
+in five scopes. The daily realized-loss breaker latches across restarts and latches the `live`
+switch; an UNCONFIRMED fill makes the day's PnL unknown, and unknown is closed. The exposure
+ledger reserves before submission, releases only on both-venue reconciliation, journals to
+`capital_reservations`, and reloads open reservations at start. The mode gate decides once:
+`LIVE=1` in a non-live mode refuses to start; capital-risking modes need the signed override
+with matching runner and limits shas, positive caps and an unexpired date. The watchdog gained
+three risk alarms — kill file present, breaker latched, reservation unreconciled too long — each
+demonstrated firing in its selftest.
