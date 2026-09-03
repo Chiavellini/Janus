@@ -1,0 +1,49 @@
+experiment_id: "janus-sports-cfb-settlement-wedge-rates-2026-09-03"
+date_registered: "2026-09-03"
+track: "sports/settlement"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L32"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE RUN.
+purpose: >
+  Measure the two probabilities the college-football settlement wedge is priced with:
+  cfb.postponed_gt48h_rate (Kalshi KXNCAAFGAME resolves to a fair price when a game is not started
+  within 48 hours of its original kickoff; Polymarket waits) and cfb.cancelled_rate (Kalshi fair
+  price; Polymarket 50-50). The same shape as the NFL row (L30): a denominator from a schedule
+  archive, a numerator from a cited table of schedule changes.
+
+source:
+  denominator: "ESPN college-football scoreboard (site.web.api.espn.com), groups 80 (FBS) and 81 (FCS), every regular-season date range per season, season type 2 only, de-duplicated on the ESPN game id; cached under /Volumes/Kilos/janus/catalog/espn_cfb/. ESPN drops a postponed game from its original date (L26) and lists it on the played date, so the denominator counts games played plus the cancellations in events.csv."
+  numerator: "events.csv in this directory: one row per regular-season game moved from its originally scheduled date or cancelled, with original and actual dates, division (FBS/FCS) and a citation URL. Compiled 2026-09-03 from press and conference releases."
+  limitation: "College football has no weekday gate: MAC and other weeknight games are scheduled on Tuesdays and Wednesdays, and Labor Day weekend games on Sundays and Mondays, so an unexplained odd weekday is not evidence of a reschedule. The numerator's completeness therefore rests on the press coverage of each season; FBS is well covered, FCS is not, and the FCS rate is declared a FLOOR."
+
+window:
+  seasons: [2019, 2021, 2022, 2023, 2024, 2025]
+  excluded: "2020, by the same decision as the NFL row (2026-09-03): the pandemic season is not the regime the reserve prices; the exclusion makes the reserve smaller and is stated."
+
+definitions:
+  game_unit: "one Division I regular-season game (FBS or FCS), counted once; bowls, conference championship games and FCS playoffs excluded"
+  denominator: "ESPN season-type-2 games in the window (played) plus every cancelled game in events.csv"
+  postponed_gt48h: "actual kickoff minus original kickoff, absolute hours, strictly greater than 48.0; when only dates are known the difference is date difference x 24 and hours_known = false"
+  cancelled: "a game never completed and declared cancelled, no contest or forfeited without being played, with no make-up"
+  rates: "per division and pooled; the POOLED rates are registered; the FBS-only rates are reported beside them"
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no look. No outcome is read."
+  - "Every events.csv row must match exactly one ESPN game in the window on (season, the two teams) unless it is a cancellation; an unmatched moved game -> INCOMPLETE, nothing registered."
+  - "Fewer than 3,000 games in the denominator -> INSUFFICIENT, nothing registered."
+  - "The registered value carries the label FLOOR for FCS coverage; the evidence note must say so."
+
+outputs:
+  rates: ["cfb.postponed_gt48h_rate", "cfb.cancelled_rate"]
+  evidence_registration: "nodes/settle_wedge/evidence.py, citing this spec"
+  files:
+    results: "research/sports/2026-09-03_cfb-settlement-wedge-rates/results.json"
+    verdict: "research/sports/2026-09-03_cfb-settlement-wedge-rates/verdict.md"
+
+what_this_does_not_establish:
+  - "Anything about 2020."
+  - "Completeness for FCS and below: a moved FCS game the press did not report is not in the numerator."
+  - "Any edge. A reserve is a cost."
