@@ -1,4 +1,41 @@
 venue,league,venue_team_id,entity_id,source,label
+kalshi,atp,01b4fd12-0978-4ae6-9fc9-64493f64962e,atp:stefanos-tsitsipas,custom_strike,TSI
+kalshi,atp,039a632f-1895-4dbe-a457-49d8ccec2c51,atp:alexander-blockx,custom_strike,BLO
+kalshi,atp,05040645-e988-4e97-a807-752b464c147b,atp:flavio-cobolli,custom_strike,COB
+kalshi,atp,0fc6ed98-7a80-43e4-950d-4ac48826b9a9,atp:arthur-gea,custom_strike,GEA
+kalshi,atp,12b691b0-b144-4a80-bf50-7c0f09b66d1a,atp:tommy-paul,custom_strike,PAU
+kalshi,atp,241ad35b-edbe-4ea0-a2bc-647102e62d3e,atp:ben-shelton,custom_strike,SHE
+kalshi,atp,31083d0e-a88b-4a59-9215-d4696b37c225,atp:alexander-bublik,custom_strike,BUB
+kalshi,atp,32f233fb-77b8-4aac-bf24-c893ef35bd75,atp:alex-michelsen,custom_strike,MIC
+kalshi,atp,35b9acda-2a7c-4255-aaf0-ce912d35b3b5,atp:frances-tiafoe,custom_strike,TIA
+kalshi,atp,3b70fa7d-132f-4922-958c-ff79800f01e5,atp:valentin-vacherot,custom_strike,VAC
+kalshi,atp,3e22c35d-63bc-44ff-9ee5-f08459ccf13c,atp:alejandro-tabilo,custom_strike,TAB
+kalshi,atp,4c4702bf-a8b8-4592-b9cd-6cef1892a562,atp:jiri-lehecka,custom_strike,LEH
+kalshi,atp,4d7051e1-dfeb-4b37-8fc0-700b88c23dda,atp:alex-de-minaur,custom_strike,DE
+kalshi,atp,527915ea-e368-4c7f-a203-c83ebb6f6572,atp:carlos-alcaraz,custom_strike,ALC
+kalshi,atp,58df3a69-c402-4e09-af82-c706ef7c8749,atp:mariano-navone,custom_strike,NAV
+kalshi,atp,5ae53c08-17fc-4132-ae4d-a1993d5ee8bf,atp:michael-zheng,custom_strike,ZHE
+kalshi,atp,5c4e35a1-ecf8-4118-853b-56bbf4e3663d,atp:tristan-schoolkate,custom_strike,SCH
+kalshi,atp,5f58ce8c-7da9-4a7a-be1d-7104dfc1d685,atp:zachary-svajda,custom_strike,SVA
+kalshi,atp,63c46490-f7f6-4c07-918c-eff64bb6707e,atp:jakub-mensik,custom_strike,MEN
+kalshi,atp,65088313-14b6-4550-94ee-88fe13972354,atp:yibing-wu,custom_strike,YIB
+kalshi,atp,6ac9a088-e05e-454c-9085-1020f6786e67,atp:alexei-popyrin,custom_strike,POP
+kalshi,atp,6d821426-6b61-4bf8-aae9-d2e92ef1e6b4,atp:zizou-bergs,custom_strike,BER
+kalshi,atp,794ce9cc-0372-4c5e-9a21-e11dc70426d6,atp:dane-sweeny,custom_strike,SWE
+kalshi,atp,808b61c1-4663-4368-ad6b-6f37cc988990,atp:jesper-de-jong,custom_strike,DEJ
+kalshi,atp,8c4709e2-3b9a-497b-bfdd-a4c8e9ed29ac,atp:benjamin-bonzi,custom_strike,BON
+kalshi,atp,8fa15da9-5968-49a4-9850-3d344f31b575,atp:lorenzo-musetti,custom_strike,MUS
+kalshi,atp,90ded265-bda3-4c07-9bcd-3b94089a4d7e,atp:jurij-rodionov,custom_strike,ROD
+kalshi,atp,c19a8bf3-bb0a-4443-bbf2-36c5f9315dce,atp:botic-van-de-zandschulp,custom_strike,VAN
+kalshi,atp,d2257e62-3f76-4724-8a3f-745799aeae46,atp:daniil-medvedev,custom_strike,MED
+kalshi,atp,d232bb3f-f5d7-4bf8-87a7-4563b11653c0,atp:ignacio-buse,custom_strike,BUS
+kalshi,atp,d7fd9794-61d8-4dd5-8072-78d13c93fbcf,atp:arthur-rinderknech,custom_strike,RIN
+kalshi,atp,dc4002ad-fb32-4f36-b59f-7c7af1927c57,atp:alexander-zverev,custom_strike,ZVE
+kalshi,atp,e09a4b00-945b-4b17-967e-27bfc48d63c1,atp:gael-monfils,custom_strike,MON
+kalshi,atp,e4502d98-1e89-4896-8980-06f033b7e94e,atp:yunchaokete-bu,custom_strike,YUN
+kalshi,atp,f0c27486-2bf2-4d48-b064-66acd05967db,atp:denis-shapovalov,custom_strike,SHA
+kalshi,atp,f2fa50df-3459-4bf6-a4ff-ee23a9df467d,atp:marco-trungelliti,custom_strike,TRU
+kalshi,atp,f4eb3284-d7e6-4320-91b8-352effe46fcd,atp:quentin-halys,custom_strike,HAL
 kalshi,bel1,000d32b0-159a-4977-8505-80dcd3d7898b,bel1:bel.club_brugge,custom_strike,BRU
 kalshi,bel1,2739d427-ddc0-46fb-8463-b27bde3ae367,bel1:bel.kvc_westerlo,custom_strike,WES
 kalshi,bel1,28cd7607-1d39-420b-b028-1037703fdda0,bel1:bel.oud-heverlee_leuven,custom_strike,OHL
@@ -541,6 +578,237 @@ kalshi,scop,db6f419e-d853-44ec-ac18-f7e380400add,scop:sco.st_mirren,custom_strik
 kalshi,scop,e4bda32c-b4a5-417b-93dc-64858ae7df1f,scop:sco.celtic,custom_strike,CEL
 kalshi,scop,e4d74382-289d-4e62-9f1e-8554ed89c5fa,scop:sco.kilmarnock,custom_strike,KIL
 kalshi,scop,ee7d18ea-9ba2-4242-b46f-0ef45ac392cf,scop:sco.st_johnstone,custom_strike,JOH
+kalshi,wta,06a69884-3e1d-4b67-ab92-5b7f7917a57b,wta:francesca-jones,custom_strike,JON
+kalshi,wta,1716723d-87c5-4c73-b242-835dae00f4cd,wta:elena-rybakina,custom_strike,RYB
+kalshi,wta,17233ac0-1563-4968-89b6-92d8d64ecd5c,wta:anna-kalinskaya,custom_strike,KAL
+kalshi,wta,23554e73-dcff-4dd7-b90f-176cd7761733,wta:anastasia-potapova,custom_strike,POT
+kalshi,wta,24ad350b-aafe-4514-950d-d8320f870263,wta:oleksandra-oliynykova,custom_strike,OLI
+kalshi,wta,35f4cdd4-49e0-47bb-b545-c30251f0e451,wta:paula-badosa,custom_strike,BAD
+kalshi,wta,38b7cc42-e0ec-4a1c-9d1e-33a77c3576cc,wta:maria-sakkari,custom_strike,SAK
+kalshi,wta,3e231cb6-70d3-4cfc-958a-e160cd45b0a7,wta:ann-li,custom_strike,ANN
+kalshi,wta,41cc6fe8-fadb-4ea7-a9ff-0ed8f11efb4b,wta:linda-noskova,custom_strike,NOS
+kalshi,wta,500f9182-df27-4f29-bb5c-ae02f3f172fd,wta:leylah-fernandez,custom_strike,FER
+kalshi,wta,5b6bcc13-d96b-4fc4-b32d-b1098a9531c0,wta:jasmine-paolini,custom_strike,PAO
+kalshi,wta,61ba7d09-9ec0-4a20-b094-40e9ce6a8960,wta:tatjana-maria,custom_strike,MAR
+kalshi,wta,6993e120-7e1a-4409-9f90-785604b8b7f9,wta:kamilla-rakhimova,custom_strike,RAK
+kalshi,wta,6b48f577-d421-4d95-ab71-27521ca2ecdc,wta:ekaterina-alexandrova,custom_strike,ALE
+kalshi,wta,6c69f42c-5e27-4cfd-a9ea-8eb9fbb0bd12,wta:eva-lys,custom_strike,LYS
+kalshi,wta,74248032-3332-4ef8-87be-17aac45b7479,wta:yulia-putintseva,custom_strike,PUT
+kalshi,wta,78600154-518d-401e-b34a-139be60b9fec,wta:nikola-bartunkova,custom_strike,BAR
+kalshi,wta,7b2b468a-0943-418a-a0a6-e5cbd81954af,wta:qinwen-zheng,custom_strike,ZHE
+kalshi,wta,8aad20ee-9a6f-44a2-b740-3af544a671a0,wta:mirra-andreeva,custom_strike,AND
+kalshi,wta,8b86810e-0f21-4130-ae44-54647d36d148,wta:marie-bouzkova,custom_strike,BOU
+kalshi,wta,8b9cb9b7-53d2-4826-b884-85a3d9d0c19b,wta:karolina-muchova,custom_strike,MUC
+kalshi,wta,8e6702f3-e4ac-4409-882c-cdc41a7c9e81,wta:cristina-bucsa,custom_strike,BUC
+kalshi,wta,95f2d754-ff98-41ec-b407-15cb5a56c219,wta:naomi-osaka,custom_strike,OSA
+kalshi,wta,98f47d8a-b793-4ffb-942e-20d2109eb016,wta:amanda-anisimova,custom_strike,ANI
+kalshi,wta,a48ac25f-b930-4065-bd81-8c65430d5f8e,wta:jessica-pegula,custom_strike,PEG
+kalshi,wta,ab190640-8df5-460e-b1fb-b9659ed6a96f,wta:aryna-sabalenka,custom_strike,SAB
+kalshi,wta,af6bf52a-0c5a-48c9-9deb-61699321b95a,wta:diana-shnaider,custom_strike,SHN
+kalshi,wta,b6d7e0eb-1cd2-4b04-8c23-f1faaccbe631,wta:alexandra-eala,custom_strike,EAL
+kalshi,wta,c23e74e1-3ffe-4959-a733-90bbf2af6e0b,wta:iva-jovic,custom_strike,JOV
+kalshi,wta,d3887497-38f2-46e1-8ba4-93fdccaf164e,wta:marta-kostyuk,custom_strike,KOS
+kalshi,wta,d3eb0e9d-4691-4077-ae7a-083d098920c5,wta:sorana-cirstea,custom_strike,CIR
+kalshi,wta,da46fe5d-61ba-493b-af66-5ac0cdd7619f,wta:elina-svitolina,custom_strike,SVI
+kalshi,wta,e6ed7038-2b1d-4665-831a-0fffcb91e892,wta:jessica-bouzas-maneiro,custom_strike,BOU
+kalshi,wta,ec734435-b809-4db4-b9ff-d9176cfe6226,wta:coco-gauff,custom_strike,GAU
+kalshi,wta,f17d541e-1f11-44ec-987b-3f2d8a90408b,wta:emma-navarro,custom_strike,NAV
+kalshi,wta,f1da9fec-fc90-40e0-9cd6-1bc9eea719dd,wta:taylor-townsend,custom_strike,TOW
+kalshi,wta,f88b87da-95df-4450-9988-b0b06738087d,wta:himeno-sakatsume,custom_strike,SAK
+polymarket,atp,1274313,atp:alejandro-moro-canas,teams[].id,Alejandro Moro Canas
+polymarket,atp,1388176,atp:ilia-simakin,teams[].id,Ilia Simakin
+polymarket,atp,147099,atp:flavio-cobolli,teams[].id,Flavio Cobolli
+polymarket,atp,147101,atp:jiri-lehecka,teams[].id,Jiri Lehecka
+polymarket,atp,147103,atp:benjamin-bonzi,teams[].id,Benjamin Bonzi
+polymarket,atp,147115,atp:alex-michelsen,teams[].id,Alex Michelsen
+polymarket,atp,147120,atp:daniil-medvedev,teams[].id,Daniil Medvedev
+polymarket,atp,147122,atp:jan-lennard-struff,teams[].id,Jan-Lennard Struff
+polymarket,atp,147128,atp:lorenzo-musetti,teams[].id,Lorenzo Musetti
+polymarket,atp,147131,atp:tomas-etcheverry,teams[].id,Tomas Etcheverry
+polymarket,atp,147133,atp:felix-auger-aliassime,teams[].id,Felix Auger-Aliassime
+polymarket,atp,147135,atp:denis-shapovalov,teams[].id,Denis Shapovalov
+polymarket,atp,147160,atp:alejandro-tabilo,teams[].id,Alejandro Tabilo
+polymarket,atp,147173,atp:carlos-alcaraz,teams[].id,Carlos Alcaraz
+polymarket,atp,147200,atp:adrian-mannarino,teams[].id,Adrian Mannarino
+polymarket,atp,147203,atp:quentin-halys,teams[].id,Quentin Halys
+polymarket,atp,147206,atp:botic-van-de-zandschulp,teams[].id,Botic van de Zandschulp
+polymarket,atp,147207,atp:mattia-bellucci,teams[].id,Mattia Bellucci
+polymarket,atp,147217,atp:tristan-schoolkate,teams[].id,Tristan Schoolkate
+polymarket,atp,147218,atp:jesper-de-jong,teams[].id,Jesper de Jong
+polymarket,atp,147223,atp:terence-atmane,teams[].id,Terence Atmane
+polymarket,atp,147245,atp:valentin-vacherot,teams[].id,Valentin Vacherot
+polymarket,atp,147257,atp:jakub-mensik,teams[].id,Jakub Mensik
+polymarket,atp,147263,atp:arthur-rinderknech,teams[].id,Arthur Rinderknech
+polymarket,atp,147273,atp:francisco-cerundolo,teams[].id,Francisco Cerundolo
+polymarket,atp,147274,atp:alexander-bublik,teams[].id,Alexander Bublik
+polymarket,atp,147276,atp:alex-de-minaur,teams[].id,Alex de Minaur
+polymarket,atp,147279,atp:jurij-rodionov,teams[].id,Jurij Rodionov
+polymarket,atp,147284,atp:alexei-popyrin,teams[].id,Alexei Popyrin
+polymarket,atp,147288,atp:cameron-norrie,teams[].id,Cameron Norrie
+polymarket,atp,147291,atp:stefanos-tsitsipas,teams[].id,Stefanos Tsitsipas
+polymarket,atp,147292,atp:karen-khachanov,teams[].id,Karen Khachanov
+polymarket,atp,147294,atp:luciano-darderi,teams[].id,Luciano Darderi
+polymarket,atp,147315,atp:alexander-zverev,teams[].id,Alexander Zverev
+polymarket,atp,147316,atp:jaume-munar,teams[].id,Jaume Munar
+polymarket,atp,147318,atp:ben-shelton,teams[].id,Ben Shelton
+polymarket,atp,178024,atp:learner-tien,teams[].id,Learner Tien
+polymarket,atp,178025,atp:zizou-bergs,teams[].id,Zizou Bergs
+polymarket,atp,178130,atp:taylor-fritz,teams[].id,Taylor Fritz
+polymarket,atp,183152,atp:thiago-agustin-tirante,teams[].id,Thiago Agustin Tirante
+polymarket,atp,183154,atp:chun-hsin-tseng,teams[].id,Chun-Hsin Tseng
+polymarket,atp,183156,atp:marco-trungelliti,teams[].id,Marco Trungelliti
+polymarket,atp,183162,atp:billy-harris,teams[].id,Billy Harris
+polymarket,atp,183169,atp:mark-lajal,teams[].id,Mark Lajal
+polymarket,atp,183171,atp:ivan-ivanov,teams[].id,Ivan Ivanov
+polymarket,atp,183172,atp:alexander-blockx,teams[].id,Alexander Blockx
+polymarket,atp,1957367,atp:edas-butvilas,teams[].id,Edas Butvilas
+polymarket,atp,1957371,atp:duje-ajdukovic,teams[].id,Duje Ajdukovic
+polymarket,atp,1957373,atp:ilya-ivashka,teams[].id,Ilya Ivashka
+polymarket,atp,2071220,atp:juan-pablo-varillas,teams[].id,Juan Pablo Varillas
+polymarket,atp,2071222,atp:miguel-damas,teams[].id,Miguel Damas
+polymarket,atp,2185073,atp:facundo-mena,teams[].id,Facundo Mena
+polymarket,atp,229149,atp:dane-sweeny,teams[].id,Dane Sweeny
+polymarket,atp,229172,atp:frances-tiafoe,teams[].id,Frances Tiafoe
+polymarket,atp,229174,atp:tommy-paul,teams[].id,Tommy Paul
+polymarket,atp,229198,atp:mariano-navone,teams[].id,Mariano Navone
+polymarket,atp,229199,atp:yibing-wu,teams[].id,Yibing Wu
+polymarket,atp,229205,atp:yunchaokete-bu,teams[].id,Yunchaokete Bu
+polymarket,atp,229486,atp:dalibor-svrcina,teams[].id,Dalibor Svrcina
+polymarket,atp,229503,atp:gael-monfils,teams[].id,Gael Monfils
+polymarket,atp,229594,atp:jack-pinnington-jones,teams[].id,Jack Pinnington Jones
+polymarket,atp,229614,atp:arthur-gea,teams[].id,Arthur Gea
+polymarket,atp,229624,atp:michael-zheng,teams[].id,Michael Zheng
+polymarket,atp,229626,atp:daniel-merida-aguilar,teams[].id,Daniel Merida Aguilar
+polymarket,atp,229651,atp:zachary-svajda,teams[].id,Zachary Svajda
+polymarket,atp,229661,atp:thiago-seyboth-wild,teams[].id,Thiago Seyboth Wild
+polymarket,atp,229664,atp:gustavo-heide,teams[].id,Gustavo Heide
+polymarket,atp,229669,atp:hugo-dellien,teams[].id,Hugo Dellien
+polymarket,atp,230554,atp:juan-manuel-la-serna,teams[].id,Juan Manuel La Serna
+polymarket,atp,230557,atp:thiago-monteiro,teams[].id,Thiago Monteiro
+polymarket,atp,230578,atp:ignacio-buse,teams[].id,Ignacio Buse
+polymarket,atp,2868097,atp:matej-dodig,teams[].id,Matej Dodig
+polymarket,atp,3099452,atp:daniel-rincon,teams[].id,Daniel Rincon
+polymarket,atp,3228769,atp:mitsuki-wei-kang-leong,teams[].id,Mitsuki Wei Kang Leong
+polymarket,atp,3246384,atp:valerio-aboian,teams[].id,Valerio Aboian
+polymarket,atp,3265063,atp:oriol-roca-batalla,teams[].id,Oriol Roca Batalla
+polymarket,atp,3265065,atp:thomas-faurel,teams[].id,Thomas Faurel
+polymarket,atp,3265196,atp:federico-iannaccone,teams[].id,Federico Iannaccone
+polymarket,atp,3265281,atp:dusan-obradovic,teams[].id,Dusan Obradovic
+polymarket,atp,3265283,atp:andrej-nedic,teams[].id,Andrej Nedic
+polymarket,atp,3267748,atp:james-kent-trotter,teams[].id,James Kent Trotter
+polymarket,atp,3267771,atp:kasidit-samrej,teams[].id,Kasidit Samrej
+polymarket,atp,3267772,atp:fajing-sun,teams[].id,Fajing Sun
+polymarket,atp,3267780,atp:juan-martin,teams[].id,Juan Martin
+polymarket,atp,3267788,atp:inaki-montes,teams[].id,Inaki Montes
+polymarket,atp,3267793,atp:johan-nikles,teams[].id,Johan Nikles
+polymarket,atp,3269899,atp:pedro-vives-marcos,teams[].id,Pedro Vives Marcos
+polymarket,atp,3270409,atp:enzo-aguiard,teams[].id,Enzo Aguiard
+polymarket,atp,3270553,atp:max-schoenhaus,teams[].id,Max Schoenhaus
+polymarket,atp,3270655,atp:luca-potenza,teams[].id,Luca Potenza
+polymarket,atp,3270918,atp:reymond-sanchez,teams[].id,Reymond/Sanchez
+polymarket,atp,3270919,atp:drzewiecki-matuszewski,teams[].id,Drzewiecki/Matuszewski
+polymarket,atp,3270921,atp:nouza-oberleitner,teams[].id,Nouza/Oberleitner
+polymarket,atp,3270922,atp:gille-verbeek,teams[].id,Gille/Verbeek
+polymarket,atp,3270924,atp:luz-matos,teams[].id,Luz/Matos
+polymarket,atp,3270926,atp:arends-pel,teams[].id,Arends/Pel
+polymarket,atp,3270929,atp:paul-vocel,teams[].id,Paul/Vocel
+polymarket,atp,3270930,atp:doumbia-reboul,teams[].id,Doumbia/Reboul
+polymarket,atp,3270931,atp:granollers-zeballos,teams[].id,Granollers/Zeballos
+polymarket,atp,3270932,atp:harrison-skupski,teams[].id,Harrison/Skupski
+polymarket,atp,3270933,atp:arevalo-pavic,teams[].id,Arevalo/Pavic
+polymarket,atp,3270941,atp:krajicek-mektic,teams[].id,Krajicek/Mektic
+polymarket,atp,3270958,atp:reynolds-watt,teams[].id,Reynolds/Watt
+polymarket,atp,3270964,atp:lammons-withrow,teams[].id,Lammons/Withrow
+polymarket,atp,3270967,atp:frantzen-haase,teams[].id,Frantzen/Haase
+polymarket,atp,3270972,atp:halys-herbert,teams[].id,Halys/Herbert
+polymarket,atp,3271373,atp:helioevaara-patten,teams[].id,Helioevaara/Patten
+polymarket,atp,3271374,atp:bolelli-vavassori,teams[].id,Bolelli/Vavassori
+polymarket,atp,3271893,atp:pavlasek-rikl,teams[].id,Pavlasek/Rikl
+polymarket,atp,3271940,atp:hidalgo-tabilo,teams[].id,Hidalgo/Tabilo
+polymarket,atp,3271941,atp:bhambri-venus,teams[].id,Bhambri/Venus
+polymarket,atp,3271943,atp:andreozzi-guinard,teams[].id,Andreozzi/Guinard
+polymarket,atp,3271945,atp:krawietz-puetz,teams[].id,Krawietz/Puetz
+polymarket,atp,3271946,atp:nys-roger-vasselin,teams[].id,Nys/Roger-Vasselin
+polymarket,atp,3271948,atp:arribage-olivetti,teams[].id,Arribage/Olivetti
+polymarket,atp,3271951,atp:schnaitter-wallner,teams[].id,Schnaitter/Wallner
+polymarket,atp,3272397,atp:georgii-kravchenko,teams[].id,Georgii Kravchenko
+polymarket,atp,3272507,atp:cash-glasspool,teams[].id,Cash/Glasspool
+polymarket,atp,3275615,atp:carabelli-etcheverry,teams[].id,Carabelli/Etcheverry
+polymarket,atp,3275626,atp:golubev-nedovyesov,teams[].id,Golubev/Nedovyesov
+polymarket,atp,3278907,atp:stevenson-willis,teams[].id,Stevenson/Willis
+polymarket,atp,3278918,atp:kolar-poljak,teams[].id,Kolar/Poljak
+polymarket,atp,3279085,atp:felix-balshaw,teams[].id,Felix Balshaw
+polymarket,atp,3279528,atp:forcano-vervoort,teams[].id,Forcano/Vervoort
+polymarket,atp,3279662,atp:johnson-zielinski,teams[].id,Johnson/Zielinski
+polymarket,atp,3279664,atp:ram-salisbury,teams[].id,Ram/Salisbury
+polymarket,atp,3279667,atp:castelnuovo-santillan,teams[].id,Castelnuovo/Santillan
+polymarket,atp,3280144,atp:yanaki-milev,teams[].id,Yanaki Milev
+polymarket,atp,3280178,atp:loof-uesugi,teams[].id,Loof/Uesugi
+polymarket,atp,3280695,atp:duckworth-kecmanovic,teams[].id,Duckworth/Kecmanovic
+polymarket,atp,3280696,atp:bonzi-rinderknech,teams[].id,Bonzi/Rinderknech
+polymarket,atp,3280697,atp:cerundolo-cerundolo,teams[].id,Cerundolo/Cerundolo
+polymarket,atp,3280706,atp:buse-trungelliti,teams[].id,Buse/Trungelliti
+polymarket,atp,3280826,atp:rojer-winegar,teams[].id,Rojer/Winegar
+polymarket,atp,3281126,atp:kalender-serdarusic,teams[].id,Kalender/Serdarusic
+polymarket,atp,3281507,atp:miedler-polmans,teams[].id,Miedler/Polmans
+polymarket,atp,3281934,atp:papa-zheng,teams[].id,Papa/Zheng
+polymarket,atp,3281975,atp:milavsky-shick,teams[].id,Milavsky/Shick
+polymarket,atp,3283229,atp:cash-erler,teams[].id,Cash/Erler
+polymarket,atp,3283231,atp:cabral-tracy,teams[].id,Cabral/Tracy
+polymarket,atp,3283298,atp:seggerman-trhac,teams[].id,Seggerman/Trhac
+polymarket,atp,3285307,atp:oleksandr-ovcharenko,teams[].id,Oleksandr Ovcharenko
+polymarket,atp,3285339,atp:fuchs-perez,teams[].id,Fuchs/Perez
+polymarket,atp,3285516,atp:fancutt-watanabe,teams[].id,Fancutt/Watanabe
+polymarket,atp,3285921,atp:galloway-goransson,teams[].id,Galloway/Goransson
+polymarket,atp,3286018,atp:iannaccone-kravchenko,teams[].id,Iannaccone/Kravchenko
+polymarket,atp,3286019,atp:opitz-strombachs,teams[].id,Opitz/Strombachs
+polymarket,atp,3287145,atp:nam-park,teams[].id,Nam/Park
+polymarket,atp,3287147,atp:jiang-zhang,teams[].id,Jiang/Zhang
+polymarket,atp,3287148,atp:jasika-tomic,teams[].id,Jasika/Tomic
+polymarket,atp,3287149,atp:kong-meng,teams[].id,Kong/Meng
+polymarket,atp,3287150,atp:delaney-delaney,teams[].id,Delaney/Delaney
+polymarket,atp,3287153,atp:charlton-wang,teams[].id,Charlton/Wang
+polymarket,atp,3287154,atp:kadhe-yuzuki,teams[].id,Kadhe/Yuzuki
+polymarket,atp,3287156,atp:clarke-feldbausch,teams[].id,Clarke/Feldbausch
+polymarket,atp,3287157,atp:brancaccio-martinez,teams[].id,Brancaccio/Martinez
+polymarket,atp,3287164,atp:siniakov-vanshelboim,teams[].id,Siniakov/Vanshelboim
+polymarket,atp,3287171,atp:aboian-serna,teams[].id,Aboian/Serna
+polymarket,atp,3287173,atp:lopez-marcos,teams[].id,Lopez/Marcos
+polymarket,atp,3287174,atp:barrientos-mena,teams[].id,Barrientos/Mena
+polymarket,atp,3287176,atp:canas-damas,teams[].id,Canas/Damas
+polymarket,atp,3287178,atp:luque-rocha,teams[].id,Luque/Rocha
+polymarket,atp,3287179,atp:diez-ribeiro,teams[].id,Diez/Ribeiro
+polymarket,atp,3287518,atp:ingildsen-poulsen,teams[].id,Ingildsen/Poulsen
+polymarket,atp,3287521,atp:friend-montes,teams[].id,Friend/Montes
+polymarket,atp,3287522,atp:barry-masur,teams[].id,Barry/Masur
+polymarket,atp,3287523,atp:lock-lock,teams[].id,Lock/Lock
+polymarket,atp,3287524,atp:ivanov-sarksian,teams[].id,Ivanov/Sarksian
+polymarket,atp,3287525,atp:bertola-kym,teams[].id,Bertola/Kym
+polymarket,atp,3287528,atp:campos-hernandez,teams[].id,Campos/Hernandez
+polymarket,atp,3287529,atp:butvilas-kasnikowski,teams[].id,Butvilas/Kasnikowski
+polymarket,atp,3288472,atp:genov-ovcharenko,teams[].id,Genov/Ovcharenko
+polymarket,atp,3288509,atp:arneodo-mannarino,teams[].id,Arneodo/Mannarino
+polymarket,atp,3288510,atp:arnaldi-struff,teams[].id,Arnaldi/Struff
+polymarket,atp,3288511,atp:demoliner-ho,teams[].id,Demoliner/Ho
+polymarket,atp,3288512,atp:balaji-king,teams[].id,Balaji/King
+polymarket,atp,3288513,atp:bublik-shang,teams[].id,Bublik/Shang
+polymarket,atp,3288514,atp:baez-marozsan,teams[].id,Baez/Marozsan
+polymarket,atp,3288515,atp:blockx-prizmic,teams[].id,Blockx/Prizmic
+polymarket,atp,3288516,atp:pieczonka-stevens,teams[].id,Pieczonka/Stevens
+polymarket,atp,3288517,atp:alvarez-johnston,teams[].id,Alvarez/Johnston
+polymarket,atp,3288518,atp:damm-mcdonald,teams[].id,Damm/McDonald
+polymarket,atp,3288519,atp:atmane-romboli,teams[].id,Atmane/Romboli
+polymarket,atp,3288520,atp:darderi-kestelboim,teams[].id,Darderi/Kestelboim
+polymarket,atp,3288521,atp:nakashima-nakashima,teams[].id,Nakashima/Nakashima
+polymarket,atp,3288522,atp:borges-hijikata,teams[].id,Borges/Hijikata
+polymarket,atp,3288523,atp:brooksby-giron,teams[].id,Brooksby/Giron
+polymarket,atp,3288524,atp:kiger-kovacevic,teams[].id,Kiger/Kovacevic
+polymarket,atp,3288525,atp:carpico-filin,teams[].id,Carpico/Filin
+polymarket,atp,3288526,atp:melo-peers,teams[].id,Melo/Peers
+polymarket,atp,3288527,atp:gonzalez-smith,teams[].id,Gonzalez/Smith
+polymarket,atp,3288528,atp:gonzalez-molteni,teams[].id,Gonzalez/Molteni
+polymarket,atp,3288529,atp:fery-paris,teams[].id,Fery/Paris
+polymarket,atp,3288530,atp:jebens-reyes,teams[].id,Jebens/Reyes
 polymarket,bel1,3282310,bel1:bel.club_brugge,teams[].id,Club Brugge
 polymarket,bel1,3282311,bel1:bel.kv_kortrijk,teams[].id,KV Kortrijk
 polymarket,bel1,3282312,bel1:bel.standard_liege,teams[].id,Standard Liege
@@ -979,3 +1247,103 @@ polymarket,scop,218338,scop:sco.dundee,teams[].id,Dundee FC
 polymarket,scop,218341,scop:sco.st_mirren,teams[].id,St Mirren FC
 polymarket,scop,218342,scop:sco.dundee_utd,teams[].id,Dundee United FC
 polymarket,scop,218343,scop:sco.falkirk,teams[].id,Falkirk FC
+polymarket,wta,147096,wta:naomi-osaka,teams[].id,Naomi Osaka
+polymarket,wta,147102,wta:diana-shnaider,teams[].id,Diana Shnaider
+polymarket,wta,147106,wta:leylah-fernandez,teams[].id,Leylah Fernandez
+polymarket,wta,147114,wta:jasmine-paolini,teams[].id,Jasmine Paolini
+polymarket,wta,147118,wta:sorana-cirstea,teams[].id,Sorana Cirstea
+polymarket,wta,147119,wta:ekaterina-alexandrova,teams[].id,Ekaterina Alexandrova
+polymarket,wta,147125,wta:elena-rybakina,teams[].id,Elena Rybakina
+polymarket,wta,147151,wta:sinja-kraus,teams[].id,Sinja Kraus
+polymarket,wta,147155,wta:harriet-dart,teams[].id,Harriet Dart
+polymarket,wta,147163,wta:anna-bondar,teams[].id,Anna Bondar
+polymarket,wta,147178,wta:marie-bouzkova,teams[].id,Marie Bouzkova
+polymarket,wta,147182,wta:eva-lys,teams[].id,Eva Lys
+polymarket,wta,147183,wta:yulia-starodubtseva,teams[].id,Yulia Starodubtseva
+polymarket,wta,147192,wta:cristina-bucsa,teams[].id,Cristina Bucsa
+polymarket,wta,147194,wta:himeno-sakatsume,teams[].id,Himeno Sakatsume
+polymarket,wta,147196,wta:maria-sakkari,teams[].id,Maria Sakkari
+polymarket,wta,147233,wta:karolina-muchova,teams[].id,Karolina Muchova
+polymarket,wta,147235,wta:nikola-bartunkova,teams[].id,Nikola Bartunkova
+polymarket,wta,147237,wta:linda-noskova,teams[].id,Linda Noskova
+polymarket,wta,147240,wta:anna-kalinskaya,teams[].id,Anna Kalinskaya
+polymarket,wta,147297,wta:kamilla-rakhimova,teams[].id,Kamilla Rakhimova
+polymarket,wta,147299,wta:tatjana-maria,teams[].id,Tatjana Maria
+polymarket,wta,147300,wta:francesca-jones,teams[].id,Francesca Jones
+polymarket,wta,147307,wta:leolia-jeanjean,teams[].id,Leolia Jeanjean
+polymarket,wta,147319,wta:jessica-bouzas-maneiro,teams[].id,Jessica Bouzas Maneiro
+polymarket,wta,147321,wta:alexandra-eala,teams[].id,Alexandra Eala
+polymarket,wta,147322,wta:yulia-putintseva,teams[].id,Yulia Putintseva
+polymarket,wta,147324,wta:ann-li,teams[].id,Ann Li
+polymarket,wta,178028,wta:lilli-tagger,teams[].id,Lilli Tagger
+polymarket,wta,183137,wta:madison-keys,teams[].id,Madison Keys
+polymarket,wta,183138,wta:amanda-anisimova,teams[].id,Amanda Anisimova
+polymarket,wta,183139,wta:aryna-sabalenka,teams[].id,Aryna Sabalenka
+polymarket,wta,183140,wta:coco-gauff,teams[].id,Coco Gauff
+polymarket,wta,183141,wta:jessica-pegula,teams[].id,Jessica Pegula
+polymarket,wta,229175,wta:elina-svitolina,teams[].id,Elina Svitolina
+polymarket,wta,229185,wta:emma-navarro,teams[].id,Emma Navarro
+polymarket,wta,229188,wta:anastasia-potapova,teams[].id,Anastasia Potapova
+polymarket,wta,229214,wta:iva-jovic,teams[].id,Iva Jovic
+polymarket,wta,229216,wta:paula-badosa,teams[].id,Paula Badosa
+polymarket,wta,229231,wta:mirra-andreeva,teams[].id,Mirra Andreeva
+polymarket,wta,229232,wta:marta-kostyuk,teams[].id,Marta Kostyuk
+polymarket,wta,229237,wta:liudmila-samsonova,teams[].id,Liudmila Samsonova
+polymarket,wta,229479,wta:katerina-siniakova,teams[].id,Katerina Siniakova
+polymarket,wta,229491,wta:laura-siegemund,teams[].id,Laura Siegemund
+polymarket,wta,229708,wta:taylor-townsend,teams[].id,Taylor Townsend
+polymarket,wta,229772,wta:oleksandra-oliynykova,teams[].id,Oleksandra Oliynykova
+polymarket,wta,230530,wta:qinwen-zheng,teams[].id,Qinwen Zheng
+polymarket,wta,3270390,wta:noma-noha-akugue,teams[].id,Noma Noha Akugue
+polymarket,wta,3270979,wta:siniakova-townsend,teams[].id,Siniakova/Townsend
+polymarket,wta,3270982,wta:bucsa-melichar,teams[].id,Bucsa/Melichar
+polymarket,wta,3270986,wta:aoyama-liang,teams[].id,Aoyama/Liang
+polymarket,wta,3270987,wta:mihalikova-nicholls,teams[].id,Mihalikova/Nicholls
+polymarket,wta,3271917,wta:maleckova-skoch,teams[].id,Maleckova/Skoch
+polymarket,wta,3271928,wta:muhammad-stollar,teams[].id,Muhammad/Stollar
+polymarket,wta,3275537,wta:pridankina-tang,teams[].id,Pridankina/Tang
+polymarket,wta,3275547,wta:li-tauson,teams[].id,Li/Tauson
+polymarket,wta,3275570,wta:guo-mladenovic,teams[].id,Guo/Mladenovic
+polymarket,wta,3275589,wta:errani-tagger,teams[].id,Errani/Tagger
+polymarket,wta,3275593,wta:bouzkova-tormo,teams[].id,Bouzkova/Tormo
+polymarket,wta,3275602,wta:maria-sonmez,teams[].id,Maria/Sonmez
+polymarket,wta,3275607,wta:danilina-krunic,teams[].id,Danilina/Krunic
+polymarket,wta,3277376,wta:huergo-korpatsch,teams[].id,Huergo/Korpatsch
+polymarket,wta,3278213,wta:dart-lumsden,teams[].id,Dart/Lumsden
+polymarket,wta,3278892,wta:piter-siskova,teams[].id,Piter/Siskova
+polymarket,wta,3278894,wta:neel-olmos,teams[].id,Neel/Olmos
+polymarket,wta,3279643,wta:jurak-ruzic,teams[].id,Jurak/Ruzic
+polymarket,wta,3280741,wta:williams-williams,teams[].id,Williams/Williams
+polymarket,wta,3280746,wta:noskova-sramkova,teams[].id,Noskova/Sramkova
+polymarket,wta,3283177,wta:kichenok-kichenok,teams[].id,Kichenok/Kichenok
+polymarket,wta,3283179,wta:birrell-stearns,teams[].id,Birrell/Stearns
+polymarket,wta,3283181,wta:alexandrova-gibson,teams[].id,Alexandrova/Gibson
+polymarket,wta,3283183,wta:chan-joint,teams[].id,Chan/Joint
+polymarket,wta,3283204,wta:kenin-potapova,teams[].id,Kenin/Potapova
+polymarket,wta,3283206,wta:routliffe-sutjiadi,teams[].id,Routliffe/Sutjiadi
+polymarket,wta,3283224,wta:arseneault-cross,teams[].id,Arseneault/Cross
+polymarket,wta,3284010,wta:rogers-zamarripa,teams[].id,Rogers/Zamarripa
+polymarket,wta,3284566,wta:mertens-shnaider,teams[].id,Mertens/Shnaider
+polymarket,wta,3284572,wta:hsieh-ostapenko,teams[].id,Hsieh/Ostapenko
+polymarket,wta,3285226,wta:jiang-zhang,teams[].id,Jiang/Zhang
+polymarket,wta,3286151,wta:haverlag-radisic,teams[].id,Haverlag/Radisic
+polymarket,wta,3286152,wta:cano-reasco,teams[].id,Cano/Reasco
+polymarket,wta,3286157,wta:chong-yang,teams[].id,Chong/Yang
+polymarket,wta,3288431,wta:brantmeier-broadus,teams[].id,Brantmeier/Broadus
+polymarket,wta,3288437,wta:marcinko-oliynykova,teams[].id,Marcinko/Oliynykova
+polymarket,wta,3288438,wta:golubic-waltert,teams[].id,Golubic/Waltert
+polymarket,wta,3288439,wta:kessler-mcnally,teams[].id,Kessler/McNally
+polymarket,wta,3288442,wta:snigur-vandewinkel,teams[].id,Snigur/Vandewinkel
+polymarket,wta,3288443,wta:chwalinska-linette,teams[].id,Chwalinska/Linette
+polymarket,wta,3288444,wta:korneeva-vidmanova,teams[].id,Korneeva/Vidmanova
+polymarket,wta,3288445,wta:bondar-kalinina,teams[].id,Bondar/Kalinina
+polymarket,wta,3288448,wta:krueger-montgomery,teams[].id,Krueger/Montgomery
+polymarket,wta,3288449,wta:guarachi-sherif,teams[].id,Guarachi/Sherif
+polymarket,wta,3288450,wta:kasatkina-starodubtseva,teams[].id,Kasatkina/Starodubtseva
+polymarket,wta,3288451,wta:bartunkova-osorio,teams[].id,Bartunkova/Osorio
+polymarket,wta,3288452,wta:kato-wu,teams[].id,Kato/Wu
+polymarket,wta,3288453,wta:parks-shymanovich,teams[].id,Parks/Shymanovich
+polymarket,wta,3288454,wta:payne-shumate,teams[].id,Payne/Shumate
+polymarket,wta,3288455,wta:hozumi-klepac,teams[].id,Hozumi/Klepac
+polymarket,wta,3288456,wta:penickova-penickova,teams[].id,Penickova/Penickova
+polymarket,wta,3288621,wta:shibahara-tararudee,teams[].id,Shibahara/Tararudee

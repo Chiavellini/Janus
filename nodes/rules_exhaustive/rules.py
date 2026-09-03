@@ -91,6 +91,21 @@ RULES: dict[tuple[str, str, str], tuple[int, str, str | None]] = {
         "2026-09-03 and pinned in nodes/settle_wedge/policy.py."),
 }
 
+#: Tennis. ATP Official Rulebook and WTA Official Rulebook: once a match has begun, a player who
+#: retires, is defaulted or disqualified loses it and the opponent advances; there is no draw and no
+#: clock, and no tiebreak procedure ends undecided. {player A, player B} is therefore complete for a
+#: match that has begun. A match that never begins (a walkover) is not an outcome of the match: both
+#: venues rule on it separately (nodes/settle_wedge, player_non_participation), and that dimension is
+#: priced, not assumed. Both venues' texts harvested 2026-09-03.
+_TENNIS_2WAY = (
+    2, "tennis_match_no_draw",
+    "ATP and WTA Official Rulebooks: a match, once begun, ends with a winner -- by completion, retirement, default or "
+    "disqualification; no draw exists and no tiebreak ends undecided. Kalshi settles the match 'after a ball has been "
+    "played' on the official result and Polymarket resolves to the player who advances (both harvested 2026-09-03 and "
+    "pinned in nodes/settle_wedge/policy.py). A walkover is no match and is ruled by settle_wedge, not assumed here.")
+for _lg in ("atp", "wta"):
+    RULES[(_lg, "moneyline", "game")] = _TENNIS_2WAY
+
 #: Three-way soccer. IFAB Laws of the Game 2025/26, Law 10.1 (Determining the outcome of a match):
 #: "The team scoring the greater number of goals is the winner. If both teams score no goals or an
 #: equal number of goals the match is drawn." {home, draw, away} therefore partitions the result at

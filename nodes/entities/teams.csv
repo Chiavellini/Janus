@@ -1,4 +1,198 @@
 entity_id,league,espn_id,abbrev,location,nickname,display_name
+atp:aboian-serna,atp,3287171,ABOISER,,Aboian/Serna,Aboian/Serna
+atp:adrian-mannarino,atp,147200,MANNARI,Adrian,Mannarino,Adrian Mannarino
+atp:alejandro-moro-canas,atp,1274313,CANAS,Alejandro Moro,Canas,Alejandro Moro Canas
+atp:alejandro-tabilo,atp,147160,TABILO,Alejandro,Tabilo,Alejandro Tabilo
+atp:alex-de-minaur,atp,147276,MINAUR,Alex de,Minaur,Alex de Minaur
+atp:alex-michelsen,atp,147115,MICHELS,Alex,Michelsen,Alex Michelsen
+atp:alexander-blockx,atp,183172,BLOCKX,Alexander,Blockx,Alexander Blockx
+atp:alexander-bublik,atp,147274,BUBLIK,Alexander,Bublik,Alexander Bublik
+atp:alexander-zverev,atp,147315,ZVEREV,Alexander,Zverev,Alexander Zverev
+atp:alexei-popyrin,atp,147284,POPYRIN,Alexei,Popyrin,Alexei Popyrin
+atp:alvarez-johnston,atp,3288517,ALVAJOH,,Alvarez/Johnston,Alvarez/Johnston
+atp:andrej-nedic,atp,3265283,NEDIC,Andrej,Nedic,Andrej Nedic
+atp:andreozzi-guinard,atp,3271943,ANDRGUI,,Andreozzi/Guinard,Andreozzi/Guinard
+atp:arends-pel,atp,3270926,ARENPEL,,Arends/Pel,Arends/Pel
+atp:arevalo-pavic,atp,3270933,AREVPAV,,Arevalo/Pavic,Arevalo/Pavic
+atp:arnaldi-struff,atp,3288510,ARNASTR,,Arnaldi/Struff,Arnaldi/Struff
+atp:arneodo-mannarino,atp,3288509,ARNEMAN,,Arneodo/Mannarino,Arneodo/Mannarino
+atp:arribage-olivetti,atp,3271948,ARRIOLI,,Arribage/Olivetti,Arribage/Olivetti
+atp:arthur-gea,atp,229614,GEA,Arthur,Gea,Arthur Gea
+atp:arthur-rinderknech,atp,147263,RINDERK,Arthur,Rinderknech,Arthur Rinderknech
+atp:atmane-romboli,atp,3288519,ATMAROM,,Atmane/Romboli,Atmane/Romboli
+atp:baez-marozsan,atp,3288514,BAEZMAR,,Baez/Marozsan,Baez/Marozsan
+atp:balaji-king,atp,3288512,BALAKIN,,Balaji/King,Balaji/King
+atp:barrientos-mena,atp,3287174,BARRMEN,,Barrientos/Mena,Barrientos/Mena
+atp:barry-masur,atp,3287522,BARRMAS,,Barry/Masur,Barry/Masur
+atp:ben-shelton,atp,147318,SHELTON,Ben,Shelton,Ben Shelton
+atp:benjamin-bonzi,atp,147103,BONZI,Benjamin,Bonzi,Benjamin Bonzi
+atp:bertola-kym,atp,3287525,BERTKYM,,Bertola/Kym,Bertola/Kym
+atp:bhambri-venus,atp,3271941,BHAMVEN,,Bhambri/Venus,Bhambri/Venus
+atp:billy-harris,atp,183162,HARRIS,Billy,Harris,Billy Harris
+atp:blockx-prizmic,atp,3288515,BLOCPRI,,Blockx/Prizmic,Blockx/Prizmic
+atp:bolelli-vavassori,atp,3271374,BOLEVAV,,Bolelli/Vavassori,Bolelli/Vavassori
+atp:bonzi-rinderknech,atp,3280696,BONZRIN,,Bonzi/Rinderknech,Bonzi/Rinderknech
+atp:borges-hijikata,atp,3288522,BORGHIJ,,Borges/Hijikata,Borges/Hijikata
+atp:botic-van-de-zandschulp,atp,147206,ZANDSCH,Botic van de,Zandschulp,Botic van de Zandschulp
+atp:brancaccio-martinez,atp,3287157,BRANMAR,,Brancaccio/Martinez,Brancaccio/Martinez
+atp:brooksby-giron,atp,3288523,BROOGIR,,Brooksby/Giron,Brooksby/Giron
+atp:bublik-shang,atp,3288513,BUBLSHA,,Bublik/Shang,Bublik/Shang
+atp:buse-trungelliti,atp,3280706,BUSETRU,,Buse/Trungelliti,Buse/Trungelliti
+atp:butvilas-kasnikowski,atp,3287529,BUTVKAS,,Butvilas/Kasnikowski,Butvilas/Kasnikowski
+atp:cabral-tracy,atp,3283231,CABRTRA,,Cabral/Tracy,Cabral/Tracy
+atp:cameron-norrie,atp,147288,NORRIE,Cameron,Norrie,Cameron Norrie
+atp:campos-hernandez,atp,3287528,CAMPHER,,Campos/Hernandez,Campos/Hernandez
+atp:canas-damas,atp,3287176,DAMACAN,,Canas/Damas,Canas/Damas
+atp:carabelli-etcheverry,atp,3275615,ETCHCAR,,Carabelli/Etcheverry,Carabelli/Etcheverry
+atp:carlos-alcaraz,atp,147173,ALCARAZ,Carlos,Alcaraz,Carlos Alcaraz
+atp:carpico-filin,atp,3288525,CARPFIL,,Carpico/Filin,Carpico/Filin
+atp:cash-erler,atp,3283229,CASHERL,,Cash/Erler,Cash/Erler
+atp:cash-glasspool,atp,3272507,CASHGLA,,Cash/Glasspool,Cash/Glasspool
+atp:castelnuovo-santillan,atp,3279667,CASTSAN,,Castelnuovo/Santillan,Castelnuovo/Santillan
+atp:cerundolo-cerundolo,atp,3280697,CERUCER,,Cerundolo/Cerundolo,Cerundolo/Cerundolo
+atp:charlton-wang,atp,3287153,CHARWAN,,Charlton/Wang,Charlton/Wang
+atp:chun-hsin-tseng,atp,183154,TSENG,Chun-Hsin,Tseng,Chun-Hsin Tseng
+atp:clarke-feldbausch,atp,3287156,CLARFEL,,Clarke/Feldbausch,Clarke/Feldbausch
+atp:dalibor-svrcina,atp,229486,SVRCINA,Dalibor,Svrcina,Dalibor Svrcina
+atp:damm-mcdonald,atp,3288518,DAMMMCD,,Damm/McDonald,Damm/McDonald
+atp:dane-sweeny,atp,229149,SWEENY,Dane,Sweeny,Dane Sweeny
+atp:daniel-merida-aguilar,atp,229626,AGUILAR,Daniel Merida,Aguilar,Daniel Merida Aguilar
+atp:daniel-rincon,atp,3099452,RINCON,Daniel,Rincon,Daniel Rincon
+atp:daniil-medvedev,atp,147120,MEDVEDE,Daniil,Medvedev,Daniil Medvedev
+atp:darderi-kestelboim,atp,3288520,DARDKES,,Darderi/Kestelboim,Darderi/Kestelboim
+atp:delaney-delaney,atp,3287150,DELADEL,,Delaney/Delaney,Delaney/Delaney
+atp:demoliner-ho,atp,3288511,DEMOHO,,Demoliner/Ho,Demoliner/Ho
+atp:denis-shapovalov,atp,147135,SHAPOVA,Denis,Shapovalov,Denis Shapovalov
+atp:diez-ribeiro,atp,3287179,DIEZRIB,,Diez/Ribeiro,Diez/Ribeiro
+atp:doumbia-reboul,atp,3270930,DOUMREB,,Doumbia/Reboul,Doumbia/Reboul
+atp:drzewiecki-matuszewski,atp,3270919,DRZEMAT,,Drzewiecki/Matuszewski,Drzewiecki/Matuszewski
+atp:duckworth-kecmanovic,atp,3280695,DUCKKEC,,Duckworth/Kecmanovic,Duckworth/Kecmanovic
+atp:duje-ajdukovic,atp,1957371,AJDUKOV,Duje,Ajdukovic,Duje Ajdukovic
+atp:dusan-obradovic,atp,3265281,OBRADOV,Dusan,Obradovic,Dusan Obradovic
+atp:edas-butvilas,atp,1957367,BUTVILA,Edas,Butvilas,Edas Butvilas
+atp:enzo-aguiard,atp,3270409,AGUIARD,Enzo,Aguiard,Enzo Aguiard
+atp:facundo-mena,atp,2185073,MENA,Facundo,Mena,Facundo Mena
+atp:fajing-sun,atp,3267772,SU,Fajing,Sun,Fajing Sun
+atp:fancutt-watanabe,atp,3285516,FANCWAT,,Fancutt/Watanabe,Fancutt/Watanabe
+atp:federico-iannaccone,atp,3265196,IANNACC,Federico,Iannaccone,Federico Iannaccone
+atp:felix-auger-aliassime,atp,147133,AUGERAL,Felix,Auger-Aliassime,Felix Auger-Aliassime
+atp:felix-balshaw,atp,3279085,BALSHAW,Felix,Balshaw,Felix Balshaw
+atp:fery-paris,atp,3288529,FERYPAR,,Fery/Paris,Fery/Paris
+atp:flavio-cobolli,atp,147099,COBOLLI,Flavio,Cobolli,Flavio Cobolli
+atp:forcano-vervoort,atp,3279528,FORCVER,,Forcano/Vervoort,Forcano/Vervoort
+atp:frances-tiafoe,atp,229172,TIAFOE,Frances,Tiafoe,Frances Tiafoe
+atp:francisco-cerundolo,atp,147273,CERUNDO,Francisco,Cerundolo,Francisco Cerundolo
+atp:frantzen-haase,atp,3270967,FRANHAA,,Frantzen/Haase,Frantzen/Haase
+atp:friend-montes,atp,3287521,FRIEMON,,Friend/Montes,Friend/Montes
+atp:fuchs-perez,atp,3285339,FUCHPER,,Fuchs/Perez,Fuchs/Perez
+atp:gael-monfils,atp,229503,MONFILS,Gael,Monfils,Gael Monfils
+atp:galloway-goransson,atp,3285921,GALLGOR,,Galloway/Goransson,Galloway/Goransson
+atp:genov-ovcharenko,atp,3288472,GENOOVC,,Genov/Ovcharenko,Genov/Ovcharenko
+atp:georgii-kravchenko,atp,3272397,KRAVCHE,Georgii,Kravchenko,Georgii Kravchenko
+atp:gille-verbeek,atp,3270922,GILLVER,,Gille/Verbeek,Gille/Verbeek
+atp:golubev-nedovyesov,atp,3275626,GOLUNED,,Golubev/Nedovyesov,Golubev/Nedovyesov
+atp:gonzalez-molteni,atp,3288528,GONZMOL,,Gonzalez/Molteni,Gonzalez/Molteni
+atp:gonzalez-smith,atp,3288527,GONZSMI,,Gonzalez/Smith,Gonzalez/Smith
+atp:granollers-zeballos,atp,3270931,GRANZEB,,Granollers/Zeballos,Granollers/Zeballos
+atp:gustavo-heide,atp,229664,HEIDE,Gustavo,Heide,Gustavo Heide
+atp:halys-herbert,atp,3270972,HALYHER,,Halys/Herbert,Halys/Herbert
+atp:harrison-skupski,atp,3270932,HARRSKU,,Harrison/Skupski,Harrison/Skupski
+atp:helioevaara-patten,atp,3271373,HELIPAT,,Helioevaara/Patten,Helioevaara/Patten
+atp:hidalgo-tabilo,atp,3271940,HIDATAB,,Hidalgo/Tabilo,Hidalgo/Tabilo
+atp:hugo-dellien,atp,229669,DELLIEN,Hugo,Dellien,Hugo Dellien
+atp:iannaccone-kravchenko,atp,3286018,IANNKRA,,Iannaccone/Kravchenko,Iannaccone/Kravchenko
+atp:ignacio-buse,atp,230578,BUSE,Ignacio,Buse,Ignacio Buse
+atp:ilia-simakin,atp,1388176,SIMAKIN,Ilia,Simakin,Ilia Simakin
+atp:ilya-ivashka,atp,1957373,IVASHKA,Ilya,Ivashka,Ilya Ivashka
+atp:inaki-montes,atp,3267788,MONTES,Inaki,Montes,Inaki Montes
+atp:ingildsen-poulsen,atp,3287518,INGIPOU,,Ingildsen/Poulsen,Ingildsen/Poulsen
+atp:ivan-ivanov,atp,183171,IVANOV,Ivan,Ivanov,Ivan Ivanov
+atp:ivanov-sarksian,atp,3287524,IVANSAR,,Ivanov/Sarksian,Ivanov/Sarksian
+atp:jack-pinnington-jones,atp,229594,JONES,Jack Pinnington,Jones,Jack Pinnington Jones
+atp:jakub-mensik,atp,147257,MENSIK,Jakub,Mensik,Jakub Mensik
+atp:james-kent-trotter,atp,3267748,TROTTER,James Kent,Trotter,James Kent Trotter
+atp:jan-lennard-struff,atp,147122,STRUFF,Jan-Lennard,Struff,Jan-Lennard Struff
+atp:jasika-tomic,atp,3287148,JASITOM,,Jasika/Tomic,Jasika/Tomic
+atp:jaume-munar,atp,147316,MUNAR,Jaume,Munar,Jaume Munar
+atp:jebens-reyes,atp,3288530,JEBEREY,,Jebens/Reyes,Jebens/Reyes
+atp:jesper-de-jong,atp,147218,JONG,Jesper de,Jong,Jesper de Jong
+atp:jiang-zhang,atp,3287147,JIANZHA,,Jiang/Zhang,Jiang/Zhang
+atp:jiri-lehecka,atp,147101,LEHECKA,Jiri,Lehecka,Jiri Lehecka
+atp:johan-nikles,atp,3267793,NIKLES,Johan,Nikles,Johan Nikles
+atp:johnson-zielinski,atp,3279662,JOHNZIE,,Johnson/Zielinski,Johnson/Zielinski
+atp:juan-manuel-la-serna,atp,230554,SERNA,Juan Manuel La,Serna,Juan Manuel La Serna
+atp:juan-martin,atp,3267780,MA,Juan,Martin,Juan Martin
+atp:juan-pablo-varillas,atp,2071220,VARILLA,Juan Pablo,Varillas,Juan Pablo Varillas
+atp:jurij-rodionov,atp,147279,RODIONO,Jurij,Rodionov,Jurij Rodionov
+atp:kadhe-yuzuki,atp,3287154,KADHYUZ,,Kadhe/Yuzuki,Kadhe/Yuzuki
+atp:kalender-serdarusic,atp,3281126,KALESER,,Kalender/Serdarusic,Kalender/Serdarusic
+atp:karen-khachanov,atp,147292,KHACHAN,Karen,Khachanov,Karen Khachanov
+atp:kasidit-samrej,atp,3267771,SAMREJ,Kasidit,Samrej,Kasidit Samrej
+atp:kiger-kovacevic,atp,3288524,KIGEKOV,,Kiger/Kovacevic,Kiger/Kovacevic
+atp:kolar-poljak,atp,3278918,KOLAPOL,,Kolar/Poljak,Kolar/Poljak
+atp:kong-meng,atp,3287149,KONGMEN,,Kong/Meng,Kong/Meng
+atp:krajicek-mektic,atp,3270941,KRAJMEK,,Krajicek/Mektic,Krajicek/Mektic
+atp:krawietz-puetz,atp,3271945,KRAWPUE,,Krawietz/Puetz,Krawietz/Puetz
+atp:lammons-withrow,atp,3270964,LAMMWIT,,Lammons/Withrow,Lammons/Withrow
+atp:learner-tien,atp,178024,TIEN,Learner,Tien,Learner Tien
+atp:lock-lock,atp,3287523,LOCKLOC,,Lock/Lock,Lock/Lock
+atp:loof-uesugi,atp,3280178,LOOFUES,,Loof/Uesugi,Loof/Uesugi
+atp:lopez-marcos,atp,3287173,MARCLOP,,Lopez/Marcos,Lopez/Marcos
+atp:lorenzo-musetti,atp,147128,MUSETTI,Lorenzo,Musetti,Lorenzo Musetti
+atp:luca-potenza,atp,3270655,POTENZA,Luca,Potenza,Luca Potenza
+atp:luciano-darderi,atp,147294,DARDERI,Luciano,Darderi,Luciano Darderi
+atp:luque-rocha,atp,3287178,LUQUROC,,Luque/Rocha,Luque/Rocha
+atp:luz-matos,atp,3270924,LUZMATO,,Luz/Matos,Luz/Matos
+atp:marco-trungelliti,atp,183156,TRUNGEL,Marco,Trungelliti,Marco Trungelliti
+atp:mariano-navone,atp,229198,NAVONE,Mariano,Navone,Mariano Navone
+atp:mark-lajal,atp,183169,LAJAL,Mark,Lajal,Mark Lajal
+atp:matej-dodig,atp,2868097,DODIG,Matej,Dodig,Matej Dodig
+atp:mattia-bellucci,atp,147207,BELLUCC,Mattia,Bellucci,Mattia Bellucci
+atp:max-schoenhaus,atp,3270553,SCHOENH,Max,Schoenhaus,Max Schoenhaus
+atp:melo-peers,atp,3288526,MELOPEE,,Melo/Peers,Melo/Peers
+atp:michael-zheng,atp,229624,ZHENG,Michael,Zheng,Michael Zheng
+atp:miedler-polmans,atp,3281507,MIEDPOL,,Miedler/Polmans,Miedler/Polmans
+atp:miguel-damas,atp,2071222,DAMAS,Miguel,Damas,Miguel Damas
+atp:milavsky-shick,atp,3281975,MILASHI,,Milavsky/Shick,Milavsky/Shick
+atp:mitsuki-wei-kang-leong,atp,3228769,LEONG,Mitsuki Wei Kang,Leong,Mitsuki Wei Kang Leong
+atp:nakashima-nakashima,atp,3288521,NAKANAK,,Nakashima/Nakashima,Nakashima/Nakashima
+atp:nam-park,atp,3287145,NAMPARK,,Nam/Park,Nam/Park
+atp:nouza-oberleitner,atp,3270921,NOUZOBE,,Nouza/Oberleitner,Nouza/Oberleitner
+atp:nys-roger-vasselin,atp,3271946,NYSROGE,,Nys/Roger-Vasselin,Nys/Roger-Vasselin
+atp:oleksandr-ovcharenko,atp,3285307,OVCHARE,Oleksandr,Ovcharenko,Oleksandr Ovcharenko
+atp:opitz-strombachs,atp,3286019,OPITSTR,,Opitz/Strombachs,Opitz/Strombachs
+atp:oriol-roca-batalla,atp,3265063,BATALLA,Oriol Roca,Batalla,Oriol Roca Batalla
+atp:papa-zheng,atp,3281934,PAPAZHE,,Papa/Zheng,Papa/Zheng
+atp:paul-vocel,atp,3270929,PAULVOC,,Paul/Vocel,Paul/Vocel
+atp:pavlasek-rikl,atp,3271893,PAVLRIK,,Pavlasek/Rikl,Pavlasek/Rikl
+atp:pedro-vives-marcos,atp,3269899,MARCOS,Pedro Vives,Marcos,Pedro Vives Marcos
+atp:pieczonka-stevens,atp,3288516,PIECSTE,,Pieczonka/Stevens,Pieczonka/Stevens
+atp:quentin-halys,atp,147203,HALYS,Quentin,Halys,Quentin Halys
+atp:ram-salisbury,atp,3279664,RAMSALI,,Ram/Salisbury,Ram/Salisbury
+atp:reymond-sanchez,atp,3270918,REYMSAN,,Reymond/Sanchez,Reymond/Sanchez
+atp:reynolds-watt,atp,3270958,REYNWAT,,Reynolds/Watt,Reynolds/Watt
+atp:rojer-winegar,atp,3280826,ROJEWIN,,Rojer/Winegar,Rojer/Winegar
+atp:schnaitter-wallner,atp,3271951,SCHNWAL,,Schnaitter/Wallner,Schnaitter/Wallner
+atp:seggerman-trhac,atp,3283298,SEGGTRH,,Seggerman/Trhac,Seggerman/Trhac
+atp:siniakov-vanshelboim,atp,3287164,SINIVAN,,Siniakov/Vanshelboim,Siniakov/Vanshelboim
+atp:stefanos-tsitsipas,atp,147291,TSITSIP,Stefanos,Tsitsipas,Stefanos Tsitsipas
+atp:stevenson-willis,atp,3278907,STEVWIL,,Stevenson/Willis,Stevenson/Willis
+atp:taylor-fritz,atp,178130,FRITZ,Taylor,Fritz,Taylor Fritz
+atp:terence-atmane,atp,147223,ATMANE,Terence,Atmane,Terence Atmane
+atp:thiago-agustin-tirante,atp,183152,TIRANTE,Thiago Agustin,Tirante,Thiago Agustin Tirante
+atp:thiago-monteiro,atp,230557,MONTEIR,Thiago,Monteiro,Thiago Monteiro
+atp:thiago-seyboth-wild,atp,229661,WILD,Thiago Seyboth,Wild,Thiago Seyboth Wild
+atp:thomas-faurel,atp,3265065,FAUREL,Thomas,Faurel,Thomas Faurel
+atp:tomas-etcheverry,atp,147131,ETCHEVE,Tomas,Etcheverry,Tomas Etcheverry
+atp:tommy-paul,atp,229174,PAUL,Tommy,Paul,Tommy Paul
+atp:tristan-schoolkate,atp,147217,SCHOOLK,Tristan,Schoolkate,Tristan Schoolkate
+atp:valentin-vacherot,atp,147245,VACHERO,Valentin,Vacherot,Valentin Vacherot
+atp:valerio-aboian,atp,3246384,ABOIAN,Valerio,Aboian,Valerio Aboian
+atp:yanaki-milev,atp,3280144,MILEV,Yanaki,Milev,Yanaki Milev
+atp:yibing-wu,atp,229199,WU,Yibing,Wu,Yibing Wu
+atp:yunchaokete-bu,atp,229205,BU,Yunchaokete,Bu,Yunchaokete Bu
+atp:zachary-svajda,atp,229651,SVAJDA,Zachary,Svajda,Zachary Svajda
+atp:zizou-bergs,atp,178025,BERGS,Zizou,Bergs,Zizou Bergs
 bel1:bel.anderlecht,bel1,441,AND,Anderlecht,Anderlecht,Anderlecht
 bel1:bel.cercle_brugge_ksv,bel1,3610,CBK,Cercle Brugge KSV,Cercle Brugge KSV,Cercle Brugge KSV
 bel1:bel.club_brugge,bel1,570,BRU,Club Brugge,Club Brugge,Club Brugge
@@ -1138,3 +1332,103 @@ wnba:portland-fire,wnba,132052,POR,Portland,Fire,Portland Fire
 wnba:seattle-storm,wnba,14,SEA,Seattle,Storm,Seattle Storm
 wnba:toronto-tempo,wnba,131935,TOR,Toronto,Tempo,Toronto Tempo
 wnba:washington-mystics,wnba,16,WSH,Washington,Mystics,Washington Mystics
+wta:alexandra-eala,wta,147321,EALA,Alexandra,Eala,Alexandra Eala
+wta:alexandrova-gibson,wta,3283181,ALEXGIB,,Alexandrova/Gibson,Alexandrova/Gibson
+wta:amanda-anisimova,wta,183138,ANISIMO,Amanda,Anisimova,Amanda Anisimova
+wta:anastasia-potapova,wta,229188,POTAPOV,Anastasia,Potapova,Anastasia Potapova
+wta:ann-li,wta,147324,ANNLI,Ann,Li,Ann Li
+wta:anna-bondar,wta,147163,BONDAR,Anna,Bondar,Anna Bondar
+wta:anna-kalinskaya,wta,147240,KALINSK,Anna,Kalinskaya,Anna Kalinskaya
+wta:aoyama-liang,wta,3270986,AOYALIA,,Aoyama/Liang,Aoyama/Liang
+wta:arseneault-cross,wta,3283224,ARSECRO,,Arseneault/Cross,Arseneault/Cross
+wta:aryna-sabalenka,wta,183139,SABALEN,Aryna,Sabalenka,Aryna Sabalenka
+wta:bartunkova-osorio,wta,3288451,BARTOSO,,Bartunkova/Osorio,Bartunkova/Osorio
+wta:birrell-stearns,wta,3283179,BIRRSTE,,Birrell/Stearns,Birrell/Stearns
+wta:bondar-kalinina,wta,3288445,BONDKAL,,Bondar/Kalinina,Bondar/Kalinina
+wta:bouzkova-tormo,wta,3275593,BOUZTOR,,Bouzkova/Tormo,Bouzkova/Tormo
+wta:brantmeier-broadus,wta,3288431,BRANBRO,,Brantmeier/Broadus,Brantmeier/Broadus
+wta:bucsa-melichar,wta,3270982,BUCSMEL,,Bucsa/Melichar,Bucsa/Melichar
+wta:cano-reasco,wta,3286152,CANOREA,,Cano/Reasco,Cano/Reasco
+wta:chan-joint,wta,3283183,CHANJOI,,Chan/Joint,Chan/Joint
+wta:chong-yang,wta,3286157,CHONYAN,,Chong/Yang,Chong/Yang
+wta:chwalinska-linette,wta,3288443,CHWALIN,,Chwalinska/Linette,Chwalinska/Linette
+wta:coco-gauff,wta,183140,GAUFF,Coco,Gauff,Coco Gauff
+wta:cristina-bucsa,wta,147192,BUCSA,Cristina,Bucsa,Cristina Bucsa
+wta:danilina-krunic,wta,3275607,DANIKRU,,Danilina/Krunic,Danilina/Krunic
+wta:dart-lumsden,wta,3278213,DARTLUM,,Dart/Lumsden,Dart/Lumsden
+wta:diana-shnaider,wta,147102,SHNAIDE,Diana,Shnaider,Diana Shnaider
+wta:ekaterina-alexandrova,wta,147119,ALEXAND,Ekaterina,Alexandrova,Ekaterina Alexandrova
+wta:elena-rybakina,wta,147125,RYBAKIN,Elena,Rybakina,Elena Rybakina
+wta:elina-svitolina,wta,229175,SVITOLI,Elina,Svitolina,Elina Svitolina
+wta:emma-navarro,wta,229185,NAVARRO,Emma,Navarro,Emma Navarro
+wta:errani-tagger,wta,3275589,ERRATAG,,Errani/Tagger,Errani/Tagger
+wta:eva-lys,wta,147182,LYS,Eva,Lys,Eva Lys
+wta:francesca-jones,wta,147300,JONES,Francesca,Jones,Francesca Jones
+wta:golubic-waltert,wta,3288438,WALTGOL,,Golubic/Waltert,Golubic/Waltert
+wta:guarachi-sherif,wta,3288449,GUARSHE,,Guarachi/Sherif,Guarachi/Sherif
+wta:guo-mladenovic,wta,3275570,GUOMLAD,,Guo/Mladenovic,Guo/Mladenovic
+wta:harriet-dart,wta,147155,DART,Harriet,Dart,Harriet Dart
+wta:haverlag-radisic,wta,3286151,HAVERAD,,Haverlag/Radisic,Haverlag/Radisic
+wta:himeno-sakatsume,wta,147194,SAKATSU,Himeno,Sakatsume,Himeno Sakatsume
+wta:hozumi-klepac,wta,3288455,HOZUKLE,,Hozumi/Klepac,Hozumi/Klepac
+wta:hsieh-ostapenko,wta,3284572,HSIEOST,,Hsieh/Ostapenko,Hsieh/Ostapenko
+wta:huergo-korpatsch,wta,3277376,HUERKOR,,Huergo/Korpatsch,Huergo/Korpatsch
+wta:iva-jovic,wta,229214,JOVIC,Iva,Jovic,Iva Jovic
+wta:jasmine-paolini,wta,147114,PAOLINI,Jasmine,Paolini,Jasmine Paolini
+wta:jessica-bouzas-maneiro,wta,147319,MANEIRO,Jessica Bouzas,Maneiro,Jessica Bouzas Maneiro
+wta:jessica-pegula,wta,183141,PEGULA,Jessica,Pegula,Jessica Pegula
+wta:jiang-zhang,wta,3285226,JIANZHA,,Jiang/Zhang,Jiang/Zhang
+wta:jurak-ruzic,wta,3279643,JURARUZ,,Jurak/Ruzic,Jurak/Ruzic
+wta:kamilla-rakhimova,wta,147297,RAKHIMO,Kamilla,Rakhimova,Kamilla Rakhimova
+wta:karolina-muchova,wta,147233,MUCHOVA,Karolina,Muchova,Karolina Muchova
+wta:kasatkina-starodubtseva,wta,3288450,KASASTA,,Kasatkina/Starodubtseva,Kasatkina/Starodubtseva
+wta:katerina-siniakova,wta,229479,SINIAKO,Katerina,Siniakova,Katerina Siniakova
+wta:kato-wu,wta,3288452,KATOWU,,Kato/Wu,Kato/Wu
+wta:kenin-potapova,wta,3283204,KENIPOT,,Kenin/Potapova,Kenin/Potapova
+wta:kessler-mcnally,wta,3288439,KESSMCN,,Kessler/McNally,Kessler/McNally
+wta:kichenok-kichenok,wta,3283177,KICHKIC,,Kichenok/Kichenok,Kichenok/Kichenok
+wta:korneeva-vidmanova,wta,3288444,KORNVID,,Korneeva/Vidmanova,Korneeva/Vidmanova
+wta:krueger-montgomery,wta,3288448,MONTKRU,,Krueger/Montgomery,Krueger/Montgomery
+wta:laura-siegemund,wta,229491,SIEGEMU,Laura,Siegemund,Laura Siegemund
+wta:leolia-jeanjean,wta,147307,JEANJEA,Leolia,Jeanjean,Leolia Jeanjean
+wta:leylah-fernandez,wta,147106,FERNAND,Leylah,Fernandez,Leylah Fernandez
+wta:li-tauson,wta,3275547,LITAUS,,Li/Tauson,Li/Tauson
+wta:lilli-tagger,wta,178028,TAGGER,Lilli,Tagger,Lilli Tagger
+wta:linda-noskova,wta,147237,NOSKOVA,Linda,Noskova,Linda Noskova
+wta:liudmila-samsonova,wta,229237,SAMSONO,Liudmila,Samsonova,Liudmila Samsonova
+wta:madison-keys,wta,183137,KEYS,Madison,Keys,Madison Keys
+wta:maleckova-skoch,wta,3271917,MALESKO,,Maleckova/Skoch,Maleckova/Skoch
+wta:marcinko-oliynykova,wta,3288437,MARCOLI,,Marcinko/Oliynykova,Marcinko/Oliynykova
+wta:maria-sakkari,wta,147196,SAKKARI,Maria,Sakkari,Maria Sakkari
+wta:maria-sonmez,wta,3275602,MARISON,,Maria/Sonmez,Maria/Sonmez
+wta:marie-bouzkova,wta,147178,BOUZKOV,Marie,Bouzkova,Marie Bouzkova
+wta:marta-kostyuk,wta,229232,KOSTYUK,Marta,Kostyuk,Marta Kostyuk
+wta:mertens-shnaider,wta,3284566,MERTSHN,,Mertens/Shnaider,Mertens/Shnaider
+wta:mihalikova-nicholls,wta,3270987,MIHANIC,,Mihalikova/Nicholls,Mihalikova/Nicholls
+wta:mirra-andreeva,wta,229231,ANDREEV,Mirra,Andreeva,Mirra Andreeva
+wta:muhammad-stollar,wta,3271928,MUHASTO,,Muhammad/Stollar,Muhammad/Stollar
+wta:naomi-osaka,wta,147096,OSAKA,Naomi,Osaka,Naomi Osaka
+wta:neel-olmos,wta,3278894,NEELOLM,,Neel/Olmos,Neel/Olmos
+wta:nikola-bartunkova,wta,147235,BARTUNK,Nikola,Bartunkova,Nikola Bartunkova
+wta:noma-noha-akugue,wta,3270390,AKUGUE,Noma Noha,Akugue,Noma Noha Akugue
+wta:noskova-sramkova,wta,3280746,NOSKSRA,,Noskova/Sramkova,Noskova/Sramkova
+wta:oleksandra-oliynykova,wta,229772,OLIYNYK,Oleksandra,Oliynykova,Oleksandra Oliynykova
+wta:parks-shymanovich,wta,3288453,PARKSHY,,Parks/Shymanovich,Parks/Shymanovich
+wta:paula-badosa,wta,229216,BADOSA,Paula,Badosa,Paula Badosa
+wta:payne-shumate,wta,3288454,PAYNSHU,,Payne/Shumate,Payne/Shumate
+wta:penickova-penickova,wta,3288456,PENIPEN,,Penickova/Penickova,Penickova/Penickova
+wta:piter-siskova,wta,3278892,PITESIS,,Piter/Siskova,Piter/Siskova
+wta:pridankina-tang,wta,3275537,PRIDTAN,,Pridankina/Tang,Pridankina/Tang
+wta:qinwen-zheng,wta,230530,ZHEN,Qinwen,Zheng,Qinwen Zheng
+wta:rogers-zamarripa,wta,3284010,ROGEZAM,,Rogers/Zamarripa,Rogers/Zamarripa
+wta:routliffe-sutjiadi,wta,3283206,ROUTSUT,,Routliffe/Sutjiadi,Routliffe/Sutjiadi
+wta:shibahara-tararudee,wta,3288621,SHIBTAR,,Shibahara/Tararudee,Shibahara/Tararudee
+wta:siniakova-townsend,wta,3270979,SINITOW,,Siniakova/Townsend,Siniakova/Townsend
+wta:sinja-kraus,wta,147151,KRAUS,Sinja,Kraus,Sinja Kraus
+wta:snigur-vandewinkel,wta,3288442,SNIGVAN,,Snigur/Vandewinkel,Snigur/Vandewinkel
+wta:sorana-cirstea,wta,147118,CIRSTEA,Sorana,Cirstea,Sorana Cirstea
+wta:tatjana-maria,wta,147299,MARIA,Tatjana,Maria,Tatjana Maria
+wta:taylor-townsend,wta,229708,TOWNSEN,Taylor,Townsend,Taylor Townsend
+wta:williams-williams,wta,3280741,WILLWIL,,Williams/Williams,Williams/Williams
+wta:yulia-putintseva,wta,147322,PUTINTS,Yulia,Putintseva,Yulia Putintseva
+wta:yulia-starodubtseva,wta,147183,STARODU,Yulia,Starodubtseva,Yulia Starodubtseva

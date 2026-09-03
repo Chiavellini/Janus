@@ -39,11 +39,11 @@ import json
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, asdict, field
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from nodes.match_sports.stage1_checkpoint import (
-    KALSHI_BASE, PM_GAMMA, games_on_local_date, kalshi_date_from_rules,
+    KALSHI_BASE, PM_GAMMA, games_on_local_date, kalshi_date_from_rules, kalshi_date_from_ticker,
     kalshi_start_from_rules, pull_kalshi, pull_pm, _pm_start,
 )
 from kernel.schema import CanonicalKey, KeyProvenance
@@ -69,7 +69,9 @@ DRAW_ENTITY = "draw"
 
 
 def _fullgame_slug(league: str) -> re.Pattern[str]:
-    return re.compile(rf"^{re.escape(league)}-[a-z0-9]{{2,4}}-[a-z0-9]{{2,4}}-\d{{4}}-\d{{2}}-\d{{2}}$")
+    prefix = LEAGUES[league].pm_prefix if league in LEAGUES else league
+    # team abbreviations run 2-4 characters; a player's slug piece runs up to 8 ("siegemu", "samsono")
+    return re.compile(rf"^{re.escape(prefix)}-[a-z0-9]{{2,8}}-[a-z0-9]{{2,8}}-\d{{4}}-\d{{2}}-\d{{2}}$")
 
 
 @dataclass(frozen=True)
@@ -135,8 +137,14 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
         espn_ids = tuple(sorted(r.teams[e].espn_id for _, e in sides if e in r.teams))
         cands = by_pair.get(espn_ids, [])
         st = kalshi_start_from_rules(rules)
-        g = (espn.nearest_game(cands, st) if st is not None
-             else games_on_local_date(cands, kalshi_date_from_rules(rules) or datetime.now().date()))
+        if league in LEAGUES and LEAGUES[league].anchor == "venue_structured":
+            # No date in the rules text (tennis names the tournament and round instead): the
+            # ticker date is the venue's own statement of the day.
+            ymd = kalshi_date_from_ticker(tick)
+            g = games_on_local_date(cands, date(ymd[0], ymd[1], ymd[2])) if ymd else None
+        else:
+            g = (espn.nearest_game(cands, st) if st is not None
+                 else games_on_local_date(cands, kalshi_date_from_rules(rules) or datetime.now().date()))
         if g is None:
             if cands:
                 _reason(stats["k_reason"], "no_schedule_match")

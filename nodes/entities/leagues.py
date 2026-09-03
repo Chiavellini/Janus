@@ -37,6 +37,9 @@ class League:
     #: Gamma `primaryTagId` from /sports, for competitions whose tag slug is not the sport code;
     #: when set, event pulls use `tag_id` instead of `tag_slug`.
     pm_tag_id: int | None = None
+    #: Regexes removed from a venue's rules text before it is hashed into a template: the tournament
+    #: and round a tennis text names change every match while the rules do not.
+    template_scrub: tuple[str, ...] = ()
 
 
 LEAGUES: dict[str, League] = {
@@ -64,6 +67,18 @@ LEAGUES: dict[str, League] = {
     "por":  League("por", "Primeira Liga", "KXLIGAPORTUGALGAME", "por", "por", ("soccer", "por.1"), outcomes=3, pm_tag_id=101772),
     "scop":  League("scop", "Scottish Premiership", "KXSCOTTISHPREMGAME", "scop", "scop", ("soccer", "sco.1"), outcomes=3, pm_tag_id=102872),
     "bel1":  League("bel1", "Belgian Pro League", "KXBELGIANPLGAME", "bel1", "bel1", ("soccer", "bel.1"), outcomes=3, pm_tag_id=105725),
+    # Tennis, 2026-09-03: no ESPN schedule anchors a match, so the schedule is Polymarket's own game
+    # events (player names, ids and gameStartTime) and Kalshi is joined on the players' names and the
+    # ticker date -- a `venue_structured` anchor with the weaker provenance grade. Both tours share
+    # Polymarket's `tennis` tag; the slug prefix says which. Kalshi settles tennis on exchange shard 3.
+    "atp":  League("atp", "ATP Tour", "KXATPMATCH", "tennis", "atp", None, anchor="venue_structured",
+                   template_scrub=(r"in the \d{4} .*? (?:Men|Women)(?:'s)? Singles [A-Za-z0-9 ]+? (?=after a ball)",
+                                   r"in the [A-Z][A-Za-z0-9 .'-]*? (?:ATP|WTA)\b,",
+                                   r"official information from (?:the )?[A-Z][A-Za-z0-9 .'-]*?\.")),
+    "wta":  League("wta", "WTA Tour", "KXWTAMATCH", "tennis", "wta", None, anchor="venue_structured",
+                   template_scrub=(r"in the \d{4} .*? (?:Men|Women)(?:'s)? Singles [A-Za-z0-9 ]+? (?=after a ball)",
+                                   r"in the [A-Z][A-Za-z0-9 .'-]*? (?:ATP|WTA)\b,",
+                                   r"official information from (?:the )?[A-Z][A-Za-z0-9 .'-]*?\.")),
     # Not yet: UCL. Entities are keyed per league (lal:esp.real_madrid) and a club plays in its domestic
     # league AND the Champions League, so its one Kalshi team id would map to two entities and the
     # xref table refuses the collision. A club must become one entity across competitions first.
@@ -87,6 +102,11 @@ def kalshi_series() -> dict[str, str]:
 def pm_tags() -> dict[str, str | int]:
     """league -> Gamma tag slug, or the numeric tag id when the registry carries one."""
     return {c: (l.pm_tag_id if l.pm_tag_id is not None else l.pm_tag) for c, l in LEAGUES.items()}
+
+
+def venue_structured() -> list[str]:
+    """Leagues whose schedule comes from the venues themselves (no ESPN anchor)."""
+    return [c for c, l in LEAGUES.items() if l.anchor == "venue_structured"]
 
 
 def espn_paths() -> dict[str, tuple[str, str]]:

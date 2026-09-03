@@ -22,13 +22,15 @@ BATCH2 = {"elc", "el1", "ita", "fl1", "ere", "por", "scop", "bel1"}
 
 def test_the_eighteen_of_2026_09_03_and_their_shapes():
     from nodes.entities.leagues import SOCCER, espn_groups
-    assert set(LEAGUES) == {"mlb", "nfl", "nba", "wnba", "nhl", "epl", "lal", "bun", "mls", "cfb"} | BATCH2
+    assert set(LEAGUES) == {"mlb", "nfl", "nba", "wnba", "nhl", "epl", "lal", "bun", "mls", "cfb", "atp", "wta"} | BATCH2
     assert espn_groups() == {"cfb": ("80", "81")}, "FBS and FCS; ESPN's default feed is FBS alone"
     assert set(SOCCER) == {"epl", "lal", "bun", "mls"} | BATCH2
     assert all(LEAGUES[c].pm_tag_id for c in BATCH2), "batch 2 pulls Gamma events by tag id"
     assert pm_tags()["elc"] == 102643 and pm_tags()["mlb"] == "mlb"
     assert all(LEAGUES[c].outcomes == 3 for c in SOCCER) and all(LEAGUES[c].outcomes == 2 for c in LEAGUES if c not in SOCCER)
-    assert all(lg.anchor == "espn" and lg.espn is not None for lg in LEAGUES.values())
+    assert all(lg.anchor == "espn" and lg.espn is not None for c, lg in LEAGUES.items() if c not in ("atp", "wta"))
+    assert all(LEAGUES[c].anchor == "venue_structured" and LEAGUES[c].espn is None and LEAGUES[c].template_scrub for c in ("atp", "wta"))
+    assert "atp" not in espn_paths()
     assert "ucl" not in LEAGUES, "a club is one entity across competitions before UCL can be registered"
 
 
@@ -53,4 +55,6 @@ def test_enablement_names_what_each_league_lacks():
         assert enablement(c) == [], c                # L35, the same proxy
     for c in ("fl1", "ere", "por", "scop", "bel1"):  # registered and reviewed; no archive to measure from
         assert enablement(c) == [f"EVIDENCE_UNMEASURED:soccer.{c}.cancelled_rate", f"EVIDENCE_UNMEASURED:soccer.{c}.postponed_gt48h_rate"], c
+    for c in ("atp", "wta"):
+        assert enablement(c) == ["EVIDENCE_UNMEASURED:tennis.delayed_gt7d_rate", "EVIDENCE_UNMEASURED:tennis.walkover_rate"], c   # one rate pair for both tours
     assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "cfb", "elc", "el1", "ita"]

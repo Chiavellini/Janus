@@ -131,3 +131,37 @@ def test_a_school_named_without_its_nickname_still_hashes_to_the_template():
     p = harvest_polymarket({"slug": "s", "description": text},
                            participants=("Kentucky Christian Knights", "Morehead State Eagles", "Knights", "Eagles"), retrieved_at=T)
     assert p.template_hash == POLYMARKET_CFB_GAME_V1.template_hash, p.template_text
+
+
+def test_tennis_texts_hash_to_their_templates_across_tournaments_and_block_on_unmeasured_rates():
+    from nodes.entities.leagues import LEAGUES
+    from nodes.settle_wedge.policy import KALSHI_TENNIS_MATCH_V1, POLYMARKET_TENNIS_MATCH_V1
+    scrub = LEAGUES["atp"].template_scrub
+    # another tournament and round, other players: the scrub removes what varies
+    k_text = (KALSHI_TENNIS_MATCH_V1.sample_text.replace("Yibing Wu", "Jannik Sinner").replace("Wu vs Alcaraz", "Sinner vs Zverev")
+              .replace("2026 US Open Men Singles Round Of 32", "2026 Shanghai Masters Men Singles Quarterfinal"))
+    k = harvest_kalshi({"ticker": "t", "rules_primary": k_text.split("\n")[0], "rules_secondary": k_text.split("\n", 1)[1]},
+                       participants=("Jannik Sinner", "Alexander Zverev"), retrieved_at=T, scrub=scrub)
+    assert k.template_hash == KALSHI_TENNIS_MATCH_V1.template_hash, k.template_text
+    p_text = (POLYMARKET_TENNIS_MATCH_V1.sample_text.replace("Laura Siegemund", "Jannik Sinner").replace("Liudmila Samsonova", "Alexander Zverev")
+              .replace("'Siegemund'", "'Sinner'").replace("'Samsonova'", "'Zverev'").replace("Australian Open WTA", "Shanghai Masters ATP")
+              .replace("January 17 at 7:00PM ET", "October 10 at 8:00AM ET").replace("Australian Open", "Shanghai Masters"))
+    p = harvest_polymarket({"slug": "s", "description": p_text}, participants=("Jannik Sinner", "Alexander Zverev"), retrieved_at=T, scrub=scrub)
+    assert p.template_hash == POLYMARKET_TENNIS_MATCH_V1.template_hash, p.template_text
+    got = certify(k, p, league="atp")
+    assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED" and got.context["evidence_key"].startswith("tennis.")
+    rates = {"tennis.walkover_rate": 0.02, "tennis.delayed_gt7d_rate": 0.001}
+    eq = certify(k, p, league="atp", rates=rates)
+    assert isinstance(eq, SettlementEquivalence)
+    by = {v.dimension: v.outcome for v in eq.verdicts}
+    assert by["retirement"] == "SAME" and by["player_non_participation"] == "BOUNDED" and by["postponement"] == "BOUNDED"
+    # the buffer: walkover charges max(0, p_pm - 0.5), the long delay charges half a contract
+    assert eq.settlement_buffer([("kalshi", 0.30), ("polymarket", 0.70)]) == pytest.approx(0.02 * 0.20 + 0.001 * 0.5, abs=1e-9)
+    assert isinstance(certify_cover(prove("atp", "moneyline", "game", ["a", "b"]), eq), CoverProof)
+    # the WTA text ("Potapova vs Anisimova ... Women Singles Round Of 32") hashes to the same template
+    w_text = (KALSHI_TENNIS_MATCH_V1.sample_text.replace("Yibing Wu", "Anastasia Potapova").replace("Wu vs Alcaraz", "Potapova vs Anisimova")
+              .replace("Men Singles", "Women Singles"))
+    w = harvest_kalshi({"ticker": "t", "rules_primary": w_text.split("\n")[0], "rules_secondary": w_text.split("\n", 1)[1]},
+                       participants=("Anastasia Potapova", "Amanda Anisimova"), retrieved_at=T, scrub=LEAGUES["wta"].template_scrub)
+    assert w.template_hash == KALSHI_TENNIS_MATCH_V1.template_hash
+    assert isinstance(certify(w, p, league="wta", rates=rates), SettlementEquivalence)

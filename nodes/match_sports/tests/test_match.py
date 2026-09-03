@@ -82,3 +82,9 @@ def test_polymarket_outcome_labels_are_the_fallback_for_nickname_only_team_names
                       {"slug": "cfb-lcdbfc25-nwst-2026-08-27-spread", "outcomes": '["Yes", "No"]'}]}
     assert _pm_outcome_labels(ev, "cfb-lcdbfc25-nwst-2026-08-27") == ["Louisiana Christian", "Northwestern State"]
     assert _pm_outcome_labels(ev, "cfb-x") == [] and _pm_outcome_labels({"markets": [{"slug": "s", "outcomes": "nope"}]}, "s") == []
+
+
+def test_the_full_match_slug_admits_player_pieces_up_to_eight_characters():
+    assert _fullgame_slug("wta").match("wta-siegemu-samsono-2026-01-18")
+    assert _fullgame_slug("atp").match("atp-blockx-trungel-2026-09-02")
+    assert not _fullgame_slug("atp").match("atp-doubles-marclop-kolapol-2026-09-04")

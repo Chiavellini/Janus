@@ -13,6 +13,8 @@ elc,text,unknown,sot,21
 elc,text,unknown,sto,21
 ere,text,unknown,SBV Excelsior,21
 ere,text,unknown,Telstar 1963,21
+fl1,text,unknown,Olympique de Marseille,21
+fl1,text,unknown,Stade Rennais FC 1901,21
 scop,text,unknown,hmi,21
 cfb,text,ambiguous,Tigers,19
 fl1,text,unknown,Angers SCO,18
@@ -20,11 +22,9 @@ fl1,text,unknown,ES Troyes AC,18
 fl1,text,unknown,Lille OSC,18
 fl1,text,unknown,OGC Nice,18
 fl1,text,unknown,Olympique Lyonnais,18
-fl1,text,unknown,Olympique de Marseille,18
 fl1,text,unknown,RC Strasbourg Alsace,18
 fl1,text,unknown,Racing Club de Lens,18
 fl1,text,unknown,Stade Brestois 29,18
-fl1,text,unknown,Stade Rennais FC 1901,18
 fl1,text,unknown,aja,18
 fl1,text,unknown,asm,18
 fl1,text,unknown,lil,18
@@ -404,6 +404,48 @@ scop,text,unknown,HIB,2
 scop,text,unknown,JOH,2
 scop,text,unknown,MIR,2
 scop,text,unknown,RFC,2
+wta,text,unknown,BOU,2
+wta,text,unknown,SAK,2
+atp,text,unknown,ALC,1
+atp,text,unknown,BER,1
+atp,text,unknown,BLO,1
+atp,text,unknown,BON,1
+atp,text,unknown,BUB,1
+atp,text,unknown,BUS,1
+atp,text,unknown,COB,1
+atp,text,unknown,DE,1
+atp,text,unknown,DEJ,1
+atp,text,unknown,Daniel Merida,1
+atp,text,unknown,ETC,1
+atp,text,unknown,HAL,1
+atp,text,unknown,LEH,1
+atp,text,unknown,MED,1
+atp,text,unknown,MEN,1
+atp,text,unknown,MER,1
+atp,text,unknown,MIC,1
+atp,text,unknown,MON,1
+atp,text,unknown,MUS,1
+atp,text,unknown,NAV,1
+atp,text,unknown,PAU,1
+atp,text,unknown,POP,1
+atp,text,unknown,RIN,1
+atp,text,unknown,ROD,1
+atp,text,unknown,SCH,1
+atp,text,unknown,SHA,1
+atp,text,unknown,SHE,1
+atp,text,unknown,SVA,1
+atp,text,unknown,SWE,1
+atp,text,unknown,TAB,1
+atp,text,unknown,TIA,1
+atp,text,unknown,TRU,1
+atp,text,unknown,TSI,1
+atp,text,unknown,Tomas Martin Etcheverry,1
+atp,text,unknown,VAC,1
+atp,text,unknown,VAN,1
+atp,text,unknown,YIB,1
+atp,text,unknown,YUN,1
+atp,text,unknown,ZHE,1
+atp,text,unknown,ZVE,1
 bel1,text,unknown,BEV,1
 bel1,text,unknown,Beveren,1
 bel1,text,unknown,CER,1
@@ -555,3 +597,41 @@ por,text,unknown,Vicente Barcelos,1
 scop,text,ambiguous,DUN,1
 scop,text,unknown,DUU,1
 scop,text,unknown,FAL,1
+wta,text,unknown,ALE,1
+wta,text,unknown,AND,1
+wta,text,unknown,ANI,1
+wta,text,unknown,ANN,1
+wta,text,unknown,BAD,1
+wta,text,unknown,BAR,1
+wta,text,unknown,BUC,1
+wta,text,unknown,CIR,1
+wta,text,unknown,EAL,1
+wta,text,unknown,Elise Mertens,1
+wta,text,unknown,FER,1
+wta,text,unknown,GAU,1
+wta,text,unknown,Iga Swiatek,1
+wta,text,unknown,JON,1
+wta,text,unknown,JOV,1
+wta,text,unknown,KAL,1
+wta,text,unknown,KOS,1
+wta,text,unknown,MAR,1
+wta,text,unknown,MER,1
+wta,text,unknown,MUC,1
+wta,text,unknown,NAV,1
+wta,text,unknown,NOS,1
+wta,text,unknown,OLI,1
+wta,text,unknown,OSA,1
+wta,text,unknown,PAO,1
+wta,text,unknown,PEG,1
+wta,text,unknown,POT,1
+wta,text,unknown,PUT,1
+wta,text,unknown,RAK,1
+wta,text,unknown,RYB,1
+wta,text,unknown,SAB,1
+wta,text,unknown,SHN,1
+wta,text,unknown,STA,1
+wta,text,unknown,SVI,1
+wta,text,unknown,SWI,1
+wta,text,unknown,TOW,1
+wta,text,unknown,Yuliia Starodubtseva,1
+wta,text,unknown,ZHE,1

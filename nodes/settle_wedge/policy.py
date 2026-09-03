@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from nodes.entities.leagues import SOCCER
+from nodes.entities.leagues import LEAGUES, SOCCER
 from kernel.schema import SettleRef, TiePolicy, VoidPolicy
 from nodes.settle_wedge.harvest import _sha, normalise_template
 
@@ -50,10 +50,13 @@ class Template:
     sample_text: str
     sample_participants: tuple[str, ...]
     settle_ref: SettleRef              # this venue's own policies, for the record
+    #: The league's own scrub regexes (nodes/entities/leagues.template_scrub), so the template is
+    #: hashed exactly as the harvest hashes a live text for that league.
+    scrub: tuple[str, ...] = ()
 
     @property
     def template_text(self) -> str:
-        return normalise_template(self.sample_text, self.sample_participants)
+        return normalise_template(self.sample_text, self.sample_participants, self.scrub)
 
     @property
     def template_hash(self) -> str:
@@ -540,6 +543,89 @@ KALSHI_BEL1_GAME_V1 = Template(
               revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
               terms_url=None, provenance="api_field"))
 
+# ── tennis, recorded verbatim from the API on 2026-09-03 ─────────────────────
+TENNIS_SCRUB = LEAGUES["atp"].template_scrub
+# The texts name the tournament and the round; the registry's template_scrub removes those before
+# the hash (nodes/entities/leagues.py), so one template per venue and tour covers every event.
+
+KALSHI_TENNIS_MATCH_V1 = Template(
+    "kalshi_tennis_match_v1", "kalshi", frozenset({"atp", "wta"}), "2026-09-03",
+    # ONE template for both tours: once the tournament and round are scrubbed the ATP and WTA texts
+    # are the same sentence (measured 2026-09-03), so two templates would share one hash.
+    # KXATPMATCH-26SEP04YIBALC-YIB, rules_primary + "\n" + rules_secondary
+    "If Yibing Wu wins the Wu vs Alcaraz professional tennis match in the 2026 US Open Men Singles Round "
+    "Of 32 after a ball has been played, then the market resolves to Yes.\nThe following market refers to "
+    "the Wu vs Alcaraz professional tennis match in the 2026 US Open Men Singles Round Of 32 after a ball"
+    " has been played. If the match does not occur (signaled by a ball being played) due to a player "
+    "injury, walkover, forfeiture, or any other cancellation (all before the match starts), the market "
+    "will resolve to a fair price in accordance with the rules. If this match is postponed or delayed, "
+    "the market will remain open and close after the rescheduled match has finished (within two weeks).\n\n"
+    "Kalshi is not affiliated, associated, authorized, endorsed by, or in any way officially connected "
+    "with the Governing League. All trademarks, logos, and brand names are the property of their "
+    "respective owners.",
+    ("Yibing Wu", "Carlos Alcaraz"),
+    SettleRef(source_agency="ATP", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=True, dnp_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              retirement_policy="a match after a ball is played settles on the official result (the opponent advances)",
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"),
+    scrub=TENNIS_SCRUB)
+
+POLYMARKET_TENNIS_MATCH_V1 = Template(
+    "polymarket_tennis_match_v1", "polymarket", frozenset({"atp", "wta"}), "2026-09-03",
+    # wta-siegemu-samsono-2026-01-18, market.description
+    "This market refers on the tennis match between Laura Siegemund and Liudmila Samsonova in the "
+    "Australian Open WTA, scheduled for January 17 at 7:00PM ET.\n\nThis market will resolve to 'Siegemund'"
+    " if Laura Siegemund advances against Liudmila Samsonova.\n\nThis market will resolve to 'Samsonova' if"
+    " Liudmila Samsonova advances against Laura Siegemund.\n\nIf the match is canceled (not played at all),"
+    " ends in a tie, or is delayed beyond 7 days from the scheduled date without a winner determined, "
+    "this market will resolve to 50-50.\n\nIf the match begins but is not completed, and one player "
+    "advances due to the opponent's retirement, default, or disqualification, this market will resolve to"
+    " the player who advances.\n\nIf the match ends in a walkover (player withdraws before the start and "
+    "the other advances automatically), this market will resolve to 50-50.\n\nThe primary resolution source"
+    " will be official information from the Australian Open. A consensus of credible reporting may also "
+    "be used.",
+    ('Laura Siegemund', 'Liudmila Samsonova'),
+    SettleRef(source_agency="the tournament's official information", oracle="uma", void_policy=VoidPolicy.RESOLVE_FIFTY,
+              tie_policy=TiePolicy.RESOLVE_FIFTY, ot_included=True, dnp_policy=VoidPolicy.RESOLVE_FIFTY,
+              retirement_policy="the player who advances after a retirement, default or disqualification; a walkover is 50-50",
+              revision_policy="consensus of credible reporting", dispute_mechanism="uma", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"),
+    scrub=TENNIS_SCRUB)
+
+
+def _tennis_verdicts() -> tuple[Verdict, ...]:
+    """Kalshi tennis match (either tour) vs Polymarket tennis match. Both venues advance the opponent
+    of a player who retires or is defaulted after the first ball; they part on the match that never
+    starts and on a long delay. One rate pair for both tours: the row measures both."""
+    walkover = "tennis.walkover_rate"
+    delayed = "tennis.delayed_gt7d_rate"
+    return (
+        Verdict("official_source", "SAME", "both settle on the tour's / tournament's official result."),
+        Verdict("winner_determination", "SAME", "the player who wins or advances, both venues."),
+        Verdict("overtime", "NA", "a tennis match has no clock."),
+        Verdict("tie", "NA", "a tennis match has no draw; Polymarket's tie clause cannot fire."),
+        Verdict("retirement", "SAME", "after a ball is played, Kalshi settles on the official result and the ATP/WTA "
+                "record a retirement or default as a win for the opponent; Polymarket resolves to the player who advances."),
+        Verdict("player_non_participation", "BOUNDED",
+                "a walkover, withdrawal or cancellation BEFORE the first ball: Kalshi resolves to a fair price, Polymarket "
+                "resolves 50-50. The cover loses when the Polymarket leg is the favourite: max(0, p_pm - 0.5).",
+                evidence_key=walkover, loss_model="kalshi_fair_vs_pm_half"),
+        Verdict("cancellation", "SAME", "a cancellation before the first ball IS the walkover above, priced once there; "
+                "after the first ball the match has a result on both venues."),
+        Verdict("postponement", "BOUNDED",
+                "Kalshi stays open up to two weeks for a rescheduled match; Polymarket resolves 50-50 when the match is delayed "
+                "beyond 7 days. A match played between 7 and 14 days late pays Kalshi the result and Polymarket 0.50 a side.",
+                evidence_key=delayed, loss_model="pm_half_vs_kalshi_result"),
+        Verdict("suspended", "SAME", "a suspended match resumes and both venues wait for the result (within their windows above)."),
+        Verdict("abandoned", "SAME", "an abandoned match is a retirement or a cancellation, ruled above."),
+        Verdict("dispute_revision", "SAME", "terminal outcome is the official result on both; mechanisms differ."),
+        Verdict("settlement_timing", "SAME", "payouts agree; timing differs and is the risk ledger's job."),
+    )
+
+
+_TENNIS_K_PM = _tennis_verdicts()
+
 _SOCCER_KALSHI = {"epl": KALSHI_EPL_GAME_V1, "lal": KALSHI_LAL_GAME_V1, "bun": KALSHI_BUN_GAME_V1,
                   "mls": KALSHI_MLS_GAME_V1, "ucl": KALSHI_UCL_GAME_V1,
                   "elc": KALSHI_ELC_GAME_V1, "el1": KALSHI_EL1_GAME_V1, "ita": KALSHI_ITA_GAME_V1, "fl1": KALSHI_FL1_GAME_V1, "ere": KALSHI_ERE_GAME_V1, "por": KALSHI_POR_GAME_V1, "scop": KALSHI_SCOP_GAME_V1, "bel1": KALSHI_BEL1_GAME_V1}
@@ -547,7 +633,8 @@ _SOCCER_KALSHI = {"epl": KALSHI_EPL_GAME_V1, "lal": KALSHI_LAL_GAME_V1, "bun": K
 TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1,
                                                               KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1,
                                                               *_SOCCER_PM, *_SOCCER_KALSHI.values(),
-                                                              KALSHI_CFB_GAME_V1, POLYMARKET_CFB_GAME_V1)}
+                                                              KALSHI_CFB_GAME_V1, POLYMARKET_CFB_GAME_V1,
+                                                              KALSHI_TENNIS_MATCH_V1, POLYMARKET_TENNIS_MATCH_V1)}
 
 
 def template_for(template_hash: str) -> Template | None:
@@ -619,6 +706,7 @@ PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
     ("kalshi_mlb_game_v1", "polymarket_mlb_game_v1"): _MLB_K_PM,
     ("kalshi_nfl_game_v1", "polymarket_nfl_game_v1"): _NFL_K_PM,
     ("kalshi_cfb_game_v1", "polymarket_cfb_game_v1"): _CFB_K_PM,
+    ("kalshi_tennis_match_v1", "polymarket_tennis_match_v1"): _TENNIS_K_PM,
     **{(t.template_id, pm.template_id): _soccer_verdicts(code) for code, t in _SOCCER_KALSHI.items() for pm in _SOCCER_PM},
 }
 

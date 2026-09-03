@@ -70,6 +70,10 @@ class SettlementEquivalence:
                     buf += p * max(0.0, price - 0.5)
                 elif v.loss_model == "kalshi_fair_vs_pm_result":
                     buf += p * price
+                elif v.loss_model == "pm_half_vs_kalshi_result":
+                    # Polymarket pays 0.50 a side while Kalshi pays the result: when the Polymarket
+                    # side is the winner the cover collects 0.50 instead of 1.00.
+                    buf += p * 0.5
                 else:
                     raise ValueError(f"unknown loss model {v.loss_model!r}")
         return buf

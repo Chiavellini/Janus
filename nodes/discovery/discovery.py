@@ -36,7 +36,8 @@ from typing import Any, Mapping
 from kernel.fetch import Client
 from kernel.redact import brief_error
 from nodes.entities.resolve import Resolver, normalize
-from nodes.entities.leagues import LEAGUES
+from nodes.discovery.venue_schedule import fetch_schedule
+from nodes.entities.leagues import LEAGUES, venue_structured
 from nodes.entities.seed import KALSHI_GAME_SERIES, NON_TEAM_OUTCOMES
 from nodes.match_sports.sports_match import DRAW_ENTITY, kalshi_markets, pair, pm_markets
 from nodes.schedule_espn import espn
@@ -105,8 +106,12 @@ def live_games(leagues: list[str], now: datetime, include_near: bool,
     horizon = max(1.0, pre_hours / 24.0 + 1.0)
     for league in leagues:
         try:
-            schedule = espn.fetch_range(league, now - timedelta(days=1),
-                                        now + timedelta(days=horizon), use_cache=False)
+            if league in venue_structured():
+                # No ESPN anchor: the schedule is Polymarket's own game events (nodes/discovery/venue_schedule).
+                schedule = fetch_schedule(league, now)
+            else:
+                schedule = espn.fetch_range(league, now - timedelta(days=1),
+                                            now + timedelta(days=horizon), use_cache=False)
         except Exception as exc:  # noqa: BLE001 -- one league must not take the others down
             failures[league] = brief_error(exc)
             continue
@@ -240,6 +245,17 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
         by_game: dict[str, dict] = {}
         for m in matches:
             by_game.setdefault(m["game_id"], {})[m["entity_id"]] = m
+            # A tennis market labels its outcomes by surname ("Siegemund") while the event names the
+            # player in full; when the label resolves to nothing, the participant whose full name
+            # ends with the label owns the token. Exact suffix on normalised text, never a score.
+            slug, label = m["pm_event"], m.get("pm_label") or ""
+            if slug in d.tokens and (slug, m["entity_id"]) not in tok_by:
+                full = normalize(label)
+                for name, token in d.tokens[slug][0].items():
+                    n = normalize(name)
+                    if n and (full == n or full.endswith(" " + n)):
+                        tok_by[(slug, m["entity_id"])] = token
+                        break
         for gid, rows in by_game.items():
             g = games_by_id.get(gid)
             if g is None or len(rows) != n_out:

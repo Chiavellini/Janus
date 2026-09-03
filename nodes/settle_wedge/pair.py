@@ -10,20 +10,26 @@ from nodes.settle_wedge.equivalence import NotEquivalent, SettlementEquivalence,
 from nodes.settle_wedge.harvest import RulesRecord, harvest_kalshi, harvest_polymarket
 
 
-def records_from_spec(spec: Mapping) -> tuple[RulesRecord, RulesRecord] | None:
+def _scrub(league: str | None) -> tuple[str, ...]:
+    from nodes.entities.leagues import LEAGUES
+    return LEAGUES[league].template_scrub if league in LEAGUES else ()
+
+
+def records_from_spec(spec: Mapping, league: str | None = None) -> tuple[RulesRecord, RulesRecord] | None:
     rules = spec.get("rules") or {}
     k, p = rules.get("kalshi"), rules.get("polymarket")
     if not k or not p:
         return None
     t = float(rules.get("retrieved_at") or 0.0)
+    scrub = _scrub(league or spec.get("league"))
     return (harvest_kalshi(k["market"], participants=k.get("participants", ()), retrieved_at=t,
-                           series=k.get("series")),
-            harvest_polymarket(p["market"], participants=p.get("participants", ()), retrieved_at=t))
+                           series=k.get("series"), scrub=scrub),
+            harvest_polymarket(p["market"], participants=p.get("participants", ()), retrieved_at=t, scrub=scrub))
 
 
 def certify_from_spec(spec: Mapping, league: str, *,
                       rates: Mapping[str, float] | None = None) -> SettlementEquivalence | NotEquivalent:
-    recs = records_from_spec(spec)
+    recs = records_from_spec(spec, league)
     if recs is None:
         return NotEquivalent("RULES_MISSING", "the slate spec carries no rules text for one or both venues")
     return certify(recs[0], recs[1], league=league, rates=rates)

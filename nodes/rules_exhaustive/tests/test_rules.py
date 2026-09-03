@@ -47,7 +47,7 @@ def _old_nfl_blocks_because_regular_season_games_can_tie():
 
 
 def test_unregistered_league_blocks_rather_than_defaulting_open():
-    got = prove("atp", "moneyline", "game", ["a", "b"])
+    got = prove("ufc", "moneyline", "game", ["a", "b"])   # tennis got its rule on 2026-09-03; UFC has none
     assert isinstance(got, NotExhaustive)
     assert got.code == "NO_RULE_FOR_LEAGUE"
 

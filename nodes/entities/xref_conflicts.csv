@@ -1,4 +1,6 @@
 venue,league,uuid,abbrev,sub_title,abbrev_hit,loc_hit,reason
+kalshi,atp,1a6577a3-f592-47fd-a84e-eb7e97ff61b8,ETC,Tomas Martin Etcheverry,,,no_agreement
+kalshi,atp,94faa7e8-a77c-4003-914f-3b87a333465c,MER,Daniel Merida,,,no_agreement
 kalshi,bel1,056e5c89-c80e-40ac-85fb-2c986607a8b9,BEV,Beveren,,,no_agreement
 kalshi,bel1,3a482436-b7ee-403a-91da-e433e0bf8737,RAFC,Royal Antwerp,,,no_agreement
 kalshi,bel1,7377314c-5ade-4013-817d-8faab8186bc7,KOR,Kortrijk,,,no_agreement
@@ -44,6 +46,9 @@ kalshi,por,ca5d00cc-f18d-4802-8337-32c0e7152d64,ESA,Estrela Amadora,,,no_agreeme
 kalshi,por,dca44d67-d382-4a24-b504-2839f6e59cb6,BEN,SL Benfica,,,no_agreement
 kalshi,por,dca44d67-d382-4a24-b504-2839f6e59cb6,BEN,SL Benfica,,,no_agreement
 kalshi,por,f7ef567e-a7c4-4ae3-9709-9e2e2628be40,CSM,Madeira,,,no_agreement
+kalshi,wta,3887631b-0004-412f-bfc0-7579bd31467c,SWI,Iga Swiatek,,,no_agreement
+kalshi,wta,506b703b-96e5-41b1-aede-2a3b34e04741,MER,Elise Mertens,,,no_agreement
+kalshi,wta,663e59a7-9691-4949-8dd2-4306dda8c1ec,STA,Yuliia Starodubtseva,,,no_agreement
 polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement
 polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement
 polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement

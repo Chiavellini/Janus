@@ -44,16 +44,21 @@ class RulesRecord:
     settlement_sources: tuple[str, ...] = ()
 
 
-def normalise_template(text: str, participants: Sequence[str]) -> str:
+def normalise_template(text: str, participants: Sequence[str], scrub: Sequence[str] = ()) -> str:
     """Strip everything that varies per game. Longest participant names first, so
-    'Los Angeles D' goes before 'Los Angeles'."""
+    'Los Angeles D' goes before 'Los Angeles'. `scrub` are a league's own regexes for what else
+    varies (a tennis text names the tournament and the round), applied before anything else."""
+    for pat in scrub:
+        text = re.sub(pat, " ", text)
     s = text.lower()
     names = {p.lower() for p in participants if p}
     # A venue may name a team by its nickname alone (Polymarket NFL: "Patriots"); strip the last
     # word of every multi-word name too. Short tails ("D" in "Los Angeles D") are left alone.
     for n in list(names):
         tail = n.split()[-1] if " " in n else ""
-        if len(tail) > 3:
+        # A venue may name a participant by the last word alone (Polymarket NFL "Patriots"; a tennis
+        # text "Wu vs Alcaraz"); one-letter tails ("D" in "Los Angeles D") are left alone.
+        if len(tail) >= 2:
             names.add(tail)
         # ... and by the name without its nickname (Polymarket college football: "Morehead State"
         # for "Morehead State Eagles"). Short heads ("St.") are left alone.
@@ -78,20 +83,21 @@ def _sha(s: str) -> str:
 
 
 def harvest_kalshi(market: dict, *, participants: Sequence[str], retrieved_at: float,
-                   series: dict | None = None) -> RulesRecord:
+                   series: dict | None = None, scrub: Sequence[str] = ()) -> RulesRecord:
     text = "\n".join(x for x in (market.get("rules_primary"), market.get("rules_secondary")) if x)
     s = (series or {}).get("series", series) or {}
     sources = tuple(str(x.get("name")) for x in (s.get("settlement_sources") or []) if x.get("name"))
-    tmpl = normalise_template(text, participants)
+    tmpl = normalise_template(text, participants, scrub)
     return RulesRecord("kalshi", str(market.get("ticker") or ""), "api_field",
                        s.get("contract_url") or None, "api_field", retrieved_at, text, _sha(text),
                        tmpl, _sha(tmpl), sources)
 
 
-def harvest_polymarket(market: dict, *, participants: Sequence[str], retrieved_at: float) -> RulesRecord:
+def harvest_polymarket(market: dict, *, participants: Sequence[str], retrieved_at: float,
+                       scrub: Sequence[str] = ()) -> RulesRecord:
     text = str(market.get("description") or "")
     src = market.get("resolutionSource") or None
-    tmpl = normalise_template(text, participants)
+    tmpl = normalise_template(text, participants, scrub)
     return RulesRecord("polymarket", str(market.get("slug") or market.get("id") or ""), "api_field",
                        src, "api_field", retrieved_at, text, _sha(text), tmpl, _sha(tmpl),
                        (src,) if src else ())

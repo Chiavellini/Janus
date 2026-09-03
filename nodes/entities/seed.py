@@ -66,10 +66,34 @@ def _slugify(s: str) -> str:
 
 # ── teams + aliases from ESPN ────────────────────────────────────────────────
 
+def _seed_players(lg: str, client) -> tuple[list[Team], list[dict]]:
+    """A venue-structured league (tennis): the participants are the players Polymarket lists, keyed
+    by Polymarket's stable id (carried in the `espn_id` column: the schedule source's id)."""
+    from nodes.discovery.venue_schedule import pm_game_events, pm_players
+    league = LEAGUES[lg]
+    tag = league.pm_tag_id if league.pm_tag_id is not None else league.pm_tag
+    cl = client or Client("polymarket", rate=4.0, burst=8.0)
+    teams, aliases = [], []
+    for pl in pm_players(lg, league.pm_prefix, pm_game_events(tag, cl)):
+        name = pl["name"]
+        surname = name.split()[-1] if " " in name else name
+        eid = f"{lg}:{_slugify(name)}"
+        teams.append(Team(entity_id=eid, league=lg, espn_id=pl["id"], abbrev=pl["abbreviation"].upper(),
+                          location=" ".join(name.split()[:-1]), nickname=surname, display_name=name))
+        for a in {name, pl["abbreviation"], f"{name[0]}. {surname}" if " " in name else name}:
+            if a and normalize(a):
+                aliases.append({"league": lg, "alias": a, "entity_id": eid, "source": "polymarket"})
+    return teams, aliases
+
+
 def seed_teams(leagues=SEED_LEAGUES, *, client=None) -> tuple[list[Team], list[dict]]:
     teams: list[Team] = []
     aliases: list[dict] = []
     for lg in leagues:
+        if lg in LEAGUES and LEAGUES[lg].anchor == "venue_structured":
+            t_, a_ = _seed_players(lg, client)
+            teams += t_; aliases += a_
+            continue
         raw = espn.fetch_teams(lg, client=client)
         for t in raw:
             if not t.get("isActive", True):
@@ -186,7 +210,13 @@ def seed_pm_xrefs(resolver: Resolver, leagues=SEED_LEAGUES, *,
             continue
         seen: dict[str, set[str]] = defaultdict(set)
         labels: dict[str, str] = {}
+        prefix = LEAGUES[lg].pm_prefix if lg in LEAGUES else None
         for e in _pm_events(tag, cl):
+            # Both tours share Polymarket's `tennis` tag: keep to this league's own events, or an
+            # ATP player's id lands on a WTA row through a shared surname (measured 2026-09-03).
+            if lg in LEAGUES and LEAGUES[lg].anchor == "venue_structured" and prefix \
+                    and not str(e.get("slug", "")).startswith(prefix + "-"):
+                continue
             for t in e.get("teams") or []:
                 tid = str(t.get("id") or "")
                 if not tid:
