@@ -304,3 +304,24 @@ def test_the_event_timestamp_reaches_the_book_and_the_clock():
     s.handle(ch, now=T + 1, mono=8.0)
     assert r.snapshot(T + 1).received_mono == 8.0
     assert s.clock.stats()["samples"] == 1 and s.clock.healthy, "the book's stamp is not clock evidence"
+
+
+def test_an_empty_subscription_set_never_connects():
+    """Found on the first restart of the lane: with no live game the socket connected, sent nothing,
+    was closed with a 1008 policy error, and reconnected on backoff -- noise, not liveness."""
+    s = PolymarketStream()
+    attempts = []
+
+    class Never:
+        async def __aenter__(self): attempts.append(1); raise AssertionError("must not connect")
+        async def __aexit__(self, *a): return False
+
+    async def go():
+        stop = asyncio.Event()
+        task = asyncio.create_task(s.run(stop, connect=lambda u: Never()))
+        await asyncio.sleep(0.05); stop.set(); task.cancel()
+        try: await task
+        except asyncio.CancelledError: pass
+
+    asyncio.run(go())
+    assert attempts == []

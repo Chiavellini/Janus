@@ -218,6 +218,9 @@ class KalshiStream:
             url, additional_headers=headers, ping_interval=20, max_size=2 ** 23))
         backoff = 1.0
         while not stop.is_set():
+            if not self.regs:
+                await asyncio.sleep(1.0)      # nothing to subscribe: no handshake, no idle socket
+                continue
             try:
                 headers = ws_headers(self.api_key, self.private_key)
                 async with connect(self.url, headers) as ws:
