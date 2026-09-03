@@ -157,7 +157,8 @@ def check(index: Path = INDEX, *, now: float | None = None,
                           f"{int(sla.max_age_s)}s")
     if risk is None or risk:
         from nodes.risk.health import risk_alerts
-        alerts.extend(risk_alerts(now=now, **(risk or {})))
+        rk = {k: v for k, v in (risk or {}).items() if k != "in_season"}
+        alerts.extend(risk_alerts(now=now, **rk))
         db = (risk or {}).get("db_path")
         if risk is None or db:
             try:
