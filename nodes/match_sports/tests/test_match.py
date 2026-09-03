@@ -63,3 +63,14 @@ def test_the_lakers_celtics_trap_never_pairs_across_dates():
     k = [vm("kalshi", "g1", "a", start=1_800_000_000)]
     p = [vm("polymarket", "g1", "a", start=1_800_000_000 + 14 * 86400)]
     assert pair(k, p) == []
+
+
+def test_the_draw_of_a_three_way_game_pairs_like_any_other_side():
+    from nodes.match_sports.sports_match import DRAW_ENTITY
+    k = [vm("kalshi", "g1", "lee", vid="KX-1", oid="KX-1-LEE"), vm("kalshi", "g1", "new", vid="KX-1", oid="KX-1-NEW"),
+         vm("kalshi", "g1", DRAW_ENTITY, vid="KX-1", oid="KX-1-TIE")]
+    p = [vm("polymarket", "g1", "lee", vid="slug", oid="slug:lee"), vm("polymarket", "g1", "new", vid="slug", oid="slug:new"),
+         vm("polymarket", "g1", DRAW_ENTITY, vid="slug", oid="slug:draw")]
+    out = pair(k, p)
+    assert [(r["entity_id"], r["kalshi_outcome"], r["pm_outcome"]) for r in out] == [
+        (DRAW_ENTITY, "KX-1-TIE", "slug:draw"), ("lee", "KX-1-LEE", "slug:lee"), ("new", "KX-1-NEW", "slug:new")]

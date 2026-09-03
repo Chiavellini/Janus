@@ -61,3 +61,23 @@ def test_order_limits_use_schema_names():
 def test_polymarket_is_registered_and_live():
     a = venue_registry.get("polymarket")
     assert a.tradeable() and a.liquidity_source == "pm_clob"
+
+
+def test_three_way_soccer_yields_three_yes_tokens_by_team_name_and_draw():
+    from nodes.venue_polymarket.books import pm_outcome_tokens, pm_primary_market
+    slug = "epl-lee-new-2026-09-14"
+    ev = {"slug": slug, "teams": [{"name": "Leeds United FC", "abbreviation": "lee"}, {"name": "Newcastle United FC", "abbreviation": "new"}],
+          "markets": [{"slug": f"{slug}-lee", "sportsMarketType": "moneyline", "clobTokenIds": '["t-lee-yes","t-lee-no"]', "feeSchedule": {"rate": 0.05}},
+                      {"slug": f"{slug}-draw", "sportsMarketType": "moneyline", "clobTokenIds": '["t-draw-yes","t-draw-no"]'},
+                      {"slug": f"{slug}-new", "sportsMarketType": "moneyline", "clobTokenIds": '["t-new-yes","t-new-no"]'},
+                      {"slug": f"{slug}-total-2pt5", "sportsMarketType": "totals", "clobTokenIds": '["x","y"]'}]}
+    assert pm_outcome_tokens(ev, slug) == {"Leeds United FC": "t-lee-yes", "Draw": "t-draw-yes", "Newcastle United FC": "t-new-yes"}
+    assert pm_primary_market(ev, slug)["slug"] == f"{slug}-lee"
+    # a two-outcome game is unchanged: one market carrying the slug, outcomes are the names
+    two = {"slug": "mlb-sf-pit-2026-09-03", "markets": [{"slug": "mlb-sf-pit-2026-09-03", "outcomes": '["San Francisco Giants","Pittsburgh Pirates"]',
+                                                          "clobTokenIds": '["a","b"]'}]}
+    assert pm_outcome_tokens(two, "mlb-sf-pit-2026-09-03") == {"San Francisco Giants": "a", "Pittsburgh Pirates": "b"}
+    assert pm_primary_market(two, "mlb-sf-pit-2026-09-03")["slug"] == "mlb-sf-pit-2026-09-03"
+    # a three-way event missing its draw market yields nothing rather than two thirds of a cover
+    del ev["markets"][1]
+    assert pm_outcome_tokens(ev, slug) == {}

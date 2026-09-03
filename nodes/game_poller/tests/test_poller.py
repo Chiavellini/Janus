@@ -40,11 +40,13 @@ def sync_all(p: GamePoller, *, kh=0.50, ka=0.50, ph=0.50, pa=0.50, now=T, size=5
                         seq=1 if rep.verification != "external" else None, now=now)
 
 
-def test_a_three_way_league_never_gets_a_poller():
-    """No subscription should be spent on a game whose outcome set cannot be proven complete."""
+def test_a_three_way_league_never_gets_a_two_outcome_poller():
+    """No subscription should be spent on a game whose outcome set cannot be proven complete: two
+    outcomes of a three-way soccer game are not a partition (OUTCOME_COUNT_MISMATCH since the rule
+    was cited on 2026-09-03; RULE_UNCITED before)."""
     p = GamePoller("g", "epl", OUT)
     assert p.state is PollerState.BLOCKED
-    assert p.block_reason == "RULE_UNCITED"
+    assert p.block_reason == "OUTCOME_COUNT_MISMATCH"
     assert p.replicas == {}
     assert p.on_event("kalshi", "K_H", now=T) == []
 

@@ -93,7 +93,7 @@ def test_a_three_way_league_is_blocked_at_spawn_not_priced(tmp_path: Path):
     store = TupleStore(tmp_path / "c.sqlite", enforce_volume=False)
     h = Harness(store, rates=NO_WEDGE)
     assert not h.spawn("espn:epl:1", {**SPEC, "league": "epl"})
-    assert h.blocked == {"espn:epl:1": "SPAWN:RULE_UNCITED"}
+    assert h.blocked == {"espn:epl:1": "SPAWN:OUTCOME_COUNT_MISMATCH"}   # two outcomes of a three-way game
     assert h.ks.tickers == [] and h.ps.asset_ids == []
 
 

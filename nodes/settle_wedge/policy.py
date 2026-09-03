@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from nodes.entities.leagues import SOCCER
 from kernel.schema import SettleRef, TiePolicy, VoidPolicy
 from nodes.settle_wedge.harvest import _sha, normalise_template
 
@@ -131,8 +132,190 @@ POLYMARKET_NFL_GAME_V1 = Template(
               retirement_policy=None, revision_policy=None, dispute_mechanism="uma", settle_lag_h_p50=None,
               terms_url="https://www.nfl.com/scores", provenance="api_field"))
 
+
+# ── three-way soccer, recorded verbatim from the API on 2026-09-03 ──────────
+# Kalshi's game text names the competition ("professional EPL soccer game"), so it is one template
+# per competition; Polymarket's does not, so one template covers every soccer league. Both settle
+# on 90 minutes plus stoppage time, extra time and penalties excluded (the exhaustiveness citation).
+# Polymarket's DRAW market carries a different cancellation clause from its team markets: canceled
+# with no make-up game -> the draw market resolves "Yes", the team markets "No". Recorded here so
+# the cancellation verdict cites both; the team-market text is the template the harvest hashes.
+POLYMARKET_SOCCER_DRAW_CLAUSE_2026_09_03 = (
+    "In the upcoming game, scheduled for September 14, 2026\nIf the game ends in a draw, this market will "
+    "resolve to \"Yes\".\nOtherwise, this market will resolve to \"No\".\nIf the game is postponed, this market"
+    " will remain open until the game has been completed.\nIf the game is canceled entirely, with no "
+    "make-up game, this market will resolve to \"Yes\".\nThis market refers only to the outcome within the "
+    "first 90 minutes of regular play plus stoppage time.\n\nThe primary resolution source for this market "
+    "is the official statistics of the event as recognized by the governing body or event organizers. "
+    "However, if the governing body or event organizers have not published final match statistics within "
+    "2 hours after the event's conclusion, data from Flashscore may be used; if Flashscore data is "
+    "unavailable, data from Sofascore may be used; if neither is available, a consensus of credible "
+    "reporting may be used instead. All markets will settle based on the official final result as "
+    "recognized by the governing body or event organizers. Revisions to officially declared final scores "
+    "made after market resolution will not be accounted for in determining the outcome. If no acceptable "
+    "data is available within 24 hours of the event's conclusion, this market will resolve 50-50, or to "
+    "\"Draw\" where applicable.")
+
+KALSHI_EPL_GAME_V1 = Template(
+    "kalshi_epl_game_v1", "kalshi", frozenset({"epl"}), "2026-09-03",
+    # KXEPLGAME-26SEP14LEENEW-LEE, rules_primary + "\n" + rules_secondary
+    "If Leeds United wins the Leeds United vs Newcastle professional EPL soccer game originally scheduled"
+    " for Sep 14, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), "
+    "then the market resolves to Yes.\nThe following market refers to the Leeds United vs Newcastle "
+    "professional EPL soccer game originally scheduled for Sep 14, 2026 after 90 minutes plus stoppage "
+    "time (does not include extra time or penalties). If the game ends in a tie, the market called \"Tie\" "
+    "resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the market will "
+    "resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, associated, "
+    "authorized, endorsed by, or in any way officially connected with the Governing League. All "
+    "trademarks, logos, and brand names are the property of their respective owners.",
+    ('Leeds United', 'Newcastle'),
+    SettleRef(source_agency="ESPN / Fox Sports" if "epl" != "mls" else "MLS", oracle="kalshi",
+              void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE, tie_policy=TiePolicy.UNKNOWN,
+              ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi",
+              settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
+KALSHI_LAL_GAME_V1 = Template(
+    "kalshi_lal_game_v1", "kalshi", frozenset({"lal"}), "2026-09-03",
+    # KXLALIGAGAME-26SEP17MCFVIL-VIL, rules_primary + "\n" + rules_secondary
+    "If Villarreal wins the Malaga vs Villarreal professional La Liga soccer game originally scheduled "
+    "for Sep 17, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), "
+    "then the market resolves to Yes.\nThe following market refers to the Malaga vs Villarreal "
+    "professional La Liga soccer game originally scheduled for Sep 17, 2026 after 90 minutes plus "
+    "stoppage time (does not include extra time or penalties). If the game ends in a tie, the market "
+    "called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the "
+    "market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, "
+    "associated, authorized, endorsed by, or in any way officially connected with the Governing League. "
+    "All trademarks, logos, and brand names are the property of their respective owners.",
+    ('Malaga', 'Villarreal'),
+    SettleRef(source_agency="ESPN / Fox Sports" if "lal" != "mls" else "MLS", oracle="kalshi",
+              void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE, tie_policy=TiePolicy.UNKNOWN,
+              ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi",
+              settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
+KALSHI_UCL_GAME_V1 = Template(
+    "kalshi_ucl_game_v1", "kalshi", frozenset({"ucl"}), "2026-09-03",
+    # KXUCLGAME-26SEP10SLARCL-SLA, rules_primary + "\n" + rules_secondary
+    "If Slavia Prague wins the Slavia Prague vs Lens professional Champions League soccer game originally"
+    " scheduled for Sep 10, 2026 after 90 minutes plus stoppage time (does not include extra time or "
+    "penalties), then the market resolves to Yes.\nThe following market refers to the Slavia Prague vs "
+    "Lens professional Champions League soccer game originally scheduled for Sep 10, 2026 after 90 "
+    "minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, "
+    "the market called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours "
+    "away, the market will resolve to a fair price in accordance with the rules.\n\nKalshi is not "
+    "affiliated, associated, authorized, endorsed by, or in any way officially connected with the "
+    "Governing League. All trademarks, logos, and brand names are the property of their respective "
+    "owners.",
+    ('Slavia Prague', 'Lens'),
+    SettleRef(source_agency="ESPN / Fox Sports" if "ucl" != "mls" else "MLS", oracle="kalshi",
+              void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE, tie_policy=TiePolicy.UNKNOWN,
+              ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi",
+              settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
+KALSHI_MLS_GAME_V1 = Template(
+    "kalshi_mls_game_v1", "kalshi", frozenset({"mls"}), "2026-09-03",
+    # KXMLSGAME-26SEP13SDPHI-SD, rules_primary + "\n" + rules_secondary
+    "If San Diego FC wins the San Diego FC vs Philadelphia professional MLS soccer game originally "
+    "scheduled for Sep 13, 2026 after 90 minutes plus stoppage time (does not include extra time or "
+    "penalties), then the market resolves to Yes.\nThe following market refers to the San Diego FC vs "
+    "Philadelphia professional MLS soccer game originally scheduled for Sep 13, 2026 after 90 minutes "
+    "plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market"
+    " called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the "
+    "market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, "
+    "associated, authorized, endorsed by, or in any way officially connected with the Governing League. "
+    "All trademarks, logos, and brand names are the property of their respective owners.",
+    ('San Diego FC', 'Philadelphia'),
+    SettleRef(source_agency="ESPN / Fox Sports" if "mls" != "mls" else "MLS", oracle="kalshi",
+              void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE, tie_policy=TiePolicy.UNKNOWN,
+              ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi",
+              settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
+KALSHI_BUN_GAME_V1 = Template(
+    "kalshi_bun_game_v1", "kalshi", frozenset({"bun"}), "2026-09-03",
+    # KXBUNDESLIGAGAME-26SEP13SVEBMU-SVE, rules_primary + "\n" + rules_secondary
+    "If Elversberg wins the Elversberg vs Bayern Munich professional Bundesliga soccer game originally "
+    "scheduled for Sep 13, 2026 after 90 minutes plus stoppage time (does not include extra time or "
+    "penalties), then the market resolves to Yes.\nThe following market refers to the Elversberg vs Bayern"
+    " Munich professional Bundesliga soccer game originally scheduled for Sep 13, 2026 after 90 minutes "
+    "plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market"
+    " called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the "
+    "market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, "
+    "associated, authorized, endorsed by, or in any way officially connected with the Governing League. "
+    "All trademarks, logos, and brand names are the property of their respective owners.",
+    ('Bayern Munich', 'Elversberg'),
+    SettleRef(source_agency="ESPN / Fox Sports" if "bun" != "mls" else "MLS", oracle="kalshi",
+              void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE, tie_policy=TiePolicy.UNKNOWN,
+              ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi",
+              settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
+POLYMARKET_SOCCER_GAME_V1 = Template(
+    "polymarket_soccer_game_v1", "polymarket", frozenset(SOCCER), "2026-09-03",
+    # epl-lee-new-2026-09-14-lee, market.description (the team market; the draw market differs on cancellation)
+    "In the upcoming game, scheduled for September 14, 2026\nIf Leeds United FC wins, this market will "
+    "resolve to \"Yes\".\nOtherwise, this market will resolve to \"No\".\nIf the game is postponed, this market"
+    " will remain open until the game has been completed.\nIf the game is canceled entirely, with no "
+    "make-up game, this market will resolve \"No\".\nThis market refers only to the outcome within the first"
+    " 90 minutes of regular play plus stoppage time.\n\nThe primary resolution source for this market is "
+    "the official statistics of the event as recognized by the governing body or event organizers. "
+    "However, if the governing body or event organizers have not published final match statistics within "
+    "2 hours after the event's conclusion, data from Flashscore may be used; if Flashscore data is "
+    "unavailable, data from Sofascore may be used; if neither is available, a consensus of credible "
+    "reporting may be used instead. All markets will settle based on the official final result as "
+    "recognized by the governing body or event organizers. Revisions to officially declared final scores "
+    "made after market resolution will not be accounted for in determining the outcome. If no acceptable "
+    "data is available within 24 hours of the event's conclusion, this market will resolve 50-50, or to "
+    "\"Draw\" where applicable.",
+    ("Leeds United FC", "Newcastle United FC"),
+    SettleRef(source_agency="official statistics of the governing body", oracle="uma",
+              void_policy=VoidPolicy.UNKNOWN, tie_policy=TiePolicy.UNKNOWN, ot_included=False,
+              dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="consensus of credible reporting after 2h", dispute_mechanism="uma",
+              settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
+
+def _soccer_verdicts(code: str) -> tuple[Verdict, ...]:
+    """The Kalshi <competition> game vs Polymarket soccer game pair. Per-competition evidence keys:
+    postponement and cancellation rates differ by league and climate, and none is measured yet, so
+    every soccer pair blocks at EVIDENCE_UNMEASURED until its row is registered and run."""
+    return (
+        Verdict("official_source", "SAME", "both settle on the official final result (Kalshi: ESPN/Fox, or MLS for "
+                "KXMLSGAME; Polymarket: the governing body's official statistics). For a completed match the same fact."),
+        Verdict("winner_determination", "SAME", "the side that wins at full time, both venues; the draw is its own "
+                "outcome on both (Kalshi 'Tie' market; Polymarket draw market)."),
+        Verdict("overtime", "SAME", "90 minutes plus stoppage time on both venues; extra time and penalties are "
+                "excluded by both texts. This is the period the exhaustiveness citation relies on."),
+        Verdict("tie", "SAME", "a draw is an outcome, not a wedge: a three-leg cover holds the draw and receives "
+                "$1.00 on it from either venue."),
+        Verdict("postponement", "BOUNDED",
+                "Kalshi resolves to a fair price when the game is rescheduled to over 48 hours away; Polymarket "
+                "stays open until the game is completed. Bounded on the Polymarket leg.",
+                evidence_key=f"soccer.{code}.postponed_gt48h_rate", loss_model="kalshi_fair_vs_pm_result"),
+        Verdict("cancellation", "BOUNDED",
+                "Kalshi resolves to a fair price; Polymarket's team markets resolve No and its draw market resolves "
+                "Yes (POLYMARKET_SOCCER_DRAW_CLAUSE_2026_09_03). A Polymarket team leg pays 0 in the worst case, "
+                "which is what kalshi_fair_vs_pm_result charges; the draw leg's payout is a gain, not charged.",
+                evidence_key=f"soccer.{code}.cancelled_rate", loss_model="kalshi_fair_vs_pm_result"),
+        Verdict("suspended", "BOUNDED", "an abandoned-then-replayed match is a reschedule; same shape as postponement.",
+                evidence_key=f"soccer.{code}.postponed_gt48h_rate", loss_model="kalshi_fair_vs_pm_result"),
+        Verdict("abandoned", "BOUNDED", "a match abandoned before full time is replayed or the result is awarded by "
+                "the competition; the replay case is the postponement shape.",
+                evidence_key=f"soccer.{code}.postponed_gt48h_rate", loss_model="kalshi_fair_vs_pm_result"),
+        Verdict("player_non_participation", "NA", "team moneyline; no player condition on either venue."),
+        Verdict("retirement", "NA", "not a tennis market."),
+        Verdict("dispute_revision", "SAME", "terminal outcome is the official result on both; mechanisms differ."),
+        Verdict("settlement_timing", "SAME", "payouts agree; timing differs and is the risk ledger's job."),
+    )
+
+_SOCCER_KALSHI = {"epl": KALSHI_EPL_GAME_V1, "lal": KALSHI_LAL_GAME_V1, "bun": KALSHI_BUN_GAME_V1,
+                  "mls": KALSHI_MLS_GAME_V1, "ucl": KALSHI_UCL_GAME_V1}
+
 TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1,
-                                                              KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1)}
+                                                              KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1,
+                                                              POLYMARKET_SOCCER_GAME_V1, *_SOCCER_KALSHI.values())}
 
 
 def template_for(template_hash: str) -> Template | None:
@@ -203,6 +386,7 @@ _NFL_K_PM = (
 PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
     ("kalshi_mlb_game_v1", "polymarket_mlb_game_v1"): _MLB_K_PM,
     ("kalshi_nfl_game_v1", "polymarket_nfl_game_v1"): _NFL_K_PM,
+    **{(t.template_id, "polymarket_soccer_game_v1"): _soccer_verdicts(code) for code, t in _SOCCER_KALSHI.items()},
 }
 
 

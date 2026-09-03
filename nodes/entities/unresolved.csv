@@ -1,61 +1,86 @@
 league,source,reason,query,count
-epl,text,unknown,mac,14
-epl,text,unknown,not,14
-epl,text,unknown,bri,13
-epl,text,unknown,mun,13
-mlb,text,unknown,oak,8
-epl,text,unknown,ast,7
-wnba,text,unknown,conn,6
-wnba,text,unknown,gsv,6
-nfl,text,unknown,la,4
-wnba,text,unknown,las,4
-wnba,text,unknown,nyl,4
-mlb,text,unknown,A's,3
-mlb,text,unknown,AZ,3
-mlb,text,unknown,Chicago C,3
-mlb,text,unknown,Los Angeles D,3
-mlb,text,unknown,New York M,3
-epl,text,unknown,BRI,2
-epl,text,unknown,CFC,2
-epl,text,unknown,LFC,2
-epl,text,unknown,MCI,2
-epl,text,unknown,MUN,2
-epl,text,unknown,Nottingham,2
-epl,text,unknown,Tottenham,2
-mlb,text,unknown,Los Angeles A,2
-mlb,text,unknown,New York Y,2
-nfl,text,unknown,ARI Cardinals,1
-nfl,text,unknown,ATL Falcons,1
-nfl,text,unknown,BAL Ravens,1
-nfl,text,unknown,BUF Bills,1
-nfl,text,unknown,CAR Panthers,1
-nfl,text,unknown,CHI Bears,1
-nfl,text,unknown,CIN Bengals,1
-nfl,text,unknown,CLE Browns,1
-nfl,text,unknown,DAL Cowboys,1
-nfl,text,unknown,DEN Broncos,1
-nfl,text,unknown,DET Lions,1
-nfl,text,unknown,GB Packers,1
-nfl,text,unknown,HOU Texans,1
-nfl,text,unknown,IND Colts,1
-nfl,text,unknown,KC Chiefs,1
-nfl,text,unknown,LA Chargers,1
-nfl,text,unknown,LA Rams,1
-nfl,text,unknown,LV Raiders,1
-nfl,text,unknown,Los Angeles C,1
-nfl,text,unknown,Los Angeles R,1
-nfl,text,unknown,MIA Dolphins,1
-nfl,text,unknown,MIN Vikings,1
-nfl,text,unknown,NE Patriots,1
-nfl,text,unknown,NO Saints,1
-nfl,text,unknown,NY Giants,1
-nfl,text,unknown,NY Jets,1
-nfl,text,unknown,New York G,1
-nfl,text,unknown,New York J,1
-nfl,text,unknown,PHI Eagles,1
-nfl,text,unknown,PIT Steelers,1
-nfl,text,unknown,SEA Seahawks,1
-nfl,text,unknown,SF 49ers,1
-nfl,text,unknown,TB Buccaneers,1
-nfl,text,unknown,TEN Titans,1
-wnba,text,unknown,CONN,1
+mls,text,unknown,vwh,30
+lal,text,unknown,RC Celta de Vigo,28
+lal,text,unknown,Real Sociedad de Fútbol,28
+lal,text,unknown,Club Atlético de Madrid,25
+lal,text,unknown,RC Deportivo A Coruña,25
+lal,text,unknown,bil,25
+lal,text,unknown,mad,25
+lal,text,unknown,rea,25
+mls,text,unknown,Los Angeles FC,25
+mls,text,unknown,laf,25
+lal,text,unknown,CA Osasuna,24
+lal,text,unknown,Deportivo Alavés,24
+lal,text,unknown,Levante UD,24
+lal,text,unknown,RCD Espanyol de Barcelona,24
+lal,text,unknown,Rayo Vallecano de Madrid,24
+lal,text,unknown,Real Racing Club,24
+lal,text,unknown,rrc,24
+mls,text,unknown,New York Red Bulls,23
+mls,text,unknown,mim,23
+mls,text,unknown,ner,23
+mls,text,unknown,nyr,23
+mls,text,unknown,Los Angeles Galaxy,22
+mls,text,unknown,aus,22
+mls,text,unknown,dcu,22
+mls,text,unknown,fcc,22
+mls,text,unknown,lag,22
+mls,text,unknown,nas,22
+mls,text,unknown,sdg,22
+mls,text,unknown,sje,22
+bun,text,unknown,1. FC Köln,18
+bun,text,unknown,1. FSV Mainz 05,18
+bun,text,unknown,BV Borussia 09 Dortmund,18
+bun,text,unknown,Bayer 04 Leverkusen,18
+bun,text,unknown,FC Bayern München,18
+bun,text,unknown,Hamburger SV,18
+bun,text,unknown,SV 07 Elversberg,18
+bun,text,unknown,SV Werder Bremen,18
+bun,text,unknown,TSG 1899 Hoffenheim,18
+bun,text,unknown,aug,18
+bun,text,unknown,bay,18
+bun,text,unknown,ein,18
+bun,text,unknown,fre,18
+bun,text,unknown,hof,18
+bun,text,unknown,lei,18
+bun,text,unknown,mai,18
+bun,text,unknown,moe,18
+bun,text,unknown,stu,18
+bun,text,unknown,uni,18
+bun,text,unknown,wer,18
+lal,text,unknown,Real Betis Balompié,18
+lal,text,unknown,mala,17
+nfl,text,unknown,la,6
+nhl,text,unknown,las,5
+nhl,text,unknown,cal,4
+nhl,text,unknown,lak,4
+nhl,text,unknown,mon,4
+lal,text,unknown,Bilbao,3
+lal,text,unknown,Deportivo De La Coruna,3
+lal,text,unknown,RBB,3
+lal,text,unknown,RCC,3
+lal,text,unknown,RVC,3
+lal,text,unknown,SAN,3
+lal,text,unknown,Santander,3
+lal,text,unknown,VCF,3
+lal,text,unknown,Vallecano,3
+mls,text,unknown,DC United,3
+mls,text,unknown,DCU,3
+mls,text,unknown,LAG,3
+mls,text,unknown,Los Angeles F,3
+mls,text,unknown,Los Angeles G,3
+mls,text,unknown,NYRB,3
+mls,text,unknown,New York RB,3
+mls,text,unknown,Saint Louis,3
+bun,text,unknown,BMU,2
+bun,text,unknown,BVB,2
+bun,text,unknown,FC Köln,2
+bun,text,unknown,LEV,2
+bun,text,unknown,Leipzig,2
+bun,text,unknown,M´gladbach,2
+bun,text,unknown,PAD,2
+bun,text,unknown,SCH,2
+bun,text,unknown,SVE,2
+bun,text,unknown,UNI,2
+nba,text,unknown,NYK,1
+nba,text,unknown,SAS,1

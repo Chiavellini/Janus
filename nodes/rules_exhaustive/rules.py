@@ -82,9 +82,25 @@ RULES: dict[tuple[str, str, str], tuple[int, str, str | None]] = {
         "harvested 2026-09-03 and pinned as templates in nodes/settle_wedge/policy.py), so one contract of "
         "each side receives exactly $1.00 in every terminal state. Valid ONLY paired with a venue pair whose "
         "settle_wedge verdict on 'tie' is SAME."),
-    ("epl", "moneyline", "game"): (
-        3, "soccer_3way", None),         # home/draw/away; a two-leg cover pays nothing on a draw
 }
+
+#: Three-way soccer. IFAB Laws of the Game 2025/26, Law 10.1 (Determining the outcome of a match):
+#: "The team scoring the greater number of goals is the winner. If both teams score no goals or an
+#: equal number of goals the match is drawn." {home, draw, away} therefore partitions the result at
+#: full time. Both venues' game markets settle on exactly that period and no other -- Kalshi
+#: KX*GAME rules: "after 90 minutes plus stoppage time (does not include extra time or penalties)";
+#: Polymarket: "refers only to the outcome within the first 90 minutes of regular play plus
+#: stoppage time" -- harvested 2026-09-03 and pinned as templates in nodes/settle_wedge/policy.py.
+#: A two-leg cover pays nothing on a draw; only the three-leg cover is complete. Valid ONLY paired
+#: with a settle_wedge verdict of SAME on 'overtime' (the period) for the pair.
+_SOCCER_3WAY = (
+    3, "soccer_3way_full_time",
+    "IFAB Laws of the Game 2025/26, Law 10.1: the team scoring more goals wins; equal goals is a draw. "
+    "{home, draw, away} partitions the full-time result. Both venues settle their game markets on 90 minutes "
+    "plus stoppage time, extra time and penalties excluded (Kalshi KX*GAME rules_primary; Polymarket market "
+    "description), harvested 2026-09-03 and pinned in nodes/settle_wedge/policy.py. A cover must hold all three.")
+for _lg in ("epl", "lal", "bun", "mls", "ucl"):   # ucl: rule ready, league not yet registered (entities)
+    RULES[(_lg, "moneyline", "game")] = _SOCCER_3WAY
 
 
 def prove(league: str, market_type: str, period: str,

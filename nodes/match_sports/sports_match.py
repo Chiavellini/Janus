@@ -49,6 +49,8 @@ from nodes.match_sports.stage1_checkpoint import (
 from kernel.schema import CanonicalKey, KeyProvenance
 from nodes.entities.resolve import Resolver, normalize
 from nodes.entities.seed import NON_TEAM_OUTCOMES
+from nodes.entities.leagues import LEAGUES
+from nodes.venue_polymarket.books import pm_primary_market
 from nodes.schedule_espn import espn
 
 #: A PM FULL-GAME moneyline slug is exactly `{league}-{away}-{home}-{YYYY-MM-DD}`. Any further
@@ -61,6 +63,11 @@ from nodes.schedule_espn import espn
 #: failure that read as a benign reason code. Sampled 2026-09-02 against live Gamma data, the
 #: convention is identical across leagues (mlb-tb-nyy-…, nfl-ne-sea-…, nhl-tor-mon-…, epl-ips-liv-…),
 #: so the league prefix is a parameter, never a constant.
+#: The draw of a three-way game is an outcome with no participant. One id on both venues, so the
+#: exact join pairs Kalshi's "Tie" market with Polymarket's draw market like any other side.
+DRAW_ENTITY = "draw"
+
+
 def _fullgame_slug(league: str) -> re.Pattern[str]:
     return re.compile(rf"^{re.escape(league)}-[a-z0-9]{{2,4}}-[a-z0-9]{{2,4}}-\d{{4}}-\d{{2}}-\d{{2}}$")
 
@@ -105,8 +112,11 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
     out: list[VenueMarket] = []
     for ev in pull_kalshi(league, _client("kalshi")):
         tick = ev.get("event_ticker", "")
+        three_way = LEAGUES[league].outcomes == 3 if league in LEAGUES else False
         mkts = [m for m in (ev.get("markets") or [])
                 if normalize(m.get("yes_sub_title") or "") not in NON_TEAM_OUTCOMES]
+        draws = [m for m in (ev.get("markets") or [])
+                 if normalize(m.get("yes_sub_title") or "") in NON_TEAM_OUTCOMES]
         if not mkts:
             continue
         stats["kalshi_events"] += 1
@@ -137,6 +147,15 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
         if not (lo <= g.start_utc < hi):
             _reason(stats["k_reason"], "outside_window")
             continue
+        # A three-way game's draw is a third OUTCOME with no participant: the Kalshi "Tie" market,
+        # entity DRAW_ENTITY, same key. Without it a soccer cover has two legs and pays nothing on
+        # a draw, which is the +31% ghost the exhaustiveness proof exists to refuse.
+        if three_way:
+            if len(draws) != 1:
+                _reason(stats["k_reason"], "no_draw_market")
+                near_miss.append({"venue": "kalshi", "id": tick, "reason": "no_draw_market"})
+                continue
+            sides.append((draws[0], DRAW_ENTITY))
         for m, eid in sides:
             out.append(VenueMarket("kalshi", tick, m["ticker"], g.game_id, eid,
                                    "moneyline", "game", g.start_utc,
@@ -185,14 +204,23 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> l
         if not (lo <= g.start_utc < hi):
             _reason(stats["p_reason"], "outside_window")
             continue
-        mk = next((x for x in ev.get("markets") or [] if x.get("slug") == slug), {})
-        pm_rules = {"slug": slug, "description": mk.get("description") or "",
+        mk = pm_primary_market(ev, slug) or {}
+        pm_rules = {"slug": mk.get("slug") or slug, "description": mk.get("description") or "",
                     "resolutionSource": mk.get("resolutionSource") or ev.get("resolutionSource") or ""}
         for t, eid in ents:
             out.append(VenueMarket("polymarket", slug, f"{slug}:{t.get('abbreviation')}",
                                    g.game_id, eid, "moneyline", "game", g.start_utc,
                                    t.get("name") or "", rules=pm_rules,
                                    key=canonical_key(g, league), key_provenance=KeyProvenance.API_STRUCTURED))
+        if league in LEAGUES and LEAGUES[league].outcomes == 3:
+            if not any(str(x.get("slug", "")) == f"{slug}-draw" for x in ev.get("markets") or []):
+                _reason(stats["p_reason"], "no_draw_market")
+                near_miss.append({"venue": "polymarket", "id": slug, "reason": "no_draw_market"})
+                out = [m for m in out if m.venue_id != slug]
+                continue
+            out.append(VenueMarket("polymarket", slug, f"{slug}:draw", g.game_id, DRAW_ENTITY, "moneyline", "game",
+                                   g.start_utc, "Draw", rules=pm_rules, key=canonical_key(g, league),
+                                   key_provenance=KeyProvenance.API_STRUCTURED))
     return out
 
 

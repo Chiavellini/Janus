@@ -30,10 +30,14 @@ def test_two_way_leagues_with_a_citation_mint_a_proof():
         assert got.citation, "a proof without a citation is an assertion"
 
 
-def test_epl_blocks_because_soccer_is_three_way():
-    got = prove("epl", "moneyline", "game", ["home", "away"])
-    assert isinstance(got, NotExhaustive)
-    assert got.code == "RULE_UNCITED"
+def test_soccer_is_three_way_so_two_outcomes_never_prove_and_three_do():
+    """Cited 2026-09-03 (IFAB Law 10.1, both venues settle at full time). The +31% ghost was a
+    two-leg EPL cover; the type still refuses it, now by count rather than by a missing citation."""
+    for league in ("epl", "lal", "bun", "mls"):
+        got = prove(league, "moneyline", "game", ["home", "away"])
+        assert isinstance(got, NotExhaustive) and got.code == "OUTCOME_COUNT_MISMATCH", league
+        three = prove(league, "moneyline", "game", ["home", "draw", "away"])
+        assert isinstance(three, ExhaustiveOutcomeSet) and "Law 10.1" in three.citation, league
 
 
 def _old_nfl_blocks_because_regular_season_games_can_tie():

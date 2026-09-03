@@ -41,7 +41,16 @@ LEAGUES: dict[str, League] = {
     "wnba": League("wnba", "WNBA", "KXWNBAGAME", "wnba", "wnba", ("basketball", "wnba")),
     "nhl":  League("nhl", "NHL", "KXNHLGAME", "nhl", "nhl", ("hockey", "nhl")),
     "epl":  League("epl", "Premier League", "KXEPLGAME", "epl", "epl", ("soccer", "eng.1"), outcomes=3),
+    # Three-way soccer, added 2026-09-03 from the L28 census (La Liga ranked first in the window).
+    "lal":  League("lal", "La Liga", "KXLALIGAGAME", "la-liga", "lal", ("soccer", "esp.1"), outcomes=3),
+    "bun":  League("bun", "Bundesliga", "KXBUNDESLIGAGAME", "bundesliga", "bun", ("soccer", "ger.1"), outcomes=3),
+    "mls":  League("mls", "MLS", "KXMLSGAME", "mls", "mls", ("soccer", "usa.1"), outcomes=3),
+    # Not yet: UCL. Entities are keyed per league (lal:esp.real_madrid) and a club plays in its domestic
+    # league AND the Champions League, so its one Kalshi team id would map to two entities and the
+    # xref table refuses the collision. A club must become one entity across competitions first.
 }
+
+SOCCER = tuple(c for c, l in LEAGUES.items() if l.outcomes == 3)
 
 
 def league_for_series(series_ticker: str) -> str | None:

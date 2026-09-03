@@ -14,13 +14,16 @@ def test_every_consumer_reads_the_registry():
     assert seed.KALSHI_GAME_SERIES == kalshi_series() and seed.PM_TAG == pm_tags()
     assert espn.LEAGUE_PATHS == espn_paths()
     assert league_for_series("KXMLBGAME") == "mlb" and league_for_series("KXWTIW") is None
-    assert league_for_prefix("epl") == "epl" and league_for_prefix("lal") is None
+    assert league_for_prefix("epl") == "epl" and league_for_prefix("lal") == "lal" and league_for_prefix("ucl") is None
 
 
-def test_the_six_of_2026_09_03_and_their_shapes():
-    assert set(LEAGUES) == {"mlb", "nfl", "nba", "wnba", "nhl", "epl"}
-    assert LEAGUES["epl"].outcomes == 3 and all(LEAGUES[c].outcomes == 2 for c in LEAGUES if c != "epl")
+def test_the_nine_of_2026_09_03_and_their_shapes():
+    from nodes.entities.leagues import SOCCER
+    assert set(LEAGUES) == {"mlb", "nfl", "nba", "wnba", "nhl", "epl", "lal", "bun", "mls"}
+    assert set(SOCCER) == {"epl", "lal", "bun", "mls"}
+    assert all(LEAGUES[c].outcomes == 3 for c in SOCCER) and all(LEAGUES[c].outcomes == 2 for c in LEAGUES if c not in SOCCER)
     assert all(lg.anchor == "espn" and lg.espn is not None for lg in LEAGUES.values())
+    assert "ucl" not in LEAGUES, "a club is one entity across competitions before UCL can be registered"
 
 
 def test_an_unregistered_league_still_blocks_at_the_rule():
@@ -31,11 +34,13 @@ def test_an_unregistered_league_still_blocks_at_the_rule():
 def test_enablement_names_what_each_league_lacks():
     # MLB has a cited rule, both templates and measured rates; NFL lacks only the rates (ledger row
     # pending); NBA/WNBA/NHL have a rule but no templates;
-    # EPL's three-way rule is uncited and no template exists. Nothing here is a status: it is
+    # Nothing here is a status: it is
     # computed from the rule and template registries at call time.
     assert enablement("mlb") == []
     assert enablement("nfl") == ["EVIDENCE_UNMEASURED:nfl.cancelled_rate", "EVIDENCE_UNMEASURED:nfl.postponed_gt48h_rate"]
     for c in ("nba", "wnba", "nhl"):
         assert enablement(c) == ["NO_KALSHI_TEMPLATE", "NO_POLYMARKET_TEMPLATE"], c
-    assert enablement("epl") == ["RULE_UNCITED", "NO_KALSHI_TEMPLATE", "NO_POLYMARKET_TEMPLATE"]
+    # soccer: rule cited, both templates reviewed 2026-09-03, rates unmeasured per competition
+    for c in ("epl", "lal", "bun", "mls"):
+        assert enablement(c) == [f"EVIDENCE_UNMEASURED:soccer.{c}.cancelled_rate", f"EVIDENCE_UNMEASURED:soccer.{c}.postponed_gt48h_rate"], c
     assert default_leagues() == ["mlb"]

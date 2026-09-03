@@ -35,15 +35,15 @@ from typing import Any, Mapping
 
 from kernel.fetch import Client
 from kernel.redact import brief_error
-from nodes.entities.resolve import Resolver
-from nodes.entities.seed import KALSHI_GAME_SERIES
-from nodes.match_sports.sports_match import kalshi_markets, pair, pm_markets
+from nodes.entities.resolve import Resolver, normalize
+from nodes.entities.leagues import LEAGUES
+from nodes.entities.seed import KALSHI_GAME_SERIES, NON_TEAM_OUTCOMES
+from nodes.match_sports.sports_match import DRAW_ENTITY, kalshi_markets, pair, pm_markets
 from nodes.schedule_espn import espn
 from nodes.settle_wedge.pair import certify_from_spec, records_from_spec, summary
 from nodes.settle_wedge.records import record_equivalence, record_rules
 from nodes.venue_kalshi.books import fetch_kalshi_series, kalshi_fee_params
-from nodes.venue_polymarket.books import (pm_fee_params, pm_market_for_slug, pm_order_limits,
-                                          pm_token_map)
+from nodes.venue_polymarket.books import pm_fee_params, pm_order_limits, pm_primary_market, pm_token_map
 
 #: Hours ahead of first pitch/puck to start watching a pre-game market.
 DEFAULT_PRE_HOURS = 6.0
@@ -199,7 +199,7 @@ def discover(leagues: list[str], now: datetime, include_near: bool, pre_hours: f
     pm_fees: dict[str, dict] = {}
     pm_fee_errors: dict[str, str] = {}
     for slug, (_names, ev) in tokens.items():
-        fp = pm_fee_params(pm_market_for_slug(ev, slug) or {})
+        fp = pm_fee_params(pm_primary_market(ev, slug) or {})
         if fp is None:
             pm_fee_errors[slug] = "gamma market carries no feeSchedule"
         else:
@@ -227,9 +227,13 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
         blocked[lg] = f"SCHEDULE_FETCH: {err}"
     games_by_id = {g.game_id: g for g in d.games}
     for league, (matches, _stats, resolver) in d.per_league.items():
+        n_out = LEAGUES[league].outcomes if league in LEAGUES else 2
         tok_by: dict[tuple, str] = {}
         for slug, (names, _ev) in d.tokens.items():
             for name, token in names.items():
+                if name == "Draw":
+                    tok_by[(slug, DRAW_ENTITY)] = token
+                    continue
                 res = resolver.resolve(league, text=name, venue="polymarket")
                 if res.ok:
                     tok_by[(slug, res.entity_id)] = token
@@ -238,8 +242,8 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
             by_game.setdefault(m["game_id"], {})[m["entity_id"]] = m
         for gid, rows in by_game.items():
             g = games_by_id.get(gid)
-            if g is None or len(rows) != 2:
-                blocked[gid] = "INCOMPLETE_EXACT_TWO_OUTCOME_MATCH"
+            if g is None or len(rows) != n_out:
+                blocked[gid] = "INCOMPLETE_EXACT_TWO_OUTCOME_MATCH" if n_out == 2 else "INCOMPLETE_EXACT_THREE_OUTCOME_MATCH"
                 continue
             outcomes: dict[str, dict] = {}
             slug = next(iter(rows.values()))["pm_event"]
@@ -248,7 +252,7 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
                 if not tok:
                     break
                 outcomes[ent] = {"kalshi": m["kalshi_outcome"], "polymarket": tok}
-            if len(outcomes) != 2:
+            if len(outcomes) != n_out:
                 detail = d.token_errors.get(slug)
                 blocked[gid] = "PM_TOKEN_RESOLUTION" + (f": {detail}" if detail else "")
                 continue
@@ -261,15 +265,17 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
             # The venues' settlement text rides with the spec, so the supervisor and the replay
             # certify from the same words discovery read, and the store keeps them.
             first = next(iter(rows.values()))
+            # Participants for the template normaliser: team names only. The draw's labels ("Tie",
+            # "Draw") are rule words in the venues' own texts; stripping them would change the hash.
             names = sorted({x for m in rows.values() for x in (m.get("kalshi_label"), m.get("pm_label"))
-                            if x} | {g.home_name, g.away_name})
+                            if x and normalize(x) not in NON_TEAM_OUTCOMES} | {g.home_name, g.away_name})
             k_rules = dict(first.get("kalshi_rules") or {})
             p_rules = dict(first.get("pm_rules") or {})
             spec = {"league": league, "short_name": g.short_name, "state": g.state,
                     "tier": tier_of(g, now or d.made_utc, first_seen_ts=(first_seen or {}).get(gid)),
                     "start_utc": g.start_utc, "outcomes": outcomes, "fee_params": fees,
                     "pm_slug": slug, "kalshi_event": first["kalshi_event"],
-                    "pm_limits": pm_order_limits(pm_market_for_slug(ev, slug) or {}),
+                    "pm_limits": pm_order_limits(pm_primary_market(ev, slug) or {}),
                     "rules": {"kalshi": {"market": k_rules, "participants": names,
                                          "series": d.series.get(league)},
                               "polymarket": {"market": p_rules, "participants": names},

@@ -1,4 +1,22 @@
 entity_id,league,espn_id,abbrev,location,nickname,display_name
+bun:ger.1_fc_kln,bun,122,KOE,FC Cologne,FC Cologne,FC Cologne
+bun:ger.bayern_munich,bun,132,MUN,Bayern Munich,Bayern Munich,Bayern Munich
+bun:ger.borussia_mgladbach,bun,268,BMG,Borussia Mönchengladbach,Borussia Mönchengladbach,Borussia Mönchengladbach
+bun:ger.dortmund,bun,124,DOR,Borussia Dortmund,Borussia Dortmund,Borussia Dortmund
+bun:ger.fc_augsburg,bun,3841,FCA,FC Augsburg,FC Augsburg,FC Augsburg
+bun:ger.fc_union_berlin,bun,598,FCU,1. FC Union Berlin,1. FC Union Berlin,1. FC Union Berlin
+bun:ger.frankfurt,bun,125,SGE,Eintracht Frankfurt,Eintracht Frankfurt,Eintracht Frankfurt
+bun:ger.freiburg,bun,126,SCF,SC Freiburg,SC Freiburg,SC Freiburg
+bun:ger.hamburg,bun,127,HSV,Hamburg SV,Hamburg SV,Hamburg SV
+bun:ger.leverkusen,bun,131,B04,Bayer Leverkusen,Bayer Leverkusen,Bayer Leverkusen
+bun:ger.mainz,bun,2950,M05,Mainz,Mainz,Mainz
+bun:ger.rb_leipzig,bun,11420,RBL,RB Leipzig,RB Leipzig,RB Leipzig
+bun:ger.sc_paderborn_07,bun,3307,SCP,SC Paderborn 07,SC Paderborn 07,SC Paderborn 07
+bun:ger.schalke_04,bun,133,S04,Schalke 04,Schalke 04,Schalke 04
+bun:ger.stuttgart,bun,134,VFB,VfB Stuttgart,VfB Stuttgart,VfB Stuttgart
+bun:ger.sv_07_elversberg,bun,10388,ELV,SV Elversberg,SV Elversberg,SV Elversberg
+bun:ger.tsg_hoffenheim,bun,7911,TSG,TSG Hoffenheim,TSG Hoffenheim,TSG Hoffenheim
+bun:ger.werder_bremen,bun,137,SVW,Werder Bremen,Werder Bremen,Werder Bremen
 epl:eng.arsenal,epl,359,ARS,Arsenal,Arsenal,Arsenal
 epl:eng.aston_villa,epl,362,AVL,Aston Villa,Aston Villa,Aston Villa
 epl:eng.bournemouth,epl,349,BOU,AFC Bournemouth,AFC Bournemouth,AFC Bournemouth
@@ -19,6 +37,26 @@ epl:eng.newcastle,epl,361,NEW,Newcastle United,Newcastle United,Newcastle United
 epl:eng.nottm_forest,epl,393,NFO,Nottingham Forest,Nottingham Forest,Nottingham Forest
 epl:eng.sunderland,epl,366,SUN,Sunderland,Sunderland,Sunderland
 epl:eng.tottenham,epl,367,TOT,Tottenham Hotspur,Tottenham Hotspur,Tottenham Hotspur
+lal:esp.alaves,lal,96,ALA,Alavés,Alavés,Alavés
+lal:esp.athletic_club,lal,93,ATH,Athletic Club,Athletic Club,Athletic Club
+lal:esp.atletico_madrid,lal,1068,ATM,Atlético Madrid,Atlético Madrid,Atlético Madrid
+lal:esp.barcelona,lal,83,BAR,Barcelona,Barcelona,Barcelona
+lal:esp.betis_sevilla,lal,244,BET,Real Betis,Real Betis,Real Betis
+lal:esp.celta_vigo,lal,85,CEL,Celta Vigo,Celta Vigo,Celta Vigo
+lal:esp.deportivo_coruna,lal,90,DEP,Deportivo,Deportivo,Deportivo
+lal:esp.elche,lal,3751,ELC,Elche,Elche,Elche
+lal:esp.espanyol,lal,88,ESP,Espanyol,Espanyol,Espanyol
+lal:esp.fc_sevilla,lal,243,SEV,Sevilla,Sevilla,Sevilla
+lal:esp.getafe,lal,2922,GET,Getafe,Getafe,Getafe
+lal:esp.levante,lal,1538,LEV,Levante,Levante,Levante
+lal:esp.malaga,lal,99,MCF,Málaga,Málaga,Málaga
+lal:esp.osasuna,lal,97,OSA,Osasuna,Osasuna,Osasuna
+lal:esp.racing_santander,lal,87,RAC,Racing Santander,Racing Santander,Racing Santander
+lal:esp.rayo_vallecano,lal,101,RAY,Rayo Vallecano,Rayo Vallecano,Rayo Vallecano
+lal:esp.real_madrid,lal,86,RMA,Real Madrid,Real Madrid,Real Madrid
+lal:esp.real_sociedad,lal,89,RSO,Real Sociedad,Real Sociedad,Real Sociedad
+lal:esp.valencia,lal,94,VAL,Valencia,Valencia,Valencia
+lal:esp.villarreal,lal,102,VIL,Villarreal,Villarreal,Villarreal
 mlb:arizona-diamondbacks,mlb,29,ARI,Arizona,Diamondbacks,Arizona Diamondbacks
 mlb:athletics,mlb,11,ATH,Athletics,Athletics,Athletics
 mlb:atlanta-braves,mlb,15,ATL,Atlanta,Braves,Atlanta Braves
@@ -49,6 +87,36 @@ mlb:tampa-bay-rays,mlb,30,TB,Tampa Bay,Rays,Tampa Bay Rays
 mlb:texas-rangers,mlb,13,TEX,Texas,Rangers,Texas Rangers
 mlb:toronto-blue-jays,mlb,14,TOR,Toronto,Blue Jays,Toronto Blue Jays
 mlb:washington-nationals,mlb,20,WSH,Washington,Nationals,Washington Nationals
+mls:austin_fc,mls,20906,ATX,Austin FC,Austin FC,Austin FC
+mls:charlotte_fc,mls,21300,CLT,Charlotte FC,Charlotte FC,Charlotte FC
+mls:fc_cincinnati,mls,18267,CIN,FC Cincinnati,FC Cincinnati,FC Cincinnati
+mls:nashville_sc,mls,18986,NSH,Nashville SC,Nashville SC,Nashville SC
+mls:san_diego_fc,mls,22529,SD,San Diego FC,San Diego FC,San Diego FC
+mls:st._louis_city_sc,mls,21812,STL,St. Louis CITY SC,St. Louis CITY SC,St. Louis CITY SC
+mls:usa.atlanta_united_fc,mls,18418,ATL,Atlanta United FC,Atlanta United FC,Atlanta United FC
+mls:usa.chicago,mls,182,CHI,Chicago Fire FC,Chicago Fire FC,Chicago Fire FC
+mls:usa.colorado,mls,184,COL,Colorado Rapids,Colorado Rapids,Colorado Rapids
+mls:usa.columbus,mls,183,CLB,Columbus Crew,Columbus Crew,Columbus Crew
+mls:usa.dallas,mls,185,DAL,FC Dallas,FC Dallas,FC Dallas
+mls:usa.dc_united,mls,193,DC,D.C. United,D.C. United,D.C. United
+mls:usa.houston,mls,6077,HOU,Houston Dynamo FC,Houston Dynamo FC,Houston Dynamo FC
+mls:usa.inter_miami,mls,20232,MIA,Inter Miami CF,Inter Miami CF,Inter Miami CF
+mls:usa.kansas_city,mls,186,SKC,Sporting Kansas City,Sporting Kansas City,Sporting Kansas City
+mls:usa.lafc,mls,18966,LAFC,LAFC,LAFC,LAFC
+mls:usa.los_angeles,mls,187,LA,LA Galaxy,LA Galaxy,LA Galaxy
+mls:usa.minnesota_united_fc,mls,17362,MIN,Minnesota United FC,Minnesota United FC,Minnesota United FC
+mls:usa.new_england,mls,189,NE,New England Revolution,New England Revolution,New England Revolution
+mls:usa.new_york,mls,190,RBNY,Red Bull New York,Red Bull New York,Red Bull New York
+mls:usa.nyc_fc,mls,17606,NYC,New York City FC,New York City FC,New York City FC
+mls:usa.orlando_city_sc,mls,12011,ORL,Orlando City SC,Orlando City SC,Orlando City SC
+mls:usa.philadelphia,mls,10739,PHI,Philadelphia Union,Philadelphia Union,Philadelphia Union
+mls:usa.portland,mls,9723,POR,Portland Timbers,Portland Timbers,Portland Timbers
+mls:usa.real_salt_lake,mls,4771,RSL,Real Salt Lake,Real Salt Lake,Real Salt Lake
+mls:usa.san_jose,mls,191,SJ,San Jose Earthquakes,San Jose Earthquakes,San Jose Earthquakes
+mls:usa.seattle,mls,9726,SEA,Seattle Sounders FC,Seattle Sounders FC,Seattle Sounders FC
+mls:usa.toronto_fc,mls,7318,TOR,Toronto FC,Toronto FC,Toronto FC
+mls:usa.usl.1.montreal,mls,9720,MTL,CF Montréal,CF Montréal,CF Montréal
+mls:usa.vancouver,mls,9727,VAN,Vancouver Whitecaps,Vancouver Whitecaps,Vancouver Whitecaps
 nba:atlanta-hawks,nba,1,ATL,Atlanta,Hawks,Atlanta Hawks
 nba:boston-celtics,nba,2,BOS,Boston,Celtics,Boston Celtics
 nba:brooklyn-nets,nba,17,BKN,Brooklyn,Nets,Brooklyn Nets
