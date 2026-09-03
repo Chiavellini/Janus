@@ -164,7 +164,7 @@ def _pm_events(tag: str, client: Client) -> list[dict]:
     for off in range(0, 1500, 100):
         try:
             d = client.get_json(f"{PM_GAMMA}/events",
-                                params={"tag_slug": tag, "closed": "false",
+                                params={("tag_id" if isinstance(tag, int) else "tag_slug"): tag, "closed": "false",
                                         "limit": 100, "offset": off})
         except Exception:  # noqa: BLE001
             break

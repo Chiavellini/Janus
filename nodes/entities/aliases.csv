@@ -1,4 +1,81 @@
 league,alias,entity_id,source
+bel1,AND,bel1:bel.anderlecht,espn
+bel1,ANT,bel1:friendly.antwerp,espn
+bel1,Anderlecht,bel1:bel.anderlecht,espn
+bel1,Anderlecht Anderlecht,bel1:bel.anderlecht,espn
+bel1,Antwerp,bel1:friendly.antwerp,espn
+bel1,Antwerp Antwerp,bel1:friendly.antwerp,espn
+bel1,BRU,bel1:bel.club_brugge,espn
+bel1,CBK,bel1:bel.cercle_brugge_ksv,espn
+bel1,CHA,bel1:bel.royal_charleroi_sc,espn
+bel1,Cercle Brugge,bel1:bel.cercle_brugge_ksv,espn
+bel1,Cercle Brugge KSV,bel1:bel.cercle_brugge_ksv,espn
+bel1,Cercle Brugge KSV Cercle Brugge KSV,bel1:bel.cercle_brugge_ksv,espn
+bel1,Club Brugge,bel1:bel.club_brugge,espn
+bel1,Club Brugge Club Brugge,bel1:bel.club_brugge,espn
+bel1,GENT,bel1:bel.kaa_gent,espn
+bel1,Genk,bel1:bel.racing_genk,espn
+bel1,KAA Gent,bel1:bel.kaa_gent,espn
+bel1,KAA Gent KAA Gent,bel1:bel.kaa_gent,espn
+bel1,KV Kortrijk,bel1:bel.kv_kortrijk,espn
+bel1,KV Kortrijk KV Kortrijk,bel1:bel.kv_kortrijk,espn
+bel1,KV Mechelen,bel1:bel.kv-mechelen,espn
+bel1,KV Mechelen KV Mechelen,bel1:bel.kv-mechelen,espn
+bel1,KVC Westerlo,bel1:bel.kvc_westerlo,espn
+bel1,KVC Westerlo KVC Westerlo,bel1:bel.kvc_westerlo,espn
+bel1,KVCW,bel1:bel.kvc_westerlo,espn
+bel1,KVK,bel1:bel.kv_kortrijk,espn
+bel1,KVM,bel1:bel.kv-mechelen,espn
+bel1,LOM,bel1:lommel_sk,espn
+bel1,La Louvière,bel1:raal_la_louviere,espn
+bel1,Lommel SK,bel1:lommel_sk,espn
+bel1,Lommel SK Lommel SK,bel1:lommel_sk,espn
+bel1,OH Leuven,bel1:bel.oud-heverlee_leuven,espn
+bel1,OHL,bel1:bel.oud-heverlee_leuven,espn
+bel1,Oud-Heverlee Leuven,bel1:bel.oud-heverlee_leuven,espn
+bel1,Oud-Heverlee Leuven Oud-Heverlee Leuven,bel1:bel.oud-heverlee_leuven,espn
+bel1,RAAL La Louvière,bel1:raal_la_louviere,espn
+bel1,RAAL La Louvière RAAL La Louvière,bel1:raal_la_louviere,espn
+bel1,RLL,bel1:raal_la_louviere,espn
+bel1,Racing Genk,bel1:bel.racing_genk,espn
+bel1,Racing Genk Racing Genk,bel1:bel.racing_genk,espn
+bel1,Royal Charleroi SC,bel1:bel.royal_charleroi_sc,espn
+bel1,Royal Charleroi SC Royal Charleroi SC,bel1:bel.royal_charleroi_sc,espn
+bel1,STL,bel1:bel.standard_liege,espn
+bel1,STVV,bel1:bel.st._truiden,espn
+bel1,Sint-Truidense,bel1:bel.st._truiden,espn
+bel1,Sint-Truidense Sint-Truidense,bel1:bel.st._truiden,espn
+bel1,Standard Liege,bel1:bel.standard_liege,espn
+bel1,Standard Liege Standard Liege,bel1:bel.standard_liege,espn
+bel1,USG,bel1:team.union_st.-gilloise.betbrain,espn
+bel1,Union SG,bel1:team.union_st.-gilloise.betbrain,espn
+bel1,Union St.-Gilloise,bel1:team.union_st.-gilloise.betbrain,espn
+bel1,Union St.-Gilloise Union St.-Gilloise,bel1:team.union_st.-gilloise.betbrain,espn
+bel1,WAA,bel1:bel.waasland-beveren,espn
+bel1,Waasland-Beveren,bel1:bel.waasland-beveren,espn
+bel1,Waasland-Beveren Waasland-Beveren,bel1:bel.waasland-beveren,espn
+bel1,Westerlo,bel1:bel.kvc_westerlo,espn
+bel1,ZUL,bel1:bel.zulte-waregem,espn
+bel1,Zulte-Waregem,bel1:bel.zulte-waregem,espn
+bel1,Zulte-Waregem Zulte-Waregem,bel1:bel.zulte-waregem,espn
+bel1,bel.anderlecht,bel1:bel.anderlecht,espn
+bel1,bel.cercle_brugge_ksv,bel1:bel.cercle_brugge_ksv,espn
+bel1,bel.club_brugge,bel1:bel.club_brugge,espn
+bel1,bel.kaa_gent,bel1:bel.kaa_gent,espn
+bel1,bel.kv mechelen,bel1:bel.kv-mechelen,espn
+bel1,bel.kv_kortrijk,bel1:bel.kv_kortrijk,espn
+bel1,bel.kvc_westerlo,bel1:bel.kvc_westerlo,espn
+bel1,bel.oud heverlee_leuven,bel1:bel.oud-heverlee_leuven,espn
+bel1,bel.racing_genk,bel1:bel.racing_genk,espn
+bel1,bel.royal_charleroi_sc,bel1:bel.royal_charleroi_sc,espn
+bel1,bel.st._truiden,bel1:bel.st._truiden,espn
+bel1,bel.standard_liege,bel1:bel.standard_liege,espn
+bel1,bel.waasland beveren,bel1:bel.waasland-beveren,espn
+bel1,bel.zulte waregem,bel1:bel.zulte-waregem,espn
+bel1,friendly.antwerp,bel1:friendly.antwerp,espn
+bel1,lommel_sk,bel1:lommel_sk,espn
+bel1,raal_la_louviere,bel1:raal_la_louviere,espn
+bel1,team.union_st. gilloise.betbrain,bel1:team.union_st.-gilloise.betbrain,espn
 bun,1. FC Union Berlin,bun:ger.fc_union_berlin,espn
 bun,1. FC Union Berlin 1. FC Union Berlin,bun:ger.fc_union_berlin,espn
 bun,Augsburg,bun:ger.fc_augsburg,espn
@@ -130,12 +207,14 @@ cfb,AUS,cfb:austin-roos,espn
 cfb,AUSD,cfb:augustana-sd-vikings,espn
 cfb,AVE M,cfb:ave-maria-university-gyrenes,espn
 cfb,AVER,cfb:averett-cougars,espn
+cfb,AVILA,cfb:avila-university-eagles,espn
 cfb,AZ Christn,cfb:phoenix-firestorm,espn
 cfb,AZCHR,cfb:phoenix-firestorm,espn
 cfb,Abilene Christian,cfb:abilene-christian-wildcats,espn
 cfb,Abilene Chrstn,cfb:abilene-christian-wildcats,espn
 cfb,Adams St,cfb:adams-state-grizzlies,espn
 cfb,Adams State,cfb:adams-state-grizzlies,espn
+cfb,Adams State Grizzlies,cfb:adams-state-grizzlies,espn
 cfb,Adrian,cfb:adrian-bulldogs,espn
 cfb,Aggies,cfb:delaware-valley-aggies,espn
 cfb,Aggies,cfb:new-mexico-state-aggies,espn
@@ -144,30 +223,27 @@ cfb,Aggies,cfb:texas-am-aggies,espn
 cfb,Aggies,cfb:uc-davis-aggies,espn
 cfb,Aggies,cfb:utah-state-aggies,espn
 cfb,Air Force,cfb:air-force-falcons,espn
+cfb,Air Force Falcons,cfb:air-force-falcons,espn
 cfb,Akron,cfb:akron-zips,espn
-cfb,Akron Zips,cfb:akron-zips,espn
 cfb,Alabama,cfb:alabama-crimson-tide,espn
 cfb,Alabama A&M,cfb:alabama-am-bulldogs,espn
 cfb,Alabama A&M Bulldogs,cfb:alabama-am-bulldogs,espn
-cfb,Alabama Crimson Tide,cfb:alabama-crimson-tide,espn
 cfb,Alabama St,cfb:alabama-state-hornets,espn
 cfb,Alabama State,cfb:alabama-state-hornets,espn
-cfb,Alabama State Hornets,cfb:alabama-state-hornets,espn
 cfb,Albany St,cfb:albany-state-golden-rams,espn
 cfb,Albany State,cfb:albany-state-golden-rams,espn
-cfb,Albany State Golden Rams,cfb:albany-state-golden-rams,espn
 cfb,Albion,cfb:albion-britons,espn
-cfb,Albion Britons,cfb:albion-britons,espn
 cfb,Albright,cfb:albright-lions,espn
 cfb,Albright Lions,cfb:albright-lions,espn
 cfb,Alcorn St,cfb:alcorn-state-braves,espn
 cfb,Alcorn State,cfb:alcorn-state-braves,espn
 cfb,Alcorn State Braves,cfb:alcorn-state-braves,espn
 cfb,Alfred,cfb:alfred-saxons,espn
+cfb,Alfred Saxons,cfb:alfred-saxons,espn
 cfb,Alfred St,cfb:alfred-state-pioneers,espn
 cfb,Alfred State,cfb:alfred-state-pioneers,espn
+cfb,Alfred State Pioneers,cfb:alfred-state-pioneers,espn
 cfb,Allegheny,cfb:allegheny-gators,espn
-cfb,Allegheny Gators,cfb:allegheny-gators,espn
 cfb,Allen,cfb:allen-yellow-jackets,espn
 cfb,Alma,cfb:alma-scots,espn
 cfb,Alma Scots,cfb:alma-scots,espn
@@ -177,13 +253,13 @@ cfb,American Int'l,cfb:american-international-yellow-jackets,espn
 cfb,American International,cfb:american-international-yellow-jackets,espn
 cfb,Amherst,cfb:amherst-mammoths,espn
 cfb,Anderson (IN),cfb:anderson-in-ravens,espn
-cfb,Anderson (IN) Ravens,cfb:anderson-in-ravens,espn
 cfb,Anderson (SC),cfb:anderson-sc-trojans,espn
 cfb,Anderson (SC) Trojans,cfb:anderson-sc-trojans,espn
 cfb,Andrew,cfb:andrew-fighting-tigers,espn
 cfb,Andrew Fighting Tigers,cfb:andrew-fighting-tigers,espn
 cfb,Angelo St,cfb:angelo-state-rams,espn
 cfb,Angelo State,cfb:angelo-state-rams,espn
+cfb,Angelo State Rams,cfb:angelo-state-rams,espn
 cfb,App State,cfb:app-state-mountaineers,espn
 cfb,Apprentice,cfb:apprentice-school-builders,espn
 cfb,Apprentice School,cfb:apprentice-school-builders,espn
@@ -191,39 +267,38 @@ cfb,Argonauts,cfb:west-florida-argonauts,espn
 cfb,Arizona,cfb:arizona-wildcats,espn
 cfb,Arizona St,cfb:arizona-state-sun-devils,espn
 cfb,Arizona State,cfb:arizona-state-sun-devils,espn
-cfb,Arizona Wildcats,cfb:arizona-wildcats,espn
 cfb,Ark Baptist,cfb:arkansas-baptist-buffaloes,espn
 cfb,Arkansas,cfb:arkansas-razorbacks,espn
 cfb,Arkansas Baptist,cfb:arkansas-baptist-buffaloes,espn
-cfb,Arkansas Baptist Buffaloes,cfb:arkansas-baptist-buffaloes,espn
 cfb,Arkansas Monticello,cfb:arkansas-monticello-boll-weevils,espn
-cfb,Arkansas Monticello Boll Weevils,cfb:arkansas-monticello-boll-weevils,espn
 cfb,Arkansas Razorbacks,cfb:arkansas-razorbacks,espn
 cfb,Arkansas St,cfb:arkansas-state-red-wolves,espn
 cfb,Arkansas State,cfb:arkansas-state-red-wolves,espn
 cfb,Arkansas State Red Wolves,cfb:arkansas-state-red-wolves,espn
 cfb,Arkansas Tech,cfb:arkansas-tech-wonder-boys,espn
+cfb,Arkansas Tech Wonder Boys,cfb:arkansas-tech-wonder-boys,espn
 cfb,Arkansas-Pine Bluff,cfb:arkansas-pine-bluff-golden-lions,espn
 cfb,Army,cfb:army-black-knights,espn
+cfb,Army Black Knights,cfb:army-black-knights,espn
 cfb,Ashland,cfb:ashland-eagles,espn
+cfb,Ashland Eagles,cfb:ashland-eagles,espn
 cfb,Assumption,cfb:assumption-greyhounds,espn
 cfb,Assumption Greyhounds,cfb:assumption-greyhounds,espn
 cfb,Auburn,cfb:auburn-tigers,espn
+cfb,Auburn Tigers,cfb:auburn-tigers,espn
 cfb,Auggies,cfb:augsburg-auggies,espn
 cfb,Augsburg,cfb:augsburg-auggies,espn
+cfb,Augsburg Auggies,cfb:augsburg-auggies,espn
 cfb,Augustana (IL),cfb:augustana-il-vikings,espn
 cfb,Augustana (SD),cfb:augustana-sd-vikings,espn
 cfb,Augustana (SD) Vikings,cfb:augustana-sd-vikings,espn
 cfb,Aurora,cfb:aurora-spartans,espn
-cfb,Aurora Spartans,cfb:aurora-spartans,espn
 cfb,Austin,cfb:austin-roos,espn
 cfb,Austin Peay,cfb:austin-peay-governors,espn
-cfb,Austin Peay Governors,cfb:austin-peay-governors,espn
 cfb,Ave Maria,cfb:ave-maria-university-gyrenes,espn
 cfb,Ave Maria University,cfb:ave-maria-university-gyrenes,espn
 cfb,Averett,cfb:averett-cougars,espn
 cfb,Averett Cougars,cfb:averett-cougars,espn
-cfb,Avila,cfb:avila-university-eagles,espn
 cfb,Avila University,cfb:avila-university-eagles,espn
 cfb,Aztecs,cfb:san-diego-state-aztecs,espn
 cfb,Azusa Pacific,cfb:azusa-pacific-cougars,espn
@@ -251,7 +326,6 @@ cfb,BHSU,cfb:black-hills-state-yellow-jackets,espn
 cfb,BLF,cfb:bluffton-beavers,espn
 cfb,BLU,cfb:bluefield-ramblin-rams,espn
 cfb,BLUEFIELD,cfb:bluefield-ramblin-rams,espn
-cfb,BLUEFIELD Ramblin' Rams,cfb:bluefield-ramblin-rams,espn
 cfb,BLUS,cfb:bluefield-state-big-blue,espn
 cfb,BNIL,cfb:benedictine-il-eagles,espn
 cfb,BOIS,cfb:boise-state-broncos,espn
@@ -272,7 +346,6 @@ cfb,BUMN,cfb:bethel-mn-royals,espn
 cfb,BVU,cfb:buena-vista-beavers,espn
 cfb,BW,cfb:baldwin-wallace-yellow-jackets,espn
 cfb,BYU,cfb:byu-cougars,espn
-cfb,BYU Cougars,cfb:byu-cougars,espn
 cfb,Badgers,cfb:wisconsin-badgers,espn
 cfb,Baker,cfb:baker-university-baker,espn
 cfb,Baker University,cfb:baker-university-baker,espn
@@ -290,6 +363,7 @@ cfb,Bates Bobcats,cfb:bates-bobcats,espn
 cfb,Battling Bishops,cfb:north-carolina-wesleyan-battling-bishops,espn
 cfb,Battling Bishops,cfb:ohio-wesleyan-battling-bishops,espn
 cfb,Baylor,cfb:baylor-bears,espn
+cfb,Baylor Bears,cfb:baylor-bears,espn
 cfb,Beacons,cfb:valparaiso-beacons,espn
 cfb,Bearcats,cfb:cincinnati-bearcats,espn
 cfb,Bearcats,cfb:mckendree-bearcats,espn
@@ -318,25 +392,23 @@ cfb,Beavers,cfb:buena-vista-beavers,espn
 cfb,Beavers,cfb:minot-state-beavers,espn
 cfb,Beavers,cfb:oregon-state-beavers,espn
 cfb,Belhaven,cfb:belhaven-blazers,espn
+cfb,Belhaven Blazers,cfb:belhaven-blazers,espn
 cfb,Beloit,cfb:beloit-buccaneers,espn
 cfb,Beloit Buccaneers,cfb:beloit-buccaneers,espn
 cfb,Bemidji St,cfb:bemidji-state-beavers,espn
 cfb,Bemidji State,cfb:bemidji-state-beavers,espn
 cfb,Bemidji State Beavers,cfb:bemidji-state-beavers,espn
 cfb,Benedict,cfb:benedict-tigers,espn
-cfb,Benedictine (IL),cfb:benedictine-il-eagles,espn
-cfb,Benedictine (IL) Eagles,cfb:benedictine-il-eagles,espn
 cfb,Benedictine College,cfb:benedictine-college-ravens,espn
 cfb,Benedictine College Ravens,cfb:benedictine-college-ravens,espn
+cfb,Benedictine IL,cfb:benedictine-il-eagles,espn
 cfb,Bengals,cfb:buffalo-state-bengals,espn
 cfb,Bengals,cfb:idaho-state-bengals,espn
 cfb,Bentley,cfb:bentley-falcons,espn
 cfb,Berry,cfb:berry-vikings,espn
-cfb,Berry Vikings,cfb:berry-vikings,espn
 cfb,Bethany (KS) Bethany (Ks),cfb:bethany-ks,espn
 cfb,Bethany (WV),cfb:bethany-wv-bison,espn
 cfb,Bethany (WV) Bison,cfb:bethany-wv-bison,espn
-cfb,Bethany KS,cfb:bethany-ks,espn
 cfb,Bethel (MN),cfb:bethel-mn-royals,espn
 cfb,Bethel TN,cfb:bethel-university-tennessee-wildcats,espn
 cfb,Bethel University Tennessee,cfb:bethel-university-tennessee-wildcats,espn
@@ -400,17 +472,19 @@ cfb,Boll Weevils,cfb:arkansas-monticello-boll-weevils,espn
 cfb,Bombers,cfb:ithaca-bombers,espn
 cfb,Borregos,cfb:monterrey-tech-borregos,espn
 cfb,Boston College,cfb:boston-college-eagles,espn
+cfb,Boston College Eagles,cfb:boston-college-eagles,espn
 cfb,Bowdoin,cfb:bowdoin-polar-bears,espn
+cfb,Bowdoin Polar Bears,cfb:bowdoin-polar-bears,espn
 cfb,Bowie St,cfb:bowie-state-bulldogs,espn
 cfb,Bowie State,cfb:bowie-state-bulldogs,espn
 cfb,Bowie State Bulldogs,cfb:bowie-state-bulldogs,espn
 cfb,Bowling Green,cfb:bowling-green-falcons,espn
+cfb,Bowling Green Falcons,cfb:bowling-green-falcons,espn
 cfb,Boxers,cfb:pacific-or-boxers,espn
 cfb,Braves,cfb:alcorn-state-braves,espn
 cfb,Braves,cfb:unc-pembroke-braves,espn
 cfb,Brevard,cfb:brevard-tornados,espn
 cfb,Bridgewater,cfb:bridgewater-eagles,espn
-cfb,Bridgewater Eagles,cfb:bridgewater-eagles,espn
 cfb,Bridgewater St,cfb:bridgewater-state-bears,espn
 cfb,Bridgewater State,cfb:bridgewater-state-bears,espn
 cfb,British Col,cfb:british-columbia-british-col,espn
@@ -425,6 +499,7 @@ cfb,Broncos,cfb:boise-state-broncos,espn
 cfb,Broncos,cfb:fayetteville-state-broncos,espn
 cfb,Broncos,cfb:western-michigan-broncos,espn
 cfb,Brown,cfb:brown-bears,espn
+cfb,Brown Bears,cfb:brown-bears,espn
 cfb,Bruins,cfb:george-fox-bruins,espn
 cfb,Bruins,cfb:ucla-bruins,espn
 cfb,Bryant,cfb:bryant-bulldogs,espn
@@ -521,8 +596,8 @@ cfb,CNIA,cfb:cornell-ia-rams,espn
 cfb,CNSU,cfb:central-state-marauders,espn
 cfb,CNTC,cfb:central-college-dutch,espn
 cfb,CNU,cfb:christopher-newport-captains,espn
-cfb,COE,cfb:coe-kohawks,espn
 cfb,COI,cfb:college-of-idaho-yotes,espn
+cfb,COLE,cfb:cole-college-jaguars,espn
 cfb,COLG,cfb:colgate-raiders,espn
 cfb,COLLE,cfb:charlotte-saints,espn
 cfb,COLO,cfb:colorado-buffaloes,espn
@@ -553,20 +628,18 @@ cfb,CWRU,cfb:case-western-reserve-spartans,espn
 cfb,Cadets,cfb:norwich-cadets,espn
 cfb,Cal (PA),cfb:california-pa-vulcans,espn
 cfb,Cal Lutheran,cfb:cal-lutheran-kingsmen,espn
-cfb,Cal Lutheran Kingsmen,cfb:cal-lutheran-kingsmen,espn
 cfb,Cal Poly,cfb:cal-poly-mustangs,espn
 cfb,Cal Poly Mustangs,cfb:cal-poly-mustangs,espn
 cfb,California,cfb:california-golden-bears,espn
 cfb,California (PA),cfb:california-pa-vulcans,espn
-cfb,California Golden Bears,cfb:california-golden-bears,espn
 cfb,Calvin,cfb:calvin-knights,espn
+cfb,Calvin Knights,cfb:calvin-knights,espn
 cfb,Campbell,cfb:campbell-fighting-camels,espn
 cfb,Campbell Fighting Camels,cfb:campbell-fighting-camels,espn
 cfb,Campbellsville University,cfb:campbellsville-university-tigers,espn
 cfb,Campbellsville University Tigers,cfb:campbellsville-university-tigers,espn
 cfb,Camplville,cfb:campbellsville-university-tigers,espn
 cfb,Capital,cfb:capital-comets,espn
-cfb,Capital Comets,cfb:capital-comets,espn
 cfb,Captains,cfb:christopher-newport-captains,espn
 cfb,Cardinal,cfb:stanford-cardinal,espn
 cfb,Cardinals,cfb:ball-state-cardinals,espn
@@ -583,6 +656,7 @@ cfb,Cardinals,cfb:wesleyan-ct-cardinals,espn
 cfb,Cardinals,cfb:wheeling-cardinals,espn
 cfb,Cardinals,cfb:william-jewell-cardinals,espn
 cfb,Carleton,cfb:carleton-knights,espn
+cfb,Carleton Knights,cfb:carleton-knights,espn
 cfb,Carn Mellon,cfb:carnegie-mellon-tartans,espn
 cfb,Carnegie Mellon,cfb:carnegie-mellon-tartans,espn
 cfb,Carnegie Mellon Tartans,cfb:carnegie-mellon-tartans,espn
@@ -592,9 +666,9 @@ cfb,Carson Newman Eagles,cfb:carson-newman-eagles,espn
 cfb,Carthage,cfb:carthage-firebirds,espn
 cfb,Case Western,cfb:case-western-reserve-spartans,espn
 cfb,Case Western Reserve,cfb:case-western-reserve-spartans,espn
+cfb,Case Western Reserve Spartans,cfb:case-western-reserve-spartans,espn
 cfb,Catamounts,cfb:western-carolina-catamounts,espn
 cfb,Catawba,cfb:catawba-indians,espn
-cfb,Catawba Indians,cfb:catawba-indians,espn
 cfb,Catholic,cfb:catholic-cardinals,espn
 cfb,Catholic Cardinals,cfb:catholic-cardinals,espn
 cfb,Cavaliers,cfb:uva-wise-cavaliers,espn
@@ -602,54 +676,57 @@ cfb,Cavaliers,cfb:virginia-cavaliers,espn
 cfb,Cavaliers,cfb:walsh-cavaliers,espn
 cfb,Centenary (LA),cfb:centenary-la-gentlemen,espn
 cfb,Central Arkansas,cfb:central-arkansas-bears,espn
-cfb,Central Arkansas Bears,cfb:central-arkansas-bears,espn
 cfb,Central Col,cfb:central-college-dutch,espn
 cfb,Central College,cfb:central-college-dutch,espn
 cfb,Central Connecticut,cfb:central-connecticut-blue-devils,espn
-cfb,Central Connecticut Blue Devils,cfb:central-connecticut-blue-devils,espn
 cfb,Central Methodist,cfb:central-methodist-eagles,espn
+cfb,Central Methodist Eagles,cfb:central-methodist-eagles,espn
 cfb,Central Michigan,cfb:central-michigan-chippewas,espn
+cfb,Central Michigan Chippewas,cfb:central-michigan-chippewas,espn
 cfb,Central Missouri,cfb:central-missouri-mules,espn
-cfb,Central Missouri Mules,cfb:central-missouri-mules,espn
 cfb,Central Oklahoma,cfb:central-oklahoma-bronchos,espn
+cfb,Central Oklahoma Bronchos,cfb:central-oklahoma-bronchos,espn
 cfb,Central St,cfb:central-state-marauders,espn
 cfb,Central State,cfb:central-state-marauders,espn
 cfb,Central State Marauders,cfb:central-state-marauders,espn
 cfb,Central Washington,cfb:central-washington-wildcats,espn
 cfb,Centre,cfb:centre-colonels,espn
+cfb,Centre Colonels,cfb:centre-colonels,espn
 cfb,Chadron St,cfb:chadron-state-eagles,espn
 cfb,Chadron State,cfb:chadron-state-eagles,espn
+cfb,Chadron State Eagles,cfb:chadron-state-eagles,espn
 cfb,Chanticleers,cfb:coastal-carolina-chanticleers,espn
 cfb,Chapman,cfb:chapman-panthers,espn
 cfb,Chapman Panthers,cfb:chapman-panthers,espn
 cfb,Chargers,cfb:hillsdale-chargers,espn
 cfb,Chargers,cfb:new-haven-chargers,espn
-cfb,Charleston (WV) Golden Eagles,cfb:charleston-wv-golden-eagles,espn
+cfb,Charleston (WV),cfb:charleston-wv-golden-eagles,espn
 cfb,Charleston So,cfb:charleston-southern-buccaneers,espn
 cfb,Charleston Southern,cfb:charleston-southern-buccaneers,espn
-cfb,Charleston Southern Buccaneers,cfb:charleston-southern-buccaneers,espn
-cfb,Charleston WV,cfb:charleston-wv-golden-eagles,espn
 cfb,Charlotte,cfb:charlotte-49ers,espn
 cfb,Charlotte,cfb:charlotte-saints,espn
-cfb,Charlotte Saints,cfb:charlotte-saints,espn
 cfb,Chattanooga,cfb:chattanooga-mocs,espn
 cfb,Chattanooga Mocs,cfb:chattanooga-mocs,espn
 cfb,Chicago,cfb:chicago-maroons,espn
-cfb,Chicago Maroons,cfb:chicago-maroons,espn
 cfb,Chiefs,cfb:morningside-chiefs,espn
 cfb,Chippewas,cfb:central-michigan-chippewas,espn
 cfb,Chowan,cfb:chowan-hawks,espn
+cfb,Chowan Hawks,cfb:chowan-hawks,espn
 cfb,Chris Newport,cfb:christopher-newport-captains,espn
 cfb,Christopher Newport,cfb:christopher-newport-captains,espn
 cfb,Christopher Newport Captains,cfb:christopher-newport-captains,espn
 cfb,Cincinnati,cfb:cincinnati-bearcats,espn
+cfb,Cincinnati Bearcats,cfb:cincinnati-bearcats,espn
 cfb,Claremont Mudd Scripps,cfb:claremont-mudd-scripps-stags,espn
 cfb,Claremont Mudd Scripps Stags,cfb:claremont-mudd-scripps-stags,espn
 cfb,Claremont-M-S,cfb:claremont-mudd-scripps-stags,espn
 cfb,Clarion,cfb:clarion-golden-eagles,espn
+cfb,Clarion Golden Eagles,cfb:clarion-golden-eagles,espn
 cfb,Clark (GA),cfb:clark-atlanta-panthers,espn
 cfb,Clark Atlanta,cfb:clark-atlanta-panthers,espn
+cfb,Clark Atlanta Panthers,cfb:clark-atlanta-panthers,espn
 cfb,Clemson,cfb:clemson-tigers,espn
+cfb,Clemson Tigers,cfb:clemson-tigers,espn
 cfb,Clippers,cfb:concordia-university-nebraska-clippers,espn
 cfb,Cmbrlnd TN,cfb:cumberland-tn-bulldogs,espn
 cfb,Cncrdia MI,cfb:concordia-michigan-cardinals,espn
@@ -658,11 +735,9 @@ cfb,Coast Guard,cfb:coast-guard-bears,espn
 cfb,Coast Guard Bears,cfb:coast-guard-bears,espn
 cfb,Coastal,cfb:coastal-carolina-chanticleers,espn
 cfb,Coastal Carolina,cfb:coastal-carolina-chanticleers,espn
-cfb,Coastal Carolina Chanticleers,cfb:coastal-carolina-chanticleers,espn
 cfb,Cobbers,cfb:concordia-mn-cobbers,espn
-cfb,Coe Kohawks,cfb:coe-kohawks,espn
+cfb,Coe,cfb:coe-kohawks,espn
 cfb,Colby,cfb:colby-white-mules,espn
-cfb,Cole,cfb:cole-college-jaguars,espn
 cfb,Cole College,cfb:cole-college-jaguars,espn
 cfb,Colgate,cfb:colgate-raiders,espn
 cfb,Colgate Raiders,cfb:colgate-raiders,espn
@@ -679,24 +754,22 @@ cfb,Colonials,cfb:robert-morris-colonials,espn
 cfb,Colorado,cfb:colorado-buffaloes,espn
 cfb,Colorado Buffaloes,cfb:colorado-buffaloes,espn
 cfb,Colorado Mesa,cfb:colorado-mesa-mavericks,espn
-cfb,Colorado Mesa Mavericks,cfb:colorado-mesa-mavericks,espn
 cfb,Colorado Mines,cfb:colorado-school-of-mines-orediggers,espn
 cfb,Colorado School of Mines,cfb:colorado-school-of-mines-orediggers,espn
 cfb,Colorado St,cfb:colorado-state-rams,espn
 cfb,Colorado State,cfb:colorado-state-rams,espn
-cfb,Colorado State Rams,cfb:colorado-state-rams,espn
 cfb,Columbia,cfb:columbia-lions,espn
 cfb,Comets,cfb:capital-comets,espn
 cfb,Comets,cfb:mayville-state-comets,espn
 cfb,Comets,cfb:olivet-comets,espn
 cfb,Commodores,cfb:vanderbilt-commodores,espn
 cfb,Concord,cfb:concord-mountain-lions,espn
-cfb,Concord Mountain Lions,cfb:concord-mountain-lions,espn
 cfb,Concordia (MN),cfb:concordia-mn-cobbers,espn
 cfb,Concordia (WI),cfb:concordia-wi-falcons,espn
 cfb,Concordia (WI) Falcons,cfb:concordia-wi-falcons,espn
 cfb,Concordia Chi,cfb:concordia-chicago-cougars,espn
 cfb,Concordia Chicago,cfb:concordia-chicago-cougars,espn
+cfb,Concordia Chicago Cougars,cfb:concordia-chicago-cougars,espn
 cfb,Concordia St P,cfb:concordia-st-paul-golden-bears,espn
 cfb,Concordia St. Paul,cfb:concordia-st-paul-golden-bears,espn
 cfb,Concordia St. Paul Golden Bears,cfb:concordia-st-paul-golden-bears,espn
@@ -705,7 +778,7 @@ cfb,Concordia-Michigan,cfb:concordia-michigan-cardinals,espn
 cfb,Continentals,cfb:hamilton-continentals,espn
 cfb,Cornell,cfb:cornell-big-red,espn
 cfb,Cornell (IA),cfb:cornell-ia-rams,espn
-cfb,Cornell Big Red,cfb:cornell-big-red,espn
+cfb,Cornell (IA) Rams,cfb:cornell-ia-rams,espn
 cfb,Cornhuskers,cfb:nebraska-cornhuskers,espn
 cfb,Corsairs,cfb:umass-dartmouth-corsairs,espn
 cfb,Cougars,cfb:averett-cougars,espn
@@ -744,6 +817,7 @@ cfb,Cumberland (TN) Bulldogs,cfb:cumberland-tn-bulldogs,espn
 cfb,Cumberlands,cfb:cumberlands-indians,espn
 cfb,Cumberlands Indians,cfb:cumberlands-indians,espn
 cfb,Curry,cfb:curry-colonels,espn
+cfb,Curry Colonels,cfb:curry-colonels,espn
 cfb,Cyclones,cfb:iowa-state-cyclones,espn
 cfb,DAKOT,cfb:dakota-state-university-trojans,espn
 cfb,DART,cfb:dartmouth-big-green,espn
@@ -765,10 +839,13 @@ cfb,DVU,cfb:delaware-valley-aggies,espn
 cfb,DWU,cfb:dakota-wesleyan-tigers,espn
 cfb,Dakota St,cfb:dakota-state-university-trojans,espn
 cfb,Dakota State University,cfb:dakota-state-university-trojans,espn
+cfb,Dakota State University Trojans,cfb:dakota-state-university-trojans,espn
 cfb,Dakota Wes,cfb:dakota-wesleyan-tigers,espn
 cfb,Dakota Wesleyan,cfb:dakota-wesleyan-tigers,espn
+cfb,Dakota Wesleyan Tigers,cfb:dakota-wesleyan-tigers,espn
 cfb,Dartmouth,cfb:dartmouth-big-green,espn
 cfb,Davidson,cfb:davidson-wildcats,espn
+cfb,Davidson Wildcats,cfb:davidson-wildcats,espn
 cfb,Dayton,cfb:dayton-flyers,espn
 cfb,DePauw,cfb:depauw-tigers,espn
 cfb,DePauw Tigers,cfb:depauw-tigers,espn
@@ -778,14 +855,14 @@ cfb,Defiance College,cfb:defiance-college-yellow-jackets,espn
 cfb,Defiance College Yellow Jackets,cfb:defiance-college-yellow-jackets,espn
 cfb,Del Val,cfb:delaware-valley-aggies,espn
 cfb,Delaware,cfb:delaware-blue-hens,espn
-cfb,Delaware Blue Hens,cfb:delaware-blue-hens,espn
 cfb,Delaware St,cfb:delaware-state-hornets,espn
 cfb,Delaware State,cfb:delaware-state-hornets,espn
-cfb,Delaware State Hornets,cfb:delaware-state-hornets,espn
 cfb,Delaware Valley,cfb:delaware-valley-aggies,espn
+cfb,Delaware Valley Aggies,cfb:delaware-valley-aggies,espn
 cfb,Delta Devils,cfb:mississippi-valley-state-delta-devils,espn
 cfb,Delta St,cfb:delta-state-statesmen,espn
 cfb,Delta State,cfb:delta-state-statesmen,espn
+cfb,Delta State Statesmen,cfb:delta-state-statesmen,espn
 cfb,Demon Deacons,cfb:wake-forest-demon-deacons,espn
 cfb,Demons,cfb:northwestern-state-demons,espn
 cfb,Denison,cfb:denison-big-red,espn
@@ -795,7 +872,6 @@ cfb,Devils,cfb:fdu-florham-devils,espn
 cfb,Dickinson,cfb:dickinson-red-devils,espn
 cfb,Dickinson Red Devils,cfb:dickinson-red-devils,espn
 cfb,Dickinson State University,cfb:dickinson-state-university-blue-hawks,espn
-cfb,Dickinson State University Blue Hawks,cfb:dickinson-state-university-blue-hawks,espn
 cfb,Dicknsn St,cfb:dickinson-state-university-blue-hawks,espn
 cfb,Diplomats,cfb:franklin-marshall-diplomats,espn
 cfb,Dragons,cfb:lane-college-dragons,espn
@@ -804,9 +880,9 @@ cfb,Dragons,cfb:tiffin-dragons,espn
 cfb,Dragons,cfb:virginia-lynchburg-dragons,espn
 cfb,Drake,cfb:drake-bulldogs,espn
 cfb,Dubuque,cfb:dubuque-spartans,espn
+cfb,Dubuque Spartans,cfb:dubuque-spartans,espn
 cfb,Ducks,cfb:oregon-ducks,espn
 cfb,Duhawks,cfb:loras-duhawks,espn
-cfb,Duke Blue Devils,cfb:duke-blue-devils,espn
 cfb,Dukes,cfb:duquesne-dukes,espn
 cfb,Dukes,cfb:james-madison-dukes,espn
 cfb,Duquesne,cfb:duquesne-dukes,espn
@@ -828,6 +904,7 @@ cfb,EHC,cfb:emory-henry-wasps,espn
 cfb,EIU,cfb:eastern-illinois-panthers,espn
 cfb,EKU,cfb:eastern-kentucky-colonels,espn
 cfb,ELMH,cfb:elmhurst-bluejays,espn
+cfb,ELON,cfb:elon-phoenix,espn
 cfb,EMSU,cfb:emporia-state-hornets,espn
 cfb,EMU,cfb:eastern-michigan-eagles,espn
 cfb,ENDC,cfb:endicott-gulls,espn
@@ -866,6 +943,7 @@ cfb,Eagles,cfb:reinhardt-eagles,espn
 cfb,Eagles,cfb:wisconsin-la-crosse-eagles,espn
 cfb,East Carolina,cfb:east-carolina-pirates,espn
 cfb,East Central,cfb:east-central-tigers,espn
+cfb,East Central Tigers,cfb:east-central-tigers,espn
 cfb,East Stroudsburg,cfb:east-stroudsburg-warriors,espn
 cfb,East Tennessee State,cfb:east-tennessee-state-buccaneers,espn
 cfb,East Tennessee State Buccaneers,cfb:east-tennessee-state-buccaneers,espn
@@ -873,32 +951,29 @@ cfb,East Texas A&M,cfb:east-texas-am-lions,espn
 cfb,East Texas A&M Lions,cfb:east-texas-am-lions,espn
 cfb,East Texas Baptist,cfb:east-texas-baptist-tigers,espn
 cfb,Eastern,cfb:eastern-eagles,espn
+cfb,Eastern Eagles,cfb:eastern-eagles,espn
 cfb,Eastern Illinois,cfb:eastern-illinois-panthers,espn
-cfb,Eastern Illinois Panthers,cfb:eastern-illinois-panthers,espn
 cfb,Eastern Kentucky,cfb:eastern-kentucky-colonels,espn
+cfb,Eastern Kentucky Colonels,cfb:eastern-kentucky-colonels,espn
 cfb,Eastern Michigan,cfb:eastern-michigan-eagles,espn
 cfb,Eastern Michigan Eagles,cfb:eastern-michigan-eagles,espn
 cfb,Eastern NM,cfb:eastern-new-mexico-greyhounds,espn
 cfb,Eastern New Mexico,cfb:eastern-new-mexico-greyhounds,espn
-cfb,Eastern New Mexico Greyhounds,cfb:eastern-new-mexico-greyhounds,espn
-cfb,Eastern Oregon,cfb:eastern-oregon,espn
 cfb,Eastern Oregon Eastern Oregon,cfb:eastern-oregon,espn
 cfb,Eastern Washington,cfb:eastern-washington-eagles,espn
 cfb,Edinboro,cfb:edinboro-fighting-scots,espn
-cfb,Edinboro Fighting Scots,cfb:edinboro-fighting-scots,espn
 cfb,Edward Waters,cfb:edward-waters-tigers,espn
-cfb,Edward Waters Tigers,cfb:edward-waters-tigers,espn
 cfb,Elgin,cfb:elgin-eagles,espn
 cfb,Elgin Eagles,cfb:elgin-eagles,espn
 cfb,Elizabeth City,cfb:elizabeth-city-state-vikings,espn
 cfb,Elizabeth City State,cfb:elizabeth-city-state-vikings,espn
 cfb,Elmhurst,cfb:elmhurst-bluejays,espn
-cfb,Elon,cfb:elon-phoenix,espn
+cfb,Elmhurst Bluejays,cfb:elmhurst-bluejays,espn
 cfb,Elon Phoenix,cfb:elon-phoenix,espn
 cfb,Emory & Henry,cfb:emory-henry-wasps,espn
+cfb,Emory & Henry Wasps,cfb:emory-henry-wasps,espn
 cfb,Emporia St,cfb:emporia-state-hornets,espn
 cfb,Emporia State,cfb:emporia-state-hornets,espn
-cfb,Emporia State Hornets,cfb:emporia-state-hornets,espn
 cfb,Endicott,cfb:endicott-gulls,espn
 cfb,Engineers,cfb:mit-engineers,espn
 cfb,Engineers,cfb:rensselaer-engineers,espn
@@ -906,9 +981,9 @@ cfb,Engineers,cfb:wpi-engineers,espn
 cfb,Ephs,cfb:williams-ephs,espn
 cfb,Erskine,cfb:erskine-flying-fleet,espn
 cfb,Eureka,cfb:eureka-red-devils,espn
+cfb,Eureka Red Devils,cfb:eureka-red-devils,espn
 cfb,Evangel,cfb:evangel-university-crusaders,espn
 cfb,Evangel University,cfb:evangel-university-crusaders,espn
-cfb,Evangel University Crusaders,cfb:evangel-university-crusaders,espn
 cfb,FAI,cfb:west-memphis-crusaders,espn
 cfb,FAMU,cfb:florida-am-rattlers,espn
 cfb,FAU,cfb:florida-atlantic-owls,espn
@@ -916,6 +991,7 @@ cfb,FAULKNER,cfb:faulkner-university-eagles,espn
 cfb,FAYU,cfb:fayetteville-state-broncos,espn
 cfb,FBSU,cfb:fitchburg-state-falcons,espn
 cfb,FDU Florham,cfb:fdu-florham-devils,espn
+cfb,FDU Florham Devils,cfb:fdu-florham-devils,espn
 cfb,FDUF,cfb:fdu-florham-devils,espn
 cfb,FHSU,cfb:fort-hays-tigers,espn
 cfb,FIU,cfb:florida-international-panthers,espn
@@ -937,7 +1013,6 @@ cfb,FUR,cfb:furman-paladins,espn
 cfb,FVSU,cfb:fort-valley-state-wildcats,espn
 cfb,Fairmont St,cfb:fairmont-state-falcons,espn
 cfb,Fairmont State,cfb:fairmont-state-falcons,espn
-cfb,Fairmont State Falcons,cfb:fairmont-state-falcons,espn
 cfb,Faith NC,cfb:charlotte-saints,espn
 cfb,Falcons,cfb:air-force-falcons,espn
 cfb,Falcons,cfb:bentley-falcons,espn
@@ -951,9 +1026,11 @@ cfb,Faulkner University,cfb:faulkner-university-eagles,espn
 cfb,Faulkner University Eagles,cfb:faulkner-university-eagles,espn
 cfb,Fay'ville St,cfb:fayetteville-state-broncos,espn
 cfb,Fayetteville State,cfb:fayetteville-state-broncos,espn
+cfb,Fayetteville State Broncos,cfb:fayetteville-state-broncos,espn
 cfb,Ferris St,cfb:ferris-state-bulldogs,espn
 cfb,Ferris State,cfb:ferris-state-bulldogs,espn
 cfb,Ferrum,cfb:ferrum-panthers,espn
+cfb,Ferrum Panthers,cfb:ferrum-panthers,espn
 cfb,Fightin' Engineers,cfb:rose-hulman-fightin-engineers,espn
 cfb,Fightin' Quakers,cfb:wilmington-oh-fightin-quakers,espn
 cfb,Fighting Bees,cfb:st-ambrose-fighting-bees,espn
@@ -973,12 +1050,16 @@ cfb,Fires,cfb:southeastern-fires,espn
 cfb,Firestorm,cfb:phoenix-firestorm,espn
 cfb,Fitchburg St,cfb:fitchburg-state-falcons,espn
 cfb,Fitchburg State,cfb:fitchburg-state-falcons,espn
+cfb,Fitchburg State Falcons,cfb:fitchburg-state-falcons,espn
 cfb,Flames,cfb:liberty-flames,espn
 cfb,Florida,cfb:florida-gators,espn
 cfb,Florida A&M,cfb:florida-am-rattlers,espn
 cfb,Florida A&M Rattlers,cfb:florida-am-rattlers,espn
 cfb,Florida Atlantic,cfb:florida-atlantic-owls,espn
+cfb,Florida Atlantic Owls,cfb:florida-atlantic-owls,espn
+cfb,Florida Gators,cfb:florida-gators,espn
 cfb,Florida International,cfb:florida-international-panthers,espn
+cfb,Florida International Panthers,cfb:florida-international-panthers,espn
 cfb,Florida Memori,cfb:florida-memorial-university-lions,espn
 cfb,Florida Memorial University,cfb:florida-memorial-university-lions,espn
 cfb,Florida St,cfb:florida-state-seminoles,espn
@@ -991,7 +1072,6 @@ cfb,Flying Fleet,cfb:erskine-flying-fleet,espn
 cfb,Fordham,cfb:fordham-rams,espn
 cfb,Foresters,cfb:lake-forest-foresters,espn
 cfb,Fort Hays,cfb:fort-hays-tigers,espn
-cfb,Fort Hays Tigers,cfb:fort-hays-tigers,espn
 cfb,Fort Lewis,cfb:fort-lewis-skyhawks,espn
 cfb,Fort Valley St,cfb:fort-valley-state-wildcats,espn
 cfb,Fort Valley State,cfb:fort-valley-state-wildcats,espn
@@ -1001,8 +1081,10 @@ cfb,Framingham State Rams,cfb:framingham-state-rams,espn
 cfb,Franklin,cfb:franklin-grizzlies,espn
 cfb,Franklin & Marshall,cfb:franklin-marshall-diplomats,espn
 cfb,Franklin & Marshall Diplomats,cfb:franklin-marshall-diplomats,espn
+cfb,Franklin Grizzlies,cfb:franklin-grizzlies,espn
 cfb,Franklin Marsh,cfb:franklin-marshall-diplomats,espn
 cfb,Franklin Pierce,cfb:franklin-pierce-ravens,espn
+cfb,Franklin Pierce Ravens,cfb:franklin-pierce-ravens,espn
 cfb,Fresno St,cfb:fresno-state-bulldogs,espn
 cfb,Fresno State,cfb:fresno-state-bulldogs,espn
 cfb,Fresno State Bulldogs,cfb:fresno-state-bulldogs,espn
@@ -1012,8 +1094,8 @@ cfb,Friends University Friends,cfb:friends-university-friends,espn
 cfb,Frnklin Pierce,cfb:franklin-pierce-ravens,espn
 cfb,Frostburg St,cfb:frostburg-state-bobcats,espn
 cfb,Frostburg State,cfb:frostburg-state-bobcats,espn
+cfb,Frostburg State Bobcats,cfb:frostburg-state-bobcats,espn
 cfb,Furman,cfb:furman-paladins,espn
-cfb,Furman Paladins,cfb:furman-paladins,espn
 cfb,GA Southern,cfb:georgia-southern-eagles,espn
 cfb,GAC,cfb:gustavus-adolphus-golden-gusties,espn
 cfb,GANN,cfb:gannon-golden-knights,espn
@@ -1039,11 +1121,12 @@ cfb,GVLS,cfb:glenville-state-pioneers,espn
 cfb,GVSU,cfb:grand-valley-state-lakers,espn
 cfb,GWEB,cfb:gardner-webb-runnin-bulldogs,espn
 cfb,Gallaudet,cfb:gallaudet-bison,espn
+cfb,Gallaudet Bison,cfb:gallaudet-bison,espn
 cfb,Gamecocks,cfb:jacksonville-state-gamecocks,espn
 cfb,Gamecocks,cfb:south-carolina-gamecocks,espn
 cfb,Gannon,cfb:gannon-golden-knights,espn
-cfb,Gannon Golden Knights,cfb:gannon-golden-knights,espn
 cfb,Gardner-Webb,cfb:gardner-webb-runnin-bulldogs,espn
+cfb,Gardner-Webb Runnin' Bulldogs,cfb:gardner-webb-runnin-bulldogs,espn
 cfb,Garnet Chargers,cfb:union-garnet-chargers,espn
 cfb,Gators,cfb:allegheny-gators,espn
 cfb,Gators,cfb:florida-gators,espn
@@ -1055,17 +1138,13 @@ cfb,George Fox,cfb:george-fox-bruins,espn
 cfb,George Fox Bruins,cfb:george-fox-bruins,espn
 cfb,George Mason,cfb:george-mason-university-patriots,espn
 cfb,George Mason University,cfb:george-mason-university-patriots,espn
-cfb,George Mason University Patriots,cfb:george-mason-university-patriots,espn
 cfb,Georgetown,cfb:georgetown-hoyas,espn
-cfb,Georgetown (KY),cfb:georgetown-ky-tigers,espn
-cfb,Georgetown Hoyas,cfb:georgetown-hoyas,espn
+cfb,Georgetown KY,cfb:georgetown-ky-tigers,espn
 cfb,Georgia,cfb:georgia-bulldogs,espn
-cfb,Georgia Bulldogs,cfb:georgia-bulldogs,espn
 cfb,Georgia Southern,cfb:georgia-southern-eagles,espn
 cfb,Georgia Southern Eagles,cfb:georgia-southern-eagles,espn
 cfb,Georgia St,cfb:georgia-state-panthers,espn
 cfb,Georgia State,cfb:georgia-state-panthers,espn
-cfb,Georgia State Panthers,cfb:georgia-state-panthers,espn
 cfb,Georgia Tech,cfb:georgia-tech-yellow-jackets,espn
 cfb,Gettysburg,cfb:gettysburg-bullets,espn
 cfb,Gettysburg Bullets,cfb:gettysburg-bullets,espn
@@ -1101,16 +1180,18 @@ cfb,Gorillas,cfb:pittsburg-state-gorillas,espn
 cfb,Governors,cfb:austin-peay-governors,espn
 cfb,Graceland,cfb:graceland-university-graceland,espn
 cfb,Graceland University,cfb:graceland-university-graceland,espn
+cfb,Graceland University Graceland,cfb:graceland-university-graceland,espn
 cfb,Grambling,cfb:grambling-tigers,espn
-cfb,Grambling Tigers,cfb:grambling-tigers,espn
 cfb,Grand Val St,cfb:grand-valley-state-lakers,espn
 cfb,Grand Valley State,cfb:grand-valley-state-lakers,espn
+cfb,Grand Valley State Lakers,cfb:grand-valley-state-lakers,espn
 cfb,Grand View,cfb:des-moines-vikings,espn
 cfb,Great Danes,cfb:ualbany-great-danes,espn
 cfb,Green Knights,cfb:st-norbert-green-knights,espn
 cfb,Green Terror,cfb:mcdaniel-green-terror,espn
 cfb,Green Wave,cfb:tulane-green-wave,espn
 cfb,Greensboro,cfb:greensboro-pride,espn
+cfb,Greensboro Pride,cfb:greensboro-pride,espn
 cfb,Greenville,cfb:greenville-panthers,espn
 cfb,Greyhounds,cfb:assumption-greyhounds,espn
 cfb,Greyhounds,cfb:eastern-new-mexico-greyhounds,espn
@@ -1123,7 +1204,6 @@ cfb,Grizzlies,cfb:adams-state-grizzlies,espn
 cfb,Grizzlies,cfb:franklin-grizzlies,espn
 cfb,Grizzlies,cfb:montana-grizzlies,espn
 cfb,Grove City,cfb:grove-city-wolverines,espn
-cfb,Grove City Wolverines,cfb:grove-city-wolverines,espn
 cfb,Guilford,cfb:guilford-quakers,espn
 cfb,Guilford Quakers,cfb:guilford-quakers,espn
 cfb,Gulls,cfb:endicott-gulls,espn
@@ -1162,19 +1242,17 @@ cfb,Hamilton Continentals,cfb:hamilton-continentals,espn
 cfb,Hamline,cfb:hamline-pipers,espn
 cfb,Hamline Pipers,cfb:hamline-pipers,espn
 cfb,Hampden Sydney,cfb:hampden-sydney-tigers,espn
-cfb,Hampden Sydney Tigers,cfb:hampden-sydney-tigers,espn
 cfb,Hampton,cfb:hampton-pirates,espn
-cfb,Hampton Pirates,cfb:hampton-pirates,espn
 cfb,Hanover,cfb:hanover-panthers,espn
-cfb,Hanover Panthers,cfb:hanover-panthers,espn
 cfb,Hardin Simmons,cfb:hardin-simmons-cowboys,espn
-cfb,Hardin Simmons Cowboys,cfb:hardin-simmons-cowboys,espn
 cfb,Harding,cfb:harding-bisons,espn
+cfb,Harding Bisons,cfb:harding-bisons,espn
 cfb,Hardrockers,cfb:south-dakota-mines-hardrockers,espn
 cfb,Hartwick,cfb:hartwick-hawks,espn
 cfb,Harvard,cfb:harvard-crimson,espn
 cfb,Haskell,cfb:haskell-indian-nations-univ-jayhawks,espn
 cfb,Haskell Indian Nations Univ,cfb:haskell-indian-nations-univ-jayhawks,espn
+cfb,Haskell Indian Nations Univ Jayhawks,cfb:haskell-indian-nations-univ-jayhawks,espn
 cfb,Hatters,cfb:stetson-hatters,espn
 cfb,Hawai'i,cfb:hawaii-rainbow-warriors,espn
 cfb,Hawai'i Rainbow Warriors,cfb:hawaii-rainbow-warriors,espn
@@ -1195,16 +1273,17 @@ cfb,Henderson State Reddies,cfb:henderson-state-reddies,espn
 cfb,Hendrix,cfb:hendrix-warriors,espn
 cfb,Hilbert,cfb:hilbert-hawks,espn
 cfb,Hillsdale,cfb:hillsdale-chargers,espn
+cfb,Hillsdale Chargers,cfb:hillsdale-chargers,espn
 cfb,Hilltoppers,cfb:west-liberty-hilltoppers,espn
 cfb,Hilltoppers,cfb:western-kentucky-hilltoppers,espn
 cfb,Hiram,cfb:hiram-terriers,espn
 cfb,Hobart,cfb:hobart-statesmen,espn
+cfb,Hobart Statesmen,cfb:hobart-statesmen,espn
 cfb,Hokies,cfb:virginia-tech-hokies,espn
 cfb,Holland College,cfb:holland-college-hurricanes,espn
-cfb,Holland College Hurricanes,cfb:holland-college-hurricanes,espn
 cfb,Holy Cross,cfb:holy-cross-crusaders,espn
-cfb,Holy Cross Crusaders,cfb:holy-cross-crusaders,espn
 cfb,Hoosiers,cfb:indiana-hoosiers,espn
+cfb,Hope Flying Dutchmen,cfb:hope-flying-dutchmen,espn
 cfb,Horned Frogs,cfb:tcu-horned-frogs,espn
 cfb,Hornets,cfb:alabama-state-hornets,espn
 cfb,Hornets,cfb:delaware-state-hornets,espn
@@ -1216,7 +1295,6 @@ cfb,Hou Christian,cfb:houston-christian-huskies,espn
 cfb,Houston,cfb:houston-cougars,espn
 cfb,Houston Christian,cfb:houston-christian-huskies,espn
 cfb,Howard,cfb:howard-bison,espn
-cfb,Howard Bison,cfb:howard-bison,espn
 cfb,Howard Payne,cfb:howard-payne-yellow-jackets,espn
 cfb,Howard Payne Yellow Jackets,cfb:howard-payne-yellow-jackets,espn
 cfb,Hoyas,cfb:georgetown-hoyas,espn
@@ -1243,29 +1321,30 @@ cfb,INDWESLYAN,cfb:indiana-wesleyan-wildcats,espn
 cfb,INDY,cfb:indianapolis-greyhounds,espn
 cfb,INST,cfb:indiana-state-sycamores,espn
 cfb,INWESL,cfb:indiana-wesleyan-wildcats,espn
+cfb,IOWA,cfb:iowa-hawkeyes,espn
 cfb,ISU,cfb:iowa-state-cyclones,espn
 cfb,ITH,cfb:ithaca-bombers,espn
 cfb,IU,cfb:indiana-hoosiers,espn
 cfb,IU Penn,cfb:iu-pennsylvania-crimson-hawks,espn
 cfb,IU Pennsylvania,cfb:iu-pennsylvania-crimson-hawks,espn
+cfb,IU Pennsylvania Crimson Hawks,cfb:iu-pennsylvania-crimson-hawks,espn
 cfb,IUP,cfb:iu-pennsylvania-crimson-hawks,espn
 cfb,Ichabods,cfb:washburn-ichabods,espn
 cfb,Idaho,cfb:idaho-vandals,espn
 cfb,Idaho St,cfb:idaho-state-bengals,espn
 cfb,Idaho State,cfb:idaho-state-bengals,espn
-cfb,Idaho Vandals,cfb:idaho-vandals,espn
+cfb,Idaho State Bengals,cfb:idaho-state-bengals,espn
 cfb,Illinois,cfb:illinois-fighting-illini,espn
 cfb,Illinois Col,cfb:illinois-college-blueboys,espn
 cfb,Illinois College,cfb:illinois-college-blueboys,espn
+cfb,Illinois College Blueboys,cfb:illinois-college-blueboys,espn
 cfb,Illinois Fighting Illini,cfb:illinois-fighting-illini,espn
 cfb,Illinois St,cfb:illinois-state-redbirds,espn
 cfb,Illinois State,cfb:illinois-state-redbirds,espn
-cfb,Illinois State Redbirds,cfb:illinois-state-redbirds,espn
 cfb,Illinois Wesleyan,cfb:illinois-wesleyan-titans,espn
-cfb,Illinois Wesleyan Titans,cfb:illinois-wesleyan-titans,espn
 cfb,Incarnate Word,cfb:incarnate-word-cardinals,espn
-cfb,Incarnate Word Cardinals,cfb:incarnate-word-cardinals,espn
 cfb,Indiana,cfb:indiana-hoosiers,espn
+cfb,Indiana Hoosiers,cfb:indiana-hoosiers,espn
 cfb,Indiana St,cfb:indiana-state-sycamores,espn
 cfb,Indiana State,cfb:indiana-state-sycamores,espn
 cfb,Indiana Wesleyan,cfb:indiana-wesleyan-wildcats,espn
@@ -1273,7 +1352,7 @@ cfb,Indianapolis,cfb:indianapolis-greyhounds,espn
 cfb,Indianapolis Greyhounds,cfb:indianapolis-greyhounds,espn
 cfb,Indians,cfb:catawba-indians,espn
 cfb,Indians,cfb:cumberlands-indians,espn
-cfb,Iowa,cfb:iowa-hawkeyes,espn
+cfb,Iowa Hawkeyes,cfb:iowa-hawkeyes,espn
 cfb,Iowa State,cfb:iowa-state-cyclones,espn
 cfb,Iowa State Cyclones,cfb:iowa-state-cyclones,espn
 cfb,Ithaca,cfb:ithaca-bombers,espn
@@ -1290,36 +1369,31 @@ cfb,JXST,cfb:jacksonville-state-gamecocks,espn
 cfb,Jackrabbits,cfb:south-dakota-state-jackrabbits,espn
 cfb,Jackson St,cfb:jackson-state-tigers,espn
 cfb,Jackson State,cfb:jackson-state-tigers,espn
-cfb,Jackson State Tigers,cfb:jackson-state-tigers,espn
 cfb,Jacksonville State,cfb:jacksonville-state-gamecocks,espn
 cfb,Jaguars,cfb:cole-college-jaguars,espn
 cfb,Jaguars,cfb:south-alabama-jaguars,espn
 cfb,Jaguars,cfb:southern-jaguars,espn
 cfb,James Madison,cfb:james-madison-dukes,espn
 cfb,Jamestown,cfb:jamestown-jimmies,espn
+cfb,Jamestown Jimmies,cfb:jamestown-jimmies,espn
 cfb,Javelinas,cfb:texas-am-kingsville-javelinas,espn
 cfb,Jax State,cfb:jacksonville-state-gamecocks,espn
 cfb,Jayhawks,cfb:haskell-indian-nations-univ-jayhawks,espn
 cfb,Jayhawks,cfb:kansas-jayhawks,espn
 cfb,Jimmies,cfb:jamestown-jimmies,espn
 cfb,John Carroll,cfb:john-carroll-blue-streaks,espn
-cfb,John Carroll Blue Streaks,cfb:john-carroll-blue-streaks,espn
 cfb,Johnnies,cfb:saint-johns-mn-johnnies,espn
 cfb,Johns Hopkins,cfb:johns-hopkins-blue-jays,espn
-cfb,Johns Hopkins Blue Jays,cfb:johns-hopkins-blue-jays,espn
 cfb,Johnson C Smth,cfb:johnson-c-smith-golden-bulls,espn
 cfb,Johnson C. Smith,cfb:johnson-c-smith-golden-bulls,espn
 cfb,Jumbos,cfb:tufts-jumbos,espn
 cfb,Juniata,cfb:juniata-eagles,espn
-cfb,Juniata Eagles,cfb:juniata-eagles,espn
 cfb,KALC,cfb:kalamazoo-hornets,espn
 cfb,KANSA,cfb:kansas-wesleyan-ks-wesleyan,espn
 cfb,KCU,cfb:kentucky-christian-knights,espn
-cfb,KEISER,cfb:keiser-university-keiser,espn
 cfb,KENN,cfb:kennesaw-state-owls,espn
 cfb,KENT,cfb:kent-state-golden-flashes,espn
 cfb,KNGS,cfb:kings-monarchs,espn
-cfb,KNOX,cfb:knox-prairie-fire,espn
 cfb,KNY,cfb:kenyon-owls,espn
 cfb,KS Weslyan,cfb:kansas-wesleyan-ks-wesleyan,espn
 cfb,KSU,cfb:kansas-state-wildcats,espn
@@ -1333,28 +1407,30 @@ cfb,KYSU,cfb:kentucky-state-thorobreds,espn
 cfb,Kalamazoo,cfb:kalamazoo-hornets,espn
 cfb,Kalamazoo Hornets,cfb:kalamazoo-hornets,espn
 cfb,Kansas,cfb:kansas-jayhawks,espn
-cfb,Kansas Jayhawks,cfb:kansas-jayhawks,espn
 cfb,Kansas St,cfb:kansas-state-wildcats,espn
 cfb,Kansas State,cfb:kansas-state-wildcats,espn
-cfb,Kansas State Wildcats,cfb:kansas-state-wildcats,espn
 cfb,Kansas Wesleyan,cfb:kansas-wesleyan-ks-wesleyan,espn
+cfb,Kansas Wesleyan Ks Wesleyan,cfb:kansas-wesleyan-ks-wesleyan,espn
 cfb,Kats,cfb:suny-erie-kats,espn
 cfb,Kean,cfb:kean-cougars,espn
+cfb,Kean Cougars,cfb:kean-cougars,espn
+cfb,Keiser,cfb:keiser-university-keiser,espn
 cfb,Keiser Univers,cfb:keiser-university-keiser,espn
 cfb,Keiser University,cfb:keiser-university-keiser,espn
-cfb,Keiser University Keiser,cfb:keiser-university-keiser,espn
 cfb,Kennesaw St,cfb:kennesaw-state-owls,espn
 cfb,Kennesaw State,cfb:kennesaw-state-owls,espn
+cfb,Kennesaw State Owls,cfb:kennesaw-state-owls,espn
 cfb,Kent State,cfb:kent-state-golden-flashes,espn
+cfb,Kent State Golden Flashes,cfb:kent-state-golden-flashes,espn
 cfb,Kentucky,cfb:kentucky-wildcats,espn
 cfb,Kentucky Christian,cfb:kentucky-christian-knights,espn
 cfb,Kentucky Christian Knights,cfb:kentucky-christian-knights,espn
 cfb,Kentucky St,cfb:kentucky-state-thorobreds,espn
 cfb,Kentucky State,cfb:kentucky-state-thorobreds,espn
-cfb,Kentucky State Thorobreds,cfb:kentucky-state-thorobreds,espn
 cfb,Kentucky Wesleyan,cfb:kentucky-wesleyan-panthers,espn
 cfb,Kentucky Wesleyan Panthers,cfb:kentucky-wesleyan-panthers,espn
 cfb,Kenyon,cfb:kenyon-owls,espn
+cfb,Kenyon Owls,cfb:kenyon-owls,espn
 cfb,Keydets,cfb:vmi-keydets,espn
 cfb,Keystone,cfb:keystone-giants,espn
 cfb,Keystone Giants,cfb:keystone-giants,espn
@@ -1369,10 +1445,10 @@ cfb,Knights,cfb:southern-virginia-knights,espn
 cfb,Knights,cfb:st-andrews-knights,espn
 cfb,Knights,cfb:ucf-knights,espn
 cfb,Knights,cfb:wartburg-knights,espn
+cfb,Knox,cfb:knox-prairie-fire,espn
 cfb,Kohawks,cfb:coe-kohawks,espn
 cfb,Ks Wesleyan,cfb:kansas-wesleyan-ks-wesleyan,espn
 cfb,Kutztown,cfb:kutztown-golden-bears,espn
-cfb,Kutztown Golden Bears,cfb:kutztown-golden-bears,espn
 cfb,LA Christian,cfb:louisiana-christian-wildcats,espn
 cfb,LAF,cfb:lafayette-leopards,espn
 cfb,LAM,cfb:lamar-cardinals,espn
@@ -1401,7 +1477,6 @@ cfb,LNPA,cfb:lincoln-pa-lions,espn
 cfb,LOR,cfb:loras-duhawks,espn
 cfb,LOU,cfb:louisville-cardinals,espn
 cfb,LSU,cfb:lsu-tigers,espn
-cfb,LSU Tigers,cfb:lsu-tigers,espn
 cfb,LT,cfb:louisiana-tech-bulldogs,espn
 cfb,LUTH,cfb:luther-norse,espn
 cfb,LVC,cfb:lebanon-valley-flying-dutchmen,espn
@@ -1409,12 +1484,11 @@ cfb,LWU,cfb:lindsey-wilson-lindsey,espn
 cfb,LYCO,cfb:lycoming-warriors,espn
 cfb,LYON,cfb:lyon-scots,espn
 cfb,La Verne,cfb:la-verne-leopards,espn
-cfb,La Verne Leopards,cfb:la-verne-leopards,espn
 cfb,LaGrange,cfb:lagrange-panthers,espn
 cfb,Lafayette,cfb:lafayette-leopards,espn
+cfb,Lafayette Leopards,cfb:lafayette-leopards,espn
 cfb,Lake Erie,cfb:lake-erie-storm,espn
 cfb,Lake Forest,cfb:lake-forest-foresters,espn
-cfb,Lake Forest Foresters,cfb:lake-forest-foresters,espn
 cfb,Lakeland,cfb:lakeland-muskies,espn
 cfb,Lakers,cfb:grand-valley-state-lakers,espn
 cfb,Lakers,cfb:mercyhurst-lakers,espn
@@ -1422,7 +1496,6 @@ cfb,Lakers,cfb:roosevelt-lakers,espn
 cfb,Lamar,cfb:lamar-cardinals,espn
 cfb,Lancers,cfb:worcester-state-lancers,espn
 cfb,Lane College,cfb:lane-college-dragons,espn
-cfb,Lane College Dragons,cfb:lane-college-dragons,espn
 cfb,Langston,cfb:langston-lions,espn
 cfb,Langston Lions,cfb:langston-lions,espn
 cfb,Lawrence,cfb:lawrence-vikings,espn
@@ -1430,22 +1503,22 @@ cfb,Leathernecks,cfb:western-illinois-leathernecks,espn
 cfb,Lebanon Valley,cfb:lebanon-valley-flying-dutchmen,espn
 cfb,Lehigh,cfb:lehigh-mountain-hawks,espn
 cfb,Lenoir Rhyne,cfb:lenoir-rhyne-bears,espn
-cfb,Lenoir Rhyne Bears,cfb:lenoir-rhyne-bears,espn
 cfb,Leopards,cfb:la-verne-leopards,espn
 cfb,Leopards,cfb:lafayette-leopards,espn
 cfb,Lewis & Clark,cfb:lewis-clark-river-otters,espn
-cfb,Lewis & Clark River Otters,cfb:lewis-clark-river-otters,espn
 cfb,Liberty,cfb:liberty-flames,espn
 cfb,Liberty Flames,cfb:liberty-flames,espn
 cfb,Lincoln (CA),cfb:lincoln-ca-oaklanders,espn
 cfb,Lincoln (MO),cfb:lincoln-mo-blue-tigers,espn
 cfb,Lincoln (MO) Blue Tigers,cfb:lincoln-mo-blue-tigers,espn
 cfb,Lincoln (PA),cfb:lincoln-pa-lions,espn
+cfb,Lincoln (PA) Lions,cfb:lincoln-pa-lions,espn
 cfb,Lind Bellv,cfb:lindenwood-belleville-lynx,espn
 cfb,Lindenwood,cfb:lindenwood-lions,espn
 cfb,Lindenwood Belleville,cfb:lindenwood-belleville-lynx,espn
 cfb,Lindenwood Belleville Lynx,cfb:lindenwood-belleville-lynx,espn
 cfb,Lindsey Wilson,cfb:lindsey-wilson-lindsey,espn
+cfb,Lindsey Wilson LINDSEY,cfb:lindsey-wilson-lindsey,espn
 cfb,Linfield,cfb:linfield-wildcats,espn
 cfb,Linfield Wildcats,cfb:linfield-wildcats,espn
 cfb,Lions,cfb:albright-lions,espn
@@ -1468,6 +1541,7 @@ cfb,Livingstone,cfb:livingstone-blue-bears,espn
 cfb,Lobos,cfb:new-mexico-lobos,espn
 cfb,Lobos,cfb:sul-ross-state-lobos,espn
 cfb,Lock Haven,cfb:lock-haven-bald-eagles,espn
+cfb,Lock Haven Bald Eagles,cfb:lock-haven-bald-eagles,espn
 cfb,Loggers,cfb:puget-sound-loggers,espn
 cfb,Long Island,cfb:long-island-university-sharks,espn
 cfb,Long Island University,cfb:long-island-university-sharks,espn
@@ -1475,24 +1549,22 @@ cfb,Long Island University Sharks,cfb:long-island-university-sharks,espn
 cfb,Longhorns,cfb:texas-longhorns,espn
 cfb,Lopers,cfb:nebraska-kearney-lopers,espn
 cfb,Loras,cfb:loras-duhawks,espn
+cfb,Loras Duhawks,cfb:loras-duhawks,espn
 cfb,Louisiana,cfb:louisiana-ragin-cajuns,espn
 cfb,Louisiana Christian,cfb:louisiana-christian-wildcats,espn
-cfb,Louisiana Christian Wildcats,cfb:louisiana-christian-wildcats,espn
 cfb,Louisiana Tech,cfb:louisiana-tech-bulldogs,espn
 cfb,Louisiana Tech Bulldogs,cfb:louisiana-tech-bulldogs,espn
 cfb,Louisville,cfb:louisville-cardinals,espn
-cfb,Louisville Cardinals,cfb:louisville-cardinals,espn
 cfb,Lumberjacks,cfb:northern-arizona-lumberjacks,espn
 cfb,Lumberjacks,cfb:stephen-f-austin-lumberjacks,espn
 cfb,Lutes,cfb:pacific-lutheran-lutes,espn
 cfb,Luther,cfb:luther-norse,espn
-cfb,Luther Norse,cfb:luther-norse,espn
 cfb,Lycoming,cfb:lycoming-warriors,espn
+cfb,Lycoming Warriors,cfb:lycoming-warriors,espn
 cfb,Lynx,cfb:lindenwood-belleville-lynx,espn
 cfb,Lynx,cfb:rhodes-lynx,espn
 cfb,M-OH,cfb:miami-oh-redhawks,espn
 cfb,MAC,cfb:macalester-scots,espn
-cfb,MANITOBA,cfb:manitoba,espn
 cfb,MARIAN,cfb:marian-in-marian,espn
 cfb,MARY,cfb:university-of-mary-marauders,espn
 cfb,MASS,cfb:massachusetts-minutemen,espn
@@ -1526,7 +1598,6 @@ cfb,MINS,cfb:minot-state-beavers,espn
 cfb,MISE,cfb:misericordia-cougars,espn
 cfb,MISS,cfb:ole-miss-rebels,espn
 cfb,MIT,cfb:mit-engineers,espn
-cfb,MIT Engineers,cfb:mit-engineers,espn
 cfb,MITE,cfb:monterrey-tech-borregos,espn
 cfb,MIZ,cfb:missouri-tigers,espn
 cfb,MLC,cfb:martin-luther-knights,espn
@@ -1577,33 +1648,38 @@ cfb,Macalester,cfb:macalester-scots,espn
 cfb,Madonna,cfb:madonna,espn
 cfb,Madonna MADONNA,cfb:madonna,espn
 cfb,Maine,cfb:maine-black-bears,espn
+cfb,Maine Black Bears,cfb:maine-black-bears,espn
 cfb,Maine Maritime,cfb:maine-maritime-mariners,espn
-cfb,Maine Maritime Mariners,cfb:maine-maritime-mariners,espn
 cfb,Majors,cfb:millsaps-majors,espn
 cfb,Mammoths,cfb:amherst-mammoths,espn
 cfb,Manchester,cfb:manchester-spartans,espn
-cfb,Manchester Spartans,cfb:manchester-spartans,espn
+cfb,Manitoba,cfb:manitoba,espn
 cfb,Manitoba MANITOBA,cfb:manitoba,espn
 cfb,Mansfield,cfb:mansfield-mountaineers,espn
+cfb,Mansfield Mountaineers,cfb:mansfield-mountaineers,espn
 cfb,Marauders,cfb:central-state-marauders,espn
 cfb,Marauders,cfb:millersville-marauders,espn
 cfb,Marauders,cfb:university-of-mary-marauders,espn
 cfb,Marian (IN),cfb:marian-in-marian,espn
 cfb,Marietta,cfb:marietta-pioneers,espn
+cfb,Marietta Pioneers,cfb:marietta-pioneers,espn
 cfb,Mariners,cfb:maine-maritime-mariners,espn
 cfb,Mariners,cfb:merchant-marine-mariners,espn
 cfb,Marist,cfb:marist-red-foxes,espn
+cfb,Marist Red Foxes,cfb:marist-red-foxes,espn
 cfb,Maroon Tigers,cfb:morehouse-maroon-tigers,espn
 cfb,Maroons,cfb:chicago-maroons,espn
 cfb,Mars Hill,cfb:mars-hill-lions,espn
+cfb,Mars Hill Lions,cfb:mars-hill-lions,espn
 cfb,Marshall,cfb:marshall-thundering-herd,espn
 cfb,Martin Luther,cfb:martin-luther-knights,espn
-cfb,Martin Luther Knights,cfb:martin-luther-knights,espn
 cfb,Mary Hardin,cfb:mary-hardin-baylor-crusaders,espn
 cfb,Mary Hardin Baylor,cfb:mary-hardin-baylor-crusaders,espn
 cfb,Mary Hardin Baylor Crusaders,cfb:mary-hardin-baylor-crusaders,espn
 cfb,Maryland,cfb:maryland-terrapins,espn
+cfb,Maryland Terrapins,cfb:maryland-terrapins,espn
 cfb,Maryville (TN),cfb:maryville-tn-scots,espn
+cfb,Maryville (TN) Scots,cfb:maryville-tn-scots,espn
 cfb,Mass Maritime,cfb:mass-maritime-buccaneers,espn
 cfb,Massachusetts,cfb:massachusetts-minutemen,espn
 cfb,Massachusetts Minutemen,cfb:massachusetts-minutemen,espn
@@ -1611,9 +1687,7 @@ cfb,Mavericks,cfb:colorado-mesa-mavericks,espn
 cfb,Mavericks,cfb:minnesota-state-mavericks,espn
 cfb,Mayville St,cfb:mayville-state-comets,espn
 cfb,Mayville State,cfb:mayville-state-comets,espn
-cfb,Mayville State Comets,cfb:mayville-state-comets,espn
 cfb,McDaniel,cfb:mcdaniel-green-terror,espn
-cfb,McDaniel Green Terror,cfb:mcdaniel-green-terror,espn
 cfb,McKendree,cfb:mckendree-bearcats,espn
 cfb,McMurry,cfb:mcmurry-war-hawks,espn
 cfb,McNeese,cfb:mcneese-cowboys,espn
@@ -1626,34 +1700,35 @@ cfb,Mercer,cfb:mercer-bears,espn
 cfb,Mercer Bears,cfb:mercer-bears,espn
 cfb,Merch Marine,cfb:merchant-marine-mariners,espn
 cfb,Merchant Marine,cfb:merchant-marine-mariners,espn
-cfb,Merchant Marine Mariners,cfb:merchant-marine-mariners,espn
 cfb,Mercyhurst,cfb:mercyhurst-lakers,espn
 cfb,Mercyhurst Lakers,cfb:mercyhurst-lakers,espn
 cfb,Merrimack,cfb:merrimack-warriors,espn
+cfb,Merrimack Warriors,cfb:merrimack-warriors,espn
 cfb,Methodist,cfb:methodist-monarchs,espn
-cfb,Methodist Monarchs,cfb:methodist-monarchs,espn
 cfb,Miami,cfb:miami-hurricanes,espn
+cfb,Miami (OH),cfb:miami-oh-redhawks,espn
+cfb,Miami (OH) RedHawks,cfb:miami-oh-redhawks,espn
 cfb,Miami Hurricanes,cfb:miami-hurricanes,espn
-cfb,Miami OH,cfb:miami-oh-redhawks,espn
 cfb,Michigan,cfb:michigan-wolverines,espn
 cfb,Michigan St,cfb:michigan-state-spartans,espn
 cfb,Michigan State,cfb:michigan-state-spartans,espn
-cfb,Michigan State Spartans,cfb:michigan-state-spartans,espn
 cfb,Michigan Tech,cfb:michigan-tech-huskies,espn
 cfb,Michigan Tech Huskies,cfb:michigan-tech-huskies,espn
+cfb,Michigan Wolverines,cfb:michigan-wolverines,espn
 cfb,Middle Tennessee,cfb:middle-tennessee-blue-raiders,espn
 cfb,Middle Tennessee Blue Raiders,cfb:middle-tennessee-blue-raiders,espn
 cfb,Middlebury,cfb:middlebury-panthers,espn
+cfb,Middlebury Panthers,cfb:middlebury-panthers,espn
 cfb,Midland,cfb:midland-midland-lutheran,espn
 cfb,Midland MIDLAND LUTHERAN,cfb:midland-midland-lutheran,espn
 cfb,Midshipmen,cfb:navy-midshipmen,espn
 cfb,Midwestern St,cfb:midwestern-state-mustangs,espn
 cfb,Midwestern State,cfb:midwestern-state-mustangs,espn
+cfb,Midwestern State Mustangs,cfb:midwestern-state-mustangs,espn
 cfb,Miles,cfb:miles-golden-bears,espn
 cfb,Millersville,cfb:millersville-marauders,espn
 cfb,Millersville Marauders,cfb:millersville-marauders,espn
 cfb,Millikin,cfb:millikin-big-blue,espn
-cfb,Millikin Big Blue,cfb:millikin-big-blue,espn
 cfb,Millsaps,cfb:millsaps-majors,espn
 cfb,Millsaps Majors,cfb:millsaps-majors,espn
 cfb,Miners,cfb:missouri-st-miners,espn
@@ -1663,26 +1738,25 @@ cfb,Minn Moorhead,cfb:minnesota-st-moorhead-dragons,espn
 cfb,Minn Morris,cfb:minnesota-morris-cougars,espn
 cfb,Minnesota,cfb:minnesota-golden-gophers,espn
 cfb,Minnesota Duluth,cfb:minnesota-duluth-bulldogs,espn
-cfb,Minnesota Duluth Bulldogs,cfb:minnesota-duluth-bulldogs,espn
+cfb,Minnesota Golden Gophers,cfb:minnesota-golden-gophers,espn
 cfb,Minnesota Morris,cfb:minnesota-morris-cougars,espn
 cfb,Minnesota Morris Cougars,cfb:minnesota-morris-cougars,espn
 cfb,Minnesota St,cfb:minnesota-state-mavericks,espn
 cfb,Minnesota St Moorhead,cfb:minnesota-st-moorhead-dragons,espn
 cfb,Minnesota State,cfb:minnesota-state-mavericks,espn
-cfb,Minnesota State Mavericks,cfb:minnesota-state-mavericks,espn
 cfb,Minot St,cfb:minot-state-beavers,espn
 cfb,Minot State,cfb:minot-state-beavers,espn
+cfb,Minot State Beavers,cfb:minot-state-beavers,espn
 cfb,Minutemen,cfb:massachusetts-minutemen,espn
 cfb,Misericordia,cfb:misericordia-cougars,espn
-cfb,Misericordia Cougars,cfb:misericordia-cougars,espn
 cfb,Miss Valley St,cfb:mississippi-valley-state-delta-devils,espn
 cfb,Mississippi St,cfb:mississippi-state-bulldogs,espn
 cfb,Mississippi State,cfb:mississippi-state-bulldogs,espn
 cfb,Mississippi Valley State,cfb:mississippi-valley-state-delta-devils,espn
-cfb,Mississippi Valley State Delta Devils,cfb:mississippi-valley-state-delta-devils,espn
 cfb,Missouri,cfb:missouri-tigers,espn
 cfb,Missouri Bapt,cfb:missouri-baptist-spartans,espn
 cfb,Missouri Baptist,cfb:missouri-baptist-spartans,espn
+cfb,Missouri Baptist Spartans,cfb:missouri-baptist-spartans,espn
 cfb,Missouri S&T,cfb:missouri-st-miners,espn
 cfb,Missouri S&T Miners,cfb:missouri-st-miners,espn
 cfb,Missouri So St,cfb:missouri-southern-state-lions,espn
@@ -1691,35 +1765,36 @@ cfb,Missouri St,cfb:missouri-state-bears,espn
 cfb,Missouri State,cfb:missouri-state-bears,espn
 cfb,Missouri State Bears,cfb:missouri-state-bears,espn
 cfb,Missouri Western,cfb:missouri-western-griffons,espn
+cfb,Missouri Western Griffons,cfb:missouri-western-griffons,espn
 cfb,Mocs,cfb:chattanooga-mocs,espn
 cfb,Monarchs,cfb:kings-monarchs,espn
 cfb,Monarchs,cfb:methodist-monarchs,espn
 cfb,Monarchs,cfb:old-dominion-monarchs,espn
 cfb,Monmouth,cfb:monmouth-hawks,espn
 cfb,Monmouth (IL),cfb:monmouth-il-fighting-scots,espn
-cfb,Monmouth Hawks,cfb:monmouth-hawks,espn
 cfb,Monroe,cfb:monroe-mustangs,espn
-cfb,Monroe Mustangs,cfb:monroe-mustangs,espn
 cfb,Montana,cfb:montana-grizzlies,espn
+cfb,Montana Grizzlies,cfb:montana-grizzlies,espn
 cfb,Montana St,cfb:montana-state-bobcats,espn
 cfb,Montana State,cfb:montana-state-bobcats,espn
-cfb,Montana State Bobcats,cfb:montana-state-bobcats,espn
 cfb,Montana Western,cfb:montana-western-bulldogs,espn
 cfb,Montclair,cfb:montclair-state-red-hawks,espn
 cfb,Montclair State,cfb:montclair-state-red-hawks,espn
+cfb,Montclair State Red Hawks,cfb:montclair-state-red-hawks,espn
 cfb,Monterrey Tech,cfb:monterrey-tech-borregos,espn
+cfb,Monterrey Tech Borregos,cfb:monterrey-tech-borregos,espn
 cfb,Moravian,cfb:moravian-greyhounds,espn
+cfb,Moravian Greyhounds,cfb:moravian-greyhounds,espn
 cfb,Morehead St,cfb:morehead-state-eagles,espn
 cfb,Morehead State,cfb:morehead-state-eagles,espn
 cfb,Morehead State Eagles,cfb:morehead-state-eagles,espn
 cfb,Morehouse,cfb:morehouse-maroon-tigers,espn
+cfb,Morehouse Maroon Tigers,cfb:morehouse-maroon-tigers,espn
 cfb,Morgan St,cfb:morgan-state-bears,espn
 cfb,Morgan State,cfb:morgan-state-bears,espn
-cfb,Morgan State Bears,cfb:morgan-state-bears,espn
 cfb,Morningside,cfb:morningside-chiefs,espn
 cfb,Moundbuilders,cfb:southwestern-ks-moundbuilders,espn
 cfb,Mount St Joseph,cfb:mount-st-joseph-lions,espn
-cfb,Mount St Joseph Lions,cfb:mount-st-joseph-lions,espn
 cfb,Mount Union,cfb:mount-union-purple-raiders,espn
 cfb,Mount Union Purple Raiders,cfb:mount-union-purple-raiders,espn
 cfb,Mountain Hawks,cfb:lehigh-mountain-hawks,espn
@@ -1731,6 +1806,7 @@ cfb,Mountaineers,cfb:western-colorado-mountaineers,espn
 cfb,Mt St Joseph,cfb:mount-st-joseph-lions,espn
 cfb,Mt Union,cfb:mount-union-purple-raiders,espn
 cfb,Muhlenberg,cfb:muhlenberg-mules,espn
+cfb,Muhlenberg Mules,cfb:muhlenberg-mules,espn
 cfb,Muleriders,cfb:southern-arkansas-muleriders,espn
 cfb,Mules,cfb:central-missouri-mules,espn
 cfb,Mules,cfb:muhlenberg-mules,espn
@@ -1759,6 +1835,7 @@ cfb,N'Western (OK),cfb:northwestern-ok-rangers,espn
 cfb,N'Western St,cfb:northwestern-state-demons,espn
 cfb,NAMU,cfb:north-american-stallions,espn
 cfb,NAU,cfb:northern-arizona-lumberjacks,espn
+cfb,NAVY,cfb:navy-midshipmen,espn
 cfb,NBRY,cfb:newberry-wolves,espn
 cfb,NC A&T,cfb:north-carolina-at-aggies,espn
 cfb,NC Central,cfb:north-carolina-central-eagles,espn
@@ -1803,31 +1880,31 @@ cfb,NYCL,cfb:suny-cortland-red-dragons,espn
 cfb,NYER,cfb:suny-erie-kats,espn
 cfb,NYMS,cfb:suny-morrisville-mustangs,espn
 cfb,NYMT,cfb:suny-maritime-privateers,espn
-cfb,Navy,cfb:navy-midshipmen,espn
 cfb,Navy Midshipmen,cfb:navy-midshipmen,espn
 cfb,Nebraska,cfb:nebraska-cornhuskers,espn
 cfb,Nebraska Cornhuskers,cfb:nebraska-cornhuskers,espn
 cfb,Nebraska Kearney,cfb:nebraska-kearney-lopers,espn
 cfb,Nebraska Kearney Lopers,cfb:nebraska-kearney-lopers,espn
 cfb,Nebraska Wesleyan,cfb:nebraska-wesleyan-prairie-wolves,espn
-cfb,Nebraska Wesleyan Prairie Wolves,cfb:nebraska-wesleyan-prairie-wolves,espn
 cfb,Nelson,cfb:nelson-tx-lions,espn
 cfb,Nelson (TX),cfb:nelson-tx-lions,espn
 cfb,Nevada,cfb:nevada-wolf-pack,espn
+cfb,Nevada Wolf Pack,cfb:nevada-wolf-pack,espn
 cfb,New England,cfb:new-england-noreasters,espn
 cfb,New England Nor'easters,cfb:new-england-noreasters,espn
 cfb,New Hampshire,cfb:new-hampshire-wildcats,espn
 cfb,New Hampshire Wildcats,cfb:new-hampshire-wildcats,espn
 cfb,New Haven,cfb:new-haven-chargers,espn
-cfb,New Haven Chargers,cfb:new-haven-chargers,espn
 cfb,New Mexico,cfb:new-mexico-lobos,espn
 cfb,New Mexico Highlands,cfb:new-mexico-highlands-cowboys,espn
+cfb,New Mexico Highlands Cowboys,cfb:new-mexico-highlands-cowboys,espn
+cfb,New Mexico Lobos,cfb:new-mexico-lobos,espn
 cfb,New Mexico St,cfb:new-mexico-state-aggies,espn
 cfb,New Mexico State,cfb:new-mexico-state-aggies,espn
-cfb,New Mexico State Aggies,cfb:new-mexico-state-aggies,espn
 cfb,Newberry,cfb:newberry-wolves,espn
 cfb,Newberry Wolves,cfb:newberry-wolves,espn
 cfb,Nicholls,cfb:nicholls-colonels,espn
+cfb,Nicholls Colonels,cfb:nicholls-colonels,espn
 cfb,Nichols,cfb:nichols-bison,espn
 cfb,Nichols Bison,cfb:nichols-bison,espn
 cfb,Night Hawks,cfb:thomas-night-hawks,espn
@@ -1835,19 +1912,18 @@ cfb,Nittany Lions,cfb:penn-state-nittany-lions,espn
 cfb,Nor'easters,cfb:new-england-noreasters,espn
 cfb,Norfolk St,cfb:norfolk-state-spartans,espn
 cfb,Norfolk State,cfb:norfolk-state-spartans,espn
+cfb,Norfolk State Spartans,cfb:norfolk-state-spartans,espn
 cfb,Norse,cfb:luther-norse,espn
 cfb,North Alabama,cfb:north-alabama-lions,espn
-cfb,North Alabama Lions,cfb:north-alabama-lions,espn
 cfb,North American,cfb:north-american-stallions,espn
 cfb,North Carolina,cfb:north-carolina-tar-heels,espn
 cfb,North Carolina A&T,cfb:north-carolina-at-aggies,espn
 cfb,North Carolina A&T Aggies,cfb:north-carolina-at-aggies,espn
 cfb,North Carolina Central,cfb:north-carolina-central-eagles,espn
-cfb,North Carolina Central Eagles,cfb:north-carolina-central-eagles,espn
 cfb,North Carolina Tar Heels,cfb:north-carolina-tar-heels,espn
 cfb,North Carolina Wesleyan,cfb:north-carolina-wesleyan-battling-bishops,espn
+cfb,North Carolina Wesleyan Battling Bishops,cfb:north-carolina-wesleyan-battling-bishops,espn
 cfb,North Central College,cfb:north-central-college-cardinals,espn
-cfb,North Central College Cardinals,cfb:north-central-college-cardinals,espn
 cfb,North Dakota,cfb:north-dakota-fighting-hawks,espn
 cfb,North Dakota State,cfb:north-dakota-state-bison,espn
 cfb,North Dakota State Bison,cfb:north-dakota-state-bison,espn
@@ -1855,35 +1931,35 @@ cfb,North Greenville,cfb:north-greenville-trailblazers,espn
 cfb,North Greenville Trailblazers,cfb:north-greenville-trailblazers,espn
 cfb,North Park,cfb:north-park-vikings,espn
 cfb,North Texas,cfb:north-texas-mean-green,espn
-cfb,North Texas Mean Green,cfb:north-texas-mean-green,espn
 cfb,Northeastern State,cfb:northeastern-state-riverhawks,espn
 cfb,Northern Arizona,cfb:northern-arizona-lumberjacks,espn
-cfb,Northern Arizona Lumberjacks,cfb:northern-arizona-lumberjacks,espn
 cfb,Northern Colorado,cfb:northern-colorado-bears,espn
 cfb,Northern Illinois,cfb:northern-illinois-huskies,espn
 cfb,Northern Illinois Huskies,cfb:northern-illinois-huskies,espn
 cfb,Northern Iowa,cfb:northern-iowa-panthers,espn
-cfb,Northern Iowa Panthers,cfb:northern-iowa-panthers,espn
 cfb,Northern Michigan,cfb:northern-michigan-wildcats,espn
+cfb,Northern Michigan Wildcats,cfb:northern-michigan-wildcats,espn
 cfb,Northern St,cfb:northern-state-wolves,espn
 cfb,Northern State,cfb:northern-state-wolves,espn
 cfb,Northern State Wolves,cfb:northern-state-wolves,espn
 cfb,Northwest Missouri State,cfb:northwest-missouri-state-bearcats,espn
-cfb,Northwest Missouri State Bearcats,cfb:northwest-missouri-state-bearcats,espn
 cfb,Northwestern,cfb:northwestern-wildcats,espn
 cfb,Northwestern (MN),cfb:northwestern-mn-eagles,espn
-cfb,Northwestern (MN) Eagles,cfb:northwestern-mn-eagles,espn
 cfb,Northwestern (OK),cfb:northwestern-ok-rangers,espn
+cfb,Northwestern (OK) Rangers,cfb:northwestern-ok-rangers,espn
 cfb,Northwestern State,cfb:northwestern-state-demons,espn
+cfb,Northwestern State Demons,cfb:northwestern-state-demons,espn
+cfb,Northwestern Wildcats,cfb:northwestern-wildcats,espn
 cfb,Northwood,cfb:northwood-timberwolves,espn
+cfb,Northwood Timberwolves,cfb:northwood-timberwolves,espn
 cfb,Norwich,cfb:norwich-cadets,espn
 cfb,Norwich Cadets,cfb:norwich-cadets,espn
 cfb,Notre Dame,cfb:notre-dame-fighting-irish,espn
-cfb,Notre Dame Fighting Irish,cfb:notre-dame-fighting-irish,espn
 cfb,OBE,cfb:oberlin-yeomen,espn
 cfb,OBU,cfb:ouachita-baptist-tigers,espn
 cfb,ODU,cfb:old-dominion-monarchs,espn
 cfb,OHDU,cfb:ohio-dominican-panthers,espn
+cfb,OHIO,cfb:ohio-bobcats,espn
 cfb,OHNU,cfb:ohio-northern-polar-bears,espn
 cfb,OK Baptist,cfb:oklahoma-baptist-bison,espn
 cfb,OK PANHANDLE ST,cfb:oklahoma-panhandle-ok-panhandle-st,espn
@@ -1903,23 +1979,25 @@ cfb,Oaklanders,cfb:lincoln-ca-oaklanders,espn
 cfb,Oauchita Bapt,cfb:ouachita-baptist-tigers,espn
 cfb,Oberlin,cfb:oberlin-yeomen,espn
 cfb,Oberlin Yeomen,cfb:oberlin-yeomen,espn
-cfb,Ohio,cfb:ohio-bobcats,espn
+cfb,Ohio Bobcats,cfb:ohio-bobcats,espn
 cfb,Ohio Dominican,cfb:ohio-dominican-panthers,espn
 cfb,Ohio Dominican Panthers,cfb:ohio-dominican-panthers,espn
 cfb,Ohio Northern,cfb:ohio-northern-polar-bears,espn
 cfb,Ohio State,cfb:ohio-state-buckeyes,espn
 cfb,Ohio State Newark,cfb:ohio-state-newark-titans,espn
+cfb,Ohio State Newark Titans,cfb:ohio-state-newark-titans,espn
 cfb,Ohio Wesleyan,cfb:ohio-wesleyan-battling-bishops,espn
-cfb,Ohio Wesleyan Battling Bishops,cfb:ohio-wesleyan-battling-bishops,espn
 cfb,Oilers,cfb:findlay-oilers,espn
 cfb,Oklahoma,cfb:oklahoma-sooners,espn
 cfb,Oklahoma Baptist,cfb:oklahoma-baptist-bison,espn
 cfb,Oklahoma Baptist Bison,cfb:oklahoma-baptist-bison,espn
 cfb,Oklahoma Panhandle,cfb:oklahoma-panhandle-ok-panhandle-st,espn
+cfb,Oklahoma Panhandle OK PANHANDLE ST,cfb:oklahoma-panhandle-ok-panhandle-st,espn
 cfb,Oklahoma St,cfb:oklahoma-state-cowboys,espn
 cfb,Oklahoma State,cfb:oklahoma-state-cowboys,espn
 cfb,Oklahoma State Cowboys,cfb:oklahoma-state-cowboys,espn
 cfb,Old Dominion,cfb:old-dominion-monarchs,espn
+cfb,Old Dominion Monarchs,cfb:old-dominion-monarchs,espn
 cfb,Ole Miss,cfb:ole-miss-rebels,espn
 cfb,Ole Miss Rebels,cfb:ole-miss-rebels,espn
 cfb,Oles,cfb:st-olaf-oles,espn
@@ -1928,11 +2006,12 @@ cfb,Olivet Comets,cfb:olivet-comets,espn
 cfb,Orange,cfb:syracuse-orange,espn
 cfb,Orediggers,cfb:colorado-school-of-mines-orediggers,espn
 cfb,Oregon,cfb:oregon-ducks,espn
+cfb,Oregon Ducks,cfb:oregon-ducks,espn
 cfb,Oregon St,cfb:oregon-state-beavers,espn
 cfb,Oregon State,cfb:oregon-state-beavers,espn
+cfb,Oregon State Beavers,cfb:oregon-state-beavers,espn
 cfb,Osunewark,cfb:ohio-state-newark-titans,espn
 cfb,Otterbein,cfb:otterbein-cardinals,espn
-cfb,Otterbein Cardinals,cfb:otterbein-cardinals,espn
 cfb,Ouachita Baptist,cfb:ouachita-baptist-tigers,espn
 cfb,Owls,cfb:florida-atlantic-owls,espn
 cfb,Owls,cfb:kennesaw-state-owls,espn
@@ -1943,7 +2022,6 @@ cfb,Owls,cfb:temple-owls,espn
 cfb,Owls,cfb:westfield-state-owls,espn
 cfb,PCLT,cfb:pacific-lutheran-lutes,espn
 cfb,PCOR,cfb:pacific-or-boxers,espn
-cfb,PENN,cfb:pennsylvania-quakers,espn
 cfb,PIKEV,cfb:pikeville-bears,espn
 cfb,PLYM,cfb:plymouth-state-panthers,espn
 cfb,POINT,cfb:point-university-skyhawks,espn
@@ -1985,7 +2063,9 @@ cfb,Panthers,cfb:virginia-union-panthers,espn
 cfb,Patriots,cfb:george-mason-university-patriots,espn
 cfb,Peacocks,cfb:upper-iowa-peacocks,espn
 cfb,Penguins,cfb:youngstown-state-penguins,espn
+cfb,Penn,cfb:pennsylvania-quakers,espn
 cfb,Penn State,cfb:penn-state-nittany-lions,espn
+cfb,Penn State Nittany Lions,cfb:penn-state-nittany-lions,espn
 cfb,Pennsylvania,cfb:pennsylvania-quakers,espn
 cfb,Pennsylvania Quakers,cfb:pennsylvania-quakers,espn
 cfb,Phoenix,cfb:elon-phoenix,espn
@@ -2011,6 +2091,7 @@ cfb,Pirates,cfb:whitworth-pirates,espn
 cfb,Pitt,cfb:pittsburgh-panthers,espn
 cfb,Pittsburg St,cfb:pittsburg-state-gorillas,espn
 cfb,Pittsburg State,cfb:pittsburg-state-gorillas,espn
+cfb,Pittsburg State Gorillas,cfb:pittsburg-state-gorillas,espn
 cfb,Pittsburgh,cfb:pittsburgh-panthers,espn
 cfb,Pittsburgh Panthers,cfb:pittsburgh-panthers,espn
 cfb,Plymouth St,cfb:plymouth-state-panthers,espn
@@ -2023,9 +2104,9 @@ cfb,Polar Bears,cfb:bowdoin-polar-bears,espn
 cfb,Polar Bears,cfb:ohio-northern-polar-bears,espn
 cfb,Polars,cfb:crown-polars,espn
 cfb,Pomona Pitzer,cfb:pomona-pitzer-sagehens,espn
-cfb,Pomona Pitzer Sagehens,cfb:pomona-pitzer-sagehens,espn
 cfb,Portland St,cfb:portland-state-vikings,espn
 cfb,Portland State,cfb:portland-state-vikings,espn
+cfb,Portland State Vikings,cfb:portland-state-vikings,espn
 cfb,Post Eagles,cfb:post-eagles,espn
 cfb,Prairie Fire,cfb:knox-prairie-fire,espn
 cfb,Prairie View,cfb:prairie-view-am-panthers,espn
@@ -2038,7 +2119,6 @@ cfb,Pride,cfb:greensboro-pride,espn
 cfb,Pride,cfb:springfield-pride,espn
 cfb,Pride,cfb:widener-pride,espn
 cfb,Princeton,cfb:princeton-tigers,espn
-cfb,Princeton Tigers,cfb:princeton-tigers,espn
 cfb,Privateers,cfb:suny-maritime-privateers,espn
 cfb,Profs,cfb:rowan-profs,espn
 cfb,Puget Sound,cfb:puget-sound-loggers,espn
@@ -2104,26 +2184,23 @@ cfb,Redbirds,cfb:illinois-state-redbirds,espn
 cfb,Reddies,cfb:henderson-state-reddies,espn
 cfb,Redhawks,cfb:southeast-missouri-state-redhawks,espn
 cfb,Redlands,cfb:redlands-bulldogs,espn
+cfb,Redlands Bulldogs,cfb:redlands-bulldogs,espn
 cfb,Regents,cfb:rockford-regents,espn
 cfb,Reinhardt,cfb:reinhardt-eagles,espn
 cfb,Rensselaer,cfb:rensselaer-engineers,espn
 cfb,Rensselaer Engineers,cfb:rensselaer-engineers,espn
 cfb,Rhode Island,cfb:rhode-island-rams,espn
-cfb,Rhode Island Rams,cfb:rhode-island-rams,espn
 cfb,Rhodes,cfb:rhodes-lynx,espn
-cfb,Rhodes Lynx,cfb:rhodes-lynx,espn
 cfb,Rice,cfb:rice-owls,espn
-cfb,Rice Owls,cfb:rice-owls,espn
 cfb,Richmond,cfb:richmond-spiders,espn
-cfb,Richmond Spiders,cfb:richmond-spiders,espn
 cfb,Ripon,cfb:ripon-red-hawks,espn
+cfb,Ripon Red Hawks,cfb:ripon-red-hawks,espn
 cfb,River Hawks,cfb:susquehanna-river-hawks,espn
 cfb,River Otters,cfb:lewis-clark-river-otters,espn
 cfb,RiverHawks,cfb:northeastern-state-riverhawks,espn
 cfb,Roadrunners,cfb:utsa-roadrunners,espn
 cfb,Robert Morris,cfb:robert-morris-colonials,espn
 cfb,Rochester (NY),cfb:rochester-ny-yellow-jackets,espn
-cfb,Rochester (NY) Yellow Jackets,cfb:rochester-ny-yellow-jackets,espn
 cfb,Rockets,cfb:toledo-rockets,espn
 cfb,Rockford,cfb:rockford-regents,espn
 cfb,Roosevelt,cfb:roosevelt-lakers,espn
@@ -2159,7 +2236,6 @@ cfb,SDMT,cfb:south-dakota-mines-hardrockers,espn
 cfb,SDST,cfb:south-dakota-state-jackrabbits,espn
 cfb,SDSU,cfb:san-diego-state-aztecs,espn
 cfb,SE Louisiana,cfb:se-louisiana-lions,espn
-cfb,SE Louisiana Lions,cfb:se-louisiana-lions,espn
 cfb,SE Missouri,cfb:southeast-missouri-state-redhawks,espn
 cfb,SE Oklahoma St,cfb:southeastern-oklahoma-state-savage-storm,espn
 cfb,SEHI,cfb:seton-hill-griffins,espn
@@ -2174,6 +2250,7 @@ cfb,SFIL,cfb:st-francis-il-fighting-saints,espn
 cfb,SFIN,cfb:saint-francis-in-cougars,espn
 cfb,SFPA,cfb:saint-francis-red-flash,espn
 cfb,SFU,cfb:sioux-falls-cougars,espn
+cfb,SHAW,cfb:shaw-bears,espn
 cfb,SHEN,cfb:shenandoah-hornets,espn
 cfb,SHEP,cfb:shepherd-rams,espn
 cfb,SHIP,cfb:shippensburg-raiders,espn
@@ -2211,7 +2288,6 @@ cfb,SUNY Cortland,cfb:suny-cortland-red-dragons,espn
 cfb,SUNY Erie,cfb:suny-erie-kats,espn
 cfb,SUNY Maritime,cfb:suny-maritime-privateers,espn
 cfb,SUNY Morrisville,cfb:suny-morrisville-mustangs,espn
-cfb,SUNY Morrisville Mustangs,cfb:suny-morrisville-mustangs,espn
 cfb,SUNY Morrisvle,cfb:suny-morrisville-mustangs,espn
 cfb,SUSQ,cfb:susquehanna-river-hawks,espn
 cfb,SUU,cfb:southern-utah-thunderbirds,espn
@@ -2228,19 +2304,20 @@ cfb,SWU,cfb:southwestern-u-pirates,espn
 cfb,SYR,cfb:syracuse-orange,espn
 cfb,Sacramento St,cfb:sacramento-state-hornets,espn
 cfb,Sacramento State,cfb:sacramento-state-hornets,espn
+cfb,Sacramento State Hornets,cfb:sacramento-state-hornets,espn
 cfb,Sacred Heart,cfb:sacred-heart-pioneers,espn
 cfb,Sagehens,cfb:pomona-pitzer-sagehens,espn
 cfb,Saginaw Valley,cfb:saginaw-valley-state-cardinals,espn
 cfb,Saginaw Valley State,cfb:saginaw-valley-state-cardinals,espn
+cfb,Saginaw Valley State Cardinals,cfb:saginaw-valley-state-cardinals,espn
 cfb,Saint Anselm,cfb:saint-anselm-hawks,espn
 cfb,Saint Francis,cfb:saint-francis-red-flash,espn
 cfb,Saint Francis (IN),cfb:saint-francis-in-cougars,espn
+cfb,Saint Francis Red Flash,cfb:saint-francis-red-flash,espn
 cfb,Saint John's (MN),cfb:saint-johns-mn-johnnies,espn
 cfb,Saint John's (MN) Johnnies,cfb:saint-johns-mn-johnnies,espn
 cfb,Saint Vincent,cfb:saint-vincent-bearcats,espn
-cfb,Saint Vincent Bearcats,cfb:saint-vincent-bearcats,espn
 cfb,Saint Xavier,cfb:saint-xavier-cougars,espn
-cfb,Saint Xavier Cougars,cfb:saint-xavier-cougars,espn
 cfb,Saints,cfb:charlotte-saints,espn
 cfb,Saints,cfb:siena-heights-saints,espn
 cfb,Saints,cfb:st-lawrence-saints,espn
@@ -2249,19 +2326,19 @@ cfb,Saints,cfb:thomas-more-saints,espn
 cfb,Salisbury,cfb:salisbury-sea-gulls,espn
 cfb,Salukis,cfb:southern-illinois-salukis,espn
 cfb,Salve Regina,cfb:salve-regina-seahawks,espn
+cfb,Salve Regina Seahawks,cfb:salve-regina-seahawks,espn
 cfb,Sam Houston,cfb:sam-houston-bearkats,espn
-cfb,Sam Houston Bearkats,cfb:sam-houston-bearkats,espn
 cfb,Samford,cfb:samford-bulldogs,espn
+cfb,Samford Bulldogs,cfb:samford-bulldogs,espn
 cfb,San Diego,cfb:san-diego-toreros,espn
 cfb,San Diego St,cfb:san-diego-state-aztecs,espn
 cfb,San Diego State,cfb:san-diego-state-aztecs,espn
-cfb,San Diego State Aztecs,cfb:san-diego-state-aztecs,espn
 cfb,San José St,cfb:san-jose-state-spartans,espn
 cfb,San José State,cfb:san-jose-state-spartans,espn
+cfb,San José State Spartans,cfb:san-jose-state-spartans,espn
 cfb,Savage Storm,cfb:southeastern-oklahoma-state-savage-storm,espn
 cfb,Savannah St,cfb:savannah-state-tigers,espn
 cfb,Savannah State,cfb:savannah-state-tigers,espn
-cfb,Savannah State Tigers,cfb:savannah-state-tigers,espn
 cfb,Saxons,cfb:alfred-saxons,espn
 cfb,Scarlet Knights,cfb:rutgers-scarlet-knights,espn
 cfb,Scots,cfb:alma-scots,espn
@@ -2274,11 +2351,10 @@ cfb,Seahawks,cfb:wagner-seahawks,espn
 cfb,Seawolves,cfb:stony-brook-seawolves,espn
 cfb,Seminoles,cfb:florida-state-seminoles,espn
 cfb,Seton Hill,cfb:seton-hill-griffins,espn
-cfb,Seton Hill Griffins,cfb:seton-hill-griffins,espn
 cfb,Setters,cfb:pace-setters,espn
 cfb,Sewanee,cfb:sewanee-tigers,espn
+cfb,Sewanee Tigers,cfb:sewanee-tigers,espn
 cfb,Sharks,cfb:long-island-university-sharks,espn
-cfb,Shaw,cfb:shaw-bears,espn
 cfb,Shenandoah,cfb:shenandoah-hornets,espn
 cfb,Shenandoah Hornets,cfb:shenandoah-hornets,espn
 cfb,Shepherd,cfb:shepherd-rams,espn
@@ -2286,11 +2362,9 @@ cfb,Shippensburg,cfb:shippensburg-raiders,espn
 cfb,Shippensburg Raiders,cfb:shippensburg-raiders,espn
 cfb,Shorter,cfb:shorter-hawks,espn
 cfb,Siena Heights,cfb:siena-heights-saints,espn
-cfb,Siena Heights Saints,cfb:siena-heights-saints,espn
 cfb,Simpson (CA),cfb:simpson-ca-red-hawks,espn
 cfb,Simpson (IA),cfb:simpson-ia-storm,espn
 cfb,Sioux Falls,cfb:sioux-falls-cougars,espn
-cfb,Sioux Falls Cougars,cfb:sioux-falls-cougars,espn
 cfb,Skyhawks,cfb:fort-lewis-skyhawks,espn
 cfb,Skyhawks,cfb:point-university-skyhawks,espn
 cfb,Skyhawks,cfb:stonehill-skyhawks,espn
@@ -2299,33 +2373,31 @@ cfb,Slippery Rock,cfb:slippery-rock-the-rock,espn
 cfb,Slippery Rock The Rock,cfb:slippery-rock-the-rock,espn
 cfb,Sooners,cfb:oklahoma-sooners,espn
 cfb,South Alabama,cfb:south-alabama-jaguars,espn
+cfb,South Alabama Jaguars,cfb:south-alabama-jaguars,espn
 cfb,South Carolina,cfb:south-carolina-gamecocks,espn
 cfb,South Carolina Gamecocks,cfb:south-carolina-gamecocks,espn
 cfb,South Carolina State,cfb:south-carolina-state-bulldogs,espn
 cfb,South Carolina State Bulldogs,cfb:south-carolina-state-bulldogs,espn
 cfb,South Dakota,cfb:south-dakota-coyotes,espn
+cfb,South Dakota Coyotes,cfb:south-dakota-coyotes,espn
 cfb,South Dakota Mines,cfb:south-dakota-mines-hardrockers,espn
+cfb,South Dakota Mines Hardrockers,cfb:south-dakota-mines-hardrockers,espn
 cfb,South Dakota State,cfb:south-dakota-state-jackrabbits,espn
 cfb,South Dakota State Jackrabbits,cfb:south-dakota-state-jackrabbits,espn
 cfb,South Florida,cfb:south-florida-bulls,espn
 cfb,Southeast Missouri State,cfb:southeast-missouri-state-redhawks,espn
 cfb,Southeastern,cfb:southeastern-fires,espn
-cfb,Southeastern Fires,cfb:southeastern-fires,espn
 cfb,Southeastern Oklahoma State,cfb:southeastern-oklahoma-state-savage-storm,espn
+cfb,Southeastern Oklahoma State Savage Storm,cfb:southeastern-oklahoma-state-savage-storm,espn
 cfb,Southern,cfb:southern-jaguars,espn
 cfb,Southern Arkansas,cfb:southern-arkansas-muleriders,espn
-cfb,Southern Arkansas Muleriders,cfb:southern-arkansas-muleriders,espn
 cfb,Southern Connecticut State,cfb:southern-connecticut-state-owls,espn
-cfb,Southern Connecticut State Owls,cfb:southern-connecticut-state-owls,espn
 cfb,Southern Illinois,cfb:southern-illinois-salukis,espn
-cfb,Southern Jaguars,cfb:southern-jaguars,espn
 cfb,Southern Miss,cfb:southern-miss-golden-eagles,espn
 cfb,Southern Miss Golden Eagles,cfb:southern-miss-golden-eagles,espn
 cfb,Southern Nazarene,cfb:southern-nazarene-crimson-storm,espn
-cfb,Southern Nazarene Crimson Storm,cfb:southern-nazarene-crimson-storm,espn
 cfb,Southern Oregon,cfb:southern-oregon-raiders,espn
 cfb,Southern Utah,cfb:southern-utah-thunderbirds,espn
-cfb,Southern Utah Thunderbirds,cfb:southern-utah-thunderbirds,espn
 cfb,Southern Virginia,cfb:southern-virginia-knights,espn
 cfb,Southwest Baptist,cfb:southwest-baptist-bearcats,espn
 cfb,Southwest Baptist Bearcats,cfb:southwest-baptist-bearcats,espn
@@ -2349,52 +2421,50 @@ cfb,Spartans,cfb:vermont-state-castleton-spartans,espn
 cfb,Spiders,cfb:richmond-spiders,espn
 cfb,Springfield,cfb:springfield-pride,espn
 cfb,Springfield Pride,cfb:springfield-pride,espn
+cfb,St Andrews,cfb:st-andrews-knights,espn
+cfb,St Francis IL,cfb:st-francis-il-fighting-saints,espn
 cfb,St Francis IN,cfb:saint-francis-in-cougars,espn
 cfb,St John Fisher,cfb:st-john-fisher-cardinals,espn
 cfb,St Johns (MN),cfb:saint-johns-mn-johnnies,espn
-cfb,St Lawrence,cfb:st-lawrence-saints,espn
+cfb,St Olaf,cfb:st-olaf-oles,espn
+cfb,St Thomas,cfb:st-thomas-tommies,espn
 cfb,St. Ambrose,cfb:st-ambrose-fighting-bees,espn
-cfb,St. Ambrose Fighting Bees,cfb:st-ambrose-fighting-bees,espn
-cfb,St. Andrews,cfb:st-andrews-knights,espn
 cfb,St. Andrews Knights,cfb:st-andrews-knights,espn
-cfb,St. Francis (IL),cfb:st-francis-il-fighting-saints,espn
-cfb,St. John Fisher Cardinals,cfb:st-john-fisher-cardinals,espn
+cfb,St. Francis (IL) Fighting Saints,cfb:st-francis-il-fighting-saints,espn
+cfb,St. Lawrence,cfb:st-lawrence-saints,espn
+cfb,St. Lawrence Saints,cfb:st-lawrence-saints,espn
 cfb,St. Norbert,cfb:st-norbert-green-knights,espn
 cfb,St. Norbert Green Knights,cfb:st-norbert-green-knights,espn
-cfb,St. Olaf,cfb:st-olaf-oles,espn
-cfb,St. Olaf Oles,cfb:st-olaf-oles,espn
 cfb,St. Petersburg,cfb:st-petersburg-glory-eagles,espn
-cfb,St. Petersburg Glory Eagles,cfb:st-petersburg-glory-eagles,espn
 cfb,St. Scholastica,cfb:st-scholastica-saints,espn
 cfb,St. Scholastica Saints,cfb:st-scholastica-saints,espn
-cfb,St. Thomas,cfb:st-thomas-tommies,espn
-cfb,St. Thomas Tommies,cfb:st-thomas-tommies,espn
 cfb,Stags,cfb:claremont-mudd-scripps-stags,espn
 cfb,Stallions,cfb:north-american-stallions,espn
 cfb,Stanford,cfb:stanford-cardinal,espn
+cfb,Stanford Cardinal,cfb:stanford-cardinal,espn
 cfb,Statesmen,cfb:delta-state-statesmen,espn
 cfb,Statesmen,cfb:hobart-statesmen,espn
 cfb,Statesmen,cfb:william-penn-statesmen,espn
 cfb,Steers,cfb:texas-college-steers,espn
 cfb,Stephen F. Austin,cfb:stephen-f-austin-lumberjacks,espn
+cfb,Stephen F. Austin Lumberjacks,cfb:stephen-f-austin-lumberjacks,espn
 cfb,Sterling,cfb:sterling-sterling-ks,espn
 cfb,Stetson,cfb:stetson-hatters,espn
 cfb,Stevenson,cfb:stevenson-mustangs,espn
 cfb,Stevenson Mustangs,cfb:stevenson-mustangs,espn
 cfb,Stonehill,cfb:stonehill-skyhawks,espn
-cfb,Stonehill Skyhawks,cfb:stonehill-skyhawks,espn
 cfb,Stony Brook,cfb:stony-brook-seawolves,espn
+cfb,Stony Brook Seawolves,cfb:stony-brook-seawolves,espn
 cfb,Storm,cfb:lake-erie-storm,espn
 cfb,Storm,cfb:simpson-ia-storm,espn
 cfb,Student Princes,cfb:heidelberg-student-princes,espn
 cfb,Sul Ross St,cfb:sul-ross-state-lobos,espn
 cfb,Sul Ross State,cfb:sul-ross-state-lobos,espn
-cfb,Sul Ross State Lobos,cfb:sul-ross-state-lobos,espn
 cfb,Sun Devils,cfb:arizona-state-sun-devils,espn
 cfb,Susquehanna,cfb:susquehanna-river-hawks,espn
+cfb,Susquehanna River Hawks,cfb:susquehanna-river-hawks,espn
 cfb,Sycamores,cfb:indiana-state-sycamores,espn
 cfb,Syracuse,cfb:syracuse-orange,espn
-cfb,Syracuse Orange,cfb:syracuse-orange,espn
 cfb,TA&M,cfb:texas-am-aggies,espn
 cfb,TAMK,cfb:texas-am-kingsville-javelinas,espn
 cfb,TAMU-Kingsvlle,cfb:texas-am-kingsville-javelinas,espn
@@ -2438,13 +2508,12 @@ cfb,Tartans,cfb:carnegie-mellon-tartans,espn
 cfb,Taylor,cfb:taylor-trojans,espn
 cfb,Taylor Trojans,cfb:taylor-trojans,espn
 cfb,Temple,cfb:temple-owls,espn
+cfb,Temple Owls,cfb:temple-owls,espn
 cfb,Tennessee,cfb:tennessee-volunteers,espn
 cfb,Tennessee St,cfb:tennessee-state-tigers,espn
 cfb,Tennessee State,cfb:tennessee-state-tigers,espn
 cfb,Tennessee State Tigers,cfb:tennessee-state-tigers,espn
 cfb,Tennessee Tech,cfb:tennessee-tech-golden-eagles,espn
-cfb,Tennessee Tech Golden Eagles,cfb:tennessee-tech-golden-eagles,espn
-cfb,Tennessee Volunteers,cfb:tennessee-volunteers,espn
 cfb,Terrapins,cfb:maryland-terrapins,espn
 cfb,Terriers,cfb:hiram-terriers,espn
 cfb,Terriers,cfb:wofford-terriers,espn
@@ -2455,23 +2524,23 @@ cfb,Texas A&M Aggies,cfb:texas-am-aggies,espn
 cfb,Texas A&M-Kingsville,cfb:texas-am-kingsville-javelinas,espn
 cfb,Texas A&M-Kingsville Javelinas,cfb:texas-am-kingsville-javelinas,espn
 cfb,Texas College,cfb:texas-college-steers,espn
-cfb,Texas College Steers,cfb:texas-college-steers,espn
 cfb,Texas Longhorns,cfb:texas-longhorns,espn
 cfb,Texas Lutheran,cfb:texas-lutheran-bulldogs,espn
+cfb,Texas Lutheran Bulldogs,cfb:texas-lutheran-bulldogs,espn
 cfb,Texas Southern,cfb:texas-southern-tigers,espn
-cfb,Texas Southern Tigers,cfb:texas-southern-tigers,espn
 cfb,Texas St,cfb:texas-state-bobcats,espn
 cfb,Texas State,cfb:texas-state-bobcats,espn
+cfb,Texas State Bobcats,cfb:texas-state-bobcats,espn
 cfb,Texas Tech,cfb:texas-tech-red-raiders,espn
 cfb,Texas Tech Red Raiders,cfb:texas-tech-red-raiders,espn
 cfb,The Citadel,cfb:the-citadel-bulldogs,espn
+cfb,The Citadel Bulldogs,cfb:the-citadel-bulldogs,espn
 cfb,The College of New Jersey,cfb:the-college-of-new-jersey-lions,espn
-cfb,The College of New Jersey Lions,cfb:the-college-of-new-jersey-lions,espn
 cfb,The Rock,cfb:slippery-rock-the-rock,espn
 cfb,Thiel,cfb:thiel-tomcats,espn
 cfb,Thomas,cfb:thomas-night-hawks,espn
 cfb,Thomas More,cfb:thomas-more-saints,espn
-cfb,Thomas Night Hawks,cfb:thomas-night-hawks,espn
+cfb,Thomas More Saints,cfb:thomas-more-saints,espn
 cfb,Thorobreds,cfb:kentucky-state-thorobreds,espn
 cfb,Thunder,cfb:trine-thunder,espn
 cfb,Thunder,cfb:wheaton-il-thunder,espn
@@ -2479,7 +2548,6 @@ cfb,ThunderWolves,cfb:csu-pueblo-thunderwolves,espn
 cfb,Thunderbirds,cfb:southern-utah-thunderbirds,espn
 cfb,Thundering Herd,cfb:marshall-thundering-herd,espn
 cfb,Tiffin,cfb:tiffin-dragons,espn
-cfb,Tiffin Dragons,cfb:tiffin-dragons,espn
 cfb,Tigers,cfb:auburn-tigers,espn
 cfb,Tigers,cfb:benedict-tigers,espn
 cfb,Tigers,cfb:campbellsville-university-tigers,espn
@@ -2513,6 +2581,7 @@ cfb,Titans,cfb:ohio-state-newark-titans,espn
 cfb,Titans,cfb:westminster-pa-titans,espn
 cfb,Titans,cfb:wisconsin-oshkosh-titans,espn
 cfb,Toledo,cfb:toledo-rockets,espn
+cfb,Toledo Rockets,cfb:toledo-rockets,espn
 cfb,Tomcats,cfb:thiel-tomcats,espn
 cfb,Tommies,cfb:st-thomas-tommies,espn
 cfb,Toreros,cfb:san-diego-toreros,espn
@@ -2525,8 +2594,8 @@ cfb,Tribe,cfb:william-mary-tribe,espn
 cfb,Trine,cfb:trine-thunder,espn
 cfb,Trine Thunder,cfb:trine-thunder,espn
 cfb,Trinity (CT),cfb:trinity-ct-bantams,espn
+cfb,Trinity (CT) Bantams,cfb:trinity-ct-bantams,espn
 cfb,Trinity (TX),cfb:trinity-tx-tigers,espn
-cfb,Trinity (TX) Tigers,cfb:trinity-tx-tigers,espn
 cfb,Trinity Bible,cfb:trinity-bible-lions,espn
 cfb,Trinity Bible Lions,cfb:trinity-bible-lions,espn
 cfb,Trojans,cfb:anderson-sc-trojans,espn
@@ -2536,14 +2605,15 @@ cfb,Trojans,cfb:troy-trojans,espn
 cfb,Trojans,cfb:usc-trojans,espn
 cfb,Trojans,cfb:virginia-state-trojans,espn
 cfb,Troy,cfb:troy-vikings,espn
-cfb,Troy Vikings,cfb:troy-vikings,espn
+cfb,Troy Trojans,cfb:troy-trojans,espn
 cfb,Truman St,cfb:truman-state-bulldogs,espn
 cfb,Truman State,cfb:truman-state-bulldogs,espn
+cfb,Truman State Bulldogs,cfb:truman-state-bulldogs,espn
 cfb,Tufts,cfb:tufts-jumbos,espn
+cfb,Tufts Jumbos,cfb:tufts-jumbos,espn
 cfb,Tulane,cfb:tulane-green-wave,espn
 cfb,Tulane Green Wave,cfb:tulane-green-wave,espn
 cfb,Tulsa,cfb:tulsa-golden-hurricane,espn
-cfb,Tulsa Golden Hurricane,cfb:tulsa-golden-hurricane,espn
 cfb,Tusculum,cfb:tusculum-pioneers,espn
 cfb,Tuskegee,cfb:tuskegee-golden-tigers,espn
 cfb,Tuskegee Golden Tigers,cfb:tuskegee-golden-tigers,espn
@@ -2551,17 +2621,16 @@ cfb,U of Faith,cfb:st-petersburg-glory-eagles,espn
 cfb,U of Mexico,cfb:university-of-mexico-mexico-u,espn
 cfb,UA Monticello,cfb:arkansas-monticello-boll-weevils,espn
 cfb,UAB,cfb:uab-blazers,espn
-cfb,UAB Blazers,cfb:uab-blazers,espn
 cfb,UALB,cfb:ualbany-great-danes,espn
 cfb,UAM,cfb:arkansas-monticello-boll-weevils,espn
 cfb,UAPB,cfb:arkansas-pine-bluff-golden-lions,espn
 cfb,UAlbany,cfb:ualbany-great-danes,espn
 cfb,UAlbany Great Danes,cfb:ualbany-great-danes,espn
 cfb,UC Davis,cfb:uc-davis-aggies,espn
-cfb,UC Davis Aggies,cfb:uc-davis-aggies,espn
 cfb,UCD,cfb:uc-davis-aggies,espn
 cfb,UCF,cfb:ucf-knights,espn
 cfb,UCLA,cfb:ucla-bruins,espn
+cfb,UCLA Bruins,cfb:ucla-bruins,espn
 cfb,UCM,cfb:central-missouri-mules,espn
 cfb,UCO,cfb:central-oklahoma-bronchos,espn
 cfb,UCWV,cfb:charleston-wv-golden-eagles,espn
@@ -2597,6 +2666,7 @@ cfb,UNE,cfb:new-england-noreasters,espn
 cfb,UNH,cfb:new-hampshire-wildcats,espn
 cfb,UNI,cfb:northern-iowa-panthers,espn
 cfb,UNLV,cfb:unlv-rebels,espn
+cfb,UNLV Rebels,cfb:unlv-rebels,espn
 cfb,UNM,cfb:new-mexico-lobos,espn
 cfb,UNNY,cfb:union-garnet-chargers,espn
 cfb,UNT,cfb:north-texas-mean-green,espn
@@ -2614,16 +2684,16 @@ cfb,USL,cfb:st-lawrence-saints,espn
 cfb,USM,cfb:southern-miss-golden-eagles,espn
 cfb,USU,cfb:utah-state-aggies,espn
 cfb,UT Martin,cfb:ut-martin-skyhawks,espn
+cfb,UT Martin Skyhawks,cfb:ut-martin-skyhawks,espn
 cfb,UT Permian Basin,cfb:ut-permian-basin-falcons,espn
 cfb,UT Prmian Basn,cfb:ut-permian-basin-falcons,espn
-cfb,UTAH,cfb:utah-utes,espn
 cfb,UTC,cfb:chattanooga-mocs,espn
 cfb,UTEP,cfb:utep-miners,espn
+cfb,UTEP Miners,cfb:utep-miners,espn
 cfb,UTIC,cfb:utica-pioneers,espn
 cfb,UTM,cfb:ut-martin-skyhawks,espn
 cfb,UTPB,cfb:ut-permian-basin-falcons,espn
 cfb,UTSA,cfb:utsa-roadrunners,espn
-cfb,UTSA Roadrunners,cfb:utsa-roadrunners,espn
 cfb,UTU,cfb:utah-tech-trailblazers,espn
 cfb,UVA,cfb:virginia-cavaliers,espn
 cfb,UVA Wise,cfb:uva-wise-cavaliers,espn
@@ -2652,14 +2722,15 @@ cfb,Union Garnet Chargers,cfb:union-garnet-chargers,espn
 cfb,University of Mary,cfb:university-of-mary-marauders,espn
 cfb,University of Mary Marauders,cfb:university-of-mary-marauders,espn
 cfb,University of Mexico,cfb:university-of-mexico-mexico-u,espn
-cfb,University of Mexico MEXICO U,cfb:university-of-mexico-mexico-u,espn
 cfb,Upper Iowa,cfb:upper-iowa-peacocks,espn
 cfb,Ursinus,cfb:ursinus-bears,espn
+cfb,Ursinus Bears,cfb:ursinus-bears,espn
+cfb,Utah,cfb:utah-utes,espn
 cfb,Utah State,cfb:utah-state-aggies,espn
 cfb,Utah Tech,cfb:utah-tech-trailblazers,espn
+cfb,Utah Utes,cfb:utah-utes,espn
 cfb,Utes,cfb:utah-utes,espn
 cfb,Utica,cfb:utica-pioneers,espn
-cfb,Utica Pioneers,cfb:utica-pioneers,espn
 cfb,VA Lynchburg,cfb:virginia-lynchburg-dragons,espn
 cfb,VAL,cfb:valparaiso-beacons,espn
 cfb,VALD,cfb:valdosta-state-blazers,espn
@@ -2676,15 +2747,15 @@ cfb,VUL,cfb:virginia-lynchburg-dragons,espn
 cfb,VUU,cfb:virginia-union-panthers,espn
 cfb,Valdosta St,cfb:valdosta-state-blazers,espn
 cfb,Valdosta State,cfb:valdosta-state-blazers,espn
+cfb,Valdosta State Blazers,cfb:valdosta-state-blazers,espn
 cfb,Valley City St,cfb:valley-city-state-vikings,espn
 cfb,Valley City State,cfb:valley-city-state-vikings,espn
+cfb,Valley City State Vikings,cfb:valley-city-state-vikings,espn
 cfb,Valparaiso,cfb:valparaiso-beacons,espn
 cfb,Valparaiso Beacons,cfb:valparaiso-beacons,espn
 cfb,Vandals,cfb:idaho-vandals,espn
 cfb,Vanderbilt,cfb:vanderbilt-commodores,espn
-cfb,Vanderbilt Commodores,cfb:vanderbilt-commodores,espn
 cfb,Vermont State Castleton,cfb:vermont-state-castleton-spartans,espn
-cfb,Vermont State Castleton Spartans,cfb:vermont-state-castleton-spartans,espn
 cfb,Vikings,cfb:augustana-il-vikings,espn
 cfb,Vikings,cfb:augustana-sd-vikings,espn
 cfb,Vikings,cfb:berry-vikings,espn
@@ -2696,9 +2767,11 @@ cfb,Vikings,cfb:portland-state-vikings,espn
 cfb,Vikings,cfb:troy-vikings,espn
 cfb,Vikings,cfb:valley-city-state-vikings,espn
 cfb,Villanova,cfb:villanova-wildcats,espn
+cfb,Villanova Wildcats,cfb:villanova-wildcats,espn
 cfb,Virginia,cfb:virginia-cavaliers,espn
 cfb,Virginia Cavaliers,cfb:virginia-cavaliers,espn
 cfb,Virginia Lynchburg,cfb:virginia-lynchburg-dragons,espn
+cfb,Virginia Lynchburg Dragons,cfb:virginia-lynchburg-dragons,espn
 cfb,Virginia St,cfb:virginia-state-trojans,espn
 cfb,Virginia State,cfb:virginia-state-trojans,espn
 cfb,Virginia Tech,cfb:virginia-tech-hokies,espn
@@ -2760,7 +2833,6 @@ cfb,WORC,cfb:worcester-state-lancers,espn
 cfb,WORU,cfb:western-oregon-wolves,espn
 cfb,WPEN,cfb:william-penn-statesmen,espn
 cfb,WPI,cfb:wpi-engineers,espn
-cfb,WPI Engineers,cfb:wpi-engineers,espn
 cfb,WPU,cfb:william-paterson-pioneers,espn
 cfb,WRNR,cfb:warner-royals,espn
 cfb,WSBN,cfb:washburn-ichabods,espn
@@ -2781,17 +2853,17 @@ cfb,WVWC,cfb:west-virginia-wesleyan-bobcats,espn
 cfb,WYBU,cfb:wayland-baptist-pioneers,espn
 cfb,WYO,cfb:wyoming-cowboys,espn
 cfb,Wabash,cfb:wabash-little-giants,espn
-cfb,Wabash Little Giants,cfb:wabash-little-giants,espn
 cfb,Wagner,cfb:wagner-seahawks,espn
 cfb,Wake Forest,cfb:wake-forest-demon-deacons,espn
+cfb,Wake Forest Demon Deacons,cfb:wake-forest-demon-deacons,espn
 cfb,Waldorf,cfb:waldorf-warriors,espn
-cfb,Waldorf Warriors,cfb:waldorf-warriors,espn
 cfb,Walsh,cfb:walsh-cavaliers,espn
 cfb,Walsh Cavaliers,cfb:walsh-cavaliers,espn
 cfb,War Hawks,cfb:mcmurry-war-hawks,espn
 cfb,Warhawks,cfb:ul-monroe-warhawks,espn
 cfb,Warhawks,cfb:wisconsin-whitewater-warhawks,espn
 cfb,Warner,cfb:warner-royals,espn
+cfb,Warner Royals,cfb:warner-royals,espn
 cfb,Warriors,cfb:east-stroudsburg-warriors,espn
 cfb,Warriors,cfb:hendrix-warriors,espn
 cfb,Warriors,cfb:lycoming-warriors,espn
@@ -2806,37 +2878,38 @@ cfb,Wash & Jeff,cfb:washington-jefferson-presidents,espn
 cfb,Wash St Louis,cfb:washington-st-louis-bears,espn
 cfb,Wash and Lee,cfb:washington-and-lee-generals,espn
 cfb,Washburn,cfb:washburn-ichabods,espn
+cfb,Washburn Ichabods,cfb:washburn-ichabods,espn
 cfb,Washington,cfb:washington-huskies,espn
 cfb,Washington & Jefferson,cfb:washington-jefferson-presidents,espn
 cfb,Washington Huskies,cfb:washington-huskies,espn
 cfb,Washington St,cfb:washington-state-cougars,espn
 cfb,Washington St. Louis,cfb:washington-st-louis-bears,espn
-cfb,Washington St. Louis Bears,cfb:washington-st-louis-bears,espn
 cfb,Washington State,cfb:washington-state-cougars,espn
 cfb,Washington and Lee,cfb:washington-and-lee-generals,espn
 cfb,Washington and Lee Generals,cfb:washington-and-lee-generals,espn
 cfb,Wasps,cfb:emory-henry-wasps,espn
 cfb,Wayland Baptist,cfb:wayland-baptist-pioneers,espn
+cfb,Wayland Baptist Pioneers,cfb:wayland-baptist-pioneers,espn
 cfb,Wayne St (MI),cfb:wayne-state-mi-warriors,espn
 cfb,Wayne St (NE),cfb:wayne-state-ne-wildcats,espn
 cfb,Wayne State (MI),cfb:wayne-state-mi-warriors,espn
-cfb,Wayne State (MI) Warriors,cfb:wayne-state-mi-warriors,espn
 cfb,Wayne State (NE),cfb:wayne-state-ne-wildcats,espn
+cfb,Wayne State (NE) Wildcats,cfb:wayne-state-ne-wildcats,espn
 cfb,Waynesburg,cfb:waynesburg-yellow-jackets,espn
 cfb,Waynesburg Yellow Jackets,cfb:waynesburg-yellow-jackets,espn
 cfb,Webber Int'l,cfb:webber-international-warriors,espn
 cfb,Webber International,cfb:webber-international-warriors,espn
-cfb,Webber International Warriors,cfb:webber-international-warriors,espn
 cfb,Weber St,cfb:weber-state-wildcats,espn
 cfb,Weber State,cfb:weber-state-wildcats,espn
+cfb,Weber State Wildcats,cfb:weber-state-wildcats,espn
 cfb,Wesleyan (CT),cfb:wesleyan-ct-cardinals,espn
+cfb,Wesleyan (CT) Cardinals,cfb:wesleyan-ct-cardinals,espn
 cfb,West Alabama,cfb:west-alabama-tigers,espn
 cfb,West Alabama Tigers,cfb:west-alabama-tigers,espn
 cfb,West Chester,cfb:west-chester-golden-rams,espn
-cfb,West Chester Golden Rams,cfb:west-chester-golden-rams,espn
 cfb,West Florida,cfb:west-florida-argonauts,espn
-cfb,West Florida Argonauts,cfb:west-florida-argonauts,espn
 cfb,West Georgia,cfb:west-georgia-wolves,espn
+cfb,West Georgia Wolves,cfb:west-georgia-wolves,espn
 cfb,West Liberty,cfb:west-liberty-hilltoppers,espn
 cfb,West Liberty Hilltoppers,cfb:west-liberty-hilltoppers,espn
 cfb,West Memphis,cfb:west-memphis-crusaders,espn
@@ -2844,9 +2917,7 @@ cfb,West Memphis Crusaders,cfb:west-memphis-crusaders,espn
 cfb,West Oregon,cfb:western-oregon-wolves,espn
 cfb,West Texas,cfb:west-texas-buffaloes,espn
 cfb,West Virginia,cfb:west-virginia-mountaineers,espn
-cfb,West Virginia Mountaineers,cfb:west-virginia-mountaineers,espn
 cfb,West Virginia State,cfb:west-virginia-state-yellow-jackets,espn
-cfb,West Virginia State Yellow Jackets,cfb:west-virginia-state-yellow-jackets,espn
 cfb,West Virginia Wesleyan,cfb:west-virginia-wesleyan-bobcats,espn
 cfb,West Virginia Wesleyan Bobcats,cfb:west-virginia-wesleyan-bobcats,espn
 cfb,WestConn,cfb:western-connecticut-state-wolves,espn
@@ -2855,24 +2926,25 @@ cfb,Western Colorado,cfb:western-colorado-mountaineers,espn
 cfb,Western Colorado Mountaineers,cfb:western-colorado-mountaineers,espn
 cfb,Western Connecticut State,cfb:western-connecticut-state-wolves,espn
 cfb,Western Illinois,cfb:western-illinois-leathernecks,espn
-cfb,Western Illinois Leathernecks,cfb:western-illinois-leathernecks,espn
 cfb,Western KY,cfb:western-kentucky-hilltoppers,espn
 cfb,Western Kentucky,cfb:western-kentucky-hilltoppers,espn
+cfb,Western Kentucky Hilltoppers,cfb:western-kentucky-hilltoppers,espn
 cfb,Western Michigan,cfb:western-michigan-broncos,espn
 cfb,Western NM,cfb:western-new-mexico-mustangs,espn
 cfb,Western New England,cfb:western-new-england-golden-bears,espn
 cfb,Western New Mexico,cfb:western-new-mexico-mustangs,espn
+cfb,Western New Mexico Mustangs,cfb:western-new-mexico-mustangs,espn
 cfb,Western Oregon,cfb:western-oregon-wolves,espn
 cfb,Western Oregon Wolves,cfb:western-oregon-wolves,espn
 cfb,Westfield St,cfb:westfield-state-owls,espn
 cfb,Westfield State,cfb:westfield-state-owls,espn
-cfb,Westfield State Owls,cfb:westfield-state-owls,espn
 cfb,Westgate Chris,cfb:westgate-christian-university-ravens,espn
 cfb,Westgate Christian University,cfb:westgate-christian-university-ravens,espn
 cfb,Westgate Christian University Ravens,cfb:westgate-christian-university-ravens,espn
 cfb,Westminster (MO),cfb:westminster-mo-blue-jays,espn
 cfb,Westminster (PA),cfb:westminster-pa-titans,espn
 cfb,Wheaton (IL),cfb:wheaton-il-thunder,espn
+cfb,Wheaton (IL) Thunder,cfb:wheaton-il-thunder,espn
 cfb,Wheeling,cfb:wheeling-cardinals,espn
 cfb,White Mules,cfb:colby-white-mules,espn
 cfb,Whittier,cfb:whittier-poets,espn
@@ -2880,6 +2952,7 @@ cfb,Whittier Poets,cfb:whittier-poets,espn
 cfb,Whitworth,cfb:whitworth-pirates,espn
 cfb,Whitworth Pirates,cfb:whitworth-pirates,espn
 cfb,Widener,cfb:widener-pride,espn
+cfb,Widener Pride,cfb:widener-pride,espn
 cfb,Wildcats,cfb:abilene-christian-wildcats,espn
 cfb,Wildcats,cfb:arizona-wildcats,espn
 cfb,Wildcats,cfb:bethel-university-tennessee-wildcats,espn
@@ -2904,13 +2977,17 @@ cfb,Wilkes Colonels,cfb:wilkes-colonels,espn
 cfb,Willamette,cfb:willamette-bearcats,espn
 cfb,Willamette Bearcats,cfb:willamette-bearcats,espn
 cfb,William & Mary,cfb:william-mary-tribe,espn
+cfb,William & Mary Tribe,cfb:william-mary-tribe,espn
 cfb,William Jewell,cfb:william-jewell-cardinals,espn
 cfb,William Jewell Cardinals,cfb:william-jewell-cardinals,espn
 cfb,William Paterson,cfb:william-paterson-pioneers,espn
+cfb,William Paterson Pioneers,cfb:william-paterson-pioneers,espn
 cfb,William Penn,cfb:william-penn-statesmen,espn
+cfb,William Penn Statesmen,cfb:william-penn-statesmen,espn
 cfb,Williams,cfb:williams-ephs,espn
 cfb,Williams Ephs,cfb:williams-ephs,espn
 cfb,Williamson,cfb:williamson-mechanics,espn
+cfb,Williamson Mechanics,cfb:williamson-mechanics,espn
 cfb,Wilmington OH,cfb:wilmington-oh-fightin-quakers,espn
 cfb,Wingate,cfb:wingate-bulldogs,espn
 cfb,Wingate Bulldogs,cfb:wingate-bulldogs,espn
@@ -2918,26 +2995,23 @@ cfb,Winona St,cfb:winona-state-warriors,espn
 cfb,Winona State,cfb:winona-state-warriors,espn
 cfb,Winston-Salem,cfb:winston-salem-state-rams,espn
 cfb,Winston-Salem State,cfb:winston-salem-state-rams,espn
+cfb,Winston-Salem State Rams,cfb:winston-salem-state-rams,espn
 cfb,Wisc Lutheran,cfb:wisconsin-lutheran-warriors,espn
 cfb,Wisconsin,cfb:wisconsin-badgers,espn
 cfb,Wisconsin Eau Claire,cfb:wisconsin-eau-claire-blugolds,espn
-cfb,Wisconsin Eau Claire Blugolds,cfb:wisconsin-eau-claire-blugolds,espn
 cfb,Wisconsin La Crosse,cfb:wisconsin-la-crosse-eagles,espn
 cfb,Wisconsin Lutheran,cfb:wisconsin-lutheran-warriors,espn
 cfb,Wisconsin Oshkosh,cfb:wisconsin-oshkosh-titans,espn
-cfb,Wisconsin Oshkosh Titans,cfb:wisconsin-oshkosh-titans,espn
 cfb,Wisconsin Platteville,cfb:wisconsin-platteville-pioneers,espn
 cfb,Wisconsin River Falls,cfb:wisconsin-river-falls-falcons,espn
+cfb,Wisconsin River Falls Falcons,cfb:wisconsin-river-falls-falcons,espn
 cfb,Wisconsin Stevens Point,cfb:wisconsin-stevens-point-pointers,espn
-cfb,Wisconsin Stevens Point Pointers,cfb:wisconsin-stevens-point-pointers,espn
 cfb,Wisconsin Stout,cfb:wisconsin-stout-blue-devils,espn
-cfb,Wisconsin Stout Blue Devils,cfb:wisconsin-stout-blue-devils,espn
 cfb,Wisconsin Whitewater,cfb:wisconsin-whitewater-warhawks,espn
-cfb,Wisconsin Whitewater Warhawks,cfb:wisconsin-whitewater-warhawks,espn
 cfb,Wittenberg,cfb:wittenberg-tigers,espn
-cfb,Wittenberg Tigers,cfb:wittenberg-tigers,espn
 cfb,Wm Paterson,cfb:william-paterson-pioneers,espn
 cfb,Wofford,cfb:wofford-terriers,espn
+cfb,Wofford Terriers,cfb:wofford-terriers,espn
 cfb,Wolf Pack,cfb:nevada-wolf-pack,espn
 cfb,Wolfpack,cfb:nc-state-wolfpack,espn
 cfb,Wolverines,cfb:grove-city-wolverines,espn
@@ -2953,8 +3027,8 @@ cfb,Worcester St,cfb:worcester-state-lancers,espn
 cfb,Worcester State,cfb:worcester-state-lancers,espn
 cfb,Wylnd Baptist,cfb:wayland-baptist-pioneers,espn
 cfb,Wyoming,cfb:wyoming-cowboys,espn
-cfb,YALE,cfb:yale-bulldogs,espn
 cfb,YSU,cfb:youngstown-state-penguins,espn
+cfb,Yale,cfb:yale-bulldogs,espn
 cfb,Yale Bulldogs,cfb:yale-bulldogs,espn
 cfb,Yellow Jackets,cfb:allen-yellow-jackets,espn
 cfb,Yellow Jackets,cfb:american-international-yellow-jackets,espn
@@ -2973,380 +3047,604 @@ cfb,Youngstown St,cfb:youngstown-state-penguins,espn
 cfb,Youngstown State,cfb:youngstown-state-penguins,espn
 cfb,Zips,cfb:akron-zips,espn
 cfb,abilene christian wildcats,cfb:abilene-christian-wildcats,espn
-cfb,adams state grizzlies,cfb:adams-state-grizzlies,espn
 cfb,adrian bulldogs,cfb:adrian-bulldogs,espn
-cfb,air force falcons,cfb:air-force-falcons,espn
+cfb,akron zips,cfb:akron-zips,espn
 cfb,alabama am bulldogs,cfb:alabama-am-bulldogs,espn
-cfb,alfred saxons,cfb:alfred-saxons,espn
-cfb,alfred state pioneers,cfb:alfred-state-pioneers,espn
+cfb,alabama crimson tide,cfb:alabama-crimson-tide,espn
+cfb,alabama state hornets,cfb:alabama-state-hornets,espn
+cfb,albany state golden rams,cfb:albany-state-golden-rams,espn
+cfb,albion britons,cfb:albion-britons,espn
+cfb,allegheny gators,cfb:allegheny-gators,espn
 cfb,allen yellow jackets,cfb:allen-yellow-jackets,espn
 cfb,american international yellow jackets,cfb:american-international-yellow-jackets,espn
 cfb,amherst mammoths,cfb:amherst-mammoths,espn
-cfb,angelo state rams,cfb:angelo-state-rams,espn
+cfb,anderson in ravens,cfb:anderson-in-ravens,espn
 cfb,app state mountaineers,cfb:app-state-mountaineers,espn
 cfb,apprentice school builders,cfb:apprentice-school-builders,espn
 cfb,arizona state sun devils,cfb:arizona-state-sun-devils,espn
+cfb,arizona wildcats,cfb:arizona-wildcats,espn
+cfb,arkansas baptist buffaloes,cfb:arkansas-baptist-buffaloes,espn
+cfb,arkansas monticello boll weevils,cfb:arkansas-monticello-boll-weevils,espn
 cfb,arkansas pine bluff golden lions,cfb:arkansas-pine-bluff-golden-lions,espn
-cfb,arkansas tech wonder boys,cfb:arkansas-tech-wonder-boys,espn
-cfb,army black knights,cfb:army-black-knights,espn
-cfb,ashland eagles,cfb:ashland-eagles,espn
-cfb,auburn tigers,cfb:auburn-tigers,espn
-cfb,augsburg auggies,cfb:augsburg-auggies,espn
 cfb,augustana il vikings,cfb:augustana-il-vikings,espn
+cfb,aurora spartans,cfb:aurora-spartans,espn
+cfb,austin peay governors,cfb:austin-peay-governors,espn
 cfb,austin roos,cfb:austin-roos,espn
 cfb,ave maria university gyrenes,cfb:ave-maria-university-gyrenes,espn
 cfb,avila university eagles,cfb:avila-university-eagles,espn
 cfb,baldwin wallace yellow jackets,cfb:baldwin-wallace-yellow-jackets,espn
-cfb,baylor bears,cfb:baylor-bears,espn
-cfb,belhaven blazers,cfb:belhaven-blazers,espn
 cfb,benedict tigers,cfb:benedict-tigers,espn
+cfb,benedictine il eagles,cfb:benedictine-il-eagles,espn
 cfb,bentley falcons,cfb:bentley-falcons,espn
+cfb,berry vikings,cfb:berry-vikings,espn
+cfb,bethany ks,cfb:bethany-ks,espn
 cfb,bethel mn royals,cfb:bethel-mn-royals,espn
 cfb,black hills state yellow jackets,cfb:black-hills-state-yellow-jackets,espn
+cfb,bluefield ramblin rams,cfb:bluefield-ramblin-rams,espn
 cfb,bluefield state big blue,cfb:bluefield-state-big-blue,espn
-cfb,boston college eagles,cfb:boston-college-eagles,espn
-cfb,bowdoin polar bears,cfb:bowdoin-polar-bears,espn
-cfb,bowling green falcons,cfb:bowling-green-falcons,espn
 cfb,brevard tornados,cfb:brevard-tornados,espn
+cfb,bridgewater eagles,cfb:bridgewater-eagles,espn
 cfb,bridgewater state bears,cfb:bridgewater-state-bears,espn
-cfb,brown bears,cfb:brown-bears,espn
 cfb,bucknell bison,cfb:bucknell-bison,espn
 cfb,buffalo bulls,cfb:buffalo-bulls,espn
 cfb,buffalo state bengals,cfb:buffalo-state-bengals,espn
+cfb,byu cougars,cfb:byu-cougars,espn
+cfb,cal lutheran kingsmen,cfb:cal-lutheran-kingsmen,espn
+cfb,california golden bears,cfb:california-golden-bears,espn
 cfb,california pa vulcans,cfb:california-pa-vulcans,espn
-cfb,calvin knights,cfb:calvin-knights,espn
-cfb,carleton knights,cfb:carleton-knights,espn
+cfb,capital comets,cfb:capital-comets,espn
 cfb,carroll wi pioneers,cfb:carroll-wi-pioneers,espn
 cfb,carthage firebirds,cfb:carthage-firebirds,espn
-cfb,case western reserve spartans,cfb:case-western-reserve-spartans,espn
+cfb,catawba indians,cfb:catawba-indians,espn
 cfb,centenary la gentlemen,cfb:centenary-la-gentlemen,espn
+cfb,central arkansas bears,cfb:central-arkansas-bears,espn
 cfb,central college dutch,cfb:central-college-dutch,espn
-cfb,central methodist eagles,cfb:central-methodist-eagles,espn
-cfb,central michigan chippewas,cfb:central-michigan-chippewas,espn
-cfb,central oklahoma bronchos,cfb:central-oklahoma-bronchos,espn
+cfb,central connecticut blue devils,cfb:central-connecticut-blue-devils,espn
+cfb,central missouri mules,cfb:central-missouri-mules,espn
 cfb,central washington wildcats,cfb:central-washington-wildcats,espn
-cfb,centre colonels,cfb:centre-colonels,espn
-cfb,chadron state eagles,cfb:chadron-state-eagles,espn
+cfb,charleston southern buccaneers,cfb:charleston-southern-buccaneers,espn
+cfb,charleston wv golden eagles,cfb:charleston-wv-golden-eagles,espn
 cfb,charlotte 49ers,cfb:charlotte-49ers,espn
-cfb,chowan hawks,cfb:chowan-hawks,espn
-cfb,cincinnati bearcats,cfb:cincinnati-bearcats,espn
-cfb,clarion golden eagles,cfb:clarion-golden-eagles,espn
-cfb,clark atlanta panthers,cfb:clark-atlanta-panthers,espn
-cfb,clemson tigers,cfb:clemson-tigers,espn
+cfb,charlotte saints,cfb:charlotte-saints,espn
+cfb,chicago maroons,cfb:chicago-maroons,espn
+cfb,coastal carolina chanticleers,cfb:coastal-carolina-chanticleers,espn
+cfb,coe kohawks,cfb:coe-kohawks,espn
 cfb,colby white mules,cfb:colby-white-mules,espn
 cfb,cole college jaguars,cfb:cole-college-jaguars,espn
+cfb,colorado mesa mavericks,cfb:colorado-mesa-mavericks,espn
 cfb,colorado school of mines orediggers,cfb:colorado-school-of-mines-orediggers,espn
+cfb,colorado state rams,cfb:colorado-state-rams,espn
 cfb,columbia lions,cfb:columbia-lions,espn
-cfb,concordia chicago cougars,cfb:concordia-chicago-cougars,espn
+cfb,concord mountain lions,cfb:concord-mountain-lions,espn
 cfb,concordia michigan cardinals,cfb:concordia-michigan-cardinals,espn
 cfb,concordia mn cobbers,cfb:concordia-mn-cobbers,espn
 cfb,concordia university nebraska clippers,cfb:concordia-university-nebraska-clippers,espn
-cfb,cornell ia rams,cfb:cornell-ia-rams,espn
-cfb,curry colonels,cfb:curry-colonels,espn
-cfb,dakota state university trojans,cfb:dakota-state-university-trojans,espn
-cfb,dakota wesleyan tigers,cfb:dakota-wesleyan-tigers,espn
+cfb,cornell big red,cfb:cornell-big-red,espn
 cfb,dartmouth big green,cfb:dartmouth-big-green,espn
-cfb,davidson wildcats,cfb:davidson-wildcats,espn
 cfb,dayton flyers,cfb:dayton-flyers,espn
 cfb,dean bulldogs,cfb:dean-bulldogs,espn
-cfb,delaware valley aggies,cfb:delaware-valley-aggies,espn
-cfb,delta state statesmen,cfb:delta-state-statesmen,espn
+cfb,delaware blue hens,cfb:delaware-blue-hens,espn
+cfb,delaware state hornets,cfb:delaware-state-hornets,espn
 cfb,des moines vikings,cfb:des-moines-vikings,espn
+cfb,dickinson state university blue hawks,cfb:dickinson-state-university-blue-hawks,espn
 cfb,drake bulldogs,cfb:drake-bulldogs,espn
-cfb,dubuque spartans,cfb:dubuque-spartans,espn
+cfb,duke blue devils,cfb:duke-blue-devils,espn
 cfb,east carolina pirates,cfb:east-carolina-pirates,espn
-cfb,east central tigers,cfb:east-central-tigers,espn
 cfb,east stroudsburg warriors,cfb:east-stroudsburg-warriors,espn
 cfb,east texas am lions,cfb:east-texas-am-lions,espn
 cfb,east texas baptist tigers,cfb:east-texas-baptist-tigers,espn
-cfb,eastern eagles,cfb:eastern-eagles,espn
-cfb,eastern kentucky colonels,cfb:eastern-kentucky-colonels,espn
+cfb,eastern illinois panthers,cfb:eastern-illinois-panthers,espn
+cfb,eastern new mexico greyhounds,cfb:eastern-new-mexico-greyhounds,espn
+cfb,eastern oregon,cfb:eastern-oregon,espn
 cfb,eastern washington eagles,cfb:eastern-washington-eagles,espn
+cfb,edinboro fighting scots,cfb:edinboro-fighting-scots,espn
+cfb,edward waters tigers,cfb:edward-waters-tigers,espn
 cfb,elizabeth city state vikings,cfb:elizabeth-city-state-vikings,espn
-cfb,elmhurst bluejays,cfb:elmhurst-bluejays,espn
-cfb,emory henry wasps,cfb:emory-henry-wasps,espn
+cfb,emporia state hornets,cfb:emporia-state-hornets,espn
 cfb,endicott gulls,cfb:endicott-gulls,espn
 cfb,erskine flying fleet,cfb:erskine-flying-fleet,espn
-cfb,eureka red devils,cfb:eureka-red-devils,espn
-cfb,fayetteville state broncos,cfb:fayetteville-state-broncos,espn
-cfb,fdu florham devils,cfb:fdu-florham-devils,espn
+cfb,evangel university crusaders,cfb:evangel-university-crusaders,espn
+cfb,fairmont state falcons,cfb:fairmont-state-falcons,espn
 cfb,ferris state bulldogs,cfb:ferris-state-bulldogs,espn
-cfb,ferrum panthers,cfb:ferrum-panthers,espn
 cfb,findlay oilers,cfb:findlay-oilers,espn
-cfb,fitchburg state falcons,cfb:fitchburg-state-falcons,espn
 cfb,florida am rattlers,cfb:florida-am-rattlers,espn
-cfb,florida atlantic owls,cfb:florida-atlantic-owls,espn
-cfb,florida gators,cfb:florida-gators,espn
-cfb,florida international panthers,cfb:florida-international-panthers,espn
 cfb,florida memorial university lions,cfb:florida-memorial-university-lions,espn
 cfb,fordham rams,cfb:fordham-rams,espn
+cfb,fort hays tigers,cfb:fort-hays-tigers,espn
 cfb,fort lewis skyhawks,cfb:fort-lewis-skyhawks,espn
 cfb,fort valley state wildcats,cfb:fort-valley-state-wildcats,espn
-cfb,franklin grizzlies,cfb:franklin-grizzlies,espn
-cfb,franklin pierce ravens,cfb:franklin-pierce-ravens,espn
-cfb,frostburg state bobcats,cfb:frostburg-state-bobcats,espn
-cfb,gallaudet bison,cfb:gallaudet-bison,espn
-cfb,gardner webb runnin bulldogs,cfb:gardner-webb-runnin-bulldogs,espn
+cfb,furman paladins,cfb:furman-paladins,espn
+cfb,gannon golden knights,cfb:gannon-golden-knights,espn
+cfb,george mason university patriots,cfb:george-mason-university-patriots,espn
+cfb,georgetown hoyas,cfb:georgetown-hoyas,espn
 cfb,georgetown ky tigers,cfb:georgetown-ky-tigers,espn
+cfb,georgia bulldogs,cfb:georgia-bulldogs,espn
+cfb,georgia state panthers,cfb:georgia-state-panthers,espn
 cfb,georgia tech yellow jackets,cfb:georgia-tech-yellow-jackets,espn
-cfb,graceland university graceland,cfb:graceland-university-graceland,espn
-cfb,grand valley state lakers,cfb:grand-valley-state-lakers,espn
-cfb,greensboro pride,cfb:greensboro-pride,espn
+cfb,grambling tigers,cfb:grambling-tigers,espn
 cfb,greenville panthers,cfb:greenville-panthers,espn
 cfb,grinnell pioneers,cfb:grinnell-pioneers,espn
+cfb,grove city wolverines,cfb:grove-city-wolverines,espn
 cfb,gustavus adolphus golden gusties,cfb:gustavus-adolphus-golden-gusties,espn
-cfb,harding bisons,cfb:harding-bisons,espn
+cfb,hampden sydney tigers,cfb:hampden-sydney-tigers,espn
+cfb,hampton pirates,cfb:hampton-pirates,espn
+cfb,hanover panthers,cfb:hanover-panthers,espn
+cfb,hardin simmons cowboys,cfb:hardin-simmons-cowboys,espn
 cfb,hartwick hawks,cfb:hartwick-hawks,espn
 cfb,harvard crimson,cfb:harvard-crimson,espn
-cfb,haskell indian nations univ jayhawks,cfb:haskell-indian-nations-univ-jayhawks,espn
 cfb,hawaii rainbow warriors,cfb:hawaii-rainbow-warriors,espn
 cfb,hendrix warriors,cfb:hendrix-warriors,espn
 cfb,hilbert hawks,cfb:hilbert-hawks,espn
-cfb,hillsdale chargers,cfb:hillsdale-chargers,espn
 cfb,hiram terriers,cfb:hiram-terriers,espn
-cfb,hobart statesmen,cfb:hobart-statesmen,espn
-cfb,hope flying dutchmen,cfb:hope-flying-dutchmen,espn
+cfb,holland college hurricanes,cfb:holland-college-hurricanes,espn
+cfb,holy cross crusaders,cfb:holy-cross-crusaders,espn
 cfb,houston christian huskies,cfb:houston-christian-huskies,espn
 cfb,houston cougars,cfb:houston-cougars,espn
+cfb,howard bison,cfb:howard-bison,espn
 cfb,huntingdon hawks,cfb:huntingdon-hawks,espn
-cfb,idaho state bengals,cfb:idaho-state-bengals,espn
-cfb,illinois college blueboys,cfb:illinois-college-blueboys,espn
-cfb,indiana hoosiers,cfb:indiana-hoosiers,espn
+cfb,idaho vandals,cfb:idaho-vandals,espn
+cfb,illinois state redbirds,cfb:illinois-state-redbirds,espn
+cfb,illinois wesleyan titans,cfb:illinois-wesleyan-titans,espn
+cfb,incarnate word cardinals,cfb:incarnate-word-cardinals,espn
 cfb,indiana state sycamores,cfb:indiana-state-sycamores,espn
 cfb,indiana wesleyan wildcats,cfb:indiana-wesleyan-wildcats,espn
-cfb,iowa hawkeyes,cfb:iowa-hawkeyes,espn
-cfb,iu pennsylvania crimson hawks,cfb:iu-pennsylvania-crimson-hawks,espn
+cfb,jackson state tigers,cfb:jackson-state-tigers,espn
 cfb,jacksonville state gamecocks,cfb:jacksonville-state-gamecocks,espn
 cfb,james madison dukes,cfb:james-madison-dukes,espn
-cfb,jamestown jimmies,cfb:jamestown-jimmies,espn
+cfb,john carroll blue streaks,cfb:john-carroll-blue-streaks,espn
+cfb,johns hopkins blue jays,cfb:johns-hopkins-blue-jays,espn
 cfb,johnson c smith golden bulls,cfb:johnson-c-smith-golden-bulls,espn
-cfb,kansas wesleyan ks wesleyan,cfb:kansas-wesleyan-ks-wesleyan,espn
-cfb,kean cougars,cfb:kean-cougars,espn
-cfb,kennesaw state owls,cfb:kennesaw-state-owls,espn
-cfb,kent state golden flashes,cfb:kent-state-golden-flashes,espn
+cfb,juniata eagles,cfb:juniata-eagles,espn
+cfb,kansas jayhawks,cfb:kansas-jayhawks,espn
+cfb,kansas state wildcats,cfb:kansas-state-wildcats,espn
+cfb,keiser university keiser,cfb:keiser-university-keiser,espn
+cfb,kentucky state thorobreds,cfb:kentucky-state-thorobreds,espn
 cfb,kentucky wildcats,cfb:kentucky-wildcats,espn
-cfb,kenyon owls,cfb:kenyon-owls,espn
 cfb,kings monarchs,cfb:kings-monarchs,espn
 cfb,knox prairie fire,cfb:knox-prairie-fire,espn
-cfb,lafayette leopards,cfb:lafayette-leopards,espn
+cfb,kutztown golden bears,cfb:kutztown-golden-bears,espn
+cfb,la verne leopards,cfb:la-verne-leopards,espn
 cfb,lagrange panthers,cfb:lagrange-panthers,espn
 cfb,lake erie storm,cfb:lake-erie-storm,espn
+cfb,lake forest foresters,cfb:lake-forest-foresters,espn
 cfb,lakeland muskies,cfb:lakeland-muskies,espn
 cfb,lamar cardinals,cfb:lamar-cardinals,espn
+cfb,lane college dragons,cfb:lane-college-dragons,espn
 cfb,lawrence vikings,cfb:lawrence-vikings,espn
 cfb,lebanon valley flying dutchmen,cfb:lebanon-valley-flying-dutchmen,espn
 cfb,lehigh mountain hawks,cfb:lehigh-mountain-hawks,espn
+cfb,lenoir rhyne bears,cfb:lenoir-rhyne-bears,espn
+cfb,lewis clark river otters,cfb:lewis-clark-river-otters,espn
 cfb,lincoln ca oaklanders,cfb:lincoln-ca-oaklanders,espn
-cfb,lincoln pa lions,cfb:lincoln-pa-lions,espn
 cfb,lindenwood lions,cfb:lindenwood-lions,espn
-cfb,lindsey wilson lindsey,cfb:lindsey-wilson-lindsey,espn
 cfb,livingstone blue bears,cfb:livingstone-blue-bears,espn
-cfb,lock haven bald eagles,cfb:lock-haven-bald-eagles,espn
-cfb,loras duhawks,cfb:loras-duhawks,espn
+cfb,louisiana christian wildcats,cfb:louisiana-christian-wildcats,espn
 cfb,louisiana ragin cajuns,cfb:louisiana-ragin-cajuns,espn
-cfb,lycoming warriors,cfb:lycoming-warriors,espn
+cfb,louisville cardinals,cfb:louisville-cardinals,espn
+cfb,lsu tigers,cfb:lsu-tigers,espn
+cfb,luther norse,cfb:luther-norse,espn
 cfb,lyon scots,cfb:lyon-scots,espn
 cfb,macalester scots,cfb:macalester-scots,espn
-cfb,maine black bears,cfb:maine-black-bears,espn
-cfb,mansfield mountaineers,cfb:mansfield-mountaineers,espn
+cfb,maine maritime mariners,cfb:maine-maritime-mariners,espn
+cfb,manchester spartans,cfb:manchester-spartans,espn
 cfb,marian in marian,cfb:marian-in-marian,espn
-cfb,marietta pioneers,cfb:marietta-pioneers,espn
-cfb,marist red foxes,cfb:marist-red-foxes,espn
-cfb,mars hill lions,cfb:mars-hill-lions,espn
 cfb,marshall thundering herd,cfb:marshall-thundering-herd,espn
-cfb,maryland terrapins,cfb:maryland-terrapins,espn
-cfb,maryville tn scots,cfb:maryville-tn-scots,espn
+cfb,martin luther knights,cfb:martin-luther-knights,espn
 cfb,mass maritime buccaneers,cfb:mass-maritime-buccaneers,espn
+cfb,mayville state comets,cfb:mayville-state-comets,espn
+cfb,mcdaniel green terror,cfb:mcdaniel-green-terror,espn
 cfb,mckendree bearcats,cfb:mckendree-bearcats,espn
 cfb,mcmurry war hawks,cfb:mcmurry-war-hawks,espn
-cfb,merrimack warriors,cfb:merrimack-warriors,espn
-cfb,miami oh redhawks,cfb:miami-oh-redhawks,espn
-cfb,michigan wolverines,cfb:michigan-wolverines,espn
-cfb,middlebury panthers,cfb:middlebury-panthers,espn
-cfb,midwestern state mustangs,cfb:midwestern-state-mustangs,espn
+cfb,merchant marine mariners,cfb:merchant-marine-mariners,espn
+cfb,methodist monarchs,cfb:methodist-monarchs,espn
+cfb,michigan state spartans,cfb:michigan-state-spartans,espn
 cfb,miles golden bears,cfb:miles-golden-bears,espn
-cfb,minnesota golden gophers,cfb:minnesota-golden-gophers,espn
+cfb,millikin big blue,cfb:millikin-big-blue,espn
+cfb,minnesota duluth bulldogs,cfb:minnesota-duluth-bulldogs,espn
 cfb,minnesota st moorhead dragons,cfb:minnesota-st-moorhead-dragons,espn
-cfb,minot state beavers,cfb:minot-state-beavers,espn
+cfb,minnesota state mavericks,cfb:minnesota-state-mavericks,espn
+cfb,misericordia cougars,cfb:misericordia-cougars,espn
 cfb,mississippi state bulldogs,cfb:mississippi-state-bulldogs,espn
-cfb,missouri baptist spartans,cfb:missouri-baptist-spartans,espn
+cfb,mississippi valley state delta devils,cfb:mississippi-valley-state-delta-devils,espn
 cfb,missouri southern state lions,cfb:missouri-southern-state-lions,espn
 cfb,missouri st miners,cfb:missouri-st-miners,espn
 cfb,missouri tigers,cfb:missouri-tigers,espn
-cfb,missouri western griffons,cfb:missouri-western-griffons,espn
+cfb,mit engineers,cfb:mit-engineers,espn
+cfb,monmouth hawks,cfb:monmouth-hawks,espn
 cfb,monmouth il fighting scots,cfb:monmouth-il-fighting-scots,espn
-cfb,montana grizzlies,cfb:montana-grizzlies,espn
+cfb,monroe mustangs,cfb:monroe-mustangs,espn
+cfb,montana state bobcats,cfb:montana-state-bobcats,espn
 cfb,montana western bulldogs,cfb:montana-western-bulldogs,espn
-cfb,montclair state red hawks,cfb:montclair-state-red-hawks,espn
-cfb,monterrey tech borregos,cfb:monterrey-tech-borregos,espn
-cfb,moravian greyhounds,cfb:moravian-greyhounds,espn
-cfb,morehouse maroon tigers,cfb:morehouse-maroon-tigers,espn
+cfb,morgan state bears,cfb:morgan-state-bears,espn
 cfb,morningside chiefs,cfb:morningside-chiefs,espn
-cfb,muhlenberg mules,cfb:muhlenberg-mules,espn
+cfb,mount st joseph lions,cfb:mount-st-joseph-lions,espn
 cfb,murray state racers,cfb:murray-state-racers,espn
 cfb,muskingum fighting muskies,cfb:muskingum-fighting-muskies,espn
+cfb,nebraska wesleyan prairie wolves,cfb:nebraska-wesleyan-prairie-wolves,espn
 cfb,nelson tx lions,cfb:nelson-tx-lions,espn
-cfb,nevada wolf pack,cfb:nevada-wolf-pack,espn
 cfb,new england noreasters,cfb:new-england-noreasters,espn
-cfb,new mexico highlands cowboys,cfb:new-mexico-highlands-cowboys,espn
-cfb,new mexico lobos,cfb:new-mexico-lobos,espn
-cfb,nicholls colonels,cfb:nicholls-colonels,espn
-cfb,norfolk state spartans,cfb:norfolk-state-spartans,espn
+cfb,new haven chargers,cfb:new-haven-chargers,espn
+cfb,new mexico state aggies,cfb:new-mexico-state-aggies,espn
+cfb,north alabama lions,cfb:north-alabama-lions,espn
 cfb,north american stallions,cfb:north-american-stallions,espn
 cfb,north carolina at aggies,cfb:north-carolina-at-aggies,espn
-cfb,north carolina wesleyan battling bishops,cfb:north-carolina-wesleyan-battling-bishops,espn
+cfb,north carolina central eagles,cfb:north-carolina-central-eagles,espn
+cfb,north central college cardinals,cfb:north-central-college-cardinals,espn
 cfb,north dakota fighting hawks,cfb:north-dakota-fighting-hawks,espn
 cfb,north park vikings,cfb:north-park-vikings,espn
+cfb,north texas mean green,cfb:north-texas-mean-green,espn
 cfb,northeastern state riverhawks,cfb:northeastern-state-riverhawks,espn
+cfb,northern arizona lumberjacks,cfb:northern-arizona-lumberjacks,espn
 cfb,northern colorado bears,cfb:northern-colorado-bears,espn
-cfb,northern michigan wildcats,cfb:northern-michigan-wildcats,espn
-cfb,northwestern ok rangers,cfb:northwestern-ok-rangers,espn
-cfb,northwestern state demons,cfb:northwestern-state-demons,espn
-cfb,northwestern wildcats,cfb:northwestern-wildcats,espn
-cfb,northwood timberwolves,cfb:northwood-timberwolves,espn
-cfb,ohio bobcats,cfb:ohio-bobcats,espn
+cfb,northern iowa panthers,cfb:northern-iowa-panthers,espn
+cfb,northwest missouri state bearcats,cfb:northwest-missouri-state-bearcats,espn
+cfb,northwestern mn eagles,cfb:northwestern-mn-eagles,espn
+cfb,notre dame fighting irish,cfb:notre-dame-fighting-irish,espn
 cfb,ohio northern polar bears,cfb:ohio-northern-polar-bears,espn
 cfb,ohio state buckeyes,cfb:ohio-state-buckeyes,espn
-cfb,ohio state newark titans,cfb:ohio-state-newark-titans,espn
-cfb,oklahoma panhandle ok panhandle st,cfb:oklahoma-panhandle-ok-panhandle-st,espn
+cfb,ohio wesleyan battling bishops,cfb:ohio-wesleyan-battling-bishops,espn
 cfb,oklahoma sooners,cfb:oklahoma-sooners,espn
-cfb,old dominion monarchs,cfb:old-dominion-monarchs,espn
-cfb,oregon ducks,cfb:oregon-ducks,espn
-cfb,oregon state beavers,cfb:oregon-state-beavers,espn
+cfb,otterbein cardinals,cfb:otterbein-cardinals,espn
 cfb,ouachita baptist tigers,cfb:ouachita-baptist-tigers,espn
-cfb,penn state nittany lions,cfb:penn-state-nittany-lions,espn
 cfb,phoenix firestorm,cfb:phoenix-firestorm,espn
-cfb,pittsburg state gorillas,cfb:pittsburg-state-gorillas,espn
 cfb,point university skyhawks,cfb:point-university-skyhawks,espn
-cfb,portland state vikings,cfb:portland-state-vikings,espn
+cfb,pomona pitzer sagehens,cfb:pomona-pitzer-sagehens,espn
 cfb,prairie view am panthers,cfb:prairie-view-am-panthers,espn
 cfb,presbyterian blue hose,cfb:presbyterian-blue-hose,espn
+cfb,princeton tigers,cfb:princeton-tigers,espn
 cfb,randolph macon yellow jackets,cfb:randolph-macon-yellow-jackets,espn
-cfb,redlands bulldogs,cfb:redlands-bulldogs,espn
 cfb,reinhardt eagles,cfb:reinhardt-eagles,espn
-cfb,ripon red hawks,cfb:ripon-red-hawks,espn
+cfb,rhode island rams,cfb:rhode-island-rams,espn
+cfb,rhodes lynx,cfb:rhodes-lynx,espn
+cfb,rice owls,cfb:rice-owls,espn
+cfb,richmond spiders,cfb:richmond-spiders,espn
 cfb,robert morris colonials,cfb:robert-morris-colonials,espn
+cfb,rochester ny yellow jackets,cfb:rochester-ny-yellow-jackets,espn
 cfb,rockford regents,cfb:rockford-regents,espn
 cfb,rose hulman fightin engineers,cfb:rose-hulman-fightin-engineers,espn
 cfb,rowan profs,cfb:rowan-profs,espn
-cfb,sacramento state hornets,cfb:sacramento-state-hornets,espn
 cfb,sacred heart pioneers,cfb:sacred-heart-pioneers,espn
-cfb,saginaw valley state cardinals,cfb:saginaw-valley-state-cardinals,espn
 cfb,saint anselm hawks,cfb:saint-anselm-hawks,espn
 cfb,saint francis in cougars,cfb:saint-francis-in-cougars,espn
-cfb,saint francis red flash,cfb:saint-francis-red-flash,espn
 cfb,saint johns mn johnnies,cfb:saint-johns-mn-johnnies,espn
+cfb,saint vincent bearcats,cfb:saint-vincent-bearcats,espn
+cfb,saint xavier cougars,cfb:saint-xavier-cougars,espn
 cfb,salisbury sea gulls,cfb:salisbury-sea-gulls,espn
-cfb,salve regina seahawks,cfb:salve-regina-seahawks,espn
-cfb,samford bulldogs,cfb:samford-bulldogs,espn
+cfb,sam houston bearkats,cfb:sam-houston-bearkats,espn
+cfb,san diego state aztecs,cfb:san-diego-state-aztecs,espn
 cfb,san diego toreros,cfb:san-diego-toreros,espn
-cfb,san jose state spartans,cfb:san-jose-state-spartans,espn
-cfb,sewanee tigers,cfb:sewanee-tigers,espn
+cfb,savannah state tigers,cfb:savannah-state-tigers,espn
+cfb,se louisiana lions,cfb:se-louisiana-lions,espn
+cfb,seton hill griffins,cfb:seton-hill-griffins,espn
 cfb,shaw bears,cfb:shaw-bears,espn
 cfb,shepherd rams,cfb:shepherd-rams,espn
 cfb,shorter hawks,cfb:shorter-hawks,espn
+cfb,siena heights saints,cfb:siena-heights-saints,espn
 cfb,simpson ca red hawks,cfb:simpson-ca-red-hawks,espn
 cfb,simpson ia storm,cfb:simpson-ia-storm,espn
+cfb,sioux falls cougars,cfb:sioux-falls-cougars,espn
 cfb,smu mustangs,cfb:smu-mustangs,espn
-cfb,south alabama jaguars,cfb:south-alabama-jaguars,espn
-cfb,south dakota coyotes,cfb:south-dakota-coyotes,espn
-cfb,south dakota mines hardrockers,cfb:south-dakota-mines-hardrockers,espn
 cfb,south florida bulls,cfb:south-florida-bulls,espn
 cfb,southeast missouri state redhawks,cfb:southeast-missouri-state-redhawks,espn
-cfb,southeastern oklahoma state savage storm,cfb:southeastern-oklahoma-state-savage-storm,espn
+cfb,southeastern fires,cfb:southeastern-fires,espn
+cfb,southern arkansas muleriders,cfb:southern-arkansas-muleriders,espn
+cfb,southern connecticut state owls,cfb:southern-connecticut-state-owls,espn
 cfb,southern illinois salukis,cfb:southern-illinois-salukis,espn
+cfb,southern jaguars,cfb:southern-jaguars,espn
+cfb,southern nazarene crimson storm,cfb:southern-nazarene-crimson-storm,espn
 cfb,southern oregon raiders,cfb:southern-oregon-raiders,espn
+cfb,southern utah thunderbirds,cfb:southern-utah-thunderbirds,espn
 cfb,southern virginia knights,cfb:southern-virginia-knights,espn
 cfb,southwestern u pirates,cfb:southwestern-u-pirates,espn
-cfb,st francis il fighting saints,cfb:st-francis-il-fighting-saints,espn
-cfb,st lawrence saints,cfb:st-lawrence-saints,espn
-cfb,stanford cardinal,cfb:stanford-cardinal,espn
-cfb,stephen f austin lumberjacks,cfb:stephen-f-austin-lumberjacks,espn
+cfb,st ambrose fighting bees,cfb:st-ambrose-fighting-bees,espn
+cfb,st john fisher cardinals,cfb:st-john-fisher-cardinals,espn
+cfb,st olaf oles,cfb:st-olaf-oles,espn
+cfb,st petersburg glory eagles,cfb:st-petersburg-glory-eagles,espn
+cfb,st thomas tommies,cfb:st-thomas-tommies,espn
 cfb,sterling sterling ks,cfb:sterling-sterling-ks,espn
 cfb,stetson hatters,cfb:stetson-hatters,espn
-cfb,stony brook seawolves,cfb:stony-brook-seawolves,espn
+cfb,stonehill skyhawks,cfb:stonehill-skyhawks,espn
+cfb,sul ross state lobos,cfb:sul-ross-state-lobos,espn
 cfb,suny cortland red dragons,cfb:suny-cortland-red-dragons,espn
 cfb,suny erie kats,cfb:suny-erie-kats,espn
 cfb,suny maritime privateers,cfb:suny-maritime-privateers,espn
-cfb,susquehanna river hawks,cfb:susquehanna-river-hawks,espn
-cfb,temple owls,cfb:temple-owls,espn
+cfb,suny morrisville mustangs,cfb:suny-morrisville-mustangs,espn
+cfb,syracuse orange,cfb:syracuse-orange,espn
+cfb,tennessee tech golden eagles,cfb:tennessee-tech-golden-eagles,espn
+cfb,tennessee volunteers,cfb:tennessee-volunteers,espn
 cfb,texas am aggies,cfb:texas-am-aggies,espn
 cfb,texas am kingsville javelinas,cfb:texas-am-kingsville-javelinas,espn
-cfb,texas lutheran bulldogs,cfb:texas-lutheran-bulldogs,espn
-cfb,texas state bobcats,cfb:texas-state-bobcats,espn
-cfb,the citadel bulldogs,cfb:the-citadel-bulldogs,espn
+cfb,texas college steers,cfb:texas-college-steers,espn
+cfb,texas southern tigers,cfb:texas-southern-tigers,espn
+cfb,the college of new jersey lions,cfb:the-college-of-new-jersey-lions,espn
 cfb,thiel tomcats,cfb:thiel-tomcats,espn
-cfb,thomas more saints,cfb:thomas-more-saints,espn
-cfb,toledo rockets,cfb:toledo-rockets,espn
-cfb,trinity ct bantams,cfb:trinity-ct-bantams,espn
-cfb,troy trojans,cfb:troy-trojans,espn
-cfb,truman state bulldogs,cfb:truman-state-bulldogs,espn
-cfb,tufts jumbos,cfb:tufts-jumbos,espn
+cfb,thomas night hawks,cfb:thomas-night-hawks,espn
+cfb,tiffin dragons,cfb:tiffin-dragons,espn
+cfb,trinity tx tigers,cfb:trinity-tx-tigers,espn
+cfb,troy vikings,cfb:troy-vikings,espn
+cfb,tulsa golden hurricane,cfb:tulsa-golden-hurricane,espn
 cfb,tusculum pioneers,cfb:tusculum-pioneers,espn
+cfb,uab blazers,cfb:uab-blazers,espn
+cfb,uc davis aggies,cfb:uc-davis-aggies,espn
 cfb,ucf knights,cfb:ucf-knights,espn
-cfb,ucla bruins,cfb:ucla-bruins,espn
 cfb,uconn huskies,cfb:uconn-huskies,espn
 cfb,ul monroe warhawks,cfb:ul-monroe-warhawks,espn
 cfb,unc pembroke braves,cfb:unc-pembroke-braves,espn
-cfb,unlv rebels,cfb:unlv-rebels,espn
+cfb,university of mexico mexico u,cfb:university-of-mexico-mexico-u,espn
 cfb,upper iowa peacocks,cfb:upper-iowa-peacocks,espn
-cfb,ursinus bears,cfb:ursinus-bears,espn
 cfb,usc trojans,cfb:usc-trojans,espn
-cfb,ut martin skyhawks,cfb:ut-martin-skyhawks,espn
 cfb,ut permian basin falcons,cfb:ut-permian-basin-falcons,espn
 cfb,utah state aggies,cfb:utah-state-aggies,espn
 cfb,utah tech trailblazers,cfb:utah-tech-trailblazers,espn
-cfb,utah utes,cfb:utah-utes,espn
-cfb,utep miners,cfb:utep-miners,espn
-cfb,valdosta state blazers,cfb:valdosta-state-blazers,espn
-cfb,valley city state vikings,cfb:valley-city-state-vikings,espn
-cfb,villanova wildcats,cfb:villanova-wildcats,espn
-cfb,virginia lynchburg dragons,cfb:virginia-lynchburg-dragons,espn
+cfb,utica pioneers,cfb:utica-pioneers,espn
+cfb,utsa roadrunners,cfb:utsa-roadrunners,espn
+cfb,vanderbilt commodores,cfb:vanderbilt-commodores,espn
+cfb,vermont state castleton spartans,cfb:vermont-state-castleton-spartans,espn
 cfb,virginia state trojans,cfb:virginia-state-trojans,espn
 cfb,virginia tech hokies,cfb:virginia-tech-hokies,espn
 cfb,virginia union panthers,cfb:virginia-union-panthers,espn
+cfb,wabash little giants,cfb:wabash-little-giants,espn
 cfb,wagner seahawks,cfb:wagner-seahawks,espn
-cfb,wake forest demon deacons,cfb:wake-forest-demon-deacons,espn
-cfb,warner royals,cfb:warner-royals,espn
+cfb,waldorf warriors,cfb:waldorf-warriors,espn
 cfb,wartburg knights,cfb:wartburg-knights,espn
-cfb,washburn ichabods,cfb:washburn-ichabods,espn
 cfb,washington jefferson presidents,cfb:washington-jefferson-presidents,espn
+cfb,washington st louis bears,cfb:washington-st-louis-bears,espn
 cfb,washington state cougars,cfb:washington-state-cougars,espn
-cfb,wayland baptist pioneers,cfb:wayland-baptist-pioneers,espn
-cfb,wayne state ne wildcats,cfb:wayne-state-ne-wildcats,espn
-cfb,weber state wildcats,cfb:weber-state-wildcats,espn
-cfb,wesleyan ct cardinals,cfb:wesleyan-ct-cardinals,espn
-cfb,west georgia wolves,cfb:west-georgia-wolves,espn
+cfb,wayne state mi warriors,cfb:wayne-state-mi-warriors,espn
+cfb,webber international warriors,cfb:webber-international-warriors,espn
+cfb,west chester golden rams,cfb:west-chester-golden-rams,espn
+cfb,west florida argonauts,cfb:west-florida-argonauts,espn
 cfb,west texas buffaloes,cfb:west-texas-buffaloes,espn
+cfb,west virginia mountaineers,cfb:west-virginia-mountaineers,espn
+cfb,west virginia state yellow jackets,cfb:west-virginia-state-yellow-jackets,espn
 cfb,western carolina catamounts,cfb:western-carolina-catamounts,espn
 cfb,western connecticut state wolves,cfb:western-connecticut-state-wolves,espn
-cfb,western kentucky hilltoppers,cfb:western-kentucky-hilltoppers,espn
+cfb,western illinois leathernecks,cfb:western-illinois-leathernecks,espn
 cfb,western michigan broncos,cfb:western-michigan-broncos,espn
 cfb,western new england golden bears,cfb:western-new-england-golden-bears,espn
-cfb,western new mexico mustangs,cfb:western-new-mexico-mustangs,espn
+cfb,westfield state owls,cfb:westfield-state-owls,espn
 cfb,westminster mo blue jays,cfb:westminster-mo-blue-jays,espn
 cfb,westminster pa titans,cfb:westminster-pa-titans,espn
-cfb,wheaton il thunder,cfb:wheaton-il-thunder,espn
 cfb,wheeling cardinals,cfb:wheeling-cardinals,espn
-cfb,widener pride,cfb:widener-pride,espn
-cfb,william mary tribe,cfb:william-mary-tribe,espn
-cfb,william paterson pioneers,cfb:william-paterson-pioneers,espn
-cfb,william penn statesmen,cfb:william-penn-statesmen,espn
-cfb,williamson mechanics,cfb:williamson-mechanics,espn
 cfb,wilmington oh fightin quakers,cfb:wilmington-oh-fightin-quakers,espn
 cfb,winona state warriors,cfb:winona-state-warriors,espn
-cfb,winston salem state rams,cfb:winston-salem-state-rams,espn
 cfb,wisconsin badgers,cfb:wisconsin-badgers,espn
+cfb,wisconsin eau claire blugolds,cfb:wisconsin-eau-claire-blugolds,espn
 cfb,wisconsin la crosse eagles,cfb:wisconsin-la-crosse-eagles,espn
 cfb,wisconsin lutheran warriors,cfb:wisconsin-lutheran-warriors,espn
+cfb,wisconsin oshkosh titans,cfb:wisconsin-oshkosh-titans,espn
 cfb,wisconsin platteville pioneers,cfb:wisconsin-platteville-pioneers,espn
-cfb,wisconsin river falls falcons,cfb:wisconsin-river-falls-falcons,espn
-cfb,wofford terriers,cfb:wofford-terriers,espn
+cfb,wisconsin stevens point pointers,cfb:wisconsin-stevens-point-pointers,espn
+cfb,wisconsin stout blue devils,cfb:wisconsin-stout-blue-devils,espn
+cfb,wisconsin whitewater warhawks,cfb:wisconsin-whitewater-warhawks,espn
+cfb,wittenberg tigers,cfb:wittenberg-tigers,espn
 cfb,wooster fighting scots,cfb:wooster-fighting-scots,espn
 cfb,worcester state lancers,cfb:worcester-state-lancers,espn
+cfb,wpi engineers,cfb:wpi-engineers,espn
 cfb,wvu tech golden bears,cfb:wvu-tech-golden-bears,espn
 cfb,wyoming cowboys,cfb:wyoming-cowboys,espn
 cfb,youngstown state penguins,cfb:youngstown-state-penguins,espn
+el1,AFC Wimbledon AFC Wimbledon,el1:betbrain.afc_wimbledon,espn
+el1,BAR,el1:eng.barnsley,espn
+el1,BLP,el1:eng.blackpool,espn
+el1,BRD,el1:eng.bradford,espn
+el1,BRO,el1:betbrain.bromley,espn
+el1,BRT,el1:eng.burton_albion,espn
+el1,Barnsley,el1:eng.barnsley,espn
+el1,Barnsley Barnsley,el1:eng.barnsley,espn
+el1,Blackpool,el1:eng.blackpool,espn
+el1,Blackpool Blackpool,el1:eng.blackpool,espn
+el1,Bradford,el1:eng.bradford,espn
+el1,Bradford City,el1:eng.bradford,espn
+el1,Bradford City Bradford City,el1:eng.bradford,espn
+el1,Bromley,el1:betbrain.bromley,espn
+el1,Bromley Bromley,el1:betbrain.bromley,espn
+el1,Burton Albion,el1:eng.burton_albion,espn
+el1,Burton Albion Burton Albion,el1:eng.burton_albion,espn
+el1,CAM,el1:eng.cambridge_utd,espn
+el1,Cambridge,el1:eng.cambridge_utd,espn
+el1,Cambridge United,el1:eng.cambridge_utd,espn
+el1,Cambridge United Cambridge United,el1:eng.cambridge_utd,espn
+el1,DON,el1:eng.doncaster,espn
+el1,Doncaster,el1:eng.doncaster,espn
+el1,Doncaster Rovers,el1:eng.doncaster,espn
+el1,Doncaster Rovers Doncaster Rovers,el1:eng.doncaster,espn
+el1,HUD,el1:eng.huddersfield,espn
+el1,Huddersfield,el1:eng.huddersfield,espn
+el1,Huddersfield Town,el1:eng.huddersfield,espn
+el1,Huddersfield Town Huddersfield Town,el1:eng.huddersfield,espn
+el1,LEI,el1:eng.leicester,espn
+el1,LEY,el1:eng.leyton_orient,espn
+el1,LTN,el1:eng.luton,espn
+el1,Leicester,el1:eng.leicester,espn
+el1,Leicester City,el1:eng.leicester,espn
+el1,Leicester City Leicester City,el1:eng.leicester,espn
+el1,Leyton Orient,el1:eng.leyton_orient,espn
+el1,Leyton Orient Leyton Orient,el1:eng.leyton_orient,espn
+el1,Luton,el1:eng.luton,espn
+el1,Luton Town,el1:eng.luton,espn
+el1,Luton Town Luton Town,el1:eng.luton,espn
+el1,MK Dons,el1:eng.wimbledon,espn
+el1,MKD,el1:eng.wimbledon,espn
+el1,MNF,el1:eng.mansfield,espn
+el1,Mansfield,el1:eng.mansfield,espn
+el1,Mansfield Town,el1:eng.mansfield,espn
+el1,Mansfield Town Mansfield Town,el1:eng.mansfield,espn
+el1,Milton Keynes Dons,el1:eng.wimbledon,espn
+el1,Milton Keynes Dons Milton Keynes Dons,el1:eng.wimbledon,espn
+el1,NCO,el1:eng.notts_county,espn
+el1,Notts County,el1:eng.notts_county,espn
+el1,Notts County Notts County,el1:eng.notts_county,espn
+el1,OXF,el1:eng.oxford_utd,espn
+el1,Oxford United,el1:eng.oxford_utd,espn
+el1,Oxford United Oxford United,el1:eng.oxford_utd,espn
+el1,Oxford Utd,el1:eng.oxford_utd,espn
+el1,PET,el1:eng.peterborough,espn
+el1,PLY,el1:eng.plymouth,espn
+el1,Peterborough,el1:eng.peterborough,espn
+el1,Peterborough United,el1:eng.peterborough,espn
+el1,Peterborough United Peterborough United,el1:eng.peterborough,espn
+el1,Plymouth,el1:eng.plymouth,espn
+el1,Plymouth Argyle,el1:eng.plymouth,espn
+el1,Plymouth Argyle Plymouth Argyle,el1:eng.plymouth,espn
+el1,REA,el1:eng.reading,espn
+el1,Reading,el1:eng.reading,espn
+el1,Reading Reading,el1:eng.reading,espn
+el1,SHW,el1:eng.sheff_wed,espn
+el1,STE,el1:eng.stevenage,espn
+el1,STO,el1:eng.stockport,espn
+el1,Sheffield Wed,el1:eng.sheff_wed,espn
+el1,Sheffield Wednesday,el1:eng.sheff_wed,espn
+el1,Sheffield Wednesday Sheffield Wednesday,el1:eng.sheff_wed,espn
+el1,Stevenage,el1:eng.stevenage,espn
+el1,Stevenage Stevenage,el1:eng.stevenage,espn
+el1,Stockport,el1:eng.stockport,espn
+el1,Stockport County,el1:eng.stockport,espn
+el1,Stockport County Stockport County,el1:eng.stockport,espn
+el1,WGA,el1:eng.wigan,espn
+el1,WIM,el1:betbrain.afc_wimbledon,espn
+el1,WYC,el1:eng.wycombe,espn
+el1,Wigan,el1:eng.wigan,espn
+el1,Wigan Athletic,el1:eng.wigan,espn
+el1,Wigan Athletic Wigan Athletic,el1:eng.wigan,espn
+el1,Wimbledon,el1:betbrain.afc_wimbledon,espn
+el1,Wycombe,el1:eng.wycombe,espn
+el1,Wycombe Wanderers,el1:eng.wycombe,espn
+el1,Wycombe Wanderers Wycombe Wanderers,el1:eng.wycombe,espn
+el1,betbrain.afc_wimbledon,el1:betbrain.afc_wimbledon,espn
+el1,betbrain.bromley,el1:betbrain.bromley,espn
+el1,eng.barnsley,el1:eng.barnsley,espn
+el1,eng.blackpool,el1:eng.blackpool,espn
+el1,eng.bradford,el1:eng.bradford,espn
+el1,eng.burton_albion,el1:eng.burton_albion,espn
+el1,eng.cambridge_utd,el1:eng.cambridge_utd,espn
+el1,eng.doncaster,el1:eng.doncaster,espn
+el1,eng.huddersfield,el1:eng.huddersfield,espn
+el1,eng.leicester,el1:eng.leicester,espn
+el1,eng.leyton_orient,el1:eng.leyton_orient,espn
+el1,eng.luton,el1:eng.luton,espn
+el1,eng.mansfield,el1:eng.mansfield,espn
+el1,eng.notts_county,el1:eng.notts_county,espn
+el1,eng.oxford_utd,el1:eng.oxford_utd,espn
+el1,eng.peterborough,el1:eng.peterborough,espn
+el1,eng.plymouth,el1:eng.plymouth,espn
+el1,eng.reading,el1:eng.reading,espn
+el1,eng.sheff_wed,el1:eng.sheff_wed,espn
+el1,eng.stevenage,el1:eng.stevenage,espn
+el1,eng.stockport,el1:eng.stockport,espn
+el1,eng.wigan,el1:eng.wigan,espn
+el1,eng.wimbledon,el1:eng.wimbledon,espn
+el1,eng.wycombe,el1:eng.wycombe,espn
+elc,BIR,elc:eng.birmingham,espn
+elc,BLK,elc:eng.blackburn,espn
+elc,BOL,elc:eng.bolton,espn
+elc,BRC,elc:eng.bristol_city,espn
+elc,BUR,elc:eng.burnley,espn
+elc,Birmingham,elc:eng.birmingham,espn
+elc,Birmingham City,elc:eng.birmingham,espn
+elc,Birmingham City Birmingham City,elc:eng.birmingham,espn
+elc,Blackburn,elc:eng.blackburn,espn
+elc,Blackburn Rovers,elc:eng.blackburn,espn
+elc,Blackburn Rovers Blackburn Rovers,elc:eng.blackburn,espn
+elc,Bolton,elc:eng.bolton,espn
+elc,Bolton Wanderers,elc:eng.bolton,espn
+elc,Bolton Wanderers Bolton Wanderers,elc:eng.bolton,espn
+elc,Boro,elc:eng.middlesbrough,espn
+elc,Bristol City,elc:eng.bristol_city,espn
+elc,Bristol City Bristol City,elc:eng.bristol_city,espn
+elc,Burnley,elc:eng.burnley,espn
+elc,Burnley Burnley,elc:eng.burnley,espn
+elc,CAR,elc:eng.cardiff,espn
+elc,CHA,elc:eng.charlton,espn
+elc,Cardiff,elc:eng.cardiff,espn
+elc,Cardiff City,elc:eng.cardiff,espn
+elc,Cardiff City Cardiff City,elc:eng.cardiff,espn
+elc,Charlton,elc:eng.charlton,espn
+elc,Charlton Athletic,elc:eng.charlton,espn
+elc,Charlton Athletic Charlton Athletic,elc:eng.charlton,espn
+elc,DER,elc:eng.derby,espn
+elc,Derby,elc:eng.derby,espn
+elc,Derby County,elc:eng.derby,espn
+elc,Derby County Derby County,elc:eng.derby,espn
+elc,LCN,elc:eng.lincoln_city,espn
+elc,Lincoln City,elc:eng.lincoln_city,espn
+elc,Lincoln City Lincoln City,elc:eng.lincoln_city,espn
+elc,MID,elc:eng.middlesbrough,espn
+elc,MIL,elc:eng.millwall,espn
+elc,Middlesbrough,elc:eng.middlesbrough,espn
+elc,Middlesbrough Middlesbrough,elc:eng.middlesbrough,espn
+elc,Millwall,elc:eng.millwall,espn
+elc,Millwall Millwall,elc:eng.millwall,espn
+elc,NOR,elc:eng.norwich,espn
+elc,Norwich City,elc:eng.norwich,espn
+elc,Norwich City Norwich City,elc:eng.norwich,espn
+elc,PNE,elc:eng.preston,espn
+elc,POR,elc:eng.portsmouth,espn
+elc,Portsmouth,elc:eng.portsmouth,espn
+elc,Portsmouth Portsmouth,elc:eng.portsmouth,espn
+elc,Preston,elc:eng.preston,espn
+elc,Preston North End,elc:eng.preston,espn
+elc,Preston North End Preston North End,elc:eng.preston,espn
+elc,QPR,elc:eng.qpr,espn
+elc,Queens Park Rangers,elc:eng.qpr,espn
+elc,Queens Park Rangers Queens Park Rangers,elc:eng.qpr,espn
+elc,SHU,elc:eng.sheff_utd,espn
+elc,SOU,elc:eng.southampton,espn
+elc,STK,elc:eng.stoke,espn
+elc,SWA,elc:eng.swansea,espn
+elc,Sheffield United,elc:eng.sheff_utd,espn
+elc,Sheffield United Sheffield United,elc:eng.sheff_utd,espn
+elc,Sheffield Utd,elc:eng.sheff_utd,espn
+elc,Southampton,elc:eng.southampton,espn
+elc,Southampton Southampton,elc:eng.southampton,espn
+elc,Stoke,elc:eng.stoke,espn
+elc,Stoke City,elc:eng.stoke,espn
+elc,Stoke City Stoke City,elc:eng.stoke,espn
+elc,Swansea,elc:eng.swansea,espn
+elc,Swansea City,elc:eng.swansea,espn
+elc,Swansea City Swansea City,elc:eng.swansea,espn
+elc,WAT,elc:eng.watford,espn
+elc,WBA,elc:eng.west_brom,espn
+elc,WHU,elc:eng.west_ham,espn
+elc,WOL,elc:eng.wolverhampton,espn
+elc,WXM,elc:eng.wrexham,espn
+elc,Watford,elc:eng.watford,espn
+elc,Watford Watford,elc:eng.watford,espn
+elc,West Brom,elc:eng.west_brom,espn
+elc,West Bromwich Albion,elc:eng.west_brom,espn
+elc,West Bromwich Albion West Bromwich Albion,elc:eng.west_brom,espn
+elc,West Ham,elc:eng.west_ham,espn
+elc,West Ham United,elc:eng.west_ham,espn
+elc,West Ham United West Ham United,elc:eng.west_ham,espn
+elc,Wolverhampton Wanderers,elc:eng.wolverhampton,espn
+elc,Wolverhampton Wanderers Wolverhampton Wanderers,elc:eng.wolverhampton,espn
+elc,Wolves,elc:eng.wolverhampton,espn
+elc,Wrexham,elc:eng.wrexham,espn
+elc,Wrexham Wrexham,elc:eng.wrexham,espn
+elc,eng.birmingham,elc:eng.birmingham,espn
+elc,eng.blackburn,elc:eng.blackburn,espn
+elc,eng.bolton,elc:eng.bolton,espn
+elc,eng.bristol_city,elc:eng.bristol_city,espn
+elc,eng.burnley,elc:eng.burnley,espn
+elc,eng.cardiff,elc:eng.cardiff,espn
+elc,eng.charlton,elc:eng.charlton,espn
+elc,eng.derby,elc:eng.derby,espn
+elc,eng.lincoln_city,elc:eng.lincoln_city,espn
+elc,eng.middlesbrough,elc:eng.middlesbrough,espn
+elc,eng.millwall,elc:eng.millwall,espn
+elc,eng.norwich,elc:eng.norwich,espn
+elc,eng.portsmouth,elc:eng.portsmouth,espn
+elc,eng.preston,elc:eng.preston,espn
+elc,eng.qpr,elc:eng.qpr,espn
+elc,eng.sheff_utd,elc:eng.sheff_utd,espn
+elc,eng.southampton,elc:eng.southampton,espn
+elc,eng.stoke,elc:eng.stoke,espn
+elc,eng.swansea,elc:eng.swansea,espn
+elc,eng.watford,elc:eng.watford,espn
+elc,eng.west_brom,elc:eng.west_brom,espn
+elc,eng.west_ham,elc:eng.west_ham,espn
+elc,eng.wolverhampton,elc:eng.wolverhampton,espn
+elc,eng.wrexham,elc:eng.wrexham,espn
 epl,AFC Bournemouth AFC Bournemouth,epl:eng.bournemouth,espn
 epl,ARS,epl:eng.arsenal,espn
 epl,AVL,epl:eng.aston_villa,espn
@@ -3438,6 +3736,236 @@ epl,eng.newcastle,epl:eng.newcastle,espn
 epl,eng.nottm_forest,epl:eng.nottm_forest,espn
 epl,eng.sunderland,epl:eng.sunderland,espn
 epl,eng.tottenham,epl:eng.tottenham,espn
+ere,ADO,ere:ned.ado_den_haag,espn
+ere,ADO Den Haag,ere:ned.ado_den_haag,espn
+ere,ADO Den Haag ADO Den Haag,ere:ned.ado_den_haag,espn
+ere,AJA,ere:ned.ajax,espn
+ere,AZ,ere:ned.az,espn
+ere,AZ Alkmaar,ere:ned.az,espn
+ere,AZ Alkmaar AZ Alkmaar,ere:ned.az,espn
+ere,Ajax,ere:ned.ajax,espn
+ere,Ajax Amsterdam,ere:ned.ajax,espn
+ere,Ajax Amsterdam Ajax Amsterdam,ere:ned.ajax,espn
+ere,CAM,ere:ned.cambuur_leeuwarden,espn
+ere,EXC,ere:ned.excelsior,espn
+ere,Excelsior,ere:ned.excelsior,espn
+ere,Excelsior Excelsior,ere:ned.excelsior,espn
+ere,FC Groningen,ere:ned.groningen,espn
+ere,FC Groningen FC Groningen,ere:ned.groningen,espn
+ere,FC Twente,ere:ned.fc_twente,espn
+ere,FC Twente FC Twente,ere:ned.fc_twente,espn
+ere,FC Utrecht,ere:ned.fc_utrecht,espn
+ere,FC Utrecht FC Utrecht,ere:ned.fc_utrecht,espn
+ere,FEY,ere:ned.feyenoord,espn
+ere,FOR,ere:ned.fortuna_sittard,espn
+ere,Feyenoord,ere:ned.feyenoord,espn
+ere,Feyenoord Rotterdam,ere:ned.feyenoord,espn
+ere,Feyenoord Rotterdam Feyenoord Rotterdam,ere:ned.feyenoord,espn
+ere,Fortuna,ere:ned.fortuna_sittard,espn
+ere,Fortuna Sittard,ere:ned.fortuna_sittard,espn
+ere,Fortuna Sittard Fortuna Sittard,ere:ned.fortuna_sittard,espn
+ere,GAE,ere:ned.go_ahead_eagles,espn
+ere,GRO,ere:ned.groningen,espn
+ere,Go Ahead Eagles,ere:ned.go_ahead_eagles,espn
+ere,Go Ahead Eagles Go Ahead Eagles,ere:ned.go_ahead_eagles,espn
+ere,HEE,ere:ned.heerenveen,espn
+ere,Heerenveen,ere:ned.heerenveen,espn
+ere,Heerenveen Heerenveen,ere:ned.heerenveen,espn
+ere,NEC,ere:ned.nec,espn
+ere,NEC Nijmegen,ere:ned.nec,espn
+ere,NEC Nijmegen NEC Nijmegen,ere:ned.nec,espn
+ere,PEC,ere:ned.fc_zwolle,espn
+ere,PEC Zwolle,ere:ned.fc_zwolle,espn
+ere,PEC Zwolle PEC Zwolle,ere:ned.fc_zwolle,espn
+ere,PSV,ere:ned.psv,espn
+ere,PSV Eindhoven,ere:ned.psv,espn
+ere,PSV Eindhoven PSV Eindhoven,ere:ned.psv,espn
+ere,SC Cambuur,ere:ned.cambuur_leeuwarden,espn
+ere,SC Cambuur SC Cambuur,ere:ned.cambuur_leeuwarden,espn
+ere,SPA,ere:ned.sparta,espn
+ere,Sparta,ere:ned.sparta,espn
+ere,Sparta Rotterdam,ere:ned.sparta,espn
+ere,Sparta Rotterdam Sparta Rotterdam,ere:ned.sparta,espn
+ere,TEL,ere:ned.sc_stormvogels_telstar,espn
+ere,TWE,ere:ned.fc_twente,espn
+ere,Telstar,ere:ned.sc_stormvogels_telstar,espn
+ere,Telstar Telstar,ere:ned.sc_stormvogels_telstar,espn
+ere,UTR,ere:ned.fc_utrecht,espn
+ere,WIL,ere:ned.willem_ii,espn
+ere,Willem II,ere:ned.willem_ii,espn
+ere,Willem II Willem II,ere:ned.willem_ii,espn
+ere,ned.ado_den_haag,ere:ned.ado_den_haag,espn
+ere,ned.ajax,ere:ned.ajax,espn
+ere,ned.az,ere:ned.az,espn
+ere,ned.cambuur_leeuwarden,ere:ned.cambuur_leeuwarden,espn
+ere,ned.excelsior,ere:ned.excelsior,espn
+ere,ned.fc_twente,ere:ned.fc_twente,espn
+ere,ned.fc_utrecht,ere:ned.fc_utrecht,espn
+ere,ned.fc_zwolle,ere:ned.fc_zwolle,espn
+ere,ned.feyenoord,ere:ned.feyenoord,espn
+ere,ned.fortuna_sittard,ere:ned.fortuna_sittard,espn
+ere,ned.go_ahead_eagles,ere:ned.go_ahead_eagles,espn
+ere,ned.groningen,ere:ned.groningen,espn
+ere,ned.heerenveen,ere:ned.heerenveen,espn
+ere,ned.nec,ere:ned.nec,espn
+ere,ned.psv,ere:ned.psv,espn
+ere,ned.sc_stormvogels_telstar,ere:ned.sc_stormvogels_telstar,espn
+ere,ned.sparta,ere:ned.sparta,espn
+ere,ned.willem_ii,ere:ned.willem_ii,espn
+fl1,AJ Auxerre,fl1:fra.auxerre,espn
+fl1,AJ Auxerre AJ Auxerre,fl1:fra.auxerre,espn
+fl1,ANG,fl1:fra.angers,espn
+fl1,AS Monaco,fl1:fra.monaco,espn
+fl1,AS Monaco AS Monaco,fl1:fra.monaco,espn
+fl1,AUX,fl1:fra.auxerre,espn
+fl1,Angers,fl1:fra.angers,espn
+fl1,Angers Angers,fl1:fra.angers,espn
+fl1,Auxerre,fl1:fra.auxerre,espn
+fl1,BRE,fl1:fra.brest,espn
+fl1,Brest,fl1:fra.brest,espn
+fl1,Brest Brest,fl1:fra.brest,espn
+fl1,HAC,fl1:fra.le_havre_ac,espn
+fl1,LILL,fl1:fra.lille,espn
+fl1,LOR,fl1:fra.lorient,espn
+fl1,LYON,fl1:fra.lyon,espn
+fl1,Le Havre AC,fl1:fra.le_havre_ac,espn
+fl1,Le Havre AC Le Havre AC,fl1:fra.le_havre_ac,espn
+fl1,Le Mans,fl1:fra.le_mans,espn
+fl1,Le Mans Le Mans,fl1:fra.le_mans,espn
+fl1,Lens,fl1:fra.lens,espn
+fl1,Lens Lens,fl1:fra.lens,espn
+fl1,Lille,fl1:fra.lille,espn
+fl1,Lille Lille,fl1:fra.lille,espn
+fl1,Lorient,fl1:fra.lorient,espn
+fl1,Lorient Lorient,fl1:fra.lorient,espn
+fl1,Lyon Lyon,fl1:fra.lyon,espn
+fl1,MNS,fl1:fra.le_mans,espn
+fl1,MON,fl1:fra.monaco,espn
+fl1,Marseille,fl1:fra.marseille,espn
+fl1,Marseille Marseille,fl1:fra.marseille,espn
+fl1,Monaco,fl1:fra.monaco,espn
+fl1,Nice,fl1:fra.nice,espn
+fl1,Nice Nice,fl1:fra.nice,espn
+fl1,OLM,fl1:fra.marseille,espn
+fl1,PAR,fl1:betbrain.paris_fc,espn
+fl1,PSG,fl1:fra.psg,espn
+fl1,Paris FC,fl1:betbrain.paris_fc,espn
+fl1,Paris FC Paris FC,fl1:betbrain.paris_fc,espn
+fl1,Paris Saint-Germain,fl1:fra.psg,espn
+fl1,Paris Saint-Germain Paris Saint-Germain,fl1:fra.psg,espn
+fl1,RCL,fl1:fra.lens,espn
+fl1,REN,fl1:fra.rennes,espn
+fl1,Rennes,fl1:fra.rennes,espn
+fl1,STR,fl1:fra.strasbourg,espn
+fl1,Stade Rennais,fl1:fra.rennes,espn
+fl1,Stade Rennais Stade Rennais,fl1:fra.rennes,espn
+fl1,Strasbourg,fl1:fra.strasbourg,espn
+fl1,Strasbourg Strasbourg,fl1:fra.strasbourg,espn
+fl1,TOU,fl1:fra.toulouse,espn
+fl1,TRY,fl1:fra.troyes,espn
+fl1,Toulouse,fl1:fra.toulouse,espn
+fl1,Toulouse Toulouse,fl1:fra.toulouse,espn
+fl1,Troyes,fl1:fra.troyes,espn
+fl1,Troyes Troyes,fl1:fra.troyes,espn
+fl1,betbrain.paris_fc,fl1:betbrain.paris_fc,espn
+fl1,fra.angers,fl1:fra.angers,espn
+fl1,fra.auxerre,fl1:fra.auxerre,espn
+fl1,fra.brest,fl1:fra.brest,espn
+fl1,fra.le_havre_ac,fl1:fra.le_havre_ac,espn
+fl1,fra.le_mans,fl1:fra.le_mans,espn
+fl1,fra.lens,fl1:fra.lens,espn
+fl1,fra.lille,fl1:fra.lille,espn
+fl1,fra.lorient,fl1:fra.lorient,espn
+fl1,fra.lyon,fl1:fra.lyon,espn
+fl1,fra.marseille,fl1:fra.marseille,espn
+fl1,fra.monaco,fl1:fra.monaco,espn
+fl1,fra.nice,fl1:fra.nice,espn
+fl1,fra.psg,fl1:fra.psg,espn
+fl1,fra.rennes,fl1:fra.rennes,espn
+fl1,fra.strasbourg,fl1:fra.strasbourg,espn
+fl1,fra.toulouse,fl1:fra.toulouse,espn
+fl1,fra.troyes,fl1:fra.troyes,espn
+ita,AC Milan,ita:ita.ac_milan,espn
+ita,AC Milan AC Milan,ita:ita.ac_milan,espn
+ita,AS Roma,ita:ita.as_roma,espn
+ita,AS Roma AS Roma,ita:ita.as_roma,espn
+ita,ATA,ita:ita.atalanta,espn
+ita,Atalanta,ita:ita.atalanta,espn
+ita,Atalanta Atalanta,ita:ita.atalanta,espn
+ita,BOL,ita:ita.bologna,espn
+ita,Bologna,ita:ita.bologna,espn
+ita,Bologna Bologna,ita:ita.bologna,espn
+ita,CAG,ita:ita.cagliari,espn
+ita,Cagliari,ita:ita.cagliari,espn
+ita,Cagliari Cagliari,ita:ita.cagliari,espn
+ita,Como,ita:ita.como,espn
+ita,Como Como,ita:ita.como,espn
+ita,FIO,ita:ita.fiorentina,espn
+ita,FRO,ita:ita.frosinone,espn
+ita,Fiorentina,ita:ita.fiorentina,espn
+ita,Fiorentina Fiorentina,ita:ita.fiorentina,espn
+ita,Frosinone,ita:ita.frosinone,espn
+ita,Frosinone Frosinone,ita:ita.frosinone,espn
+ita,GEN,ita:ita.genoa,espn
+ita,Genoa,ita:ita.genoa,espn
+ita,Genoa Genoa,ita:ita.genoa,espn
+ita,INT,ita:ita.inter_milan,espn
+ita,Inter Milan,ita:ita.inter_milan,espn
+ita,Internazionale,ita:ita.inter_milan,espn
+ita,Internazionale Internazionale,ita:ita.inter_milan,espn
+ita,JUV,ita:ita.juventus,espn
+ita,Juventus,ita:ita.juventus,espn
+ita,Juventus Juventus,ita:ita.juventus,espn
+ita,LAZ,ita:ita.lazio_rome,espn
+ita,LEC,ita:ita.lecce,espn
+ita,Lazio,ita:ita.lazio_rome,espn
+ita,Lazio Lazio,ita:ita.lazio_rome,espn
+ita,Lecce,ita:ita.lecce,espn
+ita,Lecce Lecce,ita:ita.lecce,espn
+ita,MIL,ita:ita.ac_milan,espn
+ita,MON,ita:ita.monza,espn
+ita,Milan,ita:ita.ac_milan,espn
+ita,Monza,ita:ita.monza,espn
+ita,Monza Monza,ita:ita.monza,espn
+ita,NAP,ita:ita.napoli,espn
+ita,Napoli,ita:ita.napoli,espn
+ita,Napoli Napoli,ita:ita.napoli,espn
+ita,PAR,ita:ita.parma,espn
+ita,Parma,ita:ita.parma,espn
+ita,Parma Parma,ita:ita.parma,espn
+ita,ROMA,ita:ita.as_roma,espn
+ita,SAS,ita:ita.sassuolo,espn
+ita,Sassuolo,ita:ita.sassuolo,espn
+ita,Sassuolo Sassuolo,ita:ita.sassuolo,espn
+ita,TOR,ita:ita.torino,espn
+ita,Torino,ita:ita.torino,espn
+ita,Torino Torino,ita:ita.torino,espn
+ita,UDI,ita:ita.udinese,espn
+ita,Udinese,ita:ita.udinese,espn
+ita,Udinese Udinese,ita:ita.udinese,espn
+ita,VEN,ita:f.b.c_unione_venezia,espn
+ita,Venezia,ita:f.b.c_unione_venezia,espn
+ita,Venezia Venezia,ita:f.b.c_unione_venezia,espn
+ita,f.b.c_unione_venezia,ita:f.b.c_unione_venezia,espn
+ita,ita.ac_milan,ita:ita.ac_milan,espn
+ita,ita.as_roma,ita:ita.as_roma,espn
+ita,ita.atalanta,ita:ita.atalanta,espn
+ita,ita.bologna,ita:ita.bologna,espn
+ita,ita.cagliari,ita:ita.cagliari,espn
+ita,ita.como,ita:ita.como,espn
+ita,ita.fiorentina,ita:ita.fiorentina,espn
+ita,ita.frosinone,ita:ita.frosinone,espn
+ita,ita.genoa,ita:ita.genoa,espn
+ita,ita.inter_milan,ita:ita.inter_milan,espn
+ita,ita.juventus,ita:ita.juventus,espn
+ita,ita.lazio_rome,ita:ita.lazio_rome,espn
+ita,ita.lecce,ita:ita.lecce,espn
+ita,ita.monza,ita:ita.monza,espn
+ita,ita.napoli,ita:ita.napoli,espn
+ita,ita.parma,ita:ita.parma,espn
+ita,ita.sassuolo,ita:ita.sassuolo,espn
+ita,ita.torino,ita:ita.torino,espn
+ita,ita.udinese,ita:ita.udinese,espn
 lal,ALA,lal:esp.alaves,espn
 lal,ATH,lal:esp.athletic_club,espn
 lal,ATM,lal:esp.atletico_madrid,espn
@@ -3528,6 +4056,7 @@ mlb,ATH,mlb:athletics,espn
 mlb,ATL,mlb:atlanta-braves,espn
 mlb,Angels,mlb:los-angeles-angels,espn
 mlb,Arizona,mlb:arizona-diamondbacks,espn
+mlb,Arizona Diamondbacks,mlb:arizona-diamondbacks,espn
 mlb,Astros,mlb:houston-astros,espn
 mlb,Athletics,mlb:athletics,espn
 mlb,Athletics Athletics,mlb:athletics,espn
@@ -3548,20 +4077,22 @@ mlb,COL,mlb:colorado-rockies,espn
 mlb,Cardinals,mlb:st-louis-cardinals,espn
 mlb,Chicago,mlb:chicago-cubs,espn
 mlb,Chicago,mlb:chicago-white-sox,espn
-mlb,Chicago White Sox,mlb:chicago-white-sox,espn
+mlb,Chicago Cubs,mlb:chicago-cubs,espn
 mlb,Cincinnati,mlb:cincinnati-reds,espn
+mlb,Cincinnati Reds,mlb:cincinnati-reds,espn
 mlb,Cleveland,mlb:cleveland-guardians,espn
 mlb,Colorado,mlb:colorado-rockies,espn
+mlb,Colorado Rockies,mlb:colorado-rockies,espn
 mlb,Cubs,mlb:chicago-cubs,espn
 mlb,DET,mlb:detroit-tigers,espn
 mlb,Detroit,mlb:detroit-tigers,espn
-mlb,Detroit Tigers,mlb:detroit-tigers,espn
 mlb,Diamondbacks,mlb:arizona-diamondbacks,espn
 mlb,Dodgers,mlb:los-angeles-dodgers,espn
 mlb,Giants,mlb:san-francisco-giants,espn
 mlb,Guardians,mlb:cleveland-guardians,espn
 mlb,HOU,mlb:houston-astros,espn
 mlb,Houston,mlb:houston-astros,espn
+mlb,Houston Astros,mlb:houston-astros,espn
 mlb,KC,mlb:kansas-city-royals,espn
 mlb,Kansas City,mlb:kansas-city-royals,espn
 mlb,LAA,mlb:los-angeles-angels,espn
@@ -3578,11 +4109,13 @@ mlb,Miami,mlb:miami-marlins,espn
 mlb,Miami Marlins,mlb:miami-marlins,espn
 mlb,Milwaukee,mlb:milwaukee-brewers,espn
 mlb,Minnesota,mlb:minnesota-twins,espn
+mlb,Minnesota Twins,mlb:minnesota-twins,espn
 mlb,NYM,mlb:new-york-mets,espn
 mlb,NYY,mlb:new-york-yankees,espn
 mlb,Nationals,mlb:washington-nationals,espn
 mlb,New York,mlb:new-york-mets,espn
 mlb,New York,mlb:new-york-yankees,espn
+mlb,New York Mets,mlb:new-york-mets,espn
 mlb,Orioles,mlb:baltimore-orioles,espn
 mlb,PHI,mlb:philadelphia-phillies,espn
 mlb,PIT,mlb:pittsburgh-pirates,espn
@@ -3603,8 +4136,8 @@ mlb,SEA,mlb:seattle-mariners,espn
 mlb,SF,mlb:san-francisco-giants,espn
 mlb,STL,mlb:st-louis-cardinals,espn
 mlb,San Diego,mlb:san-diego-padres,espn
-mlb,San Diego Padres,mlb:san-diego-padres,espn
 mlb,San Francisco,mlb:san-francisco-giants,espn
+mlb,San Francisco Giants,mlb:san-francisco-giants,espn
 mlb,Seattle,mlb:seattle-mariners,espn
 mlb,Seattle Mariners,mlb:seattle-mariners,espn
 mlb,St. Louis,mlb:st-louis-cardinals,espn
@@ -3625,23 +4158,18 @@ mlb,Washington,mlb:washington-nationals,espn
 mlb,Washington Nationals,mlb:washington-nationals,espn
 mlb,White Sox,mlb:chicago-white-sox,espn
 mlb,Yankees,mlb:new-york-yankees,espn
-mlb,arizona diamondbacks,mlb:arizona-diamondbacks,espn
 mlb,atlanta braves,mlb:atlanta-braves,espn
 mlb,baltimore orioles,mlb:baltimore-orioles,espn
-mlb,chicago cubs,mlb:chicago-cubs,espn
-mlb,cincinnati reds,mlb:cincinnati-reds,espn
+mlb,chicago white sox,mlb:chicago-white-sox,espn
 mlb,cleveland guardians,mlb:cleveland-guardians,espn
-mlb,colorado rockies,mlb:colorado-rockies,espn
-mlb,houston astros,mlb:houston-astros,espn
+mlb,detroit tigers,mlb:detroit-tigers,espn
 mlb,kansas city royals,mlb:kansas-city-royals,espn
 mlb,los angeles angels,mlb:los-angeles-angels,espn
 mlb,los angeles dodgers,mlb:los-angeles-dodgers,espn
 mlb,milwaukee brewers,mlb:milwaukee-brewers,espn
-mlb,minnesota twins,mlb:minnesota-twins,espn
-mlb,new york mets,mlb:new-york-mets,espn
 mlb,new york yankees,mlb:new-york-yankees,espn
 mlb,philadelphia phillies,mlb:philadelphia-phillies,espn
-mlb,san francisco giants,mlb:san-francisco-giants,espn
+mlb,san diego padres,mlb:san-diego-padres,espn
 mls,ATL,mls:usa.atlanta_united_fc,espn
 mls,ATX,mls:austin_fc,espn
 mls,Atlanta,mls:usa.atlanta_united_fc,espn
@@ -3656,7 +4184,7 @@ mls,CIN,mls:fc_cincinnati,espn
 mls,CLB,mls:usa.columbus,espn
 mls,CLT,mls:charlotte_fc,espn
 mls,COL,mls:usa.colorado,espn
-mls,Charlotte,mls:charlotte_fc,espn
+mls,Charlotte FC,mls:charlotte_fc,espn
 mls,Charlotte FC Charlotte FC,mls:charlotte_fc,espn
 mls,Chicago,mls:usa.chicago,espn
 mls,Chicago Fire FC,mls:usa.chicago,espn
@@ -3671,9 +4199,9 @@ mls,D.C. United,mls:usa.dc_united,espn
 mls,D.C. United D.C. United,mls:usa.dc_united,espn
 mls,DAL,mls:usa.dallas,espn
 mls,DC,mls:usa.dc_united,espn
+mls,Dallas,mls:usa.dallas,espn
 mls,FC Cincinnati,mls:fc_cincinnati,espn
 mls,FC Cincinnati FC Cincinnati,mls:fc_cincinnati,espn
-mls,FC Dallas,mls:usa.dallas,espn
 mls,FC Dallas FC Dallas,mls:usa.dallas,espn
 mls,HOU,mls:usa.houston,espn
 mls,Houston,mls:usa.houston,espn
@@ -3698,7 +4226,7 @@ mls,NE,mls:usa.new_england,espn
 mls,NSH,mls:nashville_sc,espn
 mls,NYC,mls:usa.nyc_fc,espn
 mls,NYCFC,mls:usa.nyc_fc,espn
-mls,Nashville SC,mls:nashville_sc,espn
+mls,Nashville,mls:nashville_sc,espn
 mls,Nashville SC Nashville SC,mls:nashville_sc,espn
 mls,New England,mls:usa.new_england,espn
 mls,New England Revolution,mls:usa.new_england,espn
@@ -3788,6 +4316,7 @@ nba,BKN,nba:brooklyn-nets,espn
 nba,BOS,nba:boston-celtics,espn
 nba,Boston,nba:boston-celtics,espn
 nba,Brooklyn,nba:brooklyn-nets,espn
+nba,Brooklyn Nets,nba:brooklyn-nets,espn
 nba,Bucks,nba:milwaukee-bucks,espn
 nba,Bulls,nba:chicago-bulls,espn
 nba,CHA,nba:charlotte-hornets,espn
@@ -3796,21 +4325,18 @@ nba,CLE,nba:cleveland-cavaliers,espn
 nba,Cavaliers,nba:cleveland-cavaliers,espn
 nba,Celtics,nba:boston-celtics,espn
 nba,Charlotte,nba:charlotte-hornets,espn
-nba,Charlotte Hornets,nba:charlotte-hornets,espn
 nba,Chicago,nba:chicago-bulls,espn
 nba,Cleveland,nba:cleveland-cavaliers,espn
-nba,Cleveland Cavaliers,nba:cleveland-cavaliers,espn
 nba,Clippers,nba:la-clippers,espn
 nba,DAL,nba:dallas-mavericks,espn
 nba,DEN,nba:denver-nuggets,espn
 nba,DET,nba:detroit-pistons,espn
 nba,Dallas,nba:dallas-mavericks,espn
 nba,Denver,nba:denver-nuggets,espn
+nba,Denver Nuggets,nba:denver-nuggets,espn
 nba,Detroit,nba:detroit-pistons,espn
-nba,Detroit Pistons,nba:detroit-pistons,espn
 nba,GS,nba:golden-state-warriors,espn
 nba,Golden State,nba:golden-state-warriors,espn
-nba,Golden State Warriors,nba:golden-state-warriors,espn
 nba,Grizzlies,nba:memphis-grizzlies,espn
 nba,HOU,nba:houston-rockets,espn
 nba,Hawks,nba:atlanta-hawks,espn
@@ -3819,17 +4345,14 @@ nba,Hornets,nba:charlotte-hornets,espn
 nba,Houston,nba:houston-rockets,espn
 nba,IND,nba:indiana-pacers,espn
 nba,Indiana,nba:indiana-pacers,espn
-nba,Indiana Pacers,nba:indiana-pacers,espn
 nba,Jazz,nba:utah-jazz,espn
 nba,Kings,nba:sacramento-kings,espn
 nba,Knicks,nba:new-york-knicks,espn
 nba,LA,nba:la-clippers,espn
-nba,LA Clippers,nba:la-clippers,espn
 nba,LAC,nba:la-clippers,espn
 nba,LAL,nba:los-angeles-lakers,espn
 nba,Lakers,nba:los-angeles-lakers,espn
 nba,Los Angeles,nba:los-angeles-lakers,espn
-nba,Los Angeles Lakers,nba:los-angeles-lakers,espn
 nba,MEM,nba:memphis-grizzlies,espn
 nba,MIA,nba:miami-heat,espn
 nba,MIL,nba:milwaukee-bucks,espn
@@ -3839,11 +4362,9 @@ nba,Mavericks,nba:dallas-mavericks,espn
 nba,Memphis,nba:memphis-grizzlies,espn
 nba,Memphis Grizzlies,nba:memphis-grizzlies,espn
 nba,Miami,nba:miami-heat,espn
-nba,Miami Heat,nba:miami-heat,espn
 nba,Milwaukee,nba:milwaukee-bucks,espn
 nba,Milwaukee Bucks,nba:milwaukee-bucks,espn
 nba,Minnesota,nba:minnesota-timberwolves,espn
-nba,Minnesota Timberwolves,nba:minnesota-timberwolves,espn
 nba,NO,nba:new-orleans-pelicans,espn
 nba,NY,nba:new-york-knicks,espn
 nba,Nets,nba:brooklyn-nets,espn
@@ -3863,6 +4384,7 @@ nba,Pacers,nba:indiana-pacers,espn
 nba,Pelicans,nba:new-orleans-pelicans,espn
 nba,Philadelphia,nba:philadelphia-76ers,espn
 nba,Phoenix,nba:phoenix-suns,espn
+nba,Phoenix Suns,nba:phoenix-suns,espn
 nba,Pistons,nba:detroit-pistons,espn
 nba,Portland,nba:portland-trail-blazers,espn
 nba,Portland Trail Blazers,nba:portland-trail-blazers,espn
@@ -3871,7 +4393,6 @@ nba,Rockets,nba:houston-rockets,espn
 nba,SA,nba:san-antonio-spurs,espn
 nba,SAC,nba:sacramento-kings,espn
 nba,Sacramento,nba:sacramento-kings,espn
-nba,Sacramento Kings,nba:sacramento-kings,espn
 nba,San Antonio,nba:san-antonio-spurs,espn
 nba,San Antonio Spurs,nba:san-antonio-spurs,espn
 nba,Spurs,nba:san-antonio-spurs,espn
@@ -3880,25 +4401,32 @@ nba,TOR,nba:toronto-raptors,espn
 nba,Thunder,nba:oklahoma-city-thunder,espn
 nba,Timberwolves,nba:minnesota-timberwolves,espn
 nba,Toronto,nba:toronto-raptors,espn
-nba,Toronto Raptors,nba:toronto-raptors,espn
 nba,Trail Blazers,nba:portland-trail-blazers,espn
-nba,UTAH,nba:utah-jazz,espn
-nba,Utah Jazz,nba:utah-jazz,espn
+nba,Utah,nba:utah-jazz,espn
 nba,WSH,nba:washington-wizards,espn
 nba,Warriors,nba:golden-state-warriors,espn
 nba,Washington,nba:washington-wizards,espn
-nba,Washington Wizards,nba:washington-wizards,espn
 nba,Wizards,nba:washington-wizards,espn
 nba,boston celtics,nba:boston-celtics,espn
-nba,brooklyn nets,nba:brooklyn-nets,espn
+nba,charlotte hornets,nba:charlotte-hornets,espn
 nba,chicago bulls,nba:chicago-bulls,espn
+nba,cleveland cavaliers,nba:cleveland-cavaliers,espn
 nba,dallas mavericks,nba:dallas-mavericks,espn
-nba,denver nuggets,nba:denver-nuggets,espn
+nba,detroit pistons,nba:detroit-pistons,espn
+nba,golden state warriors,nba:golden-state-warriors,espn
 nba,houston rockets,nba:houston-rockets,espn
+nba,indiana pacers,nba:indiana-pacers,espn
+nba,la clippers,nba:la-clippers,espn
+nba,los angeles lakers,nba:los-angeles-lakers,espn
+nba,miami heat,nba:miami-heat,espn
+nba,minnesota timberwolves,nba:minnesota-timberwolves,espn
 nba,new orleans pelicans,nba:new-orleans-pelicans,espn
 nba,new york knicks,nba:new-york-knicks,espn
 nba,philadelphia 76ers,nba:philadelphia-76ers,espn
-nba,phoenix suns,nba:phoenix-suns,espn
+nba,sacramento kings,nba:sacramento-kings,espn
+nba,toronto raptors,nba:toronto-raptors,espn
+nba,utah jazz,nba:utah-jazz,espn
+nba,washington wizards,nba:washington-wizards,espn
 nfl,49ers,nfl:san-francisco-49ers,espn
 nfl,ARI,nfl:arizona-cardinals,espn
 nfl,ATL,nfl:atlanta-falcons,espn
@@ -3926,12 +4454,10 @@ nfl,Cardinals,nfl:arizona-cardinals,espn
 nfl,Carolina,nfl:carolina-panthers,espn
 nfl,Chargers,nfl:los-angeles-chargers,espn
 nfl,Chicago,nfl:chicago-bears,espn
-nfl,Chicago Bears,nfl:chicago-bears,espn
 nfl,Chiefs,nfl:kansas-city-chiefs,espn
 nfl,Cincinnati,nfl:cincinnati-bengals,espn
 nfl,Cincinnati Bengals,nfl:cincinnati-bengals,espn
 nfl,Cleveland,nfl:cleveland-browns,espn
-nfl,Cleveland Browns,nfl:cleveland-browns,espn
 nfl,Colts,nfl:indianapolis-colts,espn
 nfl,Commanders,nfl:washington-commanders,espn
 nfl,Cowboys,nfl:dallas-cowboys,espn
@@ -3939,8 +4465,8 @@ nfl,DAL,nfl:dallas-cowboys,espn
 nfl,DEN,nfl:denver-broncos,espn
 nfl,DET,nfl:detroit-lions,espn
 nfl,Dallas,nfl:dallas-cowboys,espn
+nfl,Dallas Cowboys,nfl:dallas-cowboys,espn
 nfl,Denver,nfl:denver-broncos,espn
-nfl,Denver Broncos,nfl:denver-broncos,espn
 nfl,Detroit,nfl:detroit-lions,espn
 nfl,Dolphins,nfl:miami-dolphins,espn
 nfl,Eagles,nfl:philadelphia-eagles,espn
@@ -3948,13 +4474,10 @@ nfl,Falcons,nfl:atlanta-falcons,espn
 nfl,GB,nfl:green-bay-packers,espn
 nfl,Giants,nfl:new-york-giants,espn
 nfl,Green Bay,nfl:green-bay-packers,espn
-nfl,Green Bay Packers,nfl:green-bay-packers,espn
 nfl,HOU,nfl:houston-texans,espn
 nfl,Houston,nfl:houston-texans,espn
-nfl,Houston Texans,nfl:houston-texans,espn
 nfl,IND,nfl:indianapolis-colts,espn
 nfl,Indianapolis,nfl:indianapolis-colts,espn
-nfl,Indianapolis Colts,nfl:indianapolis-colts,espn
 nfl,JAX,nfl:jacksonville-jaguars,espn
 nfl,Jacksonville,nfl:jacksonville-jaguars,espn
 nfl,Jaguars,nfl:jacksonville-jaguars,espn
@@ -3970,6 +4493,7 @@ nfl,Las Vegas Raiders,nfl:las-vegas-raiders,espn
 nfl,Lions,nfl:detroit-lions,espn
 nfl,Los Angeles,nfl:los-angeles-chargers,espn
 nfl,Los Angeles,nfl:los-angeles-rams,espn
+nfl,Los Angeles Chargers,nfl:los-angeles-chargers,espn
 nfl,MIA,nfl:miami-dolphins,espn
 nfl,MIN,nfl:minnesota-vikings,espn
 nfl,Miami,nfl:miami-dolphins,espn
@@ -3985,7 +4509,6 @@ nfl,New Orleans,nfl:new-orleans-saints,espn
 nfl,New Orleans Saints,nfl:new-orleans-saints,espn
 nfl,New York,nfl:new-york-giants,espn
 nfl,New York,nfl:new-york-jets,espn
-nfl,New York Giants,nfl:new-york-giants,espn
 nfl,New York Jets,nfl:new-york-jets,espn
 nfl,PHI,nfl:philadelphia-eagles,espn
 nfl,PIT,nfl:pittsburgh-steelers,espn
@@ -3993,8 +4516,8 @@ nfl,Packers,nfl:green-bay-packers,espn
 nfl,Panthers,nfl:carolina-panthers,espn
 nfl,Patriots,nfl:new-england-patriots,espn
 nfl,Philadelphia,nfl:philadelphia-eagles,espn
-nfl,Philadelphia Eagles,nfl:philadelphia-eagles,espn
 nfl,Pittsburgh,nfl:pittsburgh-steelers,espn
+nfl,Pittsburgh Steelers,nfl:pittsburgh-steelers,espn
 nfl,Raiders,nfl:las-vegas-raiders,espn
 nfl,Rams,nfl:los-angeles-rams,espn
 nfl,Ravens,nfl:baltimore-ravens,espn
@@ -4002,16 +4525,14 @@ nfl,SEA,nfl:seattle-seahawks,espn
 nfl,SF,nfl:san-francisco-49ers,espn
 nfl,Saints,nfl:new-orleans-saints,espn
 nfl,San Francisco,nfl:san-francisco-49ers,espn
-nfl,San Francisco 49ers,nfl:san-francisco-49ers,espn
 nfl,Seahawks,nfl:seattle-seahawks,espn
 nfl,Seattle,nfl:seattle-seahawks,espn
-nfl,Seattle Seahawks,nfl:seattle-seahawks,espn
 nfl,Steelers,nfl:pittsburgh-steelers,espn
 nfl,TB,nfl:tampa-bay-buccaneers,espn
 nfl,TEN,nfl:tennessee-titans,espn
 nfl,Tampa Bay,nfl:tampa-bay-buccaneers,espn
-nfl,Tampa Bay Buccaneers,nfl:tampa-bay-buccaneers,espn
 nfl,Tennessee,nfl:tennessee-titans,espn
+nfl,Tennessee Titans,nfl:tennessee-titans,espn
 nfl,Texans,nfl:houston-texans,espn
 nfl,Titans,nfl:tennessee-titans,espn
 nfl,Vikings,nfl:minnesota-vikings,espn
@@ -4019,17 +4540,23 @@ nfl,WSH,nfl:washington-commanders,espn
 nfl,Washington,nfl:washington-commanders,espn
 nfl,Washington Commanders,nfl:washington-commanders,espn
 nfl,carolina panthers,nfl:carolina-panthers,espn
-nfl,dallas cowboys,nfl:dallas-cowboys,espn
+nfl,chicago bears,nfl:chicago-bears,espn
+nfl,cleveland browns,nfl:cleveland-browns,espn
+nfl,denver broncos,nfl:denver-broncos,espn
 nfl,detroit lions,nfl:detroit-lions,espn
+nfl,green bay packers,nfl:green-bay-packers,espn
+nfl,houston texans,nfl:houston-texans,espn
+nfl,indianapolis colts,nfl:indianapolis-colts,espn
 nfl,jacksonville jaguars,nfl:jacksonville-jaguars,espn
-nfl,los angeles chargers,nfl:los-angeles-chargers,espn
 nfl,los angeles rams,nfl:los-angeles-rams,espn
 nfl,miami dolphins,nfl:miami-dolphins,espn
-nfl,pittsburgh steelers,nfl:pittsburgh-steelers,espn
-nfl,tennessee titans,nfl:tennessee-titans,espn
+nfl,new york giants,nfl:new-york-giants,espn
+nfl,philadelphia eagles,nfl:philadelphia-eagles,espn
+nfl,san francisco 49ers,nfl:san-francisco-49ers,espn
+nfl,seattle seahawks,nfl:seattle-seahawks,espn
+nfl,tampa bay buccaneers,nfl:tampa-bay-buccaneers,espn
 nhl,ANA,nhl:anaheim-ducks,espn
 nhl,Anaheim,nhl:anaheim-ducks,espn
-nhl,Anaheim Ducks,nhl:anaheim-ducks,espn
 nhl,Avalanche,nhl:colorado-avalanche,espn
 nhl,BOS,nhl:boston-bruins,espn
 nhl,BUF,nhl:buffalo-sabres,espn
@@ -4037,32 +4564,26 @@ nhl,Blackhawks,nhl:chicago-blackhawks,espn
 nhl,Blue Jackets,nhl:columbus-blue-jackets,espn
 nhl,Blues,nhl:st-louis-blues,espn
 nhl,Boston,nhl:boston-bruins,espn
-nhl,Boston Bruins,nhl:boston-bruins,espn
 nhl,Bruins,nhl:boston-bruins,espn
 nhl,Buffalo,nhl:buffalo-sabres,espn
-nhl,Buffalo Sabres,nhl:buffalo-sabres,espn
 nhl,CAR,nhl:carolina-hurricanes,espn
 nhl,CBJ,nhl:columbus-blue-jackets,espn
 nhl,CGY,nhl:calgary-flames,espn
 nhl,CHI,nhl:chicago-blackhawks,espn
 nhl,COL,nhl:colorado-avalanche,espn
 nhl,Calgary,nhl:calgary-flames,espn
-nhl,Calgary Flames,nhl:calgary-flames,espn
 nhl,Canadiens,nhl:montreal-canadiens,espn
 nhl,Canucks,nhl:vancouver-canucks,espn
 nhl,Capitals,nhl:washington-capitals,espn
 nhl,Carolina,nhl:carolina-hurricanes,espn
 nhl,Carolina Hurricanes,nhl:carolina-hurricanes,espn
 nhl,Chicago,nhl:chicago-blackhawks,espn
-nhl,Chicago Blackhawks,nhl:chicago-blackhawks,espn
 nhl,Colorado,nhl:colorado-avalanche,espn
-nhl,Colorado Avalanche,nhl:colorado-avalanche,espn
 nhl,Columbus,nhl:columbus-blue-jackets,espn
 nhl,Columbus Blue Jackets,nhl:columbus-blue-jackets,espn
 nhl,DAL,nhl:dallas-stars,espn
 nhl,DET,nhl:detroit-red-wings,espn
 nhl,Dallas,nhl:dallas-stars,espn
-nhl,Dallas Stars,nhl:dallas-stars,espn
 nhl,Detroit,nhl:detroit-red-wings,espn
 nhl,Detroit Red Wings,nhl:detroit-red-wings,espn
 nhl,Devils,nhl:new-jersey-devils,espn
@@ -4083,6 +4604,7 @@ nhl,Kraken,nhl:seattle-kraken,espn
 nhl,LA,nhl:los-angeles-kings,espn
 nhl,Lightning,nhl:tampa-bay-lightning,espn
 nhl,Los Angeles,nhl:los-angeles-kings,espn
+nhl,Los Angeles Kings,nhl:los-angeles-kings,espn
 nhl,MIN,nhl:minnesota-wild,espn
 nhl,MTL,nhl:montreal-canadiens,espn
 nhl,Mammoth,nhl:utah-mammoth,espn
@@ -4095,11 +4617,12 @@ nhl,NSH,nhl:nashville-predators,espn
 nhl,NYI,nhl:new-york-islanders,espn
 nhl,NYR,nhl:new-york-rangers,espn
 nhl,Nashville,nhl:nashville-predators,espn
-nhl,Nashville Predators,nhl:nashville-predators,espn
 nhl,New Jersey,nhl:new-jersey-devils,espn
 nhl,New Jersey Devils,nhl:new-jersey-devils,espn
 nhl,New York,nhl:new-york-islanders,espn
 nhl,New York,nhl:new-york-rangers,espn
+nhl,New York Islanders,nhl:new-york-islanders,espn
+nhl,New York Rangers,nhl:new-york-rangers,espn
 nhl,OTT,nhl:ottawa-senators,espn
 nhl,Oilers,nhl:edmonton-oilers,espn
 nhl,Ottawa,nhl:ottawa-senators,espn
@@ -4108,7 +4631,9 @@ nhl,PIT,nhl:pittsburgh-penguins,espn
 nhl,Panthers,nhl:florida-panthers,espn
 nhl,Penguins,nhl:pittsburgh-penguins,espn
 nhl,Philadelphia,nhl:philadelphia-flyers,espn
+nhl,Philadelphia Flyers,nhl:philadelphia-flyers,espn
 nhl,Pittsburgh,nhl:pittsburgh-penguins,espn
+nhl,Pittsburgh Penguins,nhl:pittsburgh-penguins,espn
 nhl,Predators,nhl:nashville-predators,espn
 nhl,Rangers,nhl:new-york-rangers,espn
 nhl,Red Wings,nhl:detroit-red-wings,espn
@@ -4119,41 +4644,168 @@ nhl,Sabres,nhl:buffalo-sabres,espn
 nhl,San Jose,nhl:san-jose-sharks,espn
 nhl,San Jose Sharks,nhl:san-jose-sharks,espn
 nhl,Seattle,nhl:seattle-kraken,espn
-nhl,Seattle Kraken,nhl:seattle-kraken,espn
 nhl,Senators,nhl:ottawa-senators,espn
 nhl,Sharks,nhl:san-jose-sharks,espn
 nhl,St. Louis,nhl:st-louis-blues,espn
+nhl,St. Louis Blues,nhl:st-louis-blues,espn
 nhl,Stars,nhl:dallas-stars,espn
 nhl,TB,nhl:tampa-bay-lightning,espn
 nhl,TOR,nhl:toronto-maple-leafs,espn
 nhl,Tampa Bay,nhl:tampa-bay-lightning,espn
 nhl,Tampa Bay Lightning,nhl:tampa-bay-lightning,espn
 nhl,Toronto,nhl:toronto-maple-leafs,espn
-nhl,UTAH,nhl:utah-mammoth,espn
+nhl,Toronto Maple Leafs,nhl:toronto-maple-leafs,espn
+nhl,Utah,nhl:utah-mammoth,espn
 nhl,VAN,nhl:vancouver-canucks,espn
 nhl,VGK,nhl:vegas-golden-knights,espn
 nhl,Vancouver,nhl:vancouver-canucks,espn
 nhl,Vancouver Canucks,nhl:vancouver-canucks,espn
 nhl,Vegas,nhl:vegas-golden-knights,espn
-nhl,Vegas Golden Knights,nhl:vegas-golden-knights,espn
 nhl,WPG,nhl:winnipeg-jets,espn
 nhl,WSH,nhl:washington-capitals,espn
 nhl,Washington,nhl:washington-capitals,espn
 nhl,Washington Capitals,nhl:washington-capitals,espn
 nhl,Wild,nhl:minnesota-wild,espn
 nhl,Winnipeg,nhl:winnipeg-jets,espn
+nhl,Winnipeg Jets,nhl:winnipeg-jets,espn
+nhl,anaheim ducks,nhl:anaheim-ducks,espn
+nhl,boston bruins,nhl:boston-bruins,espn
+nhl,buffalo sabres,nhl:buffalo-sabres,espn
+nhl,calgary flames,nhl:calgary-flames,espn
+nhl,chicago blackhawks,nhl:chicago-blackhawks,espn
+nhl,colorado avalanche,nhl:colorado-avalanche,espn
+nhl,dallas stars,nhl:dallas-stars,espn
 nhl,edmonton oilers,nhl:edmonton-oilers,espn
-nhl,los angeles kings,nhl:los-angeles-kings,espn
 nhl,montreal canadiens,nhl:montreal-canadiens,espn
-nhl,new york islanders,nhl:new-york-islanders,espn
-nhl,new york rangers,nhl:new-york-rangers,espn
+nhl,nashville predators,nhl:nashville-predators,espn
 nhl,ottawa senators,nhl:ottawa-senators,espn
-nhl,philadelphia flyers,nhl:philadelphia-flyers,espn
-nhl,pittsburgh penguins,nhl:pittsburgh-penguins,espn
-nhl,st louis blues,nhl:st-louis-blues,espn
-nhl,toronto maple leafs,nhl:toronto-maple-leafs,espn
+nhl,seattle kraken,nhl:seattle-kraken,espn
 nhl,utah mammoth,nhl:utah-mammoth,espn
-nhl,winnipeg jets,nhl:winnipeg-jets,espn
+nhl,vegas golden knights,nhl:vegas-golden-knights,espn
+por,ACV,por:viseu,espn
+por,ALV,por:alverca,espn
+por,Académico,por:viseu,espn
+por,Académico de Viseu,por:viseu,espn
+por,Académico de Viseu Académico de Viseu,por:viseu,espn
+por,Alverca Alverca,por:alverca,espn
+por,Arouca,por:por.arouca,espn
+por,Arouca Arouca,por:por.arouca,espn
+por,Benfica,por:por.benfica,espn
+por,Benfica Benfica,por:por.benfica,espn
+por,Braga,por:por.braga,espn
+por,Braga Braga,por:por.braga,espn
+por,C.D. Nacional,por:por.cd_nacional_de_madeira,espn
+por,C.D. Nacional C.D. Nacional,por:por.cd_nacional_de_madeira,espn
+por,CDN,por:por.cd_nacional_de_madeira,espn
+por,CDSC,por:fifa.santa_clara,espn
+por,CPAC,por:casa_pia,espn
+por,Casa Pia,por:casa_pia,espn
+por,Casa Pia Casa Pia,por:casa_pia,espn
+por,EPF,por:por.estoril,espn
+por,EST,por:estrela,espn
+por,Estoril,por:por.estoril,espn
+por,Estoril Estoril,por:por.estoril,espn
+por,Estrela Estrela,por:estrela,espn
+por,FC Famalicao,por:eng.fc_famalicao,espn
+por,FC Famalicao FC Famalicao,por:eng.fc_famalicao,espn
+por,FC Porto,por:por.porto,espn
+por,FC Porto FC Porto,por:por.porto,espn
+por,FCA,por:por.arouca,espn
+por,FCF,por:eng.fc_famalicao,espn
+por,FCP,por:por.porto,espn
+por,GVFC,por:por.gil_vicente,espn
+por,Gil Vicente,por:por.gil_vicente,espn
+por,Gil Vicente Gil Vicente,por:por.gil_vicente,espn
+por,MAR,por:por.maritimo,espn
+por,MFC,por:por.moreirense,espn
+por,Maritimo,por:por.maritimo,espn
+por,Maritimo Maritimo,por:por.maritimo,espn
+por,Moreirense,por:por.moreirense,espn
+por,Moreirense Moreirense,por:por.moreirense,espn
+por,Nacional,por:por.cd_nacional_de_madeira,espn
+por,RAFC,por:por.rio_ave,espn
+por,Rio Ave,por:por.rio_ave,espn
+por,Rio Ave Rio Ave,por:por.rio_ave,espn
+por,SCB,por:por.braga,espn
+por,SCP,por:por.sporting_lisbon,espn
+por,SLB,por:por.benfica,espn
+por,Santa Clara,por:fifa.santa_clara,espn
+por,Santa Clara Santa Clara,por:fifa.santa_clara,espn
+por,Sporting,por:por.sporting_lisbon,espn
+por,Sporting CP,por:por.sporting_lisbon,espn
+por,Sporting CP Sporting CP,por:por.sporting_lisbon,espn
+por,VSC,por:por.guimaraes,espn
+por,Vitória ,por:por.guimaraes,espn
+por,Vitória de Guimaraes,por:por.guimaraes,espn
+por,Vitória de Guimaraes Vitória de Guimaraes,por:por.guimaraes,espn
+por,alverca,por:alverca,espn
+por,casa_pia,por:casa_pia,espn
+por,eng.fc_famalicao,por:eng.fc_famalicao,espn
+por,estrela,por:estrela,espn
+por,fifa.santa_clara,por:fifa.santa_clara,espn
+por,por.arouca,por:por.arouca,espn
+por,por.benfica,por:por.benfica,espn
+por,por.braga,por:por.braga,espn
+por,por.cd_nacional_de_madeira,por:por.cd_nacional_de_madeira,espn
+por,por.estoril,por:por.estoril,espn
+por,por.gil_vicente,por:por.gil_vicente,espn
+por,por.guimaraes,por:por.guimaraes,espn
+por,por.maritimo,por:por.maritimo,espn
+por,por.moreirense,por:por.moreirense,espn
+por,por.porto,por:por.porto,espn
+por,por.rio_ave,por:por.rio_ave,espn
+por,por.sporting_lisbon,por:por.sporting_lisbon,espn
+por,viseu,por:viseu,espn
+scop,ABE,scop:sco.aberdeen,espn
+scop,Aberdeen,scop:sco.aberdeen,espn
+scop,Aberdeen Aberdeen,scop:sco.aberdeen,espn
+scop,CEL,scop:sco.celtic,espn
+scop,Celtic,scop:sco.celtic,espn
+scop,Celtic Celtic,scop:sco.celtic,espn
+scop,DUN,scop:sco.dundee,espn
+scop,DUN,scop:sco.dundee_utd,espn
+scop,Dundee,scop:sco.dundee,espn
+scop,Dundee Dundee,scop:sco.dundee,espn
+scop,Dundee United,scop:sco.dundee_utd,espn
+scop,Dundee United Dundee United,scop:sco.dundee_utd,espn
+scop,Dundee Utd,scop:sco.dundee_utd,espn
+scop,FALK,scop:sco.falkirk,espn
+scop,Falkirk,scop:sco.falkirk,espn
+scop,Falkirk Falkirk,scop:sco.falkirk,espn
+scop,HIBS,scop:sco.hibernian,espn
+scop,HOM,scop:sco.hearts,espn
+scop,Heart of Midlothian,scop:sco.hearts,espn
+scop,Heart of Midlothian Heart of Midlothian,scop:sco.hearts,espn
+scop,Hearts,scop:sco.hearts,espn
+scop,Hibernian,scop:sco.hibernian,espn
+scop,Hibernian Hibernian,scop:sco.hibernian,espn
+scop,KIL,scop:sco.kilmarnock,espn
+scop,Kilmarnock,scop:sco.kilmarnock,espn
+scop,Kilmarnock Kilmarnock,scop:sco.kilmarnock,espn
+scop,MOT,scop:sco.motherwell,espn
+scop,Motherwell,scop:sco.motherwell,espn
+scop,Motherwell Motherwell,scop:sco.motherwell,espn
+scop,RAN,scop:sco.rangers,espn
+scop,Rangers,scop:sco.rangers,espn
+scop,Rangers Rangers,scop:sco.rangers,espn
+scop,STJ,scop:sco.st_johnstone,espn
+scop,STM,scop:sco.st_mirren,espn
+scop,St Johnstone,scop:sco.st_johnstone,espn
+scop,St Johnstone St Johnstone,scop:sco.st_johnstone,espn
+scop,St Mirren,scop:sco.st_mirren,espn
+scop,St Mirren St Mirren,scop:sco.st_mirren,espn
+scop,sco.aberdeen,scop:sco.aberdeen,espn
+scop,sco.celtic,scop:sco.celtic,espn
+scop,sco.dundee,scop:sco.dundee,espn
+scop,sco.dundee_utd,scop:sco.dundee_utd,espn
+scop,sco.falkirk,scop:sco.falkirk,espn
+scop,sco.hearts,scop:sco.hearts,espn
+scop,sco.hibernian,scop:sco.hibernian,espn
+scop,sco.kilmarnock,scop:sco.kilmarnock,espn
+scop,sco.motherwell,scop:sco.motherwell,espn
+scop,sco.rangers,scop:sco.rangers,espn
+scop,sco.st_johnstone,scop:sco.st_johnstone,espn
+scop,sco.st_mirren,scop:sco.st_mirren,espn
 wnba,ATL,wnba:atlanta-dream,espn
 wnba,Aces,wnba:las-vegas-aces,espn
 wnba,Atlanta,wnba:atlanta-dream,espn
@@ -4177,7 +4829,6 @@ wnba,Indiana Fever,wnba:indiana-fever,espn
 wnba,LA,wnba:los-angeles-sparks,espn
 wnba,LV,wnba:las-vegas-aces,espn
 wnba,Las Vegas,wnba:las-vegas-aces,espn
-wnba,Las Vegas Aces,wnba:las-vegas-aces,espn
 wnba,Liberty,wnba:new-york-liberty,espn
 wnba,Los Angeles,wnba:los-angeles-sparks,espn
 wnba,Lynx,wnba:minnesota-lynx,espn
@@ -4187,14 +4838,14 @@ wnba,Minnesota,wnba:minnesota-lynx,espn
 wnba,Mystics,wnba:washington-mystics,espn
 wnba,NY,wnba:new-york-liberty,espn
 wnba,New York,wnba:new-york-liberty,espn
-wnba,New York Liberty,wnba:new-york-liberty,espn
 wnba,PHX,wnba:phoenix-mercury,espn
 wnba,POR,wnba:portland-fire,espn
 wnba,Phoenix,wnba:phoenix-mercury,espn
+wnba,Phoenix Mercury,wnba:phoenix-mercury,espn
 wnba,Portland,wnba:portland-fire,espn
-wnba,Portland Fire,wnba:portland-fire,espn
 wnba,SEA,wnba:seattle-storm,espn
 wnba,Seattle,wnba:seattle-storm,espn
+wnba,Seattle Storm,wnba:seattle-storm,espn
 wnba,Sky,wnba:chicago-sky,espn
 wnba,Sparks,wnba:los-angeles-sparks,espn
 wnba,Storm,wnba:seattle-storm,espn
@@ -4205,12 +4856,13 @@ wnba,Toronto,wnba:toronto-tempo,espn
 wnba,Valkyries,wnba:golden-state-valkyries,espn
 wnba,WSH,wnba:washington-mystics,espn
 wnba,Washington,wnba:washington-mystics,espn
+wnba,Washington Mystics,wnba:washington-mystics,espn
 wnba,Wings,wnba:dallas-wings,espn
 wnba,atlanta dream,wnba:atlanta-dream,espn
 wnba,chicago sky,wnba:chicago-sky,espn
+wnba,las vegas aces,wnba:las-vegas-aces,espn
 wnba,los angeles sparks,wnba:los-angeles-sparks,espn
 wnba,minnesota lynx,wnba:minnesota-lynx,espn
-wnba,phoenix mercury,wnba:phoenix-mercury,espn
-wnba,seattle storm,wnba:seattle-storm,espn
+wnba,new york liberty,wnba:new-york-liberty,espn
+wnba,portland fire,wnba:portland-fire,espn
 wnba,toronto tempo,wnba:toronto-tempo,espn
-wnba,washington mystics,wnba:washington-mystics,espn

@@ -381,3 +381,8 @@ the runner sha, so nothing merges to main before that run).
   move command; `ops/kalshi_shards.py` shows and moves collateral (`--confirm` is the operator's).
 - **The lane watches the enabled set.** `--leagues enabled` resolves to `default_leagues()`; the
   plist uses it with a six-hour pre-game horizon instead of a stale five-league list.
+- **Batch 2 of soccer.** Eight more competitions registered with their Kalshi texts pinned verbatim
+  (EFL Championship, EFL League One, Serie A, Ligue 1, Eredivisie, Primeira Liga, Scottish
+  Premiership, Belgian Pro League), Gamma events pulled by tag id where the slug is not the sport
+  code. L35 measures the Championship, League One and Serie A with L33's proxy (FLOOR); the other
+  five have no openfootball archive and block by name. `default_leagues()` is nine leagues.

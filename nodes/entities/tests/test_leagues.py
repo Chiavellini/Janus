@@ -17,11 +17,16 @@ def test_every_consumer_reads_the_registry():
     assert league_for_prefix("epl") == "epl" and league_for_prefix("lal") == "lal" and league_for_prefix("ucl") is None
 
 
-def test_the_ten_of_2026_09_03_and_their_shapes():
+BATCH2 = {"elc", "el1", "ita", "fl1", "ere", "por", "scop", "bel1"}
+
+
+def test_the_eighteen_of_2026_09_03_and_their_shapes():
     from nodes.entities.leagues import SOCCER, espn_groups
-    assert set(LEAGUES) == {"mlb", "nfl", "nba", "wnba", "nhl", "epl", "lal", "bun", "mls", "cfb"}
+    assert set(LEAGUES) == {"mlb", "nfl", "nba", "wnba", "nhl", "epl", "lal", "bun", "mls", "cfb"} | BATCH2
     assert espn_groups() == {"cfb": ("80", "81")}, "FBS and FCS; ESPN's default feed is FBS alone"
-    assert set(SOCCER) == {"epl", "lal", "bun", "mls"}
+    assert set(SOCCER) == {"epl", "lal", "bun", "mls"} | BATCH2
+    assert all(LEAGUES[c].pm_tag_id for c in BATCH2), "batch 2 pulls Gamma events by tag id"
+    assert pm_tags()["elc"] == 102643 and pm_tags()["mlb"] == "mlb"
     assert all(LEAGUES[c].outcomes == 3 for c in SOCCER) and all(LEAGUES[c].outcomes == 2 for c in LEAGUES if c not in SOCCER)
     assert all(lg.anchor == "espn" and lg.espn is not None for lg in LEAGUES.values())
     assert "ucl" not in LEAGUES, "a club is one entity across competitions before UCL can be registered"
@@ -44,4 +49,8 @@ def test_enablement_names_what_each_league_lacks():
     for c in ("epl", "lal", "bun"):
         assert enablement(c) == [], c                # L33 (a proxy, labelled FLOOR in the evidence note)
     assert enablement("mls") == ["EVIDENCE_UNMEASURED:soccer.mls.cancelled_rate", "EVIDENCE_UNMEASURED:soccer.mls.postponed_gt48h_rate"]
-    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "cfb"]
+    for c in ("elc", "el1", "ita"):
+        assert enablement(c) == [], c                # L35, the same proxy
+    for c in ("fl1", "ere", "por", "scop", "bel1"):  # registered and reviewed; no archive to measure from
+        assert enablement(c) == [f"EVIDENCE_UNMEASURED:soccer.{c}.cancelled_rate", f"EVIDENCE_UNMEASURED:soccer.{c}.postponed_gt48h_rate"], c
+    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "cfb", "elc", "el1", "ita"]

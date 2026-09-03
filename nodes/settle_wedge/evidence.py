@@ -36,6 +36,7 @@ _L26 = "research/sports/2026-09-02_mlb-settlement-wedge-rates/spec.yaml"
 _L30 = "research/sports/2026-09-03_nfl-settlement-wedge-rates-v2/spec.yaml"
 _L33 = "research/sports/2026-09-03_soccer-settlement-wedge-rates/spec.yaml"
 _L32 = "research/sports/2026-09-03_cfb-settlement-wedge-rates/spec.yaml"
+_L35 = "research/sports/2026-09-03_soccer-settlement-wedge-rates-batch2/spec.yaml"
 EVIDENCE: dict[str, Evidence] = {
     "mlb.postponed_gt2d_rate": Evidence(
         "mlb.postponed_gt2d_rate", 0.004762, 2100,
@@ -109,6 +110,33 @@ EVIDENCE: dict[str, Evidence] = {
         "ESPN college-football scoreboard, FBS + FCS, seasons 2019 and 2021-2025 + cited schedule-change table", "2026-09-03", _L32,
         "17 of 9529: 13 FCS and 4 FBS games cancelled, forfeited or ruled no contest (hurricanes, two campus "
         "shootings, a player's death, a lightning no-contest). FLOOR for FCS for the same reason as above."),
+    "soccer.el1.postponed_gt48h_rate": Evidence(
+        "soccer.el1.postponed_gt48h_rate", 0.083333, 2208,
+        "openfootball EFL League One season files 2021-22..2024-25 (frozen under the row), round-window proxy", "2026-09-03", _L35,
+        "PROXY (L33's design): 184 of 2208 matches played more than 48 h after their round's core window; "
+        "over-counts moves announced weeks ahead, misses moves inside the window. FLOOR label as for L33."),
+    "soccer.el1.cancelled_rate": Evidence(
+        "soccer.el1.cancelled_rate", 0.000000, 2208,
+        "openfootball EFL League One season files 2021-22..2024-25: scheduled N(N-1) minus played", "2026-09-03", _L35,
+        "0 of 2208: every season parsed to exactly N(N-1) league matches (playoff rounds excluded)."),
+    "soccer.elc.postponed_gt48h_rate": Evidence(
+        "soccer.elc.postponed_gt48h_rate", 0.031703, 2208,
+        "openfootball EFL Championship season files 2021-22..2024-25 (frozen under the row), round-window proxy", "2026-09-03", _L35,
+        "PROXY (L33's design): 70 of 2208 matches played more than 48 h after their round's core window; "
+        "over-counts moves announced weeks ahead, misses moves inside the window. FLOOR label as for L33."),
+    "soccer.elc.cancelled_rate": Evidence(
+        "soccer.elc.cancelled_rate", 0.000000, 2208,
+        "openfootball EFL Championship season files 2021-22..2024-25: scheduled N(N-1) minus played", "2026-09-03", _L35,
+        "0 of 2208: every season parsed to exactly N(N-1) league matches (playoff rounds excluded)."),
+    "soccer.ita.postponed_gt48h_rate": Evidence(
+        "soccer.ita.postponed_gt48h_rate", 0.010526, 1520,
+        "openfootball Serie A season files 2021-22..2024-25 (frozen under the row), round-window proxy", "2026-09-03", _L35,
+        "PROXY (L33's design): 16 of 1520 matches played more than 48 h after their round's core window; "
+        "over-counts moves announced weeks ahead, misses moves inside the window. FLOOR label as for L33."),
+    "soccer.ita.cancelled_rate": Evidence(
+        "soccer.ita.cancelled_rate", 0.000000, 1520,
+        "openfootball Serie A season files 2021-22..2024-25: scheduled N(N-1) minus played", "2026-09-03", _L35,
+        "0 of 1520: every season parsed to exactly N(N-1) league matches (playoff rounds excluded)."),
 }
 
 

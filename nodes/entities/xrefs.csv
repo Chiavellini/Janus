@@ -1,4 +1,16 @@
 venue,league,venue_team_id,entity_id,source,label
+kalshi,bel1,000d32b0-159a-4977-8505-80dcd3d7898b,bel1:bel.club_brugge,custom_strike,BRU
+kalshi,bel1,2739d427-ddc0-46fb-8463-b27bde3ae367,bel1:bel.kvc_westerlo,custom_strike,WES
+kalshi,bel1,28cd7607-1d39-420b-b028-1037703fdda0,bel1:bel.oud-heverlee_leuven,custom_strike,OHL
+kalshi,bel1,310cbef0-3cea-4d5f-be5a-6b96e86f05df,bel1:lommel_sk,custom_strike,LOM
+kalshi,bel1,491593c8-10a4-4c69-94a0-05e363d48d27,bel1:team.union_st.-gilloise.betbrain,custom_strike,USG
+kalshi,bel1,5b05e2c1-8655-4b97-a1e1-863274f9ab5a,bel1:bel.racing_genk,custom_strike,GEN
+kalshi,bel1,60582c8e-196a-40f3-9df5-56688c57255b,bel1:bel.kaa_gent,custom_strike,KAA
+kalshi,bel1,a005a3d2-7a9a-46c3-ac24-6cba40e7b0ca,bel1:bel.cercle_brugge_ksv,custom_strike,CER
+kalshi,bel1,ab430872-c928-461f-97f0-b059ad4a3925,bel1:raal_la_louviere,custom_strike,RAAL
+kalshi,bel1,adf9c2ec-93b8-48a8-b80f-fa987f85e30f,bel1:bel.zulte-waregem,custom_strike,ZUL
+kalshi,bel1,d1851a64-3bc3-4546-bbb3-4b0469a4020f,bel1:bel.anderlecht,custom_strike,RSC
+kalshi,bel1,d838bcaa-7ee7-4e99-9114-f259a80ea69d,bel1:bel.royal_charleroi_sc,custom_strike,RCH
 kalshi,bun,0d65d14f-6bb0-4e1f-a08e-a6135ac3b473,bun:ger.sc_paderborn_07,custom_strike,PAD
 kalshi,bun,163ba3b0-cc73-4949-b3c9-d37d7927d972,bun:ger.tsg_hoffenheim,custom_strike,TSG
 kalshi,bun,4d7f3dc3-83df-4548-8738-69148d2fa3b9,bun:ger.schalke_04,custom_strike,SCH
@@ -272,6 +284,51 @@ kalshi,cfb,fa55b6b6-4267-410f-bd09-990e08a82be2,cfb:colorado-buffaloes,custom_st
 kalshi,cfb,faa5d9ae-48b0-4f85-8f2f-8dcc92fde9f3,cfb:georgia-state-panthers,custom_strike,GAST
 kalshi,cfb,fb432ba8-14cd-4375-82aa-03e7a6599f58,cfb:presbyterian-blue-hose,custom_strike,PRE
 kalshi,cfb,fc19fcd1-1879-45c1-b031-f27d79b8eae5,cfb:merrimack-warriors,custom_strike,MRMK
+kalshi,el1,0141d716-e53f-446a-9bfa-1245fecbd2a7,el1:eng.doncaster,custom_strike,DR
+kalshi,el1,0a1b8cbd-9def-41ff-958b-72b8977f9d2b,el1:eng.huddersfield,custom_strike,HUD
+kalshi,el1,11222bec-1b01-4542-ab53-0838e23df97d,el1:eng.mansfield,custom_strike,MAT
+kalshi,el1,18f88a71-c28c-4d90-9e86-70e72a25d4f4,el1:eng.oxford_utd,custom_strike,OXU
+kalshi,el1,27e65735-ffff-474c-9ec3-6ef32e29771e,el1:eng.wimbledon,custom_strike,MKD
+kalshi,el1,40af2477-58e6-4d5b-818c-093c46739a46,el1:eng.leicester,custom_strike,LEI
+kalshi,el1,4d55297c-d432-47ca-80bd-abccc9265f4f,el1:betbrain.bromley,custom_strike,BRO
+kalshi,el1,5623be58-d65d-4bf3-b3c0-3ef5cc7891ee,el1:eng.peterborough,custom_strike,PET
+kalshi,el1,5f0d1132-f78a-4fca-aa4a-77fb49942581,el1:eng.reading,custom_strike,REA
+kalshi,el1,7ef519e1-e3d8-4942-81e1-c23c5dd8fbf9,el1:eng.bradford,custom_strike,BRA
+kalshi,el1,8ce86c04-1e63-4e45-8111-b89bb2e3c997,el1:eng.wycombe,custom_strike,WYW
+kalshi,el1,94675324-4220-47d2-a783-1bd4b8bb22c7,el1:eng.sheff_wed,custom_strike,SHW
+kalshi,el1,ae3561a9-0445-4e8e-8a0e-ed48e4fa539a,el1:eng.plymouth,custom_strike,PA
+kalshi,el1,ae9dbed3-ae13-49a8-b7c7-76ee958c303d,el1:eng.wigan,custom_strike,WIG
+kalshi,el1,c44bc1b3-1253-438f-88eb-a69fa22c8730,el1:eng.stevenage,custom_strike,STE
+kalshi,el1,c79dcde0-c6b6-4157-aca1-8342a9f36fdb,el1:betbrain.afc_wimbledon,custom_strike,WIM
+kalshi,el1,c937f3d7-87ff-4f1f-b60c-d51981313a05,el1:eng.luton,custom_strike,LUT
+kalshi,el1,cb5fc16c-d808-49a4-a523-bfd23be5920f,el1:eng.stockport,custom_strike,STO
+kalshi,el1,e683b9bf-afbb-416e-8da6-42e5ac555694,el1:eng.leyton_orient,custom_strike,LEY
+kalshi,el1,ea4d8ef5-91ed-4b81-b48e-156ccec6c1a1,el1:eng.barnsley,custom_strike,BAR
+kalshi,el1,eb14c7b6-1e7c-4673-bbf7-d32ba909febf,el1:eng.blackpool,custom_strike,BLP
+kalshi,el1,fdd55acd-bade-4c62-9207-ae2785a02f97,el1:eng.cambridge_utd,custom_strike,CAM
+kalshi,elc,03c321c1-1e5b-48fe-bde8-b3df48b347d5,elc:eng.portsmouth,custom_strike,POR
+kalshi,elc,07fc230f-2671-4f9f-bd3f-5737d23e3d26,elc:eng.charlton,custom_strike,CHA
+kalshi,elc,0a477d37-7c8b-4f79-9a8a-824d07a66975,elc:eng.west_brom,custom_strike,WBA
+kalshi,elc,0bcfe4bc-7c9d-44c9-9951-a0e0c291442b,elc:eng.bolton,custom_strike,BOL
+kalshi,elc,11993776-1534-4e44-9e27-a445988ba2f4,elc:eng.millwall,custom_strike,MIL
+kalshi,elc,20507a8d-03f7-49c4-a13a-81256f26a40e,elc:eng.norwich,custom_strike,NOR
+kalshi,elc,27461b1c-ecf0-4202-b4fd-e9c4f9e8ec08,elc:eng.wrexham,custom_strike,WRE
+kalshi,elc,277d05a4-b167-47c8-a90e-24730727c1fe,elc:eng.west_ham,custom_strike,WHU
+kalshi,elc,2a502bbe-407e-42f1-a60b-3ca856e9ce9b,elc:eng.sheff_utd,custom_strike,SHU
+kalshi,elc,30808845-9850-4244-a380-f244ee3094ca,elc:eng.derby,custom_strike,DER
+kalshi,elc,39a9cc77-8830-446c-810e-332fbfcd6c49,elc:eng.burnley,custom_strike,BUR
+kalshi,elc,3a983351-9f3b-43a6-ba02-a86105d1aa04,elc:eng.cardiff,custom_strike,CAR
+kalshi,elc,5abb1e53-44dc-422f-b789-40990aee7d98,elc:eng.birmingham,custom_strike,BC
+kalshi,elc,5e4ebc35-e6f2-4fab-9562-db21b028a3d5,elc:eng.stoke,custom_strike,STK
+kalshi,elc,6183f0da-7d6c-4d4b-9c70-b3f52b05592d,elc:eng.southampton,custom_strike,SOU
+kalshi,elc,6d2d5718-39c1-4334-b213-0279649539bb,elc:eng.blackburn,custom_strike,BLA
+kalshi,elc,8099cd72-e8e5-4f6d-852e-85feb2e51618,elc:eng.watford,custom_strike,WAT
+kalshi,elc,8c1c83c0-ca55-444a-aa4f-ad24532a6864,elc:eng.middlesbrough,custom_strike,MID
+kalshi,elc,a167633a-7aed-42fc-bc59-249714d520c3,elc:eng.qpr,custom_strike,QPR
+kalshi,elc,aa75ddd1-5344-482a-8777-13c45c2b0e7c,elc:eng.preston,custom_strike,PNE
+kalshi,elc,c568246b-b817-4dde-ac6d-6e1145ca32f3,elc:eng.wolverhampton,custom_strike,WOL
+kalshi,elc,c72fae8d-68e0-4fce-842d-4ab05ed04c28,elc:eng.bristol_city,custom_strike,BRC
+kalshi,elc,f0ca0f58-f522-40ca-9b8d-d11332faed3c,elc:eng.swansea,custom_strike,SWA
 kalshi,epl,0a9eca41-bd4f-415c-b804-58214e97a77f,epl:eng.ipswich,custom_strike,IPS
 kalshi,epl,244308db-fa16-4065-905e-9053d68370e6,epl:eng.brentford,custom_strike,BRE
 kalshi,epl,246a91c5-f145-401f-bf0d-2a436e25a5f6,epl:eng.arsenal,custom_strike,ARS
@@ -292,6 +349,57 @@ kalshi,epl,bfb98900-9759-436c-bc1f-8bf8c5ae249f,epl:eng.aston_villa,custom_strik
 kalshi,epl,cfd4b999-b080-4c2b-8a5b-640c992aff6e,epl:eng.liverpool,custom_strike,LFC
 kalshi,epl,f0a69f43-b3c4-4049-bf6d-4717809000a1,epl:eng.sunderland,custom_strike,SUN
 kalshi,epl,f5d3f1b2-8ff6-4165-835f-45406eae5fb6,epl:eng.man_city,custom_strike,MCI
+kalshi,ere,08a3b906-dcd8-451b-8f6d-dacfd3a967db,ere:ned.psv,custom_strike,PSV
+kalshi,ere,167db0d3-153f-43c1-95d8-f2346f1418ff,ere:ned.sparta,custom_strike,SPA
+kalshi,ere,23bda28e-b962-46e1-b3fd-72215b5db7da,ere:ned.fc_utrecht,custom_strike,FCU
+kalshi,ere,250b6a43-6d72-497e-bac6-813f89bce2d2,ere:ned.groningen,custom_strike,GRO
+kalshi,ere,2c635bbd-1117-4792-83d4-a94326296c22,ere:ned.feyenoord,custom_strike,FEY
+kalshi,ere,4bd188c8-4509-4ac0-ba11-f3a956a11259,ere:ned.heerenveen,custom_strike,HEE
+kalshi,ere,504a448b-32d0-4125-88c6-856fcbabf0e0,ere:ned.ajax,custom_strike,AJA
+kalshi,ere,595047b5-f05a-410e-908e-5629f7cc956a,ere:ned.fortuna_sittard,custom_strike,FOR
+kalshi,ere,85389cb9-7f59-4465-9587-78358c24d0e7,ere:ned.willem_ii,custom_strike,WIL
+kalshi,ere,ab00ba21-e944-4313-ace2-add9437710fc,ere:ned.ado_den_haag,custom_strike,ADO
+kalshi,ere,b2806203-e12d-434b-b4b5-01561a0369f9,ere:ned.fc_twente,custom_strike,TWE
+kalshi,ere,b6e0ffba-5c37-4a96-8d16-8f2063021156,ere:ned.excelsior,custom_strike,EXC
+kalshi,ere,c16ca56a-fc42-4d93-b818-54f5861f7a99,ere:ned.go_ahead_eagles,custom_strike,GAE
+kalshi,ere,def3014d-1cea-479c-8660-c33341d59721,ere:ned.cambuur_leeuwarden,custom_strike,CAM
+kalshi,ere,e2dd1b68-2aca-496e-bcd1-f1198240b7b0,ere:ned.sc_stormvogels_telstar,custom_strike,TEL
+kalshi,fl1,00049ee0-cd95-4b49-b619-fcac66a3a697,fl1:fra.toulouse,custom_strike,TFC
+kalshi,fl1,037e6593-99d0-464b-a28c-ac1211d6a6f3,fl1:fra.lens,custom_strike,RCL
+kalshi,fl1,10edc47b-07ac-458a-b5f3-6cffef6e45d2,fl1:fra.le_mans,custom_strike,MAN
+kalshi,fl1,13d9035e-e8ee-4b61-9eb1-5b628e29c3b4,fl1:betbrain.paris_fc,custom_strike,PAR
+kalshi,fl1,329f5cd5-aa14-449e-8af0-9edff2b4516b,fl1:fra.angers,custom_strike,ANG
+kalshi,fl1,3986fe47-3e06-4718-91a0-074e5c58421a,fl1:fra.marseille,custom_strike,OLM
+kalshi,fl1,5771a079-b487-491f-ac9c-96e61f85e336,fl1:fra.auxerre,custom_strike,AUX
+kalshi,fl1,5cc2a488-c8de-4d8f-b9b3-02eef80a027a,fl1:fra.lorient,custom_strike,FCL
+kalshi,fl1,5f32114f-e756-4f90-ac5d-6577ff768add,fl1:fra.nice,custom_strike,NIC
+kalshi,fl1,7020b25c-8c0a-4f0b-a672-efa63c8e1990,fl1:fra.monaco,custom_strike,ASM
+kalshi,fl1,8ea42e42-cce3-4ad9-a513-0dd5279fd774,fl1:fra.le_havre_ac,custom_strike,HAC
+kalshi,fl1,a572e730-a7c1-40c3-b036-ad065635a8d0,fl1:fra.lille,custom_strike,LIL
+kalshi,fl1,ad4277a2-305e-4181-9d7c-7601e1abf1d8,fl1:fra.troyes,custom_strike,EST
+kalshi,fl1,ccdc8659-ec81-4278-bc14-a0d10d78d6d1,fl1:fra.psg,custom_strike,PSG
+kalshi,fl1,dcaae7b8-7422-415c-a3c9-2531926daae9,fl1:fra.rennes,custom_strike,REN
+kalshi,fl1,eb75f92c-7b8f-4a17-92fb-b9068dfba2d7,fl1:fra.lyon,custom_strike,OL
+kalshi,ita,1333d5e7-e2e6-464d-943c-db9b79e9596c,ita:f.b.c_unione_venezia,custom_strike,VEN
+kalshi,ita,139b1e61-312d-4fb6-8e98-2dd6017e8660,ita:ita.atalanta,custom_strike,ATA
+kalshi,ita,281c09d3-8d95-4ce9-b2ef-3b003f8a8959,ita:ita.ac_milan,custom_strike,ACM
+kalshi,ita,39fb9d43-9820-4c04-9cc1-2b52f0563936,ita:ita.torino,custom_strike,TOR
+kalshi,ita,3d8adaa2-763d-4f62-9aa4-7d7a2725ca12,ita:ita.fiorentina,custom_strike,FIO
+kalshi,ita,55e84dfe-7254-477d-b442-e6a12afab353,ita:ita.bologna,custom_strike,BFC
+kalshi,ita,58215c67-3aad-42de-a00d-c2596704384f,ita:ita.frosinone,custom_strike,FRO
+kalshi,ita,5cdc7d5f-0a5e-4579-9488-f95b23250c46,ita:ita.como,custom_strike,COM
+kalshi,ita,695c1113-de03-4b68-a3b7-660c4f60b0c7,ita:ita.udinese,custom_strike,UDI
+kalshi,ita,6d5d7d4b-da73-49d7-9597-f0233f233710,ita:ita.lazio_rome,custom_strike,LAZ
+kalshi,ita,70476de9-4ac1-43e9-a1e6-1bf33f073f61,ita:ita.parma,custom_strike,PAR
+kalshi,ita,721bf91f-9827-4be2-8429-86360529a258,ita:ita.napoli,custom_strike,NAP
+kalshi,ita,725973ad-cad9-4446-aad3-446461b374f0,ita:ita.juventus,custom_strike,JUV
+kalshi,ita,775a95db-4d08-47f5-a069-6f124db0ac30,ita:ita.lecce,custom_strike,LEC
+kalshi,ita,7c892e5b-17ba-4437-871a-14b25c249e86,ita:ita.cagliari,custom_strike,CAG
+kalshi,ita,8c7d0d19-56bc-4fd2-86ac-df5eaca951b2,ita:ita.inter_milan,custom_strike,INT
+kalshi,ita,94863c56-7c99-41c0-b88b-30b89f2fe821,ita:ita.genoa,custom_strike,GEN
+kalshi,ita,b2bb7d8f-38bb-490a-82f4-7d1e9faa2db7,ita:ita.sassuolo,custom_strike,SAS
+kalshi,ita,c9b2a47f-17a6-4db9-83a6-3c65b5d8cbb1,ita:ita.as_roma,custom_strike,ROM
+kalshi,ita,da2081c3-6922-47a2-b05e-5474c4705815,ita:ita.monza,custom_strike,MON
 kalshi,lal,0353a2d0-c82f-45b1-a8e5-c0299bdb9922,lal:esp.elche,custom_strike,ELC
 kalshi,lal,1858f693-87a8-4102-86c0-aa65c04f56ad,lal:esp.real_madrid,custom_strike,RMA
 kalshi,lal,2c274499-d0e5-4b6c-83df-c1f0e424c899,lal:esp.levante,custom_strike,LEV
@@ -410,6 +518,41 @@ kalshi,nfl,f7c2cd06-61bf-469e-984f-3ef56cb8f3d7,nfl:new-orleans-saints,custom_st
 kalshi,nfl,f95a55a7-8472-4ffa-be20-14547e3c32ff,nfl:detroit-lions,custom_strike,DET
 kalshi,nfl,f9acd396-ba35-4cae-a431-a44b2af707b0,nfl:buffalo-bills,custom_strike,BUF
 kalshi,nfl,fe5f8219-fef4-4498-83d5-f6cc6f2cb7bf,nfl:indianapolis-colts,custom_strike,IND
+kalshi,por,467c89fd-7eac-4205-89ac-039147631a67,por:por.arouca,custom_strike,ARO
+kalshi,por,468b41a6-6487-43ce-b6ca-4ee5953b3b06,por:viseu,custom_strike,ACV
+kalshi,por,655f36ab-ac60-4c2f-b9d1-5b827bcb7825,por:por.moreirense,custom_strike,MOR
+kalshi,por,78834360-5f35-4fb1-8482-4b074d099a57,por:alverca,custom_strike,ALV
+kalshi,por,9b5e7d84-3417-42dd-809e-5c73cff563bf,por:eng.fc_famalicao,custom_strike,FAM
+kalshi,por,aae4ed5f-78d2-4205-a12a-408a8d368782,por:por.porto,custom_strike,FCP
+kalshi,por,bbafe881-978e-4eaa-b6d3-21fb6537d0af,por:por.sporting_lisbon,custom_strike,SPO
+kalshi,por,c90a46e4-ea7c-426a-a9cc-4da81ed58bd9,por:por.braga,custom_strike,BRA
+kalshi,por,cc07030e-0a8f-40a5-9beb-9a93a0de67f3,por:por.rio_ave,custom_strike,RAV
+kalshi,por,de99ec82-a5d1-4fdc-9da3-b2605e8e02cd,por:casa_pia,custom_strike,CAS
+kalshi,por,df62d492-8015-4f6b-b745-2693bfd8d373,por:por.cd_nacional_de_madeira,custom_strike,CDN
+kalshi,scop,25246a75-cae3-44a9-a56b-eeb03a632883,scop:sco.motherwell,custom_strike,MOT
+kalshi,scop,60738cf6-61d9-4ad2-b00b-3e9785c7a035,scop:sco.dundee_utd,custom_strike,DUU
+kalshi,scop,62141dba-aa48-493a-9c3e-3fe0ee5fcf54,scop:sco.hearts,custom_strike,HOM
+kalshi,scop,6358a477-56ea-4ec9-bec9-59102e9d7573,scop:sco.aberdeen,custom_strike,ABE
+kalshi,scop,8504af39-51bb-4970-93b8-252f7fe1b967,scop:sco.falkirk,custom_strike,FAL
+kalshi,scop,8d4495fc-0cbd-40f0-83d6-20e343ff5da7,scop:sco.dundee,custom_strike,DUN
+kalshi,scop,8f168310-ad4c-484f-b3c6-a236510e0415,scop:sco.rangers,custom_strike,RFC
+kalshi,scop,ca980ba1-c9cb-4f27-8778-6f268d805766,scop:sco.hibernian,custom_strike,HIB
+kalshi,scop,db6f419e-d853-44ec-ac18-f7e380400add,scop:sco.st_mirren,custom_strike,MIR
+kalshi,scop,e4bda32c-b4a5-417b-93dc-64858ae7df1f,scop:sco.celtic,custom_strike,CEL
+kalshi,scop,e4d74382-289d-4e62-9f1e-8554ed89c5fa,scop:sco.kilmarnock,custom_strike,KIL
+kalshi,scop,ee7d18ea-9ba2-4242-b46f-0ef45ac392cf,scop:sco.st_johnstone,custom_strike,JOH
+polymarket,bel1,3282310,bel1:bel.club_brugge,teams[].id,Club Brugge
+polymarket,bel1,3282311,bel1:bel.kv_kortrijk,teams[].id,KV Kortrijk
+polymarket,bel1,3282312,bel1:bel.standard_liege,teams[].id,Standard Liege
+polymarket,bel1,3282313,bel1:bel.cercle_brugge_ksv,teams[].id,Cercle Brugge
+polymarket,bel1,3282314,bel1:bel.kvc_westerlo,teams[].id,KVC Westerlo
+polymarket,bel1,3282315,bel1:team.union_st.-gilloise.betbrain,teams[].id,Union Saint-Gilloise
+polymarket,bel1,3282317,bel1:lommel_sk,teams[].id,Lommel SK
+polymarket,bel1,3282318,bel1:bel.kaa_gent,teams[].id,KAA Gent
+polymarket,bel1,3282320,bel1:bel.royal_charleroi_sc,teams[].id,Royal Charleroi SC
+polymarket,bel1,3282321,bel1:bel.oud-heverlee_leuven,teams[].id,Oud-Heverlee Leuven
+polymarket,bel1,3282322,bel1:bel.zulte-waregem,teams[].id,SV Zulte Waregem
+polymarket,bel1,3284408,bel1:raal_la_louviere,teams[].id,RAAL La Louviere
 polymarket,bun,101129,bun:ger.bayern_munich,teams[].id,FC Bayern München
 polymarket,bun,101130,bun:ger.freiburg,teams[].id,SC Freiburg
 polymarket,bun,101132,bun:ger.mainz,teams[].id,1. FSV Mainz 05
@@ -571,6 +714,54 @@ polymarket,cfb,3286792,cfb:san-diego-toreros,teams[].id,Toreros
 polymarket,cfb,3286799,cfb:elizabeth-city-state-vikings,teams[].id,Vikings
 polymarket,cfb,3286817,cfb:davidson-wildcats,teams[].id,Wildcats
 polymarket,cfb,3286828,cfb:west-virginia-state-yellow-jackets,teams[].id,Yellow Jackets
+polymarket,el1,3267947,el1:eng.huddersfield,teams[].id,Huddersfield Town AFC
+polymarket,el1,3267949,el1:betbrain.afc_wimbledon,teams[].id,AFC Wimbledon
+polymarket,el1,3267950,el1:eng.burton_albion,teams[].id,Burton Albion FC
+polymarket,el1,3267951,el1:eng.bradford,teams[].id,Bradford City AFC
+polymarket,el1,3267952,el1:eng.barnsley,teams[].id,Barnsley FC
+polymarket,el1,3267953,el1:eng.blackpool,teams[].id,Blackpool FC
+polymarket,el1,3267955,el1:eng.peterborough,teams[].id,Peterborough United FC
+polymarket,el1,3267957,el1:eng.plymouth,teams[].id,Plymouth Argyle FC
+polymarket,el1,3267959,el1:eng.mansfield,teams[].id,Mansfield Town FC
+polymarket,el1,3267960,el1:eng.luton,teams[].id,Luton Town FC
+polymarket,el1,3267962,el1:eng.leyton_orient,teams[].id,Leyton Orient FC
+polymarket,el1,3267964,el1:eng.doncaster,teams[].id,Doncaster Rovers FC
+polymarket,el1,3267965,el1:eng.stockport,teams[].id,Stockport County FC
+polymarket,el1,3267966,el1:eng.wigan,teams[].id,Wigan Athletic FC
+polymarket,el1,3267967,el1:eng.stevenage,teams[].id,Stevenage FC
+polymarket,el1,3267969,el1:eng.reading,teams[].id,Reading FC
+polymarket,el1,3267970,el1:eng.wycombe,teams[].id,Wycombe Wanderers FC
+polymarket,el1,3284262,el1:eng.notts_county,teams[].id,Notts County FC
+polymarket,el1,3284263,el1:eng.leicester,teams[].id,Leicester City FC
+polymarket,el1,3284264,el1:eng.oxford_utd,teams[].id,Oxford United FC
+polymarket,el1,3284265,el1:eng.wimbledon,teams[].id,Milton Keynes Dons FC
+polymarket,el1,3284266,el1:eng.sheff_wed,teams[].id,Sheffield Wednesday FC
+polymarket,el1,3284267,el1:eng.cambridge_utd,teams[].id,Cambridge United FC
+polymarket,el1,3284268,el1:betbrain.bromley,teams[].id,Bromley FC
+polymarket,elc,118994,elc:eng.norwich,teams[].id,Norwich City FC
+polymarket,elc,118995,elc:eng.southampton,teams[].id,Southampton FC
+polymarket,elc,118996,elc:eng.stoke,teams[].id,Stoke City FC
+polymarket,elc,118998,elc:eng.swansea,teams[].id,Swansea City AFC
+polymarket,elc,118999,elc:eng.watford,teams[].id,Watford FC
+polymarket,elc,119000,elc:eng.west_brom,teams[].id,West Bromwich Albion FC
+polymarket,elc,119001,elc:eng.burnley,teams[].id,Burnley FC
+polymarket,elc,119003,elc:eng.middlesbrough,teams[].id,Middlesbrough FC
+polymarket,elc,119005,elc:eng.cardiff,teams[].id,Cardiff City FC
+polymarket,elc,119007,elc:eng.sheff_utd,teams[].id,Sheffield United FC
+polymarket,elc,119009,elc:eng.birmingham,teams[].id,Birmingham City FC
+polymarket,elc,119010,elc:eng.blackburn,teams[].id,Blackburn Rovers FC
+polymarket,elc,119013,elc:eng.bristol_city,teams[].id,Bristol City FC
+polymarket,elc,119014,elc:eng.charlton,teams[].id,Charlton Athletic FC
+polymarket,elc,119016,elc:eng.derby,teams[].id,Derby County FC
+polymarket,elc,119020,elc:eng.millwall,teams[].id,Millwall FC
+polymarket,elc,119025,elc:eng.portsmouth,teams[].id,Portsmouth FC
+polymarket,elc,119026,elc:eng.preston,teams[].id,Preston North End FC
+polymarket,elc,119027,elc:eng.qpr,teams[].id,Queens Park Rangers FC
+polymarket,elc,119032,elc:eng.wrexham,teams[].id,Wrexham AFC
+polymarket,elc,3284157,elc:eng.wolverhampton,teams[].id,Wolverhampton Wanderers FC
+polymarket,elc,3284215,elc:eng.bolton,teams[].id,Bolton Wanderers FC
+polymarket,elc,3284217,elc:eng.lincoln_city,teams[].id,Lincoln City FC
+polymarket,elc,3284294,elc:eng.west_ham,teams[].id,West Ham United FC
 polymarket,epl,100000,epl:eng.newcastle,teams[].id,Newcastle United FC
 polymarket,epl,100004,epl:eng.man_city,teams[].id,Manchester City FC
 polymarket,epl,100005,epl:eng.arsenal,teams[].id,Arsenal FC
@@ -591,6 +782,36 @@ polymarket,epl,114263,epl:eng.sunderland,teams[].id,Sunderland AFC
 polymarket,epl,114264,epl:eng.leeds,teams[].id,Leeds United FC
 polymarket,epl,3284766,epl:eng.coventry,teams[].id,Coventry City FC
 polymarket,epl,3284806,epl:eng.hull,teams[].id,Hull City AFC
+polymarket,ere,115285,ere:ned.ajax,teams[].id,AFC Ajax
+polymarket,ere,115286,ere:ned.psv,teams[].id,PSV
+polymarket,ere,115287,ere:ned.ado_den_haag,teams[].id,ADO Den Haag
+polymarket,ere,115288,ere:ned.az,teams[].id,AZ
+polymarket,ere,115289,ere:ned.groningen,teams[].id,FC Groningen
+polymarket,ere,115290,ere:ned.fc_twente,teams[].id,FC Twente
+polymarket,ere,115291,ere:ned.fc_utrecht,teams[].id,FC Utrecht
+polymarket,ere,115292,ere:ned.feyenoord,teams[].id,Feyenoord Rotterdam
+polymarket,ere,115294,ere:ned.nec,teams[].id,NEC
+polymarket,ere,115295,ere:ned.fc_zwolle,teams[].id,PEC Zwolle
+polymarket,ere,115296,ere:ned.excelsior,teams[].id,SBV Excelsior
+polymarket,ere,115298,ere:ned.cambuur_leeuwarden,teams[].id,SC Cambuur-Leeuwarden
+polymarket,ere,115300,ere:ned.heerenveen,teams[].id,SC Heerenveen
+polymarket,ere,115304,ere:ned.go_ahead_eagles,teams[].id,Go Ahead Eagles
+polymarket,ere,115305,ere:ned.sparta,teams[].id,Sparta Rotterdam
+polymarket,ere,115309,ere:ned.fortuna_sittard,teams[].id,Fortuna Sittard
+polymarket,ere,115313,ere:ned.sc_stormvogels_telstar,teams[].id,Telstar 1963
+polymarket,fl1,114302,fl1:fra.angers,teams[].id,Angers SCO
+polymarket,fl1,114303,fl1:fra.auxerre,teams[].id,AJ Auxerre
+polymarket,fl1,114305,fl1:fra.le_havre_ac,teams[].id,Le Havre AC
+polymarket,fl1,114306,fl1:fra.lens,teams[].id,Racing Club de Lens
+polymarket,fl1,114308,fl1:fra.lorient,teams[].id,FC Lorient
+polymarket,fl1,114310,fl1:fra.marseille,teams[].id,Olympique de Marseille
+polymarket,fl1,114312,fl1:fra.monaco,teams[].id,AS Monaco FC
+polymarket,fl1,114315,fl1:fra.psg,teams[].id,Paris Saint-Germain FC
+polymarket,fl1,114316,fl1:betbrain.paris_fc,teams[].id,Paris FC
+polymarket,fl1,114317,fl1:fra.rennes,teams[].id,Stade Rennais FC 1901
+polymarket,fl1,114318,fl1:fra.strasbourg,teams[].id,RC Strasbourg Alsace
+polymarket,fl1,114319,fl1:fra.toulouse,teams[].id,Toulouse FC
+polymarket,fl1,3284804,fl1:fra.le_mans,teams[].id,Le Mans FC
 polymarket,lal,101029,lal:esp.alaves,teams[].id,Deportivo Alavés
 polymarket,lal,101030,lal:esp.betis_sevilla,teams[].id,Real Betis Balompié
 polymarket,lal,101031,lal:esp.getafe,teams[].id,Getafe CF
@@ -734,3 +955,27 @@ polymarket,nhl,100642,nhl:vegas-golden-knights,teams[].id,Golden Knights
 polymarket,nhl,100643,nhl:washington-capitals,teams[].id,Capitals
 polymarket,nhl,100644,nhl:winnipeg-jets,teams[].id,Jets
 polymarket,nhl,100645,nhl:utah-mammoth,teams[].id,Mammoth
+polymarket,por,118502,por:por.porto,teams[].id,FC Porto
+polymarket,por,118504,por:por.sporting_lisbon,teams[].id,Sporting CP
+polymarket,por,118505,por:por.braga,teams[].id,SC Braga
+polymarket,por,118506,por:por.guimaraes,teams[].id,Vitória SC
+polymarket,por,118507,por:por.arouca,teams[].id,FC Arouca
+polymarket,por,118508,por:por.rio_ave,teams[].id,Rio Ave FC
+polymarket,por,118513,por:alverca,teams[].id,FC Alverca
+polymarket,por,118516,por:eng.fc_famalicao,teams[].id,FC Famalicão
+polymarket,por,118517,por:estrela,teams[].id,Estoril Praia
+polymarket,por,118518,por:por.gil_vicente,teams[].id,Gil Vicente FC
+polymarket,por,118519,por:por.moreirense,teams[].id,Moreirense FC
+polymarket,por,3284195,por:viseu,teams[].id,Académico de Viseu FC
+polymarket,scop,218330,scop:sco.celtic,teams[].id,Celtic FC
+polymarket,scop,218331,scop:sco.aberdeen,teams[].id,Aberdeen FC
+polymarket,scop,218332,scop:sco.st_johnstone,teams[].id,St Johnstone FC
+polymarket,scop,218333,scop:sco.hearts,teams[].id,Heart of Midlothian FC
+polymarket,scop,218334,scop:sco.hibernian,teams[].id,Hibernian FC
+polymarket,scop,218335,scop:sco.rangers,teams[].id,Rangers FC
+polymarket,scop,218336,scop:sco.kilmarnock,teams[].id,Kilmarnock FC
+polymarket,scop,218337,scop:sco.motherwell,teams[].id,Motherwell FC
+polymarket,scop,218338,scop:sco.dundee,teams[].id,Dundee FC
+polymarket,scop,218341,scop:sco.st_mirren,teams[].id,St Mirren FC
+polymarket,scop,218342,scop:sco.dundee_utd,teams[].id,Dundee United FC
+polymarket,scop,218343,scop:sco.falkirk,teams[].id,Falkirk FC

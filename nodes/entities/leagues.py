@@ -34,6 +34,9 @@ class League:
     pm_sport: str | None = None   # Gamma /sports `sport` code when it differs from pm_prefix
     #: ESPN scoreboard `groups` to query (college football: 80 = FBS, 81 = FCS); () = the default feed.
     espn_groups: tuple[str, ...] = ()
+    #: Gamma `primaryTagId` from /sports, for competitions whose tag slug is not the sport code;
+    #: when set, event pulls use `tag_id` instead of `tag_slug`.
+    pm_tag_id: int | None = None
 
 
 LEAGUES: dict[str, League] = {
@@ -52,6 +55,15 @@ LEAGUES: dict[str, League] = {
     # for explicitly and Division II stays unmatched (blocked, by name) until it is worth a group.
     "cfb":  League("cfb", "College Football", "KXNCAAFGAME", "cfb", "cfb", ("football", "college-football"),
                    espn_groups=("80", "81")),
+    # Batch 2, 2026-09-03: the census's next soccer competitions both venues list (Gamma tag ids from /sports).
+    "elc":  League("elc", "EFL Championship", "KXEFLCHAMPIONSHIPGAME", "elc", "elc", ("soccer", "eng.2"), outcomes=3, pm_tag_id=102643),
+    "el1":  League("el1", "EFL League One", "KXEFLL1GAME", "el1", "el1", ("soccer", "eng.3"), outcomes=3, pm_tag_id=104319),
+    "ita":  League("ita", "Serie A", "KXSERIEAGAME", "sea", "sea", ("soccer", "ita.1"), outcomes=3, pm_tag_id=100618),
+    "fl1":  League("fl1", "Ligue 1", "KXLIGUE1GAME", "fl1", "fl1", ("soccer", "fra.1"), outcomes=3, pm_tag_id=102070),
+    "ere":  League("ere", "Eredivisie", "KXEREDIVISIEGAME", "ere", "ere", ("soccer", "ned.1"), outcomes=3, pm_tag_id=101735),
+    "por":  League("por", "Primeira Liga", "KXLIGAPORTUGALGAME", "por", "por", ("soccer", "por.1"), outcomes=3, pm_tag_id=101772),
+    "scop":  League("scop", "Scottish Premiership", "KXSCOTTISHPREMGAME", "scop", "scop", ("soccer", "sco.1"), outcomes=3, pm_tag_id=102872),
+    "bel1":  League("bel1", "Belgian Pro League", "KXBELGIANPLGAME", "bel1", "bel1", ("soccer", "bel.1"), outcomes=3, pm_tag_id=105725),
     # Not yet: UCL. Entities are keyed per league (lal:esp.real_madrid) and a club plays in its domestic
     # league AND the Champions League, so its one Kalshi team id would map to two entities and the
     # xref table refuses the collision. A club must become one entity across competitions first.
@@ -72,8 +84,9 @@ def kalshi_series() -> dict[str, str]:
     return {c: l.kalshi_series for c, l in LEAGUES.items()}
 
 
-def pm_tags() -> dict[str, str]:
-    return {c: l.pm_tag for c, l in LEAGUES.items()}
+def pm_tags() -> dict[str, str | int]:
+    """league -> Gamma tag slug, or the numeric tag id when the registry carries one."""
+    return {c: (l.pm_tag_id if l.pm_tag_id is not None else l.pm_tag) for c, l in LEAGUES.items()}
 
 
 def espn_paths() -> dict[str, tuple[str, str]]:

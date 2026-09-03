@@ -1,4 +1,11 @@
 venue,league,uuid,abbrev,sub_title,abbrev_hit,loc_hit,reason
+kalshi,bel1,056e5c89-c80e-40ac-85fb-2c986607a8b9,BEV,Beveren,,,no_agreement
+kalshi,bel1,3a482436-b7ee-403a-91da-e433e0bf8737,RAFC,Royal Antwerp,,,no_agreement
+kalshi,bel1,7377314c-5ade-4013-817d-8faab8186bc7,KOR,Kortrijk,,,no_agreement
+kalshi,bel1,7377314c-5ade-4013-817d-8faab8186bc7,KOR,Kortrijk,,,no_agreement
+kalshi,bel1,801c4014-deff-4d49-92e1-b20a8a228d46,STT,St. Truidense,,,no_agreement
+kalshi,bel1,aa63c209-6c18-4548-823a-80634cbd3f3a,STA,Standard,,,no_agreement
+kalshi,bel1,cd4f6267-e0bf-4074-9c47-abb625ad14e1,YRM,Mechelen,,,no_agreement
 kalshi,cfb,162003aa-d818-4875-abff-0abd901ad731,KSU,Kentucky State Thorobreds,cfb:kansas-state-wildcats,cfb:kentucky-state-thorobreds,disagree
 kalshi,cfb,26f09c01-3307-4cc6-bb6e-c988f2a10ca6,ALBY,University at Albany,,,no_agreement
 kalshi,cfb,26f09c01-3307-4cc6-bb6e-c988f2a10ca6,ALBY,University at Albany,,,no_agreement
@@ -17,6 +24,77 @@ kalshi,cfb,dbcf6416-ad58-4527-908d-881295cfd1dc,CHS,Chicago State Cougars,,,no_a
 kalshi,cfb,e33b83e5-1305-4de1-9def-9baef7b4eb1f,NCST,North Carolina St.,,,no_agreement
 kalshi,cfb,f18defe1-5718-44d5-b244-80b01b449943,JVST,Jacksonville St.,,,no_agreement
 kalshi,cfb,f18defe1-5718-44d5-b244-80b01b449943,JVST,Jacksonville St.,,,no_agreement
+kalshi,el1,850100da-48c2-46ee-8f85-1e32e4c6e8b8,BURA,Burton,,,no_agreement
+kalshi,el1,ab4363f4-8fc4-4d4a-8240-d8d2657084bc,NOC,Notts,,,no_agreement
+kalshi,elc,02dfca9a-b1be-4db7-bba4-03c109f0532b,LIC,Lincoln,,,no_agreement
+kalshi,ere,167b048f-0412-4626-9766-ec08603e62cc,AZA,Alkmaar,,,no_agreement
+kalshi,ere,3098d6a7-5bdd-4685-87e4-cd32d396ab85,ZWO,Zwolle,,,no_agreement
+kalshi,ere,c6b449b1-6876-440f-b111-978a142f995d,NIJ,Nijmegen,,,no_agreement
+kalshi,ere,c6b449b1-6876-440f-b111-978a142f995d,NIJ,Nijmegen,,,no_agreement
+kalshi,fl1,56635ac9-ca4c-487a-9892-cfe5e8b039dc,RCS,Strasbourg Alsace,,,no_agreement
+kalshi,fl1,56635ac9-ca4c-487a-9892-cfe5e8b039dc,RCS,Strasbourg Alsace,,,no_agreement
+kalshi,fl1,c2267bd3-224d-43fb-8d9c-ff087318c7a1,STB,Stade Brest 29,,,no_agreement
+kalshi,fl1,c2267bd3-224d-43fb-8d9c-ff087318c7a1,STB,Stade Brest 29,,,no_agreement
+kalshi,por,0d439835-fa4d-4722-ba44-e321fc36b5f7,SCL,Santa Clara Azores,,,no_agreement
+kalshi,por,34188565-7463-436a-a6fc-c98b053d5a40,GIL,Vicente Barcelos,,,no_agreement
+kalshi,por,ad1853e8-ebc1-4623-845d-a59a0962a7d7,EST,Estoril,por:estrela,por:por.estoril,disagree
+kalshi,por,c03fe83a-b659-411e-a820-0a0f70901f13,VIT,Guimaraes,,,no_agreement
+kalshi,por,ca5d00cc-f18d-4802-8337-32c0e7152d64,ESA,Estrela Amadora,,,no_agreement
+kalshi,por,ca5d00cc-f18d-4802-8337-32c0e7152d64,ESA,Estrela Amadora,,,no_agreement
+kalshi,por,dca44d67-d382-4a24-b504-2839f6e59cb6,BEN,SL Benfica,,,no_agreement
+kalshi,por,dca44d67-d382-4a24-b504-2839f6e59cb6,BEN,SL Benfica,,,no_agreement
+kalshi,por,f7ef567e-a7c4-4ae3-9709-9e2e2628be40,CSM,Madeira,,,no_agreement
+polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement
+polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement
+polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement
+polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement
+polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement
+polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement
+polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement
+polymarket,bel1,3282316,stt,St. Truidense VV,,,no_agreement
+polymarket,bel1,3282319,yrm,Yellow-Red KV Mechelen,,,no_agreement
+polymarket,bel1,3282319,yrm,Yellow-Red KV Mechelen,,,no_agreement
+polymarket,bel1,3282319,yrm,Yellow-Red KV Mechelen,,,no_agreement
+polymarket,bel1,3282319,yrm,Yellow-Red KV Mechelen,,,no_agreement
+polymarket,bel1,3282319,yrm,Yellow-Red KV Mechelen,,,no_agreement
+polymarket,bel1,3282319,yrm,Yellow-Red KV Mechelen,,,no_agreement
+polymarket,bel1,3282319,yrm,Yellow-Red KV Mechelen,,,no_agreement
+polymarket,bel1,3282323,gen,KRC Genk,,,no_agreement
+polymarket,bel1,3282323,gen,KRC Genk,,,no_agreement
+polymarket,bel1,3282323,gen,KRC Genk,,,no_agreement
+polymarket,bel1,3282323,gen,KRC Genk,,,no_agreement
+polymarket,bel1,3282323,gen,KRC Genk,,,no_agreement
+polymarket,bel1,3282323,gen,KRC Genk,,,no_agreement
+polymarket,bel1,3282323,gen,KRC Genk,,,no_agreement
+polymarket,bel1,3282323,gen,KRC Genk,,,no_agreement
+polymarket,bel1,3282324,rafc,Royal Antwerp FC,,,no_agreement
+polymarket,bel1,3282324,rafc,Royal Antwerp FC,,,no_agreement
+polymarket,bel1,3282324,rafc,Royal Antwerp FC,,,no_agreement
+polymarket,bel1,3282324,rafc,Royal Antwerp FC,,,no_agreement
+polymarket,bel1,3282324,rafc,Royal Antwerp FC,,,no_agreement
+polymarket,bel1,3282324,rafc,Royal Antwerp FC,,,no_agreement
+polymarket,bel1,3282324,rafc,Royal Antwerp FC,,,no_agreement
+polymarket,bel1,3282325,bev,SK Beveren,,,no_agreement
+polymarket,bel1,3282325,bev,SK Beveren,,,no_agreement
+polymarket,bel1,3282325,bev,SK Beveren,,,no_agreement
+polymarket,bel1,3282325,bev,SK Beveren,,,no_agreement
+polymarket,bel1,3282325,bev,SK Beveren,,,no_agreement
+polymarket,bel1,3282325,bev,SK Beveren,,,no_agreement
+polymarket,bel1,3282325,bev,SK Beveren,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
+polymarket,bel1,3284406,rsc,RSC Anderlecht,,,no_agreement
 polymarket,cfb,118231,templ,Owls,,,no_agreement
 polymarket,cfb,118231,templ,Owls,,,no_agreement
 polymarket,cfb,118236,mphs,Tigers,,,no_agreement
@@ -270,6 +348,118 @@ polymarket,cfb,3286809,webc8a2e4,Warriors,,,no_agreement
 polymarket,cfb,3286813,nmu,Wildcats,,,no_agreement
 polymarket,cfb,3286814,cwu,Wildcats,,,no_agreement
 polymarket,cfb,3286820,lcdbfc25,Wildcats,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,ere,115303,wii,Willem II Tilburg,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114304,sbr,Stade Brestois 29,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114307,lil,Lille OSC,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114309,lyo,Olympique Lyonnais,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,114314,ogc,OGC Nice,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
+polymarket,fl1,3284805,tro,ES Troyes AC,,,no_agreement
 polymarket,mls,115062,mim,CF Montréal,mls:usa.inter_miami,mls:usa.usl.1.montreal,disagree
 polymarket,mls,115062,mim,CF Montréal,mls:usa.inter_miami,mls:usa.usl.1.montreal,disagree
 polymarket,mls,115062,mim,CF Montréal,mls:usa.inter_miami,mls:usa.usl.1.montreal,disagree
@@ -293,3 +483,63 @@ polymarket,mls,115062,mim,CF Montréal,mls:usa.inter_miami,mls:usa.usl.1.montrea
 polymarket,mls,115062,mim,CF Montréal,mls:usa.inter_miami,mls:usa.usl.1.montreal,disagree
 polymarket,mls,115062,mim,CF Montréal,mls:usa.inter_miami,mls:usa.usl.1.montreal,disagree
 polymarket,mls,115062,mim,CF Montréal,mls:usa.inter_miami,mls:usa.usl.1.montreal,disagree
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118503,ben,Sport Lisboa e Benfica,,,no_agreement
+polymarket,por,118510,nac,CD Nacional,,,no_agreement
+polymarket,por,118510,nac,CD Nacional,,,no_agreement
+polymarket,por,118510,nac,CD Nacional,,,no_agreement
+polymarket,por,118510,nac,CD Nacional,,,no_agreement
+polymarket,por,118510,nac,CD Nacional,,,no_agreement
+polymarket,por,118510,nac,CD Nacional,,,no_agreement
+polymarket,por,118510,nac,CD Nacional,,,no_agreement
+polymarket,por,118511,cds,CD Santa Clara,,,no_agreement
+polymarket,por,118511,cds,CD Santa Clara,,,no_agreement
+polymarket,por,118511,cds,CD Santa Clara,,,no_agreement
+polymarket,por,118511,cds,CD Santa Clara,,,no_agreement
+polymarket,por,118511,cds,CD Santa Clara,,,no_agreement
+polymarket,por,118511,cds,CD Santa Clara,,,no_agreement
+polymarket,por,118511,cds,CD Santa Clara,,,no_agreement
+polymarket,por,118514,cas,Casa Pia AC,,,no_agreement
+polymarket,por,118514,cas,Casa Pia AC,,,no_agreement
+polymarket,por,118514,cas,Casa Pia AC,,,no_agreement
+polymarket,por,118514,cas,Casa Pia AC,,,no_agreement
+polymarket,por,118514,cas,Casa Pia AC,,,no_agreement
+polymarket,por,118514,cas,Casa Pia AC,,,no_agreement
+polymarket,por,118514,cas,Casa Pia AC,,,no_agreement
+polymarket,por,118514,cas,Casa Pia AC,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,118515,ama,CF Estrela da Amadora,,,no_agreement
+polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
+polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
+polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
+polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
+polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
+polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
+polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
+polymarket,por,3283092,csm,CS Marítimo,,,no_agreement

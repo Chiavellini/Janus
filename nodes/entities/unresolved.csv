@@ -1,17 +1,108 @@
 league,source,reason,query,count
+scop,text,unknown,hib,23
+elc,text,unknown,wre,22
+ere,text,unknown,Willem II Tilburg,22
+ere,text,unknown,wii,22
 cfb,text,ambiguous,Bulldogs,21
 cfb,text,ambiguous,Wildcats,21
+elc,text,unknown,bbr,21
+elc,text,unknown,bri,21
+elc,text,unknown,lin,21
+elc,text,unknown,she,21
+elc,text,unknown,sot,21
+elc,text,unknown,sto,21
+ere,text,unknown,SBV Excelsior,21
+ere,text,unknown,Telstar 1963,21
+scop,text,unknown,hmi,21
 cfb,text,ambiguous,Tigers,19
+fl1,text,unknown,Angers SCO,18
+fl1,text,unknown,ES Troyes AC,18
+fl1,text,unknown,Lille OSC,18
+fl1,text,unknown,OGC Nice,18
+fl1,text,unknown,Olympique Lyonnais,18
+fl1,text,unknown,Olympique de Marseille,18
+fl1,text,unknown,RC Strasbourg Alsace,18
+fl1,text,unknown,Racing Club de Lens,18
+fl1,text,unknown,Stade Brestois 29,18
+fl1,text,unknown,Stade Rennais FC 1901,18
+fl1,text,unknown,aja,18
+fl1,text,unknown,asm,18
+fl1,text,unknown,lil,18
+fl1,text,unknown,lmf,18
+fl1,text,unknown,lyo,18
+fl1,text,unknown,ogc,18
+fl1,text,unknown,pfc,18
+fl1,text,unknown,sbr,18
+fl1,text,unknown,tro,18
+el1,text,unknown,wig,15
+ere,text,unknown,her1,15
+por,text,unknown,CF Estrela da Amadora,15
+por,text,unknown,Sport Lisboa e Benfica,15
+por,text,unknown,ama,15
+por,text,unknown,ben,15
+por,text,unknown,gil,15
+scop,text,unknown,joh,15
+bel1,text,unknown,RSC Anderlecht,14
+bel1,text,unknown,kaa,14
+bel1,text,unknown,kor,14
+bel1,text,unknown,rsc,14
+el1,text,unknown,bla,14
+el1,text,unknown,bra,14
+el1,text,unknown,bur,14
+el1,text,unknown,lut,14
+el1,text,unknown,man,14
+el1,text,unknown,not,14
+el1,text,unknown,swe,14
+ere,text,unknown,SC Cambuur-Leeuwarden,14
+ere,text,unknown,goa,14
+ere,text,unknown,sit,14
+ere,text,unknown,zwo,14
+por,text,unknown,mor,14
+scop,text,unknown,fal,14
 cfb,text,ambiguous,Bears,12
 cfb,text,ambiguous,Eagles,12
 cfb,text,ambiguous,Panthers,12
 cfb,text,ambiguous,Aggies,10
 cfb,text,ambiguous,Lions,9
 cfb,text,ambiguous,Owls,9
+bel1,text,unknown,KRC Genk,8
+bel1,text,unknown,SV Zulte Waregem,8
+bel1,text,unknown,St. Truidense VV,8
+bel1,text,unknown,Union Saint-Gilloise,8
+bel1,text,unknown,cer,8
+bel1,text,unknown,gen,8
+bel1,text,unknown,rch,8
+bel1,text,unknown,stt,8
+bel1,text,unknown,wes,8
 cfb,text,ambiguous,Huskies,8
+por,text,unknown,CS Marítimo,8
+por,text,unknown,Casa Pia AC,8
+por,text,unknown,aro,8
+por,text,unknown,cas,8
+por,text,unknown,csm,8
+por,text,unknown,gui,8
+por,text,unknown,rio,8
+por,text,unknown,spo,8
+bel1,text,unknown,Royal Antwerp FC,7
+bel1,text,unknown,SK Beveren,7
+bel1,text,unknown,Yellow-Red KV Mechelen,7
+bel1,text,unknown,bev,7
+bel1,text,unknown,raal,7
+bel1,text,unknown,rafc,7
+bel1,text,unknown,sta,7
+bel1,text,unknown,yrm,7
 cfb,text,ambiguous,Cardinals,7
 cfb,text,ambiguous,Cougars,7
 cfb,text,ambiguous,Rams,7
+por,text,unknown,CD Nacional,7
+por,text,unknown,CD Santa Clara,7
+por,text,unknown,Estoril Praia,7
+por,text,unknown,cds,7
+por,text,unknown,fam,7
+por,text,unknown,nac,7
+por,text,unknown,por,7
+scop,text,ambiguous,dun,7
+scop,text,unknown,dfc,7
 cfb,text,ambiguous,Bison,6
 cfb,text,ambiguous,Bobcats,6
 cfb,text,ambiguous,Cowboys,6
@@ -46,6 +137,11 @@ cfb,text,ambiguous,Pioneers,3
 cfb,text,ambiguous,Vikings,3
 cfb,text,ambiguous,Warriors,3
 cfb,text,ambiguous,Yellow Jackets,3
+bel1,text,unknown,KAA,2
+bel1,text,unknown,KOR,2
+bel1,text,unknown,Kortrijk,2
+bel1,text,unknown,Leuven,2
+bel1,text,unknown,RSC,2
 cfb,text,ambiguous,Bearcats,2
 cfb,text,ambiguous,Beavers,2
 cfb,text,ambiguous,Bengals,2
@@ -269,6 +365,62 @@ cfb,text,unknown,woff,2
 cfb,text,unknown,wvir,2
 cfb,text,unknown,wyom,2
 cfb,text,unknown,yngst,2
+el1,text,unknown,LUT,2
+el1,text,unknown,OXU,2
+elc,text,unknown,BC,2
+elc,text,unknown,BLA,2
+elc,text,unknown,Norwich,2
+elc,text,unknown,WRE,2
+elc,text,unknown,West Bromwich,2
+ere,text,unknown,Enschede,2
+ere,text,unknown,NIJ,2
+ere,text,unknown,Nijmegen,2
+fl1,text,unknown,ASM,2
+fl1,text,unknown,EST,2
+fl1,text,unknown,FCL,2
+fl1,text,unknown,LIL,2
+fl1,text,unknown,Le Havre,2
+fl1,text,unknown,MAN,2
+fl1,text,unknown,NIC,2
+fl1,text,unknown,OL,2
+fl1,text,unknown,RCS,2
+fl1,text,unknown,STB,2
+fl1,text,unknown,Stade Brest 29,2
+fl1,text,unknown,Strasbourg Alsace,2
+fl1,text,unknown,TFC,2
+ita,text,unknown,ACM,2
+ita,text,unknown,BFC,2
+ita,text,unknown,COM,2
+ita,text,unknown,Inter,2
+ita,text,unknown,Parma Calcio,2
+ita,text,unknown,ROM,2
+por,text,unknown,BEN,2
+por,text,unknown,BRA,2
+por,text,unknown,ESA,2
+por,text,unknown,Estrela Amadora,2
+por,text,unknown,MOR,2
+por,text,unknown,SL Benfica,2
+scop,text,unknown,HIB,2
+scop,text,unknown,JOH,2
+scop,text,unknown,MIR,2
+scop,text,unknown,RFC,2
+bel1,text,unknown,BEV,1
+bel1,text,unknown,Beveren,1
+bel1,text,unknown,CER,1
+bel1,text,unknown,GEN,1
+bel1,text,unknown,Lommel,1
+bel1,text,unknown,Mechelen,1
+bel1,text,unknown,RAAL,1
+bel1,text,unknown,RAFC,1
+bel1,text,unknown,RCH,1
+bel1,text,unknown,Royal Antwerp,1
+bel1,text,unknown,STA,1
+bel1,text,unknown,STT,1
+bel1,text,unknown,St. Truidense,1
+bel1,text,unknown,Standard,1
+bel1,text,unknown,Union Gilloise,1
+bel1,text,unknown,WES,1
+bel1,text,unknown,YRM,1
 cfb,text,ambiguous,Cavaliers,1
 cfb,text,ambiguous,Charlotte,1
 cfb,text,ambiguous,Marauders,1
@@ -362,5 +514,44 @@ cfb,text,unknown,vir,1
 cfb,text,unknown,vlb,1
 cfb,text,unknown,vsu206eca,1
 cfb,text,unknown,webc8a2e4,1
+el1,text,unknown,BRA,1
+el1,text,unknown,BURA,1
+el1,text,unknown,Burton,1
+el1,text,unknown,DR,1
+el1,text,unknown,MAT,1
+el1,text,unknown,Milton Keynes,1
+el1,text,unknown,NOC,1
+el1,text,unknown,Notts,1
+el1,text,unknown,PA,1
+el1,text,unknown,WIG,1
+el1,text,unknown,WYW,1
+elc,text,unknown,LIC,1
+elc,text,unknown,Lincoln,1
+elc,text,unknown,Wolverhampton,1
+ere,text,unknown,AZA,1
+ere,text,unknown,Alkmaar,1
+ere,text,unknown,Den Haag,1
+ere,text,unknown,Eindhoven,1
+ere,text,unknown,FCU,1
+ere,text,unknown,GA Eagles,1
+ere,text,unknown,Sittard,1
+ere,text,unknown,ZWO,1
+ere,text,unknown,Zwolle,1
 nba,text,unknown,NYK,1
 nba,text,unknown,SAS,1
+por,text,unknown,ARO,1
+por,text,unknown,CAS,1
+por,text,unknown,CSM,1
+por,text,unknown,FAM,1
+por,text,unknown,GIL,1
+por,text,unknown,Guimaraes,1
+por,text,unknown,Madeira,1
+por,text,unknown,RAV,1
+por,text,unknown,SCL,1
+por,text,unknown,SPO,1
+por,text,unknown,Santa Clara Azores,1
+por,text,unknown,VIT,1
+por,text,unknown,Vicente Barcelos,1
+scop,text,ambiguous,DUN,1
+scop,text,unknown,DUU,1
+scop,text,unknown,FAL,1

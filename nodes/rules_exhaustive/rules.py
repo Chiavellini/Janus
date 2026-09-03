@@ -106,7 +106,7 @@ _SOCCER_3WAY = (
     "{home, draw, away} partitions the full-time result. Both venues settle their game markets on 90 minutes "
     "plus stoppage time, extra time and penalties excluded (Kalshi KX*GAME rules_primary; Polymarket market "
     "description), harvested 2026-09-03 and pinned in nodes/settle_wedge/policy.py. A cover must hold all three.")
-for _lg in ("epl", "lal", "bun", "mls", "ucl"):   # ucl: rule ready, league not yet registered (entities)
+for _lg in ("epl", "lal", "bun", "mls", "ucl", "elc", "el1", "ita", "fl1", "ere", "por", "scop", "bel1"):   # ucl: rule ready, league not yet registered
     RULES[(_lg, "moneyline", "game")] = _SOCCER_3WAY
 
 

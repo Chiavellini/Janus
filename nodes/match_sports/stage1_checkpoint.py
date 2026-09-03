@@ -159,8 +159,8 @@ def pull_pm(league: str, client: Client) -> list[dict]:
     for off in range(0, 1500, 100):
         try:
             d = client.get_json(f"{PM_GAMMA}/events",
-                                params={"tag_slug": PM_TAG[league], "closed": "false",
-                                        "limit": 100, "offset": off}, use_cache=False)
+                                params={("tag_id" if isinstance(PM_TAG[league], int) else "tag_slug"): PM_TAG[league],
+                                        "closed": "false", "limit": 100, "offset": off}, use_cache=False)
         except Exception:  # noqa: BLE001
             break
         if not d:

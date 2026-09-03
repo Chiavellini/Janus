@@ -1,4 +1,22 @@
 entity_id,league,espn_id,abbrev,location,nickname,display_name
+bel1:bel.anderlecht,bel1,441,AND,Anderlecht,Anderlecht,Anderlecht
+bel1:bel.cercle_brugge_ksv,bel1,3610,CBK,Cercle Brugge KSV,Cercle Brugge KSV,Cercle Brugge KSV
+bel1:bel.club_brugge,bel1,570,BRU,Club Brugge,Club Brugge,Club Brugge
+bel1:bel.kaa_gent,bel1,3611,GENT,KAA Gent,KAA Gent,KAA Gent
+bel1:bel.kv-mechelen,bel1,7879,KVM,KV Mechelen,KV Mechelen,KV Mechelen
+bel1:bel.kv_kortrijk,bel1,5786,KVK,KV Kortrijk,KV Kortrijk,KV Kortrijk
+bel1:bel.kvc_westerlo,bel1,606,KVCW,KVC Westerlo,KVC Westerlo,KVC Westerlo
+bel1:bel.oud-heverlee_leuven,bel1,5579,OHL,Oud-Heverlee Leuven,Oud-Heverlee Leuven,OH Leuven
+bel1:bel.racing_genk,bel1,938,GENK,Racing Genk,Racing Genk,Racing Genk
+bel1:bel.royal_charleroi_sc,bel1,3616,CHA,Royal Charleroi SC,Royal Charleroi SC,Royal Charleroi SC
+bel1:bel.st._truiden,bel1,936,STVV,Sint-Truidense,Sint-Truidense,Sint-Truidense
+bel1:bel.standard_liege,bel1,559,STL,Standard Liege,Standard Liege,Standard Liege
+bel1:bel.waasland-beveren,bel1,13450,WAA,Waasland-Beveren,Waasland-Beveren,Waasland-Beveren
+bel1:bel.zulte-waregem,bel1,4691,ZUL,Zulte-Waregem,Zulte-Waregem,Zulte-Waregem
+bel1:friendly.antwerp,bel1,17544,ANT,Antwerp,Antwerp,Antwerp
+bel1:lommel_sk,bel1,22269,LOM,Lommel SK,Lommel SK,Lommel SK
+bel1:raal_la_louviere,bel1,131235,RLL,RAAL La Louvière,RAAL La Louvière,RAAL La Louvière
+bel1:team.union_st.-gilloise.betbrain,bel1,5807,USG,Union St.-Gilloise,Union St.-Gilloise,Union St.-Gilloise
 bun:ger.1_fc_kln,bun,122,KOE,FC Cologne,FC Cologne,FC Cologne
 bun:ger.bayern_munich,bun,132,MUN,Bayern Munich,Bayern Munich,Bayern Munich
 bun:ger.borussia_mgladbach,bun,268,BMG,Borussia Mönchengladbach,Borussia Mönchengladbach,Borussia Mönchengladbach
@@ -777,6 +795,54 @@ cfb:wvu-tech-golden-bears,cfb,2706,WVUT,WVU Tech,Golden Bears,WVU Tech Golden Be
 cfb:wyoming-cowboys,cfb,2751,WYO,Wyoming,Cowboys,Wyoming Cowboys
 cfb:yale-bulldogs,cfb,43,YALE,Yale,Bulldogs,Yale Bulldogs
 cfb:youngstown-state-penguins,cfb,2754,YSU,Youngstown State,Penguins,Youngstown State Penguins
+el1:betbrain.afc_wimbledon,el1,3802,WIM,AFC Wimbledon,AFC Wimbledon,AFC Wimbledon
+el1:betbrain.bromley,el1,3129,BRO,Bromley,Bromley,Bromley
+el1:eng.barnsley,el1,397,BAR,Barnsley,Barnsley,Barnsley
+el1:eng.blackpool,el1,346,BLP,Blackpool,Blackpool,Blackpool
+el1:eng.bradford,el1,387,BRD,Bradford City,Bradford City,Bradford City
+el1:eng.burton_albion,el1,2567,BRT,Burton Albion,Burton Albion,Burton Albion
+el1:eng.cambridge_utd,el1,351,CAM,Cambridge United,Cambridge United,Cambridge United
+el1:eng.doncaster,el1,279,DON,Doncaster Rovers,Doncaster Rovers,Doncaster Rovers
+el1:eng.huddersfield,el1,335,HUD,Huddersfield Town,Huddersfield Town,Huddersfield Town
+el1:eng.leicester,el1,375,LEI,Leicester City,Leicester City,Leicester City
+el1:eng.leyton_orient,el1,309,LEY,Leyton Orient,Leyton Orient,Leyton Orient
+el1:eng.luton,el1,301,LTN,Luton Town,Luton Town,Luton Town
+el1:eng.mansfield,el1,304,MNF,Mansfield Town,Mansfield Town,Mansfield Town
+el1:eng.notts_county,el1,340,NCO,Notts County,Notts County,Notts County
+el1:eng.oxford_utd,el1,311,OXF,Oxford United,Oxford United,Oxford United
+el1:eng.peterborough,el1,342,PET,Peterborough United,Peterborough United,Peterborough United
+el1:eng.plymouth,el1,307,PLY,Plymouth Argyle,Plymouth Argyle,Plymouth Argyle
+el1:eng.reading,el1,338,REA,Reading,Reading,Reading
+el1:eng.sheff_wed,el1,399,SHW,Sheffield Wednesday,Sheffield Wednesday,Sheffield Wednesday
+el1:eng.stevenage,el1,285,STE,Stevenage,Stevenage,Stevenage
+el1:eng.stockport,el1,400,STO,Stockport County,Stockport County,Stockport County
+el1:eng.wigan,el1,350,WGA,Wigan Athletic,Wigan Athletic,Wigan Athletic
+el1:eng.wimbledon,el1,390,MKD,Milton Keynes Dons,Milton Keynes Dons,Milton Keynes Dons
+el1:eng.wycombe,el1,344,WYC,Wycombe Wanderers,Wycombe Wanderers,Wycombe Wanderers
+elc:eng.birmingham,elc,392,BIR,Birmingham City,Birmingham City,Birmingham City
+elc:eng.blackburn,elc,365,BLK,Blackburn Rovers,Blackburn Rovers,Blackburn Rovers
+elc:eng.bolton,elc,358,BOL,Bolton Wanderers,Bolton Wanderers,Bolton Wanderers
+elc:eng.bristol_city,elc,333,BRC,Bristol City,Bristol City,Bristol City
+elc:eng.burnley,elc,379,BUR,Burnley,Burnley,Burnley
+elc:eng.cardiff,elc,347,CAR,Cardiff City,Cardiff City,Cardiff City
+elc:eng.charlton,elc,372,CHA,Charlton Athletic,Charlton Athletic,Charlton Athletic
+elc:eng.derby,elc,374,DER,Derby County,Derby County,Derby County
+elc:eng.lincoln_city,elc,314,LCN,Lincoln City,Lincoln City,Lincoln City
+elc:eng.middlesbrough,elc,369,MID,Middlesbrough,Middlesbrough,Middlesbrough
+elc:eng.millwall,elc,391,MIL,Millwall,Millwall,Millwall
+elc:eng.norwich,elc,381,NOR,Norwich City,Norwich City,Norwich City
+elc:eng.portsmouth,elc,385,POR,Portsmouth,Portsmouth,Portsmouth
+elc:eng.preston,elc,394,PNE,Preston North End,Preston North End,Preston North End
+elc:eng.qpr,elc,334,QPR,Queens Park Rangers,Queens Park Rangers,Queens Park Rangers
+elc:eng.sheff_utd,elc,398,SHU,Sheffield United,Sheffield United,Sheffield United
+elc:eng.southampton,elc,376,SOU,Southampton,Southampton,Southampton
+elc:eng.stoke,elc,336,STK,Stoke City,Stoke City,Stoke City
+elc:eng.swansea,elc,318,SWA,Swansea City,Swansea City,Swansea City
+elc:eng.watford,elc,395,WAT,Watford,Watford,Watford
+elc:eng.west_brom,elc,383,WBA,West Bromwich Albion,West Bromwich Albion,West Bromwich Albion
+elc:eng.west_ham,elc,371,WHU,West Ham United,West Ham United,West Ham United
+elc:eng.wolverhampton,elc,380,WOL,Wolverhampton Wanderers,Wolverhampton Wanderers,Wolverhampton Wanderers
+elc:eng.wrexham,elc,352,WXM,Wrexham,Wrexham,Wrexham
 epl:eng.arsenal,epl,359,ARS,Arsenal,Arsenal,Arsenal
 epl:eng.aston_villa,epl,362,AVL,Aston Villa,Aston Villa,Aston Villa
 epl:eng.bournemouth,epl,349,BOU,AFC Bournemouth,AFC Bournemouth,AFC Bournemouth
@@ -797,6 +863,62 @@ epl:eng.newcastle,epl,361,NEW,Newcastle United,Newcastle United,Newcastle United
 epl:eng.nottm_forest,epl,393,NFO,Nottingham Forest,Nottingham Forest,Nottingham Forest
 epl:eng.sunderland,epl,366,SUN,Sunderland,Sunderland,Sunderland
 epl:eng.tottenham,epl,367,TOT,Tottenham Hotspur,Tottenham Hotspur,Tottenham Hotspur
+ere:ned.ado_den_haag,ere,2726,ADO,ADO Den Haag,ADO Den Haag,ADO Den Haag
+ere:ned.ajax,ere,139,AJA,Ajax Amsterdam,Ajax Amsterdam,Ajax Amsterdam
+ere:ned.az,ere,140,AZ,AZ Alkmaar,AZ Alkmaar,AZ Alkmaar
+ere:ned.cambuur_leeuwarden,ere,3736,CAM,SC Cambuur,SC Cambuur,SC Cambuur
+ere:ned.excelsior,ere,2566,EXC,Excelsior,Excelsior,Excelsior
+ere:ned.fc_twente,ere,152,TWE,FC Twente,FC Twente,FC Twente
+ere:ned.fc_utrecht,ere,153,UTR,FC Utrecht,FC Utrecht,FC Utrecht
+ere:ned.fc_zwolle,ere,2565,PEC,PEC Zwolle,PEC Zwolle,PEC Zwolle
+ere:ned.feyenoord,ere,142,FEY,Feyenoord Rotterdam,Feyenoord Rotterdam,Feyenoord Rotterdam
+ere:ned.fortuna_sittard,ere,143,FOR,Fortuna Sittard,Fortuna Sittard,Fortuna Sittard
+ere:ned.go_ahead_eagles,ere,3706,GAE,Go Ahead Eagles,Go Ahead Eagles,Go Ahead Eagles
+ere:ned.groningen,ere,145,GRO,FC Groningen,FC Groningen,FC Groningen
+ere:ned.heerenveen,ere,146,HEE,Heerenveen,Heerenveen,Heerenveen
+ere:ned.nec,ere,147,NEC,NEC Nijmegen,NEC Nijmegen,NEC Nijmegen
+ere:ned.psv,ere,148,PSV,PSV Eindhoven,PSV Eindhoven,PSV Eindhoven
+ere:ned.sc_stormvogels_telstar,ere,3735,TEL,Telstar,Telstar,Telstar
+ere:ned.sparta,ere,151,SPA,Sparta Rotterdam,Sparta Rotterdam,Sparta Rotterdam
+ere:ned.willem_ii,ere,156,WIL,Willem II,Willem II,Willem II
+fl1:betbrain.paris_fc,fl1,6851,PAR,Paris FC,Paris FC,Paris FC
+fl1:fra.angers,fl1,7868,ANG,Angers,Angers,Angers
+fl1:fra.auxerre,fl1,172,AUX,AJ Auxerre,AJ Auxerre,AJ Auxerre
+fl1:fra.brest,fl1,6997,BRE,Brest,Brest,Brest
+fl1:fra.le_havre_ac,fl1,3236,HAC,Le Havre AC,Le Havre AC,Le Havre AC
+fl1:fra.le_mans,fl1,2697,MNS,Le Mans,Le Mans,Le Mans
+fl1:fra.lens,fl1,175,RCL,Lens,Lens,Lens
+fl1:fra.lille,fl1,166,LILL,Lille,Lille,Lille
+fl1:fra.lorient,fl1,273,LOR,Lorient,Lorient,Lorient
+fl1:fra.lyon,fl1,167,LYON,Lyon,Lyon,Lyon
+fl1:fra.marseille,fl1,176,OLM,Marseille,Marseille,Marseille
+fl1:fra.monaco,fl1,174,MON,AS Monaco,AS Monaco,AS Monaco
+fl1:fra.nice,fl1,2502,NICE,Nice,Nice,Nice
+fl1:fra.psg,fl1,160,PSG,Paris Saint-Germain,Paris Saint-Germain,Paris Saint-Germain
+fl1:fra.rennes,fl1,169,REN,Stade Rennais,Stade Rennais,Stade Rennais
+fl1:fra.strasbourg,fl1,180,STR,Strasbourg,Strasbourg,Strasbourg
+fl1:fra.toulouse,fl1,179,TOU,Toulouse,Toulouse,Toulouse
+fl1:fra.troyes,fl1,170,TRY,Troyes,Troyes,Troyes
+ita:f.b.c_unione_venezia,ita,17530,VEN,Venezia,Venezia,Venezia
+ita:ita.ac_milan,ita,103,MIL,AC Milan,AC Milan,AC Milan
+ita:ita.as_roma,ita,104,ROMA,AS Roma,AS Roma,AS Roma
+ita:ita.atalanta,ita,105,ATA,Atalanta,Atalanta,Atalanta
+ita:ita.bologna,ita,107,BOL,Bologna,Bologna,Bologna
+ita:ita.cagliari,ita,2925,CAG,Cagliari,Cagliari,Cagliari
+ita:ita.como,ita,2572,COMO,Como,Como,Como
+ita:ita.fiorentina,ita,109,FIO,Fiorentina,Fiorentina,Fiorentina
+ita:ita.frosinone,ita,4057,FRO,Frosinone,Frosinone,Frosinone
+ita:ita.genoa,ita,3263,GEN,Genoa,Genoa,Genoa
+ita:ita.inter_milan,ita,110,INT,Internazionale,Internazionale,Internazionale
+ita:ita.juventus,ita,111,JUV,Juventus,Juventus,Juventus
+ita:ita.lazio_rome,ita,112,LAZ,Lazio,Lazio,Lazio
+ita:ita.lecce,ita,113,LEC,Lecce,Lecce,Lecce
+ita:ita.monza,ita,4007,MON,Monza,Monza,Monza
+ita:ita.napoli,ita,114,NAP,Napoli,Napoli,Napoli
+ita:ita.parma,ita,115,PAR,Parma,Parma,Parma
+ita:ita.sassuolo,ita,3997,SAS,Sassuolo,Sassuolo,Sassuolo
+ita:ita.torino,ita,239,TOR,Torino,Torino,Torino
+ita:ita.udinese,ita,118,UDI,Udinese,Udinese,Udinese
 lal:esp.alaves,lal,96,ALA,Alavés,Alavés,Alavés
 lal:esp.athletic_club,lal,93,ATH,Athletic Club,Athletic Club,Athletic Club
 lal:esp.atletico_madrid,lal,1068,ATM,Atlético Madrid,Atlético Madrid,Atlético Madrid
@@ -971,6 +1093,36 @@ nhl:vancouver-canucks,nhl,22,VAN,Vancouver,Canucks,Vancouver Canucks
 nhl:vegas-golden-knights,nhl,37,VGK,Vegas,Golden Knights,Vegas Golden Knights
 nhl:washington-capitals,nhl,23,WSH,Washington,Capitals,Washington Capitals
 nhl:winnipeg-jets,nhl,28,WPG,Winnipeg,Jets,Winnipeg Jets
+por:alverca,por,21613,ALV,Alverca,Alverca,Alverca
+por:casa_pia,por,21581,CPAC,Casa Pia,Casa Pia,Casa Pia
+por:eng.fc_famalicao,por,12698,FCF,FC Famalicao,FC Famalicao,FC Famalicao
+por:estrela,por,21610,EST,Estrela,Estrela,Estrela
+por:fifa.santa_clara,por,12215,CDSC,Santa Clara,Santa Clara,Santa Clara
+por:por.arouca,por,15784,FCA,Arouca,Arouca,Arouca
+por:por.benfica,por,1929,SLB,Benfica,Benfica,Benfica
+por:por.braga,por,2994,SCB,Braga,Braga,Braga
+por:por.cd_nacional_de_madeira,por,3472,CDN,C.D. Nacional,C.D. Nacional,C.D. Nacional
+por:por.estoril,por,12216,EPF,Estoril,Estoril,Estoril
+por:por.gil_vicente,por,3699,GVFC,Gil Vicente,Gil Vicente,Gil Vicente
+por:por.guimaraes,por,5309,VSC,Vitória de Guimaraes,Vitória de Guimaraes,Vitória de Guimaraes
+por:por.maritimo,por,552,MAR,Maritimo,Maritimo,Maritimo
+por:por.moreirense,por,3696,MFC,Moreirense,Moreirense,Moreirense
+por:por.porto,por,437,FCP,FC Porto,FC Porto,FC Porto
+por:por.rio_ave,por,3822,RAFC,Rio Ave,Rio Ave,Rio Ave
+por:por.sporting_lisbon,por,2250,SCP,Sporting CP,Sporting CP,Sporting CP
+por:viseu,por,21607,ACV,Académico de Viseu,Académico de Viseu,Académico de Viseu
+scop:sco.aberdeen,scop,263,ABE,Aberdeen,Aberdeen,Aberdeen
+scop:sco.celtic,scop,256,CEL,Celtic,Celtic,Celtic
+scop:sco.dundee,scop,261,DUN,Dundee,Dundee,Dundee
+scop:sco.dundee_utd,scop,264,DUN,Dundee United,Dundee United,Dundee United
+scop:sco.falkirk,scop,254,FALK,Falkirk,Falkirk,Falkirk
+scop:sco.hearts,scop,262,HOM,Heart of Midlothian,Heart of Midlothian,Heart of Midlothian
+scop:sco.hibernian,scop,258,HIBS,Hibernian,Hibernian,Hibernian
+scop:sco.kilmarnock,scop,260,KIL,Kilmarnock,Kilmarnock,Kilmarnock
+scop:sco.motherwell,scop,266,MOT,Motherwell,Motherwell,Motherwell
+scop:sco.rangers,scop,257,RAN,Rangers,Rangers,Rangers
+scop:sco.st_johnstone,scop,267,STJ,St Johnstone,St Johnstone,St Johnstone
+scop:sco.st_mirren,scop,250,STM,St Mirren,St Mirren,St Mirren
 wnba:atlanta-dream,wnba,20,ATL,Atlanta,Dream,Atlanta Dream
 wnba:chicago-sky,wnba,19,CHI,Chicago,Sky,Chicago Sky
 wnba:connecticut-sun,wnba,18,CON,Connecticut,Sun,Connecticut Sun

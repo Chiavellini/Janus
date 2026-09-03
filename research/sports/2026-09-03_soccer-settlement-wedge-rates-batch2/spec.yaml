@@ -1,0 +1,55 @@
+experiment_id: "janus-sports-soccer-settlement-wedge-rates-batch2-2026-09-03"
+date_registered: "2026-09-03"
+track: "sports/settlement"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L35"
+same_design_as: "snooping_ledger.md row L33 (the round-window proxy, its validation and its FLOOR label), applied to the census's next competitions"
+test_looks_spent: 0
+design_memo: "DESIGN.md beside this file (the source survey and why this is a proxy)"
+
+# IMMUTABLE AFTER THE RUN.
+purpose: >
+  Measure, per competition, the two probabilities the soccer settlement wedge is priced with:
+  soccer.<code>.postponed_gt48h_rate (Kalshi resolves to a fair price when a game is rescheduled to
+  over 48 hours away; Polymarket waits for the result) and soccer.<code>.cancelled_rate (Kalshi fair
+  price; Polymarket team markets No, draw market Yes). No free archive keeps a match's originally
+  scheduled kickoff (DESIGN.md), so the postponement rate is a PROXY and a FLOOR: a match played more
+  than 48 hours after its round's core window. It cannot see a move inside the window.
+
+source:
+  fixtures: "openfootball season files, frozen under inputs/ with the clone shas (inputs/PROVENANCE.md): England 2-championship.txt (elc, 24 teams) and 3-league1.txt (el1, 24 teams), Italy 1-seriea.txt (ita, 20 teams); each carries the matchday label, the date played and the kickoff time."
+  cancellations: "per competition-season, scheduled N(N-1) minus matches in the file; every shortfall must be cited from the league's release (none expected in the window: the survey found Bochum-Gladbach 2022 abandoned-and-awarded, Bournemouth-Luton 2023 abandoned-and-replayed)."
+  not_measured: "fl1, ere, por, scop: openfootball keeps no season files for France, the Netherlands, Portugal or Scotland (probed 2026-09-03); bel1: the Belgian file mixes the regular phase with playoff rounds, so N(N-1) does not hold. All five stay EVIDENCE_UNMEASURED."
+
+window:
+  competitions: ["elc", "el1", "ita"]
+  seasons: ["2021-22", "2022-23", "2023-24", "2024-25"]
+  excluded: "2019-20 and 2020-21 (the pandemic suspension and its behind-closed-doors rescheduling), by the same reasoning as the operator's NFL decision of 2026-09-03; stated, and it makes the reserve smaller."
+
+definitions:
+  match_unit: "one league match, counted once; a season must parse to exactly N(N-1) matches or the run is INCOMPLETE"
+  round: "the file's matchday label"
+  core_window: "the 4-day span (any consecutive four calendar days) holding the most matches of that round; ties resolved to the earliest span"
+  postponed_gt48h_proxy: "a match whose kickoff is more than 48.0 hours after the end of its round's core window (end = 23:59 of the window's last day)"
+  cancelled: "scheduled minus played, each one cited"
+  rates: "per competition over the four seasons, registered verbatim including zero"
+  floor: "the proxy misses every move inside the round window and every same-week reschedule; the registered value is labelled FLOOR in evidence.py and stays so until a forward measurement with true original dates replaces it"
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no look. No outcome is read."
+  - "Validation as in L33: the out-of-window 2020-21 Premier League file (copied into inputs/) must flag Manchester United v Liverpool (matchday 34, played 13 May 2021); if it does not, the run is INVALID."
+  - "A season whose file does not parse to exactly N(N-1) matches -> INCOMPLETE, nothing registered for that competition."
+  - "Fewer than 1,000 matches per competition -> INSUFFICIENT."
+
+outputs:
+  rates: ["soccer.elc.postponed_gt48h_rate", "soccer.elc.cancelled_rate", "soccer.el1.postponed_gt48h_rate", "soccer.el1.cancelled_rate", "soccer.ita.postponed_gt48h_rate", "soccer.ita.cancelled_rate"]
+  evidence_registration: "nodes/settle_wedge/evidence.py, citing this spec, with the FLOOR label in the note"
+  files:
+    results: "research/sports/2026-09-03_soccer-settlement-wedge-rates-batch2/results.json"
+    verdict: "research/sports/2026-09-03_soccer-settlement-wedge-rates-batch2/verdict.md"
+
+what_this_does_not_establish:
+  - "Anything about MLS, cup competitions, or extra-time formats."
+  - "The true postponement rate: this is a floor by construction."
+  - "Any edge. A reserve is a cost."

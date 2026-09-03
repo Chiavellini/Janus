@@ -1,0 +1,2429 @@
+{
+  "competitions": {
+    "el1": {
+      "cancelled": 0,
+      "flagged": [
+        [
+          "2021-22",
+          6,
+          "Lincoln City",
+          "Rotherham United",
+          "2021-09-14",
+          163.8
+        ],
+        [
+          "2021-22",
+          6,
+          "Crewe Alexandra",
+          "Morecambe FC",
+          "2021-09-21",
+          331.8
+        ],
+        [
+          "2021-22",
+          6,
+          "Gillingham FC",
+          "Charlton Athletic",
+          "2021-09-21",
+          331.8
+        ],
+        [
+          "2021-22",
+          6,
+          "Portsmouth FC",
+          "Plymouth Argyle",
+          "2021-09-21",
+          331.8
+        ],
+        [
+          "2021-22",
+          6,
+          "Doncaster Rovers",
+          "Cambridge United",
+          "2021-10-26",
+          1171.8
+        ],
+        [
+          "2021-22",
+          6,
+          "Wycombe Wanderers",
+          "Ipswich Town",
+          "2021-11-02",
+          1339.8
+        ],
+        [
+          "2021-22",
+          6,
+          "Fleetwood Town",
+          "Wigan Athletic",
+          "2021-11-02",
+          1339.8
+        ],
+        [
+          "2021-22",
+          6,
+          "Sheffield Wednesday",
+          "Sunderland AFC",
+          "2021-11-02",
+          1339.8
+        ],
+        [
+          "2021-22",
+          12,
+          "Wigan Athletic",
+          "Lincoln City",
+          "2021-10-26",
+          331.8
+        ],
+        [
+          "2021-22",
+          12,
+          "Charlton Athletic",
+          "Rotherham United",
+          "2021-11-02",
+          499.8
+        ],
+        [
+          "2021-22",
+          12,
+          "Crewe Alexandra",
+          "Doncaster Rovers",
+          "2021-11-02",
+          499.8
+        ],
+        [
+          "2021-22",
+          12,
+          "Morecambe FC",
+          "Cambridge United",
+          "2021-11-02",
+          499.8
+        ],
+        [
+          "2021-22",
+          12,
+          "Portsmouth FC",
+          "Cheltenham Town",
+          "2021-11-02",
+          499.8
+        ],
+        [
+          "2021-22",
+          12,
+          "Sunderland AFC",
+          "Oxford United",
+          "2021-12-04",
+          1263.0
+        ],
+        [
+          "2021-22",
+          12,
+          "Accrington Stanley",
+          "Fleetwood Town",
+          "2021-12-04",
+          1263.0
+        ],
+        [
+          "2021-22",
+          12,
+          "Milton Keynes Dons",
+          "AFC Wimbledon",
+          "2022-01-11",
+          2179.8
+        ],
+        [
+          "2021-22",
+          17,
+          "Doncaster Rovers",
+          "Fleetwood Town",
+          "2022-01-08",
+          1287.0
+        ],
+        [
+          "2021-22",
+          17,
+          "Sunderland AFC",
+          "Lincoln City",
+          "2022-01-11",
+          1363.8
+        ],
+        [
+          "2021-22",
+          17,
+          "Morecambe FC",
+          "Wigan Athletic",
+          "2022-01-18",
+          1531.8
+        ],
+        [
+          "2021-22",
+          17,
+          "AFC Wimbledon",
+          "Cheltenham Town",
+          "2022-02-01",
+          1867.8
+        ],
+        [
+          "2021-22",
+          17,
+          "Shrewsbury Town",
+          "Rotherham United",
+          "2022-03-01",
+          2539.8
+        ],
+        [
+          "2021-22",
+          18,
+          "Wigan Athletic",
+          "Oxford United",
+          "2022-02-01",
+          1675.8
+        ],
+        [
+          "2021-22",
+          23,
+          "Bolton Wanderers",
+          "Wycombe Wanderers",
+          "2022-01-11",
+          500.0
+        ],
+        [
+          "2021-22",
+          23,
+          "AFC Wimbledon",
+          "Portsmouth FC",
+          "2022-01-18",
+          667.8
+        ],
+        [
+          "2021-22",
+          23,
+          "Burton Albion",
+          "Milton Keynes Dons",
+          "2022-01-25",
+          835.8
+        ],
+        [
+          "2021-22",
+          23,
+          "Gillingham FC",
+          "Crewe Alexandra",
+          "2022-02-01",
+          1003.8
+        ],
+        [
+          "2021-22",
+          23,
+          "Lincoln City",
+          "Doncaster Rovers",
+          "2022-02-15",
+          1339.8
+        ],
+        [
+          "2021-22",
+          23,
+          "Sheffield Wednesday",
+          "Accrington Stanley",
+          "2022-03-15",
+          2011.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Gillingham FC",
+          "Ipswich Town",
+          "2022-01-08",
+          231.0
+        ],
+        [
+          "2021-22",
+          24,
+          "Sheffield Wednesday",
+          "Burton Albion",
+          "2022-03-01",
+          1483.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Portsmouth FC",
+          "Oxford United",
+          "2022-03-01",
+          1483.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Wycombe Wanderers",
+          "Cambridge United",
+          "2022-03-01",
+          1483.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Bolton Wanderers",
+          "Morecambe FC",
+          "2022-03-08",
+          1652.0
+        ],
+        [
+          "2021-22",
+          24,
+          "Crewe Alexandra",
+          "Wigan Athletic",
+          "2022-03-15",
+          1819.8
+        ],
+        [
+          "2021-22",
+          24,
+          "AFC Wimbledon",
+          "Charlton Athletic",
+          "2022-04-05",
+          2323.8
+        ],
+        [
+          "2021-22",
+          25,
+          "Cambridge United",
+          "Doncaster Rovers",
+          "2022-01-18",
+          403.8
+        ],
+        [
+          "2021-22",
+          25,
+          "Burton Albion",
+          "Bolton Wanderers",
+          "2022-02-15",
+          1075.8
+        ],
+        [
+          "2021-22",
+          25,
+          "Wigan Athletic",
+          "Fleetwood Town",
+          "2022-03-01",
+          1411.8
+        ],
+        [
+          "2021-22",
+          25,
+          "Milton Keynes Dons",
+          "Cheltenham Town",
+          "2022-03-08",
+          1579.8
+        ],
+        [
+          "2021-22",
+          25,
+          "Charlton Athletic",
+          "Gillingham FC",
+          "2022-03-15",
+          1747.8
+        ],
+        [
+          "2021-22",
+          25,
+          "Plymouth Argyle",
+          "Portsmouth FC",
+          "2022-03-15",
+          1747.8
+        ],
+        [
+          "2021-22",
+          25,
+          "Rotherham United",
+          "Lincoln City",
+          "2022-03-15",
+          1747.8
+        ],
+        [
+          "2021-22",
+          26,
+          "Sunderland AFC",
+          "Fleetwood Town",
+          "2022-03-08",
+          1507.8
+        ],
+        [
+          "2021-22",
+          26,
+          "Ipswich Town",
+          "Lincoln City",
+          "2022-03-08",
+          1507.8
+        ],
+        [
+          "2021-22",
+          26,
+          "Plymouth Argyle",
+          "AFC Wimbledon",
+          "2022-03-08",
+          1507.8
+        ],
+        [
+          "2021-22",
+          26,
+          "Wigan Athletic",
+          "Accrington Stanley",
+          "2022-04-05",
+          2179.8
+        ],
+        [
+          "2021-22",
+          27,
+          "Fleetwood Town",
+          "Plymouth Argyle",
+          "2022-01-25",
+          331.8
+        ],
+        [
+          "2021-22",
+          27,
+          "AFC Wimbledon",
+          "Ipswich Town",
+          "2022-01-25",
+          331.8
+        ],
+        [
+          "2021-22",
+          27,
+          "Gillingham FC",
+          "Shrewsbury Town",
+          "2022-01-25",
+          331.8
+        ],
+        [
+          "2021-22",
+          27,
+          "Bolton Wanderers",
+          "Cambridge United",
+          "2022-02-01",
+          500.0
+        ],
+        [
+          "2021-22",
+          27,
+          "Doncaster Rovers",
+          "Rotherham United",
+          "2022-02-01",
+          499.8
+        ],
+        [
+          "2021-22",
+          27,
+          "Sheffield Wednesday",
+          "Morecambe FC",
+          "2022-02-01",
+          499.8
+        ],
+        [
+          "2021-22",
+          27,
+          "Portsmouth FC",
+          "Wigan Athletic",
+          "2022-04-26",
+          2515.8
+        ],
+        [
+          "2021-22",
+          31,
+          "Wigan Athletic",
+          "Crewe Alexandra",
+          "2022-02-15",
+          163.8
+        ],
+        [
+          "2021-22",
+          31,
+          "Plymouth Argyle",
+          "Cheltenham Town",
+          "2022-03-22",
+          1003.8
+        ],
+        [
+          "2021-22",
+          31,
+          "Cambridge United",
+          "Wycombe Wanderers",
+          "2022-04-05",
+          1339.8
+        ],
+        [
+          "2021-22",
+          34,
+          "Crewe Alexandra",
+          "Portsmouth FC",
+          "2022-03-08",
+          355.8
+        ],
+        [
+          "2021-22",
+          34,
+          "Shrewsbury Town",
+          "Morecambe FC",
+          "2022-03-15",
+          523.8
+        ],
+        [
+          "2021-22",
+          34,
+          "Fleetwood Town",
+          "Lincoln City",
+          "2022-04-05",
+          1027.8
+        ],
+        [
+          "2021-22",
+          35,
+          "Fleetwood Town",
+          "Sheffield Wednesday",
+          "2022-04-26",
+          1435.8
+        ],
+        [
+          "2021-22",
+          40,
+          "Morecambe FC",
+          "Oxford United",
+          "2022-04-05",
+          163.8
+        ],
+        [
+          "2021-22",
+          40,
+          "Milton Keynes Dons",
+          "Crewe Alexandra",
+          "2022-04-05",
+          163.8
+        ],
+        [
+          "2021-22",
+          40,
+          "Bolton Wanderers",
+          "Portsmouth FC",
+          "2022-04-05",
+          164.0
+        ],
+        [
+          "2021-22",
+          40,
+          "Burton Albion",
+          "Wigan Athletic",
+          "2022-04-12",
+          331.8
+        ],
+        [
+          "2021-22",
+          40,
+          "Sunderland AFC",
+          "Rotherham United",
+          "2022-04-26",
+          667.8
+        ],
+        [
+          "2021-22",
+          41,
+          "Portsmouth FC",
+          "Rotherham United",
+          "2022-04-12",
+          163.8
+        ],
+        [
+          "2022-23",
+          4,
+          "Forest Green Rovers",
+          "Accrington Stanley",
+          "2022-09-06",
+          427.8
+        ],
+        [
+          "2022-23",
+          11,
+          "Oxford United",
+          "Fleetwood Town",
+          "2022-11-01",
+          835.8
+        ],
+        [
+          "2022-23",
+          11,
+          "Portsmouth FC",
+          "Bolton Wanderers",
+          "2023-02-28",
+          3691.8
+        ],
+        [
+          "2022-23",
+          11,
+          "Derby County",
+          "Cheltenham Town",
+          "2023-02-28",
+          3691.8
+        ],
+        [
+          "2022-23",
+          11,
+          "Lincoln City",
+          "Milton Keynes Dons",
+          "2023-02-28",
+          3691.8
+        ],
+        [
+          "2022-23",
+          8,
+          "Milton Keynes Dons",
+          "Bristol Rovers",
+          "2022-10-11",
+          91.8
+        ],
+        [
+          "2022-23",
+          8,
+          "Peterborough United",
+          "Forest Green Rovers",
+          "2022-10-11",
+          91.8
+        ],
+        [
+          "2022-23",
+          8,
+          "Charlton Athletic",
+          "Exeter City",
+          "2022-10-11",
+          91.8
+        ],
+        [
+          "2022-23",
+          8,
+          "Wycombe Wanderers",
+          "Port Vale FC",
+          "2022-11-01",
+          595.8
+        ],
+        [
+          "2022-23",
+          8,
+          "Lincoln City",
+          "Accrington Stanley",
+          "2022-11-01",
+          595.8
+        ],
+        [
+          "2022-23",
+          8,
+          "Morecambe FC",
+          "Derby County",
+          "2022-11-01",
+          595.8
+        ],
+        [
+          "2022-23",
+          8,
+          "Shrewsbury Town",
+          "Oxford United",
+          "2022-11-09",
+          787.8
+        ],
+        [
+          "2022-23",
+          8,
+          "Barnsley FC",
+          "Portsmouth FC",
+          "2023-03-07",
+          3619.8
+        ],
+        [
+          "2022-23",
+          21,
+          "Oxford United",
+          "Barnsley FC",
+          "2023-02-01",
+          1195.8
+        ],
+        [
+          "2022-23",
+          21,
+          "Morecambe FC",
+          "Charlton Athletic",
+          "2023-03-14",
+          2179.8
+        ],
+        [
+          "2022-23",
+          21,
+          "Accrington Stanley",
+          "Portsmouth FC",
+          "2023-03-14",
+          2179.8
+        ],
+        [
+          "2022-23",
+          22,
+          "Port Vale FC",
+          "Accrington Stanley",
+          "2023-02-07",
+          1171.8
+        ],
+        [
+          "2022-23",
+          22,
+          "Fleetwood Town",
+          "Cambridge United",
+          "2023-02-21",
+          1507.8
+        ],
+        [
+          "2022-23",
+          22,
+          "Cheltenham Town",
+          "Lincoln City",
+          "2023-03-07",
+          1843.8
+        ],
+        [
+          "2022-23",
+          22,
+          "Peterborough United",
+          "Shrewsbury Town",
+          "2023-03-07",
+          1843.8
+        ],
+        [
+          "2022-23",
+          26,
+          "Burton Albion",
+          "Peterborough United",
+          "2023-03-14",
+          1099.8
+        ],
+        [
+          "2022-23",
+          26,
+          "Accrington Stanley",
+          "Plymouth Argyle",
+          "2023-03-21",
+          1267.8
+        ],
+        [
+          "2022-23",
+          26,
+          "Exeter City",
+          "Barnsley FC",
+          "2023-03-28",
+          1435.8
+        ],
+        [
+          "2022-23",
+          26,
+          "Cheltenham Town",
+          "Sheffield Wednesday",
+          "2023-03-29",
+          1459.8
+        ],
+        [
+          "2022-23",
+          38,
+          "Barnsley FC",
+          "Ipswich Town",
+          "2023-04-25",
+          667.8
+        ],
+        [
+          "2022-23",
+          38,
+          "Oxford United",
+          "Cheltenham Town",
+          "2023-04-25",
+          667.8
+        ],
+        [
+          "2022-23",
+          38,
+          "Shrewsbury Town",
+          "Bristol Rovers",
+          "2023-05-02",
+          835.8
+        ],
+        [
+          "2022-23",
+          38,
+          "Burton Albion",
+          "Cambridge United",
+          "2023-05-03",
+          859.8
+        ],
+        [
+          "2022-23",
+          27,
+          "Cambridge United",
+          "Morecambe FC",
+          "2023-03-07",
+          1171.8
+        ],
+        [
+          "2022-23",
+          28,
+          "Morecambe FC",
+          "Port Vale FC",
+          "2023-02-21",
+          667.8
+        ],
+        [
+          "2022-23",
+          28,
+          "Peterborough United",
+          "Charlton Athletic",
+          "2023-02-28",
+          835.8
+        ],
+        [
+          "2022-23",
+          28,
+          "Bristol Rovers",
+          "Wycombe Wanderers",
+          "2023-03-14",
+          1171.8
+        ],
+        [
+          "2022-23",
+          28,
+          "Lincoln City",
+          "Burton Albion",
+          "2023-04-25",
+          2179.8
+        ],
+        [
+          "2022-23",
+          29,
+          "Plymouth Argyle",
+          "Derby County",
+          "2023-03-07",
+          836.0
+        ],
+        [
+          "2022-23",
+          29,
+          "Wycombe Wanderers",
+          "Fleetwood Town",
+          "2023-03-07",
+          835.8
+        ],
+        [
+          "2022-23",
+          29,
+          "Ipswich Town",
+          "Accrington Stanley",
+          "2023-03-07",
+          835.8
+        ],
+        [
+          "2022-23",
+          29,
+          "Barnsley FC",
+          "Sheffield Wednesday",
+          "2023-03-21",
+          1172.0
+        ],
+        [
+          "2022-23",
+          39,
+          "Bolton Wanderers",
+          "Accrington Stanley",
+          "2023-04-25",
+          499.8
+        ],
+        [
+          "2022-23",
+          39,
+          "Plymouth Argyle",
+          "Bristol Rovers",
+          "2023-04-25",
+          499.8
+        ],
+        [
+          "2023-24",
+          7,
+          "Shrewsbury Town",
+          "Bolton Wanderers",
+          "2023-11-07",
+          91.8
+        ],
+        [
+          "2023-24",
+          7,
+          "Reading FC",
+          "Bristol Rovers",
+          "2023-11-07",
+          92.0
+        ],
+        [
+          "2023-24",
+          11,
+          "Leyton Orient",
+          "Lincoln City",
+          "2023-11-21",
+          1099.8
+        ],
+        [
+          "2023-24",
+          13,
+          "Wigan Athletic",
+          "Peterborough United",
+          "2023-11-07",
+          499.8
+        ],
+        [
+          "2023-24",
+          13,
+          "Northampton Town",
+          "Portsmouth FC",
+          "2023-12-02",
+          1095.0
+        ],
+        [
+          "2023-24",
+          13,
+          "Reading FC",
+          "Oxford United",
+          "2023-12-12",
+          1340.0
+        ],
+        [
+          "2023-24",
+          13,
+          "Bristol Rovers",
+          "Exeter City",
+          "2024-01-23",
+          2347.8
+        ],
+        [
+          "2023-24",
+          13,
+          "Port Vale FC",
+          "Fleetwood Town",
+          "2024-02-27",
+          3187.8
+        ],
+        [
+          "2023-24",
+          13,
+          "Derby County",
+          "Charlton Athletic",
+          "2024-02-27",
+          3187.8
+        ],
+        [
+          "2023-24",
+          13,
+          "Wycombe Wanderers",
+          "Cheltenham Town",
+          "2024-02-27",
+          3187.8
+        ],
+        [
+          "2023-24",
+          13,
+          "Barnsley FC",
+          "Bolton Wanderers",
+          "2024-03-05",
+          3355.8
+        ],
+        [
+          "2023-24",
+          18,
+          "Oxford United",
+          "Portsmouth FC",
+          "2024-01-30",
+          91.8
+        ],
+        [
+          "2023-24",
+          18,
+          "Bristol Rovers",
+          "Fleetwood Town",
+          "2024-02-06",
+          259.8
+        ],
+        [
+          "2023-24",
+          18,
+          "Port Vale FC",
+          "Leyton Orient",
+          "2024-02-06",
+          259.8
+        ],
+        [
+          "2023-24",
+          18,
+          "Exeter City",
+          "Peterborough United",
+          "2024-02-06",
+          259.8
+        ],
+        [
+          "2023-24",
+          18,
+          "Cambridge United",
+          "Bolton Wanderers",
+          "2024-02-20",
+          595.8
+        ],
+        [
+          "2023-24",
+          18,
+          "Burton Albion",
+          "Cheltenham Town",
+          "2024-04-16",
+          1939.8
+        ],
+        [
+          "2023-24",
+          25,
+          "Stevenage FC",
+          "Cambridge United",
+          "2024-02-27",
+          1363.8
+        ],
+        [
+          "2023-24",
+          27,
+          "Oxford United",
+          "Barnsley FC",
+          "2024-01-23",
+          331.8
+        ],
+        [
+          "2023-24",
+          27,
+          "Stevenage FC",
+          "Reading FC",
+          "2024-02-06",
+          667.8
+        ],
+        [
+          "2023-24",
+          27,
+          "Wigan Athletic",
+          "Bolton Wanderers",
+          "2024-02-27",
+          1171.8
+        ],
+        [
+          "2023-24",
+          27,
+          "Leyton Orient",
+          "Blackpool FC",
+          "2024-02-27",
+          1171.8
+        ],
+        [
+          "2023-24",
+          27,
+          "Lincoln City",
+          "Shrewsbury Town",
+          "2024-02-27",
+          1171.8
+        ],
+        [
+          "2023-24",
+          27,
+          "Peterborough United",
+          "Northampton Town",
+          "2024-03-05",
+          1339.8
+        ],
+        [
+          "2023-24",
+          27,
+          "Bristol Rovers",
+          "Cambridge United",
+          "2024-04-16",
+          2347.8
+        ],
+        [
+          "2023-24",
+          28,
+          "Bolton Wanderers",
+          "Cheltenham Town",
+          "2024-01-23",
+          163.8
+        ],
+        [
+          "2023-24",
+          28,
+          "Reading FC",
+          "Port Vale FC",
+          "2024-02-20",
+          836.0
+        ],
+        [
+          "2023-24",
+          29,
+          "Oxford United",
+          "Northampton Town",
+          "2024-02-20",
+          667.8
+        ],
+        [
+          "2023-24",
+          29,
+          "Stevenage FC",
+          "Barnsley FC",
+          "2024-04-09",
+          1843.8
+        ],
+        [
+          "2023-24",
+          29,
+          "Cheltenham Town",
+          "Carlisle United",
+          "2024-04-09",
+          1843.8
+        ],
+        [
+          "2023-24",
+          29,
+          "Port Vale FC",
+          "Wycombe Wanderers",
+          "2024-04-16",
+          2011.8
+        ],
+        [
+          "2023-24",
+          33,
+          "Burton Albion",
+          "Carlisle United",
+          "2024-02-27",
+          259.8
+        ],
+        [
+          "2023-24",
+          33,
+          "Peterborough United",
+          "Port Vale FC",
+          "2024-04-10",
+          1291.8
+        ],
+        [
+          "2023-24",
+          40,
+          "Bolton Wanderers",
+          "Shrewsbury Town",
+          "2024-04-16",
+          91.8
+        ],
+        [
+          "2023-24",
+          40,
+          "Oxford United",
+          "Lincoln City",
+          "2024-04-16",
+          91.8
+        ],
+        [
+          "2023-24",
+          40,
+          "Portsmouth FC",
+          "Barnsley FC",
+          "2024-04-16",
+          91.8
+        ],
+        [
+          "2023-24",
+          40,
+          "Cambridge United",
+          "Wycombe Wanderers",
+          "2024-04-23",
+          259.8
+        ],
+        [
+          "2023-24",
+          40,
+          "Cheltenham Town",
+          "Peterborough United",
+          "2024-04-23",
+          259.8
+        ],
+        [
+          "2023-24",
+          43,
+          "Peterborough United",
+          "Fleetwood Town",
+          "2024-04-16",
+          163.8
+        ],
+        [
+          "2024-25",
+          5,
+          "Huddersfield Town",
+          "Blackpool FC",
+          "2024-09-24",
+          331.8
+        ],
+        [
+          "2024-25",
+          5,
+          "Leyton Orient",
+          "Peterborough United",
+          "2024-09-24",
+          331.8
+        ],
+        [
+          "2024-25",
+          5,
+          "Wigan Athletic",
+          "Stevenage FC",
+          "2024-09-24",
+          331.8
+        ],
+        [
+          "2024-25",
+          5,
+          "Lincoln City",
+          "Northampton Town",
+          "2024-10-29",
+          1171.8
+        ],
+        [
+          "2024-25",
+          5,
+          "Stockport County",
+          "Reading FC",
+          "2024-10-29",
+          1171.8
+        ],
+        [
+          "2024-25",
+          5,
+          "Burton Albion",
+          "Crawley Town",
+          "2024-11-05",
+          1339.8
+        ],
+        [
+          "2024-25",
+          5,
+          "Cambridge United",
+          "Bolton Wanderers",
+          "2024-11-26",
+          1843.8
+        ],
+        [
+          "2024-25",
+          5,
+          "Exeter City",
+          "Birmingham City",
+          "2024-11-26",
+          1843.8
+        ],
+        [
+          "2024-25",
+          5,
+          "Wycombe Wanderers",
+          "Mansfield Town",
+          "2024-11-26",
+          1843.8
+        ],
+        [
+          "2024-25",
+          11,
+          "Birmingham City",
+          "Cambridge United",
+          "2025-02-11",
+          1771.8
+        ],
+        [
+          "2024-25",
+          11,
+          "Exeter City",
+          "Mansfield Town",
+          "2025-03-11",
+          2443.8
+        ],
+        [
+          "2024-25",
+          16,
+          "Wycombe Wanderers",
+          "Huddersfield Town",
+          "2025-01-07",
+          1171.8
+        ],
+        [
+          "2024-25",
+          16,
+          "Rotherham United",
+          "Bolton Wanderers",
+          "2025-01-11",
+          1260.5
+        ],
+        [
+          "2024-25",
+          16,
+          "Wigan Athletic",
+          "Burton Albion",
+          "2025-01-21",
+          1507.8
+        ],
+        [
+          "2024-25",
+          16,
+          "Charlton Athletic",
+          "Peterborough United",
+          "2025-02-11",
+          2011.8
+        ],
+        [
+          "2024-25",
+          16,
+          "Leyton Orient",
+          "Mansfield Town",
+          "2025-02-11",
+          2011.8
+        ],
+        [
+          "2024-25",
+          16,
+          "Reading FC",
+          "Shrewsbury Town",
+          "2025-02-11",
+          2012.0
+        ],
+        [
+          "2024-25",
+          16,
+          "Birmingham City",
+          "Stevenage FC",
+          "2025-03-11",
+          2683.8
+        ],
+        [
+          "2024-25",
+          19,
+          "Blackpool FC",
+          "Rotherham United",
+          "2025-02-11",
+          1507.8
+        ],
+        [
+          "2024-25",
+          19,
+          "Crawley Town",
+          "Stevenage FC",
+          "2025-02-11",
+          1507.8
+        ],
+        [
+          "2024-25",
+          19,
+          "Bristol Rovers",
+          "Bolton Wanderers",
+          "2025-03-11",
+          2179.8
+        ],
+        [
+          "2024-25",
+          24,
+          "Wigan Athletic",
+          "Huddersfield Town",
+          "2025-02-25",
+          1243.8
+        ],
+        [
+          "2024-25",
+          24,
+          "Crawley Town",
+          "Charlton Athletic",
+          "2025-03-11",
+          1579.8
+        ],
+        [
+          "2024-25",
+          26,
+          "Birmingham City",
+          "Leyton Orient",
+          "2025-02-25",
+          91.8
+        ],
+        [
+          "2024-25",
+          26,
+          "Northampton Town",
+          "Barnsley FC",
+          "2025-02-25",
+          91.8
+        ],
+        [
+          "2024-25",
+          26,
+          "Blackpool FC",
+          "Cambridge United",
+          "2025-03-11",
+          427.8
+        ],
+        [
+          "2024-25",
+          26,
+          "Reading FC",
+          "Wrexham AFC",
+          "2025-03-11",
+          428.0
+        ],
+        [
+          "2024-25",
+          26,
+          "Rotherham United",
+          "Wycombe Wanderers",
+          "2025-03-18",
+          595.8
+        ],
+        [
+          "2024-25",
+          31,
+          "Wrexham AFC",
+          "Leyton Orient",
+          "2025-02-18",
+          187.8
+        ],
+        [
+          "2024-25",
+          31,
+          "Wycombe Wanderers",
+          "Bristol Rovers",
+          "2025-02-18",
+          187.8
+        ],
+        [
+          "2024-25",
+          31,
+          "Exeter City",
+          "Wigan Athletic",
+          "2025-04-08",
+          1363.8
+        ],
+        [
+          "2024-25",
+          31,
+          "Peterborough United",
+          "Birmingham City",
+          "2025-04-08",
+          1363.8
+        ],
+        [
+          "2024-25",
+          38,
+          "Bolton Wanderers",
+          "Rotherham United",
+          "2025-04-08",
+          331.8
+        ],
+        [
+          "2024-25",
+          38,
+          "Huddersfield Town",
+          "Wycombe Wanderers",
+          "2025-04-08",
+          331.8
+        ],
+        [
+          "2024-25",
+          38,
+          "Mansfield Town",
+          "Leyton Orient",
+          "2025-04-08",
+          331.8
+        ],
+        [
+          "2024-25",
+          38,
+          "Shrewsbury Town",
+          "Reading FC",
+          "2025-04-08",
+          331.8
+        ],
+        [
+          "2024-25",
+          38,
+          "Stevenage FC",
+          "Birmingham City",
+          "2025-04-24",
+          715.8
+        ],
+        [
+          "2024-25",
+          38,
+          "Burton Albion",
+          "Wigan Athletic",
+          "2025-04-29",
+          835.8
+        ],
+        [
+          "2024-25",
+          42,
+          "Blackpool FC",
+          "Birmingham City",
+          "2025-04-30",
+          355.8
+        ],
+        [
+          "2024-25",
+          42,
+          "Mansfield Town",
+          "Peterborough United",
+          "2025-04-30",
+          355.8
+        ]
+      ],
+      "played": 2208,
+      "postponed_gt48h_proxy": 184,
+      "rates": {
+        "cancelled_rate": 0.0,
+        "postponed_gt48h_rate": 0.083333
+      },
+      "scheduled": 2208,
+      "seasons": {
+        "2021-22": {
+          "complete": true,
+          "expected": 552,
+          "parsed": 552,
+          "postponed_gt48h_proxy": 66
+        },
+        "2022-23": {
+          "complete": true,
+          "expected": 552,
+          "parsed": 552,
+          "postponed_gt48h_proxy": 39
+        },
+        "2023-24": {
+          "complete": true,
+          "expected": 552,
+          "parsed": 552,
+          "postponed_gt48h_proxy": 39
+        },
+        "2024-25": {
+          "complete": true,
+          "expected": 552,
+          "parsed": 552,
+          "postponed_gt48h_proxy": 40
+        }
+      },
+      "verdict": "REGISTERED"
+    },
+    "elc": {
+      "cancelled": 0,
+      "flagged": [
+        [
+          "2021-22",
+          22,
+          "Sheffield United FC",
+          "Queens Park Rangers FC",
+          "2022-04-05",
+          2683.8
+        ],
+        [
+          "2021-22",
+          23,
+          "Reading FC",
+          "Luton Town FC",
+          "2022-01-19",
+          716.0
+        ],
+        [
+          "2021-22",
+          23,
+          "Queens Park Rangers FC",
+          "Swansea City AFC",
+          "2022-01-25",
+          859.8
+        ],
+        [
+          "2021-22",
+          23,
+          "Coventry City FC",
+          "Stoke City FC",
+          "2022-01-25",
+          859.8
+        ],
+        [
+          "2021-22",
+          23,
+          "Millwall FC",
+          "Preston North End FC",
+          "2022-02-01",
+          1027.8
+        ],
+        [
+          "2021-22",
+          23,
+          "Cardiff City FC",
+          "Derby County FC",
+          "2022-03-01",
+          1699.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Preston North End FC",
+          "Sheffield United FC",
+          "2022-01-18",
+          475.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Fulham FC",
+          "Birmingham City FC",
+          "2022-01-18",
+          475.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Hull City AFC",
+          "Blackburn Rovers FC",
+          "2022-01-19",
+          499.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Luton Town FC",
+          "Bristol City FC",
+          "2022-01-25",
+          643.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Cardiff City FC",
+          "Coventry City FC",
+          "2022-02-15",
+          1147.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Peterborough United FC",
+          "Reading FC",
+          "2022-02-16",
+          1171.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Barnsley FC",
+          "Stoke City FC",
+          "2022-03-08",
+          1651.8
+        ],
+        [
+          "2021-22",
+          24,
+          "Millwall FC",
+          "Swansea City AFC",
+          "2022-04-05",
+          2323.8
+        ],
+        [
+          "2021-22",
+          25,
+          "Reading FC",
+          "Fulham FC",
+          "2022-01-11",
+          236.0
+        ],
+        [
+          "2021-22",
+          25,
+          "Birmingham City FC",
+          "Peterborough United FC",
+          "2022-01-25",
+          571.8
+        ],
+        [
+          "2021-22",
+          25,
+          "West Bromwich Albion FC",
+          "Preston North End FC",
+          "2022-01-26",
+          596.0
+        ],
+        [
+          "2021-22",
+          25,
+          "Swansea City AFC",
+          "Luton Town FC",
+          "2022-02-01",
+          739.8
+        ],
+        [
+          "2021-22",
+          25,
+          "Sheffield United FC",
+          "Hull City AFC",
+          "2022-02-15",
+          1075.8
+        ],
+        [
+          "2021-22",
+          26,
+          "Nottingham Forest FC",
+          "Barnsley FC",
+          "2022-01-25",
+          499.8
+        ],
+        [
+          "2021-22",
+          26,
+          "Swansea City AFC",
+          "Fulham FC",
+          "2022-03-08",
+          1507.8
+        ],
+        [
+          "2021-22",
+          26,
+          "Sheffield United FC",
+          "Middlesbrough FC",
+          "2022-03-08",
+          1507.8
+        ],
+        [
+          "2021-22",
+          26,
+          "Coventry City FC",
+          "Luton Town FC",
+          "2022-03-08",
+          1507.8
+        ],
+        [
+          "2021-22",
+          26,
+          "AFC Bournemouth",
+          "Peterborough United FC",
+          "2022-03-08",
+          1507.8
+        ],
+        [
+          "2021-22",
+          27,
+          "Barnsley FC",
+          "Blackpool FC",
+          "2022-04-26",
+          2347.8
+        ],
+        [
+          "2021-22",
+          30,
+          "Millwall FC",
+          "Queens Park Rangers FC",
+          "2022-02-15",
+          235.8
+        ],
+        [
+          "2021-22",
+          30,
+          "Peterborough United FC",
+          "Luton Town FC",
+          "2022-04-05",
+          1411.8
+        ],
+        [
+          "2021-22",
+          30,
+          "Reading FC",
+          "Stoke City FC",
+          "2022-04-05",
+          1412.0
+        ],
+        [
+          "2021-22",
+          30,
+          "Nottingham Forest FC",
+          "Coventry City FC",
+          "2022-04-06",
+          1435.8
+        ],
+        [
+          "2021-22",
+          30,
+          "Middlesbrough FC",
+          "Fulham FC",
+          "2022-04-06",
+          1435.8
+        ],
+        [
+          "2021-22",
+          30,
+          "West Bromwich Albion FC",
+          "AFC Bournemouth",
+          "2022-04-06",
+          1436.0
+        ],
+        [
+          "2021-22",
+          33,
+          "Blackburn Rovers FC",
+          "Millwall FC",
+          "2022-03-08",
+          331.8
+        ],
+        [
+          "2021-22",
+          33,
+          "AFC Bournemouth",
+          "Nottingham Forest FC",
+          "2022-05-03",
+          1675.0
+        ],
+        [
+          "2021-22",
+          34,
+          "Swansea City AFC",
+          "AFC Bournemouth",
+          "2022-04-26",
+          1435.8
+        ],
+        [
+          "2021-22",
+          39,
+          "Preston North End FC",
+          "Blackpool FC",
+          "2022-04-05",
+          331.8
+        ],
+        [
+          "2021-22",
+          39,
+          "Fulham FC",
+          "Nottingham Forest FC",
+          "2022-04-26",
+          835.8
+        ],
+        [
+          "2021-22",
+          39,
+          "Middlesbrough FC",
+          "Cardiff City FC",
+          "2022-04-27",
+          859.8
+        ],
+        [
+          "2022-23",
+          2,
+          "Coventry City FC",
+          "Rotherham United FC",
+          "2022-10-25",
+          1867.8
+        ],
+        [
+          "2022-23",
+          4,
+          "Coventry City FC",
+          "Wigan Athletic FC",
+          "2022-11-08",
+          1939.8
+        ],
+        [
+          "2022-23",
+          5,
+          "Coventry City FC",
+          "Huddersfield Town AFC",
+          "2023-01-28",
+          3807.0
+        ],
+        [
+          "2022-23",
+          9,
+          "Sunderland AFC",
+          "Millwall FC",
+          "2022-12-03",
+          516.5
+        ],
+        [
+          "2022-23",
+          9,
+          "Coventry City FC",
+          "West Bromwich Albion FC",
+          "2022-12-21",
+          955.8
+        ],
+        [
+          "2022-23",
+          23,
+          "Luton Town FC",
+          "Millwall FC",
+          "2023-02-28",
+          1700.0
+        ],
+        [
+          "2022-23",
+          28,
+          "Blackpool FC",
+          "Huddersfield Town AFC",
+          "2023-02-07",
+          355.8
+        ],
+        [
+          "2022-23",
+          29,
+          "Preston North End FC",
+          "Coventry City FC",
+          "2023-02-28",
+          91.8
+        ],
+        [
+          "2022-23",
+          29,
+          "Huddersfield Town AFC",
+          "Bristol City FC",
+          "2023-03-07",
+          259.8
+        ],
+        [
+          "2022-23",
+          29,
+          "West Bromwich Albion FC",
+          "Wigan Athletic FC",
+          "2023-03-07",
+          260.0
+        ],
+        [
+          "2022-23",
+          29,
+          "Reading FC",
+          "Sheffield United FC",
+          "2023-03-07",
+          260.0
+        ],
+        [
+          "2022-23",
+          38,
+          "Blackburn Rovers FC",
+          "Burnley FC",
+          "2023-04-25",
+          836.0
+        ],
+        [
+          "2022-23",
+          38,
+          "Sheffield United FC",
+          "West Bromwich Albion FC",
+          "2023-04-26",
+          860.0
+        ],
+        [
+          "2022-23",
+          38,
+          "Rotherham United FC",
+          "Cardiff City FC",
+          "2023-04-27",
+          884.0
+        ],
+        [
+          "2022-23",
+          44,
+          "Huddersfield Town AFC",
+          "Sheffield United FC",
+          "2023-05-04",
+          211.8
+        ],
+        [
+          "2023-24",
+          12,
+          "Rotherham United FC",
+          "Ipswich Town FC",
+          "2023-11-07",
+          332.0
+        ],
+        [
+          "2023-24",
+          29,
+          "Cardiff City FC",
+          "Blackburn Rovers FC",
+          "2024-02-20",
+          499.8
+        ],
+        [
+          "2023-24",
+          29,
+          "Southampton FC",
+          "Hull City AFC",
+          "2024-02-20",
+          499.8
+        ],
+        [
+          "2023-24",
+          29,
+          "Ipswich Town FC",
+          "Rotherham United FC",
+          "2024-02-20",
+          499.8
+        ],
+        [
+          "2023-24",
+          29,
+          "Plymouth Argyle FC",
+          "West Bromwich Albion FC",
+          "2024-02-20",
+          499.8
+        ],
+        [
+          "2023-24",
+          29,
+          "Birmingham City FC",
+          "Middlesbrough FC",
+          "2024-03-12",
+          1003.8
+        ],
+        [
+          "2023-24",
+          36,
+          "Southampton FC",
+          "Preston North End FC",
+          "2024-04-16",
+          932.0
+        ],
+        [
+          "2023-24",
+          38,
+          "Leicester City FC",
+          "Southampton FC",
+          "2024-04-23",
+          836.0
+        ],
+        [
+          "2023-24",
+          38,
+          "Coventry City FC",
+          "Hull City AFC",
+          "2024-04-24",
+          859.8
+        ],
+        [
+          "2023-24",
+          44,
+          "Coventry City FC",
+          "Ipswich Town FC",
+          "2024-04-30",
+          164.0
+        ],
+        [
+          "2024-25",
+          16,
+          "Blackburn Rovers FC",
+          "Portsmouth FC",
+          "2025-01-15",
+          1219.8
+        ],
+        [
+          "2024-25",
+          17,
+          "Portsmouth FC",
+          "Millwall FC",
+          "2025-01-28",
+          1435.8
+        ],
+        [
+          "2024-25",
+          19,
+          "Cardiff City FC",
+          "Watford FC",
+          "2025-01-14",
+          859.8
+        ],
+        [
+          "2024-25",
+          19,
+          "Plymouth Argyle FC",
+          "Oxford United FC",
+          "2025-01-14",
+          859.8
+        ],
+        [
+          "2024-25",
+          31,
+          "Preston North End FC",
+          "Millwall FC",
+          "2025-02-18",
+          235.8
+        ],
+        [
+          "2024-25",
+          31,
+          "Luton Town FC",
+          "Plymouth Argyle FC",
+          "2025-02-19",
+          259.8
+        ],
+        [
+          "2024-25",
+          31,
+          "Cardiff City FC",
+          "Hull City AFC",
+          "2025-02-25",
+          403.8
+        ],
+        [
+          "2024-25",
+          31,
+          "Stoke City FC",
+          "Middlesbrough FC",
+          "2025-02-25",
+          403.8
+        ]
+      ],
+      "played": 2208,
+      "postponed_gt48h_proxy": 70,
+      "rates": {
+        "cancelled_rate": 0.0,
+        "postponed_gt48h_rate": 0.031703
+      },
+      "scheduled": 2208,
+      "seasons": {
+        "2021-22": {
+          "complete": true,
+          "expected": 552,
+          "parsed": 552,
+          "postponed_gt48h_proxy": 37
+        },
+        "2022-23": {
+          "complete": true,
+          "expected": 552,
+          "parsed": 552,
+          "postponed_gt48h_proxy": 15
+        },
+        "2023-24": {
+          "complete": true,
+          "expected": 552,
+          "parsed": 552,
+          "postponed_gt48h_proxy": 10
+        },
+        "2024-25": {
+          "complete": true,
+          "expected": 552,
+          "parsed": 552,
+          "postponed_gt48h_proxy": 8
+        }
+      },
+      "verdict": "REGISTERED"
+    },
+    "ita": {
+      "cancelled": 0,
+      "flagged": [
+        [
+          "2021-22",
+          19,
+          "Udinese Calcio",
+          "US Salernitana 1919",
+          "2022-04-20",
+          2802.8
+        ],
+        [
+          "2021-22",
+          20,
+          "ACF Fiorentina",
+          "Udinese Calcio",
+          "2022-04-27",
+          2586.0
+        ],
+        [
+          "2021-22",
+          20,
+          "Bologna FC 1909",
+          "FC Internazionale Milano",
+          "2022-04-27",
+          2588.3
+        ],
+        [
+          "2021-22",
+          20,
+          "Atalanta BC",
+          "Torino FC",
+          "2022-04-27",
+          2588.3
+        ],
+        [
+          "2021-22",
+          20,
+          "US Salernitana 1919",
+          "Venezia FC",
+          "2022-05-05",
+          2778.0
+        ],
+        [
+          "2023-24",
+          21,
+          "Bologna FC 1909",
+          "ACF Fiorentina",
+          "2024-02-14",
+          523.0
+        ],
+        [
+          "2023-24",
+          21,
+          "Torino FC",
+          "SS Lazio",
+          "2024-02-22",
+          716.8
+        ],
+        [
+          "2023-24",
+          21,
+          "US Sassuolo Calcio",
+          "SSC Napoli",
+          "2024-02-28",
+          858.0
+        ],
+        [
+          "2023-24",
+          21,
+          "FC Internazionale Milano",
+          "Atalanta BC",
+          "2024-02-28",
+          860.8
+        ],
+        [
+          "2023-24",
+          29,
+          "Atalanta BC",
+          "ACF Fiorentina",
+          "2024-06-02",
+          1818.0
+        ],
+        [
+          "2023-24",
+          32,
+          "Udinese Calcio",
+          "AS Roma",
+          "2024-04-25",
+          236.0
+        ],
+        [
+          "2024-25",
+          9,
+          "Bologna FC 1909",
+          "AC Milan",
+          "2025-02-27",
+          2924.8
+        ],
+        [
+          "2024-25",
+          14,
+          "ACF Fiorentina",
+          "FC Internazionale Milano",
+          "2025-02-06",
+          1580.8
+        ],
+        [
+          "2024-25",
+          19,
+          "Como 1907",
+          "AC Milan",
+          "2025-01-14",
+          162.5
+        ],
+        [
+          "2024-25",
+          19,
+          "Atalanta BC",
+          "Juventus FC",
+          "2025-01-14",
+          164.8
+        ],
+        [
+          "2024-25",
+          19,
+          "FC Internazionale Milano",
+          "Bologna FC 1909",
+          "2025-01-15",
+          188.8
+        ]
+      ],
+      "played": 1520,
+      "postponed_gt48h_proxy": 16,
+      "rates": {
+        "cancelled_rate": 0.0,
+        "postponed_gt48h_rate": 0.010526
+      },
+      "scheduled": 1520,
+      "seasons": {
+        "2021-22": {
+          "complete": true,
+          "expected": 380,
+          "parsed": 380,
+          "postponed_gt48h_proxy": 5
+        },
+        "2022-23": {
+          "complete": true,
+          "expected": 380,
+          "parsed": 380,
+          "postponed_gt48h_proxy": 0
+        },
+        "2023-24": {
+          "complete": true,
+          "expected": 380,
+          "parsed": 380,
+          "postponed_gt48h_proxy": 6
+        },
+        "2024-25": {
+          "complete": true,
+          "expected": 380,
+          "parsed": 380,
+          "postponed_gt48h_proxy": 5
+        }
+      },
+      "verdict": "REGISTERED"
+    }
+  },
+  "retrieved_at": "2026-09-03T18:46:52.125822+00:00",
+  "spec": "research/sports/2026-09-03_soccer-settlement-wedge-rates-batch2/spec.yaml",
+  "validation": {
+    "flagged": [
+      [
+        1,
+        "Burnley FC",
+        "Manchester United FC",
+        "2021-01-12T20:15:00",
+        2852.3
+      ],
+      [
+        1,
+        "Manchester City FC",
+        "Aston Villa FC",
+        "2021-01-20T18:00:00",
+        3042.0
+      ],
+      [
+        11,
+        "Aston Villa FC",
+        "Newcastle United FC",
+        "2021-01-23T20:00:00",
+        1100.0
+      ],
+      [
+        16,
+        "Tottenham Hotspur FC",
+        "Fulham FC",
+        "2021-01-13T20:15:00",
+        308.3
+      ],
+      [
+        16,
+        "Everton FC",
+        "Manchester City FC",
+        "2021-02-17T20:15:00",
+        1148.3
+      ],
+      [
+        17,
+        "Burnley FC",
+        "Fulham FC",
+        "2021-02-17T18:00:00",
+        1050.0
+      ],
+      [
+        18,
+        "West Ham United FC",
+        "West Bromwich Albion FC",
+        "2021-01-19T18:00:00",
+        90.0
+      ],
+      [
+        18,
+        "Leicester City FC",
+        "Chelsea FC",
+        "2021-01-19T20:15:00",
+        92.3
+      ],
+      [
+        18,
+        "Fulham FC",
+        "Manchester United FC",
+        "2021-01-20T20:15:00",
+        116.3
+      ],
+      [
+        18,
+        "Liverpool FC",
+        "Burnley FC",
+        "2021-01-21T20:00:00",
+        140.0
+      ],
+      [
+        18,
+        "Leeds United FC",
+        "Southampton FC",
+        "2021-02-23T18:00:00",
+        930.0
+      ],
+      [
+        18,
+        "Aston Villa FC",
+        "Tottenham Hotspur FC",
+        "2021-03-21T19:30:00",
+        1555.5
+      ],
+      [
+        19,
+        "Aston Villa FC",
+        "Everton FC",
+        "2021-05-13T18:00:00",
+        2730.0
+      ],
+      [
+        29,
+        "Fulham FC",
+        "Leeds United FC",
+        "2021-03-19T20:00:00",
+        332.0
+      ],
+      [
+        29,
+        "Brighton & Hove Albion FC",
+        "Newcastle United FC",
+        "2021-03-20T20:00:00",
+        356.0
+      ],
+      [
+        29,
+        "West Ham United FC",
+        "Arsenal FC",
+        "2021-03-21T15:00:00",
+        375.0
+      ],
+      [
+        29,
+        "Tottenham Hotspur FC",
+        "Southampton FC",
+        "2021-04-21T18:00:00",
+        1122.0
+      ],
+      [
+        32,
+        "Leicester City FC",
+        "West Bromwich Albion FC",
+        "2021-04-22T20:00:00",
+        68.0
+      ],
+      [
+        32,
+        "Southampton FC",
+        "Crystal Palace FC",
+        "2021-05-11T20:15:00",
+        524.3
+      ],
+      [
+        34,
+        "Manchester United FC",
+        "Liverpool FC",
+        "2021-05-13T20:15:00",
+        236.3
+      ]
+    ],
+    "man_utd_liverpool_r34_flagged": true,
+    "matches": 380
+  }
+}

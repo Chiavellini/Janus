@@ -391,8 +391,158 @@ _CFB_K_PM = (
     Verdict("settlement_timing", "SAME", "payouts agree; timing differs and is the risk ledger's job."),
 )
 
+# ── more soccer, recorded verbatim 2026-09-03 (batch 2: the census's next competitions) ──
+KALSHI_ELC_GAME_V1 = Template(
+    "kalshi_elc_game_v1", "kalshi", frozenset({"elc"}), "2026-09-03",
+    # KXEFLCHAMPIONSHIPGAME-26SEP09CHAQPR-QPR, rules_primary + "\n" + rules_secondary
+    "If QPR wins the Charlton vs QPR professional EFL Championship soccer game originally scheduled for "
+    "Sep 9, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the"
+    " market resolves to Yes.\nThe following market refers to the Charlton vs QPR professional EFL "
+    "Championship soccer game originally scheduled for Sep 9, 2026 after 90 minutes plus stoppage time "
+    "(does not include extra time or penalties). If the game ends in a tie, the market called \"Tie\" "
+    "resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the market will "
+    "resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, associated, "
+    "authorized, endorsed by, or in any way officially connected with the Governing League. All "
+    "trademarks, logos, and brand names are the property of their respective owners.",
+    ('QPR', 'Charlton'),
+    SettleRef(source_agency="ESPN / Fox Sports", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"))
+
+KALSHI_EL1_GAME_V1 = Template(
+    "kalshi_el1_game_v1", "kalshi", frozenset({"el1"}), "2026-09-03",
+    # KXEFLL1GAME-26SEP10STELUT-STE, rules_primary + "\n" + rules_secondary
+    "If Stevenage wins the Stevenage vs Luton professional EFL League One soccer game originally "
+    "scheduled for Sep 10, 2026 after 90 minutes plus stoppage time (does not include extra time or "
+    "penalties), then the market resolves to Yes.\nThe following market refers to the Stevenage vs Luton "
+    "professional EFL League One soccer game originally scheduled for Sep 10, 2026 after 90 minutes plus "
+    "stoppage time (does not include extra time or penalties). If the game ends in a tie, the market "
+    "called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the "
+    "market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, "
+    "associated, authorized, endorsed by, or in any way officially connected with the Governing League. "
+    "All trademarks, logos, and brand names are the property of their respective owners.",
+    ('Luton', 'Stevenage'),
+    SettleRef(source_agency="ESPN / Fox Sports", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"))
+
+KALSHI_ITA_GAME_V1 = Template(
+    "kalshi_ita_game_v1", "kalshi", frozenset({"ita"}), "2026-09-03",
+    # KXSERIEAGAME-26SEP14INTUDI-UDI, rules_primary + "\n" + rules_secondary
+    "If Udinese wins the Inter vs Udinese professional Serie A soccer game originally scheduled for Sep "
+    "14, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the "
+    "market resolves to Yes.\nThe following market refers to the Inter vs Udinese professional Serie A "
+    "soccer game originally scheduled for Sep 14, 2026 after 90 minutes plus stoppage time (does not "
+    "include extra time or penalties). If the game ends in a tie, the market called \"Tie\" resolves to "
+    "Yes. If the game is cancelled or rescheduled to over 48 hours away, the market will resolve to a "
+    "fair price in accordance with the rules.\nKalshi is not affiliated, associated, authorized, endorsed "
+    "by, or in any way officially connected with Lega Serie A. All trademarks, logos, and brand names are"
+    " the property of their respective owners.\n\nKalshi is not affiliated, associated, authorized, "
+    "endorsed by, or in any way officially connected with the Governing League. All trademarks, logos, "
+    "and brand names are the property of their respective owners.",
+    ('Udinese', 'Inter'),
+    SettleRef(source_agency="ESPN / Fox Sports", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"))
+
+KALSHI_FL1_GAME_V1 = Template(
+    "kalshi_fl1_game_v1", "kalshi", frozenset({"fl1"}), "2026-09-03",
+    # KXLIGUE1GAME-26SEP13STBPSG-STB, rules_primary + "\n" + rules_secondary
+    "If Stade Brest 29 wins the Stade Brest 29 vs PSG professional Ligue 1 soccer game originally "
+    "scheduled for Sep 13, 2026 after 90 minutes plus stoppage time (does not include extra time or "
+    "penalties), then the market resolves to Yes.\nThe following market refers to the Stade Brest 29 vs "
+    "PSG professional Ligue 1 soccer game originally scheduled for Sep 13, 2026 after 90 minutes plus "
+    "stoppage time (does not include extra time or penalties). If the game ends in a tie, the market "
+    "called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the "
+    "market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, "
+    "associated, authorized, endorsed by, or in any way officially connected with the Governing League. "
+    "All trademarks, logos, and brand names are the property of their respective owners.",
+    ('PSG', 'Stade Brest 29'),
+    SettleRef(source_agency="ESPN / Fox Sports", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"))
+
+KALSHI_ERE_GAME_V1 = Template(
+    "kalshi_ere_game_v1", "kalshi", frozenset({"ere"}), "2026-09-03",
+    # KXEREDIVISIEGAME-26SEP09TWETEL-TWE, rules_primary + "\n" + rules_secondary
+    "If Enschede wins the Enschede vs Telstar professional Eredivisie soccer game originally scheduled "
+    "for Sep 9, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then"
+    " the market resolves to Yes.\nThe following market refers to the Enschede vs Telstar professional "
+    "Eredivisie soccer game originally scheduled for Sep 9, 2026 after 90 minutes plus stoppage time "
+    "(does not include extra time or penalties). If the game ends in a tie, the market called \"Tie\" "
+    "resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the market will "
+    "resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, associated, "
+    "authorized, endorsed by, or in any way officially connected with the Governing League. All "
+    "trademarks, logos, and brand names are the property of their respective owners.",
+    ('Enschede', 'Telstar'),
+    SettleRef(source_agency="ESPN / Fox Sports", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"))
+
+KALSHI_POR_GAME_V1 = Template(
+    "kalshi_por_game_v1", "kalshi", frozenset({"por"}), "2026-09-03",
+    # KXLIGAPORTUGALGAME-26SEP10ESABRA-ESA, rules_primary + "\n" + rules_secondary
+    "If Estrela Amadora wins the Estrela Amadora vs Braga professional Liga Portugal soccer game "
+    "originally scheduled for Sep 10, 2026 after 90 minutes plus stoppage time (does not include extra "
+    "time or penalties), then the market resolves to Yes.\nThe following market refers to the Estrela "
+    "Amadora vs Braga professional Liga Portugal soccer game originally scheduled for Sep 10, 2026 after "
+    "90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie,"
+    " the market called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours "
+    "away, the market will resolve to a fair price in accordance with the rules.\n\nKalshi is not "
+    "affiliated, associated, authorized, endorsed by, or in any way officially connected with the "
+    "Governing League. All trademarks, logos, and brand names are the property of their respective "
+    "owners.",
+    ('Braga', 'Estrela Amadora'),
+    SettleRef(source_agency="ESPN / Fox Sports", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"))
+
+KALSHI_SCOP_GAME_V1 = Template(
+    "kalshi_scop_game_v1", "kalshi", frozenset({"scop"}), "2026-09-03",
+    # KXSCOTTISHPREMGAME-26SEP09JOHCEL-JOH, rules_primary + "\n" + rules_secondary
+    "If St. Johnstone wins the St. Johnstone vs Celtic professional Scottish Premiership soccer game "
+    "originally scheduled for Sep 9, 2026 after 90 minutes plus stoppage time (does not include extra "
+    "time or penalties), then the market resolves to Yes.\nThe following market refers to the St. "
+    "Johnstone vs Celtic professional Scottish Premiership soccer game originally scheduled for Sep 9, "
+    "2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game "
+    "ends in a tie, the market called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to "
+    "over 48 hours away, the market will resolve to a fair price in accordance with the rules.\n\nKalshi is"
+    " not affiliated, associated, authorized, endorsed by, or in any way officially connected with the "
+    "Governing League. All trademarks, logos, and brand names are the property of their respective "
+    "owners.",
+    ('Celtic', 'St. Johnstone'),
+    SettleRef(source_agency="ESPN / Fox Sports", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"))
+
+KALSHI_BEL1_GAME_V1 = Template(
+    "kalshi_bel1_game_v1", "kalshi", frozenset({"bel1"}), "2026-09-03",
+    # KXBELGIANPLGAME-26SEP06BEVOHL-OHL, rules_primary + "\n" + rules_secondary
+    "If Leuven wins the Beveren vs Leuven professional Belgian Pro League soccer game originally "
+    "scheduled for Sep 6, 2026 after 90 minutes plus stoppage time (does not include extra time or "
+    "penalties), then the market resolves to Yes.\nThe following market refers to the Beveren vs Leuven "
+    "professional Belgian Pro League soccer game originally scheduled for Sep 6, 2026 after 90 minutes "
+    "plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market"
+    " called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the "
+    "market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, "
+    "associated, authorized, endorsed by, or in any way officially connected with the Governing League. "
+    "All trademarks, logos, and brand names are the property of their respective owners.",
+    ('Leuven', 'Beveren'),
+    SettleRef(source_agency="ESPN / Fox Sports", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=False, dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"))
+
 _SOCCER_KALSHI = {"epl": KALSHI_EPL_GAME_V1, "lal": KALSHI_LAL_GAME_V1, "bun": KALSHI_BUN_GAME_V1,
-                  "mls": KALSHI_MLS_GAME_V1, "ucl": KALSHI_UCL_GAME_V1}
+                  "mls": KALSHI_MLS_GAME_V1, "ucl": KALSHI_UCL_GAME_V1,
+                  "elc": KALSHI_ELC_GAME_V1, "el1": KALSHI_EL1_GAME_V1, "ita": KALSHI_ITA_GAME_V1, "fl1": KALSHI_FL1_GAME_V1, "ere": KALSHI_ERE_GAME_V1, "por": KALSHI_POR_GAME_V1, "scop": KALSHI_SCOP_GAME_V1, "bel1": KALSHI_BEL1_GAME_V1}
 
 TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1,
                                                               KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1,
