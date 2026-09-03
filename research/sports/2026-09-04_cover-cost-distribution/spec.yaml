@@ -1,0 +1,57 @@
+experiment_id: "janus-sports-cover-cost-distribution-2026-09-04"
+date_registered: "2026-09-04"
+track: "sports/cover-cost"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L36"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE FIRST RUN. Re-runnable: each run appends its own results file and a dated
+# section to verdict.md, never edits an earlier one. The definitions below are the row.
+purpose: >
+  The question NEXT.md calls the one that matters: what is the distribution of cover cost the
+  streaming lane has recorded, per competition and quantity, with every blocked reason kept
+  distinct, so that GATE_TO_LIVE step 5 has a pre-registered distribution to gate on and step 7
+  has a pre-computed n for the forward paper row. Registered before any of it is read. The store
+  has held these rows since the 2026-09-02 seal; nothing has summarised them.
+
+source:
+  rows: "stream_evaluations in /Volumes/Kilos/janus/tuples/tuples.sqlite (nodes/store_tuples): one row per material change per (game_id, quantity) -- a status change, a 0.1c move in cost, or a 15 s heartbeat."
+  games: "events.start_utc and the first event_transitions row whose phase starts with 'post' (nodes/discovery)."
+  sockets: "socket_health, one row per report tick per venue (grids/live_stream)."
+  code: "nodes/cover_cost/distribution.py (synthetic-row tests in nodes/cover_cost/tests); this directory's measure.py"
+
+window:
+  since: "2026-09-02T00:00:00Z, the seal (GATE 2026-09-02 amendment, step 3): the first day the lane ran with fees read from the venues' payloads and settlement equivalence gating covers."
+  until: "the run's own timestamp"
+  excluded: "rows whose status is not in kernel.schema.OpportunityStatus -- the retired REST lane's vocabulary (ACTIONABLE, raw fault strings) shares the table until 2026-09-03T05:16Z. Counted once per run, never folded in."
+
+definitions:
+  dwell: "seconds from a row to the next row of the same (game_id, quantity), capped at 60 s; the last row of a series holds 60 s. Every share and quantile is dwell-weighted; the raw row count is reported beside it."
+  cell: "(league, quantity in {5, 25, 100}, phase, flapping | clean)"
+  phase: "pre = before events.start_utc; post = after the first recorded post transition; end = the 600 s before the end, where the end is that transition or, when the slate reaped the game first, the game's last evaluation row; in = otherwise."
+  flapping: "a row inside an interval between two consecutive socket_health rows of a venue where the later row is disconnected or its error count rose, OR inside the declared windows 2026-09-03T16:54Z-18:50Z and 2026-09-03T22:50Z-23:26Z (the IllegalTransition reconnect loop, recorded in CHANGELOG.md 2026-09-03 (night) before the reconnect counter existed). Kept and reported apart, never dropped."
+  status_share: "dwell share per OpportunityStatus in the cell; statuses are never collapsed."
+  blocked_reason: "for BLOCKED_* rows, blocked_by with 'venue:outcome:FAULT' reduced to 'venue:FAULT' and any other reason kept verbatim, so an unrecognised fault cannot hide behind the status nodes/opportunity/status.py mapped it to."
+  priced_share: "dwell share of rows with a non-null cost"
+  near_actionable_share: "dwell share of rows with cents_from_actionable <= 1.0"
+  profitable_share: "dwell share of PROFITABLE_UNEXECUTED rows"
+  cost_quantiles: "dwell-weighted p50 and p90 of cost over priced rows, and the minimum"
+  profitable_audit: "every PROFITABLE_UNEXECUTED row with its phase, its flapping flag, and whether any row of the same game within 60 s carried a stale-family fault (STALE, HASH_MISMATCH, HEARTBEAT_LOST, UNVERIFIED_TOO_LONG, NOT_SYNCED, SEQ_GAP, CROSSED_BOOK) on either venue"
+  n_for_paper: "over in-play, clean PROFITABLE_UNEXECUTED rows: n = max(30, ceil((1.96 * sigma(return_locked) / 0.005)^2)), the count at which a 95% interval on the mean locked return is +-0.5%. With fewer than 5 such rows sigma is undefined and n = 30 by declaration, stated in the verdict."
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no look. No outcome is read."
+  - "A cell with fewer than 60 s of dwell is reported but labelled THIN and orders nothing."
+  - "The profitable audit is reported in full; a profitable row that is flapping, in the end phase, or has a stale-family neighbour within 60 s is labelled SUSPECT. This labels; it does not delete."
+  - "n_for_paper is registered on the forward paper row (F3) as written here, whichever basis produced it."
+
+outputs:
+  results: "research/sports/2026-09-04_cover-cost-distribution/results_<run>.json"
+  verdict: "research/sports/2026-09-04_cover-cost-distribution/verdict.md (appended per run)"
+  registration: "n_for_paper, into the F3 row; the per-cell table, into GATE step 5's record"
+
+what_this_does_not_establish:
+  - "That any cover was executable: cost is the priced cover on the replicas the lane held, and the frontier was not sized before 2026-09-03 (capacity failed: TypeError, CHANGELOG 2026-09-03 night)."
+  - "That any edge exists. A profitable row is a print, not a fill; today's prints were closing books under a flapping socket."
+  - "The slippage or settlement reserve beyond what the cost model already carries (L27, L26/L30/L32/L33/L35)."

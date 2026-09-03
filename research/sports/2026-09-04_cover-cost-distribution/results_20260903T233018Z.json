@@ -1,0 +1,1403 @@
+{
+  "cells": {
+    "cfb|100|end|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.168,
+        "kalshi:NO_ASKS": 0.0109,
+        "kalshi:STALE": 0.0971,
+        "polymarket:HASH_MISMATCH": 0.0724,
+        "polymarket:HEARTBEAT_LOST": 0.0019,
+        "polymarket:STALE": 0.0811,
+        "supervisor:CLOCK_UNHEALTHY": 0.5328
+      },
+      "cost_min": 1.0034,
+      "cost_p50": 1.0148,
+      "cost_p90": 1.071,
+      "dwell_s": 1671.7,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2037,
+      "profitable_share": 0.0,
+      "rows": 902,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0109,
+        "BLOCKED_FEES": 0.009,
+        "BLOCKED_MATCH": 0.1591,
+        "BLOCKED_STALE": 0.7854,
+        "NO_EDGE": 0.0357
+      }
+    },
+    "cfb|100|end|flap": {
+      "blocked_reason_share": {
+        "supervisor:CLOCK_UNHEALTHY": 1.0
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 2455.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 85,
+      "status_share": {
+        "BLOCKED_STALE": 1.0
+      }
+    },
+    "cfb|100|in|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0849,
+        "kalshi:HEARTBEAT_LOST": 0.7154,
+        "kalshi:NO_ASKS": 0.0094,
+        "kalshi:STALE": 0.0433,
+        "polymarket:HASH_MISMATCH": 0.0012,
+        "polymarket:HEARTBEAT_LOST": 0.0003,
+        "polymarket:STALE": 0.0238,
+        "supervisor:CLOCK_UNHEALTHY": 0.0356
+      },
+      "cost_min": 1.0028,
+      "cost_p50": 1.0239,
+      "cost_p90": 1.0373,
+      "dwell_s": 5829.1,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.1708,
+      "profitable_share": 0.0,
+      "rows": 1716,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0094,
+        "BLOCKED_FEES": 0.0041,
+        "BLOCKED_MATCH": 0.0808,
+        "BLOCKED_STALE": 0.8198,
+        "NO_EDGE": 0.0859
+      }
+    },
+    "cfb|100|in|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0169,
+        "kalshi:NOT_SYNCED": 0.0035,
+        "kalshi:NO_ASKS": 0.0013,
+        "kalshi:STALE": 0.0054,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:NOT_SYNCED": 0.0001,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0029,
+        "supervisor:CLOCK_UNHEALTHY": 0.9666
+      },
+      "cost_min": 1.0085,
+      "cost_p50": 1.0425,
+      "cost_p90": 1.0915,
+      "dwell_s": 8660.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0203,
+      "profitable_share": 0.0,
+      "rows": 3291,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0013,
+        "BLOCKED_MATCH": 0.0169,
+        "BLOCKED_STALE": 0.9784,
+        "NO_EDGE": 0.0034
+      }
+    },
+    "cfb|100|pre|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0461,
+        "kalshi:HEARTBEAT_LOST": 0.152,
+        "kalshi:NOT_SYNCED": 0.0267,
+        "kalshi:NO_ASKS": 0.0024,
+        "kalshi:STALE": 0.2662,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.1007,
+        "polymarket:STALE": 0.1497,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1072,
+        "supervisor:CLOCK_UNHEALTHY": 0.1291
+      },
+      "cost_min": 0.9891,
+      "cost_p50": 1.0151,
+      "cost_p90": 1.037,
+      "dwell_s": 116303.4,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.066,
+      "profitable_share": 0.0,
+      "rows": 6093,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0024,
+        "BLOCKED_FEES": 0.001,
+        "BLOCKED_MATCH": 0.0451,
+        "BLOCKED_STALE": 0.9316,
+        "NO_EDGE": 0.0199,
+        "PROFITABLE_UNEXECUTED": 0.0
+      }
+    },
+    "cfb|100|pre|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0086,
+        "kalshi:HEARTBEAT_LOST": 0.0145,
+        "kalshi:NOT_SYNCED": 0.2212,
+        "kalshi:NO_ASKS": 0.0017,
+        "kalshi:STALE": 0.0375,
+        "polymarket:HEARTBEAT_LOST": 0.0175,
+        "polymarket:NOT_SYNCED": 0.0037,
+        "polymarket:STALE": 0.0186,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0161,
+        "supervisor:CLOCK_UNHEALTHY": 0.655
+      },
+      "cost_min": 1.0055,
+      "cost_p50": 1.0323,
+      "cost_p90": 1.0425,
+      "dwell_s": 19767.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0142,
+      "profitable_share": 0.0,
+      "rows": 773,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0017,
+        "BLOCKED_FEES": 0.0013,
+        "BLOCKED_MATCH": 0.0073,
+        "BLOCKED_STALE": 0.9841,
+        "NO_EDGE": 0.0057
+      }
+    },
+    "cfb|25|end|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.1167,
+        "kalshi:NO_ASKS": 0.0109,
+        "kalshi:STALE": 0.0971,
+        "polymarket:HASH_MISMATCH": 0.0724,
+        "polymarket:HEARTBEAT_LOST": 0.0019,
+        "polymarket:STALE": 0.0811,
+        "supervisor:CLOCK_UNHEALTHY": 0.5328
+      },
+      "cost_min": 1.0007,
+      "cost_p50": 1.0152,
+      "cost_p90": 1.0652,
+      "dwell_s": 1671.7,
+      "near_actionable_share": 0.0003,
+      "priced_share": 0.2037,
+      "profitable_share": 0.0,
+      "rows": 651,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0109,
+        "BLOCKED_FEES": 0.009,
+        "BLOCKED_MATCH": 0.1078,
+        "BLOCKED_STALE": 0.7854,
+        "NO_EDGE": 0.087
+      }
+    },
+    "cfb|25|end|flap": {
+      "blocked_reason_share": {
+        "supervisor:CLOCK_UNHEALTHY": 1.0
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 2455.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 85,
+      "status_share": {
+        "BLOCKED_STALE": 1.0
+      }
+    },
+    "cfb|25|in|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.1194,
+        "kalshi:HEARTBEAT_LOST": 0.7158,
+        "kalshi:NO_ASKS": 0.0094,
+        "kalshi:STALE": 0.0434,
+        "polymarket:HASH_MISMATCH": 0.0012,
+        "polymarket:HEARTBEAT_LOST": 0.0003,
+        "polymarket:STALE": 0.0239,
+        "supervisor:CLOCK_UNHEALTHY": 0.0357
+      },
+      "cost_min": 1.0018,
+      "cost_p50": 1.0231,
+      "cost_p90": 1.0376,
+      "dwell_s": 5825.8,
+      "near_actionable_share": 0.0159,
+      "priced_share": 0.1703,
+      "profitable_share": 0.0,
+      "rows": 1195,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0094,
+        "BLOCKED_FEES": 0.0345,
+        "BLOCKED_MATCH": 0.0849,
+        "BLOCKED_STALE": 0.8202,
+        "NO_EDGE": 0.0509
+      }
+    },
+    "cfb|25|in|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0189,
+        "kalshi:NOT_SYNCED": 0.0035,
+        "kalshi:NO_ASKS": 0.0013,
+        "kalshi:STALE": 0.0054,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:NOT_SYNCED": 0.0001,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0029,
+        "supervisor:CLOCK_UNHEALTHY": 0.9662
+      },
+      "cost_min": 1.0018,
+      "cost_p50": 1.0384,
+      "cost_p90": 1.0704,
+      "dwell_s": 8663.3,
+      "near_actionable_share": 0.0011,
+      "priced_share": 0.0207,
+      "profitable_share": 0.0,
+      "rows": 2009,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0013,
+        "BLOCKED_FEES": 0.0031,
+        "BLOCKED_MATCH": 0.0158,
+        "BLOCKED_STALE": 0.978,
+        "NO_EDGE": 0.0018
+      }
+    },
+    "cfb|25|pre|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0438,
+        "kalshi:HEARTBEAT_LOST": 0.152,
+        "kalshi:NOT_SYNCED": 0.0267,
+        "kalshi:NO_ASKS": 0.0024,
+        "kalshi:STALE": 0.2662,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.1007,
+        "polymarket:STALE": 0.1497,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1072,
+        "supervisor:CLOCK_UNHEALTHY": 0.1291
+      },
+      "cost_min": 0.9893,
+      "cost_p50": 1.0144,
+      "cost_p90": 1.0372,
+      "dwell_s": 116303.4,
+      "near_actionable_share": 0.0002,
+      "priced_share": 0.066,
+      "profitable_share": 0.0,
+      "rows": 6101,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0024,
+        "BLOCKED_FEES": 0.0022,
+        "BLOCKED_MATCH": 0.0416,
+        "BLOCKED_STALE": 0.9316,
+        "DISCOVERED": 0.0002,
+        "NO_EDGE": 0.022
+      }
+    },
+    "cfb|25|pre|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0093,
+        "kalshi:HEARTBEAT_LOST": 0.0145,
+        "kalshi:NOT_SYNCED": 0.2212,
+        "kalshi:NO_ASKS": 0.0017,
+        "kalshi:STALE": 0.0375,
+        "polymarket:HEARTBEAT_LOST": 0.0175,
+        "polymarket:NOT_SYNCED": 0.0037,
+        "polymarket:STALE": 0.0186,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0161,
+        "supervisor:CLOCK_UNHEALTHY": 0.655
+      },
+      "cost_min": 1.0028,
+      "cost_p50": 1.0285,
+      "cost_p90": 1.0387,
+      "dwell_s": 19767.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0142,
+      "profitable_share": 0.0,
+      "rows": 773,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0017,
+        "BLOCKED_FEES": 0.0023,
+        "BLOCKED_MATCH": 0.007,
+        "BLOCKED_STALE": 0.9841,
+        "NO_EDGE": 0.005
+      }
+    },
+    "cfb|5|end|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.1176,
+        "kalshi:NO_ASKS": 0.0109,
+        "kalshi:STALE": 0.0971,
+        "polymarket:HASH_MISMATCH": 0.0724,
+        "polymarket:HEARTBEAT_LOST": 0.0019,
+        "polymarket:STALE": 0.0811,
+        "supervisor:CLOCK_UNHEALTHY": 0.5328
+      },
+      "cost_min": 1.0011,
+      "cost_p50": 1.018,
+      "cost_p90": 1.056,
+      "dwell_s": 1671.7,
+      "near_actionable_share": 0.0004,
+      "priced_share": 0.2037,
+      "profitable_share": 0.0,
+      "rows": 486,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0109,
+        "BLOCKED_FEES": 0.0091,
+        "BLOCKED_MATCH": 0.1086,
+        "BLOCKED_STALE": 0.7854,
+        "NO_EDGE": 0.0861
+      }
+    },
+    "cfb|5|end|flap": {
+      "blocked_reason_share": {
+        "supervisor:CLOCK_UNHEALTHY": 1.0
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 2829.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 101,
+      "status_share": {
+        "BLOCKED_STALE": 1.0
+      }
+    },
+    "cfb|5|in|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.125,
+        "kalshi:HEARTBEAT_LOST": 0.7158,
+        "kalshi:NO_ASKS": 0.0094,
+        "kalshi:STALE": 0.0434,
+        "polymarket:HASH_MISMATCH": 0.0012,
+        "polymarket:HEARTBEAT_LOST": 0.0003,
+        "polymarket:STALE": 0.0239,
+        "supervisor:CLOCK_UNHEALTHY": 0.0357
+      },
+      "cost_min": 0.9977,
+      "cost_p50": 1.0228,
+      "cost_p90": 1.034,
+      "dwell_s": 5826.3,
+      "near_actionable_share": 0.0302,
+      "priced_share": 0.1704,
+      "profitable_share": 0.0,
+      "rows": 1047,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0094,
+        "BLOCKED_FEES": 0.0346,
+        "BLOCKED_MATCH": 0.0904,
+        "BLOCKED_STALE": 0.8202,
+        "DISCOVERED": 0.0,
+        "NO_EDGE": 0.0454
+      }
+    },
+    "cfb|5|in|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0114,
+        "kalshi:NOT_SYNCED": 0.0029,
+        "kalshi:NO_ASKS": 0.0011,
+        "kalshi:STALE": 0.0045,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:NOT_SYNCED": 0.0023,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0024,
+        "supervisor:CLOCK_UNHEALTHY": 0.9741
+      },
+      "cost_min": 1.0022,
+      "cost_p50": 1.0418,
+      "cost_p90": 1.054,
+      "dwell_s": 10294.3,
+      "near_actionable_share": 0.0024,
+      "priced_share": 0.0127,
+      "profitable_share": 0.0,
+      "rows": 921,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0011,
+        "BLOCKED_FEES": 0.0046,
+        "BLOCKED_MATCH": 0.0068,
+        "BLOCKED_STALE": 0.9863,
+        "NO_EDGE": 0.0013
+      }
+    },
+    "cfb|5|pre|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0424,
+        "kalshi:HEARTBEAT_LOST": 0.152,
+        "kalshi:NOT_SYNCED": 0.0267,
+        "kalshi:NO_ASKS": 0.0024,
+        "kalshi:STALE": 0.2662,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.1007,
+        "polymarket:STALE": 0.1497,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1072,
+        "supervisor:CLOCK_UNHEALTHY": 0.1291
+      },
+      "cost_min": 0.9893,
+      "cost_p50": 1.0133,
+      "cost_p90": 1.0377,
+      "dwell_s": 116303.4,
+      "near_actionable_share": 0.0002,
+      "priced_share": 0.066,
+      "profitable_share": 0.0,
+      "rows": 6026,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0024,
+        "BLOCKED_FEES": 0.0068,
+        "BLOCKED_MATCH": 0.0356,
+        "BLOCKED_STALE": 0.9316,
+        "DISCOVERED": 0.0002,
+        "NO_EDGE": 0.0235
+      }
+    },
+    "cfb|5|pre|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.008,
+        "kalshi:HEARTBEAT_LOST": 0.0145,
+        "kalshi:NOT_SYNCED": 0.2212,
+        "kalshi:NO_ASKS": 0.0017,
+        "kalshi:STALE": 0.0375,
+        "polymarket:HEARTBEAT_LOST": 0.0175,
+        "polymarket:NOT_SYNCED": 0.0037,
+        "polymarket:STALE": 0.0186,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0161,
+        "supervisor:CLOCK_UNHEALTHY": 0.655
+      },
+      "cost_min": 1.0032,
+      "cost_p50": 1.0301,
+      "cost_p90": 1.0403,
+      "dwell_s": 19767.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0142,
+      "profitable_share": 0.0,
+      "rows": 773,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0017,
+        "BLOCKED_FEES": 0.0042,
+        "BLOCKED_MATCH": 0.0038,
+        "BLOCKED_STALE": 0.9841,
+        "NO_EDGE": 0.0062
+      }
+    },
+    "lal|100|end|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.6395,
+        "polymarket:HASH_MISMATCH": 0.0149
+      },
+      "cost_min": 1.0076,
+      "cost_p50": 1.0201,
+      "cost_p90": 1.0332,
+      "dwell_s": 108.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.9851,
+      "profitable_share": 0.0,
+      "rows": 144,
+      "status_share": {
+        "BLOCKED_FEES": 0.0022,
+        "BLOCKED_MATCH": 0.6373,
+        "BLOCKED_STALE": 0.0149,
+        "NO_EDGE": 0.3456
+      }
+    },
+    "lal|100|in|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0535,
+        "kalshi:HEARTBEAT_LOST": 0.0039,
+        "kalshi:NOT_SYNCED": 0.0007,
+        "kalshi:STALE": 0.0061,
+        "polymarket:HASH_MISMATCH": 0.0221,
+        "polymarket:NOT_SYNCED": 0.0005,
+        "polymarket:STALE": 0.471,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0312,
+        "supervisor:CLOCK_UNHEALTHY": 0.2464
+      },
+      "cost_min": 1.0111,
+      "cost_p50": 1.0546,
+      "cost_p90": 1.0732,
+      "dwell_s": 4207.7,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2181,
+      "profitable_share": 0.0,
+      "rows": 1750,
+      "status_share": {
+        "BLOCKED_FEES": 0.0021,
+        "BLOCKED_MATCH": 0.0514,
+        "BLOCKED_STALE": 0.7819,
+        "NO_EDGE": 0.1645
+      }
+    },
+    "lal|100|pre|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0039,
+        "kalshi:NOT_SYNCED": 0.5389,
+        "kalshi:STALE": 0.1253,
+        "polymarket:HEARTBEAT_LOST": 0.1769,
+        "polymarket:NOT_SYNCED": 0.0509,
+        "polymarket:STALE": 0.0942
+      },
+      "cost_min": 1.0443,
+      "cost_p50": 1.0443,
+      "cost_p90": 1.0543,
+      "dwell_s": 1338.3,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0138,
+      "profitable_share": 0.0,
+      "rows": 77,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0039,
+        "BLOCKED_STALE": 0.9862,
+        "NO_EDGE": 0.0099
+      }
+    },
+    "lal|25|end|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.6383,
+        "polymarket:HASH_MISMATCH": 0.0149
+      },
+      "cost_min": 1.0028,
+      "cost_p50": 1.0208,
+      "cost_p90": 1.0336,
+      "dwell_s": 108.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.9851,
+      "profitable_share": 0.0,
+      "rows": 143,
+      "status_share": {
+        "BLOCKED_FEES": 0.0028,
+        "BLOCKED_MATCH": 0.6356,
+        "BLOCKED_STALE": 0.0149,
+        "NO_EDGE": 0.3467
+      }
+    },
+    "lal|25|in|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.1103,
+        "kalshi:HEARTBEAT_LOST": 0.0039,
+        "kalshi:NOT_SYNCED": 0.0007,
+        "kalshi:STALE": 0.0061,
+        "polymarket:HASH_MISMATCH": 0.0221,
+        "polymarket:NOT_SYNCED": 0.0005,
+        "polymarket:STALE": 0.471,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0312,
+        "supervisor:CLOCK_UNHEALTHY": 0.2464
+      },
+      "cost_min": 1.0113,
+      "cost_p50": 1.0547,
+      "cost_p90": 1.0727,
+      "dwell_s": 4207.7,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2181,
+      "profitable_share": 0.0,
+      "rows": 1252,
+      "status_share": {
+        "BLOCKED_FEES": 0.0024,
+        "BLOCKED_MATCH": 0.1079,
+        "BLOCKED_STALE": 0.7819,
+        "NO_EDGE": 0.1077
+      }
+    },
+    "lal|25|pre|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0039,
+        "kalshi:NOT_SYNCED": 0.5389,
+        "kalshi:STALE": 0.1253,
+        "polymarket:HEARTBEAT_LOST": 0.1769,
+        "polymarket:NOT_SYNCED": 0.0509,
+        "polymarket:STALE": 0.0942
+      },
+      "cost_min": 1.0443,
+      "cost_p50": 1.0443,
+      "cost_p90": 1.0543,
+      "dwell_s": 1338.3,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0138,
+      "profitable_share": 0.0,
+      "rows": 77,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0039,
+        "BLOCKED_STALE": 0.9862,
+        "NO_EDGE": 0.0099
+      }
+    },
+    "lal|5|end|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0314,
+        "kalshi:NOT_SYNCED": 0.7825,
+        "polymarket:HASH_MISMATCH": 0.0725
+      },
+      "cost_min": 0.9956,
+      "cost_p50": 1.0331,
+      "cost_p90": 1.0356,
+      "dwell_s": 337.5,
+      "near_actionable_share": 0.0001,
+      "priced_share": 0.1451,
+      "profitable_share": 0.0,
+      "rows": 118,
+      "status_share": {
+        "BLOCKED_FEES": 0.0008,
+        "BLOCKED_MATCH": 0.0305,
+        "BLOCKED_STALE": 0.8549,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.1136
+      }
+    },
+    "lal|5|end|flap": {
+      "blocked_reason_share": {
+        "kalshi:HEARTBEAT_LOST": 0.0727,
+        "kalshi:NOT_SYNCED": 0.9273
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 320.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 15,
+      "status_share": {
+        "BLOCKED_STALE": 1.0
+      }
+    },
+    "lal|5|in|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.1135,
+        "kalshi:HEARTBEAT_LOST": 0.0039,
+        "kalshi:NOT_SYNCED": 0.0007,
+        "kalshi:STALE": 0.0061,
+        "polymarket:HASH_MISMATCH": 0.0221,
+        "polymarket:NOT_SYNCED": 0.0005,
+        "polymarket:STALE": 0.471,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0312,
+        "supervisor:CLOCK_UNHEALTHY": 0.2464
+      },
+      "cost_min": 1.0067,
+      "cost_p50": 1.0547,
+      "cost_p90": 1.0682,
+      "dwell_s": 4207.7,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2181,
+      "profitable_share": 0.0,
+      "rows": 924,
+      "status_share": {
+        "BLOCKED_FEES": 0.0074,
+        "BLOCKED_MATCH": 0.106,
+        "BLOCKED_STALE": 0.7819,
+        "NO_EDGE": 0.1046
+      }
+    },
+    "lal|5|pre|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0039,
+        "kalshi:NOT_SYNCED": 0.5389,
+        "kalshi:STALE": 0.1253,
+        "polymarket:HEARTBEAT_LOST": 0.1769,
+        "polymarket:NOT_SYNCED": 0.0509,
+        "polymarket:STALE": 0.0942
+      },
+      "cost_min": 1.0451,
+      "cost_p50": 1.0451,
+      "cost_p90": 1.0543,
+      "dwell_s": 1338.3,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0138,
+      "profitable_share": 0.0,
+      "rows": 77,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0039,
+        "BLOCKED_STALE": 0.9862,
+        "NO_EDGE": 0.0099
+      }
+    },
+    "mlb|100|end|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0211,
+        "kalshi:NO_ASKS": 0.0037,
+        "kalshi:STALE": 0.0242,
+        "polymarket:HASH_MISMATCH": 0.0001,
+        "polymarket:HEARTBEAT_LOST": 0.0001,
+        "polymarket:STALE": 0.0088,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0268,
+        "supervisor:CLOCK_UNHEALTHY": 0.13
+      },
+      "cost_min": 0.9921,
+      "cost_p50": 1.0293,
+      "cost_p90": 1.0346,
+      "dwell_s": 7831.4,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.8063,
+      "profitable_share": 0.0,
+      "rows": 4209,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0037,
+        "BLOCKED_FEES": 0.0027,
+        "BLOCKED_MATCH": 0.0184,
+        "BLOCKED_STALE": 0.19,
+        "NO_EDGE": 0.7851
+      }
+    },
+    "mlb|100|end|flap": {
+      "blocked_reason_share": {
+        "supervisor:CLOCK_UNHEALTHY": 1.0
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 714.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 28,
+      "status_share": {
+        "BLOCKED_STALE": 1.0
+      }
+    },
+    "mlb|100|in|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0973,
+        "kalshi:HEARTBEAT_LOST": 0.0019,
+        "kalshi:STALE": 0.0018,
+        "polymarket:HASH_MISMATCH": 0.0058,
+        "polymarket:HEARTBEAT_LOST": 0.0013,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:NO_ASKS": 0.0071,
+        "polymarket:STALE": 0.1465,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0843,
+        "supervisor:CLOCK_UNHEALTHY": 0.0378
+      },
+      "cost_min": 0.9903,
+      "cost_p50": 1.0293,
+      "cost_p90": 1.035,
+      "dwell_s": 16795.4,
+      "near_actionable_share": 0.0087,
+      "priced_share": 0.7135,
+      "profitable_share": 0.0,
+      "rows": 8059,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0071,
+        "BLOCKED_FEES": 0.0009,
+        "BLOCKED_MATCH": 0.0964,
+        "BLOCKED_STALE": 0.2794,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.6161
+      }
+    },
+    "mlb|100|in|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0185,
+        "kalshi:HEARTBEAT_LOST": 0.0017,
+        "kalshi:NOT_SYNCED": 0.3235,
+        "kalshi:STALE": 0.0116,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.1176,
+        "polymarket:NO_ASKS": 0.0229,
+        "polymarket:STALE": 0.239,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1947,
+        "supervisor:CLOCK_UNHEALTHY": 0.0674
+      },
+      "cost_min": 0.8482,
+      "cost_p50": 1.023,
+      "cost_p90": 1.0234,
+      "dwell_s": 9734.8,
+      "near_actionable_share": 0.0032,
+      "priced_share": 0.0217,
+      "profitable_share": 0.0027,
+      "rows": 653,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0229,
+        "BLOCKED_MATCH": 0.0185,
+        "BLOCKED_STALE": 0.9554,
+        "DISCOVERED": 0.0005,
+        "PROFITABLE_UNEXECUTED": 0.0027
+      }
+    },
+    "mlb|100|pre|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.1956,
+        "kalshi:HEARTBEAT_LOST": 0.2871,
+        "kalshi:NOT_SYNCED": 0.0212,
+        "kalshi:STALE": 0.1497,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.0132,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:STALE": 0.1653,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0387,
+        "supervisor:CLOCK_UNHEALTHY": 0.1172
+      },
+      "cost_min": 1.0142,
+      "cost_p50": 1.0268,
+      "cost_p90": 1.0276,
+      "dwell_s": 69350.2,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2076,
+      "profitable_share": 0.0,
+      "rows": 6398,
+      "status_share": {
+        "BLOCKED_FEES": 0.0213,
+        "BLOCKED_MATCH": 0.1743,
+        "BLOCKED_STALE": 0.7924,
+        "NO_EDGE": 0.012
+      }
+    },
+    "mlb|100|pre|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0144,
+        "kalshi:HEARTBEAT_LOST": 0.0065,
+        "kalshi:NOT_SYNCED": 0.3536,
+        "kalshi:STALE": 0.038,
+        "polymarket:HASH_MISMATCH": 0.0033,
+        "polymarket:HEARTBEAT_LOST": 0.0153,
+        "polymarket:NOT_SYNCED": 0.0011,
+        "polymarket:STALE": 0.0368,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0139,
+        "supervisor:CLOCK_UNHEALTHY": 0.5159
+      },
+      "cost_min": 1.0162,
+      "cost_p50": 1.0268,
+      "cost_p90": 1.0276,
+      "dwell_s": 21478.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0156,
+      "profitable_share": 0.0,
+      "rows": 995,
+      "status_share": {
+        "BLOCKED_FEES": 0.0019,
+        "BLOCKED_MATCH": 0.0125,
+        "BLOCKED_STALE": 0.9844,
+        "NO_EDGE": 0.0012
+      }
+    },
+    "mlb|25|end|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0215,
+        "kalshi:NO_ASKS": 0.0037,
+        "kalshi:STALE": 0.0242,
+        "polymarket:HASH_MISMATCH": 0.0001,
+        "polymarket:HEARTBEAT_LOST": 0.0001,
+        "polymarket:STALE": 0.0088,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0269,
+        "supervisor:CLOCK_UNHEALTHY": 0.13
+      },
+      "cost_min": 0.8886,
+      "cost_p50": 1.0294,
+      "cost_p90": 1.0343,
+      "dwell_s": 7828.8,
+      "near_actionable_share": 0.0006,
+      "priced_share": 0.8062,
+      "profitable_share": 0.0,
+      "rows": 2716,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0037,
+        "BLOCKED_FEES": 0.0047,
+        "BLOCKED_MATCH": 0.0167,
+        "BLOCKED_STALE": 0.1901,
+        "NO_EDGE": 0.7847
+      }
+    },
+    "mlb|25|end|flap": {
+      "blocked_reason_share": {
+        "supervisor:CLOCK_UNHEALTHY": 1.0
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 714.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 28,
+      "status_share": {
+        "BLOCKED_STALE": 1.0
+      }
+    },
+    "mlb|25|in|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0901,
+        "kalshi:HEARTBEAT_LOST": 0.0019,
+        "kalshi:STALE": 0.0018,
+        "polymarket:HASH_MISMATCH": 0.0058,
+        "polymarket:HEARTBEAT_LOST": 0.0014,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:NO_ASKS": 0.0071,
+        "polymarket:STALE": 0.1465,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0843,
+        "supervisor:CLOCK_UNHEALTHY": 0.0378
+      },
+      "cost_min": 0.8647,
+      "cost_p50": 1.0294,
+      "cost_p90": 1.035,
+      "dwell_s": 16789.2,
+      "near_actionable_share": 0.0137,
+      "priced_share": 0.7134,
+      "profitable_share": 0.0,
+      "rows": 5649,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0071,
+        "BLOCKED_FEES": 0.0014,
+        "BLOCKED_MATCH": 0.0887,
+        "BLOCKED_STALE": 0.2795,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.6232
+      }
+    },
+    "mlb|25|in|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0185,
+        "kalshi:HEARTBEAT_LOST": 0.0017,
+        "kalshi:NOT_SYNCED": 0.3235,
+        "kalshi:STALE": 0.0116,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.1176,
+        "polymarket:NO_ASKS": 0.0229,
+        "polymarket:STALE": 0.239,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1947,
+        "supervisor:CLOCK_UNHEALTHY": 0.0674
+      },
+      "cost_min": 0.8482,
+      "cost_p50": 1.0232,
+      "cost_p90": 1.0236,
+      "dwell_s": 9734.8,
+      "near_actionable_share": 0.0032,
+      "priced_share": 0.0217,
+      "profitable_share": 0.0027,
+      "rows": 655,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0229,
+        "BLOCKED_MATCH": 0.0185,
+        "BLOCKED_STALE": 0.9554,
+        "DISCOVERED": 0.0005,
+        "PROFITABLE_UNEXECUTED": 0.0027
+      }
+    },
+    "mlb|25|pre|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.1865,
+        "kalshi:HEARTBEAT_LOST": 0.2871,
+        "kalshi:NOT_SYNCED": 0.0212,
+        "kalshi:STALE": 0.1497,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.0132,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:STALE": 0.1653,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0387,
+        "supervisor:CLOCK_UNHEALTHY": 0.1172
+      },
+      "cost_min": 1.0144,
+      "cost_p50": 1.0268,
+      "cost_p90": 1.0276,
+      "dwell_s": 69350.2,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2076,
+      "profitable_share": 0.0,
+      "rows": 6397,
+      "status_share": {
+        "BLOCKED_FEES": 0.0213,
+        "BLOCKED_MATCH": 0.1652,
+        "BLOCKED_STALE": 0.7924,
+        "NO_EDGE": 0.0211
+      }
+    },
+    "mlb|25|pre|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0144,
+        "kalshi:HEARTBEAT_LOST": 0.0065,
+        "kalshi:NOT_SYNCED": 0.3536,
+        "kalshi:STALE": 0.038,
+        "polymarket:HASH_MISMATCH": 0.0033,
+        "polymarket:HEARTBEAT_LOST": 0.0153,
+        "polymarket:NOT_SYNCED": 0.0011,
+        "polymarket:STALE": 0.0368,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0139,
+        "supervisor:CLOCK_UNHEALTHY": 0.5159
+      },
+      "cost_min": 1.0163,
+      "cost_p50": 1.0268,
+      "cost_p90": 1.0276,
+      "dwell_s": 21478.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0156,
+      "profitable_share": 0.0,
+      "rows": 995,
+      "status_share": {
+        "BLOCKED_FEES": 0.0019,
+        "BLOCKED_MATCH": 0.0125,
+        "BLOCKED_STALE": 0.9844,
+        "NO_EDGE": 0.0012
+      }
+    },
+    "mlb|5|end|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0216,
+        "kalshi:NO_ASKS": 0.0037,
+        "kalshi:STALE": 0.0242,
+        "polymarket:HASH_MISMATCH": 0.0001,
+        "polymarket:HEARTBEAT_LOST": 0.0001,
+        "polymarket:STALE": 0.0088,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0269,
+        "supervisor:CLOCK_UNHEALTHY": 0.13
+      },
+      "cost_min": 0.874,
+      "cost_p50": 1.0302,
+      "cost_p90": 1.0346,
+      "dwell_s": 7828.3,
+      "near_actionable_share": 0.0009,
+      "priced_share": 0.8062,
+      "profitable_share": 0.0,
+      "rows": 1961,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0037,
+        "BLOCKED_FEES": 0.0058,
+        "BLOCKED_MATCH": 0.0158,
+        "BLOCKED_STALE": 0.1901,
+        "NO_EDGE": 0.7846
+      }
+    },
+    "mlb|5|end|flap": {
+      "blocked_reason_share": {
+        "kalshi:NOT_SYNCED": 0.1124,
+        "kalshi:STALE": 0.0684,
+        "polymarket:HEARTBEAT_LOST": 0.2259,
+        "polymarket:NOT_SYNCED": 0.0693,
+        "supervisor:CLOCK_UNHEALTHY": 0.524
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 1363.6,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 60,
+      "status_share": {
+        "BLOCKED_STALE": 1.0
+      }
+    },
+    "mlb|5|in|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.0979,
+        "kalshi:HEARTBEAT_LOST": 0.0019,
+        "kalshi:STALE": 0.0018,
+        "polymarket:HASH_MISMATCH": 0.0058,
+        "polymarket:HEARTBEAT_LOST": 0.0013,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:NO_ASKS": 0.0071,
+        "polymarket:STALE": 0.1458,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0843,
+        "supervisor:CLOCK_UNHEALTHY": 0.0377
+      },
+      "cost_min": 0.77,
+      "cost_p50": 1.0301,
+      "cost_p90": 1.035,
+      "dwell_s": 16798.0,
+      "near_actionable_share": 0.0121,
+      "priced_share": 0.7142,
+      "profitable_share": 0.0,
+      "rows": 4401,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0071,
+        "BLOCKED_FEES": 0.01,
+        "BLOCKED_MATCH": 0.0879,
+        "BLOCKED_STALE": 0.2787,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.6162
+      }
+    },
+    "mlb|5|in|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0013,
+        "kalshi:HEARTBEAT_LOST": 0.0035,
+        "kalshi:NOT_SYNCED": 0.3181,
+        "kalshi:STALE": 0.0698,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.0886,
+        "polymarket:NOT_SYNCED": 0.0868,
+        "polymarket:NO_ASKS": 0.0157,
+        "polymarket:STALE": 0.2181,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1496,
+        "supervisor:CLOCK_UNHEALTHY": 0.0463
+      },
+      "cost_min": 0.8482,
+      "cost_p50": 0.9722,
+      "cost_p90": 1.026,
+      "dwell_s": 14159.6,
+      "near_actionable_share": 0.0022,
+      "priced_share": 0.0035,
+      "profitable_share": 0.0004,
+      "rows": 917,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0157,
+        "BLOCKED_MATCH": 0.0013,
+        "BLOCKED_STALE": 0.9808,
+        "DISCOVERED": 0.0018,
+        "PROFITABLE_UNEXECUTED": 0.0004
+      }
+    },
+    "mlb|5|pre|clean": {
+      "blocked_reason_share": {
+        "(none)": 0.1855,
+        "kalshi:HEARTBEAT_LOST": 0.2871,
+        "kalshi:NOT_SYNCED": 0.0212,
+        "kalshi:STALE": 0.1497,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.0132,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:STALE": 0.1653,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0387,
+        "supervisor:CLOCK_UNHEALTHY": 0.1172
+      },
+      "cost_min": 1.016,
+      "cost_p50": 1.03,
+      "cost_p90": 1.03,
+      "dwell_s": 69350.2,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2076,
+      "profitable_share": 0.0,
+      "rows": 6400,
+      "status_share": {
+        "BLOCKED_FEES": 0.0213,
+        "BLOCKED_MATCH": 0.1642,
+        "BLOCKED_STALE": 0.7924,
+        "NO_EDGE": 0.0221
+      }
+    },
+    "mlb|5|pre|flap": {
+      "blocked_reason_share": {
+        "(none)": 0.0144,
+        "kalshi:HEARTBEAT_LOST": 0.0065,
+        "kalshi:NOT_SYNCED": 0.3536,
+        "kalshi:STALE": 0.038,
+        "polymarket:HASH_MISMATCH": 0.0033,
+        "polymarket:HEARTBEAT_LOST": 0.0153,
+        "polymarket:NOT_SYNCED": 0.0011,
+        "polymarket:STALE": 0.0368,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0139,
+        "supervisor:CLOCK_UNHEALTHY": 0.5159
+      },
+      "cost_min": 1.0175,
+      "cost_p50": 1.03,
+      "cost_p90": 1.03,
+      "dwell_s": 21478.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0156,
+      "profitable_share": 0.0,
+      "rows": 995,
+      "status_share": {
+        "BLOCKED_FEES": 0.0019,
+        "BLOCKED_MATCH": 0.0125,
+        "BLOCKED_STALE": 0.9844,
+        "NO_EDGE": 0.0012
+      }
+    }
+  },
+  "db": "/Volumes/Kilos/janus/tuples/tuples.sqlite",
+  "excluded_old_vocabulary": 6025,
+  "flap_seconds": 92548.0,
+  "flap_windows": 1095,
+  "games": 34,
+  "n_for_paper": {
+    "basis": "declared",
+    "in_play_clean_actionable_rows": 0,
+    "n": 30,
+    "note": "fewer than 5 in-play, non-flapping actionable rows: sigma undefined, n = 30 by declaration"
+  },
+  "profitable": [
+    {
+      "cost": 0.97138848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02945425088837784,
+      "seen_ts": 1788458920.2956958,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.97138848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.02945425088837784,
+      "seen_ts": 1788458920.2956958,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93058848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.07458884511443764,
+      "seen_ts": 1788459028.253119,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93048848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.07470433164309573,
+      "seen_ts": 1788459028.253119,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.92018848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.08673388304100485,
+      "seen_ts": 1788459152.403022,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.92018848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.08673388304100485,
+      "seen_ts": 1788459152.403022,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.84818848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.17898323731065055,
+      "seen_ts": 1788459497.015429,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8481884799999999,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.1789832373106507,
+      "seen_ts": 1788459497.015429,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8481884799999999,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.1789832373106507,
+      "seen_ts": 1788459497.015429,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85458848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.17015384995594607,
+      "seen_ts": 1788459500.209562,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8574884799999999,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.16619642516946714,
+      "seen_ts": 1788459500.209562,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85258848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.17289879403484318,
+      "seen_ts": 1788459500.2382789,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85848848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.16483799526348916,
+      "seen_ts": 1788459500.4119492,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85458848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.17015384995594607,
+      "seen_ts": 1788459500.479723,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8601884800000001,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.16253591305942602,
+      "seen_ts": 1788459500.528203,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85858848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.16470232631120327,
+      "seen_ts": 1788459500.528203,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93058848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.07458884511443764,
+      "seen_ts": 1788460356.7065642,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93048848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.07470433164309573,
+      "seen_ts": 1788460356.7065642,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9891432,
+      "flapping": false,
+      "game_id": "espn:cfb:401867889",
+      "league": "cfb",
+      "phase": "pre",
+      "quantity": 100.0,
+      "return_locked": 0.01097596384426441,
+      "seen_ts": 1788464551.637795,
+      "stale_within_60s": true
+    }
+  ],
+  "rows": 89121,
+  "run": "20260903T233018Z",
+  "since": 1788307200.0,
+  "until": 1788478218.193643
+}
