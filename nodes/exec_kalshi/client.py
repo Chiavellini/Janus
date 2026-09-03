@@ -272,9 +272,11 @@ class KalshiExecution:
         return None if d is None else Balance(self.venue, _f(d.get("balance_dollars")), self.clock())
 
     def balances_by_shard(self) -> dict[int, float] | None:
-        """exchange_index -> available USD, from `balance_breakdown` (cents, or `balance_dollars` when
-        the venue sends it). An order on a shard that holds less than its stake is refused by the
-        venue with `user_not_found`, so the caller checks this before it posts."""
+        """exchange_index -> available USD, from `balance_breakdown`. The breakdown's `balance` is in
+        CENTICENTS (measured 2026-09-03: 612445 against balance_dollars 61.2445), the unit the
+        intra-account transfer also counts in; `balance_dollars` is used when the venue sends it.
+        An order on a shard that holds less than its stake is refused `user_not_found`, so the
+        caller checks this before it posts."""
         d = self._balance_payload()
         if d is None:
             return None
@@ -284,7 +286,7 @@ class KalshiExecution:
                 idx = int(row.get("exchange_index", 0))
             except (TypeError, ValueError):
                 continue
-            usd = _f(row.get("balance_dollars")) if row.get("balance_dollars") is not None else _f(row.get("balance")) / 100.0
+            usd = _f(row.get("balance_dollars")) if row.get("balance_dollars") is not None else _f(row.get("balance")) / 10_000.0
             out[idx] = out.get(idx, 0.0) + usd
         if not out:
             out[0] = _f(d.get("balance_dollars"))

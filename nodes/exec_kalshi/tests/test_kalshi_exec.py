@@ -181,8 +181,8 @@ def test_every_order_carries_the_markets_exchange_shard_or_asks_for_auto_routing
     assert [c[2]["exchange_index"] for c in fc2.calls if c[0] == "POST"] == [-1]
 
 
-def test_balances_by_shard_reads_the_breakdown_in_cents_or_dollars(tmp_path):
-    fc = FakeClient(gets=[{"balance_dollars": "61.24", "balance_breakdown": [{"exchange_index": 0, "balance": 4124},
+def test_balances_by_shard_reads_the_breakdown_in_centicents_or_dollars(tmp_path):
+    fc = FakeClient(gets=[{"balance_dollars": "61.24", "balance_breakdown": [{"exchange_index": 0, "balance": 412400},
                                                                               {"exchange_index": 3, "balance_dollars": "20.00"}]},
                           {"balance_dollars": "61.24"}])
     v, _ = venue(tmp_path, fc)
