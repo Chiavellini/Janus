@@ -1,0 +1,36 @@
+experiment_id: "janus-infra-ashburn-latency-2026-09-03"
+date_registered: "2026-09-03"
+track: "infra"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L34"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE RUN.
+purpose: >
+  Decide, by measurement, whether an EC2 box in us-east-1 (Ashburn) reaches the venues enough
+  faster than the Mac to earn its cost as an EXECUTION host, or stays an observation host. The
+  hedge budget is 3,000 ms and L27 prices the hedge window's slippage at one tick; the Mac's
+  per-book REST round trip was 400-450 ms on 2026-09-01. Nothing here claims an edge.
+
+source:
+  tool: "ops/box/latency.py: per venue host, a fresh TCP connect, TLS handshake and the first byte of one small GET, every second, N rounds; plus the HTTP status clob.polymarket.com (Cloudflare) returns to the host's address."
+  hosts: {kalshi: "api.elections.kalshi.com /trade-api/v2/exchange/status", polymarket_clob: "clob.polymarket.com /time", polymarket_gamma: "gamma-api.polymarket.com /sports"}
+  runs: "one run on the Mac (label mac) and one on the box (label box) within the same hour, 100 rounds each"
+
+definitions:
+  stage: "connect_ms, tls_ms, first_byte_ms, total_ms per sample; p50/p90/p95 per stage"
+  bar_execution: "the box's total_ms p50 to kalshi AND to polymarket_clob is below half the Mac's p50 in the same hour, AND clob.polymarket.com answers 200 from the box"
+  outcome: "EXECUTION_HOST if bar_execution holds; OBSERVATION_HOST otherwise (the box still captures frames and contributes a labelled series to the cover-cost row)"
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no look. No price or outcome is read."
+  - "Fewer than 80 successful samples per host per venue -> INSUFFICIENT for that venue."
+  - "A 403 from clob.polymarket.com on the box is reported as a finding (datacenter egress filtered) and fails bar_execution regardless of timing."
+
+outputs:
+  files:
+    mac: "research/infra/2026-09-03_ashburn-latency/results_mac_<ts>.json"
+    box: "research/infra/2026-09-03_ashburn-latency/results_box_<ts>.json"
+    verdict: "research/infra/2026-09-03_ashburn-latency/verdict.md"
+  registration: "NEXT.md and ops/box/README.md state which host the box is; an execution override for the box is written only after EXECUTION_HOST"

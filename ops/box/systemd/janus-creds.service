@@ -1,0 +1,13 @@
+[Unit]
+Description=Janus: materialise credentials from SSM into tmpfs
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=/etc/janus.env
+ExecStartPre=/bin/mkdir -p /run/janus
+ExecStart=/opt/janus/.venv/bin/python3 /opt/janus/ops/box/creds.py --into /run/janus
+ExecStartPost=/bin/chown -R janus:janus /run/janus
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,9 @@
+[Unit]
+Description=Janus co-listing census (ledger L28), once a day
+After=network-online.target
+[Service]
+Type=oneshot
+User=janus
+EnvironmentFile=/etc/janus.env
+WorkingDirectory=/opt/janus
+ExecStart=/usr/bin/zsh /opt/janus/ops/run_node.sh census /opt/janus/research/sports/2026-09-03_co-listing-census/measure.py

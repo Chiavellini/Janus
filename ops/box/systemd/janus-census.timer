@@ -1,0 +1,7 @@
+[Unit]
+Description=Janus census daily at 18:00 UTC
+[Timer]
+OnCalendar=*-*-* 18:00:00 UTC
+Persistent=true
+[Install]
+WantedBy=timers.target

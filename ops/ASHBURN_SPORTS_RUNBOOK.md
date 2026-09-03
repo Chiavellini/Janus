@@ -1,60 +1,56 @@
-# Ashburn sports lane runbook
+# Ashburn box — runbook (rewritten 2026-09-03)
 
-This is a deployment contract, not an instruction to start the EC2 instance. The current Ashburn
-instance is stopped; starting it is billable and requires operator approval.
+The previous text launched the retired REST lane with flags the current grid does not have and
+named a directory nothing uses. This is the deployment contract for the box the operator approved
+on 2026-09-03: **one `c7g.medium` in us-east-1, SSM access only, first an observation host, an
+execution host only if ledger L34 says so.** Starting it is billable (~$0.036/h + 70 GB gp3);
+`aws ec2 stop-instances` stops the bill and keeps the data volume.
 
-## Runtime shape
+## What exists in the account (read 2026-09-03)
+Default VPC `vpc-0de2c8819be9c7353`; security group `janus-box` (`sg-061f3bb3a68d29f81`, no
+ingress); IAM role + instance profile `janus-box` (SSM core, `/janus/*` parameters with KMS
+decrypt, CloudWatch); Ubuntu 24.04 arm64 AMI from the public SSM parameter. No Janus instance yet.
 
-The coordinator should wake the worker before scheduled events, keep it hot through live play, and
-drain it after the event and settlement checks complete. Overlapping events share one worker. The
-worker must run the live sports collector in shadow mode; no order endpoint is enabled.
+## One-time, operator
+1. Push main to GitHub (the box clones the pinned sha) and create a read-only fine-grained token
+   for the repo. Put the non-secret and secret parameters in SSM (values never pass through an
+   agent):
+   ```bash
+   aws ssm put-parameter --region us-east-1 --name /janus/repo/url --type String --value https://github.com/Chiavellini/Janus.git
+   ```
+   ```bash
+   aws ssm put-parameter --region us-east-1 --name /janus/repo/sha --type String --value <sha of main>
+   ```
+   Then, each as `--type SecureString` (KMS-encrypted with the account's SSM key):
+   `/janus/repo/token`, `/janus/kalshi/api_key`, `/janus/kalshi/private_key` (the PEM file's
+   contents), `/janus/polymarket/wallet_key`, `/janus/polymarket/funder`,
+   `/janus/polymarket/signature_type`. `python3 ops/box/creds.py --dry-run` lists the names.
+2. Launch: `ops/box/launch.sh` prints the plan; `ops/box/launch.sh --go` launches. cloud-init runs
+   `ops/box/user-data.sh`: packages, the data volume at `/srv/janus`, the repo at `/opt/janus`
+   at the pinned sha, a venv, the systemd units, and `janus-creds.service`, which materialises
+   the secrets into `/run/janus` (tmpfs, 700/600) at every boot. `/var/log/janus-bootstrap.log`
+   says what happened.
+3. Session: `aws ssm start-session --target <instance id>` (needs the session-manager-plugin on
+   the Mac: `brew install --cask session-manager-plugin`).
 
-The first live lane is the existing schedule-first Kalshi/Polymarket collector. The Cloudbet
-adapter is already integrated into the common payout/cover model, but Cloudbet acceptance and
-trading-API reconciliation must be completed and validated before the three-venue lane is called
-actionable.
+## On the box, in order
+1. `cd /opt/janus && sudo -u janus JANUS_DATA_ROOT=/srv/janus .venv/bin/python3 -m pytest -q` — green.
+2. The latency row (L34): `sudo -u janus .venv/bin/python3 ops/box/latency.py --host box --samples 100 --out /srv/janus/research/results_box_<ts>.json`
+   in the same hour as the Mac's run; copy the file into the research directory and write the
+   verdict against the bar in `research/infra/2026-09-03_ashburn-latency/spec.yaml`.
+3. `systemctl enable --now janus-live-stream` (SHADOW_LIVE with capture; `--leagues enabled`).
+   `janus-watchdog.timer` and `janus-census.timer` are already enabled by cloud-init.
+4. `journalctl -u janus-live-stream -f`, `/srv/janus/logs/*.log`, and
+   `sudo -u janus .venv/bin/python3 ops/watchdog.py` must be quiet.
 
-## Host prerequisites
+## Arming from the box
+Only after: both Mac proofs reconciled, L34 = EXECUTION_HOST, and an override written ON THE BOX
+(`ops/arming_override.py` pins the runner sha of that checkout; the file lives under
+`/srv/janus/kill/`). The box's kill files are its own: `kill/all` on the Mac does not stop the
+box. Until a shared kill exists in SSM, stopping the box is `systemctl stop janus-live-stream`
+or `aws ec2 stop-instances`.
 
-1. Attach and mount the durable data volume at `/Volumes/Kilos` (or provide the equivalent mount
-   used by the Janus data symlink). Do not use the root volume for quote history.
-2. Run `df -h / /Volumes/Kilos`; abort if either available space is below 2 GB.
-3. Install the repository and Python runtime, then run the full test suite.
-4. Provide credentials through the instance secret store or systemd environment injection. Never
-   put a Cloudbet key in a checked-in `.env`, command line, cache, SQLite row, or research JSON.
-
-## Cloudbet environment
-
-```text
-JANUS_CLOUDBET_API_KEY=<injected at runtime>
-JANUS_CLOUDBET_FEED_TIER=trading
-```
-
-`trading` is required for a real-time feed. An affiliate key is explicitly treated as delayed and
-cannot support a live-arbitrage claim. The Feed API is for discovery; an exact stake still needs a
-successful Trading API acceptance response before the Cloudbet leg is executable.
-
-## Shadow launch
-
-```bash
-cd /opt/janus
-df -h / /Volumes/Kilos
-python3 -m pytest -q
-python3 grids/live_sports/grid.py \
-  --leagues mlb,nfl,nba,wnba,nhl,epl \
-  --include-near \
-  --db /Volumes/Kilos/janus/tuples/tuples.sqlite \
-  --loop --period 10
-```
-
-The current collector writes only compact latest-state, material-change history, and aggregate
-sweep rows. It does not retain unchanged full-universe snapshots and submits no orders.
-
-## Promotion blockers
-
-- exact Cloudbet Trading API acceptance request/response fixture and reconciliation;
-- schedule-anchored Cloudbet event discovery for each configured competition;
-- venue-pair settlement matrix for moneyline, spread, total, overtime, postponement, and voids;
-- live latency/acceptance measurements from Ashburn;
-- shadow evidence and the remaining Janus gates in `GATE_TO_LIVE.md`.
-
+## The data root
+Everything the tree writes lives under `JANUS_DATA_ROOT` (`kernel/paths.py`), `/srv/janus` here
+and `/Volumes/Kilos/janus` on the Mac. `ops/run_node.sh` aborts when either volume has under 2 GB
+free.

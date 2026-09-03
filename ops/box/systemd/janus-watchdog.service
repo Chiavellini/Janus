@@ -1,0 +1,8 @@
+[Unit]
+Description=Janus watchdog (one check)
+[Service]
+Type=oneshot
+User=janus
+EnvironmentFile=/etc/janus.env
+WorkingDirectory=/opt/janus
+ExecStart=/usr/bin/zsh /opt/janus/ops/run_watchdog.sh
