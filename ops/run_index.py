@@ -91,7 +91,7 @@ def last_per_job(index: Path = INDEX) -> dict[str, dict]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    s = sub.add_parser("start"); s.add_argument("job"); s.add_argument("rest", nargs="*")
+    s = sub.add_parser("start"); s.add_argument("job"); s.add_argument("rest", nargs=argparse.REMAINDER)   # everything after the job, "-m module --flags" included
     f = sub.add_parser("finish")
     f.add_argument("job"); f.add_argument("run_id")
     f.add_argument("--exit", type=int, required=True)
