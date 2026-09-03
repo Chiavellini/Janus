@@ -56,8 +56,14 @@ soccer name resolves.
    today one leg per outcome), `pm_outcome_tokens` to carry NO tokens, and the exhaustiveness
    proof to check the partition. Then `plan.py` stays two-leg. Sequencing three FOKs is not an
    option: two fills and one reject is an unhedged directional position (GATE cross-venue #2).
-6. UCL and every non-ESPN competition (UFC, tennis, cricket, esports): a club or fighter as one
-   entity across competitions, and a `venue_structured` anchor with its own blind gold file.
+6. UCL and every competition ESPN does not schedule as home/away teams. Probed 2026-09-03: ESPN
+   `mma/ufc/scoreboard` lists a card as one event with one competition per fight (fighters as
+   competitors, no `homeAway`, athlete ids absent) — an anchor for UFC needs a card-aware parser
+   and a fighter entity table; `tennis/atp/scoreboard` returns nothing and `cricket/scoreboard`
+   404s, so tennis and cricket need the `venue_structured` anchor (participants and start from
+   both venues' own fields, a per-competition alias table, a blind gold file scored before the
+   lane sees it). UCL needs a club to be one entity across competitions (the xref table keys by
+   venue id and refuses the collision today).
 7. ~~The Polymarket proof script~~ done (`ops/polymarket_live_proof.py`; tests drive it against a scripted CLOB).
 8. ~~The generic verifier~~ recovered into `nodes/match_generic/` (reproduces the archived 51,306
    verdicts exactly); its precision gate is ledger L31 and waits on your labels (below). After the
