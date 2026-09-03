@@ -6,8 +6,11 @@
 SX Bet — a **zero-rake CLOB**, 0% commission on singles, the cheapest screening coefficient of any
 two-sided venue in `nodes/fees/registry.py`.
 
-This node is the intended third venue. Unlike a sportsbook it has two-sided depth, a real NO side,
-and no counterparty discretion to reject a bet after seeing your stake.
+**Parked as of 2026-09-02.** v1 is Kalshi + Polymarket only. This node is the intended third venue
+— two-sided depth, a real NO side, no counterparty discretion — but its size convention is
+unverified against a real fill and it has no live consumer since `grids/sports_books_poll` was
+removed. It returns through the adapter interface after independent settlement and execution
+validation (spec §2).
 
 ## Position in the grid
 
@@ -29,7 +32,7 @@ probability scaled by 1e20, and a taker buying outcome ONE lifts orders whose ma
 TWO. So the taker pays `1 − makerOdds`, and `isMakerBettingOutcomeOne` selects the side. Getting
 this backwards inverts every price and produces beautiful nonsense.
 
-**Not yet wired into `grids/live_sports`** — only `grids/sports_books_poll` uses it.
+**No consumer.** `grids/sports_books_poll`, its only caller, was removed on 2026-09-02.
 
 ## Tests
 

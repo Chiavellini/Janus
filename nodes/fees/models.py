@@ -132,17 +132,22 @@ class KalshiQuadratic(_Base):
     returns {"fee_type": "quadratic", "fee_multiplier": 1}. Crypto is the premium tier; S&P and
     NASDAQ series carry 0.035, so a hardcoded 0.07 overstates index markets by 2x.
 
-    `fee_multiplier` MUST come from the market payload (params), never from a constant. Missing
-    is an error, not a default -- silently defaulting is how the PM 0.07 bug survived.
+    `fee_multiplier` MUST come from the series payload (GET /series/{ticker}). Missing or null
+    is an error, not a default -- silently defaulting is how the PM 0.07 bug survived, and it
+    is how the live lane charged sports at 1.0x for a month when KXMLBGAME reports 0.5 with
+    `fee_type: quadratic_with_maker_fees`. The registry pin supplies 1.0 as a labelled
+    SCREENING fallback; the live pricing path passes the series value as an override, and
+    `nodes/game_poller` blocks a leg whose schedule was never fetched.
     """
     id: str = "kalshi_quadratic"
     taker_coeff: float = 0.07
     maker_coeff: float = 0.0175          # 4x cheaper; exactly +1c/contract saved in the 20-80c band
 
     def entry_cost(self, fills: Sequence[Fill], params: Mapping[str, Any]) -> float:
-        mult = params.get("fee_multiplier", 1.0)
+        mult = params.get("fee_multiplier")
         if mult is None:
-            mult = 1.0
+            raise ValueError("kalshi fee_multiplier missing or null: pass the series payload value "
+                             "(or the registry pin via params_for); it is never defaulted here")
         # Only the quadratic fee_type honours the multiplier; others are flat-rate at 1x.
         if not str(params.get("fee_type") or "quadratic").startswith("quadratic"):
             mult = 1.0
@@ -312,6 +317,7 @@ class PremiumChargeSchedule:
 
 
 def selftest() -> None:
+    K1 = {"fee_multiplier": 1.0}      # the 1x tier, passed explicitly: it is never a default
     """Anchors, including a digit-for-digit cross-check against the legacy model."""
     import sys
     from pathlib import Path
@@ -323,23 +329,23 @@ def selftest() -> None:
     # ── Kalshi: reproduce every legacy anchor through the new API ──────────
     # 1 contract at 50c pays ceil(1.75) = 2c
     one = [Fill("kalshi", "M", "yes", "buy", 0.50, 1.0)]
-    assert abs(k.entry_cost(one, {}) - 0.02) < 1e-12, k.entry_cost(one, {})
-    assert k.entry_cost(one, {}) * 100.0 == float(vc.kalshi_fee_cents(50.0))
+    assert abs(k.entry_cost(one, K1) - 0.02) < 1e-12, k.entry_cost(one, K1)
+    assert k.entry_cost(one, K1) * 100.0 == float(vc.kalshi_fee_cents(50.0))
 
     # 100 contracts in ONE order amortise the ceil to exactly 1.75c each
     hundred = [Fill("kalshi", "M", "yes", "buy", 0.50, 100.0)]
-    assert abs(k.entry_cost(hundred, {}) - 1.75) < 1e-12, k.entry_cost(hundred, {})
-    assert abs(k.entry_cost(hundred, {}) / 100.0 * 100.0
+    assert abs(k.entry_cost(hundred, K1) - 1.75) < 1e-12, k.entry_cost(hundred, K1)
+    assert abs(k.entry_cost(hundred, K1) / 100.0 * 100.0
                - vc.kalshi_fee_cents_per_contract(50.0, n_contracts=100)) < 1e-9
 
     # 100 contracts as 100 SEPARATE orders pay the ceil 100 times — the order_seq contract
     split = [Fill("kalshi", "M", "yes", "buy", 0.50, 1.0, order_seq=i) for i in range(100)]
-    assert abs(k.entry_cost(split, {}) - 2.00) < 1e-12, k.entry_cost(split, {})
+    assert abs(k.entry_cost(split, K1) - 2.00) < 1e-12, k.entry_cost(split, K1)
 
     # maker tier saves exactly 1c in the mid band
     mk = [Fill("kalshi", "M", "yes", "buy", 0.50, 1.0, liquidity="maker")]
-    assert abs(k.entry_cost(mk, {}) - 0.01) < 1e-12
-    assert k.entry_cost(mk, {}) * 100.0 == float(vc.kalshi_fee_cents(50.0, coeff=vc.KALSHI_MAKER_COEFF))
+    assert abs(k.entry_cost(mk, K1) - 0.01) < 1e-12
+    assert k.entry_cost(mk, K1) * 100.0 == float(vc.kalshi_fee_cents(50.0, coeff=vc.KALSHI_MAKER_COEFF))
 
     # per-series multiplier is honoured (S&P/NASDAQ are 0.035 = half the crypto tier).
     # Note the ceil still bites: 0.035*100*100*0.25 = 87.5c -> ceil -> 88c, not 87.5c. The
@@ -347,11 +353,11 @@ def selftest() -> None:
     half = k.entry_cost([Fill("kalshi", "M", "yes", "buy", 0.50, 100.0)],
                         {"fee_multiplier": 0.5, "fee_type": "quadratic"})
     assert abs(half - 0.88) < 1e-12, half
-    assert half < k.entry_cost(hundred, {})          # still materially cheaper than the 1x tier
+    assert half < k.entry_cost(hundred, K1)          # still materially cheaper than the 1x tier
 
     # the two-leg anchor's Kalshi leg: 21c -> ceil(0.07*100*.21*.79) = ceil(1.16) = 2c
     leg = [Fill("kalshi", "M", "yes", "buy", 0.21, 1.0)]
-    assert abs(k.entry_cost(leg, {}) - 0.02) < 1e-12
+    assert abs(k.entry_cost(leg, K1) - 0.02) < 1e-12
 
     # ── Polymarket ────────────────────────────────────────────────────────
     pf = [Fill("pm", "M", "down", "buy", 0.70, 1.0)]
@@ -380,7 +386,7 @@ def selftest() -> None:
     # expected cost = p*win + (1-p)*lose = 0.0125 = 0.05 * p * (1-p). The parabola.
     assert abs((0.5 * win + 0.5 * lose) - 0.05 * 0.5 * 0.5) < 1e-12
     # and it is CHEAPER than Kalshi at the money: 1.25c vs 1.75c
-    assert (0.5 * win + 0.5 * lose) < k.entry_cost(one, {})
+    assert (0.5 * win + 0.5 * lose) < k.entry_cost(one, K1)
     # screening coefficients line up with the exact expectation
     assert abs(bf.screening_coeff({}) - 0.05) < 1e-12
     assert abs(bf.screening_coeff({"commission_rate": 0.02}) - 0.02) < 1e-12   # Smarkets

@@ -42,13 +42,12 @@ if str(ROOT) not in sys.path:
 
 from kernel.fetch import Client  # noqa: E402
 from nodes.cover.capacity import frontier  # noqa: E402
+from nodes.discovery.discovery import co_listed, discover, record_events  # noqa: E402
 from nodes.fees.targeting import hurdle_for  # noqa: E402
 from nodes.game_poller.poller import GamePoller, PollerState  # noqa: E402
-from nodes.schedule_espn import espn  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
 from nodes.stream_kalshi.stream import KalshiStream, load_private_key  # noqa: E402
 from nodes.stream_polymarket.stream import PolymarketStream  # noqa: E402
-from nodes.venue_polymarket.books import pm_token_map  # noqa: E402
 from ops import run_index  # noqa: E402
 
 DB = Path("/Volumes/Kilos/janus/tuples/tuples.sqlite")
@@ -63,6 +62,7 @@ class Supervised:
     started_utc: float
     kalshi_tickers: tuple[str, ...] = ()
     pm_assets: tuple[str, ...] = ()
+    fee_params: dict = field(default_factory=dict)
     evaluations: int = 0
     written: int = 0
 
@@ -84,53 +84,21 @@ class Supervisor:
 
     # ── discovery ───────────────────────────────────────────────────────
     def discover(self) -> dict[str, dict]:
-        """Games that are live (or nearly) AND co-listed on both venues, with their outcome map."""
-        from grids.live_sports.grid import _live_games, _match_live
+        """Games that are live (or nearly) AND co-listed on both venues, with their outcome map
+        and the fee params each venue reported. `nodes/discovery` owns all of it; this grid only
+        composes. Blocks are REPLACED each pass so a cleared block does not linger."""
         now = datetime.now(timezone.utc)
-        games, meta = _live_games(self.leagues, now, True, self.pre_hours)
-        for lg, err in meta["schedule_failures"].items():
-            self.blocked[lg] = f"SCHEDULE_FETCH: {err}"
-
         pc = Client("polymarket", rate=5, burst=8, cache_dir=None)
-        out: dict[str, dict] = {}
-        for league in self.leagues:
-            lg_games = [g for g in games if g.league == league]
-            if not lg_games:
-                continue
-            try:
-                matches, _stats, resolver = _match_live(league, lg_games, now)
-            except Exception as exc:  # noqa: BLE001 -- one league must not blank the slate
-                self.blocked[league] = f"MATCH: {type(exc).__name__}: {exc}"
-                continue
-            tokens = pm_token_map(sorted({m["pm_event"] for m in matches}), pc)
-            tok_errors = tokens.pop("__errors__", {})
-            tok_by: dict[tuple, str] = {}
-            for slug, (names, _ev) in tokens.items():
-                for name, token in names.items():
-                    res = resolver.resolve(league, text=name, venue="polymarket")
-                    if res.ok:
-                        tok_by[(slug, res.entity_id)] = token
-
-            by_game: dict[str, dict] = {}
-            for m in matches:
-                by_game.setdefault(m["game_id"], {})[m["entity_id"]] = m
-            for gid, rows in by_game.items():
-                g = next((x for x in lg_games if x.game_id == gid), None)
-                if g is None or len(rows) != 2:
-                    self.blocked[gid] = "INCOMPLETE_EXACT_TWO_OUTCOME_MATCH"
-                    continue
-                om: dict[str, dict] = {}
-                for ent, m in rows.items():
-                    tok = tok_by.get((m["pm_event"], ent))
-                    if not tok:
-                        break
-                    om[ent] = {"kalshi": m["kalshi_outcome"], "polymarket": tok}
-                if len(om) != 2:
-                    self.blocked[gid] = f"PM_TOKEN_RESOLUTION{':' + str(tok_errors) if tok_errors else ''}"
-                    continue
-                out[gid] = {"league": league, "short_name": g.short_name,
-                            "state": g.state, "outcomes": om}
-        return out
+        kc = Client("kalshi", rate=4, burst=8, cache_dir=None)
+        d = discover(self.leagues, now, True, self.pre_hours, pc, kc)
+        slate, blocked = co_listed(d)
+        self.blocked = dict(blocked)
+        for venue, errs in d.fee_errors.items():
+            for key, err in errs.items():
+                self.blocked[f"fees:{venue}:{key}"] = f"FEE_SCHEDULE: {err}"
+        if self.store is not None:
+            record_events(self.store, d, slate, blocked)
+        return slate
 
     # ── lifecycle ───────────────────────────────────────────────────────
     def reconcile(self, slate: dict[str, dict]) -> None:
@@ -140,13 +108,14 @@ class Supervisor:
                 continue
             p = GamePoller(gid, spec["league"], spec["outcomes"],
                            quantities=QUANTITIES, max_book_age_s=self.max_book_age_s,
-                           min_return=MIN_RETURN)
+                           min_return=MIN_RETURN, fee_params=spec["fee_params"])
             if p.state is PollerState.BLOCKED:
                 # An unproven outcome set never gets a subscription spent on it.
                 self.blocked[gid] = f"EXHAUSTIVE:{p.block_reason}"
                 continue
             sup = Supervised(p, spec["short_name"], time.time(),
-                             tuple(p.market_ids("kalshi")), tuple(p.market_ids("polymarket")))
+                             tuple(p.market_ids("kalshi")), tuple(p.market_ids("polymarket")),
+                             fee_params=dict(spec["fee_params"]))
             for (venue, _outcome), rep in p.replicas.items():
                 cb = self._on_update(gid)
                 if venue == "kalshi":
@@ -191,7 +160,11 @@ class Supervisor:
         hd = None
         if cov and cov.ok and cov.legs:
             fav = max(l.vwap for l in cov.legs)
-            hd = hurdle_for(fav, hurdle=MIN_RETURN)
+            # The hurdle must charge what the cover charges: the venues' own schedules, not
+            # the registry pins (PM's pin is 0.07 and Kalshi's is 1.0x; sports is neither).
+            hd = hurdle_for(fav, hurdle=MIN_RETURN,
+                            overrides_a=sup.fee_params.get("kalshi"),
+                            overrides_b=sup.fee_params.get("polymarket"))
         status = ("ACTIONABLE" if (ret is not None and ret >= MIN_RETURN
                                    and cov is not None and not cov.single_venue)
                   else ("NO_EDGE" if cov and cov.ok

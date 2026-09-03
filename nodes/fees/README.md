@@ -53,15 +53,17 @@ lopsided games actually diverge more is an empirical question the recorded distr
 
 ## Failure modes
 
-`registry.py` documents that hardcoding a Polymarket rate was a real live bug — and
-`grids/live_sports/grid.py` hardcodes `{"fee_rate": 0.05}` anyway instead of reading `feeSchedule`.
-The measured distribution is 0.04 → 1,262 markets, 0.07 → 372, 0.05 → 336.
-
-`models.py` says a missing `fee_multiplier` "is an error, not a default" and then silently defaults
-it to 1.0.
+**The pins are screening fallbacks, not what the venues charge.** Kalshi's pin carries
+`fee_multiplier 1.0` (verified for crypto series 2026-07-24); the sports game series report
+**0.5** with `quadratic_with_maker_fees` (measured 2026-09-02). Polymarket's pin is 0.07; game
+markets report 0.05 and a futures market reported 0.03. The live path (`nodes/discovery` →
+`nodes/game_poller`) passes the venues' own values as overrides and blocks a leg without them.
+`KalshiQuadratic.entry_cost` raises on a missing or null multiplier — the silent 1.0 default is gone.
 
 `carry_credit` (Kalshi pays 4.05% APY) is implemented and has **zero call sites**. Over a 240-day
 hold that is 2.7 points — larger than the whole 1% hurdle.
+
+Polymarket `rebateRate` semantics remain unverified; makers stay out of v1.
 
 Unmodelled entirely: gas/bridge (Polygon), FX and crypto spread, deposit/withdrawal, min stake.
 

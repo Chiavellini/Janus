@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Mapping
+from typing import Any, Mapping
 from enum import Enum
 
 from nodes.book_replica.replica import BookReplica, Fault
@@ -71,6 +71,11 @@ class GamePoller:
     quantities: tuple[float, ...] = (5.0, 25.0, 100.0)
     max_book_age_s: float = 5.0
     min_return: float = 0.01
+    #: venue -> fee params from the venue's OWN payload (Kalshi series fee_type/fee_multiplier;
+    #: Polymarket market feeSchedule). A venue absent here blocks its legs with
+    #: FEE_SCHEDULE_MISSING. Never a constant: KXMLBGAME is 0.5x and PM sports was 0.03 on the
+    #: day this was measured, against the 1.0x and 0.05 the lane had been charging.
+    fee_params: dict[str, Mapping[str, Any]] = field(default_factory=dict)
 
     state: PollerState = PollerState.WARMING
     replicas: dict[tuple[str, str], BookReplica] = field(default_factory=dict)
@@ -138,8 +143,12 @@ class GamePoller:
                 if book is None or not book.asks:
                     blocked = blocked or f"{v}:{outcome}:NO_ASKS"
                     continue
+                fees = self.fee_params.get(v)
+                if fees is None:
+                    blocked = blocked or f"{v}:{outcome}:FEE_SCHEDULE_MISSING"
+                    continue
                 legs.append(Leg(v, liquidity_source_for(v), rep.market_id, rep.market_id, book,
-                                {"fee_rate": 0.05} if v == "polymarket" else {}))
+                                dict(fees)))
             if legs:
                 offers[outcome] = legs
 

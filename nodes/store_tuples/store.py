@@ -93,6 +93,15 @@ class TupleStore:
         self.con.executescript(DDL)
         #: (game_id, quantity) -> (status, cost, ts) for the material-change gate on evaluations.
         self._eval_last: dict[tuple, tuple] = {}
+        self._ddl_applied: set[str] = set()
+
+    def ensure_ddl(self, ddl: str) -> None:
+        """A node owns its own tables. Idempotent (CREATE IF NOT EXISTS); call before the first
+        write. This is how new nodes add storage without everyone editing one DDL string."""
+        if ddl in self._ddl_applied:
+            return
+        self.con.executescript(ddl)
+        self._ddl_applied.add(ddl)
 
     def market(self, *, venue: str, market_id: str, family: str, event_key: str,
                outcome: str, category: str, created_ts: float | None,

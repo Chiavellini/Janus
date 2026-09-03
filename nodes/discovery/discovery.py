@@ -1,0 +1,272 @@
+#!/usr/bin/env python3
+"""The event registry: which games exist, which are co-listed, and what each venue charges.
+
+Discovery is SLOW (ESPN per league, a paginated Kalshi pull, a paginated Gamma pull, one Gamma
+call per slug, one series call per league) and changes on the order of minutes -- games start,
+games end, markets list. Everything downstream is fast and runs on its own clock. Recomputing the
+slate on every sweep hammered three APIs to re-derive a nearly identical answer, so this node
+builds it once per discovery period and hands out a frozen `Discovery`.
+
+This used to live inside `grids/live_sports`, and `grids/live_stream` imported it from there --
+a grid importing a grid, which the layering rule forbids because it makes a failure attributable
+to two places. It is a node now. Grids compose it; nothing here imports a grid.
+
+WHAT A SLATE ENTRY CARRIES. Besides the four market ids, each co-listed game carries the fee
+params each venue REPORTED for it: Kalshi's `fee_type`/`fee_multiplier` from the league's game
+series and Polymarket's `feeSchedule` from the Gamma market. Measured on 2026-09-02: KXMLBGAME is
+`quadratic_with_maker_fees` at 0.5x, and an MLB Gamma market carried rate 0.03 -- against the 1.0x
+and 0.05 the lane had been charging. A venue whose schedule could not be fetched is simply absent
+from `fee_params`, and `nodes/game_poller` then blocks that leg with FEE_SCHEDULE_MISSING rather
+than pricing it on a constant.
+
+Persistence: the `events` table is this node's own (see `EVENTS_DDL`), keyed by the ESPN game id.
+It is the stable `event_id` that per-event risk limits, kill-by-event and event-focused storage
+will key on.
+"""
+
+from __future__ import annotations
+
+import json
+import time
+from collections import Counter
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any, Mapping
+
+from kernel.fetch import Client
+from kernel.redact import brief_error
+from nodes.entities.resolve import Resolver
+from nodes.entities.seed import KALSHI_GAME_SERIES
+from nodes.match_sports.sports_match import kalshi_markets, pair, pm_markets
+from nodes.schedule_espn import espn
+from nodes.venue_kalshi.books import fetch_kalshi_series, kalshi_fee_params
+from nodes.venue_polymarket.books import (pm_fee_params, pm_market_for_slug, pm_order_limits,
+                                          pm_token_map)
+
+#: Hours ahead of first pitch/puck to start watching a pre-game market.
+DEFAULT_PRE_HOURS = 6.0
+#: A market is thinnest and most dislocated right at the open; keep watching a game that started
+#: up to this long ago even if ESPN still says "pre" (its state lags).
+DEFAULT_LEAD_S = 1800
+
+
+# ── the schedule half ────────────────────────────────────────────────────────
+def select_live(schedule: list, now_ts: float, include_near: bool, pre_hours: float,
+                *, lead_s: int = DEFAULT_LEAD_S) -> list:
+    """PURE. In-progress games, plus (optionally) pre-game ones starting within `pre_hours`."""
+    out = []
+    for g in schedule:
+        delta = g.start_utc - now_ts
+        if g.state == "in" or (include_near and g.state == "pre"
+                               and -lead_s <= delta <= pre_hours * 3600.0):
+            out.append(g)
+    return out
+
+
+def live_games(leagues: list[str], now: datetime, include_near: bool,
+               pre_hours: float = DEFAULT_PRE_HOURS) -> tuple[list, dict]:
+    """The schedule side. One league's ESPN failure is recorded, never fatal for the others."""
+    games, failures = [], {}
+    horizon = max(1.0, pre_hours / 24.0 + 1.0)
+    for league in leagues:
+        try:
+            schedule = espn.fetch_range(league, now - timedelta(days=1),
+                                        now + timedelta(days=horizon), use_cache=False)
+        except Exception as exc:  # noqa: BLE001 -- one league must not take the others down
+            failures[league] = brief_error(exc)
+            continue
+        games.extend(select_live(schedule, now.timestamp(), include_near, pre_hours))
+    return games, {"by_id": {g.game_id: g for g in games}, "schedule_failures": failures}
+
+
+def match_live(league: str, games: list, now: datetime):
+    """Both venues resolved onto the schedule independently, then an exact join."""
+    by_pair = espn.index_by_participants(games)
+    resolver = Resolver.load()
+    stats = Counter(); stats["k_reason"] = Counter(); stats["p_reason"] = Counter()
+    near_miss: list[dict] = []
+    window = (int((now - timedelta(days=1)).timestamp()), int((now + timedelta(days=1)).timestamp()))
+    kms = kalshi_markets(league, resolver, by_pair, window, stats, near_miss)
+    pms = pm_markets(league, resolver, by_pair, window, stats, near_miss)
+    live_ids = {g.game_id for g in games}
+    return [p for p in pair(kms, pms) if p["game_id"] in live_ids], {
+        "kalshi_markets": len(kms), "polymarket_markets": len(pms),
+        "near_misses": len(near_miss),
+        "matcher_reasons": {"kalshi": dict(stats["k_reason"]), "polymarket": dict(stats["p_reason"])},
+    }, resolver
+
+
+# ── the fee half ─────────────────────────────────────────────────────────────
+def kalshi_league_fees(leagues: list[str], kclient: Client) -> tuple[dict[str, dict], dict[str, str]]:
+    """league -> {fee_type, fee_multiplier} from the league's game series. Failures are named."""
+    out, errors = {}, {}
+    for league in leagues:
+        ticker = KALSHI_GAME_SERIES.get(league)
+        if not ticker:
+            errors[league] = "no game series registered for league"
+            continue
+        try:
+            fp = kalshi_fee_params(fetch_kalshi_series(ticker, kclient))
+        except (OSError, RuntimeError, ValueError, KeyError) as exc:
+            errors[league] = brief_error(exc)
+            continue
+        if fp is None:
+            errors[league] = f"{ticker} carries no fee_type/fee_multiplier"
+            continue
+        out[league] = fp
+    return out, errors
+
+
+# ── the slate ────────────────────────────────────────────────────────────────
+@dataclass
+class Discovery:
+    """The frozen answer to 'what should be watched right now, and on what terms'."""
+    made_utc: float
+    games: list
+    schedule_failures: dict[str, str]
+    per_league: dict            # league -> (matches, match_stats, resolver)
+    tokens: dict                # slug -> ({outcome_label: token}, event)
+    token_errors: dict[str, str]
+    #: venue -> key -> params. Kalshi is keyed by LEAGUE (one series per league); Polymarket by
+    #: SLUG (one schedule per market). Absent = never fetched = the poller blocks that leg.
+    fee_params: dict[str, dict[str, dict]] = field(default_factory=lambda: {"kalshi": {}, "polymarket": {}})
+    fee_errors: dict[str, dict[str, str]] = field(default_factory=dict)
+
+    def age_s(self, now: float | None = None) -> float:
+        return (now or time.time()) - self.made_utc
+
+
+def discover(leagues: list[str], now: datetime, include_near: bool, pre_hours: float,
+             pclient: Client, kclient: Client | None = None) -> Discovery:
+    """Build the watch set. Every failure is recorded, none is fatal."""
+    games, meta = live_games(leagues, now, include_near, pre_hours)
+    per_league, slugs = {}, set()
+    for league in leagues:
+        lg_games = [g for g in games if g.league == league]
+        if not lg_games:
+            continue
+        try:
+            matches, stats, resolver = match_live(league, lg_games, now)
+        except Exception as exc:  # noqa: BLE001 -- one league must not take the slate down
+            meta["schedule_failures"][league] = f"match: {brief_error(exc)}"
+            continue
+        per_league[league] = (matches, stats, resolver)
+        slugs |= {m["pm_event"] for m in matches}
+    tokens = pm_token_map(sorted(slugs), pclient) if slugs else {}
+    token_errors = tokens.pop("__errors__", {})
+
+    pm_fees: dict[str, dict] = {}
+    pm_fee_errors: dict[str, str] = {}
+    for slug, (_names, ev) in tokens.items():
+        fp = pm_fee_params(pm_market_for_slug(ev, slug) or {})
+        if fp is None:
+            pm_fee_errors[slug] = "gamma market carries no feeSchedule"
+        else:
+            pm_fees[slug] = fp
+    k_fees, k_errors = ({}, {}) if not per_league else kalshi_league_fees(
+        sorted(per_league), kclient or Client("kalshi", rate=4, burst=8, cache_dir=None))
+    return Discovery(time.time(), games, meta["schedule_failures"], per_league, tokens, token_errors,
+                     fee_params={"kalshi": k_fees, "polymarket": pm_fees},
+                     fee_errors={"kalshi": k_errors, "polymarket": pm_fee_errors})
+
+
+def co_listed(d: Discovery) -> tuple[dict[str, dict], dict[str, str]]:
+    """PURE over a Discovery. game_id -> slate spec for every game live on BOTH venues, plus a
+    game_id -> reason map for everything that was not. This is what the supervisor spawns from.
+
+    A spec carries: league, short_name, state, start_utc, outcomes (entity -> {venue: market_id}),
+    fee_params (venue -> params, only for venues whose schedule was fetched), pm_slug,
+    kalshi_event, and the PM order limits when Gamma reported them.
+    """
+    slate: dict[str, dict] = {}
+    blocked: dict[str, str] = {}
+    for lg, err in d.schedule_failures.items():
+        blocked[lg] = f"SCHEDULE_FETCH: {err}"
+    games_by_id = {g.game_id: g for g in d.games}
+    for league, (matches, _stats, resolver) in d.per_league.items():
+        tok_by: dict[tuple, str] = {}
+        for slug, (names, _ev) in d.tokens.items():
+            for name, token in names.items():
+                res = resolver.resolve(league, text=name, venue="polymarket")
+                if res.ok:
+                    tok_by[(slug, res.entity_id)] = token
+        by_game: dict[str, dict] = {}
+        for m in matches:
+            by_game.setdefault(m["game_id"], {})[m["entity_id"]] = m
+        for gid, rows in by_game.items():
+            g = games_by_id.get(gid)
+            if g is None or len(rows) != 2:
+                blocked[gid] = "INCOMPLETE_EXACT_TWO_OUTCOME_MATCH"
+                continue
+            outcomes: dict[str, dict] = {}
+            slug = next(iter(rows.values()))["pm_event"]
+            for ent, m in rows.items():
+                tok = tok_by.get((m["pm_event"], ent))
+                if not tok:
+                    break
+                outcomes[ent] = {"kalshi": m["kalshi_outcome"], "polymarket": tok}
+            if len(outcomes) != 2:
+                detail = d.token_errors.get(slug)
+                blocked[gid] = "PM_TOKEN_RESOLUTION" + (f": {detail}" if detail else "")
+                continue
+            fees: dict[str, dict] = {}
+            if league in d.fee_params.get("kalshi", {}):
+                fees["kalshi"] = dict(d.fee_params["kalshi"][league])
+            if slug in d.fee_params.get("polymarket", {}):
+                fees["polymarket"] = dict(d.fee_params["polymarket"][slug])
+            ev = d.tokens.get(slug, (None, {}))[1]
+            slate[gid] = {"league": league, "short_name": g.short_name, "state": g.state,
+                          "start_utc": g.start_utc, "outcomes": outcomes, "fee_params": fees,
+                          "pm_slug": slug,
+                          "kalshi_event": next(iter(rows.values()))["kalshi_event"],
+                          "pm_limits": pm_order_limits(pm_market_for_slug(ev, slug) or {})}
+    return slate, blocked
+
+
+# ── the registry on disk ─────────────────────────────────────────────────────
+EVENTS_DDL = """
+CREATE TABLE IF NOT EXISTS events(
+  event_id TEXT PRIMARY KEY, league TEXT NOT NULL, start_utc INTEGER, participants TEXT,
+  short_name TEXT, phase TEXT NOT NULL, kalshi_event TEXT, pm_slug TEXT, fee_params_json TEXT,
+  first_seen_ts REAL NOT NULL, last_seen_ts REAL NOT NULL, block_reason TEXT);
+CREATE TABLE IF NOT EXISTS event_transitions(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, event_id TEXT NOT NULL,
+  phase TEXT NOT NULL, block_reason TEXT);
+CREATE INDEX IF NOT EXISTS event_transitions_event ON event_transitions(event_id, seen_ts);
+"""
+
+
+def record_events(store, d: Discovery, slate: Mapping[str, dict], blocked: Mapping[str, str],
+                  *, now: float | None = None) -> int:
+    """Upsert every discovered game; append a transition only when phase or block changes.
+
+    Returns the number of transitions written. `store` is a `nodes/store_tuples.TupleStore`
+    (anything with `.ensure_ddl` and `.con` works). Phase is ESPN's state (`pre|in|post`) with
+    `co_listed` recorded alongside so the registry says which games actually had four books.
+    """
+    t = now or time.time()
+    store.ensure_ddl(EVENTS_DDL)
+    con = store.con
+    written = 0
+    for g in d.games:
+        spec = slate.get(g.game_id)
+        phase = f"{g.state}:co_listed" if spec else g.state
+        reason = blocked.get(g.game_id)
+        row = con.execute("SELECT phase, block_reason FROM events WHERE event_id=?",
+                          (g.game_id,)).fetchone()
+        con.execute(
+            "INSERT INTO events(event_id, league, start_utc, participants, short_name, phase, "
+            "kalshi_event, pm_slug, fee_params_json, first_seen_ts, last_seen_ts, block_reason) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_id) DO UPDATE SET "
+            "phase=excluded.phase, kalshi_event=COALESCE(excluded.kalshi_event, events.kalshi_event), "
+            "pm_slug=COALESCE(excluded.pm_slug, events.pm_slug), "
+            "fee_params_json=COALESCE(excluded.fee_params_json, events.fee_params_json), "
+            "last_seen_ts=excluded.last_seen_ts, block_reason=excluded.block_reason",
+            (g.game_id, g.league, g.start_utc, json.dumps(list(g.participants_espn)), g.short_name,
+             phase, spec["kalshi_event"] if spec else None, spec["pm_slug"] if spec else None,
+             json.dumps(spec["fee_params"], sort_keys=True) if spec else None, t, t, reason))
+        if row is None or (row[0], row[1]) != (phase, reason):
+            con.execute("INSERT INTO event_transitions(seen_ts, event_id, phase, block_reason) "
+                        "VALUES(?,?,?,?)", (t, g.game_id, phase, reason))
+            written += 1
+    return written

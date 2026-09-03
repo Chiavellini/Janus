@@ -17,7 +17,12 @@ Kalshi API ──▶ [venue_kalshi] ──▶ Book(asks) ──▶ [cover]
 
 ## Contract
 
-`kalshi_book(payload, side, fetched_utc)` → `Book`; `fetch_kalshi_books(tickers, client)`.
+`kalshi_book(payload, side, fetched_utc)` → `Book`; `fetch_kalshi_books(tickers, client)`;
+`fetch_kalshi_series(ticker, client)` and `kalshi_fee_params(series)` → `{fee_type, fee_multiplier}`
+or `None`. `adapter.py` registers the venue (`data_quality="live"`, `kalshi_clob`).
+
+**The multiplier is per series and it is not 1.0 for sports.** KXMLBGAME: `quadratic_with_maker_fees`,
+0.5 (2026-09-02). A `None` from `kalshi_fee_params` must block the leg, never fall back to the pin.
 
 ## Failure modes
 
@@ -30,4 +35,5 @@ indistinguishable from an exhausted one.
 
 ## Tests
 
-`nodes/cover/tests/test_cover.py` covers the parser (the bids-only fold).
+`tests/test_books.py` (the fold, the complementary NO ladder), `tests/test_series.py` (fee
+params, registration), and `nodes/cover/tests/test_cover.py`.

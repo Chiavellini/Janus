@@ -34,6 +34,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+from kernel.redact import brief_error
 from nodes.book_replica.replica import BookReplica, Fault
 from nodes.stream_kalshi.protocol import (TickerBook, parse, subscribe_frame)
 
@@ -213,7 +214,7 @@ class KalshiStream:
                 raise
             except Exception as exc:  # noqa: BLE001 -- reconnect is the whole job
                 self.connected = False
-                self.last_error = f"{type(exc).__name__}: {exc}"
+                self.last_error = brief_error(exc)
                 if on_state:
                     on_state("reconnect", self.last_error)
                 # Replicas stop serving books on heartbeat timeout; make it immediate and explicit.

@@ -32,8 +32,11 @@ Its limit, stated plainly: **it verifies the top of book only.** A level driftin
 ladder is invisible to it, and `nodes/cover` walks the ladder — so a periodic REST reconciliation
 (`BookReplica.reconcile`) remains the backstop for depth. It is no longer the primary defence.
 
-On mismatch the replica is invalidated and a resnapshot forced. A resync is cheap; a fabricated
-gap is not.
+On mismatch the replica is invalidated, the drifted local ladder is dropped, and the asset is
+queued for an **unsubscribe/subscribe round trip** on the socket — the only way this channel
+yields a fresh `book`. (Until 2026-09-02 the code only set `resubscribe_needed`; the wanted set
+was unchanged, so no frame went out and recovery waited on the venue's next trade.) A resync is
+cheap; a fabricated gap is not.
 
 ## Three more wire traps
 

@@ -113,3 +113,34 @@ capital:
 | Date | Change | What was already known |
 |---|---|---|
 | 2026-07-24 | Created at Phase 0, before any Janus result exists. | Nothing — zero Janus data collected. |
+| 2026-09-02 | Sports equivalents for steps 1–8 defined below. No sports execution result exists; shadow evidence so far is a cover-cost distribution with no actionable observation and fees now known to have been overstated 2× on the Kalshi leg. | Best streamed cover cost 1.0020; tennis 0 actionable frontiers; stage 3 interim "prices diverge, the fee floor eats it". |
+
+### 2026-09-02 amendment — the sports arm
+
+Steps 1–6 above were written for the crypto two-leg (BRTI vs Chainlink, seven assets, R1–R3). The
+sports arm keeps every step and every clause; only the nouns change. Appended, not edited.
+
+- **Step 1, corpus** = the co-listed pair map from `nodes/discovery`, byte-identical on re-run,
+  with every unmatched game in a named reason bucket (`INCOMPLETE_EXACT_TWO_OUTCOME_MATCH`,
+  `PM_TOKEN_RESOLUTION`, `FEE_SCHEDULE_MISSING`, `RULE_UNCITED`, …). Zero silent drops.
+- **Step 2, capture** = a 72 h soak of raw WebSocket frame capture (`nodes/capture`) on both venues:
+  zero unexplained sequence gaps on Kalshi, Polymarket top-of-book agreement ≥ 99.5% with every
+  drift resynced, disk inside budget, clean resume from a mid-window kill, and every stream alarm
+  demonstrated firing.
+- **Step 3, seal** = the forward era is the first day the streaming lane runs with fees read from
+  the venues' payloads and settlement equivalence gating covers. Nothing before it counts.
+- **Step 4, faithfulness** = `nodes/replay` rebuilds every `stream_evaluations` row from captured
+  frames by importing the runner's own constants (fee params, enums, thresholds). Zero mismatches.
+- **Step 5, gates** = G1–G5 over the recorded cover-cost distribution per league and quantity,
+  pre-registered. "Edge" is a locked return after fees, buffers and settlement risk, never a mid.
+- **Step 6, one-shot** = unchanged.
+- **Step 7, forward paper** = `PAPER_EXECUTION` against live replicas with the same coordinator that
+  would trade, n pre-computed from a power calculation on the recorded distribution.
+- **Step 8, execution proof** = Kalshi demo round-trip (place → poll → cancel → settle) on the demo
+  host. **Polymarket has no demo environment**: its leg's first real test is the one $5
+  `LIMITED_LIVE` fill, with the charged fee matching the market's `feeSchedule` and the Kalshi fee
+  matching `fee_multiplier` from the series. A fee above either is a STOP and a re-pin.
+- **Cross-venue additions, item 1** (leg risk) = the measured rate at which the two venues settle
+  the same game differently — cancellation, postponement, suspension, tie — from
+  `nodes/settle_wedge`, priced into the settlement-risk buffer. Until measured the label is
+  `settlement_risk_modelled=False` and the mode is capped at `PAPER_EXECUTION`.

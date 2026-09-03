@@ -42,7 +42,7 @@ fed**. It is still an actor — it owns state and a lifecycle — it simply is n
 Nothing runs on a timer. A timer samples a market, and a market that moves 28¢ between samples
 cannot be sampled into an answer.
 
-## The two refusals
+## The three refusals
 
 1. **Every replica must be SYNCED and fresh.** Three good replicas do not make a fourth
    trustworthy — one drifted book blocks the whole cover.
@@ -50,8 +50,13 @@ cannot be sampled into an answer.
    never gets a poller at all, so no subscription is spent on it. An EPL poller is `BLOCKED` before
    it opens a single book.
 
-These are the two ways a streaming arbitrage system lies to itself: a drifted replica invents a gap,
-and an incomplete outcome set turns "the draw is invisible" into a 31% return.
+3. **A leg without its venue's fee schedule is blocked** (`FEE_SCHEDULE_MISSING`). `fee_params`
+   comes from `nodes/discovery` — Kalshi's series multiplier and Polymarket's `feeSchedule` —
+   never a constant. The lane charged 1.0× and 0.05 for a month; the venues said 0.5× and 0.05.
+
+These are the ways a streaming arbitrage system lies to itself: a drifted replica invents a gap,
+an incomplete outcome set turns "the draw is invisible" into a 31% return, and a fee constant
+moves the hurdle without anyone noticing.
 
 ## States
 
@@ -60,5 +65,6 @@ and an incomplete outcome set turns "the draw is invisible" into a 31% return.
 
 ## Tests
 
-`tests/test_poller.py` — 12 tests, including that a 3-way league never gets a poller, that one
-desynced replica blocks the cover, and that a same-venue cover is not counted as an opportunity.
+`tests/test_poller.py` — 14 tests, including that a 3-way league never gets a poller, that one
+desynced replica blocks the cover, that a same-venue cover is not counted as an opportunity,
+and that a missing fee schedule blocks rather than defaults.

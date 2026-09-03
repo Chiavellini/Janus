@@ -113,7 +113,8 @@ def test_drift_invalidates_the_replica_and_forces_a_resnapshot():
     assert s.drift == 1
     assert r.state is ReplicaState.RESYNCING
     assert r.snapshot(T) is None
-    assert s.resubscribe_needed
+    assert A in s.resnapshot, "queued for an unsubscribe/subscribe round trip"
+    assert A not in s.books, "the drifted local ladder is dropped, not patched"
 
 
 def test_agreement_is_tracked_so_the_check_can_be_audited():
@@ -239,3 +240,54 @@ def test_a_genuinely_quiet_market_still_decays_and_forces_a_resnapshot():
     for i in range(1, 60):
         s.handle("PONG", now=T + i)                 # socket alive, no book traffic at all
     assert r.check(T + 59, max_age_s=1e9) is Fault.UNVERIFIED_TOO_LONG
+
+
+def test_a_drift_actually_sends_an_unsubscribe_and_subscribe_frame():
+    """Found by reading the run loop: drift set `resubscribe_needed`, but the wanted set was
+    unchanged, so the diff was empty and NO frame went out. The replica sat in RESYNCING until the
+    venue happened to push a fresh book. A forced resnapshot is a frame, not a wish."""
+    s = PolymarketStream()
+    sent = []
+
+    class FakeWS:
+        def __init__(self): self.n = 0
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def send(self, m): sent.append(json.loads(m) if m.startswith("{") else m)
+        async def recv(self):
+            self.n += 1
+            if self.n == 1:
+                return json.dumps(BOOK)
+            if self.n == 2:
+                return json.dumps(change(0.19, 0, bb=0.77, ba=0.20))      # drift
+            if self.n == 3:
+                return json.dumps(BOOK)                                    # the fresh snapshot
+            raise asyncio.CancelledError
+
+    r = BookReplica("polymarket", A, verification="stream")
+    s.register(A, r)
+
+    async def go():
+        stop = asyncio.Event()
+        try:
+            await asyncio.wait_for(s.run(stop, connect=lambda u: FakeWS()), timeout=1.0)
+        except (asyncio.CancelledError, asyncio.TimeoutError):
+            pass
+
+    asyncio.run(go())
+    frames = [f for f in sent if isinstance(f, dict)]
+    ops = [(f.get("operation"), tuple(f["assets_ids"])) for f in frames if "operation" in f]
+    assert ops == [("unsubscribe", (A,)), ("subscribe", (A,))], ops
+    assert s.drift == 1 and not s.resnapshot
+    assert r.state is ReplicaState.SYNCED, "the forced snapshot re-synced it"
+
+
+def test_a_change_after_drift_is_not_folded_into_the_dropped_book():
+    s = PolymarketStream()
+    r = BookReplica("polymarket", A, verification="stream")
+    s.register(A, r)
+    s.handle(BOOK, now=T)
+    s.handle(change(0.19, 0, bb=0.77, ba=0.20), now=T)
+    kinds = s.handle(change(0.18, 3), now=T)
+    assert kinds == ["ignored"] and A not in s.books
+    assert r.state is ReplicaState.RESYNCING

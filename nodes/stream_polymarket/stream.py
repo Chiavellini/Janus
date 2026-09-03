@@ -30,6 +30,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable
 
+from kernel.redact import brief_error
 from nodes.book_replica.replica import BookReplica, Fault
 from nodes.stream_polymarket.protocol import (AssetBook, PING, PONG, events_in, operation_frame,
                                               parse_event, subscribe_frame)
@@ -52,6 +53,11 @@ class PolymarketStream:
     regs: dict[str, list[Registration]] = field(default_factory=dict)     # asset_id -> regs
     connected: bool = False
     resubscribe_needed: bool = False
+    #: Assets whose local book drifted from the venue's claimed top. The run loop unsubscribes
+    #: and resubscribes each one, which is the only way this channel yields a fresh `book`.
+    #: Setting `resubscribe_needed` alone did nothing here: the wanted set was unchanged, so
+    #: the diff was empty and no frame went out -- recovery waited on the venue's next trade.
+    resnapshot: set[str] = field(default_factory=set)
 
     frames: int = 0
     snapshots: int = 0
@@ -140,7 +146,10 @@ class PolymarketStream:
                             self.last_error = (
                                 f"top-of-book drift on {p.asset_id[:12]}…: venue says "
                                 f"{p.claimed_bid}/{p.claimed_ask}, local {book.best_bid}/{book.best_ask}")
-                            self.resubscribe_needed = True
+                            self.resnapshot.add(p.asset_id)
+                            # Drop the drifted local book too: further changes must not be
+                            # folded into a ladder already known to be wrong.
+                            self.books.pop(p.asset_id, None)
                             for reg in self.regs.get(p.asset_id, ()):
                                 reg.replica.invalidate(Fault.HASH_MISMATCH)
                             continue
@@ -199,6 +208,7 @@ class PolymarketStream:
                                 continue
                             if not subscribed:
                                 await ws.send(json.dumps(subscribe_frame(want)))
+                                self.resnapshot.clear()     # a full subscribe snapshots all
                             else:
                                 added, gone = want - subscribed, subscribed - want
                                 if added:
@@ -206,13 +216,18 @@ class PolymarketStream:
                                 if gone:
                                     await ws.send(json.dumps(operation_frame(gone, "unsubscribe")))
                             subscribed = want
+                        pending = self.resnapshot & subscribed
+                        if pending:
+                            self.resnapshot -= pending
+                            await ws.send(json.dumps(operation_frame(pending, "unsubscribe")))
+                            await ws.send(json.dumps(operation_frame(pending, "subscribe")))
                         raw = await asyncio.wait_for(ws.recv(), timeout=recv_timeout)
                         self.handle(raw)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001 -- reconnect is the whole job
                 self.connected = False
-                self.last_error = f"{type(exc).__name__}: {exc}"
+                self.last_error = brief_error(exc)
                 if on_state:
                     on_state("reconnect", self.last_error)
                 for regs in self.regs.values():

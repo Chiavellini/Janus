@@ -97,3 +97,12 @@ def test_every_registered_sla_job_is_not_also_disabled():
 def test_watchdog_reports_unregistered_jobs_rather_than_ignoring_them(index):
     ri._append(index, {"ts": NOW, "job": "stranger", "status": "OK", "exit": 0})
     assert any("UNREGISTERED" in a for a in wd.check(index, now=NOW, slas={}))
+
+
+def test_secret_flag_values_never_reach_the_index(index):
+    """The index is append-only and forever. No flag carries a secret today; this is what keeps
+    the first `--api-key ...` anyone adds from being persisted verbatim."""
+    ri.start("j", index=index, argv=["--api-key", "sk-live-123", "--once"])
+    row = ri.last_per_job(index)["j"]
+    assert row["argv"] == ["--api-key", "<redacted>", "--once"]
+    assert "sk-live-123" not in index.read_text()

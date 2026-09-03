@@ -24,8 +24,12 @@ import argparse
 import json
 import os
 import socket
+import sys
 import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from kernel.redact import redact_argv  # noqa: E402
 
 #: Never the root disk. /Volumes/Kilos has 678 GB free; / has ~10 GB and is 91% full.
 INDEX = Path("/Volumes/Kilos/janus/runs/index.jsonl")
@@ -49,7 +53,7 @@ def start(job: str, *, index: Path = INDEX, argv: list[str] | None = None) -> st
     run_id = f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{job}_{os.getpid()}"
     _append(index, {"ts": round(time.time(), 3), "job": job, "run_id": run_id,
                     "status": "started", "pid": os.getpid(), "host": socket.gethostname(),
-                    "argv": argv or []})
+                    "argv": redact_argv(argv)})
     return run_id
 
 

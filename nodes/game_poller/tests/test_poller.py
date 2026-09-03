@@ -11,7 +11,13 @@ OUT = {"home": {"kalshi": "K_H", "polymarket": "P_H"},
        "away": {"kalshi": "K_A", "polymarket": "P_A"}}
 
 
+#: What the venues actually reported on 2026-09-02. The poller refuses a leg without these.
+FEES = {"kalshi": {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 0.5},
+        "polymarket": {"fee_rate": 0.03}}
+
+
 def mlb(**kw) -> GamePoller:
+    kw.setdefault("fee_params", FEES)
     return GamePoller("g1", "mlb", OUT, quantities=(100.0,), **kw)
 
 
@@ -125,3 +131,24 @@ def test_a_single_venue_cover_is_not_counted_as_an_opportunity():
     e = p.on_event("kalshi", "K_H", now=T)[0]
     assert e.cover.ok and e.cover.single_venue
     assert p.opportunities == 0
+
+
+def test_a_leg_without_a_fee_schedule_is_blocked_not_defaulted():
+    """The lane hardcoded PM at 0.05 and let Kalshi default to 1.0x. The venues said 0.03 and
+    0.5x. A missing schedule is a BLOCK with a name, never a constant."""
+    p = mlb(fee_params={"kalshi": FEES["kalshi"]})          # PM schedule never fetched
+    sync_all(p, kh=0.44, pa=0.44)
+    e = p.on_event("kalshi", "K_H", now=T)[0]
+    assert e.cover is None
+    assert e.blocked_by == "polymarket:home:FEE_SCHEDULE_MISSING"
+
+
+def test_the_fee_schedule_reaches_the_cover_verbatim():
+    p = mlb()
+    sync_all(p, kh=0.48, pa=0.48)
+    e = p.on_event("kalshi", "K_H", now=T)[0]
+    assert {l.venue for l in e.cover.legs} == {"kalshi", "polymarket"}
+    # Kalshi 0.5x on a 0.48 fill: 0.07*0.5*100*100*0.48*0.52 = 87.36c -> ceil 88c (175c at 1.0x).
+    # PM at the market's 0.03: 100*0.03*0.48*0.52 = 74.88c (124.8c at the hardcoded 0.05).
+    expected = 0.88 + 100 * 0.03 * 0.48 * 0.52
+    assert abs(e.cover.fee_per_contract * 100.0 - expected) < 1e-9

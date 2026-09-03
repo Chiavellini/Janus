@@ -18,21 +18,20 @@ import traceback
 import csv
 import json
 import time
-from collections import Counter, defaultdict
-from dataclasses import dataclass
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from nodes.entities.resolve import Resolver  # noqa: E402
 from kernel.fetch import Client  # noqa: E402
-from nodes.schedule_espn import espn  # noqa: E402
-from nodes.match_sports.sports_match import kalshi_markets, pair, pm_markets  # noqa: E402
+from kernel.redact import brief_error  # noqa: E402
+from kernel.schema import liquidity_source_for  # noqa: E402
 from nodes.venue_kalshi.books import kalshi_book  # noqa: E402
-from nodes.venue_polymarket.books import pm_book, pm_token_map  # noqa: E402
+from nodes.venue_polymarket.books import pm_book  # noqa: E402
+from nodes.discovery.discovery import DEFAULT_PRE_HOURS, Discovery, discover  # noqa: E402
 from nodes.cover.cover import Leg, best_cover  # noqa: E402
 from nodes.rules_exhaustive.rules import NotExhaustive, prove  # noqa: E402
 from nodes.fees.targeting import hurdle_for  # noqa: E402
@@ -51,11 +50,8 @@ RUNS_DIR = Path("/Volumes/Kilos/janus/runs/live_sports")
 DB = Path("/Volumes/Kilos/janus/tuples/tuples.sqlite")
 QUANTITIES = (5.0, 25.0, 100.0)
 
-#: Hours ahead of first pitch/puck to start watching a pre-game market.
-DEFAULT_PRE_HOURS = 6.0
 MIN_RETURN = 0.01
 MAX_QUOTE_SKEW = 5.0
-LIQUIDITY_SOURCE = {"kalshi": "kalshi_clob", "polymarket": "polymarket_clob"}
 
 
 def _fetch_book(client: Client, venue: str, market_id: str, token: str | None = None) -> dict:
@@ -87,94 +83,6 @@ def _book_levels(book) -> list[dict]:
             for q in arr[:20]]
 
 
-def _live_games(leagues: list[str], now: datetime, include_near: bool,
-                pre_hours: float = DEFAULT_PRE_HOURS) -> tuple[list, dict]:
-    """In-progress games, plus pre-game starting within `pre_hours`.
-
-    The window used to be a hardcoded +/-30 minutes, which is why the 2026-09-02 scan saw exactly
-    one game against a registered universe of 30 days. One ESPN failure also killed every league,
-    because the loop had no guard -- so each league is isolated here and a failed league is
-    reported rather than fatal.
-    """
-    games, failures = [], {}
-    horizon = max(1.0, pre_hours / 24.0 + 1.0)
-    for league in leagues:
-        try:
-            schedule = espn.fetch_range(league, now - timedelta(days=1),
-                                        now + timedelta(days=horizon), use_cache=False)
-        except Exception as exc:  # noqa: BLE001 -- one league must not take the others down
-            failures[league] = f"{type(exc).__name__}: {exc}"
-            continue
-        for g in schedule:
-            delta = g.start_utc - now.timestamp()
-            if g.state == "in" or (include_near and g.state == "pre"
-                                   and -1800 <= delta <= pre_hours * 3600.0):
-                games.append(g)
-    return games, {"by_id": {g.game_id: g for g in games}, "schedule_failures": failures}
-
-
-def _match_live(league: str, games: list, now: datetime):
-    by_pair = espn.index_by_participants(games)
-    resolver = Resolver.load()
-    stats = Counter(); stats["k_reason"] = Counter(); stats["p_reason"] = Counter()
-    near_miss: list[dict] = []
-    # These helpers query only the league game series and its sports tag. They do not persist the
-    # returned catalog, and the result is immediately reduced to the live game ids.
-    kms = kalshi_markets(league, resolver, by_pair,
-                         (int((now - timedelta(days=1)).timestamp()), int((now + timedelta(days=1)).timestamp())),
-                         stats, near_miss)
-    pms = pm_markets(league, resolver, by_pair,
-                     (int((now - timedelta(days=1)).timestamp()), int((now + timedelta(days=1)).timestamp())),
-                     stats, near_miss)
-    live_ids = {g.game_id for g in games}
-    return [p for p in pair(kms, pms) if p["game_id"] in live_ids], {
-        "kalshi_markets": len(kms), "polymarket_markets": len(pms),
-        "near_misses": len(near_miss), "matcher_reasons": {"kalshi": dict(stats["k_reason"]),
-                                                               "polymarket": dict(stats["p_reason"])}}, resolver
-
-
-@dataclass
-class Discovery:
-    """The slate: which markets to watch, on which venue, for which canonical outcome.
-
-    Discovery is SLOW (ESPN per league, a paginated Kalshi pull, a paginated PM Gamma pull, then
-    one Gamma call per slug) and changes on the order of minutes -- games start, games end, new
-    markets list. Book polling is FAST and is the only thing that needs to run every few seconds.
-    Recomputing the slate on every sweep hammered three APIs to re-derive a nearly identical
-    answer; this splits the two clocks.
-    """
-    made_utc: float
-    games: list
-    schedule_failures: dict[str, str]
-    per_league: dict            # league -> (matches, match_stats, resolver)
-    tokens: dict                # slug -> ({outcome_label: token}, event)
-    token_errors: dict[str, str]
-
-    def age_s(self, now: float | None = None) -> float:
-        return (now or time.time()) - self.made_utc
-
-
-def discover(leagues: list[str], now: datetime, include_near: bool, pre_hours: float,
-             pclient: Client) -> Discovery:
-    """Build the watch set. Every failure is recorded, none is fatal."""
-    games, meta = _live_games(leagues, now, include_near, pre_hours)
-    per_league, slugs = {}, set()
-    for league in leagues:
-        lg_games = [g for g in games if g.league == league]
-        if not lg_games:
-            continue
-        try:
-            matches, stats, resolver = _match_live(league, lg_games, now)
-        except Exception as exc:  # noqa: BLE001 -- one league must not take the slate down
-            meta["schedule_failures"][league] = f"match: {type(exc).__name__}: {exc}"
-            continue
-        per_league[league] = (matches, stats, resolver)
-        slugs |= {m["pm_event"] for m in matches}
-    tokens = pm_token_map(sorted(slugs), pclient) if slugs else {}
-    token_errors = tokens.pop("__errors__", {})
-    return Discovery(time.time(), games, meta["schedule_failures"], per_league, tokens, token_errors)
-
-
 def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
          pre_hours: float = DEFAULT_PRE_HOURS,
          discovery: Discovery | None = None) -> dict:
@@ -186,6 +94,7 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
     store = TupleStore(db)
     kclient, pclient = Client("kalshi", rate=8, burst=8, cache_dir=None), Client("polymarket", rate=8, burst=8, cache_dir=None)
     discovered = watched = changed = opportunities = 0
+    sweep_error: str | None = None
     try:
         d = discovery or discover(leagues, now, include_near, pre_hours, pclient)
         result["discovery_age_s"] = round(d.age_s(), 1)
@@ -248,6 +157,14 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                 if skew > MAX_QUOTE_SKEW:
                     result["blocked"].append({"game_id": g.game_id, "reason": "QUOTE_SKEW", "skew_s": round(skew, 3)})
                     result["games"].append(game_out); continue
+                # Fees are what the venues REPORTED (series multiplier, Gamma feeSchedule), never
+                # a constant. A leg whose schedule was not fetched blocks the game.
+                k_fees = d.fee_params["kalshi"].get(league)
+                pm_fees = d.fee_params["polymarket"].get(rows[0]["pm_event"])
+                if k_fees is None or pm_fees is None:
+                    result["blocked"].append({"game_id": g.game_id, "reason": "FEE_SCHEDULE_MISSING",
+                                              "kalshi": k_fees is not None, "polymarket": pm_fees is not None})
+                    result["games"].append(game_out); continue
                 offers = defaultdict(list)
                 by_entity = {m["entity_id"]: m for m in rows}
                 for m in rows:
@@ -255,8 +172,8 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                     pf = fetched.get(("polymarket", m["pm_outcome"]))
                     if not kf or not pf: continue
                     legs = [
-                        Leg("kalshi", LIQUIDITY_SOURCE["kalshi"], m["kalshi_outcome"], m["kalshi_event"], kf["book"]),
-                        Leg("polymarket", LIQUIDITY_SOURCE["polymarket"], m["pm_outcome"], m["pm_event"], pf["book"], {"fee_rate": 0.05}),
+                        Leg("kalshi", liquidity_source_for("kalshi"), m["kalshi_outcome"], m["kalshi_event"], kf["book"], dict(k_fees)),
+                        Leg("polymarket", liquidity_source_for("polymarket"), m["pm_outcome"], m["pm_event"], pf["book"], dict(pm_fees)),
                     ]
                     # The complementary market's NO ladder is the same exposure from a different
                     # book. Its outcome_id is that market's ticker, so the liquidity_source guard
@@ -265,9 +182,9 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                     if other is not None:
                         okf = fetched.get(("kalshi", other["kalshi_outcome"]))
                         if okf and okf.get("no_book") and okf["no_book"].asks:
-                            legs.append(Leg("kalshi", LIQUIDITY_SOURCE["kalshi"],
+                            legs.append(Leg("kalshi", liquidity_source_for("kalshi"),
                                             f"{other['kalshi_outcome']}:NO", other["kalshi_event"],
-                                            okf["no_book"]))
+                                            okf["no_book"], dict(k_fees)))
                     offers[m["entity_id"]] = legs
                     for venue, f in (("kalshi", kf), ("polymarket", pf)):
                         b = f["book"]
@@ -320,7 +237,8 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                     # hurdle is computable in advance from the price, so record the distance to
                     # actionable in cents -- that is the near-miss channel, empty since August.
                     fav = max((l.vwap for l in cov.legs), default=None) if cov.ok else None
-                    hd = hurdle_for(fav, hurdle=MIN_RETURN) if fav is not None else None
+                    hd = (hurdle_for(fav, hurdle=MIN_RETURN, overrides_a=k_fees, overrides_b=pm_fees)
+                          if fav is not None else None)
                     gross = cov.gross_per_contract if cov.ok else None
                     opp = {"game_id": g.game_id, "short_name": g.short_name, "quantity": q, "status": status,
                            "cost_per_contract": cov.cost_per_contract, "edge_per_contract": edge,
@@ -341,11 +259,14 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                               "book_rtt_ms": sorted(lat for g in result["games"] for lat in g.get("book_latency_ms", {}).values()),
                               "quote_skew_s": sorted(g.get("book_quote_skew_s") for g in result["games"] if g.get("book_quote_skew_s") is not None)}
         result["status"] = "OK"
+    except Exception as exc:  # noqa: BLE001 -- recorded on the sweep row, then re-raised
+        sweep_error = brief_error(exc)
+        raise
     finally:
         result["finished_utc"] = datetime.now(timezone.utc).isoformat()
         store.sweep(sweep_id=sweep_id, started_ts=started, finished_ts=time.time(), universe="live:" + ",".join(leagues),
                     n_discovered=discovered, n_watched=watched, n_changed=changed,
-                    n_opportunities=opportunities, status=result.get("status", "ERROR"), error=None)
+                    n_opportunities=opportunities, status=result.get("status", "ERROR"), error=sweep_error)
         store.commit(); store.close()
     return result
 

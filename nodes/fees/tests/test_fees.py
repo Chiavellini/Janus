@@ -23,6 +23,10 @@ from kernel.schema import (  # noqa: E402
     Book, CanonicalKey, NormMarket, Outcome, Quote, SettleRef, VoidPolicy,
 )
 
+#: Kalshi's 1x tier, passed explicitly. A missing or null multiplier is an ERROR (see
+#: test_a_null_multiplier_is_an_error_not_a_default); tests say what they mean.
+K1 = {"fee_multiplier": 1.0}
+
 
 # ── schema ────────────────────────────────────────────────────────────────
 
@@ -93,11 +97,11 @@ def test_legacy_cost_anchors_reproduce():
 
     for price_c in (1.0, 21.0, 25.0, 50.0, 70.0, 75.0, 99.0):
         p = price_c / 100.0
-        new = k.entry_cost([fm.Fill("kalshi", "M", "y", "buy", p, 1.0)], {}) * 100.0
+        new = k.entry_cost([fm.Fill("kalshi", "M", "y", "buy", p, 1.0)], K1) * 100.0
         assert abs(new - float(vc.kalshi_fee_cents(price_c))) < 1e-9, (price_c, new)
 
         new_mk = k.entry_cost([fm.Fill("kalshi", "M", "y", "buy", p, 1.0,
-                                       liquidity="maker")], {}) * 100.0
+                                       liquidity="maker")], K1) * 100.0
         assert abs(new_mk - float(vc.kalshi_fee_cents(price_c, coeff=vc.KALSHI_MAKER_COEFF))) < 1e-9
 
         new_pm = pm.entry_cost([fm.Fill("pm", "M", "y", "buy", p, 1.0)], {}) * 100.0
@@ -105,7 +109,7 @@ def test_legacy_cost_anchors_reproduce():
 
     # per-order amortisation across sizes
     for n in (1, 2, 10, 100, 1000):
-        new = k.entry_cost([fm.Fill("kalshi", "M", "y", "buy", 0.50, float(n))], {}) * 100.0 / n
+        new = k.entry_cost([fm.Fill("kalshi", "M", "y", "buy", 0.50, float(n))], K1) * 100.0 / n
         assert abs(new - vc.kalshi_fee_cents_per_contract(50.0, n_contracts=n)) < 1e-9, n
 
     # PM's on-chain-verified anchor
@@ -116,9 +120,9 @@ def test_legacy_cost_anchors_reproduce():
 def test_kalshi_ceil_is_per_order_not_per_contract():
     """100 contracts in one order pay the ceil once; as 100 orders they pay it 100 times."""
     k = fm.KalshiQuadratic()
-    one_order = k.entry_cost([fm.Fill("kalshi", "M", "y", "buy", 0.50, 100.0)], {})
+    one_order = k.entry_cost([fm.Fill("kalshi", "M", "y", "buy", 0.50, 100.0)], K1)
     many = k.entry_cost([fm.Fill("kalshi", "M", "y", "buy", 0.50, 1.0, order_seq=i)
-                         for i in range(100)], {})
+                         for i in range(100)], K1)
     assert abs(one_order - 1.75) < 1e-12
     assert abs(many - 2.00) < 1e-12
     assert many > one_order
@@ -213,7 +217,7 @@ def test_fee_floor_by_venue_pair():
     p = 0.50
 
     def kalshi_leg(c=1.0):
-        return k.entry_cost([fm.Fill("kalshi", "M", "o", "buy", p, c)], {}) * 100 / c
+        return k.entry_cost([fm.Fill("kalshi", "M", "o", "buy", p, c)], K1) * 100 / c
 
     def pm_leg(rate, c=1.0):
         return pm.entry_cost([fm.Fill("pm", "M", "o", "buy", p, c)], {"fee_rate": rate}) * 100 / c
@@ -245,3 +249,20 @@ if __name__ == "__main__":
                 print(f"FAIL {name}: {type(e).__name__}: {e}")
     print(f"\n{'ALL PASS' if not fails else f'{fails} FAILED'}")
     sys.exit(1 if fails else 0)
+
+
+def test_a_null_multiplier_is_an_error_not_a_default():
+    """Found live 2026-09-02: KXMLBGAME reports fee_multiplier 0.5 with quadratic_with_maker_fees,
+    and the lane had been charging 1.0x because a missing value silently became 1.0. The model
+    now refuses; the registry pin (1.0) is a labelled screening fallback reached only through
+    params_for, and the live path passes the series value."""
+    import pytest
+    k = fm.KalshiQuadratic()
+    f = [fm.Fill("kalshi", "M", "y", "buy", 0.50, 100.0)]
+    with pytest.raises(ValueError, match="fee_multiplier"):
+        k.entry_cost(f, {})
+    with pytest.raises(ValueError, match="fee_multiplier"):
+        k.entry_cost(f, {"fee_multiplier": None})
+    # 0.5x tier: 0.07*0.5*100*100*0.25 = 87.5c, ceil per order -> 88c. Half the 175c the lane charged.
+    assert abs(k.entry_cost(f, {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 0.5})
+               - 0.88) < 1e-9

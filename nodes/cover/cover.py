@@ -286,7 +286,7 @@ def selftest() -> None:
 
     # ── exhaustiveness is PROVEN, never assumed ──────────────────────────
     offers = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.45, 1000)]))],
-              "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 1000)]))]}
+              "B": [Leg("polymarket", "pm_clob", "b", "m", bk([(0.45, 1000)]))]}
     assert best_cover(offers, 100, now_utc=NOW).reject_reason == REJECT_NOT_EXHAUSTIVE
     good = best_cover(offers, 100, now_utc=NOW, exhaustive=MLB2)
     assert good.ok, good.reject_reason
@@ -297,7 +297,7 @@ def selftest() -> None:
 
     # ── a stale leg is REJECTED, not discounted ──────────────────────────
     stale = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.45, 1000)], age=120))],
-             "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 1000)]))]}
+             "B": [Leg("polymarket", "pm_clob", "b", "m", bk([(0.45, 1000)]))]}
     assert best_cover(stale, 100, now_utc=NOW, exhaustive=MLB2).reject_reason == REJECT_STALE
 
     # ── two legs on the SAME book is an accounting error ─────────────────
@@ -314,12 +314,12 @@ def selftest() -> None:
 
     # ── depth binds BEFORE price: a great touch with no size is no cover ─
     thin = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.10, 5)]))],
-            "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 1000)]))]}
+            "B": [Leg("polymarket", "pm_clob", "b", "m", bk([(0.45, 1000)]))]}
     assert best_cover(thin, 100, now_utc=NOW, exhaustive=MLB2).reject_reason == REJECT_NO_DEPTH
 
     # ── cost RISES with size when the ladder is layered ──────────────────
     lad = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.40, 50), (0.48, 5000)]))],
-           "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 50), (0.50, 5000)]))]}
+           "B": [Leg("polymarket", "pm_clob", "b", "m", bk([(0.45, 50), (0.50, 5000)]))]}
     small = best_cover(lad, 50, now_utc=NOW, exhaustive=MLB2)
     big = best_cover(lad, 500, now_utc=NOW, exhaustive=MLB2)
     assert small.ok and big.ok
@@ -329,7 +329,7 @@ def selftest() -> None:
     # SX Bet charges 0 at entry. If it charged on net winnings, a screen counting only entry fees
     # would rate the cover free. Betfair (5% on net winnings) makes the effect visible.
     bf = {"A": [Leg("betfair", "betfair_exchange", "a", "m", bk([(0.45, 5000)]))],
-          "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 5000)]))]}
+          "B": [Leg("polymarket", "pm_clob", "b", "m", bk([(0.45, 5000)]))]}
     cov = best_cover(bf, 100, now_utc=NOW, exhaustive=MLB2)
     assert cov.ok and cov.fee_per_contract > 0
     assert cov.worst_settlement_state == "a", cov.worst_settlement_state
@@ -343,7 +343,7 @@ def selftest() -> None:
     # still win once fees are counted, which is the entire point of pricing before choosing.
     two = {"A": [Leg("kalshi", "kalshi_clob", "a", "m", bk([(0.50, 5000)])),
                  Leg("sxbet", "sxbet_clob", "a2", "m", bk([(0.505, 5000)]))],
-           "B": [Leg("polymarket", "polymarket_clob", "b", "m", bk([(0.45, 5000)]))]}
+           "B": [Leg("polymarket", "pm_clob", "b", "m", bk([(0.45, 5000)]))]}
     got = best_cover(two, 100, now_utc=NOW, exhaustive=MLB2)
     assert got.ok and got.legs[0].venue == "sxbet", [l.venue for l in got.legs]
 

@@ -24,12 +24,14 @@ settlement state rather than the expected one, hard-rejects stale legs, and dedu
 
 ## Contract
 
-`best_cover(offers, contracts, *, now_utc, max_leg_age_s, exhaustive, top_k)` → `Cover`.
+`best_cover(offers, contracts, *, now_utc, max_leg_age_s, exhaustive, top_k)` → `Cover`, where
+`exhaustive` is an `ExhaustiveOutcomeSet` minted by `nodes/rules_exhaustive` — a bool is
+rejected with `outcome_set_not_proven_exhaustive`.
 `edge_per_contract = 1.0 − cost_per_contract`. Return is on **capital deployed across both legs**.
 
 Five named reject reasons — `stale_leg`, `shared_liquidity_source`,
-`outcome_set_not_proven_exhaustive`, `insufficient_depth`, `quote_not_accepted` — which become
-this node's fault vocabulary under the grid runtime.
+`outcome_set_not_proven_exhaustive`, `insufficient_depth`, `quote_not_accepted`. They map onto
+the `OpportunityStatus` enum (plan P0b) rather than a separate grid runtime.
 
 ## Capacity: how much it is worth, not whether an edge exists
 
@@ -63,22 +65,26 @@ pair in the universe.
 
 ## Failure modes
 
-**`exhaustive` is a caller-supplied `bool`, and `grids/live_sports` passes `True` for every
-league** including `epl` (3-way) and `nfl` (regular-season ties). The module docstring states the
-invariant this violates. An EPL match at home 0.46 / away 0.30 / draw 0.24 reports a cover cost of
-~0.76 and a **+31% locked return** — a bet the match is not drawn. Fix: replace the bool with an
-`ExhaustiveOutcomeSet` token only a citation-checked rule table can mint.
-
-**No leg-risk term.** Both legs are priced at simultaneous full VWAP fill. Measured book RTT is
-402–452 ms per venue and Kalshi leads Polymarket by 5–10 s, with 36% of ≥10 bps jumps unrepriced
-on PM within 60 s. `GATE_TO_LIVE.md` already requires this term.
+**No leg-risk / slippage term.** Both legs are priced at simultaneous full VWAP fill. Kalshi leads
+Polymarket by 5–10 s, with 36% of ≥10 bps jumps unrepriced on PM within 60 s. The buffer must be
+*measured* from captured frames (plan P1/P4), never chosen. `GATE_TO_LIVE.md` already requires it.
 
 **No settlement gate.** `SettleRef`/`VoidPolicy`/`TiePolicy` exist in `kernel/schema.py` and are
-never consulted; there is no `settlement` reject reason.
+never consulted; there is no `settlement` reject reason. `nodes/settle_wedge` (plan P3) adds a
+second proof, composed with `ExhaustiveOutcomeSet` into a `CoverProof` this module will require.
+
+**Fees are only as good as the params on the `Leg`.** `Leg.fee_overrides` must carry the venue's
+own schedule (Kalshi series `fee_type`/`fee_multiplier`, Polymarket `feeSchedule`); with an empty
+dict the registry pin is charged, which for Kalshi sports is 2× the real fee. `nodes/game_poller`
+refuses a leg without a schedule; a direct caller must not.
+
+**Min order size, balance and per-level executability are not modelled** (plan P4).
+`Leg.executable` is a per-leg boolean for sportsbook acceptance, not per level.
 
 A cheaper same-venue cover can mask a real cross-venue one: `best_cover` returns the global
 cheapest and the caller then filters for `cross`, reporting `NO_EDGE`.
 
 ## Tests
 
-`nodes/cover/tests/test_cover.py` — 12 tests. Until 2026-09-02 these were invisible to pytest.
+`nodes/cover/tests/test_cover.py` (12) and `test_capacity.py` (11). Until 2026-09-02 the first
+file was invisible to pytest.

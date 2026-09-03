@@ -20,18 +20,22 @@ one aggregate row per sweep — never repeated full-universe snapshots.
 `market()` upserts; `quote()` appends only on ≥1 tick, ≥10% depth change, or state change;
 `opportunity()` appends only on an actionability/return transition; `sweep()` writes one row per run.
 **Raw venue payloads are never retained.** Data must live on `/Volumes/Kilos` — enforced in
-`__init__`, because the root disk has ~10 GB free.
+`__init__`, because the root disk has ~10 GB free. `ensure_ddl(fragment)` lets a node own its
+tables (idempotent); `nodes/discovery` uses it for `events`.
 
 ## Failure modes
 
-`sweep_runs.error` is written as a hardcoded `None` by `grids/live_sports`, so a failed sweep
-records `status='ERROR'` with the exception discarded.
-
 `status` values mix casing — `ACTIONABLE`/`NO_EDGE` (literals) vs `insufficient_depth` (a
-`reject_reason`), so a downstream `== "INSUFFICIENT_DEPTH"` filter silently misses rows.
+`reject_reason`), so a downstream `== "INSUFFICIENT_DEPTH"` filter silently misses rows. The
+`OpportunityStatus` enum (plan P0b) replaces both.
 
-The table has **three sweep rows, ever**.
+**Sub-tick drift can accumulate unrecorded.** `latest_quotes` is updated on every call, but a
+history row lands only when the move from the *last stored* value is ≥ 1 tick — so a run of
+sub-tick moves that sum to several ticks writes nothing. Pinned by `tests/test_store.py`.
+
+`sweep_runs.error` now carries the exception text (was a hardcoded `None`).
 
 ## Tests
 
-No direct tests — a gap. Exercised incidentally by `venue_cloudbet/tests/test_fixtures.py`.
+`tests/test_store.py` — the volume guard, the material-change gates on quotes, opportunities
+and evaluations, `ensure_ddl`, and that a failed sweep keeps its error.

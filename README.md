@@ -17,39 +17,20 @@ Every unit of work is a **node**: its own directory, its own tests, and a `READM
 it owns and how it connects. A **grid** wires nodes into a runnable pipeline.
 
 ```
-                    ┌──────────────────┐
-   ESPN ───────────▶│  schedule_espn   │──┐
-                    └──────────────────┘  │   canonical key,
-                    ┌──────────────────┐  ├──▶ no title matching
-   venue labels ───▶│     entities     │──┘
-                    └──────────────────┘  │
-                                          ▼
-                                 ┌─────────────────┐
-                                 │  match_sports   │  NO PRICES READ
-                                 └────────┬────────┘
-                                          │ matched pairs
-              ┌───────────────────────────┼───────────────────────────┐
-              ▼                           ▼                           ▼
-     ┌─────────────────┐        ┌──────────────────┐        ┌─────────────────┐
-     │  venue_kalshi   │        │ venue_polymarket │        │   venue_sxbet   │
-     │   CLOB, 1¢ tick │        │  best price LAST │        │  zero-rake CLOB │
-     └────────┬────────┘        └────────┬─────────┘        └────────┬────────┘
-              └───────────────────────────┼───────────────────────────┘
-                                          ▼  Book(asks)
-                                   ┌─────────────┐
-                                   │    fees     │  the only place a fee is defined
-                                   └──────┬──────┘
-                                          ▼
-                                   ┌─────────────┐
-                                   │    cover    │  walks the ladder, worst settlement state
-                                   └──────┬──────┘
-                                          ▼
-                            ┌──────────────────────────┐
-                            │       store_tuples       │──▶ analysis ──▶ research/
-                            └──────────────────────────┘
+   ESPN ──▶ schedule_espn ─┐
+   venue labels ─▶ entities ┼──▶ match_sports (NO PRICES) ──┐
+   Kalshi series fees ──────┤                               ├──▶ discovery ──▶ slate + events table
+   Gamma feeSchedule ───────┘                               │        (fee params per venue, per game)
+                                                            ▼
+                     stream_kalshi ───▶ book_replica ×4 ──▶ game_poller (one actor per live game)
+                     stream_polymarket ▶ book_replica ×4 ──▶   │  rules_exhaustive proof at spawn
+                                                               │  fees ──▶ cover ──▶ capacity
+                                                               ▼
+                                                        store_tuples ──▶ analysis ──▶ research/
 
-   parked: venue_cloudbet (sportsbook — acceptance must precede pricing; see its README)
-   missing: rules_exhaustive, settle_wedge  ── the two gates that make a cover claim honest
+   grids/live_stream composes all of it (the supervisor). grids/live_sports is the REST lane, disabled.
+   parked:  venue_cloudbet (sportsbook; acceptance precedes pricing), venue_sxbet (size convention unverified)
+   missing: settle_wedge ── the settlement-equivalence gate; an unknown rule is a BLOCK, not zero
 ```
 
 ## Layout
@@ -70,27 +51,29 @@ grid imports another grid. That is what keeps a failure attributable to one node
 ## Run it
 
 ```bash
-python3 -m pytest                      # 92 tests, works from any directory
+python3 -m pytest                      # 265 tests, works from any directory, no network
 python3 ops/watchdog.py                # is anything unhealthy?
-python3 -m grids.live_sports.grid --leagues mlb --include-near
+python3 -m grids.live_stream.grid --leagues mlb --once     # one discovery pass, ~15 s of capture
 ```
 
 ## State of the evidence — read this before trusting any number
 
-- The live scanner has run **twice, ever**, on **one game**, inside a single seven-minute window.
-  The "0 opportunities above 1%" result is n=1 at −1.6%, roughly 2.7 points from the hurdle.
-- It is **MLB-only in practice**: `nodes/match_sports` hardcodes `^mlb-` in the Polymarket slug
-  pattern and applies it to all six default leagues, so five of them emit zero pairs.
-- The scan window is live plus ±30 minutes, against a registered universe of 30 days.
-- So the null is a **coverage artifact**, not an economics finding. It says nothing about whether
-  the edge exists.
-
-Two correctness bugs are known and must be fixed **in this order** — fixing coverage first would
-switch on a fake-arbitrage generator:
-
-1. `nodes/cover` receives `exhaustive=True` for every league, including 3-way EPL and tie-capable
-   NFL. Replace the bool with a token only a citation-checked rule table can mint.
-2. Only then, per-league Polymarket slug patterns in `nodes/match_sports`.
+- **No actionable cover has ever been observed.** The streaming lane (`grids/live_stream`) has run
+  over a handful of MLB games at ~200–300 evaluations/s; the best cover cost seen is 1.0020, about
+  1.2¢ from the 1% hurdle on a lopsided game, median ~1.02–1.03. Tennis: 13 co-listed pairs, zero
+  actionable frontiers. Stage 3 (interim, 8 of 40 polls): prices diverge by ~2¢ several times a
+  day and the fee floor eats it.
+- **Fees were wrong on both legs until 2026-09-02.** Kalshi sports series report
+  `fee_multiplier 0.5` (`quadratic_with_maker_fees`); the lane charged 1.0×. Polymarket's rate was
+  hardcoded rather than read from the market's `feeSchedule`. Every "cents from actionable" number
+  before this date overstates the Kalshi fee by 2×. Fees now come from the venues' own payloads,
+  and a leg whose schedule was not fetched is blocked (`FEE_SCHEDULE_MISSING`), never defaulted.
+- **Exhaustiveness is proven, settlement equivalence is not.** `nodes/rules_exhaustive` mints an
+  unforgeable proof per (league, market type, period); EPL (3-way) and NFL (ties) are blocked.
+  There is no settlement-equivalence gate yet (`SettleRef` is declared and read by nothing), so no
+  candidate carries a resolution-basis label. That is the next critical-path node.
+- **Coverage is six leagues, live plus up to `--pre-hours` before start.** The `^mlb-` slug
+  hardcode and the ±30 min window are gone (`f8a187e`).
 
 ## History
 

@@ -85,3 +85,58 @@ Nothing is gone. Every removed file is in `bd00b85`:
 git show bd00b85 --stat | head -50
 git checkout bd00b85 -- <path>
 ```
+
+---
+
+## 2026-09-02 — P0a: the live lane was mispricing fees, and the docs described fixed bugs
+
+First step of the v1 plan (Mac first, execution built but disarmed, dead grids retired). Nothing
+armed. No arbitrage math changed except what the venues actually charge.
+
+### What was wrong
+
+1. **Kalshi sports fees were charged at 2×.** `GET /series/KXMLBGAME` reports
+   `fee_type: quadratic_with_maker_fees, fee_multiplier: 0.5`. The lane never read it, and
+   `nodes/fees/models.KalshiQuadratic` silently defaulted a missing multiplier to 1.0 while its own
+   docstring said "missing is an error". Every cents-from-actionable figure before today overstates
+   the Kalshi fee by a factor of two.
+2. **Polymarket's rate was a constant** (`{"fee_rate": 0.05}` at four sites) rather than the
+   market's `feeSchedule`. Game markets happen to be 0.05 today; the futures market sampled was 0.03.
+   The hurdle (`hurdle_for`) meanwhile used the registry pin, 0.07 — so the near-miss column and
+   the cover disagreed about the fee.
+3. **A Polymarket drift never forced a resnapshot.** `stream.py` set `resubscribe_needed`, but the
+   run loop only sends frames for a CHANGED asset set; the set was unchanged, so nothing went out
+   and the replica waited on the venue's next trade.
+4. **A grid imported a grid.** `grids/live_stream` pulled discovery from `grids/live_sports`.
+5. `venue_polymarket.fetch_pm_books` raised `NameError` on every call (`errors`/`slug` out of scope).
+6. `README.md`, `NEXT.md`, `nodes/cover`, `nodes/match_sports` still described the `exhaustive=True`
+   bool and the `^mlb-` slug hardcode, both fixed on 2026-09-02 in `1c3b931` and `f8a187e`.
+
+### What changed
+
+- `nodes/discovery` (new): schedule → co-listed slate → per-game fee params from the venues' own
+  payloads → `events` table. Both grids compose it.
+- `nodes/game_poller` takes `fee_params` per venue; a venue without one blocks its legs with
+  `FEE_SCHEDULE_MISSING`. `grids/live_stream` passes the same params to the hurdle.
+- `nodes/fees/models`: a missing or null Kalshi multiplier raises. The registry pin (1.0) remains a
+  labelled screening fallback reached only through `params_for`.
+- `nodes/stream_polymarket`: drift queues the asset for an unsubscribe/subscribe round trip; the
+  drifted local ladder is dropped rather than patched.
+- `kernel/redact` (new): argv redaction before the run index persists it; exception text reduced to
+  type and first line before it can reach a log.
+- `kernel/venue_registry`: Kalshi and Polymarket are registered (`nodes/venue_*/adapter.py`); one
+  spelling of the Polymarket liquidity source (`pm_clob`).
+- `nodes/store_tuples.ensure_ddl`: a node owns its tables. `sweep_runs.error` now carries the exception.
+- Deleted `grids/scan_pure_arb` (bypassed `nodes/cover`, wrote into an immutable research dir) and
+  `grids/sports_books_poll` (passed `exhaustive=True`; every cover rejected since `1c3b931`).
+  Recoverable from `2695129`. `nodes/venue_sxbet` stays, parked.
+- Tests for `kernel/fetch`, `kernel/redact`, `match_sports`, `store_tuples`, `venue_polymarket`,
+  `venue_kalshi` (series), `discovery`; `tests/test_meta.py` now checks every node-level test file.
+- `GATE_TO_LIVE.md`: sports amendment logged (see its amendment log).
+
+### Measured today
+
+`GET /series/KXMLBGAME`: `quadratic_with_maker_fees`, multiplier 0.5, settlement sources ESPN, Fox,
+MLB. Gamma MLB game markets: `feeType sports_fees_v2`, `feeSchedule {rate 0.05, takerOnly, rebateRate
+0.15}`, `orderMinSize 5`, tick 0.01. Two live games co-listed at the time of the check, both fee
+schedules fetched, zero blocks.

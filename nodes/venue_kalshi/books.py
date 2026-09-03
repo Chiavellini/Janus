@@ -30,6 +30,26 @@ def kalshi_book(payload: dict, side: str, fetched_utc: float) -> Book:
     return Book(bids=bids, asks=fold_complement_bids(comp), fetched_utc=fetched_utc)
 
 
+def kalshi_fee_params(series: dict) -> dict | None:
+    """`fee_type` / `fee_multiplier` from GET /series/{ticker}; None if either is absent.
+
+    The multiplier is PER SERIES and it is not 1.0 for sports: KXMLBGAME reported
+    `quadratic_with_maker_fees` at 0.5 on 2026-09-02, half the crypto tier the registry pins. A
+    caller that gets None must BLOCK the leg (FEE_SCHEDULE_MISSING), never fall back to the pin --
+    `nodes/fees/models.KalshiQuadratic` refuses a null multiplier for the same reason.
+    """
+    s = series.get("series", series) if isinstance(series, dict) else {}
+    ft, mult = s.get("fee_type"), s.get("fee_multiplier")
+    if not ft or mult is None:
+        return None
+    return {"fee_type": str(ft), "fee_multiplier": float(mult)}
+
+
+def fetch_kalshi_series(series_ticker: str, cl: Client) -> dict:
+    """The series record. Cached by the caller's discovery clock, never per sweep."""
+    return cl.get_json(f"{KALSHI_BASE}/series/{series_ticker}", use_cache=False)
+
+
 def fetch_kalshi_books(tickers, cl: Client) -> dict[str, Book]:
     out = {}
     for t in tickers:
@@ -38,6 +58,7 @@ def fetch_kalshi_books(tickers, cl: Client) -> dict[str, Book]:
             d = cl.get_json(f"{KALSHI_BASE}/markets/{t}/orderbook",
                             params={"depth": 20}, use_cache=False)
             out[t] = kalshi_book(d, "yes", now)
-        except Exception:  # noqa: BLE001
+        # Narrow on purpose: a programming error must stay loud (see venue_polymarket).
+        except (OSError, RuntimeError, ValueError, KeyError):
             continue
     return out

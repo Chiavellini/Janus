@@ -18,7 +18,7 @@ never as proof.
 ```
 
 **Upstream:** `nodes/schedule_espn`, `nodes/entities`.
-**Downstream:** `grids/live_sports`, `grids/scan_pure_arb`, `nodes/venue_cloudbet/join.py`.
+**Downstream:** `nodes/discovery` (and through it both grids), `nodes/venue_cloudbet/join.py`.
 
 ## Contract
 
@@ -27,16 +27,19 @@ never as proof.
 
 ## Failure modes
 
-**`PM_FULLGAME_SLUG` is hardcoded to `^mlb-` and applied to EVERY league** (`sports_match.py:56`).
-NFL, NBA, WNBA, NHL and EPL therefore emit zero Polymarket pairs, bucketed as the benign reason
-`derivative_event_not_full_game_moneyline`. The scanner is MLB-only in practice while its default
-league list names six leagues.
+**The slug is per league** (`_fullgame_slug`). It was `^mlb-` for every league until `f8a187e`,
+which starved five of six leagues of Polymarket pairs under a benign-looking reason code. Sampled
+2026-09-02: the convention is identical across leagues.
 
-This coverage bug is the ONLY thing masking the exhaustiveness bug in `nodes/cover`. Fixing it
-first switches on a fake-arbitrage generator. Per-league slug patterns must land **after**
-`rules_exhaustive` exists.
+**Period vocabulary.** This module emits `"full_game"`; `kernel/schema.PERIODS` and
+`nodes/rules_exhaustive` use `"game"`. Unified in plan P0b.
+
+**`CanonicalKey` is not yet constructed here.** The join tuple is
+`(espn_game_id, market_type, period, entity_id)`, with participants and start time consumed
+upstream when both venues resolve onto the schedule. Plan P3 builds the kernel's `CanonicalKey`
+and records key provenance per venue.
 
 ## Tests
 
-`tests/integration/test_spine.py` covers `stage1_checkpoint`. `sports_match.py` itself has **no
-direct tests** — a gap.
+`tests/test_match.py` — the per-league slug, the exact join, determinism, no prices.
+`tests/integration/test_spine.py` covers `stage1_checkpoint`.

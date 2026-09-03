@@ -4,36 +4,45 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-02.
+Updated 2026-09-02, after P0a of the v1 plan.
 
 ## Done
 
-Substrate. Version control, the crash-loop fix, the watchdog, a visible test suite, and the node
-layout. Four legacy tracks and six collectors removed; ledger rows F1/F2/L24 closed.
+Substrate (git, watchdog, visible suite, node grid). The streaming lane: two shared sockets,
+book replicas with liveness ≠ freshness, one actor per game, the size frontier, the
+complementary NO ladder (REST lane only so far). Exhaustiveness as an unforgeable proof.
+P0a: fees from the venues' own payloads, the PM drift resnapshot fix, `nodes/discovery` (no grid
+imports a grid), credential redaction, dead grids removed, tests for every node that had none.
 
-## Now
+## Now — in this order, then fan out
 
-1. **`kernel/grid.py`** — `Fault`, `Cell`, `Node`, `fanout`, the run manifest. No callers at first.
-   Node boundaries return typed faults as values instead of raising, so a run yields a fault map
-   rather than a traceback and one league's ESPN 500 stops being fatal.
-2. **Strangle `grids/live_sports`** onto it. No existing function body gets rewritten — nodes are
-   thin adapters that translate existing failure modes into declared fault codes.
-3. **`nodes/rules_exhaustive`** — mint `ExhaustiveOutcomeSet` from a rule table that requires a
-   citation. `nodes/cover.price_combination` takes the token instead of a bool. EPL and NFL start
-   faulting loudly instead of printing +31% covers.
-4. **`nodes/settle_wedge`** — the classifier `kernel/schema.py` already claims exists.
-5. **Coverage** — per-league slug patterns, widen the window, wire `venue_sxbet` into the live
-   grid. Only after 3.
+1. **P0b kernel vocabulary** (one commit, before anything parallel): `OpportunityStatus`,
+   `ExecutionState`, `Mode`, `FillState` enums in `kernel/schema.py`; `Book.source/server_utc/
+   received_mono`; period vocabulary unified on `"game"`; status literals in `grids/live_stream`
+   replaced by the enum. These names are the faithfulness contract — name once, never rename.
+2. **P1 frame capture + replay** (`nodes/capture`, `nodes/replay`): raw frames to disk BEFORE parse;
+   drive `KalshiStream.handle` / `PolymarketStream.handle` offline. Every later test needs this.
+3. **P2 market-data completion**: Book provenance and timestamps, periodic REST reconcile for
+   Polymarket (`BookReplica.reconcile` has no caller), the complementary NO ladder in the streaming
+   lane, socket health persisted, `depth_truncated`, clock health.
+4. **P3 `nodes/settle_wedge`**: harvest → reviewed policy table → `SettlementEquivalence` token →
+   `CoverProof`. Unknown = BLOCKED_RULES. Expect the MLB cancellation wedge to bite.
+5. **P5 `nodes/risk`** (pure, before any adapter): limits, reservation ledger, latching breaker,
+   kill files, `RiskClearance` token, mode gate.
+
+P1, P2, P3 and P5 touch disjoint files and can run in parallel once P0b has landed. Then P4
+(opportunity records, total-cost model), P6 (execution adapters, disarmed), P7 (coordinator), P8
+(paper simulator + battery), P9 (control-plane polish), P10 (Ashburn, gated), P11 (promotion).
+The full plan is in the operator's plan file; this file tracks only the head of it.
 
 ## Not now, deliberately
 
-Ashburn/EC2, any order path, and `venue_cloudbet`. Cloudbet's acceptance-before-pricing sequencing
-makes its leg a naked directional bet; SX Bet is the cheaper, two-sided replacement and its parser
-already exists.
+Any order path before `nodes/risk` exists. Ashburn/EC2 before everything is proven locally.
+`venue_cloudbet` (acceptance before pricing makes its leg a naked directional bet) and
+`venue_sxbet` (size convention unverified against a fill). Makers on Polymarket (`rebateRate`
+semantics unverified). The `kernel/grid.py` typed-faults runtime: dropped in favour of the enums.
 
 ## The question that actually matters
 
-Not "did we find an arb". It is: **what is the distribution of cover cost?** A binary
-ACTIONABLE/NO_EDGE collapses four different conclusions — no price edge, no depth, stale quotes,
-unproven rules — into one uninformative null. Capture, replay, and a CDF per league and quantity
-answer it. That needs a new pre-registered row before it runs.
+Unchanged: **what is the distribution of cover cost**, per league and quantity, with every blocked
+reason kept distinct. Capture, replay and a CDF answer it, under a new pre-registered row.

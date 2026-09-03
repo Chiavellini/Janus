@@ -16,7 +16,13 @@ PM CLOB + Gamma ──▶ [venue_polymarket] ──▶ Book(asks), token map ─
 
 ## Contract
 
-`pm_book(payload, fetched_utc)`, `fetch_pm_books(token_map, client)`, `pm_token_map(slugs, client)`.
+`pm_book(payload, fetched_utc)`, `fetch_pm_books(token_map, client)`, `pm_token_map(slugs, client)`,
+`pm_market_for_slug(event, slug)`, `pm_fee_params(market)` → `{fee_rate, fee_exponent, taker_only,
+rebate_rate}` or `None`, `pm_order_limits(market)` → `{min_order_contracts, tick}`. `adapter.py`
+registers the venue (`pm_clob`).
+
+**The fee is per market.** Gamma carries `feeSchedule` on each market (`sports_fees_v2`, rate 0.05
+on game markets, 0.03 on a futures market, 2026-09-02). A `None` must block the leg.
 
 ## Failure modes
 
@@ -32,4 +38,5 @@ Books come back empty often enough to matter — one of the two recorded sports 
 
 ## Tests
 
-`nodes/cover/tests/test_cover.py` covers the reversed-ladder trap.
+`tests/test_books.py` (the reversed ladders, the fetch path that used to raise `NameError`, the
+fee schedule, order limits, registration) and `nodes/cover/tests/test_cover.py`.

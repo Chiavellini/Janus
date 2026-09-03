@@ -113,7 +113,7 @@ def test_a_real_divergence_survives_only_if_it_beats_the_fee_floor():
     sufficient; this asserts the arithmetic that makes that concrete.
     """
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.47, 10_000)]))],
-              "B": [C.Leg("polymarket", "polymarket_clob", "b", "m", _bk([(0.51, 10_000)]),
+              "B": [C.Leg("polymarket", "pm_clob", "b", "m", _bk([(0.51, 10_000)]),
                           {"fee_rate": 0.05})]}
     cov = C.best_cover(offers, 500, now_utc=1000.0, exhaustive=MLB2)
     assert cov.ok
@@ -140,7 +140,7 @@ def test_cover_would_clear_on_a_zero_fee_venue_pair():
 def test_worst_case_settlement_state_is_used_not_the_average():
     """An 'arb' that only pays when the favourite wins is a directional bet with extra steps."""
     offers = {"A": [C.Leg("betfair", "betfair_exchange", "a", "m", _bk([(0.10, 10_000)]))],
-              "B": [C.Leg("polymarket", "polymarket_clob", "b", "m2", _bk([(0.88, 10_000)]),
+              "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.88, 10_000)]),
                           {"fee_rate": 0.05})]}
     cov = C.best_cover(offers, 100, now_utc=1000.0, exhaustive=MLB2)
     assert cov.ok
@@ -151,7 +151,7 @@ def test_worst_case_settlement_state_is_used_not_the_average():
 def test_depth_binds_before_price():
     """Phase 1's mentions track found capacity ($4 median at touch) binding before edge did."""
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.01, 3)]))],
-              "B": [C.Leg("polymarket", "polymarket_clob", "b", "m2", _bk([(0.50, 10_000)]))]}
+              "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.50, 10_000)]))]}
     cov = C.best_cover(offers, 500, now_utc=1000.0, exhaustive=MLB2)
     assert not cov.ok and cov.reject_reason == C.REJECT_NO_DEPTH
 
@@ -159,7 +159,7 @@ def test_depth_binds_before_price():
 def test_stale_leg_is_rejected_not_discounted():
     """PM's limiter QUEUES, so a slow response is a stale quote wearing a fresh timestamp."""
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.40, 10_000)], age=300))],
-              "B": [C.Leg("polymarket", "polymarket_clob", "b", "m2", _bk([(0.40, 10_000)]))]}
+              "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.40, 10_000)]))]}
     cov = C.best_cover(offers, 100, now_utc=1000.0, exhaustive=MLB2, max_leg_age_s=30)
     assert not cov.ok and cov.reject_reason == C.REJECT_STALE
 
@@ -167,7 +167,7 @@ def test_stale_leg_is_rejected_not_discounted():
 def test_soccer_three_way_is_not_covered_by_two_legs():
     """Exhaustiveness is sport-specific. MLB moneyline has no draw; EPL does."""
     two_of_three = {"HOME": [C.Leg("kalshi", "kalshi_clob", "h", "m", _bk([(0.40, 10_000)]))],
-                    "AWAY": [C.Leg("polymarket", "polymarket_clob", "a", "m2",
+                    "AWAY": [C.Leg("polymarket", "pm_clob", "a", "m2",
                                    _bk([(0.35, 10_000)]))]}
     assert C.best_cover(two_of_three, 100, now_utc=1000.0,
                         exhaustive=None).reject_reason == C.REJECT_NOT_EXHAUSTIVE
@@ -175,7 +175,7 @@ def test_soccer_three_way_is_not_covered_by_two_legs():
 
 def test_screen_is_deterministic_over_frozen_books():
     offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", _bk([(0.47, 10_000)]))],
-              "B": [C.Leg("polymarket", "polymarket_clob", "b", "m2", _bk([(0.51, 10_000)]))]}
+              "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.51, 10_000)]))]}
     a = C.best_cover(offers, 200, now_utc=1000.0, exhaustive=MLB2)
     b = C.best_cover(offers, 200, now_utc=1000.0, exhaustive=MLB2)
     assert a == b

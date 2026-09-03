@@ -20,7 +20,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TEST_FILES = sorted((ROOT / "tests").glob("test_*.py"))
+#: Every test file in the tree -- the repo-root suite AND each node/kernel/ops `tests/` dir.
+#: Scoping this to `tests/` alone left the 16 node-level files outside the collect-check.
+TEST_FILES = sorted(p for p in ROOT.glob("**/tests/test_*.py")
+                    if "data" not in p.parts and ".git" not in p.parts)
 #: This file names the forbidden patterns in order to search for them, so it matches itself.
 SCANNED = [p for p in TEST_FILES if p.name != "test_meta.py"]
 
@@ -37,9 +40,10 @@ def test_every_test_file_collects_at_least_one_test():
     """A file that collects nothing drops silently out of the pass count. This is the check that
     would have caught the 156-vs-184 discrepancy the day it appeared."""
     out = subprocess.run(
-        [sys.executable, "-m", "pytest", "--collect-only", "-q", "tests"],
+        [sys.executable, "-m", "pytest", "--collect-only", "-q"],
         capture_output=True, text=True, cwd=ROOT).stdout
-    missing = [p.name for p in TEST_FILES if f"tests/{p.name}" not in out]
+    missing = [str(p.relative_to(ROOT)) for p in TEST_FILES
+               if str(p.relative_to(ROOT)) not in out]
     assert not missing, f"these files collect ZERO tests: {missing}"
 
 
