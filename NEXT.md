@@ -41,12 +41,10 @@ soccer name resolves.
 1. The census runs six more days; the rank from the median decides the unblock order
    (`nodes/settle_wedge/README.md`, "Unblocking a competition"). Day one says La Liga, college
    football, EPL, UFC, EFL Championship — and CS2/LoL where the join is weak.
-2. Per-competition bounded rates for soccer (`soccer.<code>.postponed_gt48h_rate`,
-   `soccer.<code>.cancelled_rate`). The source survey is done: no free source keeps the original
-   kickoff, so the row is a round-window proxy (a floor) over openfootball + football-data.co.uk
-   with cited cancellations, plus a forward football-data.org snapshotter for true dates —
-   `research/sports/2026-09-03_soccer-settlement-wedge-rates/DESIGN.md`. Decide 2020 before
-   registering. Until measured, soccer blocks by name.
+2. ~~Soccer rates~~ done for EPL / La Liga / Bundesliga (L33, a round-window proxy labelled FLOOR;
+   the EPL reserve it implies is ~1.9¢ at a 0.50 Polymarket price — large). The truer, smaller
+   number needs a forward snapshotter of true original dates (`DESIGN.md`): a free football-data.org
+   token (yours) and a daily job like the census. MLS has no rounds and stays blocked.
 3. ~~NFL rates~~ done (L30). ~~College football registration~~ done; its `cfb.*` rates need the
    same shape of row (a cited schedule-change table over ESPN's college schedule).
 5. Three-way execution WITHOUT a three-leg order: every Polymarket market is Yes/No, so NO on

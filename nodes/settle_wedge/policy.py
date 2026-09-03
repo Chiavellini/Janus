@@ -325,11 +325,11 @@ def _soccer_verdicts(code: str) -> tuple[Verdict, ...]:
                 "Yes (POLYMARKET_SOCCER_DRAW_CLAUSE_2026_09_03). A Polymarket team leg pays 0 in the worst case, "
                 "which is what kalshi_fair_vs_pm_result charges; the draw leg's payout is a gain, not charged.",
                 evidence_key=f"soccer.{code}.cancelled_rate", loss_model="kalshi_fair_vs_pm_result"),
-        Verdict("suspended", "BOUNDED", "an abandoned-then-replayed match is a reschedule; same shape as postponement.",
-                evidence_key=f"soccer.{code}.postponed_gt48h_rate", loss_model="kalshi_fair_vs_pm_result"),
-        Verdict("abandoned", "BOUNDED", "a match abandoned before full time is replayed or the result is awarded by "
-                "the competition; the replay case is the postponement shape.",
-                evidence_key=f"soccer.{code}.postponed_gt48h_rate", loss_model="kalshi_fair_vs_pm_result"),
+        Verdict("suspended", "SAME", "a suspended match resumes; if the resumption falls outside Kalshi's 48 hours it "
+                "is a rescheduled match and is COUNTED UNDER POSTPONEMENT (the L33 proxy sees it as played late). "
+                "Charging it again here would price the same event twice."),
+        Verdict("abandoned", "SAME", "a match abandoned before full time is replayed (counted under postponement, as "
+                "above) or its result is awarded by the competition (both venues settle on the awarded result)."),
         Verdict("player_non_participation", "NA", "team moneyline; no player condition on either venue."),
         Verdict("retirement", "NA", "not a tennis market."),
         Verdict("dispute_revision", "SAME", "terminal outcome is the official result on both; mechanisms differ."),

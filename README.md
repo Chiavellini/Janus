@@ -76,9 +76,10 @@ python3 -m grids.live_stream.grid --leagues mlb --once     # one discovery pass,
   MLB certifies; NFL and NHL block until their Polymarket game text is harvested and reviewed.
 - **Coverage is nine registered leagues (`nodes/entities/leagues.py`), one of which lacks nothing.**
   MLB and NFL certify (NFL from ledger L30: 4 of 2,640 games moved more than 48 h, 1 cancelled,
-  2020 excluded by decision). The four soccer leagues (epl, lal, bun, mls; three outcomes, the
-  draw carried through) and college football have cited rules and reviewed templates and block
-  on unmeasured postponement / cancellation rates. NBA/WNBA/NHL have rules and no templates. The co-listing census (L28,
+  2020 excluded by decision). EPL, La Liga and the Bundesliga certify as three-outcome covers
+  on L33, a round-window proxy labelled FLOOR (the EPL reserve is large: 3.8% of matches were
+  played more than 48 h after their round). MLS and college football block on unmeasured rates.
+  NBA/WNBA/NHL have rules and no templates. The co-listing census (L28,
   daily) ranks every competition both venues list; it found 1,021 co-listed events on day one.
 
 ## History

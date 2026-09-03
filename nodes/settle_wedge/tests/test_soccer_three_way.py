@@ -3,6 +3,8 @@
 injected rates certify, and the exhaustiveness proof needs all three outcomes."""
 from __future__ import annotations
 
+import pytest
+
 from kernel.schema import Book, Quote
 from nodes.cover.cover import Leg, price_combination
 from nodes.rules_exhaustive.rules import prove
@@ -46,9 +48,22 @@ def test_the_texts_hash_to_their_templates_and_polymarket_is_one_template_for_ev
 
 def test_every_soccer_pair_blocks_on_its_unmeasured_rate_and_certifies_once_measured():
     k, p = records()
-    got = certify(k, p, league="epl")
-    assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED"
-    assert got.context["evidence_key"].startswith("soccer.epl.")
+    from nodes.settle_wedge import evidence
+    saved = dict(evidence.EVIDENCE)
+    try:
+        evidence.EVIDENCE.clear()                  # before L33
+        got = certify(k, p, league="epl")
+        assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED"
+        assert got.context["evidence_key"].startswith("soccer.epl.")
+    finally:
+        evidence.EVIDENCE.update(saved)
+    # the registry (L33): 58 of 1,520 Premier League matches played >48 h after their round window, 0 cancelled;
+    # postponement is charged once (suspended and abandoned are the same population, ruled SAME)
+    live = certify(k, p, league="epl")
+    assert isinstance(live, SettlementEquivalence)
+    assert live.settlement_buffer([("kalshi", 0.40), ("polymarket", 0.30), ("polymarket", 0.30)]) == pytest.approx(
+        (58 / 1520) * 0.60, abs=1e-6)
+    assert sum(1 for v in live.verdicts if v.outcome == "BOUNDED") == 2
     eq = certify(k, p, league="epl", rates=RATES)
     assert isinstance(eq, SettlementEquivalence)
     by = {v.dimension: v.outcome for v in eq.verdicts}

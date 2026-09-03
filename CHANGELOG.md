@@ -361,3 +361,13 @@ the runner sha, so nothing merges to main before that run).
   0.001515 (4 of 2,640), `nfl.cancelled_rate` 0.000379 (1). NFL now lacks nothing.
 - **College football registered** (FBS + FCS from ESPN, both texts pinned, NCAA no-tie rule cited);
   blocks on `cfb.*` rates.
+- **Soccer certifies on a proxy.** Ledger L33: no free archive keeps a match's original kickoff
+  (the survey is in `DESIGN.md` beside the row), so the rate is every match played more than 48 h
+  after its round's core window over openfootball 2021-22 … 2024-25 — labelled FLOOR, and an
+  over-count for cup-related moves. EPL 0.038, La Liga 0.014, Bundesliga 0.003; 0 cancellations.
+  The soccer verdicts charge postponement once (suspended/abandoned ruled SAME as the same
+  population). MLS stays blocked (no rounds, no source). `default_leagues()` is now MLB, NFL,
+  EPL, La Liga, Bundesliga.
+- **The generic verifier** (`nodes/match_generic`) recovered from `5eac384^`, reproducing the
+  archived 51,306 verdicts; ledger L31 declares its precision bar before any label exists.
+- **The Polymarket proof script** (`ops/polymarket_live_proof.py`), driven offline by a scripted CLOB.

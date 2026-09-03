@@ -34,6 +34,7 @@ class Evidence:
 #: key -> Evidence. Filled ONLY from a registered measurement. See research/sports/.
 _L26 = "research/sports/2026-09-02_mlb-settlement-wedge-rates/spec.yaml"
 _L30 = "research/sports/2026-09-03_nfl-settlement-wedge-rates-v2/spec.yaml"
+_L33 = "research/sports/2026-09-03_soccer-settlement-wedge-rates/spec.yaml"
 EVIDENCE: dict[str, Evidence] = {
     "mlb.postponed_gt2d_rate": Evidence(
         "mlb.postponed_gt2d_rate", 0.004762, 2100,
@@ -59,6 +60,42 @@ EVIDENCE: dict[str, Evidence] = {
         "2015-2019 and 2021-2025", "2026-09-03", _L30,
         "1 of 2640: 2022 week 17 BUF@CIN, suspended in the first quarter and declared cancelled; the game is "
         "absent from nflverse and added to the denominator."),
+    "soccer.bun.postponed_gt48h_rate": Evidence(
+        "soccer.bun.postponed_gt48h_rate", 0.003268, 1224,
+        "openfootball Bundesliga season files 2021-22..2024-25 (frozen under the row), round-window proxy", "2026-09-03", _L33,
+        "PROXY: 4 of 1224 matches were played more than 48 h after their round's core window. "
+        "It counts every such move, including cup-related moves announced weeks ahead (not postponements at the "
+        "venue's listing time), and misses every move inside the window; a FLOOR on the second count, an over-count "
+        "on the first. Replace with a forward measurement of true original dates (DESIGN.md)."),
+    "soccer.bun.cancelled_rate": Evidence(
+        "soccer.bun.cancelled_rate", 0.000000, 1224,
+        "openfootball Bundesliga season files 2021-22..2024-25: scheduled N(N-1) minus played", "2026-09-03", _L33,
+        "0 of 1224: every season parsed to exactly N(N-1) matches. Registered verbatim; the rule-of-three bound at "
+        "this n is ~0.002 and a re-measurement over more seasons is the honest way to raise it."),
+    "soccer.epl.postponed_gt48h_rate": Evidence(
+        "soccer.epl.postponed_gt48h_rate", 0.038158, 1520,
+        "openfootball Premier League season files 2021-22..2024-25 (frozen under the row), round-window proxy", "2026-09-03", _L33,
+        "PROXY: 58 of 1520 matches were played more than 48 h after their round's core window. "
+        "It counts every such move, including cup-related moves announced weeks ahead (not postponements at the "
+        "venue's listing time), and misses every move inside the window; a FLOOR on the second count, an over-count "
+        "on the first. Replace with a forward measurement of true original dates (DESIGN.md)."),
+    "soccer.epl.cancelled_rate": Evidence(
+        "soccer.epl.cancelled_rate", 0.000000, 1520,
+        "openfootball Premier League season files 2021-22..2024-25: scheduled N(N-1) minus played", "2026-09-03", _L33,
+        "0 of 1520: every season parsed to exactly N(N-1) matches. Registered verbatim; the rule-of-three bound at "
+        "this n is ~0.002 and a re-measurement over more seasons is the honest way to raise it."),
+    "soccer.lal.postponed_gt48h_rate": Evidence(
+        "soccer.lal.postponed_gt48h_rate", 0.013816, 1520,
+        "openfootball La Liga season files 2021-22..2024-25 (frozen under the row), round-window proxy", "2026-09-03", _L33,
+        "PROXY: 21 of 1520 matches were played more than 48 h after their round's core window. "
+        "It counts every such move, including cup-related moves announced weeks ahead (not postponements at the "
+        "venue's listing time), and misses every move inside the window; a FLOOR on the second count, an over-count "
+        "on the first. Replace with a forward measurement of true original dates (DESIGN.md)."),
+    "soccer.lal.cancelled_rate": Evidence(
+        "soccer.lal.cancelled_rate", 0.000000, 1520,
+        "openfootball La Liga season files 2021-22..2024-25: scheduled N(N-1) minus played", "2026-09-03", _L33,
+        "0 of 1520: every season parsed to exactly N(N-1) matches. Registered verbatim; the rule-of-three bound at "
+        "this n is ~0.002 and a re-measurement over more seasons is the honest way to raise it."),
 }
 
 

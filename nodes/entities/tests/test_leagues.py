@@ -41,6 +41,7 @@ def test_enablement_names_what_each_league_lacks():
     for c in ("nba", "wnba", "nhl"):
         assert enablement(c) == ["NO_KALSHI_TEMPLATE", "NO_POLYMARKET_TEMPLATE"], c
     # soccer: rule cited, both templates reviewed 2026-09-03, rates unmeasured per competition
-    for c in ("epl", "lal", "bun", "mls"):
-        assert enablement(c) == [f"EVIDENCE_UNMEASURED:soccer.{c}.cancelled_rate", f"EVIDENCE_UNMEASURED:soccer.{c}.postponed_gt48h_rate"], c
-    assert default_leagues() == ["mlb", "nfl"]
+    for c in ("epl", "lal", "bun"):
+        assert enablement(c) == [], c                # L33 (a proxy, labelled FLOOR in the evidence note)
+    assert enablement("mls") == ["EVIDENCE_UNMEASURED:soccer.mls.cancelled_rate", "EVIDENCE_UNMEASURED:soccer.mls.postponed_gt48h_rate"]
+    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun"]

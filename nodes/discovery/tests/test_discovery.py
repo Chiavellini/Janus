@@ -203,8 +203,9 @@ def test_a_three_way_soccer_game_carries_six_ids_and_blocks_without_its_draw_tok
     assert set(spec["outcomes"]) == {ars, che, DRAW_ENTITY}
     assert spec["outcomes"][DRAW_ENTITY] == {"kalshi": "KXEPLGAME-26SEP14CHEARS-TIE", "polymarket": "tok-draw"}
     assert spec["pm_limits"] == {"min_order_contracts": 5.0, "tick": 0.01}
-    # the pair's settlement is reviewed but its rates are unmeasured: recorded as BLOCKED, by name
-    assert spec["settlement"]["result"] == "BLOCKED" and spec["settlement"]["code"] == "EVIDENCE_UNMEASURED"
+    # the pair's settlement is reviewed and its rates registered (L33): EQUIVALENT, with the rates it used
+    assert spec["settlement"]["result"] == "EQUIVALENT", spec["settlement"]
+    assert set(spec["settlement"]["rates"]) == {"soccer.epl.postponed_gt48h_rate", "soccer.epl.cancelled_rate"}
     # without the draw token the game is not co-listed as a cover
     d2 = Discovery(NOW, [g], {}, {"epl": (rows, {}, r)}, {slug: ({k: v for k, v in names.items() if k != "Draw"}, ev)}, {})
     _, blocked2 = co_listed(d2)
