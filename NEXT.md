@@ -21,8 +21,8 @@ soccer name resolves.
 ## Now — what is left, and whose it is
 
 **Yours, because I am not permitted to place orders or move money:**
-0. **Fund Kalshi's shard 3.** Kalshi sharded its exchange (baseball on shard 3 since 2026-08-24;
-   basketball follows on 2026-09-10) and an order on an unfunded shard is refused `user_not_found`,
+0. **Fund Kalshi's shard 3.** Kalshi sharded its exchange (baseball and tennis on shard 3 since
+   2026-08-24; basketball follows on 2026-09-10) and an order on an unfunded shard is refused `user_not_found`,
    which is what the first armed proof met. `python3 ops/kalshi_shards.py --show`, then
    `--move --to 3 --usd 20 --confirm`; the proof reads the market's shard and refuses
    `SHARD_UNFUNDED` until the money is there.
@@ -37,7 +37,14 @@ soccer name resolves.
 3. **A funded Polymarket wallet** (key file 600, `JANUS_PM_WALLET_KEY_PATH`) and a new override
    whose statement names Polymarket; then `ops/polymarket_live_proof.py --slug … --outcome …`, dry run
    and `--arm`, on any live two-sided game market (`BATTERY.md`).
-4. **Approval to start Ashburn** (billable). Another agent's `infra/` work is on main, uncommitted.
+4. **The Ashburn launch is fenced by IAM** (your other agent's design): the admin user's inline
+   policy `EarshotDenyDirectBoxLaunch` denies `ec2:RunInstances`, and the `janus-agent` role's
+   `janus-scope` denies `iam:*`, which blocks `iam:PassRole` for the `janus-box` instance profile
+   the box needs for SSM. Either carve `iam:PassRole` on `arn:aws:iam::986420598115:role/janus-box`
+   out of that deny (a `NotResource`), or drop the inline deny; then `ops/box/launch.sh --go`
+   (`JANUS_BOX_AMI` pre-resolved when launching as the role). Everything else for the box is in
+   place: repo pushed, `/janus/repo/url` and `/janus/repo/sha` in SSM; the read-only GitHub
+   token and the five secrets under `/janus/` are yours (`python3 ops/box/creds.py --dry-run`).
 5. **Label the blind gold set** `nodes/match_generic/gold/nonsports.csv` (144 pairs; `label` = 1 if
    both texts are the same contract, else 0; never look at `nonsports.key.json` first). Ledger L31
    declared the bar before any label exists; `score_gold.py` scores it.
@@ -58,7 +65,14 @@ soccer name resolves.
    today one leg per outcome), `pm_outcome_tokens` to carry NO tokens, and the exhaustiveness
    proof to check the partition. Then `plan.py` stays two-leg. Sequencing three FOKs is not an
    option: two fills and one reject is an unhedged directional position (GATE cross-venue #2).
-6. UCL and every competition ESPN does not schedule as home/away teams. Probed 2026-09-03: ESPN
+6. ~~Tennis anchor~~ built (2026-09-03 evening): atp and wta are `venue_structured` leagues — the
+   schedule is Polymarket's own game events, players are entities seeded from both venues, Kalshi
+   joins on the players' names and the ticker date; both venues' texts are reviewed (retirement
+   SAME; a walkover and a >7-day delay BOUNDED on `tennis.walkover_rate` and
+   `tennis.delayed_gt7d_rate`, unmeasured, so tennis blocks by name while its frames are captured).
+   Next for tennis: the rates row (walkovers and long delays per tour season from the ATP/WTA
+   results archives), and doubles (excluded: a pair is not a player entity yet).
+6b. UCL and every other competition ESPN does not schedule as home/away teams. Probed 2026-09-03: ESPN
    `mma/ufc/scoreboard` lists a card as one event with one competition per fight (fighters as
    competitors, no `homeAway`, athlete ids absent) — an anchor for UFC needs a card-aware parser
    and a fighter entity table; `tennis/atp/scoreboard` returns nothing and `cricket/scoreboard`
