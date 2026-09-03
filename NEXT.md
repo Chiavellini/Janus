@@ -33,24 +33,36 @@ soccer name resolves.
    whose statement names Polymarket; then `ops/polymarket_live_proof.py --slug … --outcome …`, dry run
    and `--arm`, on any live two-sided game market (`BATTERY.md`).
 4. **Approval to start Ashburn** (billable). Another agent's `infra/` work is on main, uncommitted.
+5. **Label the blind gold set** `nodes/match_generic/gold/nonsports.csv` (144 pairs; `label` = 1 if
+   both texts are the same contract, else 0; never look at `nonsports.key.json` first). Ledger L31
+   declared the bar before any label exists; `score_gold.py` scores it.
 
 **Mine, in order (the operator's decision: coverage first):**
 1. The census runs six more days; the rank from the median decides the unblock order
    (`nodes/settle_wedge/README.md`, "Unblocking a competition"). Day one says La Liga, college
    football, EPL, UFC, EFL Championship — and CS2/LoL where the join is weak.
 2. Per-competition bounded rates for soccer (`soccer.<code>.postponed_gt48h_rate`,
-   `soccer.<code>.cancelled_rate`): a registered row per competition with a data source that
-   keeps the original fixture date (ESPN drops postponed games; the football-data / league
-   fixture archives are the candidates). Until measured, soccer blocks by name.
+   `soccer.<code>.cancelled_rate`). The source survey is done: no free source keeps the original
+   kickoff, so the row is a round-window proxy (a floor) over openfootball + football-data.co.uk
+   with cited cancellations, plus a forward football-data.org snapshotter for true dates —
+   `research/sports/2026-09-03_soccer-settlement-wedge-rates/DESIGN.md`. Decide 2020 before
+   registering. Until measured, soccer blocks by name.
 3. ~~NFL rates~~ done (L30). ~~College football registration~~ done; its `cfb.*` rates need the
    same shape of row (a cited schedule-change table over ESPN's college schedule).
-5. Three-leg execution: `nodes/execute/plan.py` plans two legs; a soccer cover is priced and
-   recorded but not planned. Polymarket-first for two legs then the Kalshi hedge, or refuse.
+5. Three-way execution WITHOUT a three-leg order: every Polymarket market is Yes/No, so NO on
+   the home market pays on {draw, away} and a soccer cover is two legs again (Polymarket NO on one
+   side + Kalshi YES on that side, or the mirror). That needs `nodes/cover` to price a leg that
+   covers a SET of outcomes (a cover = legs whose covered sets partition the proven outcome set;
+   today one leg per outcome), `pm_outcome_tokens` to carry NO tokens, and the exhaustiveness
+   proof to check the partition. Then `plan.py` stays two-leg. Sequencing three FOKs is not an
+   option: two fills and one reject is an unhedged directional position (GATE cross-venue #2).
 6. UCL and every non-ESPN competition (UFC, tennis, cricket, esports): a club or fighter as one
    entity across competitions, and a `venue_structured` anchor with its own blind gold file.
 7. ~~The Polymarket proof script~~ done (`ops/polymarket_live_proof.py`; tests drive it against a scripted CLOB).
-8. The generic verifier for threshold/date events, recovered from `5eac384^` into
-   `nodes/match_generic/`, behind a pre-declared precision bar over its blind gold set.
+8. ~~The generic verifier~~ recovered into `nodes/match_generic/` (reproduces the archived 51,306
+   verdicts exactly); its precision gate is ledger L31 and waits on your labels (below). After the
+   labels: a settlement-reference equivalence record per surviving pair (source agency, threshold
+   `≥` vs `>`, date), then a `venue_structured` anchor for threshold events.
 
 **Time:** shadow evidence accrues under launchd; re-run L27 after a week of NFL traffic.
 
