@@ -55,6 +55,10 @@ if [ -f "$LOG" ]; then
 fi
 
 RUN_ID=$("$PY" ops/run_index.py start "$JOB" "$@")
+if [ -z "$RUN_ID" ]; then
+  echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') $JOB: ABORT -- no run row was written (ops/run_index.py start failed); a job the watchdog cannot see does not run" >> "$LOG"
+  exit 70
+fi
 export JANUS_RUN_ID="$RUN_ID"
 
 "$PY" "$@" >>"$LOGDIR/${JOB}.stdout.log" 2>>"$LOG"
