@@ -306,3 +306,25 @@ the slate spec and the `events` row, and `registry_health` (no co-listed game fo
 season is a discovery failure, not a quiet slate), wired into the watchdog with a firing test.
 `grids/live_stream` reports the tier counts and the box's wake/drain state from `nodes/slate` on
 every slate rebuild. `BATTERY.md` lists each pre-capital item with who has to run it.
+
+---
+
+## 2026-09-03 — the operator's list, shortened
+
+Main carries the v1 build and `com.janus.live-stream` runs it in SHADOW_LIVE with capture. Then:
+
+- **NFL reviewed.** Both venues list NFL game markets now. Templates harvested verbatim and pinned;
+  the pair's verdicts recorded. Both venues pay each side $0.50 on a tie, so a two-leg cover pays
+  exactly $1 on a tie and the tie dimension is SAME; the NFL exhaustiveness rule is cited through
+  those two clauses. Postponement beyond 48 h and cancellation are BOUNDED by `nfl.*` rates nobody
+  has measured, so NFL now blocks at `EVIDENCE_UNMEASURED` (was `TEMPLATE_UNKNOWN`). The
+  normaliser strips nicknames ("Patriots") as well as full names.
+- **Slippage measured.** Ledger L27, from the frames captured so far: 2,152 samples over 8 tickers at
+  the 3 s window, p95 adverse move one tick. Registered as `capacity.SLIPPAGE_PER_CONTRACT = 0.01`
+  with `slippage_modelled=True`; the frontier charges it by default. Re-runnable.
+- **Polymarket client installed** (`py-clob-client 0.34.6`, Homebrew site-packages). The transport
+  refuses cleanly until `JANUS_PM_WALLET_KEY_PATH` names a 600-mode key file.
+- **Real-order modes wired into the grid**: DEMO builds `nodes/exec_kalshi` on the demo host from
+  `JANUS_KALSHI_DEMO_*`; LIMITED_LIVE/PRODUCTION build both real adapters. Each refuses to start
+  with a named reason when its credentials are absent.
+- Streams no longer connect with nothing to subscribe; the registry alarm is silent on a fresh table.

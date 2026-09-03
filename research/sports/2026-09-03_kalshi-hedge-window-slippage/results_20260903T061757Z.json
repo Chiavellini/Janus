@@ -1,0 +1,46 @@
+{
+  "files": 4,
+  "frames": 2184,
+  "preliminary": false,
+  "reference_quantity": 100.0,
+  "registered_value": 0.010000000000000009,
+  "run": "20260903T061757Z",
+  "spec": "research/sports/2026-09-03_kalshi-hedge-window-slippage/spec.yaml",
+  "thin_excluded": 0,
+  "tickers": [
+    "KXMLBGAME-26SEP022210STLLAD-LAD",
+    "KXMLBGAME-26SEP022210STLLAD-STL",
+    "KXMLBGAME-26SEP031235SFPIT-PIT",
+    "KXMLBGAME-26SEP031235SFPIT-SF",
+    "KXMLBGAME-26SEP031310TORCLE-CLE",
+    "KXMLBGAME-26SEP031310TORCLE-TOR",
+    "KXMLBGAME-26SEP031410CWSHOU-CWS",
+    "KXMLBGAME-26SEP031410CWSHOU-HOU"
+  ],
+  "windows": {
+    "0.5": {
+      "n": 2133,
+      "p50": 0.0,
+      "p90": 0.0,
+      "p95": 0.0,
+      "p99": 0.010000000000000009,
+      "share_nonzero": 0.03422409751523676
+    },
+    "1.0": {
+      "n": 2143,
+      "p50": 0.0,
+      "p90": 0.0,
+      "p95": 0.010000000000000009,
+      "p99": 0.010000000000000009,
+      "share_nonzero": 0.07139524031731218
+    },
+    "3.0": {
+      "n": 2152,
+      "p50": 0.0,
+      "p90": 0.0,
+      "p95": 0.010000000000000009,
+      "p99": 0.010000000000000009,
+      "share_nonzero": 0.09061338289962825
+    }
+  }
+}

@@ -26,20 +26,26 @@ coordinator (`nodes/execute`, Polymarket first, Kalshi hedge, every transition p
 offline execution over captured frames; settlement-result ingestion; the 48 h registry with tiers,
 wake/drain and a registry alarm. Everything in the plan that code alone can deliver is delivered.
 
-## Now — the operator's steps, in order (BATTERY.md has the detail)
+## Now — what is left, and whose it is
 
-1. **Merge and restart the lane** so capture, the new vocabulary and fee-correct rows start
-   accruing: `git merge --ff-only claude/janus-arbitrage-trader-4e6d4d` on main, then
-   `launchctl kickstart -k gui/$(id -u)/com.janus.live-stream`. Watch `python3 ops/watchdog.py`.
-2. After a day of capture: register and run the **slippage measurement** (Kalshi best-ask moves
-   inside the hedge window) as a descriptive row; fill `Frontier.slippage_modelled`.
-3. **Kalshi demo credentials** → `DEMO_EXECUTION` round-trip (place → poll → cancel → settle),
-   then wire real-order modes into the grid (they are refused there until this is done once).
-4. **Polymarket**: `pip install py-clob-client`, a 600-mode wallet key file, then the $5
-   `LIMITED_LIVE` fill under a signed `kill/arming_override.json`; `nodes/reconcile.check_fees`
-   against the charged fee on both venues.
-5. Harvest and review the Polymarket **NFL and NHL** game templates when they list.
-6. P10 Ashburn only after all of the above, and only on explicit approval to start the instance.
+Done since the merge: NFL templates reviewed and the tie rule cited; slippage measured (L27) and
+registered; the Polymarket client installed; real-order modes wired into the grid.
+
+**Yours, because I am not permitted to do them:**
+1. **A Kalshi demo account** (a signup, separate from production). Put its key and PEM path in
+   `JANUS_KALSHI_DEMO_API_KEY` / `JANUS_KALSHI_DEMO_PRIVATE_KEY_PATH` in the credentials env file;
+   then `--mode DEMO_EXECUTION` runs the round-trip.
+2. **A funded Polymarket wallet.** Its private key in a 600-mode file named by
+   `JANUS_PM_WALLET_KEY_PATH` (never in `JANUS_CREDS`); `JANUS_PM_FUNDER` / `JANUS_PM_SIGNATURE_TYPE`
+   if a proxy wallet.
+3. **The $5 fills and the arming override** (`kill/arming_override.json`: your verbatim statement,
+   `signed_by`, mode, runner and limits shas, caps, expiry). Real-money orders are yours to
+   authorise; the coordinator then runs them under `LIMITED_LIVE`.
+4. **Approval to start Ashburn** (billable). Another agent has begun provisioning in `infra/`.
+
+**Time:** shadow evidence accrues under launchd; re-run L27 after a week of NFL traffic.
+**Code, when data allows:** an NFL postponement/cancellation rate (a registered row) unblocks NFL;
+NHL waits for Kalshi to list.
 
 ## Not now, deliberately
 

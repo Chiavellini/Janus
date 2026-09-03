@@ -48,7 +48,14 @@ def normalise_template(text: str, participants: Sequence[str]) -> str:
     """Strip everything that varies per game. Longest participant names first, so
     'Los Angeles D' goes before 'Los Angeles'."""
     s = text.lower()
-    for name in sorted({p.lower() for p in participants if p}, key=len, reverse=True):
+    names = {p.lower() for p in participants if p}
+    # A venue may name a team by its nickname alone (Polymarket NFL: "Patriots"); strip the last
+    # word of every multi-word name too. Short tails ("D" in "Los Angeles D") are left alone.
+    for n in list(names):
+        tail = n.split()[-1] if " " in n else ""
+        if len(tail) > 3:
+            names.add(tail)
+    for name in sorted(names, key=len, reverse=True):
         s = s.replace(name, " ")
     s = _STRIP.sub(" ", s)
     toks = []

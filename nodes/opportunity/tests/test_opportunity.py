@@ -55,7 +55,8 @@ def test_a_profitable_cover_records_its_books_transitions_and_frontier(tmp_path:
     fr = frontier({o: list(v) for o, v in ev.offers.items()}, now_utc=T, proof=p.proof, hurdle=0.01)
     assert fr.actionable
     opps.record_frontier(opp, fr, now=T)
-    assert opp.n_max == fr.n_max and opp.n_star == fr.n_star and not opp.slippage_modelled
+    assert opp.n_max == fr.n_max and opp.n_star == fr.n_star
+    assert opp.slippage_modelled and opp.slippage_buffer == pytest.approx(0.01), "L27's registered tick rides on the record"
     assert store.con.execute("SELECT COUNT(*) FROM frontiers").fetchone()[0] == 1
     # the market goes away: a transition to NO_EDGE is recorded, the books from the edge are kept
     sync_all(p, kh=0.60, ka=0.99, ph=0.99, pa=0.60, now=T + 1)

@@ -26,6 +26,8 @@ def two(a_levels, b_levels, *, free=True):
 
 
 def f(offers, **kw):
+    kw.setdefault("slippage_per_contract", 0.0)
+    kw.setdefault("slippage_modelled", False)
     return frontier(offers, now_utc=T, proof=PROOF, **kw)
 
 
@@ -135,3 +137,11 @@ def test_rungs_below_a_legs_minimum_are_skipped_not_fatal():
                          {"fee_rate": 0.0}, min_order_contracts=5.0)
     got = f(offers)
     assert got.rungs and all(r.contracts >= 5.0 for r in got.rungs)
+
+
+def test_the_registered_slippage_is_the_default_and_is_labelled_modelled():
+    from nodes.cover.capacity import SLIPPAGE_MODELLED, SLIPPAGE_PER_CONTRACT, SLIPPAGE_RESEARCH_REF
+    assert SLIPPAGE_MODELLED and SLIPPAGE_PER_CONTRACT == pytest.approx(0.01) and SLIPPAGE_RESEARCH_REF.startswith("research/")
+    got = frontier(two([(0.45, 1000)], [(0.45, 1000)]), now_utc=T, proof=PROOF)
+    assert got.slippage_modelled and got.slippage_per_contract == pytest.approx(0.01)
+    assert got.best.cost_per_contract == pytest.approx(0.91)

@@ -36,6 +36,15 @@ from nodes.cover.cover import Cover, Leg, REJECT_BELOW_MIN_ORDER, best_cover
 from nodes.settle_wedge.equivalence import CoverProof
 
 
+#: The slippage buffer, from ledger L27 (research/sports/2026-09-03_kalshi-hedge-window-slippage):
+#: the p95 adverse move of the Kalshi YES ask at 100 contracts inside the 3 s hedge window,
+#: 2152 samples over 8 tickers, run 20260903T061757Z. One tick. Re-runs append; this pin moves only
+#: with a new run's registered value.
+SLIPPAGE_PER_CONTRACT = 0.0100
+SLIPPAGE_MODELLED = True
+SLIPPAGE_RESEARCH_REF = "research/sports/2026-09-03_kalshi-hedge-window-slippage/spec.yaml"
+
+
 @dataclass(frozen=True)
 class Rung:
     """One point on the frontier."""
@@ -94,8 +103,8 @@ def frontier(offers: Mapping[str, Sequence[Leg]], *, now_utc: float,
              proof: CoverProof, max_leg_age_s: float = 5.0,
              hurdle: float = 0.0, cap: float = 100_000.0,
              cross_venue_only: bool = True, balances: Mapping[str, float] | None = None,
-             fixed_cost_usd: float = 0.0, slippage_per_contract: float = 0.0,
-             slippage_modelled: bool = False) -> Frontier:
+             fixed_cost_usd: float = 0.0, slippage_per_contract: float = SLIPPAGE_PER_CONTRACT,
+             slippage_modelled: bool = SLIPPAGE_MODELLED) -> Frontier:
     """Solve N_max and N_star by walking the ladders' own breakpoints.
 
     `hurdle` is a minimum return on capital; 0.0 asks only for a locked profit. `cross_venue_only`

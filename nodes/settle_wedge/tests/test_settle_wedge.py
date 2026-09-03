@@ -157,3 +157,34 @@ def test_the_registry_carries_l26_and_mlb_certifies_from_it():
     assert isinstance(eq, SettlementEquivalence)
     # at the measured rates a 0.70 Polymarket favourite reserves ~0.67c/contract
     assert eq.settlement_buffer([("kalshi", 0.30), ("polymarket", 0.70)]) == pytest.approx(2 * (10 / 2100) * 0.70, abs=1e-6)
+
+
+def test_the_nfl_templates_hash_from_their_samples_and_nicknames_are_stripped():
+    from nodes.settle_wedge.policy import KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1
+    other = harvest_polymarket({"slug": "nfl-sf-la-2026-09-11", "description":
+                                "In the upcoming NFL game, scheduled for September 10 at 8:35PM ET:\nIf 49ers wins, the market "
+                                "will resolve to \"49ers\".\nIf Rams wins, the market will resolve to \"Rams\".\nIf the game is "
+                                "postponed, this market will remain open until the game has been completed.\nIf the game is "
+                                "canceled entirely or ends in a tie, with no make-up game, this market will resolve 50-50."},
+                               participants=["San Francisco 49ers", "Los Angeles Rams"], retrieved_at=T)
+    assert other.template_hash == POLYMARKET_NFL_GAME_V1.template_hash, other.template_text
+    k = harvest_kalshi({"ticker": "KXNFLGAME-26SEP10SFLAR-LAR",
+                        "rules_primary": "If Los Angeles R wins the San Francisco vs Los Angeles R professional football game originally scheduled for Sep 10, 2026, then the market resolves to Yes.",
+                        "rules_secondary": KALSHI_NFL_GAME_V1.sample_text.split("\n", 1)[1].replace("New England", "San Francisco").replace("Seattle", "Los Angeles R").replace("Sep 9", "Sep 10")},
+                       participants=["San Francisco", "Los Angeles R"], retrieved_at=T)
+    assert k.template_hash == KALSHI_NFL_GAME_V1.template_hash, k.template_text
+
+
+def test_nfl_blocks_on_unmeasured_evidence_not_on_an_unknown_template():
+    from nodes.settle_wedge.policy import KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1
+    k = harvest_kalshi({"ticker": "t", "rules_primary": KALSHI_NFL_GAME_V1.sample_text.split("\n")[0],
+                        "rules_secondary": KALSHI_NFL_GAME_V1.sample_text.split("\n", 1)[1]},
+                       participants=KALSHI_NFL_GAME_V1.sample_participants, retrieved_at=T)
+    p = harvest_polymarket({"slug": "s", "description": POLYMARKET_NFL_GAME_V1.sample_text},
+                           participants=POLYMARKET_NFL_GAME_V1.sample_participants, retrieved_at=T)
+    got = certify(k, p, league="nfl")
+    assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED" and got.context["evidence_key"].startswith("nfl.")
+    eq = certify(k, p, league="nfl", rates={"nfl.postponed_gt48h_rate": 0.001, "nfl.cancelled_rate": 0.0005})
+    assert isinstance(eq, SettlementEquivalence)
+    assert {v.dimension: v.outcome for v in eq.verdicts}["tie"] == "SAME", "both venues pay $0.50 a side: a full $1 cover"
+    assert isinstance(certify_cover(prove("nfl", "moneyline", "game", ["a", "b"]), eq), CoverProof)

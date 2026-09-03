@@ -74,7 +74,14 @@ RULES: dict[tuple[str, str, str], tuple[int, str, str | None]] = {
 
     # ---- HONEST GAPS: rule stated, citation absent, therefore BLOCKED ----
     ("nfl", "moneyline", "game"): (
-        2, "nfl_ties_possible", None),   # regular-season games CAN tie after one OT period
+        2, "nfl_tie_pays_half_each_side",
+        "NFL Rule 16 Section 1: a regular-season game tied after one 10-minute overtime period ends in a "
+        "tie. {home, away} is therefore NOT a partition of the game's outcomes; it is complete as a COVER "
+        "because both venues pay each side $0.50 on a tie (Kalshi KXNFLGAME rules_secondary: 'resolve to "
+        "$0.50 for each team'; Polymarket NFL game description: 'ends in a tie ... resolve 50-50', both "
+        "harvested 2026-09-03 and pinned as templates in nodes/settle_wedge/policy.py), so one contract of "
+        "each side receives exactly $1.00 in every terminal state. Valid ONLY paired with a venue pair whose "
+        "settle_wedge verdict on 'tie' is SAME."),
     ("epl", "moneyline", "game"): (
         3, "soccer_3way", None),         # home/draw/away; a two-leg cover pays nothing on a draw
 }

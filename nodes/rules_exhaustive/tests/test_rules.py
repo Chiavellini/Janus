@@ -36,7 +36,7 @@ def test_epl_blocks_because_soccer_is_three_way():
     assert got.code == "RULE_UNCITED"
 
 
-def test_nfl_blocks_because_regular_season_games_can_tie():
+def _old_nfl_blocks_because_regular_season_games_can_tie():
     got = prove("nfl", "moneyline", "game", ["home", "away"])
     assert isinstance(got, NotExhaustive)
     assert got.code == "RULE_UNCITED"
@@ -87,3 +87,8 @@ def test_the_epl_bug_end_to_end():
     # doing its job rather than the cover engine being broken.
     mlb = mlb_cover_proof(sorted(offers))
     assert best_cover(offers, 100, now_utc=1000.0, proof=mlb).ok
+
+
+def test_nfl_is_cited_through_both_venues_tie_clauses():
+    got = prove("nfl", "moneyline", "game", ["home", "away"])
+    assert isinstance(got, ExhaustiveOutcomeSet) and "0.50" in got.citation and "settle_wedge" in got.citation

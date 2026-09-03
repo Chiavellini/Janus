@@ -11,18 +11,17 @@ running on this tree for a while, or whether it needs something only the operato
 | Reconnect and sequence-gap tests | **code** | `nodes/stream_kalshi/tests` (gap → teardown → fresh subscription; per-sid sequencing; incremental subscription frames), `nodes/stream_polymarket/tests` (drift → forced resnapshot; reconnect marks replicas disconnected), `nodes/book_replica/tests`. |
 | Partial-fill tests | **code** | `nodes/execute/tests`: the hedge is for exactly what leg A filled; a partial hedge leaves a recorded unhedged remainder and keeps the reservation. |
 | Ambiguous-order recovery | **code** | `nodes/execute/tests`: an UNCONFIRMED leg A is polled, never resubmitted, kept if unknown, hedged if found filled. `nodes/exec_kalshi/tests`: recovery by client id. |
-| Demo execution reconciled | **operator** | Needs Kalshi **demo credentials** (separate from production). Then `DEMO_EXECUTION` on the Kalshi leg: place → poll → cancel → settle, through `nodes/exec_kalshi` and `nodes/reconcile`. The grid refuses real-order modes until this is done once. |
+| Demo execution reconciled | **operator** | Needs Kalshi **demo credentials** (separate from production). Put them in `JANUS_KALSHI_DEMO_API_KEY` / `JANUS_KALSHI_DEMO_PRIVATE_KEY_PATH`; then `--mode DEMO_EXECUTION` builds the demo adapter and runs place → poll → cancel → settle through `nodes/exec_kalshi` and `nodes/reconcile`. |
 | Live shadow evidence | **time** | `SHADOW_LIVE` (the default) under launchd on this tree, with frame capture, for the pre-computed n. Every row before 2026-09-02 carries a 2× Kalshi fee and does not count. |
-| Fees reconciled against actual charges | **operator** | One $5 fill per venue under `LIMITED_LIVE` with the signed override; `nodes/reconcile.check_fees` compares the charged fee with the pinned curve at the series multiplier. An excess is a STOP and a re-pin. Polymarket additionally needs `pip install py-clob-client` and a 600-mode wallet key file. |
-| Settlement equivalence measured | **code + ledger** | `nodes/settle_wedge` with ledger L26 (2,100 games; 0.476% late makeups; 0 cancellations). MLB certifies live; NFL/NHL block until their Polymarket game text is harvested and reviewed. |
+| Fees reconciled against actual charges | **operator** | One $5 fill per venue under `LIMITED_LIVE` with the signed override; `nodes/reconcile.check_fees` compares the charged fee with the pinned curve at the series multiplier. An excess is a STOP and a re-pin. The Polymarket client is installed; the wallet key file (600-mode, `JANUS_PM_WALLET_KEY_PATH`) and its funding are yours. |
+| Settlement equivalence measured | **code + ledger** | `nodes/settle_wedge` with ledger L26 (2,100 games; 0.476% late makeups; 0 cancellations). MLB certifies live. NFL templates reviewed 2026-09-03 (tie pays $0.50 a side on both venues); NFL blocks at `EVIDENCE_UNMEASURED` until an NFL postponement/cancellation rate is registered. NHL: Polymarket lists, Kalshi does not yet. |
 | Pre-registered research and promotion gates | **operator** | GATE_TO_LIVE with its 2026-09-02 sports amendment; the arming override is a human artefact. |
-| Slippage buffer measured | **capture + ledger row** | Not yet. `Frontier.slippage_modelled=False` caps the mode at PAPER. Needs a day of Kalshi frames from the live lane on this tree and a registered descriptive row (the distribution of best-ask moves inside the hedge window). |
+| Slippage buffer measured | **ledger L27, re-runnable** | p95 adverse move at 3 s = one tick (2,152 samples, 8 tickers, one MLB evening). Registered as the frontier's default with `slippage_modelled=True`. Re-run after NFL/NBA traffic. |
 
-## To start the clock
+## The clock is running
 
-The launchd job `com.janus.live-stream` runs `/Users/bernardodelrio/Code/Janus` (main). This
-work is on the branch `claude/janus-arbitrage-trader-4e6d4d`. Nothing accrues on this tree until
-it is merged and the job restarted:
+Since 2026-09-03 main carries this tree and `com.janus.live-stream` runs it. To redeploy after a
+change on the branch:
 
 ```bash
 cd /Users/bernardodelrio/Code/Janus && git merge --ff-only claude/janus-arbitrage-trader-4e6d4d

@@ -98,7 +98,41 @@ POLYMARKET_MLB_GAME_V1 = Template(
               revision_policy="consensus of credible reporting after 24h", dispute_mechanism="uma",
               settle_lag_h_p50=None, terms_url="https://www.mlb.com/", provenance="api_field"))
 
-TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1)}
+KALSHI_NFL_GAME_V1 = Template(
+    "kalshi_nfl_game_v1", "kalshi", frozenset({"nfl"}), "2026-09-03",
+    # KXNFLGAME-26SEP09NESEA-SEA, rules_primary + "\n" + rules_secondary
+    "If Seattle wins the New England vs Seattle professional football game originally scheduled for "
+    "Sep 9, 2026, then the market resolves to Yes.\n"
+    "The following market refers to the team who wins the New England vs Seattle professional football "
+    "game originally scheduled for Sep 9, 2026. If the game ends in a tie, the market will resolve to "
+    "$0.50 for each team. If the game is postponed but begins within 48 hours from its originally "
+    "scheduled start time, the market will remain open and resolve based on the official final result. "
+    "If the game is not started within 48 hours, the market will resolve to a fair market price.\n\n"
+    "Kalshi is not affiliated, associated, authorized, endorsed by, or in any way officially connected "
+    "with the Governing League. All trademarks, logos, and brand names are the property of their "
+    "respective owners.",
+    ("New England", "Seattle"),
+    SettleRef(source_agency="NFL", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.RESOLVE_FIFTY, ot_included=True, dnp_policy=VoidPolicy.UNKNOWN,
+              retirement_policy=None, revision_policy="official final result", dispute_mechanism="kalshi",
+              settle_lag_h_p50=None, terms_url="https://assets.kalshi.com/regulatory/product-certifications/NFLGAME.pdf",
+              provenance="api_field"))
+
+POLYMARKET_NFL_GAME_V1 = Template(
+    "polymarket_nfl_game_v1", "polymarket", frozenset({"nfl"}), "2026-09-03",
+    # nfl-ne-sea-2026-09-10, market.description
+    "In the upcoming NFL game, scheduled for September 9 at 8:20PM ET:\nIf Patriots wins, the market will "
+    "resolve to \"Patriots\".\nIf Seahawks wins, the market will resolve to \"Seahawks\".\nIf the game is "
+    "postponed, this market will remain open until the game has been completed.\nIf the game is canceled "
+    "entirely or ends in a tie, with no make-up game, this market will resolve 50-50.",
+    ("New England Patriots", "Seattle Seahawks"),
+    SettleRef(source_agency="NFL official scores", oracle="uma", void_policy=VoidPolicy.RESOLVE_FIFTY,
+              tie_policy=TiePolicy.RESOLVE_FIFTY, ot_included=True, dnp_policy=VoidPolicy.UNKNOWN,
+              retirement_policy=None, revision_policy=None, dispute_mechanism="uma", settle_lag_h_p50=None,
+              terms_url="https://www.nfl.com/scores", provenance="api_field"))
+
+TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1,
+                                                              KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1)}
 
 
 def template_for(template_hash: str) -> Template | None:
@@ -141,8 +175,34 @@ _MLB_K_PM = (
             "plus proposal. Capital-availability skew is the risk ledger's job (release after both)."),
 )
 
+_NFL_K_PM = (
+    Verdict("official_source", "SAME", "both settle on the official NFL result (Kalshi: the Governing League; "
+            "Polymarket: nfl.com scores)."),
+    Verdict("winner_determination", "SAME", "the team that wins the game, both venues."),
+    Verdict("overtime", "SAME", "the full game including overtime on both venues."),
+    Verdict("tie", "SAME",
+            "Kalshi resolves each team's market to $0.50; Polymarket resolves 50-50. A two-leg cover holds one "
+            "contract of each side and receives 0.50 + 0.50 = $1.00 on a tie: the same terminal payout as a win."),
+    Verdict("postponement", "BOUNDED",
+            "Kalshi stays open only if the game starts within 48 hours, else resolves to a fair market price; "
+            "Polymarket stays open until the game is completed. Bounded on the Polymarket leg.",
+            evidence_key="nfl.postponed_gt48h_rate", loss_model="kalshi_fair_vs_pm_result"),
+    Verdict("cancellation", "BOUNDED",
+            "Kalshi's not-started-within-48-hours clause resolves to a fair market price; Polymarket resolves 50-50.",
+            evidence_key="nfl.cancelled_rate", loss_model="kalshi_fair_vs_pm_half"),
+    Verdict("suspended", "BOUNDED", "a suspended NFL game resumes; same shape as postponement.",
+            evidence_key="nfl.postponed_gt48h_rate", loss_model="kalshi_fair_vs_pm_result"),
+    Verdict("abandoned", "SAME", "an NFL game is not called official before completion; an abandoned game is "
+            "rescheduled or cancelled (above)."),
+    Verdict("player_non_participation", "NA", "team moneyline; no player condition on either venue."),
+    Verdict("retirement", "NA", "not a tennis market."),
+    Verdict("dispute_revision", "SAME", "terminal outcome is the official result on both; mechanisms differ."),
+    Verdict("settlement_timing", "SAME", "payouts agree; timing differs and is the risk ledger's job."),
+)
+
 PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
     ("kalshi_mlb_game_v1", "polymarket_mlb_game_v1"): _MLB_K_PM,
+    ("kalshi_nfl_game_v1", "polymarket_nfl_game_v1"): _NFL_K_PM,
 }
 
 

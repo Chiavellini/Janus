@@ -1,0 +1,38 @@
+experiment_id: "janus-sports-kalshi-hedge-window-slippage-2026-09-03"
+date_registered: "2026-09-03"
+track: "sports/execution"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L27"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE FIRST RUN. The row may be RE-RUN on more capture; each run appends its own
+# results file and a dated note, never edits an earlier one.
+purpose: >
+  Price the slippage buffer the total-cost model reserves for the hedge leg. The coordinator sends
+  the Polymarket leg first and hedges on Kalshi within max_hedge_latency_ms (3,000 ms). The cost of
+  that order is adverse movement in the Kalshi ask during the window. Measure, from captured
+  Kalshi orderbook frames, how much the YES ask at the walked depth moves against a buyer within
+  0.5 s, 1 s and 3 s of any instant, and register the conservative quantile as
+  slippage_per_contract with slippage_modelled=True.
+
+source:
+  frames: "/Volumes/Kilos/janus/frames*/kalshi/**/*.jsonl.gz (nodes/capture format), replayed through nodes/stream_kalshi.protocol"
+  unit: "one (ticker, instant) sample at every delta frame; the reference quantity is 100 contracts"
+
+definitions:
+  ask_at_depth: "the price at which cumulative YES ask depth reaches 100 contracts (nodes/execute/plan.marginal_price); None if the ladder is thinner"
+  adverse_move_w: "max over t' in (t, t+w] of ask_at_depth(t') - ask_at_depth(t), floored at 0 -- a buyer's cost, so favourable moves count as zero"
+  windows_s: [0.5, 1.0, 3.0]
+  quantiles: [0.5, 0.9, 0.95, 0.99]
+  registered_value: "the p95 of adverse_move at the 3 s window, in price (USD per contract)"
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no look."
+  - "Fewer than 2,000 samples across fewer than 4 distinct tickers is PRELIMINARY: reported, and slippage_modelled stays False."
+  - "Samples where the ladder is thinner than 100 contracts at t are excluded and their count reported."
+
+outputs:
+  results: "research/sports/2026-09-03_kalshi-hedge-window-slippage/results_<run>.json"
+  verdict: "research/sports/2026-09-03_kalshi-hedge-window-slippage/verdict.md (appended per run)"
+  registration: "nodes/cover/capacity.SLIPPAGE (value, modelled flag, research_ref) once a run is not PRELIMINARY"

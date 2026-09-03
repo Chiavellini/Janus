@@ -50,6 +50,8 @@ from nodes.execute.coordinator import Coordinator  # noqa: E402
 from nodes.execute.plan import plan_from_cover  # noqa: E402
 from nodes.execute.records import ExecutionRecords  # noqa: E402
 from nodes.execute.venues import build_venues  # noqa: E402
+from nodes.exec_kalshi.client import DEMO_BASE, PROD_BASE, KalshiExecution  # noqa: E402
+from nodes.exec_polymarket.client import PolymarketExecution, PyClobTransport, TransportUnavailable  # noqa: E402
 from nodes.execution.journal import Journal  # noqa: E402
 from nodes.opportunity.opportunity import books_snapshot  # noqa: E402
 from nodes.opportunity.thresholds import STRATEGY_VERSION  # noqa: E402
@@ -418,11 +420,27 @@ def main() -> int:
         return 2
     sup.mode = resolved.mode
     if sup.mode.rank >= Mode.PAPER_EXECUTION.rank:
-        if sup.mode.sends_real_orders:
-            print("real-order modes are not wired into this grid yet (P8/P11); refusing", file=sys.stderr)
-            return 2
         journal = Journal(sup.store)
-        sup.venues = build_venues(sup.mode, journal)
+        # Real venues, built only for the modes that need them, from credentials that are named
+        # by environment variable and never appear on the command line or in a log.
+        def kalshi_factory(host: str):
+            if host == "demo":
+                key, path = os.environ.get("JANUS_KALSHI_DEMO_API_KEY"), os.environ.get("JANUS_KALSHI_DEMO_PRIVATE_KEY_PATH")
+                if not (key and path):
+                    raise ValueError("DEMO_EXECUTION needs JANUS_KALSHI_DEMO_API_KEY and JANUS_KALSHI_DEMO_PRIVATE_KEY_PATH "
+                                     "(a demo account is separate from production)")
+                return KalshiExecution(key, load_private_key(path), journal, sup.mode, base_url=DEMO_BASE)
+            return KalshiExecution(api_key, load_private_key(key_path), journal, sup.mode, base_url=PROD_BASE)
+
+        def polymarket_factory():
+            return PolymarketExecution(PyClobTransport(), journal, sup.mode)
+
+        try:
+            sup.venues = build_venues(sup.mode, journal, kalshi_factory=kalshi_factory,
+                                      polymarket_factory=polymarket_factory)
+        except (ValueError, TransportUnavailable) as exc:
+            print(f"mode {sup.mode.value} cannot be built: {exc}", file=sys.stderr)
+            return 2
         sup.limits, sup.kill = limits, kill
         sup.breaker = LossBreaker(kill=kill)
         sup.ledger = ExposureLedger(sup.store)
