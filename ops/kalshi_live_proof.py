@@ -52,6 +52,7 @@ from nodes.risk.kill import KillSwitches  # noqa: E402
 from nodes.risk.ledger import ExposureLedger  # noqa: E402
 from nodes.risk.limits import load_limits  # noqa: E402
 from nodes.store_tuples.store import DEFAULT_DB, TupleStore  # noqa: E402
+from nodes.entities.seed import KALSHI_GAME_SERIES  # noqa: E402
 from nodes.stream_kalshi.stream import load_private_key  # noqa: E402
 from nodes.venue_kalshi.books import KALSHI_BASE, fetch_kalshi_series, kalshi_book, kalshi_fee_params  # noqa: E402
 
@@ -83,6 +84,12 @@ def run_proof(a) -> int:
         print(f"{a.ticker}: no two-sided touch ({book.best_bid}/{book.best_ask}); pick a live game market", file=sys.stderr)
         return 2
     series_ticker = a.ticker.split("-")[0]
+    # The risk ledger caps exposure PER LEAGUE (limits.toml [events.per_league_usd]); an unknown
+    # league caps at zero, so the series must map back to one before anything else.
+    league = next((lg for lg, t in KALSHI_GAME_SERIES.items() if t == series_ticker), None)
+    if league is None:
+        print(f"{series_ticker}: not a registered game series ({sorted(KALSHI_GAME_SERIES.values())}); refusing", file=sys.stderr)
+        return 2
     fees = kalshi_fee_params(fetch_kalshi_series(series_ticker, cl))
     if fees is None:
         print(f"{series_ticker}: no fee schedule; refusing", file=sys.stderr)
@@ -100,9 +107,6 @@ def run_proof(a) -> int:
         print("       write the override first: python3 ops/arming_override.py --mode LIMITED_LIVE ...")
         return 2
     print(f"[caps] override stake {resolved.caps.get('stake_usd')} max_contracts {resolved.caps.get('max_contracts')}")
-    if not a.arm:
-        print("dry run: nothing sent. Re-run with --arm to send.")
-        return 0
 
     store = TupleStore(a.db)
     journal = Journal(store)
@@ -113,13 +117,20 @@ def run_proof(a) -> int:
         return 2
     ledger, breaker = ExposureLedger(store), LossBreaker(kill=kill)
     event_id = f"proof:{a.ticker}"
-    cand = Candidate(f"proof:{uuid.uuid4().hex[:8]}", event_id, series_ticker.lower(), (("kalshi", float(a.contracts), ask),),
+    cand = Candidate(f"proof:{uuid.uuid4().hex[:8]}", event_id, league, (("kalshi", float(a.contracts), ask),),
                      -stake, -1.0, "proof-v1", 0.0)
     c = clear_proof(cand, mode=resolved.mode, limits=limits, ledger=ledger, kill=kill, breaker=breaker, fills_today=(),
                     balances={"kalshi": bal0.available_usd}, venues_connected={"kalshi": True}, caps=resolved.caps)
     if hasattr(c, "code"):
         print(f"risk refused the proof: {c.code}: {c.detail}", file=sys.stderr)
         return 2
+    print(f"[risk] cleared: league {league}, reservation {c.reservation.reservation_id[:8]}, balance {bal0.available_usd:.2f}")
+    if not a.arm:
+        # The dry run goes through the same gate and clearance as the real thing, so a refusal
+        # surfaces here and not after the operator has typed --arm. Its reservation is released.
+        ledger.release(c.reservation.reservation_id, reason="dry_run")
+        print("dry run: nothing sent. Re-run with --arm to send.")
+        return 0
     proof = {"ticker": a.ticker, "series": series_ticker, "fees": fees, "started_utc": datetime.now(timezone.utc).isoformat(),
              "balance_before": bal0.available_usd, "reservation_id": c.reservation.reservation_id, "runner_sha": _runner_sha(),
              "override_sha": resolved.override_sha, "steps": []}
