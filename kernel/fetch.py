@@ -33,9 +33,10 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-#: A COMPLETE browser string. clob.polymarket.com (Cloudflare) answered 403 to the truncated
-#: "...(KHTML, like Gecko)" string on 2026-09-03 while curl's default and a full Safari string passed.
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15"
+#: A PRODUCT string, not a browser's. Measured 2026-09-03 against clob.polymarket.com (Cloudflare):
+#: any Mozilla/Safari string from this client is answered 403 (a browser name without a browser's
+#: TLS fingerprint reads as a bot); "janus/1.0", "python-urllib" and curl's default all pass.
+USER_AGENT = "janus/1.0 (+python-urllib)"
 DEFAULT_TIMEOUT = 40.0
 MAX_RETRIES = 4
 BASE_BACKOFF = 1.5
