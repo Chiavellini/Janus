@@ -29,8 +29,9 @@ soccer name resolves.
 2. **The merge.** After the armed run: `git merge --ff-only claude/system-build-handoff-c80a2b`
    on main, `launchctl kickstart -k gui/$(id -u)/com.janus.live-stream`, and load
    `ops/com.janus.census.plist` so the census runs daily (`launchctl bootstrap gui/$(id -u) …`).
-3. **A funded Polymarket wallet** (key file 600, `JANUS_PM_WALLET_KEY_PATH`), and a new override
-   whose statement names Polymarket, when the PM proof script exists (below).
+3. **A funded Polymarket wallet** (key file 600, `JANUS_PM_WALLET_KEY_PATH`) and a new override
+   whose statement names Polymarket; then `ops/polymarket_live_proof.py --slug … --outcome …`, dry run
+   and `--arm`, on any live two-sided game market (`BATTERY.md`).
 4. **Approval to start Ashburn** (billable). Another agent's `infra/` work is on main, uncommitted.
 
 **Mine, in order (the operator's decision: coverage first):**
@@ -47,7 +48,7 @@ soccer name resolves.
    recorded but not planned. Polymarket-first for two legs then the Kalshi hedge, or refuse.
 6. UCL and every non-ESPN competition (UFC, tennis, cricket, esports): a club or fighter as one
    entity across competitions, and a `venue_structured` anchor with its own blind gold file.
-7. The Polymarket proof script (`ops/polymarket_live_proof.py`), sharing `ops/proof_check.py`.
+7. ~~The Polymarket proof script~~ done (`ops/polymarket_live_proof.py`; tests drive it against a scripted CLOB).
 8. The generic verifier for threshold/date events, recovered from `5eac384^` into
    `nodes/match_generic/`, behind a pre-declared precision bar over its blind gold set.
 
