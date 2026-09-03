@@ -4,6 +4,7 @@
     python3 ops/kalshi_live_proof.py --ticker KXMLBGAME-26SEP03...-STL            # DRY RUN: prints the plan
     python3 ops/kalshi_live_proof.py --ticker KXMLBGAME-26SEP03...-STL --arm      # sends the orders
     python3 ops/kalshi_live_proof.py --settle /Volumes/Kilos/janus/proofs/kalshi_<ts>.json   # after the game
+    python3 ops/kalshi_live_proof.py --check  /Volumes/Kilos/janus/proofs/kalshi_<ts>.json   # the checklist, any time
 
 THE OPERATOR RUNS THIS. It needs LIMITED_LIVE, which needs the arming override
 (ops/arming_override.py) with your statement, and it refuses without --arm. Everything goes
@@ -19,7 +20,9 @@ What it does, in order:
      pulls fills; compares the charged fee with the pinned curve at the series multiplier;
   4. balance before and after; writes a proof file. The position is held to settlement.
 --settle later reads the market result, computes realized PnL per nodes/reconcile.settle, feeds
-the loss breaker's FIFO, checks the balance delta, and releases the reservation.
+the loss breaker's FIFO, checks the balance delta, and releases the reservation. --check runs the
+post-proof checklist (ops/proof_check.py) over the file: resting -> canceled, IOC final, fees at
+the pin, balance delta, and after settlement the realized PnL and the released reservation.
 """
 
 from __future__ import annotations
@@ -55,6 +58,7 @@ from nodes.store_tuples.store import DEFAULT_DB, TupleStore  # noqa: E402
 from nodes.entities.seed import KALSHI_GAME_SERIES  # noqa: E402
 from nodes.stream_kalshi.stream import load_private_key  # noqa: E402
 from nodes.venue_kalshi.books import KALSHI_BASE, fetch_kalshi_series, kalshi_book, kalshi_fee_params  # noqa: E402
+from ops.proof_check import run_check  # noqa: E402
 
 PROOFS = Path("/Volumes/Kilos/janus/proofs")
 
@@ -72,7 +76,9 @@ def _poll(venue, cid: str, *, seconds: float = 10.0, step: float = 0.5):
     return st
 
 
-def run_proof(a) -> int:
+def run_proof(a, venue_factory=None) -> int:
+    """`venue_factory(api_key, private_key, journal, mode)` builds the execution venue; the default is
+    the production Kalshi adapter. Tests inject a fake and drive `execute_steps` directly."""
     api_key, key_path = os.environ.get("JANUS_KALSHI_API_KEY"), os.environ.get("JANUS_KALSHI_PRIVATE_KEY_PATH")
     if not (api_key and key_path):
         print("source the credentials env first (JANUS_KALSHI_API_KEY / JANUS_KALSHI_PRIVATE_KEY_PATH)", file=sys.stderr)
@@ -110,7 +116,10 @@ def run_proof(a) -> int:
 
     store = TupleStore(a.db)
     journal = Journal(store)
-    venue = KalshiExecution(api_key, load_private_key(key_path), journal, resolved.mode, base_url=PROD_BASE)
+    if venue_factory is None:
+        venue = KalshiExecution(api_key, load_private_key(key_path), journal, resolved.mode, base_url=PROD_BASE)
+    else:
+        venue = venue_factory(api_key, load_private_key(key_path), journal, resolved.mode)
     bal0 = venue.balance()
     if bal0 is None:
         print("balance could not be confirmed; refusing", file=sys.stderr)
@@ -131,15 +140,34 @@ def run_proof(a) -> int:
         ledger.release(c.reservation.reservation_id, reason="dry_run")
         print("dry run: nothing sent. Re-run with --arm to send.")
         return 0
-    proof = {"ticker": a.ticker, "series": series_ticker, "fees": fees, "started_utc": datetime.now(timezone.utc).isoformat(),
-             "balance_before": bal0.available_usd, "reservation_id": c.reservation.reservation_id, "runner_sha": _runner_sha(),
-             "override_sha": resolved.override_sha, "steps": []}
+    proof = execute_steps(venue, ticker=a.ticker, series=series_ticker, fees=fees, ask=ask, resting_px=resting_px,
+                          contracts=float(a.contracts), cand=cand, clearance=c, kill=kill, balance_before=bal0,
+                          runner_sha=_runner_sha(), override_sha=resolved.override_sha)
+    PROOFS.mkdir(parents=True, exist_ok=True)
+    out = PROOFS / f"kalshi_{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}.json"
+    out.write_text(json.dumps(proof, indent=2, default=str) + "\n")
+    store.commit(); store.close()
+    print(f"[proof  ] {out}  (run --settle {out} after the game settles)")
+    return 0
+
+
+def execute_steps(venue, *, ticker: str, series: str, fees: dict, ask: float, resting_px: float, contracts: float,
+                  cand, clearance, kill, balance_before, runner_sha: str, override_sha: str | None,
+                  sleep=time.sleep, poll_step: float = 0.5) -> dict:
+    """Steps 2-4 against an already-cleared candidate: the resting bid and its cancel, the IOC fill,
+    the fee comparison, the balance delta, the STOP latch. Returns the proof dict; the caller writes
+    it. Everything on the wire goes through `venue` (an ExecutionVenue), so a fake drives it offline."""
+    bal0 = balance_before
+    proof = {"venue": venue.venue, "ticker": ticker, "series": series, "fees": fees, "contracts": contracts,
+             "won_when": "yes", "started_utc": datetime.now(timezone.utc).isoformat(),
+             "balance_before": bal0.available_usd, "reservation_id": clearance.reservation.reservation_id,
+             "runner_sha": runner_sha, "override_sha": override_sha, "steps": []}
 
     # 2. RESTING -> cancel
-    r1 = OrderRequest("kalshi", a.ticker, a.ticker, "buy_yes", resting_px, 1.0, "gtc", uuid.uuid4().hex, cand.opportunity_id)
-    ack1 = venue.submit(r1, c)
+    r1 = OrderRequest("kalshi", ticker, ticker, "buy_yes", resting_px, 1.0, "gtc", uuid.uuid4().hex, cand.opportunity_id)
+    ack1 = venue.submit(r1, clearance)
     print(f"[resting] {ack1.state.value} {ack1.raw_status} venue_id={ack1.venue_order_id} {ack1.detail}")
-    st1 = _poll(venue, r1.client_order_id, seconds=3.0)
+    st1 = _poll(venue, r1.client_order_id, seconds=3.0, step=poll_step)
     print(f"[resting] status {st1.state.value} open={st1.open} filled={st1.filled_contracts}")
     cx = venue.cancel(r1.client_order_id)
     print(f"[cancel ] {cx.state.value} {cx.raw_status} filled={cx.filled_contracts}")
@@ -148,18 +176,18 @@ def run_proof(a) -> int:
         print("the resting bid filled (the book moved through it): counted as part of the fill proof")
 
     # 3. FILL
-    r2 = OrderRequest("kalshi", a.ticker, a.ticker, "buy_yes", ask, float(a.contracts), "ioc", uuid.uuid4().hex,
+    r2 = OrderRequest("kalshi", ticker, ticker, "buy_yes", ask, float(contracts), "ioc", uuid.uuid4().hex,
                       cand.opportunity_id, hedge=True)
-    ack2 = venue.submit(r2, c)
+    ack2 = venue.submit(r2, clearance)
     print(f"[ioc    ] {ack2.state.value} {ack2.raw_status} filled={ack2.filled_contracts} @ {ack2.avg_price} fee={ack2.fee_usd} {ack2.detail}")
-    st2 = _poll(venue, r2.client_order_id, seconds=10.0)
+    st2 = _poll(venue, r2.client_order_id, seconds=10.0, step=poll_step)
     print(f"[ioc    ] status {st2.state.value} final={st2.final} filled={st2.filled_contracts} fee={st2.fee_usd}")
-    time.sleep(2.0)
+    sleep(2.0)
     fills = venue.fills(since_utc=time.time() - 600)
     mine = [f for f in fills if f.venue_order_id in {ack1.venue_order_id, ack2.venue_order_id, st2.venue_order_id}]
     findings = []
     for f in mine:
-        pinned = model_for("kalshi").entry_cost([Fill("kalshi", f.venue_order_id, a.ticker, "yes", f.price, f.contracts,
+        pinned = model_for("kalshi").entry_cost([Fill("kalshi", f.venue_order_id, ticker, "yes", f.price, f.contracts,
                                                       "taker" if f.is_taker else "maker", 0)], params_for("kalshi", fees))
         findings.append({"fill_id": f.fill_id, "contracts": f.contracts, "price": f.price, "charged": f.fee_usd,
                          "pinned": round(pinned, 4), "excess": round(max(0.0, f.fee_usd - pinned), 4), "taker": f.is_taker})
@@ -175,12 +203,7 @@ def run_proof(a) -> int:
     if any(x["excess"] > 1e-6 for x in findings):
         kill.latch("live", "proof: a charged fee exceeded the pinned curve; re-pin before anything else")
         proof["stop"] = "FEE_ABOVE_PIN"
-    PROOFS.mkdir(parents=True, exist_ok=True)
-    out = PROOFS / f"kalshi_{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}.json"
-    out.write_text(json.dumps(proof, indent=2, default=str) + "\n")
-    store.commit(); store.close()
-    print(f"[proof  ] {out}  (run --settle {out} after the game settles)")
-    return 0
+    return proof
 
 
 def run_settle(a) -> int:
@@ -220,8 +243,11 @@ def main() -> int:
     ap.add_argument("--contracts", type=float, default=2.0)
     ap.add_argument("--arm", action="store_true", help="actually send; without it this is a dry run")
     ap.add_argument("--settle", help="a proof file to settle and reconcile")
+    ap.add_argument("--check", help="a proof file to run the post-proof checklist over (no network)")
     ap.add_argument("--db", type=Path, default=DEFAULT_DB)
     a = ap.parse_args()
+    if a.check:
+        return run_check(a.check, a.db)
     if a.settle:
         return run_settle(a)
     if not a.ticker:

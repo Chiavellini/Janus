@@ -9,6 +9,9 @@ Not a node. Operational surface: it answers *"is this job healthy?"*, which noth
 | `watchdog.py` | SLA checks over that index. Detects `CRASH_LOOP`, `CRASHED`, `FAILED`, `STALE`, `HUNG`, `NEVER_RAN`, `UNREGISTERED`. |
 | `run_node.sh` | Job wrapper: start row → run → finish row, plus stderr rotation at 32 MB. |
 | `run_watchdog.sh` | Invoked by `com.janus.watchdog` every 5 minutes. |
+| `arming_override.py` | Writes the signed arming override (GATE step 9): the operator's verbatim statement, runner and limits sha pins, caps, expiry. Refuses to overwrite without `--force`. |
+| `kalshi_live_proof.py` | GATE step 8 on Kalshi, tiny, through the same nodes a trade uses: dry run, `--arm`, `--settle`, `--check`. The operator runs it; the agent never passes `--arm`. |
+| `proof_check.py` | The post-proof checklist as code, shared by every venue's proof script: resting → canceled, IOC final, fees at the pin, balance delta, settled PnL arithmetic, reservation released. Reads the ledger read-only; never echoes an ack. |
 
 ## Why the start row exists
 
