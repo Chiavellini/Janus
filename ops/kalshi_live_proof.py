@@ -55,7 +55,7 @@ from nodes.risk.kill import KillSwitches  # noqa: E402
 from nodes.risk.ledger import ExposureLedger  # noqa: E402
 from nodes.risk.limits import load_limits  # noqa: E402
 from nodes.store_tuples.store import DEFAULT_DB, TupleStore  # noqa: E402
-from nodes.entities.seed import KALSHI_GAME_SERIES  # noqa: E402
+from nodes.entities.leagues import kalshi_series, league_for_series  # noqa: E402
 from nodes.stream_kalshi.stream import load_private_key  # noqa: E402
 from nodes.venue_kalshi.books import KALSHI_BASE, fetch_kalshi_series, kalshi_book, kalshi_fee_params  # noqa: E402
 from ops.proof_check import run_check  # noqa: E402
@@ -92,9 +92,9 @@ def run_proof(a, venue_factory=None) -> int:
     series_ticker = a.ticker.split("-")[0]
     # The risk ledger caps exposure PER LEAGUE (limits.toml [events.per_league_usd]); an unknown
     # league caps at zero, so the series must map back to one before anything else.
-    league = next((lg for lg, t in KALSHI_GAME_SERIES.items() if t == series_ticker), None)
+    league = league_for_series(series_ticker)
     if league is None:
-        print(f"{series_ticker}: not a registered game series ({sorted(KALSHI_GAME_SERIES.values())}); refusing", file=sys.stderr)
+        print(f"{series_ticker}: not a registered game series ({sorted(kalshi_series().values())}); refusing", file=sys.stderr)
         return 2
     fees = kalshi_fee_params(fetch_kalshi_series(series_ticker, cl))
     if fees is None:

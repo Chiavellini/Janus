@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.janus.census</string>
+  <!-- L28: one co-listing census a day for seven days. Public endpoints only; no credentials. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/bernardodelrio/Code/Janus/ops/run_node.sh</string>
+    <string>census</string>
+    <string>/Users/bernardodelrio/Code/Janus/research/sports/2026-09-03_co-listing-census/measure.py</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/bernardodelrio/Code/Janus</string>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>0</integer></dict>
+  <key>RunAtLoad</key><false/>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>Nice</key><integer>0</integer>
+</dict>
+</plist>

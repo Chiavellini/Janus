@@ -42,19 +42,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Iterable, Mapping, Sequence
 
 from kernel.fetch import Client
+from nodes.entities.leagues import espn_paths
 
 #: The working host. `site.api.espn.com` is 403 — see module docstring.
 ESPN_BASE = "https://site.web.api.espn.com/apis/site/v2/sports"
 
 #: Our league code -> ESPN's (sport, league) path pair.
-LEAGUE_PATHS: dict[str, tuple[str, str]] = {
-    "mlb":  ("baseball", "mlb"),
-    "nfl":  ("football", "nfl"),
-    "nba":  ("basketball", "nba"),
-    "wnba": ("basketball", "wnba"),
-    "nhl":  ("hockey", "nhl"),
-    "epl":  ("soccer", "eng.1"),
-}
+#: Read from the league registry (nodes/entities/leagues.py); a league anchored elsewhere is absent.
+LEAGUE_PATHS: dict[str, tuple[str, str]] = espn_paths()
 
 #: How far a venue's stated start time may sit from the schedule's and still be the same game.
 #: MLB doubleheaders are typically ~3.5h apart, so this must stay well under that or G1 and G2

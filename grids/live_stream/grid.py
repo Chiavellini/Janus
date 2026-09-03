@@ -44,6 +44,7 @@ from kernel.fetch import Client  # noqa: E402
 from kernel.redact import brief_error  # noqa: E402
 from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
 from nodes.cover.capacity import frontier  # noqa: E402
+from nodes.entities.leagues import LEAGUES  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, first_seen, record_events  # noqa: E402
 from nodes.slate.slate import next_transition, windows_for  # noqa: E402
 from nodes.execute.coordinator import Coordinator  # noqa: E402
@@ -367,7 +368,9 @@ def _runner_sha() -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--leagues", default="mlb,nfl,nba,wnba,nhl,epl")
+    ap.add_argument("--leagues", default=",".join(LEAGUES),
+                    help="registered leagues (nodes/entities/leagues.py); a league lacking a cited rule or "
+                         "reviewed templates blocks downstream, it is not filtered here")
     ap.add_argument("--pre-hours", type=float, default=2.0)
     ap.add_argument("--db", type=Path, default=DB)
     ap.add_argument("--discovery-period", type=float, default=300.0)

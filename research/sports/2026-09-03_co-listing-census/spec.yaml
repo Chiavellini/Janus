@@ -1,0 +1,47 @@
+experiment_id: "janus-sports-co-listing-census-2026-09-03"
+date_registered: "2026-09-03"
+track: "sports/coverage"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L28"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE FIRST RUN. The row is RE-RUN daily for seven days; each run appends its own
+# results file and a dated section to verdict.md, never edits an earlier one.
+purpose: >
+  Rank every competition both venues list as game markets by measured co-listed capacity and
+  contract life, so the order in which competitions get their exhaustiveness citation, harvested
+  settlement templates and measured bounded rates follows the market and not a preference.
+  Sports were chosen because contract life is short and arbitrage may appear; that property is
+  measured here per competition, not assumed per sport.
+
+source:
+  kalshi: "GET /series?category=Sports (paginated); GET /markets?series_ticker=<game-class series>&status=open. A game-class series is one whose ticker ends in GAME, FIGHT or MATCH (not GAMES / GAMEDAY). Touch from yes_bid_dollars x yes_bid_size_fp and yes_ask_dollars x yes_ask_size_fp on the market record; life from open_time to expected_expiration_time."
+  polymarket: "GET /sports (the venue's own league table: sport code, name, resolution source, primaryTagId); GET /events?tag_id=<primaryTagId>&closed=false (paginated). A game is an event with a market whose sportsMarketType is moneyline and which carries gameStartTime. Touch from GET clob /book per YES token, sampled for co-listed events only, at most 150 books per run spread round-robin across competitions; life from the market's createdAt to gameStartTime."
+  code: "nodes/discovery/census.py (frozen-fixture tests in nodes/discovery/tests/test_census.py); this directory's measure.py"
+
+definitions:
+  window: "events whose start lies in [now - 3 h, now + 48 h] on either venue"
+  co_listed: "a Kalshi event and a Polymarket event on the same calendar date (+-1 day; the Kalshi ticker date is venue-local) whose two participants each match -- an abbreviation equal on both venues, or a normalised name token of >= 4 characters shared, stop-words (united, city, real, ...) excluded -- and match distinct participants. Each event is paired at most once."
+  two_sided_both: "co-listed and every game market on both venues has a bid and an ask"
+  touch_usd: "per market min(bid notional, ask notional) at the touch; per event the minimum across its game markets; per competition the median over co-listed events in the window"
+  capacity_usd: "co_listed_48h x min(kalshi_touch_usd_median, pm_touch_usd_median), using whichever side was measured when only one was"
+  life_h: "median over co-listed events of the venues' contract life in hours (listing to expected settlement on Kalshi; creation to game start on Polymarket)"
+  score: "capacity_usd / life_h; the ranking statistic"
+  mapping: "Kalshi series -> Polymarket sport code, LEARNED from the joined events and reported with its count; never hand-seeded"
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no look. No outcome is read."
+  - "Seven daily runs; a competition's rank is read from the seven-day median of its score. Fewer than 4 runs is PRELIMINARY and orders nothing."
+  - "The unmatched remainder per competition is reported on every run; a competition whose Kalshi or Polymarket unmatched count exceeds its co-listed count is flagged JOIN_WEAK and its rank carries that label (the join is loose by design; a weak join is a reason to build the competition's alias table, not to trust the count)."
+  - "A run that fails to enumerate either venue (an error on the /series, /sports or a tag sweep) is reported as PARTIAL and does not count toward the seven."
+
+outputs:
+  results: "research/sports/2026-09-03_co-listing-census/results_<run>.json"
+  verdict: "research/sports/2026-09-03_co-listing-census/verdict.md (appended per run)"
+  registration: "the per-competition order of the unblock workflow (nodes/settle_wedge/README.md), once seven runs exist"
+
+what_this_does_not_establish:
+  - "That any co-listed pair is the same question: that is nodes/settle_wedge's job, per competition, from the venues' own rules text."
+  - "That any edge exists or is harvestable. Capacity at the touch is a ceiling on size, not a return."
+  - "The identity of participants: the join is a counting device with declared looseness, not the canonical key."

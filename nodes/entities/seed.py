@@ -47,13 +47,14 @@ NON_TEAM_OUTCOMES = {"tie", "draw", "no winner"}
 from kernel.fetch import Client
 from nodes.schedule_espn import espn
 
-SEED_LEAGUES = ["mlb", "nfl", "nba", "wnba", "nhl", "epl"]
+from nodes.entities.leagues import LEAGUES, kalshi_series, pm_tags
 
+#: Every registered league (nodes/entities/leagues.py is the one table; these names are views).
+SEED_LEAGUES = list(LEAGUES)
 #: Kalshi game-level series per league. Verified live 2026-08-16.
-KALSHI_GAME_SERIES = {"mlb": "KXMLBGAME", "nfl": "KXNFLGAME", "nba": "KXNBAGAME",
-                      "wnba": "KXWNBAGAME", "nhl": "KXNHLGAME", "epl": "KXEPLGAME"}
+KALSHI_GAME_SERIES = kalshi_series()
 #: Polymarket tag slug per league.
-PM_TAG = {"mlb": "mlb", "nfl": "nfl", "nba": "nba", "wnba": "wnba", "nhl": "nhl", "epl": "epl"}
+PM_TAG = pm_tags()
 
 KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
 PM_GAMMA = "https://gamma-api.polymarket.com"

@@ -1,7 +1,7 @@
 # discovery
 
 **Kind:** `source` (fetch) + `pure` (select, join, slate)
-**Implements:** `discovery.py`
+**Implements:** `discovery.py`, `census.py`
 
 The event registry. Turns the ESPN schedule into the set of games that are live (or about to be)
 **and** co-listed on both venues, with the four market ids and the fee params each venue reported
@@ -57,3 +57,18 @@ participant names the normaliser strips, and `settlement`, the verdict `nodes/se
 reached from exactly those words. `record_events` writes the `settlement_records` (the text, by
 hash) and `equivalence_records` (the verdict, append-on-change). The supervisor and the replay
 re-certify from the same spec, so what was priced and what was recorded cannot diverge.
+
+## The co-listing census (2026-09-03, ledger L28)
+
+`census.py` answers a different question from the slate: not *which games are watchable now* but
+*which competitions are worth the work of a citation, harvested templates and measured rates*.
+Both venues enumerate themselves — Kalshi `/series?category=Sports` then every game-class series'
+open markets; Polymarket `/sports` (its own league table, with the settlement source and tag)
+then each tag's events with a `moneyline` market carrying `gameStartTime` — and the two are joined
+per event on the calendar date and both participants (abbreviation equal, or a name token shared).
+The join is a counting device with declared looseness: the unmatched remainder is reported per
+competition, and the Kalshi ↔ Polymarket competition mapping is learned from the pairs, never
+hand-seeded. `summarize` scores each competition by co-listed capacity at the touch over contract
+life. `research/sports/2026-09-03_co-listing-census/measure.py` runs it daily; the rank is read
+from the seven-day median. `tests/test_census.py` covers ticker parsing, both venues' shapes as
+captured on 2026-09-03 (three-way soccer included), the join and the ranking.
