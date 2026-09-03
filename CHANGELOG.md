@@ -294,3 +294,15 @@ closed, 50-50 excluded) for `settle()`. The mode vocabulary names the one except
 ranks lowest yet drives paper venues. Verified live: `grids/live_stream --mode PAPER_EXECUTION`
 constructs the gate, venues, ledger and coordinator against real books; `LIVE=1` in that mode is
 refused at start.
+
+---
+
+## 2026-09-03 — P9: the registry as the spec describes it
+
+`nodes/discovery`: a 48-hour rolling universe (`universe`), one priority tier per game in the
+spec's order (`tier_of`: live, starting soon, newborn, recently listed, closing soon, long term;
+newborn and recently-listed are dated from the registry's own `first_seen`), the tier carried on
+the slate spec and the `events` row, and `registry_health` (no co-listed game for a day in
+season is a discovery failure, not a quiet slate), wired into the watchdog with a firing test.
+`grids/live_stream` reports the tier counts and the box's wake/drain state from `nodes/slate` on
+every slate rebuild. `BATTERY.md` lists each pre-capital item with who has to run it.

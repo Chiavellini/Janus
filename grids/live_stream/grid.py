@@ -44,7 +44,8 @@ from kernel.fetch import Client  # noqa: E402
 from kernel.redact import brief_error  # noqa: E402
 from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
 from nodes.cover.capacity import frontier  # noqa: E402
-from nodes.discovery.discovery import co_listed, discover, record_events  # noqa: E402
+from nodes.discovery.discovery import co_listed, discover, first_seen, record_events  # noqa: E402
+from nodes.slate.slate import next_transition, windows_for  # noqa: E402
 from nodes.execute.coordinator import Coordinator  # noqa: E402
 from nodes.execute.plan import plan_from_cover  # noqa: E402
 from nodes.execute.records import ExecutionRecords  # noqa: E402
@@ -112,6 +113,8 @@ class Supervisor:
     spawned: int = 0
     reaped: int = 0
     blocked: dict[str, str] = field(default_factory=dict)
+    tiers: dict[str, int] = field(default_factory=dict)
+    wake_state: tuple = ("WAKE", None, None)
 
     # ── discovery ───────────────────────────────────────────────────────
     def discover(self) -> dict[str, dict]:
@@ -122,7 +125,16 @@ class Supervisor:
         pc = Client("polymarket", rate=5, burst=8, cache_dir=None)
         kc = Client("kalshi", rate=4, burst=8, cache_dir=None)
         d = discover(self.leagues, now, True, self.pre_hours, pc, kc)
-        slate, blocked = co_listed(d)
+        seen = first_seen(self.store) if self.store is not None else {}
+        slate, blocked = co_listed(d, first_seen=seen, now=now.timestamp())
+        self.tiers = {}
+        for spec in slate.values():
+            self.tiers[spec["tier"]] = self.tiers.get(spec["tier"], 0) + 1
+        # Wake/drain: what the slate says the box should be doing right now (nodes/slate).
+        wins = windows_for(d.games, lead_s=1800, settle_s=2700)
+        nxt = next_transition(wins, now.timestamp())
+        self.wake_state = ("WAKE" if any(w.covers(now.timestamp()) for w in wins) else "DRAIN",
+                           nxt[0] if nxt else None, nxt[1] if nxt else None)
         self.blocked = dict(blocked)
         for venue, errs in d.fee_errors.items():
             for key, err in errs.items():
@@ -301,7 +313,9 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
                 try:
                     slate = sup.discover()
                     sup.reconcile(slate)
-                    print(f"[slate] {len(slate)} co-listed live games, {len(sup.live)} pollers"
+                    print(f"[slate] {len(slate)} co-listed games {sup.tiers}, {len(sup.live)} pollers, "
+                          f"box {sup.wake_state[0]}" + (f" -> {sup.wake_state[1]} in "
+                          f"{int(sup.wake_state[2] - time.time())}s" if sup.wake_state[1] else "")
                           + (f", blocked: {len(sup.blocked)}" if sup.blocked else ""), flush=True)
                 except Exception as exc:  # noqa: BLE001 -- discovery must never kill the loop
                     print(f"[slate FAILED] {type(exc).__name__}: {exc}", flush=True)

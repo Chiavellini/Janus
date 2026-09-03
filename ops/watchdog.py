@@ -158,6 +158,18 @@ def check(index: Path = INDEX, *, now: float | None = None,
     if risk is None or risk:
         from nodes.risk.health import risk_alerts
         alerts.extend(risk_alerts(now=now, **(risk or {})))
+        db = (risk or {}).get("db_path")
+        if risk is None or db:
+            try:
+                from nodes.discovery.discovery import registry_health
+                from nodes.store_tuples.store import DEFAULT_DB, TupleStore
+                path = Path(db) if db else DEFAULT_DB
+                if path.exists():
+                    st = TupleStore(path, enforce_volume=not db)
+                    alerts.extend(registry_health(st, now=now, in_season=(risk or {}).get("in_season", True)))
+                    st.close()
+            except Exception as exc:  # noqa: BLE001 -- the watchdog must report, never crash
+                alerts.append(f"registry: UNREADABLE — {type(exc).__name__}")
     return alerts
 
 
@@ -223,7 +235,7 @@ def selftest() -> None:
         import sqlite3
         kill = Path(d) / "kill"; kill.mkdir()
         brk = kill / "breaker.json"; db = Path(d) / "t.sqlite"
-        R = dict(kill_root=kill, breaker_path=brk, db_path=db, max_unreconciled_s=60)
+        R = dict(kill_root=kill, breaker_path=brk, db_path=db, max_unreconciled_s=60, in_season=False)
         assert check(fresh("q"), now=NOW, slas={}, risk=R) == [], "quiet risk state must be silent"
         (kill / "venue-kalshi").write_text("{}")
         assert any("KILL_FILE_PRESENT" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "KILL_FILE"
@@ -237,7 +249,11 @@ def selftest() -> None:
         con.execute("INSERT INTO capital_reservations VALUES('r','e','mlb','{}',NULL,?,NULL,NULL)", (NOW - 3600,))
         con.commit(); con.close()
         assert any("UNRECONCILED_TOO_LONG" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "UNRECONCILED"
-    print("watchdog selftest OK — 7 job branches and 3 risk branches fired, healthy cases stayed quiet")
+        con = sqlite3.connect(db); con.execute("DELETE FROM capital_reservations"); con.commit(); con.close()
+        # NO_CO_LISTED_GAMES: an events table with nothing co-listed for a day, in season
+        assert any("NO_CO_LISTED_GAMES" in a for a in check(fresh("q"), now=NOW, slas={}, risk={**R, "in_season": True})), "REGISTRY"
+        assert not any("registry" in a for a in check(fresh("q"), now=NOW, slas={}, risk={**R, "in_season": False}))
+    print("watchdog selftest OK — 7 job branches, 3 risk branches and the registry branch fired, healthy cases stayed quiet")
 
 
 def main() -> int:

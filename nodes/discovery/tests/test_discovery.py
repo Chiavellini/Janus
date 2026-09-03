@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from nodes.discovery.discovery import (Discovery, co_listed, load_specs, record_events, select_live)
+from nodes.discovery.discovery import (Discovery, co_listed, first_seen, load_specs, record_events,
+                                       registry_health, select_live, tier_of, universe)
 from nodes.entities.resolve import Resolver
 from nodes.schedule_espn.espn import ScheduledGame
 from nodes.settle_wedge.policy import KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1
@@ -124,4 +125,30 @@ def test_a_reworded_venue_template_blocks_the_game_and_is_recorded(tmp_path: Pat
     rows = store.con.execute("SELECT result, block_code FROM equivalence_records").fetchall()
     assert rows == [("BLOCKED", "TEMPLATE_UNKNOWN")]
     assert store.con.execute("SELECT COUNT(*) FROM settlement_records").fetchone()[0] == 2
+    store.close()
+
+
+def test_tiers_follow_the_specs_priority_order():
+    live = game(1, NOW - 600, "in"); soon = game(2, NOW + 3600, "pre"); later = game(3, NOW + 30 * 3600, "pre")
+    far = game(4, NOW + 80 * 3600, "pre")
+    assert tier_of(live, NOW) == "live" and tier_of(soon, NOW) == "starting_soon"
+    assert tier_of(later, NOW) == "closing_soon" and tier_of(far, NOW) == "long_term"
+    assert tier_of(later, NOW, first_seen_ts=NOW - 3600) == "newborn"
+    assert tier_of(later, NOW, first_seen_ts=NOW - 20 * 3600) == "recently_listed"
+    assert tier_of(soon, NOW, first_seen_ts=NOW - 60) == "starting_soon", "start proximity outranks listing age"
+    sched = [live, soon, later, far, game(5, NOW - 8000, "post")]
+    assert [g.game_id for g in universe(sched, NOW)] == ["espn:mlb:1", "espn:mlb:2", "espn:mlb:3"]
+
+
+def test_the_slate_carries_the_tier_and_the_registry_dates_newborns(tmp_path: Path):
+    d = _discovery()
+    slate, blocked = co_listed(d, now=NOW)
+    assert slate["espn:mlb:7"]["tier"] == "live"
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    record_events(store, d, slate, blocked, now=NOW)
+    assert first_seen(store) == {"espn:mlb:7": NOW}
+    assert store.con.execute("SELECT tier FROM events").fetchone() == ("live",)
+    assert registry_health(store, now=NOW + 60) == []
+    assert registry_health(store, now=NOW + 2 * 86400)[0].startswith("registry: NO_CO_LISTED_GAMES")
+    assert registry_health(store, now=NOW + 2 * 86400, in_season=False) == []
     store.close()

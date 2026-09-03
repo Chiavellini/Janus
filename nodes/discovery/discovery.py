@@ -47,6 +47,14 @@ from nodes.venue_polymarket.books import (pm_fee_params, pm_market_for_slug, pm_
 
 #: Hours ahead of first pitch/puck to start watching a pre-game market.
 DEFAULT_PRE_HOURS = 6.0
+#: The rolling event universe (spec §3). Kalshi lists a game ~72 h out, Polymarket ~82 h; 48 h is
+#: what both venues reliably cover, and it bounds the registry.
+UNIVERSE_HOURS = 48.0
+#: Priority tiers, in the order the spec ranks them. `tier_of` assigns exactly one per game.
+TIERS = ("live", "starting_soon", "newborn", "recently_listed", "closing_soon", "long_term")
+SOON_S = 2 * 3600            # starts within two hours
+NEWBORN_S = 6 * 3600         # listed within the last six hours
+RECENT_S = 24 * 3600         # listed within the last day
 #: A market is thinnest and most dislocated right at the open; keep watching a game that started
 #: up to this long ago even if ESPN still says "pre" (its state lags).
 DEFAULT_LEAD_S = 1800
@@ -63,6 +71,31 @@ def select_live(schedule: list, now_ts: float, include_near: bool, pre_hours: fl
                                and -lead_s <= delta <= pre_hours * 3600.0):
             out.append(g)
     return out
+
+
+def tier_of(g, now_ts: float, *, first_seen_ts: float | None = None) -> str:
+    """PURE. One tier per game, by the spec's priority order. `first_seen_ts` is when the registry
+    first saw the game co-listed (the events table's first_seen), which is what "newborn" and
+    "recently listed" mean; without it those two tiers cannot be claimed."""
+    delta = g.start_utc - now_ts
+    if g.state == "in":
+        return "live"
+    if g.state == "pre" and -DEFAULT_LEAD_S <= delta <= SOON_S:
+        return "starting_soon"
+    if first_seen_ts is not None:
+        age = now_ts - first_seen_ts
+        if age <= NEWBORN_S:
+            return "newborn"
+        if age <= RECENT_S:
+            return "recently_listed"
+    if delta <= UNIVERSE_HOURS * 3600:
+        return "closing_soon"
+    return "long_term"
+
+
+def universe(schedule: list, now_ts: float, *, hours: float = UNIVERSE_HOURS) -> list:
+    """PURE. Every game not yet over that starts inside the rolling horizon."""
+    return [g for g in schedule if g.state != "post" and -DEFAULT_LEAD_S <= g.start_utc - now_ts <= hours * 3600]
 
 
 def live_games(leagues: list[str], now: datetime, include_near: bool,
@@ -179,7 +212,8 @@ def discover(leagues: list[str], now: datetime, include_near: bool, pre_hours: f
                      fee_errors={"kalshi": k_errors, "polymarket": pm_fee_errors}, series=series)
 
 
-def co_listed(d: Discovery) -> tuple[dict[str, dict], dict[str, str]]:
+def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
+              now: float | None = None) -> tuple[dict[str, dict], dict[str, str]]:
     """PURE over a Discovery. game_id -> slate spec for every game live on BOTH venues, plus a
     game_id -> reason map for everything that was not. This is what the supervisor spawns from.
 
@@ -232,6 +266,7 @@ def co_listed(d: Discovery) -> tuple[dict[str, dict], dict[str, str]]:
             k_rules = dict(first.get("kalshi_rules") or {})
             p_rules = dict(first.get("pm_rules") or {})
             spec = {"league": league, "short_name": g.short_name, "state": g.state,
+                    "tier": tier_of(g, now or d.made_utc, first_seen_ts=(first_seen or {}).get(gid)),
                     "start_utc": g.start_utc, "outcomes": outcomes, "fee_params": fees,
                     "pm_slug": slug, "kalshi_event": first["kalshi_event"],
                     "pm_limits": pm_order_limits(pm_market_for_slug(ev, slug) or {}),
@@ -249,7 +284,7 @@ EVENTS_DDL = """
 CREATE TABLE IF NOT EXISTS events(
   event_id TEXT PRIMARY KEY, league TEXT NOT NULL, start_utc INTEGER, participants TEXT,
   short_name TEXT, phase TEXT NOT NULL, kalshi_event TEXT, pm_slug TEXT, fee_params_json TEXT,
-  spec_json TEXT, first_seen_ts REAL NOT NULL, last_seen_ts REAL NOT NULL, block_reason TEXT);
+  spec_json TEXT, first_seen_ts REAL NOT NULL, last_seen_ts REAL NOT NULL, block_reason TEXT, tier TEXT);
 CREATE TABLE IF NOT EXISTS event_transitions(
   id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, event_id TEXT NOT NULL,
   phase TEXT NOT NULL, block_reason TEXT);
@@ -272,22 +307,23 @@ def record_events(store, d: Discovery, slate: Mapping[str, dict], blocked: Mappi
     for g in d.games:
         spec = slate.get(g.game_id)
         phase = f"{g.state}:co_listed" if spec else g.state
+        tier = spec.get("tier") if spec else None
         reason = blocked.get(g.game_id)
         row = con.execute("SELECT phase, block_reason FROM events WHERE event_id=?",
                           (g.game_id,)).fetchone()
         con.execute(
             "INSERT INTO events(event_id, league, start_utc, participants, short_name, phase, "
-            "kalshi_event, pm_slug, fee_params_json, spec_json, first_seen_ts, last_seen_ts, block_reason) "
-            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_id) DO UPDATE SET "
+            "kalshi_event, pm_slug, fee_params_json, spec_json, first_seen_ts, last_seen_ts, block_reason, tier) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_id) DO UPDATE SET "
             "phase=excluded.phase, kalshi_event=COALESCE(excluded.kalshi_event, events.kalshi_event), "
             "pm_slug=COALESCE(excluded.pm_slug, events.pm_slug), "
             "fee_params_json=COALESCE(excluded.fee_params_json, events.fee_params_json), "
             "spec_json=COALESCE(excluded.spec_json, events.spec_json), "
-            "last_seen_ts=excluded.last_seen_ts, block_reason=excluded.block_reason",
+            "last_seen_ts=excluded.last_seen_ts, block_reason=excluded.block_reason, tier=excluded.tier",
             (g.game_id, g.league, g.start_utc, json.dumps(list(g.participants_espn)), g.short_name,
              phase, spec["kalshi_event"] if spec else None, spec["pm_slug"] if spec else None,
              json.dumps(spec["fee_params"], sort_keys=True) if spec else None,
-             json.dumps(spec, sort_keys=True) if spec else None, t, t, reason))
+             json.dumps(spec, sort_keys=True) if spec else None, t, t, reason, tier))
         if row is None or (row[0], row[1]) != (phase, reason):
             con.execute("INSERT INTO event_transitions(seen_ts, event_id, phase, block_reason) "
                         "VALUES(?,?,?,?)", (t, g.game_id, phase, reason))
@@ -310,3 +346,22 @@ def load_specs(store, *, game_ids: list[str] | None = None) -> dict[str, dict]:
     if game_ids is not None:
         out = {g: s for g, s in out.items() if g in game_ids}
     return out
+
+
+def first_seen(store) -> dict[str, float]:
+    """event_id -> first_seen_ts from the registry, for the newborn / recently-listed tiers."""
+    store.ensure_ddl(EVENTS_DDL)
+    return {r[0]: r[1] for r in store.con.execute("SELECT event_id, first_seen_ts FROM events").fetchall()}
+
+
+def registry_health(store, *, now: float | None = None, in_season: bool = True,
+                    max_silence_s: float = 24 * 3600) -> list[str]:
+    """Watchdog-shaped alerts about the registry itself: in season, no co-listed game for a day
+    means discovery is broken, not that nothing is on."""
+    t = now or time.time()
+    store.ensure_ddl(EVENTS_DDL)
+    row = store.con.execute("SELECT MAX(last_seen_ts) FROM events WHERE phase LIKE '%:co_listed'").fetchone()
+    last = row[0] if row else None
+    if in_season and (last is None or t - last > max_silence_s):
+        return [f"registry: NO_CO_LISTED_GAMES — none seen for {int(t - last) if last else 'ever'}s (limit {int(max_silence_s)}s)"]
+    return []
