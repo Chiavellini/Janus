@@ -44,6 +44,7 @@ from kernel.fetch import Client  # noqa: E402
 from kernel.redact import brief_error  # noqa: E402
 from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
 from nodes.cover.capacity import frontier  # noqa: E402
+from nodes.discovery.watchlist import Watchlist, kalshi_watch, pm_watch  # noqa: E402
 from nodes.entities.leagues import LEAGUES, default_leagues  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, first_seen, record_events  # noqa: E402
 from nodes.slate.slate import next_transition, windows_for  # noqa: E402
@@ -118,6 +119,11 @@ class Supervisor:
     blocked: dict[str, str] = field(default_factory=dict)
     tiers: dict[str, int] = field(default_factory=dict)
     wake_state: tuple = ("WAKE", None, None)
+    #: Capture-only subscriptions for what the slate cannot co-list yet (tennis has no ESPN anchor):
+    #: frames from both venues, no pricing. nodes/discovery/watchlist.
+    watch: Watchlist | None = None
+    capture_series: tuple[str, ...] = ()
+    capture_pm_tags: tuple = ()
 
     # ── discovery ───────────────────────────────────────────────────────
     def discover(self) -> dict[str, dict]:
@@ -145,6 +151,17 @@ class Supervisor:
         if self.store is not None:
             record_events(self.store, d, slate, blocked)
         return slate
+
+    def sync_watch(self) -> tuple[int, int]:
+        """Capture-only markets: subscribe what the venues list now, drop what is gone."""
+        if self.watch is None or not (self.capture_series or self.capture_pm_tags):
+            return (0, 0)
+        now = time.time()
+        kc = Client("kalshi-watch", rate=4, burst=8, cache_dir=None)
+        pc = Client("polymarket-watch", rate=4, burst=8, cache_dir=None)
+        k_now = kalshi_watch(list(self.capture_series), kc, now=now, ahead_h=self.pre_hours) if self.capture_series else []
+        p_now = pm_watch(list(self.capture_pm_tags), pc, now=now, ahead_h=self.pre_hours) if self.capture_pm_tags else []
+        return self.watch.sync(self.ks, self.ps, k_now, p_now)
 
     # ── lifecycle ───────────────────────────────────────────────────────
     def reconcile(self, slate: dict[str, dict]) -> None:
@@ -316,6 +333,12 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
                 try:
                     slate = sup.discover()
                     sup.reconcile(slate)
+                    try:
+                        added, removed = sup.sync_watch()
+                        if added or removed:
+                            print(f"[watch] capture-only +{added} -{removed}: {sup.watch.stats()}", flush=True)
+                    except Exception as exc:  # noqa: BLE001 -- capture-only must never break discovery
+                        print(f"[watch FAILED] {type(exc).__name__}: {exc}", flush=True)
                     print(f"[slate] {len(slate)} co-listed games {sup.tiers}, {len(sup.live)} pollers, "
                           f"box {sup.wake_state[0]}" + (f" -> {sup.wake_state[1]} in "
                           f"{int(sup.wake_state[2] - time.time())}s" if sup.wake_state[1] else "")
@@ -392,6 +415,10 @@ def main() -> int:
     ap.add_argument("--mode", default="SHADOW_LIVE",
                     help="OFFLINE_REPLAY | SHADOW_LIVE | PAPER_EXECUTION | DEMO_EXECUTION | LIMITED_LIVE | PRODUCTION; "
                          "resolved once by nodes/risk.gate and never escalated")
+    ap.add_argument("--capture-series", default="KXATPMATCH,KXWTAMATCH,KXATPCHALLENGERMATCH",
+                    help="Kalshi series to subscribe for CAPTURE ONLY (no pricing): what the slate cannot co-list yet; '' to disable")
+    ap.add_argument("--capture-pm-tags", default="tennis",
+                    help="Polymarket tag slugs or ids whose game markets are subscribed for capture only; '' to disable")
     ap.add_argument("--reconcile-period", type=float, default=5.0,
                     help="seconds between Polymarket REST reconcile passes over quiet replicas")
     a = ap.parse_args()
@@ -461,6 +488,9 @@ def main() -> int:
     print(f"[mode] {sup.mode.value}", flush=True)
     sup.ks = KalshiStream(api_key=api_key, private_key=load_private_key(key_path))
     sup.ps = PolymarketStream()
+    sup.capture_series = tuple(x.strip() for x in a.capture_series.split(",") if x.strip())
+    sup.capture_pm_tags = tuple(int(x) if x.strip().isdigit() else x.strip() for x in a.capture_pm_tags.split(",") if x.strip())
+    sup.watch = Watchlist() if (sup.capture_series or sup.capture_pm_tags) else None
     rest = Client("polymarket-rest", rate=4, burst=8, cache_dir=None)
 
     def _fetch_pm(asset_id: str):
