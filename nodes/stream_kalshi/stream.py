@@ -72,7 +72,7 @@ def load_private_key(path: Path):
 class Registration:
     replica: BookReplica
     outcome: str                 # "yes" | "no" -- which side of the Kalshi market this replica is
-    on_update: Callable[[str], None] | None = None
+    on_update: Callable[[str, float], None] | None = None
 
 
 @dataclass
@@ -86,6 +86,8 @@ class KalshiStream:
     regs: dict[str, list[Registration]] = field(default_factory=dict)   # ticker -> registrations
     connected: bool = False
     resubscribe_needed: bool = False
+    #: A `nodes/capture.FrameWriter`, or None. Raw frames go here before they are parsed.
+    capture: Any = None
     #: Last seq seen on the subscription. Not per ticker -- see the module docstring.
     last_seq: int | None = None
 
@@ -99,7 +101,7 @@ class KalshiStream:
 
     # ── subscription set ────────────────────────────────────────────────
     def register(self, ticker: str, replica: BookReplica, outcome: str = "yes",
-                 on_update: Callable[[str], None] | None = None) -> None:
+                 on_update: Callable[[str, float], None] | None = None) -> None:
         self.regs.setdefault(ticker, []).append(Registration(replica, outcome, on_update))
         self.resubscribe_needed = True
 
@@ -167,7 +169,9 @@ class KalshiStream:
                 reg.replica.project_in(bids, asks, seq=p.seq, now=t)
                 self.deltas += 1
             if reg.on_update:
-                reg.on_update(p.ticker)
+                # The frame's receive time travels with the event, so a poller stamps the
+                # instant the venue's message arrived -- live and under replay alike.
+                reg.on_update(p.ticker, t)
         return p.kind
 
     def stats(self) -> dict:
@@ -209,7 +213,13 @@ class KalshiStream:
                                 await asyncio.sleep(0.5)
                                 continue
                         raw = await asyncio.wait_for(ws.recv(), timeout=recv_timeout)
-                        self.handle(json.loads(raw))
+                        t_recv = time.time()
+                        if self.capture is not None:
+                            # BEFORE parse: a parse bug is what you most want to replay. The
+                            # same timestamp feeds handle(), so a replay reproduces the row.
+                            self.capture.write(raw, received_utc=t_recv,
+                                               received_mono=time.monotonic())
+                        self.handle(json.loads(raw), now=t_recv)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001 -- reconnect is the whole job

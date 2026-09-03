@@ -65,3 +65,10 @@ Prices are probabilities in [0,1]; a `40` is rejected as an API change, not read
 `tests/test_protocol.py` (12) + `tests/test_stream.py` (17), including the interleaved-subscription
 case that the naive per-market check fails, reconnect marking every replica disconnected, and that
 the signing input verifies against `timestamp + GET + path`.
+
+## Capture
+
+When a `nodes/capture.FrameWriter` is attached (`stream.capture`), the run loop writes the raw
+text of every frame **before** parsing it, stamped with the same receive time it hands to
+`handle(..., now=)`. `on_update(market_id, now)` carries that time to the poller, so a replay
+through `nodes/replay` reproduces every evaluation row. Nothing is captured after parse.

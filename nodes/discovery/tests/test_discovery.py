@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from nodes.discovery.discovery import (Discovery, co_listed, record_events, select_live)
+from nodes.discovery.discovery import (Discovery, co_listed, load_specs, record_events, select_live)
 from nodes.entities.resolve import Resolver
 from nodes.schedule_espn.espn import ScheduledGame
 from nodes.store_tuples.store import TupleStore
@@ -89,4 +89,15 @@ def test_events_table_is_change_gated(tmp_path: Path):
     assert record_events(store, d, {}, {"espn:mlb:7": "PM_TOKEN_RESOLUTION"}, now=NOW + 120) == 1
     trans = store.con.execute("SELECT phase, block_reason FROM event_transitions ORDER BY id").fetchall()
     assert trans == [("in:co_listed", None), ("in", "PM_TOKEN_RESOLUTION")]
+    store.close()
+
+
+def test_the_spec_is_persisted_so_a_replay_can_rebuild_the_pollers(tmp_path: Path):
+    d = _discovery()
+    slate, blocked = co_listed(d)
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    record_events(store, d, slate, blocked, now=NOW)
+    specs = load_specs(store)
+    assert specs == slate
+    assert load_specs(store, game_ids=["nope"]) == {}
     store.close()

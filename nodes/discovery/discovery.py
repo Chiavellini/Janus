@@ -228,7 +228,7 @@ EVENTS_DDL = """
 CREATE TABLE IF NOT EXISTS events(
   event_id TEXT PRIMARY KEY, league TEXT NOT NULL, start_utc INTEGER, participants TEXT,
   short_name TEXT, phase TEXT NOT NULL, kalshi_event TEXT, pm_slug TEXT, fee_params_json TEXT,
-  first_seen_ts REAL NOT NULL, last_seen_ts REAL NOT NULL, block_reason TEXT);
+  spec_json TEXT, first_seen_ts REAL NOT NULL, last_seen_ts REAL NOT NULL, block_reason TEXT);
 CREATE TABLE IF NOT EXISTS event_transitions(
   id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, event_id TEXT NOT NULL,
   phase TEXT NOT NULL, block_reason TEXT);
@@ -256,17 +256,30 @@ def record_events(store, d: Discovery, slate: Mapping[str, dict], blocked: Mappi
                           (g.game_id,)).fetchone()
         con.execute(
             "INSERT INTO events(event_id, league, start_utc, participants, short_name, phase, "
-            "kalshi_event, pm_slug, fee_params_json, first_seen_ts, last_seen_ts, block_reason) "
-            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_id) DO UPDATE SET "
+            "kalshi_event, pm_slug, fee_params_json, spec_json, first_seen_ts, last_seen_ts, block_reason) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(event_id) DO UPDATE SET "
             "phase=excluded.phase, kalshi_event=COALESCE(excluded.kalshi_event, events.kalshi_event), "
             "pm_slug=COALESCE(excluded.pm_slug, events.pm_slug), "
             "fee_params_json=COALESCE(excluded.fee_params_json, events.fee_params_json), "
+            "spec_json=COALESCE(excluded.spec_json, events.spec_json), "
             "last_seen_ts=excluded.last_seen_ts, block_reason=excluded.block_reason",
             (g.game_id, g.league, g.start_utc, json.dumps(list(g.participants_espn)), g.short_name,
              phase, spec["kalshi_event"] if spec else None, spec["pm_slug"] if spec else None,
-             json.dumps(spec["fee_params"], sort_keys=True) if spec else None, t, t, reason))
+             json.dumps(spec["fee_params"], sort_keys=True) if spec else None,
+             json.dumps(spec, sort_keys=True) if spec else None, t, t, reason))
         if row is None or (row[0], row[1]) != (phase, reason):
             con.execute("INSERT INTO event_transitions(seen_ts, event_id, phase, block_reason) "
                         "VALUES(?,?,?,?)", (t, g.game_id, phase, reason))
             written += 1
     return written
+
+
+def load_specs(store, *, game_ids: list[str] | None = None) -> dict[str, dict]:
+    """The slate specs the supervisor spawned from, straight from the events table. What
+    `nodes/replay` rebuilds its pollers from."""
+    store.ensure_ddl(EVENTS_DDL)
+    rows = store.con.execute("SELECT event_id, spec_json FROM events WHERE spec_json IS NOT NULL").fetchall()
+    out = {gid: json.loads(spec) for gid, spec in rows}
+    if game_ids is not None:
+        out = {g: s for g, s in out.items() if g in game_ids}
+    return out

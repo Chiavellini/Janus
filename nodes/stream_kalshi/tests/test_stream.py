@@ -32,7 +32,7 @@ def wired() -> tuple[KalshiStream, BookReplica, list]:
     s = KalshiStream(api_key="k", private_key=key())
     r = BookReplica("kalshi", "K1", verification="stream")
     seen: list = []
-    s.register("K1", r, "yes", on_update=seen.append)
+    s.register("K1", r, "yes", on_update=lambda m, _t: seen.append(m))
     return s, r, seen
 
 

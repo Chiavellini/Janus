@@ -41,11 +41,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from kernel.fetch import Client  # noqa: E402
+from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
 from nodes.cover.capacity import frontier  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, record_events  # noqa: E402
-from nodes.fees.targeting import hurdle_for  # noqa: E402
 from nodes.game_poller.poller import GamePoller, PollerState  # noqa: E402
-from nodes.opportunity.status import status_for  # noqa: E402
+from nodes.opportunity.record import record_evaluation  # noqa: E402
 from kernel.schema import OpportunityStatus  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
 from nodes.stream_kalshi.stream import KalshiStream, load_private_key  # noqa: E402
@@ -143,48 +143,21 @@ class Supervisor:
                   flush=True)
 
     def _on_update(self, gid: str):
-        def cb(_market_id: str) -> None:
+        def cb(_market_id: str, now: float) -> None:
             sup = self.live.get(gid)
             if sup is None:
                 return
-            for ev in sup.poller.on_event("stream", _market_id):
+            for ev in sup.poller.on_event("stream", _market_id, now=now):
                 sup.evaluations += 1
                 self._record(sup, ev)
         return cb
 
     # ── persistence ─────────────────────────────────────────────────────
     def _record(self, sup: Supervised, ev) -> None:
-        cov = ev.cover
-        gross = cov.gross_per_contract if (cov and cov.ok) else None
-        fee = cov.fee_per_contract if (cov and cov.ok) else None
-        cost = cov.cost_per_contract if (cov and cov.ok) else None
-        ret = ev.actionable_return
-        hd = None
-        if cov and cov.ok and cov.legs:
-            fav = max(l.vwap for l in cov.legs)
-            # The hurdle must charge what the cover charges: the venues' own schedules, not
-            # the registry pins (PM's pin is 0.07 and Kalshi's is 1.0x; sports is neither).
-            hd = hurdle_for(fav, hurdle=MIN_RETURN,
-                            overrides_a=sup.fee_params.get("kalshi"),
-                            overrides_b=sup.fee_params.get("polymarket"))
-        status = status_for(cover_ok=bool(cov and cov.ok),
-                            reject_reason=cov.reject_reason if cov else None,
-                            blocked_by=ev.blocked_by, gross_per_contract=gross,
-                            cost_per_contract=cost,
-                            single_venue=bool(cov and cov.ok and cov.single_venue),
-                            hurdle=MIN_RETURN)
-        wrote = self.store.evaluation(
-            game_id=ev.game_id, league=sup.poller.league, quantity=ev.quantity, status=status.value,
-            cost=cost, gross=gross, fees=fee, return_locked=ret,
-            required_ask_sum=hd.required_ask_sum if hd else None,
-            cents_from_actionable=(round((gross - hd.required_ask_sum) * 100.0, 4)
-                                   if (hd and gross is not None) else None),
-            blocked_by=ev.blocked_by, triggered_by=ev.triggered_by, latency_ms=ev.latency_ms,
-            legs=[{"venue": l.venue, "outcome": l.outcome_id, "vwap": round(l.vwap, 6)}
-                  for l in (cov.legs if cov and cov.ok else ())],
-            seen_ts=ev.evaluated_utc)
-        sup.written += int(wrote)
-        if status is OpportunityStatus.PROFITABLE_UNEXECUTED:
+        rec = record_evaluation(self.store, ev, league=sup.poller.league,
+                                fee_params=sup.fee_params, hurdle=MIN_RETURN)
+        sup.written += int(rec.wrote)
+        if rec.status is OpportunityStatus.PROFITABLE_UNEXECUTED:
             # Solve the size frontier on the SAME books that produced the edge. Doing it from the
             # replicas afterwards would price a different instant -- the books move in milliseconds.
             cap = ""
@@ -198,8 +171,8 @@ class Supervisor:
                                f"profit=${fr.best.profit:.2f} on ${fr.best.capital:.0f}")
             except Exception as exc:  # noqa: BLE001 -- reporting must never break the loop
                 cap = f"  (capacity failed: {type(exc).__name__})"
-            print(f"  *** {status.value} {sup.short_name} q={ev.quantity} cost={cost:.4f} "
-                  f"return={ret:+.3%}{cap}", flush=True)
+            print(f"  *** {rec.status.value} {sup.short_name} q={ev.quantity} cost={rec.cost:.4f} "
+                  f"return={rec.locked_return:+.3%}{cap}", flush=True)
 
     def stats(self) -> dict:
         return {"live": len(self.live), "spawned": self.spawned, "reaped": self.reaped,
@@ -242,6 +215,9 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
                     break
             if time.time() - last_report > report_period:
                 sup.store.commit()
+                for st_ in (sup.ks, sup.ps):
+                    if st_.capture is not None:
+                        st_.capture.flush()
                 st = sup.stats()
                 k, p = st["kalshi"] or {}, st["polymarket"] or {}
                 print(f"[{datetime.now(timezone.utc):%H:%M:%S}Z] pollers={st['live']} "
@@ -269,6 +245,9 @@ def main() -> int:
     ap.add_argument("--max-book-age", type=float, default=5.0)
     ap.add_argument("--once", action="store_true", help="one discovery pass, ~15s of capture, exit")
     ap.add_argument("--self-test", action="store_true")
+    ap.add_argument("--frames-root", type=Path, default=FRAMES_ROOT,
+                    help="raw frame capture root (hour-rotated gzip JSONL per venue)")
+    ap.add_argument("--no-capture", action="store_true", help="do not write raw frames")
     a = ap.parse_args()
 
     if a.self_test:
@@ -297,6 +276,9 @@ def main() -> int:
     sup.store = TupleStore(a.db)
     sup.ks = KalshiStream(api_key=api_key, private_key=load_private_key(key_path))
     sup.ps = PolymarketStream()
+    if not a.no_capture:
+        sup.ks.capture = FrameWriter("kalshi", a.frames_root)
+        sup.ps.capture = FrameWriter("polymarket", a.frames_root)
 
     status, code = "OK", 0
     try:
@@ -309,6 +291,9 @@ def main() -> int:
     finally:
         st = sup.stats()
         sup.store.close()
+        for st_ in (sup.ks, sup.ps):
+            if st_.capture is not None:
+                st_.capture.close()
         if owns_row:
             run_index.finish("live_stream", run_id, exit_code=code, status=status,
                              spawned=sup.spawned, reaped=sup.reaped, rows=st["rows"])

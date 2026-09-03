@@ -28,7 +28,7 @@ import asyncio
 import json
 import time
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Any, Callable
 
 from kernel.redact import brief_error
 from nodes.book_replica.replica import BookReplica, Fault
@@ -42,7 +42,7 @@ PING_INTERVAL_S = 10.0
 @dataclass
 class Registration:
     replica: BookReplica
-    on_update: Callable[[str], None] | None = None
+    on_update: Callable[[str, float], None] | None = None
 
 
 @dataclass
@@ -53,6 +53,8 @@ class PolymarketStream:
     regs: dict[str, list[Registration]] = field(default_factory=dict)     # asset_id -> regs
     connected: bool = False
     resubscribe_needed: bool = False
+    #: A `nodes/capture.FrameWriter`, or None. Raw frames go here before they are parsed.
+    capture: Any = None
     #: Assets whose local book drifted from the venue's claimed top. The run loop unsubscribes
     #: and resubscribes each one, which is the only way this channel yields a fresh `book`.
     #: Setting `resubscribe_needed` alone did nothing here: the wanted set was unchanged, so
@@ -71,7 +73,7 @@ class PolymarketStream:
 
     # ── subscription set ────────────────────────────────────────────────
     def register(self, asset_id: str, replica: BookReplica,
-                 on_update: Callable[[str], None] | None = None) -> None:
+                 on_update: Callable[[str, float], None] | None = None) -> None:
         self.regs.setdefault(asset_id, []).append(Registration(replica, on_update))
         self.resubscribe_needed = True
 
@@ -158,7 +160,7 @@ class PolymarketStream:
 
                 for reg in self.regs.get(p.asset_id, ()):
                     if reg.on_update:
-                        reg.on_update(p.asset_id)
+                        reg.on_update(p.asset_id, t)
         return kinds
 
     def _beat(self, t: float) -> None:
@@ -222,7 +224,13 @@ class PolymarketStream:
                             await ws.send(json.dumps(operation_frame(pending, "unsubscribe")))
                             await ws.send(json.dumps(operation_frame(pending, "subscribe")))
                         raw = await asyncio.wait_for(ws.recv(), timeout=recv_timeout)
-                        self.handle(raw)
+                        t_recv = time.time()
+                        if self.capture is not None:
+                            # BEFORE parse: a parse bug is what you most want to replay. The
+                            # same timestamp feeds handle(), so a replay reproduces the row.
+                            self.capture.write(raw, received_utc=t_recv,
+                                               received_mono=time.monotonic())
+                        self.handle(raw, now=t_recv)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001 -- reconnect is the whole job

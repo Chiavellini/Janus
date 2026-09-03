@@ -26,7 +26,8 @@ it owns and how it connects. A **grid** wires nodes into a runnable pipeline.
                      stream_polymarket ▶ book_replica ×4 ──▶   │  rules_exhaustive proof at spawn
                                                                │  fees ──▶ cover ──▶ capacity
                                                                ▼
-                                                        store_tuples ──▶ analysis ──▶ research/
+                                             opportunity.record ──▶ store_tuples ──▶ analysis ──▶ research/
+   raw frames ──▶ capture ──▶ /Volumes/Kilos/janus/frames ──▶ replay ──▶ the same handlers, a parity check
 
    grids/live_stream composes all of it (the supervisor). grids/live_sports is the REST lane, disabled.
    parked:  venue_cloudbet (sportsbook; acceptance precedes pricing), venue_sxbet (size convention unverified)

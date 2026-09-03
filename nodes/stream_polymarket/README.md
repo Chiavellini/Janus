@@ -61,3 +61,10 @@ ending costs one small frame rather than a reconnect and fresh snapshots for eve
 `tests/test_polymarket.py` — 20 tests, including that a missing level is caught as drift, that
 drift invalidates and forces a resnapshot, and that a slate change uses an operation frame rather
 than a reconnect.
+
+## Capture
+
+When a `nodes/capture.FrameWriter` is attached (`stream.capture`), the run loop writes the raw
+text of every frame **before** parsing it, stamped with the same receive time it hands to
+`handle(..., now=)`. `on_update(market_id, now)` carries that time to the poller, so a replay
+through `nodes/replay` reproduces every evaluation row. Nothing is captured after parse.

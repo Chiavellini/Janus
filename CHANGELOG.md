@@ -140,3 +140,23 @@ armed. No arbitrage math changed except what the venues actually charge.
 MLB. Gamma MLB game markets: `feeType sports_fees_v2`, `feeSchedule {rate 0.05, takerOnly, rebateRate
 0.15}`, `orderMinSize 5`, tick 0.01. Two live games co-listed at the time of the check, both fee
 schedules fetched, zero blocks.
+
+---
+
+## 2026-09-02 — P0b and P1: the vocabulary, then capture and replay
+
+**P0b.** `kernel/schema.py` carries `OpportunityStatus`, `ExecutionState`, `FillState`, `Mode`;
+`Book` carries `source`, `server_utc`, `received_mono`; `NormMarket.exhaustive: bool` became
+`proof`; the period vocabulary is `"game"` everywhere. `nodes/opportunity/status.py` classifies
+every evaluation; both grids write the enum. `DISCOVERED` (positive, under the hurdle) and
+`BLOCKED_FEES` (positive gross, fee-net ≤ 0) are now visible where the table used to say
+`NO_EDGE`.
+
+**P1.** `nodes/capture` writes the raw text of every WebSocket frame, before parse, hour-rotated
+gzip JSONL under `/Volumes/Kilos/janus/frames/<venue>/`. Both stream loops stamp one receive time
+per frame and hand it to the capture, to `handle()`, and — through `on_update(market_id, now)` —
+to the poller, so `evaluated_utc` is the venue message's arrival time live and offline alike.
+(Before this, the callback carried no time and the poller stamped wall clock.) `nodes/replay`
+feeds captured frames into the same handlers, spawns pollers from the slate specs the supervisor
+persisted (`events.spec_json`), writes through the same `nodes/opportunity.record_evaluation`,
+and `compare()` diffs the rows against the live table. GATE step 4 is a command now.
