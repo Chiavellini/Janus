@@ -32,7 +32,7 @@ from nodes.execution.journal import Journal  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
 from nodes.stream_kalshi.stream import load_private_key  # noqa: E402
 
-PROOF_DB = Path("/Volumes/Kilos/janus/tuples/proofs.sqlite")
+from kernel.paths import PROOF_DB  # noqa: E402,F401
 
 
 def venue_from_env(db: Path = PROOF_DB) -> KalshiExecution | None:

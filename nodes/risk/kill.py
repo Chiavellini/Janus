@@ -19,14 +19,14 @@ import json
 import time
 from pathlib import Path
 
-KILL_ROOT = Path("/Volumes/Kilos/janus/kill")
+from kernel.paths import KILL_ROOT, guard  # noqa: E402
 
 
 class KillSwitches:
     def __init__(self, root: Path | str = KILL_ROOT, *, enforce_volume: bool = True):
         self.root = Path(root)
-        if enforce_volume and not str(self.root.resolve()).startswith("/Volumes/Kilos/"):
-            raise ValueError("kill switches live on /Volumes/Kilos, never the root disk")
+        if enforce_volume:
+            guard(self.root, "kill switches")
 
     def _present(self, name: str) -> bool:
         return (self.root / name).exists()

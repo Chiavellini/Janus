@@ -75,7 +75,7 @@ from nodes.stream_polymarket.stream import PolymarketStream  # noqa: E402
 from nodes.venue_polymarket.books import PM_CLOB, pm_book  # noqa: E402
 from ops import run_index  # noqa: E402
 
-DB = Path("/Volumes/Kilos/janus/tuples/tuples.sqlite")
+from kernel.paths import DB  # noqa: E402,F401
 QUANTITIES = (5.0, 25.0, 100.0)
 MIN_RETURN = 0.01
 

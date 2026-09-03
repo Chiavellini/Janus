@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_DB = Path("/Volumes/Kilos/janus/tuples/tuples.sqlite")
+from kernel.paths import DB as DEFAULT_DB, guard  # noqa: E402
 
 DDL = """
 PRAGMA foreign_keys=ON;
@@ -84,8 +84,8 @@ def _rel_change(new: float | None, old: float | None) -> float:
 class TupleStore:
     def __init__(self, path: Path | str = DEFAULT_DB, *, enforce_volume: bool = True):
         p = Path(path).resolve()
-        if enforce_volume and not str(p).startswith("/Volumes/Kilos/"):
-            raise ValueError("tuple data must live on /Volumes/Kilos, never the root disk")
+        if enforce_volume:
+            guard(p, "tuple data")
         p.parent.mkdir(parents=True, exist_ok=True)
         # The live lane holds write transactions on the shared file; a second writer (a proof, a
         # settle) must wait for it, not die with "database is locked" (seen 2026-09-03 on the

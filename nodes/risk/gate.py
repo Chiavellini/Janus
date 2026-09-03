@@ -20,7 +20,7 @@ from kernel.schema import Mode
 from nodes.risk.kill import KillSwitches
 from nodes.risk.limits import RiskLimits
 
-OVERRIDE_PATH = Path("/Volumes/Kilos/janus/kill/arming_override.json")
+from kernel.paths import OVERRIDE_PATH  # noqa: E402,F401
 
 
 @dataclass(frozen=True)

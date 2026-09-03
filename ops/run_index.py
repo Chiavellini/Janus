@@ -32,7 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from kernel.redact import redact_argv  # noqa: E402
 
 #: Never the root disk. /Volumes/Kilos has 678 GB free; / has ~10 GB and is 91% full.
-INDEX = Path("/Volumes/Kilos/janus/runs/index.jsonl")
+from kernel.paths import RUN_INDEX as INDEX  # noqa: E402,F401
 
 TERMINAL = {"OK", "DEGRADED", "FAILED"}
 

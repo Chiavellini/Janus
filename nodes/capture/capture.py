@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Iterator
 
-FRAMES_ROOT = Path("/Volumes/Kilos/janus/frames")
+from kernel.paths import FRAMES_ROOT, guard  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -46,8 +46,8 @@ class FrameWriter:
     def __init__(self, venue: str, root: Path | str = FRAMES_ROOT, *, enforce_volume: bool = True):
         self.venue = venue
         self.root = Path(root).resolve()
-        if enforce_volume and not str(self.root).startswith("/Volumes/Kilos/"):
-            raise ValueError("frame capture must live on /Volumes/Kilos, never the root disk")
+        if enforce_volume:
+            guard(self.root, "frame capture")
         self._key: tuple[str, str] | None = None
         self._fh = None
         self.frames = 0

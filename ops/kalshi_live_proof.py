@@ -60,10 +60,7 @@ from nodes.stream_kalshi.stream import load_private_key  # noqa: E402
 from nodes.venue_kalshi.books import KALSHI_BASE, fetch_kalshi_series, kalshi_book, kalshi_fee_params  # noqa: E402
 from ops.proof_check import run_check  # noqa: E402
 
-PROOFS = Path("/Volumes/Kilos/janus/proofs")
-#: The proofs' own journal, ledger and reservations. Not the lane's file: the lane holds write locks on
-#: it for the length of a report period, and a proof must never wait on, or race, the observation lane.
-PROOF_DB = Path("/Volumes/Kilos/janus/tuples/proofs.sqlite")
+from kernel.paths import PROOFS, PROOF_DB  # noqa: E402,F401
 
 
 def _runner_sha() -> str:

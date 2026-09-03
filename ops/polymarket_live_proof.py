@@ -63,10 +63,7 @@ from nodes.venue_polymarket.books import (PM_CLOB, PM_GAMMA, pm_book, pm_fee_par
                                           pm_outcome_tokens, pm_primary_market)
 from ops.proof_check import run_check  # noqa: E402
 
-PROOFS = Path("/Volumes/Kilos/janus/proofs")
-#: The proofs' own journal, ledger and reservations. Not the lane's file: the lane holds write locks on
-#: it for the length of a report period, and a proof must never wait on, or race, the observation lane.
-PROOF_DB = Path("/Volumes/Kilos/janus/tuples/proofs.sqlite")
+from kernel.paths import PROOFS, PROOF_DB  # noqa: E402,F401
 CONFIRM_WAIT_S = 120.0
 
 

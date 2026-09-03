@@ -22,7 +22,7 @@ from typing import Sequence
 
 from kernel.schema import FillState
 
-BREAKER_PATH = Path("/Volumes/Kilos/janus/kill/breaker.json")
+from kernel.paths import BREAKER_PATH, guard  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -41,8 +41,8 @@ def day_of(ts: float | None = None) -> str:
 class LossBreaker:
     def __init__(self, path: Path | str = BREAKER_PATH, *, kill=None, enforce_volume: bool = True):
         self.path = Path(path)
-        if enforce_volume and not str(self.path.resolve()).startswith("/Volumes/Kilos/"):
-            raise ValueError("breaker state lives on /Volumes/Kilos, never the root disk")
+        if enforce_volume:
+            guard(self.path, "breaker state")
         self.kill = kill
         self.latched: bool = False
         self.latch_reason: str = ""

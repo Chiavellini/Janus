@@ -12,7 +12,7 @@ from pathlib import Path
 from nodes.risk.breaker import BREAKER_PATH
 from nodes.risk.kill import KILL_ROOT
 
-DEFAULT_DB = Path("/Volumes/Kilos/janus/tuples/tuples.sqlite")
+from kernel.paths import DB as DEFAULT_DB  # noqa: E402,F401
 MAX_UNRECONCILED_S = 15 * 60
 
 
