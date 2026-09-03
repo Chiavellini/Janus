@@ -168,7 +168,7 @@ def test_a_three_way_soccer_game_carries_six_ids_and_blocks_without_its_draw_tok
     """EPL: two teams and the draw on both venues; the slate spec has three outcomes, the draw keyed
     DRAW_ENTITY on both, and a missing draw token is an incomplete match, never a two-leg cover."""
     from nodes.match_sports.sports_match import DRAW_ENTITY
-    from nodes.settle_wedge.policy import KALSHI_EPL_GAME_V1, POLYMARKET_SOCCER_GAME_V1
+    from nodes.settle_wedge.policy import KALSHI_EPL_GAME_V1, POLYMARKET_SOCCER_GAME_V2
     r = Resolver.load()
     ars = r.resolve("epl", text="Arsenal").entity_id
     che = r.resolve("epl", text="Chelsea").entity_id
@@ -179,15 +179,16 @@ def test_a_three_way_soccer_game_carries_six_ids_and_blocks_without_its_draw_tok
     k_rules = {"ticker": "KXEPLGAME-26SEP14CHEARS-ARS",
                "rules_primary": KALSHI_EPL_GAME_V1.sample_text.split("\n")[0].replace("Leeds United", "Arsenal").replace("Newcastle", "Chelsea"),
                "rules_secondary": KALSHI_EPL_GAME_V1.sample_text.split("\n", 1)[1].replace("Leeds United", "Arsenal").replace("Newcastle", "Chelsea")}
-    p_rules = {"slug": slug + "-ars", "description": POLYMARKET_SOCCER_GAME_V1.sample_text.replace("Leeds United FC", "Arsenal FC").replace("Newcastle United FC", "Chelsea FC"),
+    p_rules = {"slug": slug + "-ars", "description": POLYMARKET_SOCCER_GAME_V2.sample_text.replace("Leeds United FC", "Arsenal FC").replace("Newcastle United FC", "Chelsea FC"),
                "resolutionSource": "https://www.premierleague.com/"}
     def row(ent, k_out, p_out, k_label, p_label):
         return {"game_id": g.game_id, "entity_id": ent, "market_type": "moneyline", "period": "game", "start_utc": NOW,
                 "kalshi_event": "KXEPLGAME-26SEP14CHEARS", "kalshi_outcome": k_out, "pm_event": slug, "pm_outcome": p_out,
                 "kalshi_label": k_label, "pm_label": p_label, "kalshi_rules": k_rules, "pm_rules": p_rules}
-    rows = [row(ars, "KXEPLGAME-26SEP14CHEARS-ARS", slug + ":ars", "Arsenal", "Arsenal FC"),
-            row(che, "KXEPLGAME-26SEP14CHEARS-CHE", slug + ":che", "Chelsea", "Chelsea FC"),
-            row(DRAW_ENTITY, "KXEPLGAME-26SEP14CHEARS-TIE", slug + ":draw", "Tie", "Draw")]
+    rows = [row(DRAW_ENTITY, "KXEPLGAME-26SEP14CHEARS-TIE", slug + ":draw", "Tie", "Draw"),
+            row(ars, "KXEPLGAME-26SEP14CHEARS-ARS", slug + ":ars", "Arsenal", "Arsenal FC"),
+            row(che, "KXEPLGAME-26SEP14CHEARS-CHE", slug + ":che", "Chelsea", "Chelsea FC")]
+    rows[0]["kalshi_rules"] = {**k_rules, "rules_primary": k_rules["rules_primary"].replace("Arsenal wins", "Tie is the result of")}
     names = {"Arsenal FC": "tok-ars", "Chelsea FC": "tok-che", "Draw": "tok-draw"}
     ev = {"slug": slug, "teams": [{"name": "Arsenal FC", "abbreviation": "ars"}, {"name": "Chelsea FC", "abbreviation": "che"}],
           "markets": [{"slug": slug + "-ars", "sportsMarketType": "moneyline", "orderMinSize": 5, "orderPriceMinTickSize": 0.01,
@@ -208,6 +209,6 @@ def test_a_three_way_soccer_game_carries_six_ids_and_blocks_without_its_draw_tok
     d2 = Discovery(NOW, [g], {}, {"epl": (rows, {}, r)}, {slug: ({k: v for k, v in names.items() if k != "Draw"}, ev)}, {})
     _, blocked2 = co_listed(d2)
     assert blocked2 == {"espn:epl:9": "PM_TOKEN_RESOLUTION"}
-    d3 = Discovery(NOW, [g], {}, {"epl": (rows[:2], {}, r)}, {slug: (names, ev)}, {})
+    d3 = Discovery(NOW, [g], {}, {"epl": (rows[1:], {}, r)}, {slug: (names, ev)}, {})
     _, blocked3 = co_listed(d3)
     assert blocked3 == {"espn:epl:9": "INCOMPLETE_EXACT_THREE_OUTCOME_MATCH"}

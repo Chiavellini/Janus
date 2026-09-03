@@ -264,7 +264,9 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
             ev = d.tokens.get(slug, (None, {}))[1]
             # The venues' settlement text rides with the spec, so the supervisor and the replay
             # certify from the same words discovery read, and the store keeps them.
-            first = next(iter(rows.values()))
+            # The rules text of a TEAM market. The draw's own text differs ("If Tie is the result",
+            # Polymarket's draw cancellation clause) and is not the template the policy is keyed on.
+            first = next((m for ent, m in rows.items() if ent != DRAW_ENTITY), next(iter(rows.values())))
             # Participants for the template normaliser: team names only. The draw's labels ("Tie",
             # "Draw") are rule words in the venues' own texts; stripping them would change the hash.
             names = sorted({x for m in rows.values() for x in (m.get("kalshi_label"), m.get("pm_label"))

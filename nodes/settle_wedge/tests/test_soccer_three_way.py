@@ -9,7 +9,8 @@ from nodes.rules_exhaustive.rules import prove
 from nodes.settle_wedge.equivalence import CoverProof, NotEquivalent, SettlementEquivalence, certify, certify_cover
 from nodes.settle_wedge.harvest import harvest_kalshi, harvest_polymarket
 from nodes.settle_wedge.policy import (KALSHI_EPL_GAME_V1, KALSHI_LAL_GAME_V1, KALSHI_MLS_GAME_V1,
-                                       POLYMARKET_SOCCER_DRAW_CLAUSE_2026_09_03, POLYMARKET_SOCCER_GAME_V1)
+                                       POLYMARKET_SOCCER_DRAW_CLAUSE_2026_09_03, POLYMARKET_SOCCER_GAME_V1,
+                                       POLYMARKET_SOCCER_GAME_V2)
 
 T = 1_800_000_000.0
 RATES = {"soccer.epl.postponed_gt48h_rate": 0.004, "soccer.epl.cancelled_rate": 0.0005}
@@ -19,19 +20,25 @@ def records(k_tmpl=KALSHI_EPL_GAME_V1):
     k = harvest_kalshi({"ticker": "t", "rules_primary": k_tmpl.sample_text.split("\n")[0],
                         "rules_secondary": k_tmpl.sample_text.split("\n", 1)[1]},
                        participants=k_tmpl.sample_participants, retrieved_at=T)
-    p = harvest_polymarket({"slug": "s", "description": POLYMARKET_SOCCER_GAME_V1.sample_text},
-                           participants=POLYMARKET_SOCCER_GAME_V1.sample_participants, retrieved_at=T)
+    p = harvest_polymarket({"slug": "s", "description": POLYMARKET_SOCCER_GAME_V2.sample_text},
+                           participants=POLYMARKET_SOCCER_GAME_V2.sample_participants, retrieved_at=T)
     return k, p
 
 
 def test_the_texts_hash_to_their_templates_and_polymarket_is_one_template_for_every_league():
     k, p = records()
-    assert k.template_hash == KALSHI_EPL_GAME_V1.template_hash and p.template_hash == POLYMARKET_SOCCER_GAME_V1.template_hash
+    assert k.template_hash == KALSHI_EPL_GAME_V1.template_hash and p.template_hash == POLYMARKET_SOCCER_GAME_V2.template_hash
     # a La Liga game on Polymarket reads the same once the names and the date are stripped
-    p2 = harvest_polymarket({"slug": "lal-x", "description": POLYMARKET_SOCCER_GAME_V1.sample_text
+    p2 = harvest_polymarket({"slug": "lal-x", "description": POLYMARKET_SOCCER_GAME_V2.sample_text
                              .replace("Leeds United FC", "Real Sociedad de Fútbol").replace("September 14, 2026", "September 3, 2026")},
                             participants=("Real Sociedad de Fútbol", "RC Celta de Vigo"), retrieved_at=T)
-    assert p2.template_hash == POLYMARKET_SOCCER_GAME_V1.template_hash
+    assert p2.template_hash == POLYMARKET_SOCCER_GAME_V2.template_hash
+    # the older live text (events created 2026-08-21) is its own template with the same verdicts
+    p1 = harvest_polymarket({"slug": "lal-rso-cel-2026-09-03-rso", "description": POLYMARKET_SOCCER_GAME_V1.sample_text},
+                            participants=POLYMARKET_SOCCER_GAME_V1.sample_participants, retrieved_at=T)
+    assert p1.template_hash == POLYMARKET_SOCCER_GAME_V1.template_hash != POLYMARKET_SOCCER_GAME_V2.template_hash
+    from nodes.settle_wedge.policy import verdicts_for
+    assert verdicts_for(KALSHI_LAL_GAME_V1.template_id, "polymarket_soccer_game_v1") == verdicts_for(KALSHI_LAL_GAME_V1.template_id, "polymarket_soccer_game_v2")
     # Kalshi names the competition in the sentence, so La Liga and MLS are their own templates
     assert len({KALSHI_EPL_GAME_V1.template_hash, KALSHI_LAL_GAME_V1.template_hash, KALSHI_MLS_GAME_V1.template_hash}) == 3
     assert "resolve to \"Yes\"" in POLYMARKET_SOCCER_DRAW_CLAUSE_2026_09_03 and "canceled" in POLYMARKET_SOCCER_DRAW_CLAUSE_2026_09_03

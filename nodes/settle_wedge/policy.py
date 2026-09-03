@@ -252,9 +252,11 @@ KALSHI_BUN_GAME_V1 = Template(
               revision_policy="in accordance with the rules", dispute_mechanism="kalshi",
               settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
 
-POLYMARKET_SOCCER_GAME_V1 = Template(
-    "polymarket_soccer_game_v1", "polymarket", frozenset(SOCCER), "2026-09-03",
-    # epl-lee-new-2026-09-14-lee, market.description (the team market; the draw market differs on cancellation)
+POLYMARKET_SOCCER_GAME_V2 = Template(
+    "polymarket_soccer_game_v2", "polymarket", frozenset(SOCCER), "2026-09-03",
+    # epl-lee-new-2026-09-14-lee, market.description (the team market; the draw market differs on
+    # cancellation). The newer of two live texts: events created 2026-09-01 carry the Flashscore /
+    # Sofascore fallbacks and the 24-hour no-data clause; events created 2026-08-21 (V1) do not.
     "In the upcoming game, scheduled for September 14, 2026\nIf Leeds United FC wins, this market will "
     "resolve to \"Yes\".\nOtherwise, this market will resolve to \"No\".\nIf the game is postponed, this market"
     " will remain open until the game has been completed.\nIf the game is canceled entirely, with no "
@@ -275,6 +277,30 @@ POLYMARKET_SOCCER_GAME_V1 = Template(
               dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
               revision_policy="consensus of credible reporting after 2h", dispute_mechanism="uma",
               settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
+POLYMARKET_SOCCER_GAME_V1 = Template(
+    "polymarket_soccer_game_v1", "polymarket", frozenset(SOCCER), "2026-09-03",
+    # lal-rso-cel-2026-09-03-rso, market.description, event created 2026-08-21. The older live text:
+    # no Flashscore / Sofascore fallback and no 24-hour no-data clause; otherwise the same rules.
+    "In the upcoming game, scheduled for September 3, 2026\nIf Real Sociedad de Fútbol wins, this market "
+    "will resolve to \"Yes\".\nOtherwise, this market will resolve to \"No\".\nIf the game is postponed, this "
+    "market will remain open until the game has been completed.\nIf the game is canceled entirely, with no"
+    " make-up game, this market will resolve \"No\".\nThis market refers only to the outcome within the "
+    "first 90 minutes of regular play plus stoppage time.\n\nThe primary resolution source for this market "
+    "is the official statistics of the event as recognized by the governing body or event organizers. "
+    "However, if the governing body or event organizers have not published final match statistics within "
+    "2 hours after the event's conclusion, a consensus of credible reporting may be used instead. All "
+    "markets will settle based on the official final result as recognized by the governing body or event "
+    "organizers. Revisions to officially declared final scores made after market resolution will not be "
+    "accounted for in determining the outcome.",
+    ("Real Sociedad de Fútbol", "RC Celta de Vigo"),
+    SettleRef(source_agency="official statistics of the governing body", oracle="uma",
+              void_policy=VoidPolicy.UNKNOWN, tie_policy=TiePolicy.UNKNOWN, ot_included=False,
+              dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="consensus of credible reporting after 2h", dispute_mechanism="uma",
+              settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
+_SOCCER_PM = (POLYMARKET_SOCCER_GAME_V1, POLYMARKET_SOCCER_GAME_V2)
 
 
 def _soccer_verdicts(code: str) -> tuple[Verdict, ...]:
@@ -315,7 +341,7 @@ _SOCCER_KALSHI = {"epl": KALSHI_EPL_GAME_V1, "lal": KALSHI_LAL_GAME_V1, "bun": K
 
 TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1,
                                                               KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1,
-                                                              POLYMARKET_SOCCER_GAME_V1, *_SOCCER_KALSHI.values())}
+                                                              *_SOCCER_PM, *_SOCCER_KALSHI.values())}
 
 
 def template_for(template_hash: str) -> Template | None:
@@ -386,7 +412,7 @@ _NFL_K_PM = (
 PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
     ("kalshi_mlb_game_v1", "polymarket_mlb_game_v1"): _MLB_K_PM,
     ("kalshi_nfl_game_v1", "polymarket_nfl_game_v1"): _NFL_K_PM,
-    **{(t.template_id, "polymarket_soccer_game_v1"): _soccer_verdicts(code) for code, t in _SOCCER_KALSHI.items()},
+    **{(t.template_id, pm.template_id): _soccer_verdicts(code) for code, t in _SOCCER_KALSHI.items() for pm in _SOCCER_PM},
 }
 
 
