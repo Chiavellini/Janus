@@ -24,3 +24,9 @@ plan P8/P11 work; `settle` takes the outcomes as input.
 ## Tests
 
 `tests/test_reconcile.py`.
+
+## Settlement results (`results.py`)
+
+`kalshi_result(market)` reads `result` only once `status` is settled; `polymarket_result(market)`
+reads `outcomePrices` only once `closed`, and a 50-50 is not a winner. `winners_for_pair` returns
+each venue's winner only when that venue has fully settled, which is what `settle()` consumes.

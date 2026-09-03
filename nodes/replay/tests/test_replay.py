@@ -111,3 +111,22 @@ def test_a_spec_without_rules_is_blocked_at_spawn_not_priced(tmp_path: Path):
     spec = {k: v for k, v in SPEC.items() if k != "rules"}
     assert not h.spawn("espn:mlb:9", spec)
     assert h.blocked == {"espn:mlb:9": "SPAWN:SETTLEMENT_UNPROVEN"}
+
+
+def test_offline_replay_runs_the_paper_coordinator_over_the_captured_books(tmp_path: Path):
+    from kernel.schema import Mode
+    store = TupleStore(tmp_path / "x.sqlite", enforce_volume=False)
+    h = Harness(store, quantities=(100.0,), rates=NO_WEDGE, mode=Mode.PAPER_EXECUTION, kill_root=tmp_path / "kill")
+    assert h.spawn("espn:mlb:1", SPEC)
+    st = replay(h, frames())
+    assert st["executions"] >= 1, st
+    rows = store.con.execute("SELECT state, first_filled, hedge_filled FROM executions").fetchall()
+    assert rows and rows[0][0] == "HEDGED" and rows[0][1] == 100.0 and rows[0][2] == 100.0
+    assert store.con.execute("SELECT COUNT(*) FROM orders WHERE mode='OFFLINE_REPLAY'").fetchone()[0] == 2
+    # a second replay is identical row for row
+    store2 = TupleStore(tmp_path / "y.sqlite", enforce_volume=False)
+    h2 = Harness(store2, quantities=(100.0,), rates=NO_WEDGE, mode=Mode.PAPER_EXECUTION, kill_root=tmp_path / "kill2")
+    h2.spawn("espn:mlb:1", SPEC); replay(h2, frames())
+    a = store.con.execute("SELECT state, first_filled, first_avg_price, hedge_filled, hedge_avg_price FROM executions").fetchall()
+    b = store2.con.execute("SELECT state, first_filled, first_avg_price, hedge_filled, hedge_avg_price FROM executions").fetchall()
+    assert a == b

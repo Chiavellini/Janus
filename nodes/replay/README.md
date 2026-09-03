@@ -47,3 +47,11 @@ Polymarket handler already counts non-JSON as an error frame.
 
 `tests/test_replay.py` — a captured pair of games replays to rows, replay is deterministic, the
 parity check reports zero mismatches against itself and names a mismatch when there is one.
+
+## Offline execution (2026-09-03)
+
+With `mode=PAPER_EXECUTION` (CLI `--mode OFFLINE_REPLAY`) the harness also runs the paper
+coordinator: every `PROFITABLE_UNEXECUTED` evaluation is planned, cleared through `nodes/risk`
+(with the harness's own kill directory and ledger) and executed against the replayed books on
+the replayed clock, so `executions` / `orders` rows are reproducible row for row. This is the
+pre-capital battery's substrate: a captured day replays into a full paper trading record.

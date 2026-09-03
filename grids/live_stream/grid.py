@@ -242,7 +242,8 @@ class Supervisor:
             for l in legs:
                 v = self.venues.get(l.venue)
                 if v is not None and hasattr(v, "books"):
-                    v.books[l.market_id] = l.book
+                    side = "buy_no" if (l.venue == "kalshi" and l.outcome_id.endswith(":NO")) else "buy_yes"
+                    v.books[(l.market_id, side)] = l.book
         max_age = max((ev.evaluated_utc - l.book.fetched_utc) for legs in offers.values() for l in legs)
         cand = Candidate(plan.opportunity_id, ev.game_id, sup.poller.league,
                          ((plan.first.venue, plan.first.contracts, plan.first.limit_price),

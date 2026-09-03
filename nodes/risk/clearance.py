@@ -92,7 +92,7 @@ def clear(cand: Candidate, *, mode: Mode, limits: RiskLimits, ledger: ExposureLe
     """Every fail-closed condition, in order. The first failure is the answer."""
     t_mono = now_mono if now_mono is not None else time.monotonic()
     venues = tuple(sorted({v for v, _c, _p in cand.legs}))
-    if mode.rank < Mode.PAPER_EXECUTION.rank:
+    if not mode.executes:
         return Refused("MODE", f"{mode.value} does not execute; nothing to clear")
     hit = kill.active(event_id=cand.event_id, strategy=cand.strategy_version, live=mode.risks_capital, venues=venues)
     if hit:

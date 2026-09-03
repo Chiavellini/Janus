@@ -65,3 +65,14 @@ def test_a_profitable_cover_records_its_books_transitions_and_frontier(tmp_path:
     assert tr == [(None, "PROFITABLE_UNEXECUTED"), ("PROFITABLE_UNEXECUTED", "NO_EDGE")]
     books = store.con.execute("SELECT books_json FROM opportunities").fetchone()[0]
     assert "0.44" in books
+
+
+def test_an_evaluation_cannot_move_a_record_the_execution_path_owns(tmp_path: Path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    opps = OpportunityStore(store)
+    kw = dict(event_id="e", league="mlb", quantity=100.0, gross=0.88, fees=0.01, settlement_buffer=0.0,
+              net_profit=10.0, locked_return=0.1, blocked_by=None, legs=[])
+    o = opps.observe(status=S.PROFITABLE_UNEXECUTED, now=T, **kw)
+    o.transition(S.EXECUTION_PENDING, now=T + 1); o.transition(S.FAILED_HEDGE, now=T + 2)
+    again = opps.observe(status=S.PROFITABLE_UNEXECUTED, now=T + 3, **kw)
+    assert again.status is S.FAILED_HEDGE and again.last_seen_ts == T + 3, "refreshed, not moved"

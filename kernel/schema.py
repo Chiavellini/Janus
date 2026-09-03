@@ -160,8 +160,15 @@ class Mode(str, Enum):
         return _MODE_ORDER.index(self)
 
     def allows(self, needed: "Mode") -> bool:
-        """True if a process in this mode may perform an action that needs `needed`."""
-        return self.rank >= needed.rank
+        """True if a process in this mode may perform an action that needs `needed`. OFFLINE_REPLAY
+        ranks lowest because it touches nothing live, yet it drives PAPER venues: that one
+        exception is named here rather than by reordering the ranks."""
+        return self.rank >= needed.rank or (self is Mode.OFFLINE_REPLAY and needed is Mode.PAPER_EXECUTION)
+
+    @property
+    def executes(self) -> bool:
+        """Whether this mode sends orders to ANY venue, paper included."""
+        return self is Mode.OFFLINE_REPLAY or self.rank >= Mode.PAPER_EXECUTION.rank
 
     @property
     def sends_real_orders(self) -> bool:

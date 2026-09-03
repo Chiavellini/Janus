@@ -34,7 +34,19 @@ from nodes.discovery.discovery import load_specs
 from nodes.game_poller.poller import GamePoller, PollerState
 from nodes.settle_wedge.equivalence import SettlementEquivalence
 from nodes.settle_wedge.pair import certify_from_spec
-from nodes.opportunity.opportunity import OpportunityStore
+from kernel.schema import Mode, OpportunityStatus
+from nodes.execute.coordinator import Coordinator
+from nodes.execute.plan import plan_from_cover
+from nodes.execute.records import ExecutionRecords
+from nodes.execute.venues import build_venues
+from nodes.execution.journal import Journal
+from nodes.opportunity.opportunity import Opportunity, OpportunityStore, books_snapshot
+from nodes.opportunity.thresholds import STRATEGY_VERSION
+from nodes.risk.breaker import LossBreaker
+from nodes.risk.clearance import Candidate, clear
+from nodes.risk.kill import KillSwitches
+from nodes.risk.ledger import ExposureLedger
+from nodes.risk.limits import load_limits
 from nodes.opportunity.record import record_evaluation
 from nodes.store_tuples.store import TupleStore
 from nodes.stream_kalshi.stream import KalshiStream
@@ -53,6 +65,13 @@ class Harness:
     min_return: float = MIN_RETURN
     #: Settlement rates; None = the evidence registry, exactly as the supervisor uses it.
     rates: dict | None = None
+    #: OFFLINE_REPLAY runs the paper coordinator over the replayed books; SHADOW_LIVE only records.
+    mode: Mode = Mode.SHADOW_LIVE
+    kill_root: object | None = None
+    coordinator: Coordinator | None = field(init=False, default=None)
+    venues: dict = field(init=False, default_factory=dict)
+    executions: int = 0
+    refusals: dict[str, int] = field(default_factory=dict)
 
     ks: KalshiStream = field(init=False)
     ps: PolymarketStream = field(init=False)
@@ -71,6 +90,20 @@ class Harness:
         self.ks = KalshiStream(api_key="replay", private_key=None)
         self.ps = PolymarketStream()
         self.opportunities = OpportunityStore(self.store)
+        if self.mode.rank >= Mode.PAPER_EXECUTION.rank:
+            self._clock_now = 0.0
+            journal = Journal(self.store)
+            self.venues = build_venues(Mode.OFFLINE_REPLAY, journal, clock=lambda: self._clock_now,
+                                       mono=lambda: self._clock_now)
+            self._limits = load_limits()
+            self._kill = KillSwitches(self.kill_root or "/Volumes/Kilos/janus/kill", enforce_volume=self.kill_root is None)
+            self._breaker = LossBreaker(__import__('pathlib').Path(self._kill.root) / 'breaker.json', kill=self._kill,
+                                        enforce_volume=self.kill_root is None)
+            self._ledger = ExposureLedger(self.store)
+            self.coordinator = Coordinator(self.venues, ExecutionRecords(self.store), Mode.OFFLINE_REPLAY,
+                                           hedge_deadline_s=self._limits.max_hedge_latency_ms / 1000.0,
+                                           clock=lambda: self._clock_now, mono=lambda: self._clock_now,
+                                           sleep=self._advance, opportunities=self.opportunities, kill=self._kill)
 
     # MIRROR of grids/live_stream Supervisor.reconcile's spawn branch. Keep them identical.
     def spawn(self, game_id: str, spec: dict) -> bool:
@@ -107,7 +140,43 @@ class Harness:
                                         fee_params=self.fee_params[gid], hurdle=self.min_return,
                                         opportunities=self.opportunities)
                 self.written += int(rec.wrote)
+                if self.coordinator is not None and rec.status is OpportunityStatus.PROFITABLE_UNEXECUTED:
+                    self._clock_now = ev.evaluated_utc
+                    self._execute(gid, ev, rec)
         return cb
+
+    def _advance(self, s: float) -> None:
+        self._clock_now += s
+
+    def _execute(self, gid: str, ev, rec) -> None:
+        """MIRROR of grids/live_stream Supervisor._execute, on the replayed books and clock."""
+        offers = {o: list(v) for o, v in ev.offers.items()}
+        plan = plan_from_cover(opportunity_id=Opportunity.id_for(gid, ev.quantity), event_id=gid,
+                               league=self.leagues[gid], cov=ev.cover, offers=offers, hurdle=self.min_return)
+        if plan is None:
+            return
+        for legs in offers.values():
+            for l in legs:
+                v = self.venues.get(l.venue)
+                if v is not None and hasattr(v, "books"):
+                    side = "buy_no" if (l.venue == "kalshi" and l.outcome_id.endswith(":NO")) else "buy_yes"
+                    v.books[(l.market_id, side)] = l.book
+        max_age = max((ev.evaluated_utc - l.book.fetched_utc) for legs in offers.values() for l in legs)
+        cand = Candidate(plan.opportunity_id, gid, self.leagues[gid],
+                         ((plan.first.venue, plan.first.contracts, plan.first.limit_price),
+                          (plan.hedge.venue, plan.hedge.contracts, plan.hedge.limit_price)),
+                         rec.net_profit_usd or 0.0, rec.locked_return or 0.0, STRATEGY_VERSION, max_age)
+        c = clear(cand, mode=Mode.OFFLINE_REPLAY, limits=self._limits, ledger=self._ledger, kill=self._kill,
+                  breaker=self._breaker, fills_today=(), clock_healthy=True, fee_schedules_ok=True,
+                  balances=None, venues_connected={"kalshi": True, "polymarket": True},
+                  now_mono=self._clock_now, now=self._clock_now)
+        if hasattr(c, "code"):
+            self.refusals[c.code] = self.refusals.get(c.code, 0) + 1
+            return
+        ex = self.coordinator.execute(plan, c, offers_books=books_snapshot(offers))
+        self.executions += 1
+        if ex.released:
+            self._ledger.release(ex.reservation_id, reason=f"nothing filled: {ex.state.value}")
 
     def feed(self, frame: Frame) -> None:
         """One captured frame, with its captured receive time as the clock."""
@@ -127,7 +196,8 @@ class Harness:
     def stats(self) -> dict:
         return {"pollers": len(self.pollers), "blocked": dict(self.blocked), "frames": dict(self.frames),
                 "parse_errors": self.parse_errors, "evaluations": self.evaluations,
-                "rows": self.written, "kalshi": self.ks.stats(), "polymarket": self.ps.stats()}
+                "rows": self.written, "mode": self.mode.value, "executions": self.executions,
+                "refusals": dict(self.refusals), "kalshi": self.ks.stats(), "polymarket": self.ps.stats()}
 
 
 def replay(harness: Harness, frames: Iterable[Frame]) -> dict:
@@ -174,6 +244,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, required=True, help="scratch DB for the replayed rows")
     ap.add_argument("--games", default="", help="comma-separated event ids; default: every spec on record")
     ap.add_argument("--max-book-age", type=float, default=5.0)
+    ap.add_argument("--mode", default="SHADOW_LIVE", help="SHADOW_LIVE records; OFFLINE_REPLAY also runs the paper coordinator")
     a = ap.parse_args(argv)
     start, end = _parse_ts(a.start), _parse_ts(a.end)
 
@@ -183,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
         print("no slate specs on record for that selection; nothing to rebuild", file=sys.stderr)
         return 2
     out = TupleStore(a.out)
-    h = Harness(out, max_book_age_s=a.max_book_age)
+    h = Harness(out, max_book_age_s=a.max_book_age, mode=Mode(a.mode) if a.mode != "OFFLINE_REPLAY" else Mode.PAPER_EXECUTION)
     for gid, spec in specs.items():
         h.spawn(gid, spec)
     frames = merge([iter_capture(a.frames_root, "kalshi", start, end),

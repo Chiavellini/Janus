@@ -59,6 +59,12 @@ for _b in (S.BLOCKED_MATCH, S.BLOCKED_RULES, S.BLOCKED_STALE, S.BLOCKED_DEPTH, S
                                 {x for x in TRANSITIONS if x.is_block} - {_b})
 
 
+#: Statuses an EVALUATION may move a record between. Everything from EXECUTION_PENDING on is
+#: owned by the execution and reconcile paths.
+_EVALUATION_OWNED = frozenset({S.DISCOVERED, S.PROFITABLE_UNEXECUTED, S.NO_EDGE, S.BLOCKED_MATCH, S.BLOCKED_RULES,
+                               S.BLOCKED_STALE, S.BLOCKED_DEPTH, S.BLOCKED_FEES, S.BLOCKED_BALANCE})
+
+
 class IllegalTransition(Exception):
     pass
 
@@ -138,8 +144,13 @@ class OpportunityStore:
             opp.history.append((now, None, status, detail))
             self.live[oid] = opp
             moved = True
-        else:
+        elif opp.status in _EVALUATION_OWNED:
             moved = opp.transition(status, now=now, detail=detail)
+        else:
+            # Once an execution has started, the record's status belongs to the coordinator and the
+            # reconcile pass. Later evaluations refresh the numbers, never the status.
+            opp.last_seen_ts = now
+            moved = False
         opp.gross, opp.fees, opp.settlement_buffer = gross, fees, settlement_buffer
         opp.net_profit, opp.locked_return, opp.blocked_by, opp.legs = net_profit, locked_return, blocked_by, legs
         # Keep the books from the EDGE. A later move to NO_EDGE must not overwrite what was priced.

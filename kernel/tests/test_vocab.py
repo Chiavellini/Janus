@@ -30,6 +30,8 @@ def test_fill_state_is_three_way():
 def test_modes_are_ordered_and_never_imply_a_higher_one():
     assert Mode.SHADOW_LIVE.allows(Mode.OFFLINE_REPLAY)
     assert not Mode.SHADOW_LIVE.allows(Mode.PAPER_EXECUTION)
+    assert Mode.OFFLINE_REPLAY.allows(Mode.PAPER_EXECUTION) and not Mode.OFFLINE_REPLAY.allows(Mode.DEMO_EXECUTION)
+    assert Mode.OFFLINE_REPLAY.executes and not Mode.SHADOW_LIVE.executes and Mode.PAPER_EXECUTION.executes
     assert not Mode.PAPER_EXECUTION.sends_real_orders and Mode.DEMO_EXECUTION.sends_real_orders
     assert not Mode.DEMO_EXECUTION.risks_capital and Mode.LIMITED_LIVE.risks_capital
     ranks = [m.rank for m in (Mode.OFFLINE_REPLAY, Mode.SHADOW_LIVE, Mode.PAPER_EXECUTION,

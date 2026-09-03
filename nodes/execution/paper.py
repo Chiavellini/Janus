@@ -25,8 +25,11 @@ class PaperVenue:
     venue: str
     journal: Journal
     mode: Mode = Mode.PAPER_EXECUTION
-    #: market_id -> the Book to fill against. The coordinator sets it from the priced offers.
-    books: dict[str, Book] = field(default_factory=dict)
+    #: (market_id, side) -> the Book to fill against, set from the priced offers. Keyed by SIDE
+    #: too: a Kalshi market has a YES projection and a NO projection, and the complementary NO
+    #: leg of one outcome shares a ticker with the YES leg of the other. A bare market_id key is
+    #: accepted for a market with one side.
+    books: dict = field(default_factory=dict)
     latency_s: float = 0.0
     #: Adverse move applied to every ask level at fill time, in price. 0.0 until measured
     #: (nodes/cover.Frontier.slippage_modelled); a test may set it.
@@ -48,7 +51,10 @@ class PaperVenue:
         if refused is not None:
             return refused
         self.journal.pending(req, mode=self.mode.value, now=t)
-        book = self.books.get(req.market_id)
+        key = (req.market_id, req.side)
+        book = self.books.get(key) or self.books.get(req.market_id)
+        if book is not None and key not in self.books:
+            key = req.market_id
         if book is None:
             ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None, "NO_BOOK", t,
                       detail="paper venue has no book for this market")
@@ -73,7 +79,7 @@ class PaperVenue:
             used = dict(taken)
             left = tuple(Quote(q.price, q.size - used.get(q.price, 0.0), q.is_synthetic) for q in book.asks
                          if q.size - used.get(q.price, 0.0) > 1e-9)
-            self.books[req.market_id] = Book(bids=book.bids, asks=left, fetched_utc=book.fetched_utc,
+            self.books[key] = Book(bids=book.bids, asks=left, fetched_utc=book.fetched_utc,
                                              source=book.source, server_utc=book.server_utc,
                                              received_mono=book.received_mono)
         state = (FillState.FILLED if filled >= req.contracts - 1e-9 else

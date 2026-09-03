@@ -282,3 +282,15 @@ leg against its own venue's result into the breaker's FIFO; capital is releasabl
 leg is UNCONFIRMED. The paper venue now consumes liquidity it fills. `grids/live_stream` takes
 `--mode`, resolved once by the risk gate; PAPER_EXECUTION runs the whole machine against live
 books; real-order modes are refused by the grid until P8/P11.
+
+---
+
+## 2026-09-03 — P8 (part): offline execution and settlement ingestion
+
+`nodes/replay` in `OFFLINE_REPLAY` runs the paper coordinator over captured books on the
+captured clock, producing a reproducible execution record; `nodes/reconcile/results.py` reads
+each venue's own settlement result (Kalshi `result` once settled; Gamma `outcomePrices` once
+closed, 50-50 excluded) for `settle()`. The mode vocabulary names the one exception: OFFLINE_REPLAY
+ranks lowest yet drives paper venues. Verified live: `grids/live_stream --mode PAPER_EXECUTION`
+constructs the gate, venues, ledger and coordinator against real books; `LIVE=1` in that mode is
+refused at start.
