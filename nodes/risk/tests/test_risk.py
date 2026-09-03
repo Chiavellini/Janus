@@ -125,14 +125,20 @@ def test_reservations_survive_a_restart_and_release_records_why(tmp_path):
 def test_the_token_cannot_be_forged_and_is_single_use_and_short_lived(kill, breaker):
     with pytest.raises(TypeError):
         RiskClearance(opportunity_id="o", event_id="e", mode=Mode.PAPER_EXECUTION, reservation=None,
-                      limits_sha="x", issued_mono=0, expires_mono=1)
+                      limits_sha="x", issued_mono=0, expires_mono=1, hedge_deadline_mono=3)
     L = ExposureLedger()
     c = clear(cand(), ledger=L, **ok_env(kill=kill, breaker=breaker))
     assert isinstance(c, RiskClearance) and c.limits_sha == LIMITS.sha
     assert c.reservation.per_venue_usd == {"kalshi": 44.0, "polymarket": 44.0}
     assert c.valid(100.2) and not c.valid(100.0 + LIMITS.clearance_ttl_ms / 1000 + 0.01)
-    assert c.consume(100.1) and not c.consume(100.1), "exactly once"
+    assert not c.consume(100.1, hedge=True), "no hedge before the first leg"
+    assert c.consume(100.1) and not c.consume(100.1), "the first leg exactly once"
     assert c.used and not c.valid(100.1)
+    # hedges: bounded in count and inside the hedge deadline (max_hedge_latency_ms from the limits)
+    assert c.consume(100.5, hedge=True) and c.consume(101.0, hedge=True) and c.consume(102.0, hedge=True)
+    assert not c.consume(102.5, hedge=True), "three hedge submits at most"
+    c2 = clear(cand(opportunity_id="o2", event_id="e2"), ledger=ExposureLedger(), **ok_env(kill=kill, breaker=breaker))
+    assert c2.consume(100.1) and not c2.consume(100.0 + LIMITS.max_hedge_latency_ms / 1000 + 0.1, hedge=True)
 
 
 def test_refusals_come_in_the_fail_closed_order(kill, breaker):

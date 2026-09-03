@@ -11,7 +11,7 @@ from nodes.risk.clearance import RiskClearance
 
 
 def admit(req: OrderRequest, clearance, *, venue: str, mode: Mode, needs: Mode,
-          now_mono: float | None = None, now: float | None = None) -> Ack | None:
+          now_mono: float | None = None, now: float | None = None, hedge: bool = False) -> Ack | None:
     """None if the order may go; otherwise the REJECTED ack to return. Consumes the clearance."""
     t = now or time.time()
     if not mode.allows(needs):
@@ -23,7 +23,7 @@ def admit(req: OrderRequest, clearance, *, venue: str, mode: Mode, needs: Mode,
     if clearance.opportunity_id != req.opportunity_id:
         return Ack(venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None, "CLEARANCE_MISMATCH", t,
                    detail=f"clearance is for {clearance.opportunity_id}, order is for {req.opportunity_id}")
-    if not clearance.consume(now_mono):
+    if not clearance.consume(now_mono, hedge=hedge):
         return Ack(venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None, "CLEARANCE_SPENT", t,
                    detail="clearance already used or expired")
     return None

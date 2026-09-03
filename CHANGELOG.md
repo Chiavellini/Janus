@@ -264,3 +264,21 @@ matched FOK FILLED-but-settlement-pending until the trade is CONFIRMED on-chain,
 signing to `py_clob_client` through a lazily imported transport that names the install step when
 absent; the wallet key is a separate 600-mode file. Nothing runs below DEMO on Kalshi or
 LIMITED_LIVE on Polymarket, and nothing has been sent to either venue.
+
+---
+
+## 2026-09-03 — P7: the coordinator, and reconciliation before release
+
+`nodes/execute`: `plan_from_cover` fixes the leg order — Polymarket first as a FOK at the walked
+limit, Kalshi as an IOC hedge for exactly what leg A filled, at a limit derived from what leg A
+paid — and `Coordinator.execute` runs DETECTED → … → HEDGED over two `ExecutionVenue`s and one
+`RiskClearance`, persisting every transition with the priced books. An UNCONFIRMED leg is polled
+and never resubmitted; whatever is unhedged at the deadline is recorded and the reservation is
+kept; a kill switch or disconnect before leg A aborts and releases; a hedge book above the limit
+is `HEDGE_SLIPPAGE_EXCEEDED`, not a chase. `venues.py` is the one place adapters are chosen by
+mode. `nodes/reconcile` resolves UNCONFIRMED orders through `status()`, ingests fills with their
+final flag, compares charged fees with the pinned curve (an excess is a STOP), and settles each
+leg against its own venue's result into the breaker's FIFO; capital is releasable only when no
+leg is UNCONFIRMED. The paper venue now consumes liquidity it fills. `grids/live_stream` takes
+`--mode`, resolved once by the risk gate; PAPER_EXECUTION runs the whole machine against live
+books; real-order modes are refused by the grid until P8/P11.

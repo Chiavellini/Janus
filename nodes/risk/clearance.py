@@ -45,29 +45,43 @@ class Candidate:
 class RiskClearance:
     """Single-use, short-lived, minted only by clear()."""
     __slots__ = ("opportunity_id", "event_id", "mode", "reservation", "limits_sha", "issued_mono",
-                 "expires_mono", "_used", "_mint")
+                 "expires_mono", "hedge_deadline_mono", "max_hedge_submits", "_first_used",
+                 "_hedge_used", "_mint")
 
     def __init__(self, *, opportunity_id: str, event_id: str, mode: Mode, reservation: Reservation,
-                 limits_sha: str, issued_mono: float, expires_mono: float, _mint=None):
+                 limits_sha: str, issued_mono: float, expires_mono: float,
+                 hedge_deadline_mono: float, max_hedge_submits: int = 3, _mint=None):
         if _mint is not _MINT:
             raise TypeError("RiskClearance cannot be constructed directly; call clearance.clear().")
         self.opportunity_id, self.event_id, self.mode = opportunity_id, event_id, mode
         self.reservation, self.limits_sha = reservation, limits_sha
-        self.issued_mono, self.expires_mono, self._used = issued_mono, expires_mono, False
+        self.issued_mono, self.expires_mono = issued_mono, expires_mono
+        self.hedge_deadline_mono, self.max_hedge_submits = hedge_deadline_mono, max_hedge_submits
+        self._first_used, self._hedge_used = False, 0
 
     def valid(self, now_mono: float | None = None) -> bool:
-        return not self._used and (now_mono if now_mono is not None else time.monotonic()) <= self.expires_mono
+        """The FIRST leg may still be sent."""
+        t = now_mono if now_mono is not None else time.monotonic()
+        return not self._first_used and t <= self.expires_mono
 
-    def consume(self, now_mono: float | None = None) -> bool:
-        """True exactly once, and only inside the window. An adapter calls this at submit."""
-        if not self.valid(now_mono):
+    def consume(self, now_mono: float | None = None, *, hedge: bool = False) -> bool:
+        """The first leg: exactly once, inside `expires_mono` (a few hundred ms -- a stale decision
+        must not be acted on late). Hedge legs: only after the first, at most `max_hedge_submits`,
+        inside `hedge_deadline_mono` (the risk limit on unhedged duration). Nothing else."""
+        t = now_mono if now_mono is not None else time.monotonic()
+        if not hedge:
+            if not self.valid(t):
+                return False
+            self._first_used = True
+            return True
+        if not self._first_used or t > self.hedge_deadline_mono or self._hedge_used >= self.max_hedge_submits:
             return False
-        self._used = True
+        self._hedge_used += 1
         return True
 
     @property
     def used(self) -> bool:
-        return self._used
+        return self._first_used
 
 
 def clear(cand: Candidate, *, mode: Mode, limits: RiskLimits, ledger: ExposureLedger,
@@ -112,4 +126,5 @@ def clear(cand: Candidate, *, mode: Mode, limits: RiskLimits, ledger: ExposureLe
         return res
     return RiskClearance(opportunity_id=cand.opportunity_id, event_id=cand.event_id, mode=mode,
                          reservation=res, limits_sha=limits.sha, issued_mono=t_mono,
-                         expires_mono=t_mono + limits.clearance_ttl_ms / 1000.0, _mint=_MINT)
+                         expires_mono=t_mono + limits.clearance_ttl_ms / 1000.0,
+                         hedge_deadline_mono=t_mono + limits.max_hedge_latency_ms / 1000.0, _mint=_MINT)

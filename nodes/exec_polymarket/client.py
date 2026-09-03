@@ -115,6 +115,7 @@ class PolymarketExecution:
     journal: Journal
     mode: Mode
     clock: Callable[[], float] = time.time
+    mono: Callable[[], float] = time.monotonic
     venue: str = "polymarket"
     submits: int = 0
     unconfirmed: int = 0
@@ -123,7 +124,8 @@ class PolymarketExecution:
 
     def submit(self, req: OrderRequest, clearance) -> Ack:
         t = self.clock()
-        refused = admit(req, clearance, venue=self.venue, mode=self.mode, needs=Mode.LIMITED_LIVE, now=t)
+        refused = admit(req, clearance, venue=self.venue, mode=self.mode, needs=Mode.LIMITED_LIVE, now=t,
+                         now_mono=self.mono(), hedge=req.hedge)
         if refused is not None:
             return refused
         if req.side != "buy_yes":

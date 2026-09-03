@@ -35,6 +35,8 @@ class OrderRequest:
     time_in_force: str             # "fok" | "ioc" | "gtc"
     client_order_id: str
     opportunity_id: str
+    #: True for the hedge leg: the clearance admits it under the hedge deadline, not the first-leg TTL.
+    hedge: bool = False
 
     def __post_init__(self) -> None:
         if self.side not in SIDES:

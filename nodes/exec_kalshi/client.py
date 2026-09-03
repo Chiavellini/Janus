@@ -84,6 +84,7 @@ class KalshiExecution:
     base_url: str = DEMO_BASE
     client: Client | None = None
     clock: Callable[[], float] = time.time
+    mono: Callable[[], float] = time.monotonic
     venue: str = "kalshi"
     submits: int = 0
     unconfirmed: int = 0
@@ -106,7 +107,8 @@ class KalshiExecution:
     # ── the order path ───────────────────────────────────────────────────
     def submit(self, req: OrderRequest, clearance) -> Ack:
         t = self.clock()
-        refused = admit(req, clearance, venue=self.venue, mode=self.mode, needs=Mode.DEMO_EXECUTION, now=t)
+        refused = admit(req, clearance, venue=self.venue, mode=self.mode, needs=Mode.DEMO_EXECUTION, now=t,
+                         now_mono=self.mono(), hedge=req.hedge)
         if refused is not None:
             return refused
         self.journal.pending(req, mode=self.mode.value, now=t)       # BEFORE the POST

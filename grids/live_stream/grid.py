@@ -41,15 +41,29 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from kernel.fetch import Client  # noqa: E402
+from kernel.redact import brief_error  # noqa: E402
 from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
 from nodes.cover.capacity import frontier  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, record_events  # noqa: E402
+from nodes.execute.coordinator import Coordinator  # noqa: E402
+from nodes.execute.plan import plan_from_cover  # noqa: E402
+from nodes.execute.records import ExecutionRecords  # noqa: E402
+from nodes.execute.venues import build_venues  # noqa: E402
+from nodes.execution.journal import Journal  # noqa: E402
+from nodes.opportunity.opportunity import books_snapshot  # noqa: E402
+from nodes.opportunity.thresholds import STRATEGY_VERSION  # noqa: E402
+from nodes.risk.breaker import LossBreaker  # noqa: E402
+from nodes.risk.clearance import Candidate, clear  # noqa: E402
+from nodes.risk.gate import resolve_mode  # noqa: E402
+from nodes.risk.kill import KillSwitches  # noqa: E402
+from nodes.risk.ledger import ExposureLedger  # noqa: E402
+from nodes.risk.limits import load_limits  # noqa: E402
 from nodes.game_poller.poller import GamePoller, PollerState  # noqa: E402
 from nodes.settle_wedge.equivalence import SettlementEquivalence  # noqa: E402
 from nodes.settle_wedge.pair import certify_from_spec  # noqa: E402
 from nodes.opportunity.opportunity import Opportunity, OpportunityStore  # noqa: E402
 from nodes.opportunity.record import record_evaluation  # noqa: E402
-from kernel.schema import OpportunityStatus  # noqa: E402
+from kernel.schema import Mode, OpportunityStatus  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
 from nodes.stream_kalshi.stream import KalshiStream, load_private_key  # noqa: E402
 from nodes.stream_polymarket.reconcile import Reconciler  # noqa: E402
@@ -86,6 +100,15 @@ class Supervisor:
     ps: PolymarketStream | None = None
     store: TupleStore | None = None
     opportunities: OpportunityStore | None = None
+    #: The execution side. None below PAPER_EXECUTION: detection only.
+    mode: Mode = Mode.SHADOW_LIVE
+    coordinator: Coordinator | None = None
+    venues: dict = field(default_factory=dict)
+    limits: object | None = None
+    ledger: ExposureLedger | None = None
+    kill: KillSwitches | None = None
+    breaker: LossBreaker | None = None
+    executions: int = 0
     spawned: int = 0
     reaped: int = 0
     blocked: dict[str, str] = field(default_factory=dict)
@@ -187,6 +210,8 @@ class Supervisor:
                 cap = f"  (capacity failed: {type(exc).__name__})"
             print(f"  *** {rec.status.value} {sup.short_name} q={ev.quantity} cost={rec.cost:.4f} "
                   f"return={rec.locked_return:+.3%}{cap}", flush=True)
+            if self.coordinator is not None:
+                self._execute(sup, ev, rec)
 
     def on_report_tick(self, now: float | None = None) -> None:
         """Persist socket health, and fail closed on an unhealthy clock: every freshness bound
@@ -203,8 +228,48 @@ class Supervisor:
                 print(f"[clock] {'HALT ' + ','.join(bad) if bad else 'healthy again'}", flush=True)
             sup.poller.halt = halt
 
+    def _execute(self, sup: Supervised, ev, rec) -> None:
+        """PAPER and above: plan from the priced cover, clear it through nodes/risk, run the machine.
+        Every refusal is recorded on the opportunity; nothing here raises into the socket loop."""
+        cov = ev.cover
+        offers = {o: list(v) for o, v in ev.offers.items()}
+        plan = plan_from_cover(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
+                               league=sup.poller.league, cov=cov, offers=offers, hurdle=MIN_RETURN)
+        if plan is None:
+            return
+        # Paper venues fill against the books the cover was priced from -- the same instant.
+        for outcome, legs in offers.items():
+            for l in legs:
+                v = self.venues.get(l.venue)
+                if v is not None and hasattr(v, "books"):
+                    v.books[l.market_id] = l.book
+        max_age = max((ev.evaluated_utc - l.book.fetched_utc) for legs in offers.values() for l in legs)
+        cand = Candidate(plan.opportunity_id, ev.game_id, sup.poller.league,
+                         ((plan.first.venue, plan.first.contracts, plan.first.limit_price),
+                          (plan.hedge.venue, plan.hedge.contracts, plan.hedge.limit_price)),
+                         rec.net_profit_usd or 0.0, rec.locked_return or 0.0, STRATEGY_VERSION, max_age)
+        balances = None
+        if self.mode.sends_real_orders:
+            got = {v: (venue.balance().available_usd if venue.balance() else None) for v, venue in self.venues.items()}
+            balances = None if any(b is None for b in got.values()) else got
+        connected = {"kalshi": bool(self.ks and self.ks.connected), "polymarket": bool(self.ps and self.ps.connected)}
+        clearance = clear(cand, mode=self.mode, limits=self.limits, ledger=self.ledger, kill=self.kill,
+                          breaker=self.breaker, fills_today=(), clock_healthy=all(
+                              st_.clock.healthy for st_ in (self.ks, self.ps) if st_ is not None),
+                          fee_schedules_ok=bool(sup.fee_params.get("kalshi") and sup.fee_params.get("polymarket")),
+                          balances=balances, venues_connected=connected)
+        if hasattr(clearance, "code"):
+            print(f"  [risk] refused {sup.short_name}: {clearance.code} {clearance.detail}", flush=True)
+            return
+        ex = self.coordinator.execute(plan, clearance, offers_books=books_snapshot(offers), venues_connected=connected)
+        self.executions += 1
+        print(f"  [exec] {sup.short_name} {ex.state.value} first={ex.first_filled}@{ex.first_avg_price} "
+              f"hedge={ex.hedge_filled}@{ex.hedge_avg_price} unhedged={ex.unhedged} {ex.detail}", flush=True)
+        if ex.released and self.ledger is not None:
+            self.ledger.release(ex.reservation_id, reason=f"nothing filled: {ex.state.value}")
+
     def stats(self) -> dict:
-        return {"live": len(self.live), "spawned": self.spawned, "reaped": self.reaped,
+        return {"live": len(self.live), "mode": self.mode.value, "executions": self.executions, "spawned": self.spawned, "reaped": self.reaped,
                 "evaluations": sum(s.evaluations for s in self.live.values()),
                 "rows": sum(s.written for s in self.live.values()),
                 "kalshi": self.ks.stats() if self.ks else None,
@@ -261,11 +326,26 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
             await asyncio.sleep(1)
     finally:
         stop.set()
+        for v in sup.venues.values():
+            try:
+                v.cancel_all()          # cancel_all() on SIGTERM: nothing may rest
+            except Exception as exc:  # noqa: BLE001
+                print(f"  [cancel_all {getattr(v, 'venue', '?')}] {brief_error(exc)}", flush=True)
         for t in tasks:
             t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
         sup.on_report_tick()          # a --once run must still leave a health row
         sup.store.commit()
+
+
+def _runner_sha() -> str:
+    """The tree this process runs from, for the arming override's pin."""
+    import subprocess
+    try:
+        return subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True,
+                              cwd=ROOT, timeout=5).stdout.strip() or "unknown"
+    except Exception:  # noqa: BLE001
+        return "unknown"
 
 
 def main() -> int:
@@ -281,6 +361,9 @@ def main() -> int:
     ap.add_argument("--frames-root", type=Path, default=FRAMES_ROOT,
                     help="raw frame capture root (hour-rotated gzip JSONL per venue)")
     ap.add_argument("--no-capture", action="store_true", help="do not write raw frames")
+    ap.add_argument("--mode", default="SHADOW_LIVE",
+                    help="OFFLINE_REPLAY | SHADOW_LIVE | PAPER_EXECUTION | DEMO_EXECUTION | LIMITED_LIVE | PRODUCTION; "
+                         "resolved once by nodes/risk.gate and never escalated")
     ap.add_argument("--reconcile-period", type=float, default=5.0,
                     help="seconds between Polymarket REST reconcile passes over quiet replicas")
     a = ap.parse_args()
@@ -310,6 +393,28 @@ def main() -> int:
                      pre_hours=a.pre_hours, db=a.db, max_book_age_s=a.max_book_age)
     sup.store = TupleStore(a.db)
     sup.opportunities = OpportunityStore(sup.store)
+    # The mode is decided ONCE, here, by the risk gate. Nothing below may escalate it.
+    limits = load_limits()
+    kill = KillSwitches()
+    resolved = resolve_mode(a.mode, env=os.environ, kill=kill, limits=limits,
+                            runner_sha=_runner_sha(), credentials_present={"kalshi": bool(api_key)})
+    if hasattr(resolved, "code"):
+        print(f"mode refused: {resolved.code}: {resolved.detail}", file=sys.stderr)
+        return 2
+    sup.mode = resolved.mode
+    if sup.mode.rank >= Mode.PAPER_EXECUTION.rank:
+        if sup.mode.sends_real_orders:
+            print("real-order modes are not wired into this grid yet (P8/P11); refusing", file=sys.stderr)
+            return 2
+        journal = Journal(sup.store)
+        sup.venues = build_venues(sup.mode, journal)
+        sup.limits, sup.kill = limits, kill
+        sup.breaker = LossBreaker(kill=kill)
+        sup.ledger = ExposureLedger(sup.store)
+        sup.coordinator = Coordinator(sup.venues, ExecutionRecords(sup.store), sup.mode,
+                                      hedge_deadline_s=limits.max_hedge_latency_ms / 1000.0,
+                                      opportunities=sup.opportunities, kill=kill)
+    print(f"[mode] {sup.mode.value}", flush=True)
     sup.ks = KalshiStream(api_key=api_key, private_key=load_private_key(key_path))
     sup.ps = PolymarketStream()
     rest = Client("polymarket-rest", rate=4, burst=8, cache_dir=None)

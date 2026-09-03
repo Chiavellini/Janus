@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Sequence
 
 from kernel.execution_protocol import Ack, Balance, FillRecord, OrderRequest, OrderState
-from kernel.schema import Book, FillState, Mode
+from kernel.schema import Book, FillState, Mode, Quote
 from nodes.execution.gate import admit
 from nodes.execution.journal import Journal
 
@@ -34,6 +34,7 @@ class PaperVenue:
     balance_usd: float = 1_000.0
     seed: int = 0
     clock: Callable[[], float] = time.time
+    mono: Callable[[], float] = time.monotonic
     _orders: dict[str, Ack] = field(default_factory=dict)
     _fills: list[FillRecord] = field(default_factory=list)
 
@@ -42,7 +43,8 @@ class PaperVenue:
 
     def submit(self, req: OrderRequest, clearance) -> Ack:
         t = self.clock()
-        refused = admit(req, clearance, venue=self.venue, mode=self.mode, needs=Mode.PAPER_EXECUTION, now=t)
+        refused = admit(req, clearance, venue=self.venue, mode=self.mode, needs=Mode.PAPER_EXECUTION, now=t,
+                         now_mono=self.mono(), hedge=req.hedge)
         if refused is not None:
             return refused
         self.journal.pending(req, mode=self.mode.value, now=t)
@@ -52,7 +54,7 @@ class PaperVenue:
                       detail="paper venue has no book for this market")
             self.journal.record(ack, kind="ack", now=t)
             return ack
-        need, gross, filled = req.contracts, 0.0, 0.0
+        need, gross, filled, taken = req.contracts, 0.0, 0.0, []
         for q in book.asks:
             px = min(0.99, q.price + self.adverse_move)
             if px > req.price + 1e-9:
@@ -61,10 +63,19 @@ class PaperVenue:
             gross += take * px
             filled += take
             need -= take
+            taken.append((q.price, take))
             if need <= 1e-9:
                 break
         if req.time_in_force == "fok" and need > 1e-9:
-            filled, gross = 0.0, 0.0
+            filled, gross, taken = 0.0, 0.0, []
+        if taken:
+            # Liquidity is consumed: the next order sees what is left, as on a real book.
+            used = dict(taken)
+            left = tuple(Quote(q.price, q.size - used.get(q.price, 0.0), q.is_synthetic) for q in book.asks
+                         if q.size - used.get(q.price, 0.0) > 1e-9)
+            self.books[req.market_id] = Book(bids=book.bids, asks=left, fetched_utc=book.fetched_utc,
+                                             source=book.source, server_utc=book.server_utc,
+                                             received_mono=book.received_mono)
         state = (FillState.FILLED if filled >= req.contracts - 1e-9 else
                  FillState.PARTIAL if filled > 0 else FillState.UNFILLED)
         avg = gross / filled if filled else None
@@ -119,6 +130,7 @@ class RefusingVenue:
     journal: Journal
     mode: Mode = Mode.SHADOW_LIVE
     clock: Callable[[], float] = time.time
+    mono: Callable[[], float] = time.monotonic
     intents: int = 0
 
     def submit(self, req: OrderRequest, clearance) -> Ack:

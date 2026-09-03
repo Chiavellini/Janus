@@ -69,7 +69,8 @@ def test_paper_fills_against_the_priced_book_and_fok_is_all_or_nothing(journal, 
     fok = v.submit(req(client_order_id="c2", price=0.44, contracts=10.0), clearance_for(tmp_path))
     assert fok.state is FillState.UNFILLED, "6 at 0.44 is not 10: FOK fills nothing"
     ioc = v.submit(req(client_order_id="c3", price=0.44, contracts=10.0, time_in_force="ioc"), clearance_for(tmp_path))
-    assert ioc.state is FillState.PARTIAL and ioc.filled_contracts == 6.0, "IOC takes the 6 at 0.44 and stops"
+    assert ioc.state is FillState.UNFILLED, "c1 consumed the 6 at 0.44 and the 4 at 0.46: nothing is left at 0.44"
+    assert v.books["tok"].asks == (Quote(0.46, 2.0),), "liquidity is consumed, as on a real book"
     assert v.status("c1").final and v.fills(since_utc=0)[0].final
 
 
