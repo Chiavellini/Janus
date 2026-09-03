@@ -49,10 +49,13 @@ def _append(path: Path, row: dict) -> None:
         os.close(fd)
 
 
-def start(job: str, *, index: Path = INDEX, argv: list[str] | None = None) -> str:
-    run_id = f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{job}_{os.getpid()}"
+def start(job: str, *, index: Path = INDEX, argv: list[str] | None = None, pid: int | None = None) -> str:
+    """`pid` is the process the watchdog should watch: the job wrapper passes its own shell pid,
+    which lives as long as the job; the row-writer's pid is gone a millisecond later."""
+    pid = int(pid) if pid else os.getpid()
+    run_id = f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{job}_{pid}"
     _append(index, {"ts": round(time.time(), 3), "job": job, "run_id": run_id,
-                    "status": "started", "pid": os.getpid(), "host": socket.gethostname(),
+                    "status": "started", "pid": pid, "host": socket.gethostname(),
                     "argv": redact_argv(argv)})
     return run_id
 
@@ -91,7 +94,8 @@ def last_per_job(index: Path = INDEX) -> dict[str, dict]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    s = sub.add_parser("start"); s.add_argument("job"); s.add_argument("rest", nargs=argparse.REMAINDER)   # everything after the job, "-m module --flags" included
+    s = sub.add_parser("start"); s.add_argument("job"); s.add_argument("--pid", type=int, default=None, help="the long-lived pid to watch (the wrapper's own)")
+    s.add_argument("rest", nargs=argparse.REMAINDER)   # everything after the job, "-m module --flags" included
     f = sub.add_parser("finish")
     f.add_argument("job"); f.add_argument("run_id")
     f.add_argument("--exit", type=int, required=True)
@@ -101,7 +105,7 @@ def main() -> int:
     a = ap.parse_args()
 
     if a.cmd == "start":
-        print(start(a.job, argv=a.rest))
+        print(start(a.job, argv=a.rest, pid=a.pid))
     elif a.cmd == "finish":
         print(finish(a.job, a.run_id, exit_code=a.exit, status=a.status))
     elif a.cmd == "tail":
