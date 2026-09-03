@@ -52,9 +52,9 @@ grid imports another grid. That is what keeps a failure attributable to one node
 ## Run it
 
 ```bash
-python3 -m pytest                      # 265 tests, works from any directory, no network
+python3 -m pytest                      # 393 tests, works from any directory, no network
 python3 ops/watchdog.py                # is anything unhealthy?
-python3 -m grids.live_stream.grid --leagues mlb --once     # one discovery pass, ~15 s of capture
+python3 -m grids.live_stream.grid --leagues mlb --once     # one discovery pass, ~15 s of capture (--mode PAPER_EXECUTION runs the machine)
 ```
 
 ## State of the evidence — read this before trusting any number
