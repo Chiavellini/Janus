@@ -28,7 +28,7 @@ def pm_book(payload: dict, fetched_utc: float) -> Book:
                          for b in payload.get("bids") or []), key=lambda q: -q.price))
     asks = tuple(sorted((Quote(float(a["price"]), float(a["size"]))
                          for a in payload.get("asks") or []), key=lambda q: q.price))
-    return Book(bids=bids, asks=asks, fetched_utc=fetched_utc)
+    return Book(bids=bids, asks=asks, fetched_utc=fetched_utc, source="rest")
 
 
 def fetch_pm_books(token_map: dict[str, str], cl: Client) -> dict[str, Book]:

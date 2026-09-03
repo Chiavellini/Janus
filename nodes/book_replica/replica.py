@@ -98,6 +98,10 @@ class BookReplica:
     asks: dict[float, float] = field(default_factory=dict)
 
     updated_utc: float = 0.0        # last book mutation
+    #: Provenance of the ladder currently held (kernel.schema.Book carries the same three).
+    source: str = "ws"              # "ws" from the socket, "rest" after a reconcile adopted REST
+    server_utc: float | None = None # the venue's own stamp on the last mutation, when it sends one
+    received_mono: float | None = None  # local monotonic clock at the last mutation
     verified_utc: float = 0.0       # last snapshot or successful reconciliation
     heartbeat_utc: float = 0.0      # last sign of life from the CONNECTION
 
@@ -127,19 +131,27 @@ class BookReplica:
         self.updated_utc = self.verified_utc = 0.0
 
     # ── data ────────────────────────────────────────────────────────────
+    def _stamp(self, source: str, server_utc: float | None, mono: float | None) -> None:
+        self.source = source
+        self.server_utc = server_utc
+        self.received_mono = mono
+
     def snapshot_in(self, bids, asks, *, seq: int | None = None,
-                    now: float | None = None) -> None:
+                    now: float | None = None, server_utc: float | None = None,
+                    mono: float | None = None) -> None:
         """Full book from the venue. The ONLY way into SYNCED."""
         t = now or time.time()
         self.bids = {float(p): float(s) for p, s in bids if float(s) > 0}
         self.asks = {float(p): float(s) for p, s in asks if float(s) > 0}
+        self._stamp("ws", server_utc, mono)
         self.seq = seq
         self.state = ReplicaState.SYNCED
         self.last_fault = None
         self.updated_utc = self.verified_utc = self.heartbeat_utc = t
 
     def delta_in(self, changes, *, seq: int | None = None,
-                 now: float | None = None) -> Fault | None:
+                 now: float | None = None, server_utc: float | None = None,
+                 mono: float | None = None) -> Fault | None:
         """Apply incremental changes. `changes` is (side, price, size); size 0 removes the level.
 
         A sequence gap does NOT just drop the message -- it invalidates the whole book, because
@@ -167,13 +179,15 @@ class BookReplica:
         if seq is not None:
             self.seq = seq
         self.applied += 1
+        self._stamp("ws", server_utc, mono)
         self.updated_utc = self.heartbeat_utc = t
         if self.verification in ("own_sequence", "stream"):
             self.verified_utc = t
         return None
 
     def project_in(self, bids, asks, *, seq: int | None = None,
-                   now: float | None = None) -> Fault | None:
+                   now: float | None = None, server_utc: float | None = None,
+                   mono: float | None = None) -> Fault | None:
         """Full ladders derived from a venue delta: sequence-checked like a delta, applied whole.
 
         Kalshi needs this and `delta_in` cannot express it. Kalshi ships YES-bid and NO-bid
@@ -197,13 +211,15 @@ class BookReplica:
         if seq is not None:
             self.seq = seq
         self.applied += 1
+        self._stamp("ws", server_utc, mono)
         self.updated_utc = self.heartbeat_utc = t
         if self.verification in ("own_sequence", "stream"):
             self.verified_utc = t
         return None
 
     def reconcile(self, bids, asks, *, now: float | None = None,
-                  tolerance: float = 1e-9) -> Fault | None:
+                  tolerance: float = 1e-9, server_utc: float | None = None,
+                  mono: float | None = None) -> Fault | None:
         """Outside check against a REST snapshot. The only integrity proof Polymarket allows.
 
         Agreement re-verifies the replica. Disagreement is not repaired quietly -- the REST book
@@ -216,6 +232,9 @@ class BookReplica:
         agree = (self._close(self.bids, want_b, tolerance)
                  and self._close(self.asks, want_a, tolerance))
         self.bids, self.asks = want_b, want_a
+        # Adopted from REST: the book is labelled so, and the caller holds it to the stricter
+        # freshness bound a REST fallback gets (spec §8).
+        self._stamp("rest", server_utc, mono)
         self.verified_utc = self.updated_utc = self.heartbeat_utc = t
         if agree:
             self.state = ReplicaState.SYNCED
@@ -289,4 +308,5 @@ class BookReplica:
         return Book(
             bids=tuple(Quote(p, self.bids[p]) for p in sorted(self.bids, reverse=True)),
             asks=tuple(Quote(p, self.asks[p]) for p in sorted(self.asks)),
-            fetched_utc=self.updated_utc)
+            fetched_utc=self.updated_utc, source=self.source, server_utc=self.server_utc,
+            received_mono=self.received_mono)

@@ -174,6 +174,21 @@ class Supervisor:
             print(f"  *** {rec.status.value} {sup.short_name} q={ev.quantity} cost={rec.cost:.4f} "
                   f"return={rec.locked_return:+.3%}{cap}", flush=True)
 
+    def on_report_tick(self, now: float | None = None) -> None:
+        """Persist socket health, and fail closed on an unhealthy clock: every freshness bound
+        in the system is `now - updated_utc`, so a stepped clock makes every book fiction."""
+        t = now or time.time()
+        for venue, st_ in (("kalshi", self.ks), ("polymarket", self.ps)):
+            if st_ is not None:
+                self.store.socket_health(venue=venue, stats=st_.stats(), seen_ts=t)
+        bad = [v for v, st_ in (("kalshi", self.ks), ("polymarket", self.ps))
+               if st_ is not None and not st_.clock.healthy]
+        halt = "CLOCK_UNHEALTHY" if bad else None
+        for sup in self.live.values():
+            if sup.poller.halt != halt:
+                print(f"[clock] {'HALT ' + ','.join(bad) if bad else 'healthy again'}", flush=True)
+            sup.poller.halt = halt
+
     def stats(self) -> dict:
         return {"live": len(self.live), "spawned": self.spawned, "reaped": self.reaped,
                 "evaluations": sum(s.evaluations for s in self.live.values()),
@@ -214,6 +229,7 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
                     await asyncio.sleep(15)
                     break
             if time.time() - last_report > report_period:
+                sup.on_report_tick()
                 sup.store.commit()
                 for st_ in (sup.ks, sup.ps):
                     if st_.capture is not None:

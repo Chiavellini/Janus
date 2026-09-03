@@ -35,6 +35,7 @@ _FAULT = {
     "CROSSED_BOOK": S.BLOCKED_STALE,
     "NO_ASKS": S.BLOCKED_DEPTH,
     "FEE_SCHEDULE_MISSING": S.BLOCKED_FEES,
+    "CLOCK_UNHEALTHY": S.BLOCKED_STALE,       # every freshness bound is fiction on a bad clock
 }
 
 

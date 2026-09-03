@@ -72,3 +72,16 @@ looking like a quiet market.
 `tests/test_replica.py` — 17 tests, including that a quiet market and a dead socket are
 distinguishable, that a sequence gap invalidates the whole book rather than one message, and that
 deltas arriving before the snapshot are discarded rather than fabricating a one-sided market.
+
+## Provenance and the clock (2026-09-02)
+
+Every ladder the replica holds is stamped with where it came from and when: `source` (`"ws"`
+from the socket, `"rest"` once `reconcile()` adopted a REST book), `server_utc` (the venue's own
+timestamp when the frame carried one — Kalshi deltas `ts_ms`, Polymarket events `timestamp`;
+None otherwise, never a local guess) and `received_mono` (the local monotonic clock). `snapshot()`
+puts all three on the `Book`, so a REST fallback is visibly labelled downstream.
+
+`clock.py` holds `ClockMonitor`: an EWMA of `received − server` per socket. Measured on both
+venues the stamp runs 30–70 ms ahead of local receipt — the normal band. A skew of seconds is a
+fault; the supervisor halts pricing on it, because every freshness bound is `now − updated_utc`
+and a stepped clock makes every book fiction at once.

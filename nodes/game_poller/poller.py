@@ -77,6 +77,11 @@ class GamePoller:
     #: day this was measured, against the 1.0x and 0.05 the lane had been charging.
     fee_params: dict[str, Mapping[str, Any]] = field(default_factory=dict)
 
+    #: Set by the supervisor to stop pricing for a reason the poller cannot see (an unhealthy
+    #: clock today; a kill switch or a venue disconnect later). Evaluations are still emitted,
+    #: blocked with this name, so the outage is recorded rather than silent.
+    halt: str | None = None
+
     state: PollerState = PollerState.WARMING
     replicas: dict[tuple[str, str], BookReplica] = field(default_factory=dict)
     proof: ExhaustiveOutcomeSet | None = None
@@ -128,7 +133,7 @@ class GamePoller:
         if self.state is PollerState.DRAINING:
             return []
 
-        offers, blocked = {}, None
+        offers, blocked = {}, (f"supervisor:halt:{self.halt}" if self.halt else None)
         for outcome, venues in self.outcomes.items():
             legs = []
             for v in venues:

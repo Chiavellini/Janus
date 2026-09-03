@@ -266,7 +266,7 @@ def test_the_sequence_re_anchors_after_a_gap():
     s, r, _ = wired()
     s.handle(SNAP, now=T)
     s.handle(delta(9), now=T)
-    assert s.gaps == 1 and s.last_seq is None
+    assert s.gaps == 1 and s.last_seq == {}, "re-anchored: the sid's baseline is dropped"
     s.handle({"type": "orderbook_snapshot", "seq": 40,
               "msg": {"market_ticker": "K1", "yes": [[0.4, 10]], "no": [[0.5, 10]]}}, now=T)
     assert s.gaps == 1, "re-anchored, not a second gap"
@@ -277,8 +277,57 @@ def test_a_new_socket_restarts_the_sequence_baseline():
     s, _r, _ = wired()
     s.handle(SNAP, now=T)
     s.handle(delta(2), now=T)
-    assert s.last_seq == 2
-    s.last_seq = None                                   # what run() does on reconnect
+    assert s.last_seq == {None: 2}
+    s.last_seq.clear()                                  # what run() does on reconnect
     s.handle({"type": "orderbook_snapshot", "seq": 1,
               "msg": {"market_ticker": "K1", "yes": [[0.4, 10]], "no": [[0.5, 10]]}}, now=T)
     assert s.gaps == 0
+
+
+# ── per-sid sequencing, server time, clock ───────────────────────────────────
+def sid_frame(sid, seq, ticker="K1", kind="orderbook_delta", ts_ms=None):
+    if kind == "orderbook_snapshot":
+        msg = {"market_ticker": ticker, "yes_dollars_fp": [[0.40, 100]], "no_dollars_fp": [[0.55, 200]]}
+    else:
+        msg = {"market_ticker": ticker, "side": "yes", "price_dollars": "0.40", "delta_fp": "-1"}
+    if ts_ms is not None:
+        msg["ts_ms"] = ts_ms
+    return {"type": kind, "sid": str(sid), "seq": str(seq), "msg": msg}     # strings, as on the wire
+
+
+def test_two_subscriptions_on_one_socket_do_not_alias_each_others_sequence():
+    """A second `subscribe` opens a second sid with its own 1,2,3. One socket-wide counter would
+    hide the new sid under the old maximum and never see a gap on either."""
+    s = KalshiStream(api_key="k", private_key=key())
+    for t in ("K1", "K2"):
+        s.register(t, BookReplica("kalshi", t, verification="stream"), "yes")
+    s.handle(sid_frame(1, 1, "K1", "orderbook_snapshot"), now=T)
+    for seq in (2, 3, 4):
+        s.handle(sid_frame(1, seq, "K1"), now=T)
+    s.handle(sid_frame(2, 1, "K2", "orderbook_snapshot"), now=T)     # the new subscription
+    s.handle(sid_frame(2, 2, "K2"), now=T)
+    s.handle(sid_frame(1, 5, "K1"), now=T)
+    assert s.gaps == 0 and s.last_seq == {1: 5, 2: 2}
+    s.handle(sid_frame(2, 4, "K2"), now=T)                            # 3 was lost on sid 2
+    assert s.gaps == 1 and "sid 2" in s.last_error
+    assert s.last_seq == {1: 5}, "only the sid that gapped is re-anchored"
+
+
+def test_the_venue_timestamp_reaches_the_book_and_the_clock_monitor():
+    s, r, _ = wired()
+    s.handle(sid_frame(1, 1, "K1", "orderbook_snapshot"), now=T, mono=50.0)
+    b = r.snapshot(T)
+    assert b.source == "ws" and b.server_utc is None and b.received_mono == 50.0, "snapshots carry no ts"
+    s.handle(sid_frame(1, 2, "K1", ts_ms=int((T - 0.07) * 1000)), now=T, mono=51.0)
+    b = r.snapshot(T)
+    assert b.server_utc == pytest.approx(T - 0.07) and b.received_mono == 51.0
+    st = s.clock.stats()
+    assert st["samples"] == 1 and st["offset_s"] == pytest.approx(0.07) and st["healthy"]
+
+
+def test_a_clock_skew_of_seconds_is_unhealthy():
+    s, _r, _ = wired()
+    s.handle(sid_frame(1, 1, "K1", "orderbook_snapshot"), now=T)
+    for seq in range(2, 60):
+        s.handle(sid_frame(1, seq, "K1", ts_ms=int((T - 30.0) * 1000)), now=T)
+    assert not s.clock.healthy and s.clock.stats()["worst_s"] == pytest.approx(30.0)

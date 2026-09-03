@@ -31,6 +31,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from kernel.redact import brief_error
+from nodes.book_replica.clock import ClockMonitor
 from nodes.book_replica.replica import BookReplica, Fault
 from nodes.stream_polymarket.protocol import (AssetBook, PING, PONG, events_in, operation_frame,
                                               parse_event, subscribe_frame)
@@ -60,6 +61,7 @@ class PolymarketStream:
     #: Setting `resubscribe_needed` alone did nothing here: the wanted set was unchanged, so
     #: the diff was empty and no frame went out -- recovery waited on the venue's next trade.
     resnapshot: set[str] = field(default_factory=set)
+    clock: ClockMonitor = field(default_factory=ClockMonitor)
 
     frames: int = 0
     snapshots: int = 0
@@ -91,7 +93,7 @@ class PolymarketStream:
         return None if not self.checks else self.agreed / self.checks
 
     # ── the message path (pure, testable without a socket) ──────────────
-    def handle(self, raw, *, now: float | None = None) -> list[str]:
+    def handle(self, raw, *, now: float | None = None, mono: float | None = None) -> list[str]:
         """Fold one frame into the books and push the result into every registered replica."""
         t = now or time.time()
         self.frames += 1
@@ -116,6 +118,7 @@ class PolymarketStream:
         for ev in events_in(raw):
             for p in parse_event(ev, self.books):
                 kinds.append(p.kind)
+                self.clock.observe(t, p.server_utc)
                 if p.kind == "error":
                     self.errors += 1
                     self.last_error = p.detail
@@ -130,7 +133,7 @@ class PolymarketStream:
                 if p.kind == "book":
                     self.snapshots += 1
                     for reg in self.regs.get(p.asset_id, ()):
-                        reg.replica.snapshot_in(bids, asks, seq=None, now=t)
+                        reg.replica.snapshot_in(bids, asks, seq=None, now=t, server_utc=p.server_utc, mono=mono)
                 else:
                     self.changes += 1
                     # THE integrity check. Polymarket offers nothing else.
@@ -156,7 +159,7 @@ class PolymarketStream:
                                 reg.replica.invalidate(Fault.HASH_MISMATCH)
                             continue
                     for reg in self.regs.get(p.asset_id, ()):
-                        reg.replica.project_in(bids, asks, seq=None, now=t)
+                        reg.replica.project_in(bids, asks, seq=None, now=t, server_utc=p.server_utc, mono=mono)
 
                 for reg in self.regs.get(p.asset_id, ()):
                     if reg.on_update:
@@ -173,7 +176,7 @@ class PolymarketStream:
                 "snapshots": self.snapshots, "changes": self.changes, "drift": self.drift,
                 "errors": self.errors, "checks": self.checks,
                 "agreement": None if self.agreement is None else round(self.agreement, 5),
-                "last_error": self.last_error,
+                "last_error": self.last_error, "clock": self.clock.stats(),
                 "age_s": round(time.time() - self.last_frame_utc, 2) if self.last_frame_utc else None}
 
     # ── transport ───────────────────────────────────────────────────────
@@ -224,13 +227,12 @@ class PolymarketStream:
                             await ws.send(json.dumps(operation_frame(pending, "unsubscribe")))
                             await ws.send(json.dumps(operation_frame(pending, "subscribe")))
                         raw = await asyncio.wait_for(ws.recv(), timeout=recv_timeout)
-                        t_recv = time.time()
+                        t_recv, m_recv = time.time(), time.monotonic()
                         if self.capture is not None:
                             # BEFORE parse: a parse bug is what you most want to replay. The
                             # same timestamp feeds handle(), so a replay reproduces the row.
-                            self.capture.write(raw, received_utc=t_recv,
-                                               received_mono=time.monotonic())
-                        self.handle(raw, now=t_recv)
+                            self.capture.write(raw, received_utc=t_recv, received_mono=m_recv)
+                        self.handle(raw, now=t_recv, mono=m_recv)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001 -- reconnect is the whole job

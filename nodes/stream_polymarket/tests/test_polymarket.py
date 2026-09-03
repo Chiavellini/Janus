@@ -291,3 +291,16 @@ def test_a_change_after_drift_is_not_folded_into_the_dropped_book():
     kinds = s.handle(change(0.18, 3), now=T)
     assert kinds == ["ignored"] and A not in s.books
     assert r.state is ReplicaState.RESYNCING
+
+
+def test_the_event_timestamp_reaches_the_book_and_the_clock():
+    s = PolymarketStream()
+    r = BookReplica("polymarket", A, verification="stream")
+    s.register(A, r)
+    s.handle({**BOOK, "timestamp": str(int((T - 0.03) * 1000))}, now=T, mono=7.0)
+    b = r.snapshot(T)
+    assert b.source == "ws" and b.server_utc == pytest.approx(T - 0.03) and b.received_mono == 7.0
+    ch = change(0.18, 4, bb=0.19, ba=0.20); ch["timestamp"] = str(int((T + 1 - 0.03) * 1000))
+    s.handle(ch, now=T + 1, mono=8.0)
+    assert r.snapshot(T + 1).received_mono == 8.0
+    assert s.clock.stats()["samples"] == 2 and s.clock.healthy

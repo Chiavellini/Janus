@@ -102,6 +102,36 @@ class Parsed:
     ticker: str = ""
     seq: int | None = None
     detail: str = ""
+    #: The subscription this frame belongs to. `seq` is contiguous PER SID (measured 2026-09-02:
+    #: every snapshot and delta carries `sid`), so a gap check must be keyed on it.
+    sid: int | None = None
+    #: The venue's own stamp, seconds. Deltas carry `ts`/`ts_ms`; snapshots carry none.
+    server_utc: float | None = None
+
+
+def server_utc_of(body: dict) -> float | None:
+    """`ts_ms` (epoch ms) preferred, else ISO `ts`; None when the frame carries neither."""
+    ms = body.get("ts_ms")
+    if ms is not None:
+        try:
+            return float(ms) / 1000.0
+        except (TypeError, ValueError):
+            return None
+    iso = body.get("ts")
+    if isinstance(iso, str) and iso:
+        from datetime import datetime, timezone
+        try:
+            return datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone(timezone.utc).timestamp()
+        except ValueError:
+            return None
+    return None
+
+
+def _int_or_none(v) -> int | None:
+    try:
+        return None if v is None else int(v)
+    except (TypeError, ValueError):
+        return None
 
 
 def ticker_of(msg: dict) -> str:
@@ -113,28 +143,30 @@ def parse(msg: dict, books: dict[str, TickerBook]) -> Parsed:
     """Decode one frame and fold it into `books`. Never raises; faults come back as Parsed."""
     typ = msg.get("type")
     body = msg.get("msg") or {}
-    seq = msg.get("seq")
+    seq = _int_or_none(msg.get("seq"))          # the wire sends strings on some frames
+    sid = _int_or_none(msg.get("sid") if msg.get("sid") is not None else body.get("sid"))
     ticker = ticker_of(msg)
+    sutc = server_utc_of(body)
 
     if typ in ("subscribed", "ok", "pong"):
-        return Parsed("heartbeat", ticker, seq)
+        return Parsed("heartbeat", ticker, seq, sid=sid)
     if typ == "error":
-        return Parsed("error", ticker, seq, str(body or msg))
+        return Parsed("error", ticker, seq, str(body or msg), sid=sid)
     if typ not in ("orderbook_snapshot", "orderbook_delta"):
         # Not silently dropped: an unhandled orderbook message is a divergence with no symptom.
-        return Parsed("ignored", ticker, seq, f"unhandled type {typ!r}")
+        return Parsed("ignored", ticker, seq, f"unhandled type {typ!r}", sid=sid)
     if not ticker:
-        return Parsed("error", "", seq, "orderbook message with no market_ticker")
+        return Parsed("error", "", seq, "orderbook message with no market_ticker", sid=sid)
 
     book = books.setdefault(ticker, TickerBook())
     try:
         if typ == "orderbook_snapshot":
             book.apply_snapshot(body, seq)
-            return Parsed("snapshot", ticker, seq)
+            return Parsed("snapshot", ticker, seq, sid=sid, server_utc=sutc)
         book.apply_delta(body, seq)
-        return Parsed("delta", ticker, seq)
+        return Parsed("delta", ticker, seq, sid=sid, server_utc=sutc)
     except (ValueError, TypeError) as exc:
-        return Parsed("error", ticker, seq, f"{type(exc).__name__}: {exc}")
+        return Parsed("error", ticker, seq, f"{type(exc).__name__}: {exc}", sid=sid)
 
 
 def subscribe_frame(tickers, msg_id: int = 1) -> dict:

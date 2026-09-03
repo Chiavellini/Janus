@@ -35,6 +35,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from kernel.redact import brief_error
+from nodes.book_replica.clock import ClockMonitor
 from nodes.book_replica.replica import BookReplica, Fault
 from nodes.stream_kalshi.protocol import (TickerBook, parse, subscribe_frame)
 
@@ -89,7 +90,12 @@ class KalshiStream:
     #: A `nodes/capture.FrameWriter`, or None. Raw frames go here before they are parsed.
     capture: Any = None
     #: Last seq seen on the subscription. Not per ticker -- see the module docstring.
-    last_seq: int | None = None
+    #: Last seq PER SID. A second `subscribe` on one socket opens a second subscription with
+    #: its own sequence; one socket-wide counter would alias the new sid's 1,2,3 under the
+    #: old one's maximum and never see a gap on either. Keyed on sid; None for frames
+    #: that carry none (a venue change, and a loud one).
+    last_seq: dict[int | None, int] = field(default_factory=dict)
+    clock: ClockMonitor = field(default_factory=ClockMonitor)
 
     frames: int = 0
     snapshots: int = 0
@@ -115,12 +121,13 @@ class KalshiStream:
         return sorted(self.regs)
 
     # ── the message path (pure, testable without a socket) ──────────────
-    def handle(self, msg: dict, *, now: float | None = None) -> str:
+    def handle(self, msg: dict, *, now: float | None = None, mono: float | None = None) -> str:
         """Fold one frame into the books and push the result into every registered replica."""
         t = now or time.time()
         self.frames += 1
         self.last_frame_utc = t
         p = parse(msg, self.books)
+        self.clock.observe(t, p.server_utc)
 
         # ANY frame proves the SOCKET is alive, so it refreshes liveness for every replica on it --
         # not just the ticker that moved. The connection is shared; a market with no activity is
@@ -141,9 +148,10 @@ class KalshiStream:
         # Subscription-level gap check, BEFORE anything is applied. A lost message may have
         # belonged to any ticker on this socket, so the whole set is suspect.
         if p.seq is not None:
-            if self.last_seq is not None and p.seq > self.last_seq + 1:
+            last = self.last_seq.get(p.sid)
+            if last is not None and p.seq > last + 1:
                 self.gaps += 1
-                self.last_error = (f"subscription seq gap: expected {self.last_seq + 1}, "
+                self.last_error = (f"subscription seq gap on sid {p.sid}: expected {last + 1}, "
                                    f"got {p.seq} (on {p.ticker})")
                 self.resubscribe_needed = True
                 for regs in self.regs.values():
@@ -152,10 +160,10 @@ class KalshiStream:
                 # Re-anchor rather than hold the old baseline. Everything is already invalidated
                 # and a resubscribe is tripped; the next frames re-establish the sequence, and
                 # holding a stale baseline would report a second gap for the same loss.
-                self.last_seq = None
+                self.last_seq.pop(p.sid, None)
                 return "gap"
-            if self.last_seq is None or p.seq > self.last_seq:
-                self.last_seq = p.seq
+            if last is None or p.seq > last:
+                self.last_seq[p.sid] = p.seq
 
         book = self.books.get(p.ticker)
         if book is None:
@@ -163,10 +171,10 @@ class KalshiStream:
         for reg in self.regs.get(p.ticker, ()):
             bids, asks = book.project(reg.outcome)
             if p.kind == "snapshot":
-                reg.replica.snapshot_in(bids, asks, seq=p.seq, now=t)
+                reg.replica.snapshot_in(bids, asks, seq=p.seq, now=t, server_utc=p.server_utc, mono=mono)
                 self.snapshots += 1
             else:
-                reg.replica.project_in(bids, asks, seq=p.seq, now=t)
+                reg.replica.project_in(bids, asks, seq=p.seq, now=t, server_utc=p.server_utc, mono=mono)
                 self.deltas += 1
             if reg.on_update:
                 # The frame's receive time travels with the event, so a poller stamps the
@@ -177,7 +185,8 @@ class KalshiStream:
     def stats(self) -> dict:
         return {"connected": self.connected, "tickers": len(self.regs), "frames": self.frames,
                 "snapshots": self.snapshots, "deltas": self.deltas, "seq_gaps": self.gaps,
-                "errors": self.errors, "last_error": self.last_error,
+                "sids": sorted(k for k in self.last_seq if k is not None),
+                "errors": self.errors, "last_error": self.last_error, "clock": self.clock.stats(),
                 "age_s": round(time.time() - self.last_frame_utc, 2) if self.last_frame_utc else None}
 
     # ── transport ───────────────────────────────────────────────────────
@@ -198,7 +207,7 @@ class KalshiStream:
                 headers = ws_headers(self.api_key, self.private_key)
                 async with connect(self.url, headers) as ws:
                     self.connected = True
-                    self.last_seq = None          # a new socket restarts the sequence
+                    self.last_seq.clear()         # a new socket restarts every sequence
                     backoff = 1.0
                     if on_state:
                         on_state("connected", f"{len(self.regs)} tickers")
@@ -213,13 +222,12 @@ class KalshiStream:
                                 await asyncio.sleep(0.5)
                                 continue
                         raw = await asyncio.wait_for(ws.recv(), timeout=recv_timeout)
-                        t_recv = time.time()
+                        t_recv, m_recv = time.time(), time.monotonic()
                         if self.capture is not None:
                             # BEFORE parse: a parse bug is what you most want to replay. The
                             # same timestamp feeds handle(), so a replay reproduces the row.
-                            self.capture.write(raw, received_utc=t_recv,
-                                               received_mono=time.monotonic())
-                        self.handle(json.loads(raw), now=t_recv)
+                            self.capture.write(raw, received_utc=t_recv, received_mono=m_recv)
+                        self.handle(json.loads(raw), now=t_recv, mono=m_recv)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001 -- reconnect is the whole job

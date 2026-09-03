@@ -160,3 +160,25 @@ def test_snapshot_orders_both_ladders_correctly():
     b = r.snapshot(T)
     assert [q.price for q in b.bids] == [0.40, 0.35, 0.30], "bids descend"
     assert [q.price for q in b.asks] == [0.50, 0.55, 0.60], "asks ascend"
+
+
+def test_a_reconciled_book_is_labelled_rest_and_a_streamed_one_ws():
+    r = BookReplica("polymarket", "m", verification="external")
+    r.snapshot_in([(0.4, 10)], [(0.5, 10)], now=1000.0, server_utc=999.9, mono=1.0)
+    b = r.snapshot(1000.0)
+    assert (b.source, b.server_utc, b.received_mono) == ("ws", 999.9, 1.0)
+    assert r.reconcile([(0.4, 10)], [(0.5, 10)], now=1001.0, mono=2.0) is None
+    b = r.snapshot(1001.0)
+    assert b.source == "rest" and b.server_utc is None and b.received_mono == 2.0
+
+
+def test_the_clock_monitor_is_unknown_healthy_and_tracks_the_worst_sample():
+    from nodes.book_replica.clock import ClockMonitor
+    c = ClockMonitor(max_skew_s=1.0)
+    assert c.healthy and c.stats()["offset_s"] is None
+    c.observe(10.0, None)
+    assert c.samples == 0, "a frame without a stamp is not evidence"
+    c.observe(10.0, 9.95); c.observe(11.0, 10.95)
+    assert c.healthy and c.stats()["offset_s"] == pytest.approx(0.05)
+    c.observe(12.0, 5.0)
+    assert c.stats()["worst_s"] == pytest.approx(7.0)

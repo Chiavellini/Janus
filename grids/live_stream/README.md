@@ -66,3 +66,9 @@ bound. Neither is re-implemented here.
 Start/finish rows to `runs/index.jsonl` (deferring to `JANUS_RUN_ID` when `ops/run_node.sh` set
 it), SIGTERM drains rather than dying mid-write, and a failed discovery pass is reported and
 retried rather than taking the loop down.
+
+## Health and the clock
+
+On every report tick the supervisor writes both sockets' `stats()` to `socket_health` and checks
+each socket's clock monitor. If either venue's stamps run more than the bound away from local
+receipt, every poller is halted (`supervisor:halt:CLOCK_UNHEALTHY`) until the skew clears.

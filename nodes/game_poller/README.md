@@ -69,3 +69,9 @@ moves the hurdle without anyone noticing.
 `tests/test_poller.py` — 14 tests, including that a 3-way league never gets a poller, that one
 desynced replica blocks the cover, that a same-venue cover is not counted as an opportunity,
 and that a missing fee schedule blocks rather than defaults.
+
+## Halt
+
+`halt` is set by the supervisor for a reason the poller cannot see — an unhealthy clock today, a
+kill switch or a venue disconnect later. Evaluations are still emitted, blocked as
+`supervisor:halt:<reason>`, so an outage is recorded rather than silent.

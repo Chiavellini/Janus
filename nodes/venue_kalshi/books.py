@@ -19,15 +19,22 @@ from kernel.schema import Book, Quote, fold_complement_bids
 KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
 
 
-def kalshi_book(payload: dict, side: str, fetched_utc: float) -> Book:
-    """Kalshi orderbook -> Book for one side. BOTH arrays are bids; asks are folded."""
+def kalshi_book(payload: dict, side: str, fetched_utc: float, *,
+                depth_requested: int | None = None) -> Book:
+    """Kalshi orderbook -> Book for one side. BOTH arrays are bids; asks are folded.
+
+    `depth_requested` is what the REST call asked for; a ladder that comes back exactly that
+    long may be truncated, and `Book.depth_truncated` says so instead of letting a truncated
+    ladder pass for an exhausted one."""
     ob = payload.get("orderbook_fp") or payload.get("orderbook") or {}
     own = ob.get(f"{side}_dollars") or ob.get(side) or []
     other = ob.get(f"{'no' if side == 'yes' else 'yes'}_dollars") or []
     bids = tuple(sorted((Quote(float(p), float(s)) for p, s in own),
                         key=lambda q: -q.price))
     comp = tuple(Quote(float(p), float(s)) for p, s in other)
-    return Book(bids=bids, asks=fold_complement_bids(comp), fetched_utc=fetched_utc)
+    truncated = bool(depth_requested) and (len(own) >= depth_requested or len(other) >= depth_requested)
+    return Book(bids=bids, asks=fold_complement_bids(comp), fetched_utc=fetched_utc,
+                depth_truncated=truncated, source="rest")
 
 
 def kalshi_fee_params(series: dict) -> dict | None:
@@ -57,7 +64,7 @@ def fetch_kalshi_books(tickers, cl: Client) -> dict[str, Book]:
             now = time.time()
             d = cl.get_json(f"{KALSHI_BASE}/markets/{t}/orderbook",
                             params={"depth": 20}, use_cache=False)
-            out[t] = kalshi_book(d, "yes", now)
+            out[t] = kalshi_book(d, "yes", now, depth_requested=20)
         # Narrow on purpose: a programming error must stay loud (see venue_polymarket).
         except (OSError, RuntimeError, ValueError, KeyError):
             continue

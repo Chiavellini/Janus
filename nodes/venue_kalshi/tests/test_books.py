@@ -77,3 +77,12 @@ def test_a_no_leg_keeps_its_own_ticker_so_double_counting_is_still_caught():
 def test_an_empty_side_is_absent_rather_than_a_zero_priced_leg():
     one_sided = {"orderbook_fp": {"yes_dollars": [[0.40, 100]], "no_dollars": []}}
     assert kalshi_book(one_sided, "yes", T).asks == ()
+
+
+def test_a_ladder_as_long_as_the_request_is_flagged_truncated_and_rest_labelled():
+    full = {"orderbook_fp": {"yes_dollars": [[0.40 - i * 0.01, 10] for i in range(20)],
+                             "no_dollars": [[0.55, 300]]}}
+    b = kalshi_book(full, "yes", T, depth_requested=20)
+    assert b.depth_truncated and b.source == "rest"
+    assert not kalshi_book(PAYLOAD, "yes", T, depth_requested=20).depth_truncated
+    assert not kalshi_book(full, "yes", T).depth_truncated, "no request depth known: no claim"

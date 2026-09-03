@@ -21,7 +21,9 @@ one aggregate row per sweep — never repeated full-universe snapshots.
 `opportunity()` appends only on an actionability/return transition; `sweep()` writes one row per run.
 **Raw venue payloads are never retained.** Data must live on `/Volumes/Kilos` — enforced in
 `__init__`, because the root disk has ~10 GB free. `ensure_ddl(fragment)` lets a node own its
-tables (idempotent); `nodes/discovery` uses it for `events`.
+tables (idempotent); `nodes/discovery` uses it for `events`. `socket_health()` writes one row per
+report tick per socket (frames, gaps, drift, agreement, clock offset and verdict) — these
+counters used to live only in unrotated stdout.
 
 ## Failure modes
 

@@ -112,6 +112,9 @@ class Parsed:
     detail: str = ""
     claimed_bid: float | None = None
     claimed_ask: float | None = None
+    #: The venue's own stamp, seconds, from the event-level `timestamp` (epoch ms). Measured
+    #: 2026-09-02: present on book, price_change and last_trade_price.
+    server_utc: float | None = None
 
 
 def events_in(raw) -> list[dict]:
@@ -121,9 +124,18 @@ def events_in(raw) -> list[dict]:
     return [raw] if isinstance(raw, dict) else []
 
 
+def server_utc_of(ev: dict) -> float | None:
+    ts = ev.get("timestamp")
+    try:
+        return None if ts is None else float(ts) / 1000.0
+    except (TypeError, ValueError):
+        return None
+
+
 def parse_event(ev: dict, books: dict[str, AssetBook]) -> list[Parsed]:
     """Fold one event into `books`. Never raises; faults come back as Parsed."""
     et = ev.get("event_type")
+    sutc = server_utc_of(ev)
 
     if et == "book":
         aid = ev.get("asset_id") or ""
@@ -133,7 +145,7 @@ def parse_event(ev: dict, books: dict[str, AssetBook]) -> list[Parsed]:
             books.setdefault(aid, AssetBook()).apply_book(ev)
         except (ValueError, TypeError, KeyError) as exc:
             return [Parsed("error", aid, f"{type(exc).__name__}: {exc}")]
-        return [Parsed("book", aid)]
+        return [Parsed("book", aid, server_utc=sutc)]
 
     if et == "price_change":
         out: list[Parsed] = []
@@ -155,7 +167,8 @@ def parse_event(ev: dict, books: dict[str, AssetBook]) -> list[Parsed]:
             bb, ba = ch.get("best_bid"), ch.get("best_ask")
             out.append(Parsed("change", aid,
                               claimed_bid=None if bb is None else float(bb),
-                              claimed_ask=None if ba is None else float(ba)))
+                              claimed_ask=None if ba is None else float(ba),
+                              server_utc=sutc))
         return out
 
     if et in ("last_trade_price",):

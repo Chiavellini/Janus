@@ -152,3 +152,13 @@ def test_the_fee_schedule_reaches_the_cover_verbatim():
     # PM at the market's 0.03: 100*0.03*0.48*0.52 = 74.88c (124.8c at the hardcoded 0.05).
     expected = 0.88 + 100 * 0.03 * 0.48 * 0.52
     assert abs(e.cover.fee_per_contract * 100.0 - expected) < 1e-9
+
+
+def test_a_supervisor_halt_blocks_with_its_name_but_still_records():
+    p = mlb()
+    sync_all(p, kh=0.44, pa=0.44)
+    p.halt = "CLOCK_UNHEALTHY"
+    e = p.on_event("kalshi", "K_H", now=T)[0]
+    assert e.cover is None and e.blocked_by == "supervisor:halt:CLOCK_UNHEALTHY"
+    p.halt = None
+    assert p.on_event("kalshi", "K_H", now=T)[0].cover.ok

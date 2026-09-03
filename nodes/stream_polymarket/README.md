@@ -68,3 +68,8 @@ When a `nodes/capture.FrameWriter` is attached (`stream.capture`), the run loop 
 text of every frame **before** parsing it, stamped with the same receive time it hands to
 `handle(..., now=)`. `on_update(market_id, now)` carries that time to the poller, so a replay
 through `nodes/replay` reproduces every evaluation row. Nothing is captured after parse.
+
+## Timestamps
+
+`book`, `price_change` and `last_trade_price` events carry an event-level `timestamp` (epoch ms).
+It becomes `Book.server_utc` and feeds the clock monitor (`stats()["clock"]`).

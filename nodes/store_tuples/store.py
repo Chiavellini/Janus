@@ -294,6 +294,29 @@ class TupleStore:
         self._eval_last[key] = (status, cost, ts)
         return True
 
+    SOCKET_HEALTH_DDL = """
+CREATE TABLE IF NOT EXISTS socket_health(
+  seen_ts REAL NOT NULL, venue TEXT NOT NULL, connected INTEGER, subscriptions INTEGER,
+  frames INTEGER, snapshots INTEGER, updates INTEGER, seq_gaps INTEGER, drift INTEGER,
+  agreement REAL, errors INTEGER, clock_offset_s REAL, clock_healthy INTEGER, age_s REAL,
+  last_error TEXT);
+CREATE INDEX IF NOT EXISTS socket_health_ts ON socket_health(venue, seen_ts);
+"""
+
+    def socket_health(self, *, venue: str, stats: dict[str, Any], seen_ts: float | None = None) -> None:
+        """One row per report tick per socket. This used to live only in stdout, which is not
+        rotated; a run's frame counts, gaps, drift rate and agreement survived nowhere."""
+        self.ensure_ddl(self.SOCKET_HEALTH_DDL)
+        clock = stats.get("clock") or {}
+        self.con.execute(
+            "INSERT INTO socket_health VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (seen_ts or time.time(), venue, int(bool(stats.get("connected"))),
+             stats.get("tickers", stats.get("assets")), stats.get("frames"), stats.get("snapshots"),
+             stats.get("deltas", stats.get("changes")), stats.get("seq_gaps"), stats.get("drift"),
+             stats.get("agreement"), stats.get("errors"), clock.get("offset_s"),
+             None if clock.get("healthy") is None else int(bool(clock["healthy"])),
+             stats.get("age_s"), stats.get("last_error") or None))
+
     def commit(self) -> None:
         self.con.commit()
 

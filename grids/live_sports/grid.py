@@ -67,8 +67,8 @@ def _fetch_book(client: Client, venue: str, market_id: str, token: str | None = 
         # Reading only the YES ladder of each market ignored roughly half the available liquidity
         # on every pair, which understated every capacity number the frontier reports.
         now_ts = time.time()
-        book = kalshi_book(payload, "yes", now_ts)
-        no_book = kalshi_book(payload, "no", now_ts)
+        book = kalshi_book(payload, "yes", now_ts, depth_requested=20)
+        no_book = kalshi_book(payload, "no", now_ts, depth_requested=20)
         return {"book": book, "no_book": no_book, "started": started, "received": time.time(),
                 "venue": venue, "market_id": market_id}
     else:

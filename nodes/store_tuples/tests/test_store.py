@@ -74,3 +74,15 @@ def test_a_failed_sweep_keeps_its_error(store):
                 n_watched=0, n_changed=0, n_opportunities=0, status="ERROR",
                 error="RuntimeError: boom")
     assert store.con.execute("SELECT status, error FROM sweep_runs").fetchone() == ("ERROR", "RuntimeError: boom")
+
+
+def test_socket_health_lands_with_the_clock_verdict(store):
+    store.socket_health(venue="kalshi", seen_ts=5.0, stats={
+        "connected": True, "tickers": 4, "frames": 100, "snapshots": 4, "deltas": 96, "seq_gaps": 0,
+        "errors": 0, "last_error": "", "age_s": 0.3, "clock": {"offset_s": -0.07, "healthy": True}})
+    store.socket_health(venue="polymarket", seen_ts=5.0, stats={
+        "connected": True, "assets": 4, "frames": 50, "snapshots": 6, "changes": 90, "drift": 2,
+        "agreement": 0.993, "errors": 0, "last_error": "drift", "age_s": 1.0, "clock": {"offset_s": 12.0, "healthy": False}})
+    rows = store.con.execute("SELECT venue, subscriptions, updates, drift, agreement, clock_healthy, last_error "
+                             "FROM socket_health ORDER BY venue").fetchall()
+    assert rows == [("kalshi", 4, 96, None, None, 1, None), ("polymarket", 4, 90, 2, 0.993, 0, "drift")]

@@ -72,3 +72,13 @@ When a `nodes/capture.FrameWriter` is attached (`stream.capture`), the run loop 
 text of every frame **before** parsing it, stamped with the same receive time it hands to
 `handle(..., now=)`. `on_update(market_id, now)` carries that time to the poller, so a replay
 through `nodes/replay` reproduces every evaluation row. Nothing is captured after parse.
+
+## Sequence is per sid
+
+Every snapshot and delta carries `sid` (measured 2026-09-02). A second `subscribe` on one socket
+opens a second subscription with its own `seq` from 1, so the gap check is keyed on `sid`: one
+socket-wide counter would alias the new sid's 1, 2, 3 under the old maximum and see a gap on
+neither. `stats()["sids"]` lists the live subscriptions; more than one after a slate change means
+the full-resubscribe path opened a duplicate (plan P2b replaces it with `update_subscription`).
+
+Deltas carry `ts_ms`; snapshots carry no timestamp. `stats()["clock"]` is the skew monitor.
