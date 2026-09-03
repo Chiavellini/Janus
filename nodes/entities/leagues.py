@@ -32,6 +32,8 @@ class League:
     outcomes: int = 2
     anchor: str = "espn"
     pm_sport: str | None = None   # Gamma /sports `sport` code when it differs from pm_prefix
+    #: ESPN scoreboard `groups` to query (college football: 80 = FBS, 81 = FCS); () = the default feed.
+    espn_groups: tuple[str, ...] = ()
 
 
 LEAGUES: dict[str, League] = {
@@ -45,6 +47,11 @@ LEAGUES: dict[str, League] = {
     "lal":  League("lal", "La Liga", "KXLALIGAGAME", "la-liga", "lal", ("soccer", "esp.1"), outcomes=3),
     "bun":  League("bun", "Bundesliga", "KXBUNDESLIGAGAME", "bundesliga", "bun", ("soccer", "ger.1"), outcomes=3),
     "mls":  League("mls", "MLS", "KXMLSGAME", "mls", "mls", ("soccer", "usa.1"), outcomes=3),
+    # College football, added 2026-09-03 from the L28 census (39 co-listed games in the first window).
+    # Kalshi lists FBS, FCS and Division II games; ESPN's default scoreboard is FBS, so FCS is asked
+    # for explicitly and Division II stays unmatched (blocked, by name) until it is worth a group.
+    "cfb":  League("cfb", "College Football", "KXNCAAFGAME", "cfb", "cfb", ("football", "college-football"),
+                   espn_groups=("80", "81")),
     # Not yet: UCL. Entities are keyed per league (lal:esp.real_madrid) and a club plays in its domestic
     # league AND the Champions League, so its one Kalshi team id would map to two entities and the
     # xref table refuses the collision. A club must become one entity across competitions first.
@@ -71,6 +78,10 @@ def pm_tags() -> dict[str, str]:
 
 def espn_paths() -> dict[str, tuple[str, str]]:
     return {c: l.espn for c, l in LEAGUES.items() if l.espn is not None}
+
+
+def espn_groups() -> dict[str, tuple[str, ...]]:
+    return {c: l.espn_groups for c, l in LEAGUES.items() if l.espn_groups}
 
 
 def enablement(code: str) -> list[str]:

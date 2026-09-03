@@ -74,3 +74,11 @@ def test_the_draw_of_a_three_way_game_pairs_like_any_other_side():
     out = pair(k, p)
     assert [(r["entity_id"], r["kalshi_outcome"], r["pm_outcome"]) for r in out] == [
         (DRAW_ENTITY, "KX-1-TIE", "slug:draw"), ("lee", "KX-1-LEE", "slug:lee"), ("new", "KX-1-NEW", "slug:new")]
+
+
+def test_polymarket_outcome_labels_are_the_fallback_for_nickname_only_team_names():
+    from nodes.match_sports.sports_match import _pm_outcome_labels
+    ev = {"markets": [{"slug": "cfb-lcdbfc25-nwst-2026-08-27", "outcomes": '["Louisiana Christian", "Northwestern State"]'},
+                      {"slug": "cfb-lcdbfc25-nwst-2026-08-27-spread", "outcomes": '["Yes", "No"]'}]}
+    assert _pm_outcome_labels(ev, "cfb-lcdbfc25-nwst-2026-08-27") == ["Louisiana Christian", "Northwestern State"]
+    assert _pm_outcome_labels(ev, "cfb-x") == [] and _pm_outcome_labels({"markets": [{"slug": "s", "outcomes": "nope"}]}, "s") == []

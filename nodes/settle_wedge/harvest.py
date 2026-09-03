@@ -55,6 +55,11 @@ def normalise_template(text: str, participants: Sequence[str]) -> str:
         tail = n.split()[-1] if " " in n else ""
         if len(tail) > 3:
             names.add(tail)
+        # ... and by the name without its nickname (Polymarket college football: "Morehead State"
+        # for "Morehead State Eagles"). Short heads ("St.") are left alone.
+        head = n.rsplit(" ", 1)[0] if " " in n else ""
+        if len(head) > 3:
+            names.add(head)
     for name in sorted(names, key=len, reverse=True):
         s = s.replace(name, " ")
     s = _STRIP.sub(" ", s)

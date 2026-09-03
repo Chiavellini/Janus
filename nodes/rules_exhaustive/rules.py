@@ -82,6 +82,13 @@ RULES: dict[tuple[str, str, str], tuple[int, str, str | None]] = {
         "harvested 2026-09-03 and pinned as templates in nodes/settle_wedge/policy.py), so one contract of "
         "each side receives exactly $1.00 in every terminal state. Valid ONLY paired with a venue pair whose "
         "settle_wedge verdict on 'tie' is SAME."),
+    ("cfb", "moneyline", "game"): (
+        2, "cfb_no_tie",
+        "NCAA Football Rules, Rule 3-1-3 (Tiebreaker): when the score is tied at the end of the fourth "
+        "period the tiebreaker procedure is played until a winner is determined; ties were abolished in "
+        "1996. {home, away} is complete. Both venues settle the full game including the tiebreaker "
+        "(Kalshi KXNCAAFGAME: 'official final result'; Polymarket: the winner of the game), harvested "
+        "2026-09-03 and pinned in nodes/settle_wedge/policy.py."),
 }
 
 #: Three-way soccer. IFAB Laws of the Game 2025/26, Law 10.1 (Determining the outcome of a match):

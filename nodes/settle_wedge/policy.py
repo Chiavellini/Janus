@@ -336,12 +336,68 @@ def _soccer_verdicts(code: str) -> tuple[Verdict, ...]:
         Verdict("settlement_timing", "SAME", "payouts agree; timing differs and is the risk ledger's job."),
     )
 
+# ── college football, recorded verbatim from the API on 2026-09-03 ──────────
+KALSHI_CFB_GAME_V1 = Template(
+    "kalshi_cfb_game_v1", "kalshi", frozenset({"cfb"}), "2026-09-03",
+    # KXNCAAFGAME-26SEP05CWUCP-CWU, rules_primary + "\n" + rules_secondary (the NFL 48-hour shape)
+    "If Central Washington Wildcats wins the Central Washington Wildcats vs Cal Poly college football "
+    "game originally scheduled for Sep 5, 2026, then the market resolves to Yes.\nIf the game is postponed"
+    " but begins within 48 hours of its originally scheduled start time, the market will remain open and "
+    "resolve based on the official final result. If the game is cancelled or not started within 48 hours "
+    "of its originally scheduled start, the market will resolve to a fair price.\n\nKalshi is not "
+    "affiliated, associated, authorized, endorsed by, or in any way officially connected with the NCAA. "
+    "All trademarks, logos, and brand names are the property of their respective owners.",
+    ("Central Washington Wildcats", "Cal Poly"),
+    SettleRef(source_agency="NCAA / ESPN", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=True, dnp_policy=VoidPolicy.UNKNOWN,
+              retirement_policy=None, revision_policy="official final result", dispute_mechanism="kalshi",
+              settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
+POLYMARKET_CFB_GAME_V1 = Template(
+    "polymarket_cfb_game_v1", "polymarket", frozenset({"cfb"}), "2026-09-03",
+    # cfb-lcdbfc25-nwst-2026-08-27, market.description (the NFL shape: canceled or tie -> 50-50)
+    "In the upcoming college football game, scheduled for August 27 at 8:00PM ET:\nIf Louisiana Christian "
+    "wins, the market will resolve to \"Louisiana Christian\".\nIf Northwestern State wins, the market will "
+    "resolve to \"Northwestern State\".\nIf the game is postponed, this market will remain open until the "
+    "game has been completed.\nIf the game is canceled entirely or ends in a tie, with no make-up game, "
+    "this market will resolve 50-50.",
+    ("Louisiana Christian", "Northwestern State"),
+    SettleRef(source_agency="NCAA", oracle="uma", void_policy=VoidPolicy.RESOLVE_FIFTY,
+              tie_policy=TiePolicy.RESOLVE_FIFTY, ot_included=True, dnp_policy=VoidPolicy.UNKNOWN,
+              retirement_policy=None, revision_policy=None, dispute_mechanism="uma", settle_lag_h_p50=None,
+              terms_url="https://www.ncaa.com/", provenance="api_field"))
+
+_CFB_K_PM = (
+    Verdict("official_source", "SAME", "both settle on the official final result (Kalshi: the NCAA / ESPN; "
+            "Polymarket: ncaa.com)."),
+    Verdict("winner_determination", "SAME", "the team that wins the game, both venues."),
+    Verdict("overtime", "SAME", "the full game including the NCAA tiebreaker on both venues."),
+    Verdict("tie", "NA", "NCAA Football Rules 3-1-3: the tiebreaker is played until a winner (the exhaustiveness "
+            "citation). Polymarket's 50-50 tie clause cannot fire; Kalshi's text carries no tie clause."),
+    Verdict("postponement", "BOUNDED",
+            "Kalshi stays open only if the game begins within 48 hours of its original start, else resolves to a "
+            "fair price; Polymarket stays open until the game is completed. Bounded on the Polymarket leg.",
+            evidence_key="cfb.postponed_gt48h_rate", loss_model="kalshi_fair_vs_pm_result"),
+    Verdict("cancellation", "BOUNDED",
+            "Kalshi's cancelled-or-not-started-within-48-hours clause resolves to a fair price; Polymarket resolves 50-50.",
+            evidence_key="cfb.cancelled_rate", loss_model="kalshi_fair_vs_pm_half"),
+    Verdict("suspended", "BOUNDED", "a suspended college game resumes or is rescheduled; same shape as postponement.",
+            evidence_key="cfb.postponed_gt48h_rate", loss_model="kalshi_fair_vs_pm_result"),
+    Verdict("abandoned", "SAME", "a college game is not called official before completion; an abandoned game is "
+            "rescheduled or cancelled (above)."),
+    Verdict("player_non_participation", "NA", "team moneyline; no player condition on either venue."),
+    Verdict("retirement", "NA", "not a tennis market."),
+    Verdict("dispute_revision", "SAME", "terminal outcome is the official result on both; mechanisms differ."),
+    Verdict("settlement_timing", "SAME", "payouts agree; timing differs and is the risk ledger's job."),
+)
+
 _SOCCER_KALSHI = {"epl": KALSHI_EPL_GAME_V1, "lal": KALSHI_LAL_GAME_V1, "bun": KALSHI_BUN_GAME_V1,
                   "mls": KALSHI_MLS_GAME_V1, "ucl": KALSHI_UCL_GAME_V1}
 
 TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1,
                                                               KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1,
-                                                              *_SOCCER_PM, *_SOCCER_KALSHI.values())}
+                                                              *_SOCCER_PM, *_SOCCER_KALSHI.values(),
+                                                              KALSHI_CFB_GAME_V1, POLYMARKET_CFB_GAME_V1)}
 
 
 def template_for(template_hash: str) -> Template | None:
@@ -412,6 +468,7 @@ _NFL_K_PM = (
 PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
     ("kalshi_mlb_game_v1", "polymarket_mlb_game_v1"): _MLB_K_PM,
     ("kalshi_nfl_game_v1", "polymarket_nfl_game_v1"): _NFL_K_PM,
+    ("kalshi_cfb_game_v1", "polymarket_cfb_game_v1"): _CFB_K_PM,
     **{(t.template_id, pm.template_id): _soccer_verdicts(code) for code, t in _SOCCER_KALSHI.items() for pm in _SOCCER_PM},
 }
 

@@ -42,7 +42,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Iterable, Mapping, Sequence
 
 from kernel.fetch import Client
-from nodes.entities.leagues import espn_paths
+from nodes.entities.leagues import espn_groups, espn_paths
 
 #: The working host. `site.api.espn.com` is 403 — see module docstring.
 ESPN_BASE = "https://site.web.api.espn.com/apis/site/v2/sports"
@@ -152,12 +152,19 @@ def fetch_range(league: str, start: datetime, end: datetime, *, client: Client |
     cl = client or _client()
     q_from = (start - timedelta(days=1)).strftime("%Y%m%d")
     q_to = (end + timedelta(days=1)).strftime("%Y%m%d")
-    payload = cl.get_json(f"{ESPN_BASE}/{sport}/{lg}/scoreboard",
-                          params={"dates": f"{q_from}-{q_to}", "limit": 1000},
-                          use_cache=use_cache)
     lo, hi = int(start.timestamp()), int(end.timestamp())
-    games = [g for g in parse_scoreboard(payload, league) if lo <= g.start_utc < hi]
-    return sorted(games, key=lambda g: (g.start_utc, g.game_id))
+    games: dict[str, ScheduledGame] = {}
+    # College football is several ESPN "groups" (80 FBS, 81 FCS); the default feed is FBS only.
+    # One call per registered group, de-duplicated on the game id.
+    for group in espn_groups().get(league, (None,)):
+        params = {"dates": f"{q_from}-{q_to}", "limit": 1000}
+        if group:
+            params["groups"] = group
+        payload = cl.get_json(f"{ESPN_BASE}/{sport}/{lg}/scoreboard", params=params, use_cache=use_cache)
+        for g in parse_scoreboard(payload, league):
+            if lo <= g.start_utc < hi:
+                games.setdefault(g.game_id, g)
+    return sorted(games.values(), key=lambda g: (g.start_utc, g.game_id))
 
 
 def fetch_teams(league: str, *, client: Client | None = None,
@@ -170,7 +177,7 @@ def fetch_teams(league: str, *, client: Client | None = None,
     """
     sport, lg = LEAGUE_PATHS[league]
     cl = client or _client()
-    d = cl.get_json(f"{ESPN_BASE}/{sport}/{lg}/teams", params={"limit": 500}, use_cache=use_cache)
+    d = cl.get_json(f"{ESPN_BASE}/{sport}/{lg}/teams", params={"limit": 1000}, use_cache=use_cache)
     return [t["team"] for t in d["sports"][0]["leagues"][0]["teams"]]
 
 

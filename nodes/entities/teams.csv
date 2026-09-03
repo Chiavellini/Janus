@@ -17,6 +17,766 @@ bun:ger.stuttgart,bun,134,VFB,VfB Stuttgart,VfB Stuttgart,VfB Stuttgart
 bun:ger.sv_07_elversberg,bun,10388,ELV,SV Elversberg,SV Elversberg,SV Elversberg
 bun:ger.tsg_hoffenheim,bun,7911,TSG,TSG Hoffenheim,TSG Hoffenheim,TSG Hoffenheim
 bun:ger.werder_bremen,bun,137,SVW,Werder Bremen,Werder Bremen,Werder Bremen
+cfb:abilene-christian-wildcats,cfb,2000,ACU,Abilene Christian,Wildcats,Abilene Christian Wildcats
+cfb:adams-state-grizzlies,cfb,2001,ADSU,Adams State,Grizzlies,Adams State Grizzlies
+cfb:adrian-bulldogs,cfb,2003,ADR,Adrian,Bulldogs,Adrian Bulldogs
+cfb:air-force-falcons,cfb,2005,AF,Air Force,Falcons,Air Force Falcons
+cfb:akron-zips,cfb,2006,AKR,Akron,Zips,Akron Zips
+cfb:alabama-am-bulldogs,cfb,2010,AAMU,Alabama A&M,Bulldogs,Alabama A&M Bulldogs
+cfb:alabama-crimson-tide,cfb,333,ALA,Alabama,Crimson Tide,Alabama Crimson Tide
+cfb:alabama-state-hornets,cfb,2011,ALST,Alabama State,Hornets,Alabama State Hornets
+cfb:albany-state-golden-rams,cfb,2013,ABSU,Albany State,Golden Rams,Albany State Golden Rams
+cfb:albion-britons,cfb,2790,ALBI,Albion,Britons,Albion Britons
+cfb:albright-lions,cfb,2015,ALBR,Albright,Lions,Albright Lions
+cfb:alcorn-state-braves,cfb,2016,ALCN,Alcorn State,Braves,Alcorn State Braves
+cfb:alfred-saxons,cfb,365,ALFR,Alfred,Saxons,Alfred Saxons
+cfb:alfred-state-pioneers,cfb,3162,AFST,Alfred State,Pioneers,Alfred State Pioneers
+cfb:allegheny-gators,cfb,2018,ALLG,Allegheny,Gators,Allegheny Gators
+cfb:allen-yellow-jackets,cfb,2019,ALNU,Allen,Yellow Jackets,Allen Yellow Jackets
+cfb:alma-scots,cfb,2800,ALMA,Alma,Scots,Alma Scots
+cfb:alvernia-golden-wolves,cfb,111674,ALVR,Alvernia,Golden Wolves,Alvernia Golden Wolves
+cfb:american-international-yellow-jackets,cfb,2022,AIC,American International,Yellow Jackets,American International Yellow Jackets
+cfb:amherst-mammoths,cfb,7,AMH,Amherst,Mammoths,Amherst Mammoths
+cfb:anderson-in-ravens,cfb,2023,ANIN,Anderson (IN),Ravens,Anderson (IN) Ravens
+cfb:anderson-sc-trojans,cfb,129469,ANSC,Anderson (SC),Trojans,Anderson (SC) Trojans
+cfb:andrew-fighting-tigers,cfb,134002,AND,Andrew,Fighting Tigers,Andrew Fighting Tigers
+cfb:angelo-state-rams,cfb,2025,AGSU,Angelo State,Rams,Angelo State Rams
+cfb:app-state-mountaineers,cfb,2026,APP,App State,Mountaineers,App State Mountaineers
+cfb:apprentice-school-builders,cfb,3111,APPRE,Apprentice School,Builders,Apprentice School Builders
+cfb:arizona-state-sun-devils,cfb,9,ASU,Arizona State,Sun Devils,Arizona State Sun Devils
+cfb:arizona-wildcats,cfb,12,ARIZ,Arizona,Wildcats,Arizona Wildcats
+cfb:arkansas-baptist-buffaloes,cfb,124386,ARBA,Arkansas Baptist,Buffaloes,Arkansas Baptist Buffaloes
+cfb:arkansas-monticello-boll-weevils,cfb,2028,UAM,Arkansas Monticello,Boll Weevils,Arkansas Monticello Boll Weevils
+cfb:arkansas-pine-bluff-golden-lions,cfb,2029,UAPB,Arkansas-Pine Bluff,Golden Lions,Arkansas-Pine Bluff Golden Lions
+cfb:arkansas-razorbacks,cfb,8,ARK,Arkansas,Razorbacks,Arkansas Razorbacks
+cfb:arkansas-state-red-wolves,cfb,2032,ARST,Arkansas State,Red Wolves,Arkansas State Red Wolves
+cfb:arkansas-tech-wonder-boys,cfb,2033,ARTE,Arkansas Tech,Wonder Boys,Arkansas Tech Wonder Boys
+cfb:army-black-knights,cfb,349,ARMY,Army,Black Knights,Army Black Knights
+cfb:ashland-eagles,cfb,308,ASH,Ashland,Eagles,Ashland Eagles
+cfb:assumption-greyhounds,cfb,2038,ASP,Assumption,Greyhounds,Assumption Greyhounds
+cfb:auburn-tigers,cfb,2,AUB,Auburn,Tigers,Auburn Tigers
+cfb:augsburg-auggies,cfb,124,AUGS,Augsburg,Auggies,Augsburg Auggies
+cfb:augustana-il-vikings,cfb,2042,AUGC,Augustana (IL),Vikings,Augustana (IL) Vikings
+cfb:augustana-sd-vikings,cfb,2043,AUSD,Augustana (SD),Vikings,Augustana (SD) Vikings
+cfb:aurora-spartans,cfb,2044,AUR,Aurora,Spartans,Aurora Spartans
+cfb:austin-peay-governors,cfb,2046,APSU,Austin Peay,Governors,Austin Peay Governors
+cfb:austin-roos,cfb,2045,AUS,Austin,'Roos,Austin 'Roos
+cfb:ave-maria-university-gyrenes,cfb,3178,AVE M,Ave Maria University,Gyrenes,Ave Maria University Gyrenes
+cfb:averett-cougars,cfb,2047,AVER,Averett,Cougars,Averett Cougars
+cfb:avila-university-eagles,cfb,2048,AVILA,Avila University,Eagles,Avila University Eagles
+cfb:azusa-pacific-cougars,cfb,2049,APU,Azusa Pacific,Cougars,Azusa Pacific Cougars
+cfb:baker-university-baker,cfb,488,BAK,Baker University,Baker,Baker University Baker
+cfb:baldwin-wallace-yellow-jackets,cfb,188,BW,Baldwin Wallace,Yellow Jackets,Baldwin Wallace Yellow Jackets
+cfb:ball-state-cardinals,cfb,2050,BALL,Ball State,Cardinals,Ball State Cardinals
+cfb:barton-bulldogs,cfb,122666,BART,Barton,Bulldogs,Barton Bulldogs
+cfb:bates-bobcats,cfb,121,BATE,Bates,Bobcats,Bates Bobcats
+cfb:baylor-bears,cfb,239,BAY,Baylor,Bears,Baylor Bears
+cfb:belhaven-blazers,cfb,2056,BELH,Belhaven,Blazers,Belhaven Blazers
+cfb:beloit-buccaneers,cfb,266,BELO,Beloit,Buccaneers,Beloit Buccaneers
+cfb:bemidji-state-beavers,cfb,132,BST,Bemidji State,Beavers,Bemidji State Beavers
+cfb:benedict-tigers,cfb,490,BEN,Benedict,Tigers,Benedict Tigers
+cfb:benedictine-college-ravens,cfb,16111,BENC,Benedictine College,Ravens,Benedictine College Ravens
+cfb:benedictine-il-eagles,cfb,2283,BNIL,Benedictine (IL),Eagles,Benedictine (IL) Eagles
+cfb:bentley-falcons,cfb,2060,BENT,Bentley,Falcons,Bentley Falcons
+cfb:berry-vikings,cfb,2757,BERR,Berry,Vikings,Berry Vikings
+cfb:bethany-ks,cfb,492,BETHA,Bethany (KS),Bethany (Ks),Bethany (Ks)
+cfb:bethany-wv-bison,cfb,2062,BCWV,Bethany (WV),Bison,Bethany (WV) Bison
+cfb:bethel-mn-royals,cfb,2802,BUMN,Bethel (MN),Royals,Bethel (MN) Royals
+cfb:bethel-university-tennessee-wildcats,cfb,2064,BETHTN,Bethel University Tennessee,Wildcats,Bethel University Tennessee Wildcats
+cfb:bethune-cookman-wildcats,cfb,2065,BCU,Bethune-Cookman,Wildcats,Bethune-Cookman Wildcats
+cfb:black-hills-state-yellow-jackets,cfb,2069,BHSU,Black Hills State,Yellow Jackets,Black Hills State Yellow Jackets
+cfb:bloomsburg-huskies,cfb,2071,BBU,Bloomsburg,Huskies,Bloomsburg Huskies
+cfb:bluefield-ramblin-rams,cfb,495,BLU,BLUEFIELD,Ramblin' Rams,BLUEFIELD Ramblin' Rams
+cfb:bluefield-state-big-blue,cfb,124180,BLUS,Bluefield State,Big Blue,Bluefield State Big Blue
+cfb:bluffton-beavers,cfb,2074,BLF,Bluffton,Beavers,Bluffton Beavers
+cfb:boise-state-broncos,cfb,68,BOIS,Boise State,Broncos,Boise State Broncos
+cfb:boston-college-eagles,cfb,103,BC,Boston College,Eagles,Boston College Eagles
+cfb:bowdoin-polar-bears,cfb,340,BOW,Bowdoin,Polar Bears,Bowdoin Polar Bears
+cfb:bowie-state-bulldogs,cfb,2075,BOWE,Bowie State,Bulldogs,Bowie State Bulldogs
+cfb:bowling-green-falcons,cfb,189,BGSU,Bowling Green,Falcons,Bowling Green Falcons
+cfb:brevard-tornados,cfb,2913,BRE,Brevard,Tornados,Brevard Tornados
+cfb:bridgewater-eagles,cfb,2079,BRI,Bridgewater,Eagles,Bridgewater Eagles
+cfb:bridgewater-state-bears,cfb,18,BRIS,Bridgewater State,Bears,Bridgewater State Bears
+cfb:british-columbia-british-col,cfb,2080,BBM,British Columbia,British Col,British Columbia British Col
+cfb:brockport-golden-eagles,cfb,2781,BRO,Brockport,Golden Eagles,Brockport Golden Eagles
+cfb:brown-bears,cfb,225,BRWN,Brown,Bears,Brown Bears
+cfb:bryant-bulldogs,cfb,2803,BRY,Bryant,Bulldogs,Bryant Bulldogs
+cfb:bucknell-bison,cfb,2083,BUCK,Bucknell,Bison,Bucknell Bison
+cfb:buena-vista-beavers,cfb,63,BVU,Buena Vista,Beavers,Buena Vista Beavers
+cfb:buffalo-bulls,cfb,2084,BUF,Buffalo,Bulls,Buffalo Bulls
+cfb:buffalo-state-bengals,cfb,2085,BSU,Buffalo State,Bengals,Buffalo State Bengals
+cfb:butler-bulldogs,cfb,2086,BTLR,Butler,Bulldogs,Butler Bulldogs
+cfb:byu-cougars,cfb,252,BYU,BYU,Cougars,BYU Cougars
+cfb:cal-lutheran-kingsmen,cfb,2094,CLU,Cal Lutheran,Kingsmen,Cal Lutheran Kingsmen
+cfb:cal-poly-mustangs,cfb,13,CP,Cal Poly,Mustangs,Cal Poly Mustangs
+cfb:california-golden-bears,cfb,25,CAL,California,Golden Bears,California Golden Bears
+cfb:california-pa-vulcans,cfb,2858,CAPA,California (PA),Vulcans,California (PA) Vulcans
+cfb:calvin-knights,cfb,129738,CALU,Calvin,Knights,Calvin Knights
+cfb:campbell-fighting-camels,cfb,2097,CAM,Campbell,Fighting Camels,Campbell Fighting Camels
+cfb:campbellsville-university-tigers,cfb,2098,CMPBVIL,Campbellsville University,Tigers,Campbellsville University Tigers
+cfb:capital-comets,cfb,424,CAPU,Capital,Comets,Capital Comets
+cfb:carleton-knights,cfb,2101,CAR,Carleton,Knights,Carleton Knights
+cfb:carnegie-mellon-tartans,cfb,2102,CGMU,Carnegie Mellon,Tartans,Carnegie Mellon Tartans
+cfb:carroll-wi-pioneers,cfb,32,CRU,Carroll (WI),Pioneers,Carroll (WI) Pioneers
+cfb:carson-newman-eagles,cfb,2105,CN,Carson Newman,Eagles,Carson Newman Eagles
+cfb:carthage-firebirds,cfb,2106,CCW,Carthage,Firebirds,Carthage Firebirds
+cfb:case-western-reserve-spartans,cfb,2963,CWRU,Case Western Reserve,Spartans,Case Western Reserve Spartans
+cfb:catawba-indians,cfb,2107,CAT,Catawba,Indians,Catawba Indians
+cfb:catholic-cardinals,cfb,2108,CATH,Catholic,Cardinals,Catholic Cardinals
+cfb:centenary-la-gentlemen,cfb,101442,CTLA,Centenary (LA),Gentlemen,Centenary (LA) Gentlemen
+cfb:central-arkansas-bears,cfb,2110,CARK,Central Arkansas,Bears,Central Arkansas Bears
+cfb:central-college-dutch,cfb,2964,CNTC,Central College,Dutch,Central College Dutch
+cfb:central-connecticut-blue-devils,cfb,2115,CCSU,Central Connecticut,Blue Devils,Central Connecticut Blue Devils
+cfb:central-methodist-eagles,cfb,2860,CDF,Central Methodist,Eagles,Central Methodist Eagles
+cfb:central-michigan-chippewas,cfb,2117,CMU,Central Michigan,Chippewas,Central Michigan Chippewas
+cfb:central-missouri-mules,cfb,2118,UCM,Central Missouri,Mules,Central Missouri Mules
+cfb:central-oklahoma-bronchos,cfb,2122,UCO,Central Oklahoma,Bronchos,Central Oklahoma Bronchos
+cfb:central-state-marauders,cfb,2119,CNSU,Central State,Marauders,Central State Marauders
+cfb:central-washington-wildcats,cfb,2120,CWAU,Central Washington,Wildcats,Central Washington Wildcats
+cfb:centre-colonels,cfb,2121,CCO,Centre,Colonels,Centre Colonels
+cfb:chadron-state-eagles,cfb,2123,CHAD,Chadron State,Eagles,Chadron State Eagles
+cfb:chapman-panthers,cfb,411,CHAP,Chapman,Panthers,Chapman Panthers
+cfb:charleston-southern-buccaneers,cfb,2127,CHSO,Charleston Southern,Buccaneers,Charleston Southern Buccaneers
+cfb:charleston-wv-golden-eagles,cfb,2128,UCWV,Charleston (WV),Golden Eagles,Charleston (WV) Golden Eagles
+cfb:charlotte-49ers,cfb,2429,CLT,Charlotte,49ers,Charlotte 49ers
+cfb:charlotte-saints,cfb,3253,COLLE,Charlotte,Saints,Charlotte Saints
+cfb:chattanooga-mocs,cfb,236,UTC,Chattanooga,Mocs,Chattanooga Mocs
+cfb:chicago-maroons,cfb,80,CHI,Chicago,Maroons,Chicago Maroons
+cfb:chowan-hawks,cfb,2804,CWAN,Chowan,Hawks,Chowan Hawks
+cfb:christopher-newport-captains,cfb,3112,CNU,Christopher Newport,Captains,Christopher Newport Captains
+cfb:cincinnati-bearcats,cfb,2132,CIN,Cincinnati,Bearcats,Cincinnati Bearcats
+cfb:claremont-mudd-scripps-stags,cfb,17,CMS,Claremont Mudd Scripps,Stags,Claremont Mudd Scripps Stags
+cfb:clarion-golden-eagles,cfb,2134,CLRN,Clarion,Golden Eagles,Clarion Golden Eagles
+cfb:clark-atlanta-panthers,cfb,2805,CKGA,Clark Atlanta,Panthers,Clark Atlanta Panthers
+cfb:clemson-tigers,cfb,228,CLEM,Clemson,Tigers,Clemson Tigers
+cfb:coast-guard-bears,cfb,2557,USCG,Coast Guard,Bears,Coast Guard Bears
+cfb:coastal-carolina-chanticleers,cfb,324,CCU,Coastal Carolina,Chanticleers,Coastal Carolina Chanticleers
+cfb:coe-kohawks,cfb,2141,COE,Coe,Kohawks,Coe Kohawks
+cfb:colby-white-mules,cfb,33,CLBY,Colby,White Mules,Colby White Mules
+cfb:cole-college-jaguars,cfb,3210,COLE,Cole College,Jaguars,Cole College Jaguars
+cfb:colgate-raiders,cfb,2142,COLG,Colgate,Raiders,Colgate Raiders
+cfb:college-of-idaho-yotes,cfb,108382,COI,College of Idaho,Yotes,College of Idaho Yotes
+cfb:colorado-buffaloes,cfb,38,COLO,Colorado,Buffaloes,Colorado Buffaloes
+cfb:colorado-mesa-mavericks,cfb,11,COMU,Colorado Mesa,Mavericks,Colorado Mesa Mavericks
+cfb:colorado-school-of-mines-orediggers,cfb,2146,CMIN,Colorado School of Mines,Orediggers,Colorado School of Mines Orediggers
+cfb:colorado-state-rams,cfb,36,CSU,Colorado State,Rams,Colorado State Rams
+cfb:columbia-lions,cfb,171,COLU,Columbia,Lions,Columbia Lions
+cfb:concord-mountain-lions,cfb,2148,CONC,Concord,Mountain Lions,Concord Mountain Lions
+cfb:concordia-chicago-cougars,cfb,2151,CUC,Concordia Chicago,Cougars,Concordia Chicago Cougars
+cfb:concordia-michigan-cardinals,cfb,2985,CONCMI,Concordia-Michigan,Cardinals,Concordia-Michigan Cardinals
+cfb:concordia-mn-cobbers,cfb,2152,CCMN,Concordia (MN),Cobbers,Concordia (MN) Cobbers
+cfb:concordia-st-paul-golden-bears,cfb,3066,CSP,Concordia St. Paul,Golden Bears,Concordia St. Paul Golden Bears
+cfb:concordia-university-nebraska-clippers,cfb,507,CONCONE,Concordia University Nebraska,Clippers,Concordia University Nebraska Clippers
+cfb:concordia-wi-falcons,cfb,409,CUW,Concordia (WI),Falcons,Concordia (WI) Falcons
+cfb:cornell-big-red,cfb,172,COR,Cornell,Big Red,Cornell Big Red
+cfb:cornell-ia-rams,cfb,2155,CNIA,Cornell (IA),Rams,Cornell (IA) Rams
+cfb:crown-polars,cfb,509,CRWN,Crown,Polars,Crown Polars
+cfb:csu-pueblo-thunderwolves,cfb,2570,CSUP,CSU Pueblo,ThunderWolves,CSU Pueblo ThunderWolves
+cfb:culver-stockton-college-wildcats,cfb,510,CULVE,Culver-Stockton College,Wildcats,Culver-Stockton College Wildcats
+cfb:cumberland-tn-bulldogs,cfb,2161,CUMBTN,Cumberland (TN),Bulldogs,Cumberland (TN) Bulldogs
+cfb:cumberlands-indians,cfb,511,CMBS,Cumberlands,Indians,Cumberlands Indians
+cfb:curry-colonels,cfb,40,CC,Curry,Colonels,Curry Colonels
+cfb:dakota-state-university-trojans,cfb,512,DAKOT,Dakota State University,Trojans,Dakota State University Trojans
+cfb:dakota-wesleyan-tigers,cfb,513,DWU,Dakota Wesleyan,Tigers,Dakota Wesleyan Tigers
+cfb:dartmouth-big-green,cfb,159,DART,Dartmouth,Big Green,Dartmouth Big Green
+cfb:davidson-wildcats,cfb,2166,DAV,Davidson,Wildcats,Davidson Wildcats
+cfb:dayton-flyers,cfb,2168,DAY,Dayton,Flyers,Dayton Flyers
+cfb:dean-bulldogs,cfb,110438,DEAN,Dean,Bulldogs,Dean Bulldogs
+cfb:defiance-college-yellow-jackets,cfb,190,DEF,Defiance College,Yellow Jackets,Defiance College Yellow Jackets
+cfb:delaware-blue-hens,cfb,48,DEL,Delaware,Blue Hens,Delaware Blue Hens
+cfb:delaware-state-hornets,cfb,2169,DSU,Delaware State,Hornets,Delaware State Hornets
+cfb:delaware-valley-aggies,cfb,2808,DVU,Delaware Valley,Aggies,Delaware Valley Aggies
+cfb:delta-state-statesmen,cfb,2170,DLST,Delta State,Statesmen,Delta State Statesmen
+cfb:denison-big-red,cfb,2171,DSN,Denison,Big Red,Denison Big Red
+cfb:depauw-tigers,cfb,83,DPU,DePauw,Tigers,DePauw Tigers
+cfb:des-moines-vikings,cfb,2254,GRANDVIEW,Des Moines,Vikings,Des Moines Vikings
+cfb:dickinson-red-devils,cfb,2175,DKSN,Dickinson,Red Devils,Dickinson Red Devils
+cfb:dickinson-state-university-blue-hawks,cfb,316,DIC,Dickinson State University,Blue Hawks,Dickinson State University Blue Hawks
+cfb:drake-bulldogs,cfb,2181,DRKE,Drake,Bulldogs,Drake Bulldogs
+cfb:dubuque-spartans,cfb,49,DBQ,Dubuque,Spartans,Dubuque Spartans
+cfb:duke-blue-devils,cfb,150,DUKE,Duke,Blue Devils,Duke Blue Devils
+cfb:duquesne-dukes,cfb,2184,DUQ,Duquesne,Dukes,Duquesne Dukes
+cfb:east-carolina-pirates,cfb,151,ECU,East Carolina,Pirates,East Carolina Pirates
+cfb:east-central-tigers,cfb,2191,ECNU,East Central,Tigers,East Central Tigers
+cfb:east-stroudsburg-warriors,cfb,2188,ESU,East Stroudsburg,Warriors,East Stroudsburg Warriors
+cfb:east-tennessee-state-buccaneers,cfb,2193,ETSU,East Tennessee State,Buccaneers,East Tennessee State Buccaneers
+cfb:east-texas-am-lions,cfb,2837,ETAM,East Texas A&M,Lions,East Texas A&M Lions
+cfb:east-texas-baptist-tigers,cfb,2194,ETBU,East Texas Baptist,Tigers,East Texas Baptist Tigers
+cfb:eastern-eagles,cfb,127954,EU,Eastern,Eagles,Eastern Eagles
+cfb:eastern-illinois-panthers,cfb,2197,EIU,Eastern Illinois,Panthers,Eastern Illinois Panthers
+cfb:eastern-kentucky-colonels,cfb,2198,EKU,Eastern Kentucky,Colonels,Eastern Kentucky Colonels
+cfb:eastern-michigan-eagles,cfb,2199,EMU,Eastern Michigan,Eagles,Eastern Michigan Eagles
+cfb:eastern-new-mexico-greyhounds,cfb,2201,ENMU,Eastern New Mexico,Greyhounds,Eastern New Mexico Greyhounds
+cfb:eastern-oregon,cfb,2202,EORE,Eastern Oregon,Eastern Oregon,Eastern Oregon
+cfb:eastern-washington-eagles,cfb,331,EWU,Eastern Washington,Eagles,Eastern Washington Eagles
+cfb:edinboro-fighting-scots,cfb,2205,EDBR,Edinboro,Fighting Scots,Edinboro Fighting Scots
+cfb:edward-waters-tigers,cfb,2206,EDW,Edward Waters,Tigers,Edward Waters Tigers
+cfb:elgin-eagles,cfb,122775,JUDSO,Elgin,Eagles,Elgin Eagles
+cfb:elizabeth-city-state-vikings,cfb,2207,ECSU,Elizabeth City State,Vikings,Elizabeth City State Vikings
+cfb:elmhurst-bluejays,cfb,72,ELMH,Elmhurst,Bluejays,Elmhurst Bluejays
+cfb:elon-phoenix,cfb,2210,ELON,Elon,Phoenix,Elon Phoenix
+cfb:emory-henry-wasps,cfb,2213,EHC,Emory & Henry,Wasps,Emory & Henry Wasps
+cfb:emporia-state-hornets,cfb,2214,EMSU,Emporia State,Hornets,Emporia State Hornets
+cfb:endicott-gulls,cfb,452,ENDC,Endicott,Gulls,Endicott Gulls
+cfb:erskine-flying-fleet,cfb,101784,ERSK,Erskine,Flying Fleet,Erskine Flying Fleet
+cfb:eureka-red-devils,cfb,101,ERKA,Eureka,Red Devils,Eureka Red Devils
+cfb:evangel-university-crusaders,cfb,2865,EVA,Evangel University,Crusaders,Evangel University Crusaders
+cfb:fairmont-state-falcons,cfb,2986,FMSU,Fairmont State,Falcons,Fairmont State Falcons
+cfb:faulkner-university-eagles,cfb,2219,FAULKNER,Faulkner University,Eagles,Faulkner University Eagles
+cfb:fayetteville-state-broncos,cfb,2220,FAYU,Fayetteville State,Broncos,Fayetteville State Broncos
+cfb:fdu-florham-devils,cfb,2221,FDUF,FDU Florham,Devils,FDU Florham Devils
+cfb:ferris-state-bulldogs,cfb,2222,FRST,Ferris State,Bulldogs,Ferris State Bulldogs
+cfb:ferrum-panthers,cfb,366,FC,Ferrum,Panthers,Ferrum Panthers
+cfb:findlay-oilers,cfb,2224,UF,Findlay,Oilers,Findlay Oilers
+cfb:fitchburg-state-falcons,cfb,114,FBSU,Fitchburg State,Falcons,Fitchburg State Falcons
+cfb:florida-am-rattlers,cfb,50,FAMU,Florida A&M,Rattlers,Florida A&M Rattlers
+cfb:florida-atlantic-owls,cfb,2226,FAU,Florida Atlantic,Owls,Florida Atlantic Owls
+cfb:florida-gators,cfb,57,FLA,Florida,Gators,Florida Gators
+cfb:florida-international-panthers,cfb,2229,FIU,Florida International,Panthers,Florida International Panthers
+cfb:florida-memorial-university-lions,cfb,125762,FLAMEMRL,Florida Memorial University,Lions,Florida Memorial University Lions
+cfb:florida-state-seminoles,cfb,52,FSU,Florida State,Seminoles,Florida State Seminoles
+cfb:fordham-rams,cfb,2230,FOR,Fordham,Rams,Fordham Rams
+cfb:fort-hays-tigers,cfb,2231,FHSU,Fort Hays,Tigers,Fort Hays Tigers
+cfb:fort-lewis-skyhawks,cfb,2237,FLWC,Fort Lewis,Skyhawks,Fort Lewis Skyhawks
+cfb:fort-valley-state-wildcats,cfb,2232,FVSU,Fort Valley State,Wildcats,Fort Valley State Wildcats
+cfb:framingham-state-rams,cfb,2967,FRSU,Framingham State,Rams,Framingham State Rams
+cfb:franklin-grizzlies,cfb,2233,FRKL,Franklin,Grizzlies,Franklin Grizzlies
+cfb:franklin-marshall-diplomats,cfb,2234,FMC,Franklin & Marshall,Diplomats,Franklin & Marshall Diplomats
+cfb:franklin-pierce-ravens,cfb,112334,FP,Franklin Pierce,Ravens,Franklin Pierce Ravens
+cfb:fresno-state-bulldogs,cfb,278,FRES,Fresno State,Bulldogs,Fresno State Bulldogs
+cfb:friends-university-friends,cfb,527,FRIE,Friends University,Friends,Friends University Friends
+cfb:frostburg-state-bobcats,cfb,341,FSTU,Frostburg State,Bobcats,Frostburg State Bobcats
+cfb:furman-paladins,cfb,231,FUR,Furman,Paladins,Furman Paladins
+cfb:gallaudet-bison,cfb,417,GLDT,Gallaudet,Bison,Gallaudet Bison
+cfb:gannon-golden-knights,cfb,367,GANN,Gannon,Golden Knights,Gannon Golden Knights
+cfb:gardner-webb-runnin-bulldogs,cfb,2241,GWEB,Gardner-Webb,Runnin' Bulldogs,Gardner-Webb Runnin' Bulldogs
+cfb:geneva-golden-tornadoes,cfb,2242,GEN,Geneva,Golden Tornadoes,Geneva Golden Tornadoes
+cfb:george-fox-bruins,cfb,415,GFU,George Fox,Bruins,George Fox Bruins
+cfb:george-mason-university-patriots,cfb,2244,GMU,George Mason University,Patriots,George Mason University Patriots
+cfb:georgetown-hoyas,cfb,46,GTWN,Georgetown,Hoyas,Georgetown Hoyas
+cfb:georgetown-ky-tigers,cfb,2245,GTKY,Georgetown (KY),Tigers,Georgetown (KY) Tigers
+cfb:georgia-bulldogs,cfb,61,UGA,Georgia,Bulldogs,Georgia Bulldogs
+cfb:georgia-southern-eagles,cfb,290,GASO,Georgia Southern,Eagles,Georgia Southern Eagles
+cfb:georgia-state-panthers,cfb,2247,GAST,Georgia State,Panthers,Georgia State Panthers
+cfb:georgia-tech-yellow-jackets,cfb,59,GT,Georgia Tech,Yellow Jackets,Georgia Tech Yellow Jackets
+cfb:gettysburg-bullets,cfb,2248,GTYB,Gettysburg,Bullets,Gettysburg Bullets
+cfb:glenville-state-pioneers,cfb,2249,GVLS,Glenville State,Pioneers,Glenville State Pioneers
+cfb:graceland-university-graceland,cfb,530,GRC,Graceland University,Graceland,Graceland University Graceland
+cfb:grambling-tigers,cfb,2755,GRAM,Grambling,Tigers,Grambling Tigers
+cfb:grand-valley-state-lakers,cfb,125,GVSU,Grand Valley State,Lakers,Grand Valley State Lakers
+cfb:greensboro-pride,cfb,2256,GRNB,Greensboro,Pride,Greensboro Pride
+cfb:greenville-panthers,cfb,2257,GRNV,Greenville,Panthers,Greenville Panthers
+cfb:grinnell-pioneers,cfb,65,GRNL,Grinnell,Pioneers,Grinnell Pioneers
+cfb:grove-city-wolverines,cfb,146,GRO,Grove City,Wolverines,Grove City Wolverines
+cfb:guilford-quakers,cfb,2258,GLFD,Guilford,Quakers,Guilford Quakers
+cfb:gustavus-adolphus-golden-gusties,cfb,2968,GAC,Gustavus Adolphus,Golden Gusties,Gustavus Adolphus Golden Gusties
+cfb:hamilton-continentals,cfb,348,HAM,Hamilton,Continentals,Hamilton Continentals
+cfb:hamline-pipers,cfb,162,HMLN,Hamline,Pipers,Hamline Pipers
+cfb:hampden-sydney-tigers,cfb,297,HSC,Hampden Sydney,Tigers,Hampden Sydney Tigers
+cfb:hampton-pirates,cfb,2261,HAMP,Hampton,Pirates,Hampton Pirates
+cfb:hanover-panthers,cfb,2262,HNVR,Hanover,Panthers,Hanover Panthers
+cfb:hardin-simmons-cowboys,cfb,2810,HSU,Hardin Simmons,Cowboys,Hardin Simmons Cowboys
+cfb:harding-bisons,cfb,2264,HARD,Harding,Bisons,Harding Bisons
+cfb:hartwick-hawks,cfb,173,HRTW,Hartwick,Hawks,Hartwick Hawks
+cfb:harvard-crimson,cfb,108,HARV,Harvard,Crimson,Harvard Crimson
+cfb:haskell-indian-nations-univ-jayhawks,cfb,535,HASKELL,Haskell Indian Nations Univ,Jayhawks,Haskell Indian Nations Univ Jayhawks
+cfb:hawaii-rainbow-warriors,cfb,62,HAW,Hawai'i,Rainbow Warriors,Hawai'i Rainbow Warriors
+cfb:heidelberg-student-princes,cfb,191,HDBG,Heidelberg,Student Princes,Heidelberg Student Princes
+cfb:henderson-state-reddies,cfb,2271,HSTU,Henderson State,Reddies,Henderson State Reddies
+cfb:hendrix-warriors,cfb,418,HDX,Hendrix,Warriors,Hendrix Warriors
+cfb:hilbert-hawks,cfb,125974,HLBT,Hilbert,Hawks,Hilbert Hawks
+cfb:hillsdale-chargers,cfb,2273,HLDL,Hillsdale,Chargers,Hillsdale Chargers
+cfb:hiram-terriers,cfb,2274,HIRM,Hiram,Terriers,Hiram Terriers
+cfb:hobart-statesmen,cfb,174,HBRT,Hobart,Statesmen,Hobart Statesmen
+cfb:holland-college-hurricanes,cfb,108354,HOL,Holland College,Hurricanes,Holland College Hurricanes
+cfb:holy-cross-crusaders,cfb,107,HC,Holy Cross,Crusaders,Holy Cross Crusaders
+cfb:hope-flying-dutchmen,cfb,2812,HOPE,Hope,Flying Dutchmen,Hope Flying Dutchmen
+cfb:houston-christian-huskies,cfb,2277,HCU,Houston Christian,Huskies,Houston Christian Huskies
+cfb:houston-cougars,cfb,248,HOU,Houston,Cougars,Houston Cougars
+cfb:howard-bison,cfb,47,HOW,Howard,Bison,Howard Bison
+cfb:howard-payne-yellow-jackets,cfb,2758,HWPU,Howard Payne,Yellow Jackets,Howard Payne Yellow Jackets
+cfb:huntingdon-hawks,cfb,2938,HNTC,Huntingdon,Hawks,Huntingdon Hawks
+cfb:husson-eagles,cfb,2280,HUSS,Husson,Eagles,Husson Eagles
+cfb:idaho-state-bengals,cfb,304,IDST,Idaho State,Bengals,Idaho State Bengals
+cfb:idaho-vandals,cfb,70,IDHO,Idaho,Vandals,Idaho Vandals
+cfb:illinois-college-blueboys,cfb,2286,ILLC,Illinois College,Blueboys,Illinois College Blueboys
+cfb:illinois-fighting-illini,cfb,356,ILL,Illinois,Fighting Illini,Illinois Fighting Illini
+cfb:illinois-state-redbirds,cfb,2287,ILST,Illinois State,Redbirds,Illinois State Redbirds
+cfb:illinois-wesleyan-titans,cfb,306,ILWU,Illinois Wesleyan,Titans,Illinois Wesleyan Titans
+cfb:incarnate-word-cardinals,cfb,2916,UIW,Incarnate Word,Cardinals,Incarnate Word Cardinals
+cfb:indiana-hoosiers,cfb,84,IU,Indiana,Hoosiers,Indiana Hoosiers
+cfb:indiana-state-sycamores,cfb,282,INST,Indiana State,Sycamores,Indiana State Sycamores
+cfb:indiana-wesleyan-wildcats,cfb,111756,INWESL,Indiana Wesleyan,Wildcats,Indiana Wesleyan Wildcats
+cfb:indianapolis-greyhounds,cfb,2292,INDY,Indianapolis,Greyhounds,Indianapolis Greyhounds
+cfb:iowa-hawkeyes,cfb,2294,IOWA,Iowa,Hawkeyes,Iowa Hawkeyes
+cfb:iowa-state-cyclones,cfb,66,ISU,Iowa State,Cyclones,Iowa State Cyclones
+cfb:ithaca-bombers,cfb,175,ITH,Ithaca,Bombers,Ithaca Bombers
+cfb:iu-pennsylvania-crimson-hawks,cfb,2291,IUP,IU Pennsylvania,Crimson Hawks,IU Pennsylvania Crimson Hawks
+cfb:jackson-state-tigers,cfb,2296,JKST,Jackson State,Tigers,Jackson State Tigers
+cfb:jacksonville-state-gamecocks,cfb,55,JXST,Jacksonville State,Gamecocks,Jacksonville State Gamecocks
+cfb:james-madison-dukes,cfb,256,JMU,James Madison,Dukes,James Madison Dukes
+cfb:jamestown-jimmies,cfb,2939,UJ,Jamestown,Jimmies,Jamestown Jimmies
+cfb:john-carroll-blue-streaks,cfb,2302,JCU,John Carroll,Blue Streaks,John Carroll Blue Streaks
+cfb:johns-hopkins-blue-jays,cfb,118,JHU,Johns Hopkins,Blue Jays,Johns Hopkins Blue Jays
+cfb:johnson-c-smith-golden-bulls,cfb,2304,JCSU,Johnson C. Smith,Golden Bulls,Johnson C. Smith Golden Bulls
+cfb:juniata-eagles,cfb,246,JUN,Juniata,Eagles,Juniata Eagles
+cfb:kalamazoo-hornets,cfb,126,KALC,Kalamazoo,Hornets,Kalamazoo Hornets
+cfb:kansas-jayhawks,cfb,2305,KU,Kansas,Jayhawks,Kansas Jayhawks
+cfb:kansas-state-wildcats,cfb,2306,KSU,Kansas State,Wildcats,Kansas State Wildcats
+cfb:kansas-wesleyan-ks-wesleyan,cfb,547,KANSA,Kansas Wesleyan,Ks Wesleyan,Kansas Wesleyan Ks Wesleyan
+cfb:kean-cougars,cfb,2871,KEAN,Kean,Cougars,Kean Cougars
+cfb:keiser-university-keiser,cfb,126110,KEISER,Keiser University,Keiser,Keiser University Keiser
+cfb:kennesaw-state-owls,cfb,338,KENN,Kennesaw State,Owls,Kennesaw State Owls
+cfb:kent-state-golden-flashes,cfb,2309,KENT,Kent State,Golden Flashes,Kent State Golden Flashes
+cfb:kentucky-christian-knights,cfb,3077,KYCHR,Kentucky Christian,Knights,Kentucky Christian Knights
+cfb:kentucky-state-thorobreds,cfb,2310,KYSU,Kentucky State,Thorobreds,Kentucky State Thorobreds
+cfb:kentucky-wesleyan-panthers,cfb,2316,KWC,Kentucky Wesleyan,Panthers,Kentucky Wesleyan Panthers
+cfb:kentucky-wildcats,cfb,96,UK,Kentucky,Wildcats,Kentucky Wildcats
+cfb:kenyon-owls,cfb,352,KNY,Kenyon,Owls,Kenyon Owls
+cfb:keystone-giants,cfb,122774,KYSN,Keystone,Giants,Keystone Giants
+cfb:kings-monarchs,cfb,247,KNGS,King's,Monarchs,King's Monarchs
+cfb:knox-prairie-fire,cfb,255,KNOX,Knox,Prairie Fire,Knox Prairie Fire
+cfb:kutztown-golden-bears,cfb,2315,KUTZ,Kutztown,Golden Bears,Kutztown Golden Bears
+cfb:la-verne-leopards,cfb,2318,ULV,La Verne,Leopards,La Verne Leopards
+cfb:lafayette-leopards,cfb,322,LAF,Lafayette,Leopards,Lafayette Leopards
+cfb:lagrange-panthers,cfb,548,LGC,LaGrange,Panthers,LaGrange Panthers
+cfb:lake-erie-storm,cfb,437,LKER,Lake Erie,Storm,Lake Erie Storm
+cfb:lake-forest-foresters,cfb,262,LFC,Lake Forest,Foresters,Lake Forest Foresters
+cfb:lakeland-muskies,cfb,6353,LKLD,Lakeland,Muskies,Lakeland Muskies
+cfb:lamar-cardinals,cfb,2320,LAM,Lamar,Cardinals,Lamar Cardinals
+cfb:lane-college-dragons,cfb,2323,LANE,Lane College,Dragons,Lane College Dragons
+cfb:langston-lions,cfb,2324,LNGT,Langston,Lions,Langston Lions
+cfb:lawrence-vikings,cfb,268,LAW,Lawrence,Vikings,Lawrence Vikings
+cfb:lebanon-valley-flying-dutchmen,cfb,388,LVC,Lebanon Valley,Flying Dutchmen,Lebanon Valley Flying Dutchmen
+cfb:lehigh-mountain-hawks,cfb,2329,LEH,Lehigh,Mountain Hawks,Lehigh Mountain Hawks
+cfb:lenoir-rhyne-bears,cfb,2331,LENR,Lenoir Rhyne,Bears,Lenoir Rhyne Bears
+cfb:lewis-clark-river-otters,cfb,2333,LC,Lewis & Clark,River Otters,Lewis & Clark River Otters
+cfb:liberty-flames,cfb,2335,LIB,Liberty,Flames,Liberty Flames
+cfb:lincoln-ca-oaklanders,cfb,124179,LNCA,Lincoln (CA),Oaklanders,Lincoln (CA) Oaklanders
+cfb:lincoln-mo-blue-tigers,cfb,2876,LNMO,Lincoln (MO),Blue Tigers,Lincoln (MO) Blue Tigers
+cfb:lincoln-pa-lions,cfb,2339,LNPA,Lincoln (PA),Lions,Lincoln (PA) Lions
+cfb:lindenwood-belleville-lynx,cfb,3209,LINB,Lindenwood Belleville,Lynx,Lindenwood Belleville Lynx
+cfb:lindenwood-lions,cfb,2815,LIN,Lindenwood,Lions,Lindenwood Lions
+cfb:lindsey-wilson-lindsey,cfb,2877,LWU,Lindsey Wilson,LINDSEY,Lindsey Wilson LINDSEY
+cfb:linfield-wildcats,cfb,203,LINF,Linfield,Wildcats,Linfield Wildcats
+cfb:livingstone-blue-bears,cfb,2940,LIV,Livingstone,Blue Bears,Livingstone Blue Bears
+cfb:lock-haven-bald-eagles,cfb,209,LHU,Lock Haven,Bald Eagles,Lock Haven Bald Eagles
+cfb:long-island-university-sharks,cfb,2341,LIU,Long Island University,Sharks,Long Island University Sharks
+cfb:loras-duhawks,cfb,263,LOR,Loras,Duhawks,Loras Duhawks
+cfb:louisiana-christian-wildcats,cfb,2347,LCHR,Louisiana Christian,Wildcats,Louisiana Christian Wildcats
+cfb:louisiana-ragin-cajuns,cfb,309,UL,Louisiana,Ragin' Cajuns,Louisiana Ragin' Cajuns
+cfb:louisiana-tech-bulldogs,cfb,2348,LT,Louisiana Tech,Bulldogs,Louisiana Tech Bulldogs
+cfb:louisville-cardinals,cfb,97,LOU,Louisville,Cardinals,Louisville Cardinals
+cfb:lsu-tigers,cfb,99,LSU,LSU,Tigers,LSU Tigers
+cfb:luther-norse,cfb,67,LUTH,Luther,Norse,Luther Norse
+cfb:lycoming-warriors,cfb,2354,LYCO,Lycoming,Warriors,Lycoming Warriors
+cfb:lyon-scots,cfb,101161,LYON,Lyon,Scots,Lyon Scots
+cfb:macalester-scots,cfb,2359,MAC,Macalester,Scots,Macalester Scots
+cfb:madonna,cfb,126146,MDNN,Madonna,MADONNA,MADONNA
+cfb:maine-black-bears,cfb,311,ME,Maine,Black Bears,Maine Black Bears
+cfb:maine-maritime-mariners,cfb,274,UMMA,Maine Maritime,Mariners,Maine Maritime Mariners
+cfb:manchester-spartans,cfb,2362,MNCH,Manchester,Spartans,Manchester Spartans
+cfb:manitoba,cfb,2770,MB,Manitoba,MANITOBA,MANITOBA
+cfb:mansfield-mountaineers,cfb,2365,MNFD,Mansfield,Mountaineers,Mansfield Mountaineers
+cfb:marian-in-marian,cfb,2366,MUIN,Marian (IN),MARIAN,Marian (IN) MARIAN
+cfb:marietta-pioneers,cfb,317,MRTT,Marietta,Pioneers,Marietta Pioneers
+cfb:marist-red-foxes,cfb,2368,MRST,Marist,Red Foxes,Marist Red Foxes
+cfb:mars-hill-lions,cfb,2369,MHU,Mars Hill,Lions,Mars Hill Lions
+cfb:marshall-thundering-herd,cfb,276,MRSH,Marshall,Thundering Herd,Marshall Thundering Herd
+cfb:martin-luther-knights,cfb,446,MLC,Martin Luther,Knights,Martin Luther Knights
+cfb:mary-hardin-baylor-crusaders,cfb,2371,MHB,Mary Hardin Baylor,Crusaders,Mary Hardin Baylor Crusaders
+cfb:maryland-terrapins,cfb,120,MD,Maryland,Terrapins,Maryland Terrapins
+cfb:maryville-tn-scots,cfb,2373,MCTN,Maryville (TN),Scots,Maryville (TN) Scots
+cfb:mass-maritime-buccaneers,cfb,110,MMT,Mass Maritime,Buccaneers,Mass Maritime Buccaneers
+cfb:massachusetts-minutemen,cfb,113,MASS,Massachusetts,Minutemen,Massachusetts Minutemen
+cfb:mayville-state-comets,cfb,561,MYSU,Mayville State,Comets,Mayville State Comets
+cfb:mcdaniel-green-terror,cfb,2700,MCD,McDaniel,Green Terror,McDaniel Green Terror
+cfb:mckendree-bearcats,cfb,2816,MCK,McKendree,Bearcats,McKendree Bearcats
+cfb:mcmurry-war-hawks,cfb,241,MCM,McMurry,War Hawks,McMurry War Hawks
+cfb:mcneese-cowboys,cfb,2377,MCN,McNeese,Cowboys,McNeese Cowboys
+cfb:memphis-tigers,cfb,235,MEM,Memphis,Tigers,Memphis Tigers
+cfb:mercer-bears,cfb,2382,MER,Mercer,Bears,Mercer Bears
+cfb:merchant-marine-mariners,cfb,2383,MMA,Merchant Marine,Mariners,Merchant Marine Mariners
+cfb:mercyhurst-lakers,cfb,2385,MERC,Mercyhurst,Lakers,Mercyhurst Lakers
+cfb:merrimack-warriors,cfb,2771,MRMK,Merrimack,Warriors,Merrimack Warriors
+cfb:methodist-monarchs,cfb,291,MU,Methodist,Monarchs,Methodist Monarchs
+cfb:miami-hurricanes,cfb,2390,MIA,Miami,Hurricanes,Miami Hurricanes
+cfb:miami-oh-redhawks,cfb,193,M-OH,Miami (OH),RedHawks,Miami (OH) RedHawks
+cfb:michigan-state-spartans,cfb,127,MSU,Michigan State,Spartans,Michigan State Spartans
+cfb:michigan-tech-huskies,cfb,2392,MTU,Michigan Tech,Huskies,Michigan Tech Huskies
+cfb:michigan-wolverines,cfb,130,MICH,Michigan,Wolverines,Michigan Wolverines
+cfb:middle-tennessee-blue-raiders,cfb,2393,MTSU,Middle Tennessee,Blue Raiders,Middle Tennessee Blue Raiders
+cfb:middlebury-panthers,cfb,2394,MIDB,Middlebury,Panthers,Middlebury Panthers
+cfb:midland-midland-lutheran,cfb,565,MIDL,Midland,MIDLAND LUTHERAN,Midland MIDLAND LUTHERAN
+cfb:midwestern-state-mustangs,cfb,2395,MWSU,Midwestern State,Mustangs,Midwestern State Mustangs
+cfb:miles-golden-bears,cfb,2396,MILE,Miles,Golden Bears,Miles Golden Bears
+cfb:millersville-marauders,cfb,210,MILL,Millersville,Marauders,Millersville Marauders
+cfb:millikin-big-blue,cfb,74,MILK,Millikin,Big Blue,Millikin Big Blue
+cfb:millsaps-majors,cfb,2398,MLSP,Millsaps,Majors,Millsaps Majors
+cfb:minnesota-duluth-bulldogs,cfb,134,UMD,Minnesota Duluth,Bulldogs,Minnesota Duluth Bulldogs
+cfb:minnesota-golden-gophers,cfb,135,MINN,Minnesota,Golden Gophers,Minnesota Golden Gophers
+cfb:minnesota-morris-cougars,cfb,2399,MNMO,Minnesota Morris,Cougars,Minnesota Morris Cougars
+cfb:minnesota-st-moorhead-dragons,cfb,2817,MSUM,Minnesota St Moorhead,Dragons,Minnesota St Moorhead Dragons
+cfb:minnesota-state-mavericks,cfb,2364,MNST,Minnesota State,Mavericks,Minnesota State Mavericks
+cfb:minot-state-beavers,cfb,568,MINS,Minot State,Beavers,Minot State Beavers
+cfb:misericordia-cougars,cfb,2969,MISE,Misericordia,Cougars,Misericordia Cougars
+cfb:mississippi-state-bulldogs,cfb,344,MSST,Mississippi State,Bulldogs,Mississippi State Bulldogs
+cfb:mississippi-valley-state-delta-devils,cfb,2400,MVSU,Mississippi Valley State,Delta Devils,Mississippi Valley State Delta Devils
+cfb:missouri-baptist-spartans,cfb,2880,MOBU,Missouri Baptist,Spartans,Missouri Baptist Spartans
+cfb:missouri-southern-state-lions,cfb,2403,MSSU,Missouri Southern State,Lions,Missouri Southern State Lions
+cfb:missouri-st-miners,cfb,2402,MS&T,Missouri S&T,Miners,Missouri S&T Miners
+cfb:missouri-state-bears,cfb,2623,MOST,Missouri State,Bears,Missouri State Bears
+cfb:missouri-tigers,cfb,142,MIZ,Missouri,Tigers,Missouri Tigers
+cfb:missouri-western-griffons,cfb,137,MOWE,Missouri Western,Griffons,Missouri Western Griffons
+cfb:mit-engineers,cfb,109,MIT,MIT,Engineers,MIT Engineers
+cfb:monmouth-hawks,cfb,2405,MONM,Monmouth,Hawks,Monmouth Hawks
+cfb:monmouth-il-fighting-scots,cfb,2919,MNIL,Monmouth (IL),Fighting Scots,Monmouth (IL) Fighting Scots
+cfb:monroe-mustangs,cfb,134001,MON,Monroe,Mustangs,Monroe Mustangs
+cfb:montana-grizzlies,cfb,149,MONT,Montana,Grizzlies,Montana Grizzlies
+cfb:montana-state-bobcats,cfb,147,MTST,Montana State,Bobcats,Montana State Bobcats
+cfb:montana-western-bulldogs,cfb,2701,UMW,Montana Western,Bulldogs,Montana Western Bulldogs
+cfb:montclair-state-red-hawks,cfb,2818,MCST,Montclair State,Red Hawks,Montclair State Red Hawks
+cfb:monterrey-tech-borregos,cfb,3100,MITE,Monterrey Tech,Borregos,Monterrey Tech Borregos
+cfb:moravian-greyhounds,cfb,323,MOR,Moravian,Greyhounds,Moravian Greyhounds
+cfb:morehead-state-eagles,cfb,2413,MORE,Morehead State,Eagles,Morehead State Eagles
+cfb:morehouse-maroon-tigers,cfb,60,MRHO,Morehouse,Maroon Tigers,Morehouse Maroon Tigers
+cfb:morgan-state-bears,cfb,2415,MORG,Morgan State,Bears,Morgan State Bears
+cfb:morningside-chiefs,cfb,2416,MNGS,Morningside,Chiefs,Morningside Chiefs
+cfb:mount-st-joseph-lions,cfb,2419,MSJ,Mount St Joseph,Lions,Mount St Joseph Lions
+cfb:mount-union-purple-raiders,cfb,426,UMU,Mount Union,Purple Raiders,Mount Union Purple Raiders
+cfb:muhlenberg-mules,cfb,2422,MUHL,Muhlenberg,Mules,Muhlenberg Mules
+cfb:murray-state-racers,cfb,93,MUR,Murray State,Racers,Murray State Racers
+cfb:muskingum-fighting-muskies,cfb,332,MSK,Muskingum,Fighting Muskies,Muskingum Fighting Muskies
+cfb:navy-midshipmen,cfb,2426,NAVY,Navy,Midshipmen,Navy Midshipmen
+cfb:nc-state-wolfpack,cfb,152,NCSU,NC State,Wolfpack,NC State Wolfpack
+cfb:nebraska-cornhuskers,cfb,158,NEB,Nebraska,Cornhuskers,Nebraska Cornhuskers
+cfb:nebraska-kearney-lopers,cfb,2438,NEBK,Nebraska Kearney,Lopers,Nebraska Kearney Lopers
+cfb:nebraska-wesleyan-prairie-wolves,cfb,6845,NWU,Nebraska Wesleyan,Prairie Wolves,Nebraska Wesleyan Prairie Wolves
+cfb:nelson-tx-lions,cfb,2904,NEL,Nelson (TX),Lions,Nelson (TX) Lions
+cfb:nevada-wolf-pack,cfb,2440,NEV,Nevada,Wolf Pack,Nevada Wolf Pack
+cfb:new-england-noreasters,cfb,111675,UNE,New England,Nor'easters,New England Nor'easters
+cfb:new-hampshire-wildcats,cfb,160,UNH,New Hampshire,Wildcats,New Hampshire Wildcats
+cfb:new-haven-chargers,cfb,2441,NHVN,New Haven,Chargers,New Haven Chargers
+cfb:new-mexico-highlands-cowboys,cfb,2424,NMHU,New Mexico Highlands,Cowboys,New Mexico Highlands Cowboys
+cfb:new-mexico-lobos,cfb,167,UNM,New Mexico,Lobos,New Mexico Lobos
+cfb:new-mexico-state-aggies,cfb,166,NMSU,New Mexico State,Aggies,New Mexico State Aggies
+cfb:newberry-wolves,cfb,2444,NBRY,Newberry,Wolves,Newberry Wolves
+cfb:nicholls-colonels,cfb,2447,NICH,Nicholls,Colonels,Nicholls Colonels
+cfb:nichols-bison,cfb,2884,NICC,Nichols,Bison,Nichols Bison
+cfb:norfolk-state-spartans,cfb,2450,NORF,Norfolk State,Spartans,Norfolk State Spartans
+cfb:north-alabama-lions,cfb,2453,UNA,North Alabama,Lions,North Alabama Lions
+cfb:north-american-stallions,cfb,123086,NAMU,North American,Stallions,North American Stallions
+cfb:north-carolina-at-aggies,cfb,2448,NCAT,North Carolina A&T,Aggies,North Carolina A&T Aggies
+cfb:north-carolina-central-eagles,cfb,2428,NCCU,North Carolina Central,Eagles,North Carolina Central Eagles
+cfb:north-carolina-tar-heels,cfb,153,UNC,North Carolina,Tar Heels,North Carolina Tar Heels
+cfb:north-carolina-wesleyan-battling-bishops,cfb,286,NCW,North Carolina Wesleyan,Battling Bishops,North Carolina Wesleyan Battling Bishops
+cfb:north-central-college-cardinals,cfb,3071,NCC,North Central College,Cardinals,North Central College Cardinals
+cfb:north-dakota-fighting-hawks,cfb,155,UND,North Dakota,Fighting Hawks,North Dakota Fighting Hawks
+cfb:north-dakota-state-bison,cfb,2449,NDSU,North Dakota State,Bison,North Dakota State Bison
+cfb:north-greenville-trailblazers,cfb,2822,NGU,North Greenville,Trailblazers,North Greenville Trailblazers
+cfb:north-park-vikings,cfb,75,NPU,North Park,Vikings,North Park Vikings
+cfb:north-texas-mean-green,cfb,249,UNT,North Texas,Mean Green,North Texas Mean Green
+cfb:northeastern-state-riverhawks,cfb,196,NESU,Northeastern State,RiverHawks,Northeastern State RiverHawks
+cfb:northern-arizona-lumberjacks,cfb,2464,NAU,Northern Arizona,Lumberjacks,Northern Arizona Lumberjacks
+cfb:northern-colorado-bears,cfb,2458,UNCO,Northern Colorado,Bears,Northern Colorado Bears
+cfb:northern-illinois-huskies,cfb,2459,NIU,Northern Illinois,Huskies,Northern Illinois Huskies
+cfb:northern-iowa-panthers,cfb,2460,UNI,Northern Iowa,Panthers,Northern Iowa Panthers
+cfb:northern-michigan-wildcats,cfb,128,NMI,Northern Michigan,Wildcats,Northern Michigan Wildcats
+cfb:northern-state-wolves,cfb,425,NSU,Northern State,Wolves,Northern State Wolves
+cfb:northwest-missouri-state-bearcats,cfb,138,MWMO,Northwest Missouri State,Bearcats,Northwest Missouri State Bearcats
+cfb:northwestern-mn-eagles,cfb,583,UNW,Northwestern (MN),Eagles,Northwestern (MN) Eagles
+cfb:northwestern-ok-rangers,cfb,2823,NWOK,Northwestern (OK),Rangers,Northwestern (OK) Rangers
+cfb:northwestern-state-demons,cfb,2466,NWST,Northwestern State,Demons,Northwestern State Demons
+cfb:northwestern-wildcats,cfb,77,NU,Northwestern,Wildcats,Northwestern Wildcats
+cfb:northwood-timberwolves,cfb,2886,NWD,Northwood,Timberwolves,Northwood Timberwolves
+cfb:norwich-cadets,cfb,2467,NWCH,Norwich,Cadets,Norwich Cadets
+cfb:notre-dame-fighting-irish,cfb,87,ND,Notre Dame,Fighting Irish,Notre Dame Fighting Irish
+cfb:oberlin-yeomen,cfb,391,OBE,Oberlin,Yeomen,Oberlin Yeomen
+cfb:ohio-bobcats,cfb,195,OHIO,Ohio,Bobcats,Ohio Bobcats
+cfb:ohio-dominican-panthers,cfb,2477,OHDU,Ohio Dominican,Panthers,Ohio Dominican Panthers
+cfb:ohio-northern-polar-bears,cfb,427,OHNU,Ohio Northern,Polar Bears,Ohio Northern Polar Bears
+cfb:ohio-state-buckeyes,cfb,194,OSU,Ohio State,Buckeyes,Ohio State Buckeyes
+cfb:ohio-state-newark-titans,cfb,3161,OSU,Ohio State Newark,Titans,Ohio State Newark Titans
+cfb:ohio-wesleyan-battling-bishops,cfb,2980,OWU,Ohio Wesleyan,Battling Bishops,Ohio Wesleyan Battling Bishops
+cfb:oklahoma-baptist-bison,cfb,319,OKBU,Oklahoma Baptist,Bison,Oklahoma Baptist Bison
+cfb:oklahoma-panhandle-ok-panhandle-st,cfb,2824,OPSU,Oklahoma Panhandle,OK PANHANDLE ST,Oklahoma Panhandle OK PANHANDLE ST
+cfb:oklahoma-sooners,cfb,201,OU,Oklahoma,Sooners,Oklahoma Sooners
+cfb:oklahoma-state-cowboys,cfb,197,OKST,Oklahoma State,Cowboys,Oklahoma State Cowboys
+cfb:old-dominion-monarchs,cfb,295,ODU,Old Dominion,Monarchs,Old Dominion Monarchs
+cfb:ole-miss-rebels,cfb,145,MISS,Ole Miss,Rebels,Ole Miss Rebels
+cfb:olivet-comets,cfb,354,UOO,Olivet,Comets,Olivet Comets
+cfb:oregon-ducks,cfb,2483,ORE,Oregon,Ducks,Oregon Ducks
+cfb:oregon-state-beavers,cfb,204,ORST,Oregon State,Beavers,Oregon State Beavers
+cfb:otterbein-cardinals,cfb,359,OTTB,Otterbein,Cardinals,Otterbein Cardinals
+cfb:ouachita-baptist-tigers,cfb,2888,OBU,Ouachita Baptist,Tigers,Ouachita Baptist Tigers
+cfb:pace-setters,cfb,2487,PACE,Pace,Setters,Pace Setters
+cfb:pacific-lutheran-lutes,cfb,2486,PCLT,Pacific Lutheran,Lutes,Pacific Lutheran Lutes
+cfb:pacific-or-boxers,cfb,205,PCOR,Pacific (OR),Boxers,Pacific (OR) Boxers
+cfb:penn-state-nittany-lions,cfb,213,PSU,Penn State,Nittany Lions,Penn State Nittany Lions
+cfb:pennsylvania-quakers,cfb,219,PENN,Pennsylvania,Quakers,Pennsylvania Quakers
+cfb:phoenix-firestorm,cfb,108358,AZCHR,Phoenix,Firestorm,Phoenix Firestorm
+cfb:pikeville-bears,cfb,95,PIKEV,Pikeville,Bears,Pikeville Bears
+cfb:pittsburg-state-gorillas,cfb,90,PTSU,Pittsburg State,Gorillas,Pittsburg State Gorillas
+cfb:pittsburgh-panthers,cfb,221,PITT,Pittsburgh,Panthers,Pittsburgh Panthers
+cfb:plymouth-state-panthers,cfb,2972,PLYM,Plymouth State,Panthers,Plymouth State Panthers
+cfb:point-university-skyhawks,cfb,3179,POINT,Point University,Skyhawks,Point University Skyhawks
+cfb:pomona-pitzer-sagehens,cfb,2923,POPI,Pomona Pitzer,Sagehens,Pomona Pitzer Sagehens
+cfb:portland-state-vikings,cfb,2502,PRST,Portland State,Vikings,Portland State Vikings
+cfb:post-eagles,cfb,126086,POST,Post,Eagles,Post Eagles
+cfb:prairie-view-am-panthers,cfb,2504,PV,Prairie View A&M,Panthers,Prairie View A&M Panthers
+cfb:presbyterian-blue-hose,cfb,2506,PRES,Presbyterian,Blue Hose,Presbyterian Blue Hose
+cfb:princeton-tigers,cfb,163,PRIN,Princeton,Tigers,Princeton Tigers
+cfb:puget-sound-loggers,cfb,2508,PUG,Puget Sound,Loggers,Puget Sound Loggers
+cfb:purdue-boilermakers,cfb,2509,PUR,Purdue,Boilermakers,Purdue Boilermakers
+cfb:quincy-hawks,cfb,2825,QUI,Quincy,Hawks,Quincy Hawks
+cfb:randolph-macon-yellow-jackets,cfb,2516,RMC,Randolph Macon,Yellow Jackets,Randolph Macon Yellow Jackets
+cfb:redlands-bulldogs,cfb,29,REDL,Redlands,Bulldogs,Redlands Bulldogs
+cfb:reinhardt-eagles,cfb,2890,RHDT,Reinhardt,Eagles,Reinhardt Eagles
+cfb:rensselaer-engineers,cfb,2528,RPI,Rensselaer,Engineers,Rensselaer Engineers
+cfb:rhode-island-rams,cfb,227,URI,Rhode Island,Rams,Rhode Island Rams
+cfb:rhodes-lynx,cfb,2519,RHDS,Rhodes,Lynx,Rhodes Lynx
+cfb:rice-owls,cfb,242,RICE,Rice,Owls,Rice Owls
+cfb:richmond-spiders,cfb,257,RICH,Richmond,Spiders,Richmond Spiders
+cfb:ripon-red-hawks,cfb,2891,RIP,Ripon,Red Hawks,Ripon Red Hawks
+cfb:robert-morris-colonials,cfb,2523,RMU,Robert Morris,Colonials,Robert Morris Colonials
+cfb:rochester-ny-yellow-jackets,cfb,184,URNY,Rochester (NY),Yellow Jackets,Rochester (NY) Yellow Jackets
+cfb:rockford-regents,cfb,2524,RFU,Rockford,Regents,Rockford Regents
+cfb:roosevelt-lakers,cfb,127991,RSVT,Roosevelt,Lakers,Roosevelt Lakers
+cfb:roosevelt-lakers,cfb,599,RSVT,Roosevelt,Lakers,Roosevelt Lakers
+cfb:rose-hulman-fightin-engineers,cfb,86,RHIT,Rose Hulman,Fightin' Engineers,Rose Hulman Fightin' Engineers
+cfb:rowan-profs,cfb,2827,ROW,Rowan,Profs,Rowan Profs
+cfb:rutgers-scarlet-knights,cfb,164,RUTG,Rutgers,Scarlet Knights,Rutgers Scarlet Knights
+cfb:sacramento-state-hornets,cfb,16,SAC,Sacramento State,Hornets,Sacramento State Hornets
+cfb:sacred-heart-pioneers,cfb,2529,SHU,Sacred Heart,Pioneers,Sacred Heart Pioneers
+cfb:saginaw-valley-state-cardinals,cfb,129,SVSU,Saginaw Valley State,Cardinals,Saginaw Valley State Cardinals
+cfb:saint-anselm-hawks,cfb,2830,SANS,Saint Anselm,Hawks,Saint Anselm Hawks
+cfb:saint-francis-in-cougars,cfb,2831,SFIN,Saint Francis (IN),Cougars,Saint Francis (IN) Cougars
+cfb:saint-francis-red-flash,cfb,2598,SFPA,Saint Francis,Red Flash,Saint Francis Red Flash
+cfb:saint-johns-mn-johnnies,cfb,2600,STJM,Saint John's (MN),Johnnies,Saint John's (MN) Johnnies
+cfb:saint-vincent-bearcats,cfb,2614,SVC,Saint Vincent,Bearcats,Saint Vincent Bearcats
+cfb:saint-xavier-cougars,cfb,2615,STX,Saint Xavier,Cougars,Saint Xavier Cougars
+cfb:salisbury-sea-gulls,cfb,2532,SAL,Salisbury,Sea Gulls,Salisbury Sea Gulls
+cfb:salve-regina-seahawks,cfb,2776,SALV,Salve Regina,Seahawks,Salve Regina Seahawks
+cfb:sam-houston-bearkats,cfb,2534,SHSU,Sam Houston,Bearkats,Sam Houston Bearkats
+cfb:samford-bulldogs,cfb,2535,SAM,Samford,Bulldogs,Samford Bulldogs
+cfb:san-diego-state-aztecs,cfb,21,SDSU,San Diego State,Aztecs,San Diego State Aztecs
+cfb:san-diego-toreros,cfb,301,USD,San Diego,Toreros,San Diego Toreros
+cfb:san-jose-state-spartans,cfb,23,SJSU,San José State,Spartans,San José State Spartans
+cfb:savannah-state-tigers,cfb,2542,SAV,Savannah State,Tigers,Savannah State Tigers
+cfb:se-louisiana-lions,cfb,2545,SELA,SE Louisiana,Lions,SE Louisiana Lions
+cfb:seton-hill-griffins,cfb,611,SEHI,Seton Hill,Griffins,Seton Hill Griffins
+cfb:sewanee-tigers,cfb,2553,SEWA,Sewanee,Tigers,Sewanee Tigers
+cfb:shaw-bears,cfb,2551,SHAW,Shaw,Bears,Shaw Bears
+cfb:shenandoah-hornets,cfb,2828,SHEN,Shenandoah,Hornets,Shenandoah Hornets
+cfb:shepherd-rams,cfb,2974,SHEP,Shepherd,Rams,Shepherd Rams
+cfb:shippensburg-raiders,cfb,2559,SHIP,Shippensburg,Raiders,Shippensburg Raiders
+cfb:shorter-hawks,cfb,2560,SHOU,Shorter,Hawks,Shorter Hawks
+cfb:siena-heights-saints,cfb,2562,SHTU,Siena Heights,Saints,Siena Heights Saints
+cfb:simpson-ca-red-hawks,cfb,129758,SUCA,Simpson (CA),Red Hawks,Simpson (CA) Red Hawks
+cfb:simpson-ia-storm,cfb,2564,SCIA,Simpson (IA),Storm,Simpson (IA) Storm
+cfb:sioux-falls-cougars,cfb,2894,SFU,Sioux Falls,Cougars,Sioux Falls Cougars
+cfb:slippery-rock-the-rock,cfb,215,SRU,Slippery Rock,The Rock,Slippery Rock The Rock
+cfb:smu-mustangs,cfb,2567,SMU,SMU,Mustangs,SMU Mustangs
+cfb:south-alabama-jaguars,cfb,6,USA,South Alabama,Jaguars,South Alabama Jaguars
+cfb:south-carolina-gamecocks,cfb,2579,SC,South Carolina,Gamecocks,South Carolina Gamecocks
+cfb:south-carolina-state-bulldogs,cfb,2569,SCST,South Carolina State,Bulldogs,South Carolina State Bulldogs
+cfb:south-dakota-coyotes,cfb,233,SDAK,South Dakota,Coyotes,South Dakota Coyotes
+cfb:south-dakota-mines-hardrockers,cfb,613,SDMT,South Dakota Mines,Hardrockers,South Dakota Mines Hardrockers
+cfb:south-dakota-state-jackrabbits,cfb,2571,SDST,South Dakota State,Jackrabbits,South Dakota State Jackrabbits
+cfb:south-florida-bulls,cfb,58,USF,South Florida,Bulls,South Florida Bulls
+cfb:southeast-missouri-state-redhawks,cfb,2546,SEMO,Southeast Missouri State,Redhawks,Southeast Missouri State Redhawks
+cfb:southeastern-fires,cfb,267,SEU,Southeastern,Fires,Southeastern Fires
+cfb:southeastern-oklahoma-state-savage-storm,cfb,199,SEOK,Southeastern Oklahoma State,Savage Storm,Southeastern Oklahoma State Savage Storm
+cfb:southern-arkansas-muleriders,cfb,2568,SAR,Southern Arkansas,Muleriders,Southern Arkansas Muleriders
+cfb:southern-connecticut-state-owls,cfb,2583,SCTS,Southern Connecticut State,Owls,Southern Connecticut State Owls
+cfb:southern-illinois-salukis,cfb,79,SIU,Southern Illinois,Salukis,Southern Illinois Salukis
+cfb:southern-jaguars,cfb,2582,SOU,Southern,Jaguars,Southern Jaguars
+cfb:southern-miss-golden-eagles,cfb,2572,USM,Southern Miss,Golden Eagles,Southern Miss Golden Eagles
+cfb:southern-nazarene-crimson-storm,cfb,200,SNU,Southern Nazarene,Crimson Storm,Southern Nazarene Crimson Storm
+cfb:southern-oregon-raiders,cfb,2584,SOR,Southern Oregon,Raiders,Southern Oregon Raiders
+cfb:southern-utah-thunderbirds,cfb,253,SUU,Southern Utah,Thunderbirds,Southern Utah Thunderbirds
+cfb:southern-virginia-knights,cfb,2896,SOVA,Southern Virginia,Knights,Southern Virginia Knights
+cfb:southwest-baptist-bearcats,cfb,2586,SWBU,Southwest Baptist,Bearcats,Southwest Baptist Bearcats
+cfb:southwest-minnesota-state-mustangs,cfb,2587,SWMS,Southwest Minnesota State,Mustangs,Southwest Minnesota State Mustangs
+cfb:southwestern-ks-moundbuilders,cfb,616,SWKS,Southwestern (KS),Moundbuilders,Southwestern (KS) Moundbuilders
+cfb:southwestern-oklahoma-state-bulldogs,cfb,2927,SOSU,Southwestern Oklahoma State,Bulldogs,Southwestern Oklahoma State Bulldogs
+cfb:southwestern-u-pirates,cfb,2588,SWU,Southwestern U,Pirates,Southwestern U Pirates
+cfb:springfield-pride,cfb,81,SPR,Springfield,Pride,Springfield Pride
+cfb:st-ambrose-fighting-bees,cfb,2591,STAM,St. Ambrose,Fighting Bees,St. Ambrose Fighting Bees
+cfb:st-andrews-knights,cfb,111610,STAU,St. Andrews,Knights,St. Andrews Knights
+cfb:st-francis-il-fighting-saints,cfb,2595,SFIL,St. Francis (IL),Fighting Saints,St. Francis (IL) Fighting Saints
+cfb:st-john-fisher-cardinals,cfb,374,STJF,St. John Fisher,Cardinals,St. John Fisher Cardinals
+cfb:st-lawrence-saints,cfb,2779,USL,St. Lawrence,Saints,St. Lawrence Saints
+cfb:st-norbert-green-knights,cfb,2832,STNC,St. Norbert,Green Knights,St. Norbert Green Knights
+cfb:st-olaf-oles,cfb,133,OLAF,St. Olaf,Oles,St. Olaf Oles
+cfb:st-petersburg-glory-eagles,cfb,3254,UFFL,St. Petersburg,Glory Eagles,St. Petersburg Glory Eagles
+cfb:st-scholastica-saints,cfb,375,CSS,St. Scholastica,Saints,St. Scholastica Saints
+cfb:st-thomas-tommies,cfb,2900,STMN,St. Thomas,Tommies,St. Thomas Tommies
+cfb:stanford-cardinal,cfb,24,STAN,Stanford,Cardinal,Stanford Cardinal
+cfb:stephen-f-austin-lumberjacks,cfb,2617,SFA,Stephen F. Austin,Lumberjacks,Stephen F. Austin Lumberjacks
+cfb:sterling-sterling-ks,cfb,618,STLG,Sterling,STERLING KS,Sterling STERLING KS
+cfb:stetson-hatters,cfb,56,STET,Stetson,Hatters,Stetson Hatters
+cfb:stevenson-mustangs,cfb,471,STVS,Stevenson,Mustangs,Stevenson Mustangs
+cfb:stonehill-skyhawks,cfb,284,STO,Stonehill,Skyhawks,Stonehill Skyhawks
+cfb:stony-brook-seawolves,cfb,2619,STBK,Stony Brook,Seawolves,Stony Brook Seawolves
+cfb:sul-ross-state-lobos,cfb,2834,SRST,Sul Ross State,Lobos,Sul Ross State Lobos
+cfb:suny-cortland-red-dragons,cfb,2782,NYCL,SUNY Cortland,Red Dragons,SUNY Cortland Red Dragons
+cfb:suny-erie-kats,cfb,3236,NYER,SUNY Erie,Kats,SUNY Erie Kats
+cfb:suny-maritime-privateers,cfb,2951,NYMT,SUNY Maritime,Privateers,SUNY Maritime Privateers
+cfb:suny-morrisville-mustangs,cfb,3110,NYMS,SUNY Morrisville,Mustangs,SUNY Morrisville Mustangs
+cfb:susquehanna-river-hawks,cfb,216,SUSQ,Susquehanna,River Hawks,Susquehanna River Hawks
+cfb:syracuse-orange,cfb,183,SYR,Syracuse,Orange,Syracuse Orange
+cfb:tarleton-state-texans,cfb,2627,TAR,Tarleton State,Texans,Tarleton State Texans
+cfb:taylor-trojans,cfb,620,TLRU,Taylor,Trojans,Taylor Trojans
+cfb:tcu-horned-frogs,cfb,2628,TCU,TCU,Horned Frogs,TCU Horned Frogs
+cfb:temple-owls,cfb,218,TEM,Temple,Owls,Temple Owls
+cfb:tennessee-state-tigers,cfb,2634,TNST,Tennessee State,Tigers,Tennessee State Tigers
+cfb:tennessee-tech-golden-eagles,cfb,2635,TNTC,Tennessee Tech,Golden Eagles,Tennessee Tech Golden Eagles
+cfb:tennessee-volunteers,cfb,2633,TENN,Tennessee,Volunteers,Tennessee Volunteers
+cfb:texas-am-aggies,cfb,245,TA&M,Texas A&M,Aggies,Texas A&M Aggies
+cfb:texas-am-kingsville-javelinas,cfb,2658,TAMK,Texas A&M-Kingsville,Javelinas,Texas A&M-Kingsville Javelinas
+cfb:texas-college-steers,cfb,2637,TXCL,Texas College,Steers,Texas College Steers
+cfb:texas-longhorns,cfb,251,TEX,Texas,Longhorns,Texas Longhorns
+cfb:texas-lutheran-bulldogs,cfb,2639,TXLU,Texas Lutheran,Bulldogs,Texas Lutheran Bulldogs
+cfb:texas-southern-tigers,cfb,2640,TXSO,Texas Southern,Tigers,Texas Southern Tigers
+cfb:texas-state-bobcats,cfb,326,TXST,Texas State,Bobcats,Texas State Bobcats
+cfb:texas-tech-red-raiders,cfb,2641,TTU,Texas Tech,Red Raiders,Texas Tech Red Raiders
+cfb:the-citadel-bulldogs,cfb,2643,CIT,The Citadel,Bulldogs,The Citadel Bulldogs
+cfb:the-college-of-new-jersey-lions,cfb,2442,TCNJ,The College of New Jersey,Lions,The College of New Jersey Lions
+cfb:thiel-tomcats,cfb,2644,THI,Thiel,Tomcats,Thiel Tomcats
+cfb:thomas-more-saints,cfb,2646,TMOR,Thomas More,Saints,Thomas More Saints
+cfb:thomas-night-hawks,cfb,134000,THO,Thomas,Night Hawks,Thomas Night Hawks
+cfb:tiffin-dragons,cfb,2838,TIFF,Tiffin,Dragons,Tiffin Dragons
+cfb:toledo-rockets,cfb,2649,TOL,Toledo,Rockets,Toledo Rockets
+cfb:towson-tigers,cfb,119,TOW,Towson,Tigers,Towson Tigers
+cfb:trine-thunder,cfb,2651,TRNE,Trine,Thunder,Trine Thunder
+cfb:trinity-bible-lions,cfb,3214,TBIB,Trinity Bible,Lions,Trinity Bible Lions
+cfb:trinity-ct-bantams,cfb,2977,TCCT,Trinity (CT),Bantams,Trinity (CT) Bantams
+cfb:trinity-tx-tigers,cfb,386,TUTX,Trinity (TX),Tigers,Trinity (TX) Tigers
+cfb:troy-trojans,cfb,2653,TROY,Troy,Trojans,Troy Trojans
+cfb:troy-vikings,cfb,3237,HVCC,Troy,Vikings,Troy Vikings
+cfb:truman-state-bulldogs,cfb,2654,TRST,Truman State,Bulldogs,Truman State Bulldogs
+cfb:tufts-jumbos,cfb,112,TUFT,Tufts,Jumbos,Tufts Jumbos
+cfb:tulane-green-wave,cfb,2655,TULN,Tulane,Green Wave,Tulane Green Wave
+cfb:tulsa-golden-hurricane,cfb,202,TLSA,Tulsa,Golden Hurricane,Tulsa Golden Hurricane
+cfb:tusculum-pioneers,cfb,2839,TUSC,Tusculum,Pioneers,Tusculum Pioneers
+cfb:tuskegee-golden-tigers,cfb,2657,TUSK,Tuskegee,Golden Tigers,Tuskegee Golden Tigers
+cfb:uab-blazers,cfb,5,UAB,UAB,Blazers,UAB Blazers
+cfb:ualbany-great-danes,cfb,399,UALB,UAlbany,Great Danes,UAlbany Great Danes
+cfb:uc-davis-aggies,cfb,302,UCD,UC Davis,Aggies,UC Davis Aggies
+cfb:ucf-knights,cfb,2116,UCF,UCF,Knights,UCF Knights
+cfb:ucla-bruins,cfb,26,UCLA,UCLA,Bruins,UCLA Bruins
+cfb:uconn-huskies,cfb,41,CONN,UConn,Huskies,UConn Huskies
+cfb:ul-monroe-warhawks,cfb,2433,ULM,UL Monroe,Warhawks,UL Monroe Warhawks
+cfb:umass-dartmouth-corsairs,cfb,379,MDAR,UMass Dartmouth,Corsairs,UMass Dartmouth Corsairs
+cfb:unc-pembroke-braves,cfb,2882,UNCP,UNC Pembroke,Braves,UNC Pembroke Braves
+cfb:union-garnet-chargers,cfb,237,UNNY,Union,Garnet Chargers,Union Garnet Chargers
+cfb:university-of-mary-marauders,cfb,559,MARY,University of Mary,Marauders,University of Mary Marauders
+cfb:university-of-mexico-mexico-u,cfb,3212,UNAM,University of Mexico,MEXICO U,University of Mexico MEXICO U
+cfb:unlv-rebels,cfb,2439,UNLV,UNLV,Rebels,UNLV Rebels
+cfb:upper-iowa-peacocks,cfb,389,UIU,Upper Iowa,Peacocks,Upper Iowa Peacocks
+cfb:ursinus-bears,cfb,2667,URSN,Ursinus,Bears,Ursinus Bears
+cfb:usc-trojans,cfb,30,USC,USC,Trojans,USC Trojans
+cfb:ut-martin-skyhawks,cfb,2630,UTM,UT Martin,Skyhawks,UT Martin Skyhawks
+cfb:ut-permian-basin-falcons,cfb,110243,UTPB,UT Permian Basin,Falcons,UT Permian Basin Falcons
+cfb:utah-state-aggies,cfb,328,USU,Utah State,Aggies,Utah State Aggies
+cfb:utah-tech-trailblazers,cfb,3101,UTU,Utah Tech,Trailblazers,Utah Tech Trailblazers
+cfb:utah-utes,cfb,254,UTAH,Utah,Utes,Utah Utes
+cfb:utep-miners,cfb,2638,UTEP,UTEP,Miners,UTEP Miners
+cfb:utica-pioneers,cfb,390,UTIC,Utica,Pioneers,Utica Pioneers
+cfb:utsa-roadrunners,cfb,2636,UTSA,UTSA,Roadrunners,UTSA Roadrunners
+cfb:uva-wise-cavaliers,cfb,2842,UVAW,UVA Wise,Cavaliers,UVA Wise Cavaliers
+cfb:valdosta-state-blazers,cfb,2673,VALD,Valdosta State,Blazers,Valdosta State Blazers
+cfb:valley-city-state-vikings,cfb,628,VCSU,Valley City State,Vikings,Valley City State Vikings
+cfb:valparaiso-beacons,cfb,2674,VAL,Valparaiso,Beacons,Valparaiso Beacons
+cfb:vanderbilt-commodores,cfb,238,VAN,Vanderbilt,Commodores,Vanderbilt Commodores
+cfb:vermont-state-castleton-spartans,cfb,293,VTSC,Vermont State Castleton,Spartans,Vermont State Castleton Spartans
+cfb:villanova-wildcats,cfb,222,VILL,Villanova,Wildcats,Villanova Wildcats
+cfb:virginia-cavaliers,cfb,258,UVA,Virginia,Cavaliers,Virginia Cavaliers
+cfb:virginia-lynchburg-dragons,cfb,2355,VUL,Virginia Lynchburg,Dragons,Virginia Lynchburg Dragons
+cfb:virginia-state-trojans,cfb,330,VSU,Virginia State,Trojans,Virginia State Trojans
+cfb:virginia-tech-hokies,cfb,259,VT,Virginia Tech,Hokies,Virginia Tech Hokies
+cfb:virginia-union-panthers,cfb,2676,VUU,Virginia Union,Panthers,Virginia Union Panthers
+cfb:vmi-keydets,cfb,2678,VMI,VMI,Keydets,VMI Keydets
+cfb:wabash-little-giants,cfb,89,WAB,Wabash,Little Giants,Wabash Little Giants
+cfb:wagner-seahawks,cfb,2681,WAG,Wagner,Seahawks,Wagner Seahawks
+cfb:wake-forest-demon-deacons,cfb,154,WAKE,Wake Forest,Demon Deacons,Wake Forest Demon Deacons
+cfb:waldorf-warriors,cfb,3080,WLDF,Waldorf,Warriors,Waldorf Warriors
+cfb:walsh-cavaliers,cfb,2682,WLSH,Walsh,Cavaliers,Walsh Cavaliers
+cfb:warner-royals,cfb,2683,WRNR,Warner,Royals,Warner Royals
+cfb:wartburg-knights,cfb,2685,WTBG,Wartburg,Knights,Wartburg Knights
+cfb:washburn-ichabods,cfb,2687,WSBN,Washburn,Ichabods,Washburn Ichabods
+cfb:washington-and-lee-generals,cfb,2688,W&L,Washington and Lee,Generals,Washington and Lee Generals
+cfb:washington-huskies,cfb,264,WASH,Washington,Huskies,Washington Huskies
+cfb:washington-jefferson-presidents,cfb,2686,W&J,Washington & Jefferson,Presidents,Washington & Jefferson Presidents
+cfb:washington-st-louis-bears,cfb,143,WUMO,Washington St. Louis,Bears,Washington St. Louis Bears
+cfb:washington-state-cougars,cfb,265,WSU,Washington State,Cougars,Washington State Cougars
+cfb:wayland-baptist-pioneers,cfb,630,WYBU,Wayland Baptist,Pioneers,Wayland Baptist Pioneers
+cfb:wayne-state-mi-warriors,cfb,131,WSMI,Wayne State (MI),Warriors,Wayne State (MI) Warriors
+cfb:wayne-state-ne-wildcats,cfb,2844,WSNE,Wayne State (NE),Wildcats,Wayne State (NE) Wildcats
+cfb:waynesburg-yellow-jackets,cfb,2845,WAYN,Waynesburg,Yellow Jackets,Waynesburg Yellow Jackets
+cfb:webber-international-warriors,cfb,2691,WINT,Webber International,Warriors,Webber International Warriors
+cfb:weber-state-wildcats,cfb,2692,WEB,Weber State,Wildcats,Weber State Wildcats
+cfb:wesleyan-ct-cardinals,cfb,336,WSCT,Wesleyan (CT),Cardinals,Wesleyan (CT) Cardinals
+cfb:west-alabama-tigers,cfb,2695,UWA,West Alabama,Tigers,West Alabama Tigers
+cfb:west-chester-golden-rams,cfb,223,WCHT,West Chester,Golden Rams,West Chester Golden Rams
+cfb:west-florida-argonauts,cfb,110242,UWF,West Florida,Argonauts,West Florida Argonauts
+cfb:west-georgia-wolves,cfb,2698,WGA,West Georgia,Wolves,West Georgia Wolves
+cfb:west-liberty-hilltoppers,cfb,2699,WLU,West Liberty,Hilltoppers,West Liberty Hilltoppers
+cfb:west-memphis-crusaders,cfb,3211,FAI,West Memphis,Crusaders,West Memphis Crusaders
+cfb:west-texas-buffaloes,cfb,2704,WTAM,West Texas,Buffaloes,West Texas Buffaloes
+cfb:west-virginia-mountaineers,cfb,277,WVU,West Virginia,Mountaineers,West Virginia Mountaineers
+cfb:west-virginia-state-yellow-jackets,cfb,2707,WVSU,West Virginia State,Yellow Jackets,West Virginia State Yellow Jackets
+cfb:west-virginia-wesleyan-bobcats,cfb,455,WVWC,West Virginia Wesleyan,Bobcats,West Virginia Wesleyan Bobcats
+cfb:western-carolina-catamounts,cfb,2717,WCU,Western Carolina,Catamounts,Western Carolina Catamounts
+cfb:western-colorado-mountaineers,cfb,2714,WCOL,Western Colorado,Mountaineers,Western Colorado Mountaineers
+cfb:western-connecticut-state-wolves,cfb,2843,WCSU,Western Connecticut State,Wolves,Western Connecticut State Wolves
+cfb:western-illinois-leathernecks,cfb,2710,WIU,Western Illinois,Leathernecks,Western Illinois Leathernecks
+cfb:western-kentucky-hilltoppers,cfb,98,WKU,Western Kentucky,Hilltoppers,Western Kentucky Hilltoppers
+cfb:western-michigan-broncos,cfb,2711,WMU,Western Michigan,Broncos,Western Michigan Broncos
+cfb:western-new-england-golden-bears,cfb,2702,WNE,Western New England,Golden Bears,Western New England Golden Bears
+cfb:western-new-mexico-mustangs,cfb,2703,WNMU,Western New Mexico,Mustangs,Western New Mexico Mustangs
+cfb:western-oregon-wolves,cfb,2848,WORU,Western Oregon,Wolves,Western Oregon Wolves
+cfb:westfield-state-owls,cfb,2909,WFST,Westfield State,Owls,Westfield State Owls
+cfb:westgate-christian-university-ravens,cfb,134087,WES,Westgate Christian University,Ravens,Westgate Christian University Ravens
+cfb:westminster-mo-blue-jays,cfb,433,WCMO,Westminster (MO),Blue Jays,Westminster (MO) Blue Jays
+cfb:westminster-pa-titans,cfb,2849,WCPA,Westminster (PA),Titans,Westminster (PA) Titans
+cfb:wheaton-il-thunder,cfb,396,WCIL,Wheaton (IL),Thunder,Wheaton (IL) Thunder
+cfb:wheeling-cardinals,cfb,112335,WHLG,Wheeling,Cardinals,Wheeling Cardinals
+cfb:whittier-poets,cfb,2850,WHTR,Whittier,Poets,Whittier Poets
+cfb:whitworth-pirates,cfb,2721,WHIW,Whitworth,Pirates,Whitworth Pirates
+cfb:widener-pride,cfb,2725,WIDE,Widener,Pride,Widener Pride
+cfb:wilkes-colonels,cfb,398,WILK,Wilkes,Colonels,Wilkes Colonels
+cfb:willamette-bearcats,cfb,2930,WLMT,Willamette,Bearcats,Willamette Bearcats
+cfb:william-jewell-cardinals,cfb,2911,WJC,William Jewell,Cardinals,William Jewell Cardinals
+cfb:william-mary-tribe,cfb,2729,W&M,William & Mary,Tribe,William & Mary Tribe
+cfb:william-paterson-pioneers,cfb,2970,WPU,William Paterson,Pioneers,William Paterson Pioneers
+cfb:william-penn-statesmen,cfb,2912,WPEN,William Penn,Statesmen,William Penn Statesmen
+cfb:williams-ephs,cfb,2731,WLM,Williams,Ephs,Williams Ephs
+cfb:williamson-mechanics,cfb,3130,WMSN,Williamson,Mechanics,Williamson Mechanics
+cfb:wilmington-oh-fightin-quakers,cfb,2733,WCOH,Wilmington (OH),Fightin' Quakers,Wilmington (OH) Fightin' Quakers
+cfb:wingate-bulldogs,cfb,351,WINU,Wingate,Bulldogs,Wingate Bulldogs
+cfb:winona-state-warriors,cfb,2851,WNST,Winona State,Warriors,Winona State Warriors
+cfb:winston-salem-state-rams,cfb,2736,WSSU,Winston-Salem State,Rams,Winston-Salem State Rams
+cfb:wisconsin-badgers,cfb,275,WIS,Wisconsin,Badgers,Wisconsin Badgers
+cfb:wisconsin-eau-claire-blugolds,cfb,2738,UWEC,Wisconsin Eau Claire,Blugolds,Wisconsin Eau Claire Blugolds
+cfb:wisconsin-la-crosse-eagles,cfb,2740,UWL,Wisconsin La Crosse,Eagles,Wisconsin La Crosse Eagles
+cfb:wisconsin-lutheran-warriors,cfb,2741,WLC,Wisconsin Lutheran,Warriors,Wisconsin Lutheran Warriors
+cfb:wisconsin-oshkosh-titans,cfb,271,UWO,Wisconsin Oshkosh,Titans,Wisconsin Oshkosh Titans
+cfb:wisconsin-platteville-pioneers,cfb,272,UWP,Wisconsin Platteville,Pioneers,Wisconsin Platteville Pioneers
+cfb:wisconsin-river-falls-falcons,cfb,2723,UWRF,Wisconsin River Falls,Falcons,Wisconsin River Falls Falcons
+cfb:wisconsin-stevens-point-pointers,cfb,2743,UWSP,Wisconsin Stevens Point,Pointers,Wisconsin Stevens Point Pointers
+cfb:wisconsin-stout-blue-devils,cfb,2744,UWST,Wisconsin Stout,Blue Devils,Wisconsin Stout Blue Devils
+cfb:wisconsin-whitewater-warhawks,cfb,2745,UWW,Wisconsin Whitewater,Warhawks,Wisconsin Whitewater Warhawks
+cfb:wittenberg-tigers,cfb,2746,WITT,Wittenberg,Tigers,Wittenberg Tigers
+cfb:wofford-terriers,cfb,2747,WOF,Wofford,Terriers,Wofford Terriers
+cfb:wooster-fighting-scots,cfb,2748,WOO,Wooster,Fighting Scots,Wooster Fighting Scots
+cfb:worcester-state-lancers,cfb,402,WORC,Worcester State,Lancers,Worcester State Lancers
+cfb:wpi-engineers,cfb,2749,WPI,WPI,Engineers,WPI Engineers
+cfb:wvu-tech-golden-bears,cfb,2706,WVUT,WVU Tech,Golden Bears,WVU Tech Golden Bears
+cfb:wyoming-cowboys,cfb,2751,WYO,Wyoming,Cowboys,Wyoming Cowboys
+cfb:yale-bulldogs,cfb,43,YALE,Yale,Bulldogs,Yale Bulldogs
+cfb:youngstown-state-penguins,cfb,2754,YSU,Youngstown State,Penguins,Youngstown State Penguins
 epl:eng.arsenal,epl,359,ARS,Arsenal,Arsenal,Arsenal
 epl:eng.aston_villa,epl,362,AVL,Aston Villa,Aston Villa,Aston Villa
 epl:eng.bournemouth,epl,349,BOU,AFC Bournemouth,AFC Bournemouth,AFC Bournemouth

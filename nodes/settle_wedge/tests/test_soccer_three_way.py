@@ -82,3 +82,29 @@ def test_the_proof_needs_the_draw_and_a_three_leg_cover_prices():
     # without the draw leg the same proof cannot price: a two-leg "cover" is not one
     two_legs = price_combination(legs[:1] + legs[2:], 100.0, now_utc=T, max_leg_age_s=30.0, proof=cp)
     assert two_legs.ok, "price_combination prices what it is given; the poller's prove() is the gate"
+
+
+def test_college_football_texts_hash_to_their_templates_and_the_tie_cannot_fire():
+    from nodes.settle_wedge.policy import KALSHI_CFB_GAME_V1, POLYMARKET_CFB_GAME_V1
+    k = harvest_kalshi({"ticker": "t", "rules_primary": KALSHI_CFB_GAME_V1.sample_text.split("\n")[0],
+                        "rules_secondary": KALSHI_CFB_GAME_V1.sample_text.split("\n", 1)[1]},
+                       participants=KALSHI_CFB_GAME_V1.sample_participants, retrieved_at=T)
+    p = harvest_polymarket({"slug": "s", "description": POLYMARKET_CFB_GAME_V1.sample_text},
+                           participants=POLYMARKET_CFB_GAME_V1.sample_participants, retrieved_at=T)
+    assert k.template_hash == KALSHI_CFB_GAME_V1.template_hash and p.template_hash == POLYMARKET_CFB_GAME_V1.template_hash
+    got = certify(k, p, league="cfb")
+    assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED" and got.context["evidence_key"].startswith("cfb.")
+    eq = certify(k, p, league="cfb", rates={"cfb.postponed_gt48h_rate": 0.002, "cfb.cancelled_rate": 0.001})
+    assert isinstance(eq, SettlementEquivalence)
+    assert {v.dimension: v.outcome for v in eq.verdicts}["tie"] == "NA"
+    assert isinstance(certify_cover(prove("cfb", "moneyline", "game", ["a", "b"]), eq), CoverProof)
+
+
+def test_a_school_named_without_its_nickname_still_hashes_to_the_template():
+    """Live 2026-09-03: Polymarket wrote 'Kentucky Christian' / 'Morehead State' while the participants
+    known to discovery were the full ESPN names; the normaliser strips the head of a name too."""
+    from nodes.settle_wedge.policy import POLYMARKET_CFB_GAME_V1
+    text = POLYMARKET_CFB_GAME_V1.sample_text.replace("Louisiana Christian", "Kentucky Christian").replace("Northwestern State", "Morehead State")
+    p = harvest_polymarket({"slug": "s", "description": text},
+                           participants=("Kentucky Christian Knights", "Morehead State Eagles", "Knights", "Eagles"), retrieved_at=T)
+    assert p.template_hash == POLYMARKET_CFB_GAME_V1.template_hash, p.template_text

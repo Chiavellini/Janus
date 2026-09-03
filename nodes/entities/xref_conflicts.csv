@@ -1,4 +1,275 @@
 venue,league,uuid,abbrev,sub_title,abbrev_hit,loc_hit,reason
+kalshi,cfb,162003aa-d818-4875-abff-0abd901ad731,KSU,Kentucky State Thorobreds,cfb:kansas-state-wildcats,cfb:kentucky-state-thorobreds,disagree
+kalshi,cfb,26f09c01-3307-4cc6-bb6e-c988f2a10ca6,ALBY,University at Albany,,,no_agreement
+kalshi,cfb,26f09c01-3307-4cc6-bb6e-c988f2a10ca6,ALBY,University at Albany,,,no_agreement
+kalshi,cfb,4618d2d4-a05f-4cc0-972a-df3fc825d451,TWU,Texas Wesleyan Rams,,,no_agreement
+kalshi,cfb,48514282-2c62-4c7a-a8c5-d66d90c4e7e3,UTRGV,UT Rio Grande Valley,,,no_agreement
+kalshi,cfb,4ee0688f-67c3-4450-b6b3-5907cd60bd9f,BSU,Boise St.,cfb:buffalo-state-bengals,cfb:boise-state-broncos,disagree
+kalshi,cfb,7485ec44-966c-4921-9fdc-64f6bd77bdc3,WEB,Webber International Warriors,cfb:weber-state-wildcats,cfb:webber-international-warriors,disagree
+kalshi,cfb,837c6f6d-b9c0-4490-a00e-3b56b7a963f5,CHAR,Charlotte,,,no_agreement
+kalshi,cfb,a3484578-3134-4a25-9c98-e1a05965f9aa,TROY,Troy,,,no_agreement
+kalshi,cfb,a3484578-3134-4a25-9c98-e1a05965f9aa,TROY,Troy,,,no_agreement
+kalshi,cfb,a5ebc6ee-e58f-4e9e-81ad-df210ea801af,OSU,Ohio St.,,,no_agreement
+kalshi,cfb,b3ccfec5-eb24-450e-98af-f3cc85099153,MTU,Middle Tennessee,cfb:michigan-tech-huskies,cfb:middle-tennessee-blue-raiders,disagree
+kalshi,cfb,d6c89c37-c2fc-40eb-bdc5-f5c28a3fb566,MHU,Mercyhurst,cfb:mars-hill-lions,cfb:mercyhurst-lakers,disagree
+kalshi,cfb,d6c89c37-c2fc-40eb-bdc5-f5c28a3fb566,MHU,Mercyhurst,cfb:mars-hill-lions,cfb:mercyhurst-lakers,disagree
+kalshi,cfb,dbcf6416-ad58-4527-908d-881295cfd1dc,CHS,Chicago State Cougars,,,no_agreement
+kalshi,cfb,e33b83e5-1305-4de1-9def-9baef7b4eb1f,NCST,North Carolina St.,,,no_agreement
+kalshi,cfb,f18defe1-5718-44d5-b244-80b01b449943,JVST,Jacksonville St.,,,no_agreement
+kalshi,cfb,f18defe1-5718-44d5-b244-80b01b449943,JVST,Jacksonville St.,,,no_agreement
+polymarket,cfb,118231,templ,Owls,,,no_agreement
+polymarket,cfb,118231,templ,Owls,,,no_agreement
+polymarket,cfb,118236,mphs,Tigers,,,no_agreement
+polymarket,cfb,118236,mphs,Tigers,,,no_agreement
+polymarket,cfb,118238,ecar,Pirates,,,no_agreement
+polymarket,cfb,118238,ecar,Pirates,,,no_agreement
+polymarket,cfb,118240,sfl,Bulls,,,no_agreement
+polymarket,cfb,118240,sfl,Bulls,,,no_agreement
+polymarket,cfb,118243,nhamp,Wildcats,,,no_agreement
+polymarket,cfb,118243,nhamp,Wildcats,,,no_agreement
+polymarket,cfb,118246,vir,Cavaliers,,,no_agreement
+polymarket,cfb,118251,clmsn,Tigers,,,no_agreement
+polymarket,cfb,118251,clmsn,Tigers,,,no_agreement
+polymarket,cfb,118256,gtech,Yellow Jackets,,,no_agreement
+polymarket,cfb,118256,gtech,Yellow Jackets,,,no_agreement
+polymarket,cfb,118259,boscol,Eagles,,,no_agreement
+polymarket,cfb,118259,boscol,Eagles,,,no_agreement
+polymarket,cfb,118260,kenest,Owls,,,no_agreement
+polymarket,cfb,118260,kenest,Owls,,,no_agreement
+polymarket,cfb,118261,ri,Rams,,,no_agreement
+polymarket,cfb,118261,ri,Rams,,,no_agreement
+polymarket,cfb,118264,fordm,Rams,,,no_agreement
+polymarket,cfb,118264,fordm,Rams,,,no_agreement
+polymarket,cfb,118268,webst,Wildcats,,,no_agreement
+polymarket,cfb,118268,webst,Wildcats,,,no_agreement
+polymarket,cfb,118269,ewash,Eagles,,,no_agreement
+polymarket,cfb,118269,ewash,Eagles,,,no_agreement
+polymarket,cfb,118271,idhst,Bengals,,,no_agreement
+polymarket,cfb,118271,idhst,Bengals,,,no_agreement
+polymarket,cfb,118273,monst,Bobcats,,,no_agreement
+polymarket,cfb,118273,monst,Bobcats,,,no_agreement
+polymarket,cfb,118274,ncol,Bears,,,no_agreement
+polymarket,cfb,118274,ncol,Bears,,,no_agreement
+polymarket,cfb,118275,portst,Vikings,,,no_agreement
+polymarket,cfb,118275,portst,Vikings,,,no_agreement
+polymarket,cfb,118276,sacst,Hornets,,,no_agreement
+polymarket,cfb,118278,narz,Lumberjacks,,,no_agreement
+polymarket,cfb,118278,narz,Lumberjacks,,,no_agreement
+polymarket,cfb,118282,chsou,Buccaneers,,,no_agreement
+polymarket,cfb,118282,chsou,Buccaneers,,,no_agreement
+polymarket,cfb,118286,mary,Terrapins,cfb:university-of-mary-marauders,cfb:maryland-terrapins,disagree
+polymarket,cfb,118286,mary,Terrapins,cfb:university-of-mary-marauders,cfb:maryland-terrapins,disagree
+polymarket,cfb,118291,mst,Spartans,,,no_agreement
+polymarket,cfb,118291,mst,Spartans,,,no_agreement
+polymarket,cfb,118294,nw,Wildcats,,,no_agreement
+polymarket,cfb,118300,kan,Jayhawks,,,no_agreement
+polymarket,cfb,118300,kan,Jayhawks,,,no_agreement
+polymarket,cfb,118301,wvir,Mountaineers,,,no_agreement
+polymarket,cfb,118301,wvir,Mountaineers,,,no_agreement
+polymarket,cfb,118302,bayl,Bears,,,no_agreement
+polymarket,cfb,118302,bayl,Bears,,,no_agreement
+polymarket,cfb,118306,kanst,Wildcats,,,no_agreement
+polymarket,cfb,118306,kanst,Wildcats,,,no_agreement
+polymarket,cfb,118310,ucdv,Aggies,,,no_agreement
+polymarket,cfb,118310,ucdv,Aggies,,,no_agreement
+polymarket,cfb,118311,calpol,Mustangs,,,no_agreement
+polymarket,cfb,118311,calpol,Mustangs,,,no_agreement
+polymarket,cfb,118314,jmad,Dukes,,,no_agreement
+polymarket,cfb,118314,jmad,Dukes,,,no_agreement
+polymarket,cfb,118315,tows,Tigers,,,no_agreement
+polymarket,cfb,118315,tows,Tigers,,,no_agreement
+polymarket,cfb,118323,loutch,Bulldogs,,,no_agreement
+polymarket,cfb,118324,old,Monarchs,,,no_agreement
+polymarket,cfb,118324,old,Monarchs,,,no_agreement
+polymarket,cfb,118326,flint,Panthers,,,no_agreement
+polymarket,cfb,118326,flint,Panthers,,,no_agreement
+polymarket,cfb,118329,soumis,Golden Eagles,,,no_agreement
+polymarket,cfb,118329,soumis,Golden Eagles,,,no_agreement
+polymarket,cfb,118330,wkent,Hilltoppers,,,no_agreement
+polymarket,cfb,118330,wkent,Hilltoppers,,,no_agreement
+polymarket,cfb,118331,flatl,Owls,,,no_agreement
+polymarket,cfb,118331,flatl,Owls,,,no_agreement
+polymarket,cfb,118343,bowlgr,Falcons,,,no_agreement
+polymarket,cfb,118343,bowlgr,Falcons,,,no_agreement
+polymarket,cfb,118344,miaoh,RedHawks,,,no_agreement
+polymarket,cfb,118344,miaoh,RedHawks,,,no_agreement
+polymarket,cfb,118346,ballst,Cardinals,,,no_agreement
+polymarket,cfb,118346,ballst,Cardinals,,,no_agreement
+polymarket,cfb,118348,nill,Huskies,,,no_agreement
+polymarket,cfb,118348,nill,Huskies,,,no_agreement
+polymarket,cfb,118349,emich,Eagles,,,no_agreement
+polymarket,cfb,118349,emich,Eagles,,,no_agreement
+polymarket,cfb,118350,wmich,Broncos,,,no_agreement
+polymarket,cfb,118350,wmich,Broncos,,,no_agreement
+polymarket,cfb,118352,scarst,Bulldogs,,,no_agreement
+polymarket,cfb,118352,scarst,Bulldogs,,,no_agreement
+polymarket,cfb,118353,norfst,Spartans,,,no_agreement
+polymarket,cfb,118353,norfst,Spartans,,,no_agreement
+polymarket,cfb,118354,bcook,Wildcats,,,no_agreement
+polymarket,cfb,118354,bcook,Wildcats,,,no_agreement
+polymarket,cfb,118356,howrd,Bison,,,no_agreement
+polymarket,cfb,118356,howrd,Bison,,,no_agreement
+polymarket,cfb,118360,morgst,Bears,,,no_agreement
+polymarket,cfb,118360,morgst,Bears,,,no_agreement
+polymarket,cfb,118361,delst,Hornets,,,no_agreement
+polymarket,cfb,118361,delst,Hornets,,,no_agreement
+polymarket,cfb,118364,niowa,Panthers,,,no_agreement
+polymarket,cfb,118364,niowa,Panthers,,,no_agreement
+polymarket,cfb,118366,msrst,Bears,,,no_agreement
+polymarket,cfb,118366,msrst,Bears,,,no_agreement
+polymarket,cfb,118368,sdst,Aztecs,cfb:south-dakota-state-jackrabbits,cfb:san-diego-state-aztecs,disagree
+polymarket,cfb,118368,sdst,Aztecs,cfb:south-dakota-state-jackrabbits,cfb:san-diego-state-aztecs,disagree
+polymarket,cfb,118369,frest,Bulldogs,,,no_agreement
+polymarket,cfb,118370,nmx,Lobos,,,no_agreement
+polymarket,cfb,118370,nmx,Lobos,,,no_agreement
+polymarket,cfb,118371,boise,Broncos,,,no_agreement
+polymarket,cfb,118371,boise,Broncos,,,no_agreement
+polymarket,cfb,118373,colst,Rams,,,no_agreement
+polymarket,cfb,118373,colst,Rams,,,no_agreement
+polymarket,cfb,118375,wyom,Cowboys,,,no_agreement
+polymarket,cfb,118375,wyom,Cowboys,,,no_agreement
+polymarket,cfb,118376,utahst,Aggies,,,no_agreement
+polymarket,cfb,118376,utahst,Aggies,,,no_agreement
+polymarket,cfb,118377,airf,Falcons,,,no_agreement
+polymarket,cfb,118377,airf,Falcons,,,no_agreement
+polymarket,cfb,118378,sjst,Spartans,,,no_agreement
+polymarket,cfb,118378,sjst,Spartans,,,no_agreement
+polymarket,cfb,118381,sacred,Pioneers,,,no_agreement
+polymarket,cfb,118381,sacred,Pioneers,,,no_agreement
+polymarket,cfb,118385,cencon,Blue Devils,,,no_agreement
+polymarket,cfb,118386,tentch,Golden Eagles,,,no_agreement
+polymarket,cfb,118386,tentch,Golden Eagles,,,no_agreement
+polymarket,cfb,118387,tenst,Tigers,,,no_agreement
+polymarket,cfb,118387,tenst,Tigers,,,no_agreement
+polymarket,cfb,118388,ekent,Colonels,,,no_agreement
+polymarket,cfb,118388,ekent,Colonels,,,no_agreement
+polymarket,cfb,118389,jaxst,Gamecocks,,,no_agreement
+polymarket,cfb,118389,jaxst,Gamecocks,,,no_agreement
+polymarket,cfb,118390,eill,Panthers,,,no_agreement
+polymarket,cfb,118390,eill,Panthers,,,no_agreement
+polymarket,cfb,118392,tmrt,Skyhawks,,,no_agreement
+polymarket,cfb,118392,tmrt,Skyhawks,,,no_agreement
+polymarket,cfb,118394,semst,Redhawks,,,no_agreement
+polymarket,cfb,118394,semst,Redhawks,,,no_agreement
+polymarket,cfb,118397,arz,Wildcats,,,no_agreement
+polymarket,cfb,118400,col,Buffaloes,,,no_agreement
+polymarket,cfb,118400,col,Buffaloes,,,no_agreement
+polymarket,cfb,118401,cah,Golden Bears,,,no_agreement
+polymarket,cfb,118401,cah,Golden Bears,,,no_agreement
+polymarket,cfb,118402,oregst,Beavers,,,no_agreement
+polymarket,cfb,118402,oregst,Beavers,,,no_agreement
+polymarket,cfb,118406,washst,Cougars,,,no_agreement
+polymarket,cfb,118406,washst,Cougars,,,no_agreement
+polymarket,cfb,118412,holy,Crusaders,,,no_agreement
+polymarket,cfb,118412,holy,Crusaders,,,no_agreement
+polymarket,cfb,118413,lafay,Leopards,,,no_agreement
+polymarket,cfb,118413,lafay,Leopards,,,no_agreement
+polymarket,cfb,118414,sc,Gamecocks,,,no_agreement
+polymarket,cfb,118414,sc,Gamecocks,,,no_agreement
+polymarket,cfb,118417,txam,Aggies,,,no_agreement
+polymarket,cfb,118417,txam,Aggies,,,no_agreement
+polymarket,cfb,118418,fl,Gators,,,no_agreement
+polymarket,cfb,118418,fl,Gators,,,no_agreement
+polymarket,cfb,118419,ga,Bulldogs,,,no_agreement
+polymarket,cfb,118419,ga,Bulldogs,,,no_agreement
+polymarket,cfb,118425,mspst,Bulldogs,,,no_agreement
+polymarket,cfb,118425,mspst,Bulldogs,,,no_agreement
+polymarket,cfb,118426,aubrn,Tigers,,,no_agreement
+polymarket,cfb,118426,aubrn,Tigers,,,no_agreement
+polymarket,cfb,118427,missr,Tigers,,,no_agreement
+polymarket,cfb,118427,missr,Tigers,,,no_agreement
+polymarket,cfb,118429,etnst,Buccaneers,,,no_agreement
+polymarket,cfb,118429,etnst,Buccaneers,,,no_agreement
+polymarket,cfb,118432,woff,Terriers,,,no_agreement
+polymarket,cfb,118432,woff,Terriers,,,no_agreement
+polymarket,cfb,118434,cita,Bulldogs,,,no_agreement
+polymarket,cfb,118434,cita,Bulldogs,,,no_agreement
+polymarket,cfb,118435,samf,Bulldogs,,,no_agreement
+polymarket,cfb,118435,samf,Bulldogs,,,no_agreement
+polymarket,cfb,118437,sfaus,Lumberjacks,,,no_agreement
+polymarket,cfb,118437,sfaus,Lumberjacks,,,no_agreement
+polymarket,cfb,118438,houbap,Huskies,,,no_agreement
+polymarket,cfb,118438,houbap,Huskies,,,no_agreement
+polymarket,cfb,118439,incar,Cardinals,,,no_agreement
+polymarket,cfb,118441,abchr,Wildcats,,,no_agreement
+polymarket,cfb,118441,abchr,Wildcats,,,no_agreement
+polymarket,cfb,118443,mcnst,Cowboys,,,no_agreement
+polymarket,cfb,118443,mcnst,Cowboys,,,no_agreement
+polymarket,cfb,118444,selou,Lions,,,no_agreement
+polymarket,cfb,118444,selou,Lions,,,no_agreement
+polymarket,cfb,118446,nichls,Colonels,,,no_agreement
+polymarket,cfb,118446,nichls,Colonels,,,no_agreement
+polymarket,cfb,118448,txs,Tigers,,,no_agreement
+polymarket,cfb,118448,txs,Tigers,,,no_agreement
+polymarket,cfb,118449,south,Jaguars,,,no_agreement
+polymarket,cfb,118449,south,Jaguars,,,no_agreement
+polymarket,cfb,118450,jackst,Tigers,,,no_agreement
+polymarket,cfb,118451,alcst,Braves,,,no_agreement
+polymarket,cfb,118451,alcst,Braves,,,no_agreement
+polymarket,cfb,118453,alaam,Bulldogs,,,no_agreement
+polymarket,cfb,118453,alaam,Bulldogs,,,no_agreement
+polymarket,cfb,118455,alast,Hornets,,,no_agreement
+polymarket,cfb,118455,alast,Hornets,,,no_agreement
+polymarket,cfb,118456,grmbst,Tigers,,,no_agreement
+polymarket,cfb,118456,grmbst,Tigers,,,no_agreement
+polymarket,cfb,118457,pvam,Panthers,,,no_agreement
+polymarket,cfb,118457,pvam,Panthers,,,no_agreement
+polymarket,cfb,118459,ndkst,Bison,,,no_agreement
+polymarket,cfb,118459,ndkst,Bison,,,no_agreement
+polymarket,cfb,118463,lamon,Warhawks,,,no_agreement
+polymarket,cfb,118463,lamon,Warhawks,,,no_agreement
+polymarket,cfb,118466,gas,Eagles,,,no_agreement
+polymarket,cfb,118466,gas,Eagles,,,no_agreement
+polymarket,cfb,118467,sala,Jaguars,,,no_agreement
+polymarket,cfb,118467,sala,Jaguars,,,no_agreement
+polymarket,cfb,118468,applst,Mountaineers,,,no_agreement
+polymarket,cfb,118468,applst,Mountaineers,,,no_agreement
+polymarket,cfb,118470,troy,Trojans,,,no_agreement
+polymarket,cfb,118470,troy,Trojans,,,no_agreement
+polymarket,cfb,118472,nmxst,Aggies,,,no_agreement
+polymarket,cfb,118472,nmxst,Aggies,,,no_agreement
+polymarket,cfb,118475,txamc,Lions,,,no_agreement
+polymarket,cfb,118475,txamc,Lions,,,no_agreement
+polymarket,cfb,118477,nal,Lions,,,no_agreement
+polymarket,cfb,118477,nal,Lions,,,no_agreement
+polymarket,cfb,118482,jac,Lions,,,no_agreement
+polymarket,cfb,118482,jac,Lions,,,no_agreement
+polymarket,cfb,118483,dxst,Trailblazers,,,no_agreement
+polymarket,cfb,118483,dxst,Trailblazers,,,no_agreement
+polymarket,cfb,118485,merri,Warriors,,,no_agreement
+polymarket,cfb,118485,merri,Warriors,,,no_agreement
+polymarket,cfb,118500,uwg,Wolves,,,no_agreement
+polymarket,cfb,118500,uwg,Wolves,,,no_agreement
+polymarket,cfb,3286587,abc,Buffaloes,,,no_agreement
+polymarket,cfb,3286591,bwst,Bulldogs,,,no_agreement
+polymarket,cfb,3286597,but,Bulldogs,,,no_agreement
+polymarket,cfb,3286597,but,Bulldogs,,,no_agreement
+polymarket,cfb,3286610,nhc,Chargers,,,no_agreement
+polymarket,cfb,3286610,nhc,Chargers,,,no_agreement
+polymarket,cfb,3286616,chs,Cougars,,,no_agreement
+polymarket,cfb,3286616,chs,Cougars,,,no_agreement
+polymarket,cfb,3286624,lc7d9922,Dragons,,,no_agreement
+polymarket,cfb,3286625,vlb,Dragons,,,no_agreement
+polymarket,cfb,3286662,frnk,Grizzlies,,,no_agreement
+polymarket,cfb,3286686,mhud34ce7,Lakers,,,no_agreement
+polymarket,cfb,3286686,mhud34ce7,Lakers,,,no_agreement
+polymarket,cfb,3286689,linc,Lions,,,no_agreement
+polymarket,cfb,3286700,csuece6b3,Marauders,,,no_agreement
+polymarket,cfb,3286719,scsu,Owls,,,no_agreement
+polymarket,cfb,3286744,twu,Rams,,,no_agreement
+polymarket,cfb,3286746,fpu,Ravens,,,no_agreement
+polymarket,cfb,3286748,dkc,Red Devils,,,no_agreement
+polymarket,cfb,3286758,tmc,Saints,,,no_agreement
+polymarket,cfb,3286767,stnh,Skyhawks,,,no_agreement
+polymarket,cfb,3286767,stnh,Skyhawks,,,no_agreement
+polymarket,cfb,3286787,ewc,Tigers,,,no_agreement
+polymarket,cfb,3286795,vsu206eca,Trojans,,,no_agreement
+polymarket,cfb,3286798,utrgv,Vaqueros,,,no_agreement
+polymarket,cfb,3286798,utrgv,Vaqueros,,,no_agreement
+polymarket,cfb,3286809,webc8a2e4,Warriors,,,no_agreement
+polymarket,cfb,3286813,nmu,Wildcats,,,no_agreement
+polymarket,cfb,3286814,cwu,Wildcats,,,no_agreement
+polymarket,cfb,3286820,lcdbfc25,Wildcats,,,no_agreement
 polymarket,mls,115062,mim,CF Montréal,mls:usa.inter_miami,mls:usa.usl.1.montreal,disagree
 polymarket,mls,115062,mim,CF Montréal,mls:usa.inter_miami,mls:usa.usl.1.montreal,disagree
 polymarket,mls,115062,mim,CF Montréal,mls:usa.inter_miami,mls:usa.usl.1.montreal,disagree

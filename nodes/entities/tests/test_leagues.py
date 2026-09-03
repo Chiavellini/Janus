@@ -17,9 +17,10 @@ def test_every_consumer_reads_the_registry():
     assert league_for_prefix("epl") == "epl" and league_for_prefix("lal") == "lal" and league_for_prefix("ucl") is None
 
 
-def test_the_nine_of_2026_09_03_and_their_shapes():
-    from nodes.entities.leagues import SOCCER
-    assert set(LEAGUES) == {"mlb", "nfl", "nba", "wnba", "nhl", "epl", "lal", "bun", "mls"}
+def test_the_ten_of_2026_09_03_and_their_shapes():
+    from nodes.entities.leagues import SOCCER, espn_groups
+    assert set(LEAGUES) == {"mlb", "nfl", "nba", "wnba", "nhl", "epl", "lal", "bun", "mls", "cfb"}
+    assert espn_groups() == {"cfb": ("80", "81")}, "FBS and FCS; ESPN's default feed is FBS alone"
     assert set(SOCCER) == {"epl", "lal", "bun", "mls"}
     assert all(LEAGUES[c].outcomes == 3 for c in SOCCER) and all(LEAGUES[c].outcomes == 2 for c in LEAGUES if c not in SOCCER)
     assert all(lg.anchor == "espn" and lg.espn is not None for lg in LEAGUES.values())
@@ -27,8 +28,8 @@ def test_the_nine_of_2026_09_03_and_their_shapes():
 
 
 def test_an_unregistered_league_still_blocks_at_the_rule():
-    assert enablement("cfb") == ["UNREGISTERED"]
-    assert prove("cfb", "moneyline", "game", ("a", "b")).code == "NO_RULE_FOR_LEAGUE"
+    assert enablement("ufc") == ["UNREGISTERED"]
+    assert prove("ufc", "moneyline", "game", ("a", "b")).code == "NO_RULE_FOR_LEAGUE"
 
 
 def test_enablement_names_what_each_league_lacks():
@@ -38,6 +39,7 @@ def test_enablement_names_what_each_league_lacks():
     # computed from the rule and template registries at call time.
     assert enablement("mlb") == []
     assert enablement("nfl") == ["EVIDENCE_UNMEASURED:nfl.cancelled_rate", "EVIDENCE_UNMEASURED:nfl.postponed_gt48h_rate"]
+    assert enablement("cfb") == ["EVIDENCE_UNMEASURED:cfb.cancelled_rate", "EVIDENCE_UNMEASURED:cfb.postponed_gt48h_rate"]
     for c in ("nba", "wnba", "nhl"):
         assert enablement(c) == ["NO_KALSHI_TEMPLATE", "NO_POLYMARKET_TEMPLATE"], c
     # soccer: rule cited, both templates reviewed 2026-09-03, rates unmeasured per competition

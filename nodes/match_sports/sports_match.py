@@ -182,10 +182,17 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> l
         if not _fullgame_slug(league).match(slug):
             _reason(stats["p_reason"], "derivative_event_not_full_game_moneyline")
             continue
+        # College football on Polymarket names `teams` by nickname alone ("Wildcats", "Demons") while
+        # the moneyline's `outcomes` carry the schools; the outcome label is the fallback, in order.
+        labels = _pm_outcome_labels(ev, slug)
         ents = []
-        for t in teams:
+        for i, t in enumerate(teams):
             res = r.resolve(league, text=t.get("name"), venue="polymarket",
                             venue_team_id=str(t.get("id") or ""))
+            if not res.ok and i < len(labels):
+                res = r.resolve(league, text=labels[i], venue="polymarket")
+                if res.ok:
+                    t = {**t, "name": labels[i]}
             if res.ok:
                 ents.append((t, res.entity_id))
         if len({e for _, e in ents}) != 2:
@@ -222,6 +229,18 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> l
                                    g.start_utc, "Draw", rules=pm_rules, key=canonical_key(g, league),
                                    key_provenance=KeyProvenance.API_STRUCTURED))
     return out
+
+
+def _pm_outcome_labels(ev: dict, slug: str) -> list[str]:
+    import json as _json
+    mk = next((x for x in ev.get("markets") or [] if x.get("slug") == slug), None)
+    outs = (mk or {}).get("outcomes")
+    if isinstance(outs, str):
+        try:
+            outs = _json.loads(outs)
+        except ValueError:
+            outs = None
+    return [str(o) for o in outs] if isinstance(outs, list) and len(outs) == 2 else []
 
 
 def _client(name: str):

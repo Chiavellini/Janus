@@ -17,6 +17,261 @@ kalshi,bun,bc9180c6-9094-4ad9-a4c9-d37ea2eb51ca,bun:ger.rb_leipzig,custom_strike
 kalshi,bun,d08e9809-a307-4a53-921c-a29a78486f7c,bun:ger.dortmund,custom_strike,BVB
 kalshi,bun,d443a482-af73-41ca-8d4b-f49502861dc4,bun:ger.bayern_munich,custom_strike,BMU
 kalshi,bun,fa1055e7-cad7-4b85-81f0-a1285af3b387,bun:ger.stuttgart,custom_strike,VFB
+kalshi,cfb,022430ef-be23-4e30-9b55-1e8a57c8f2e2,cfb:western-carolina-catamounts,custom_strike,WCU
+kalshi,cfb,03b992e9-aa9a-461d-b54b-0ae4034a0190,cfb:cincinnati-bearcats,custom_strike,CIN
+kalshi,cfb,05d451fc-a4f0-431f-bcf2-b73ac234ab47,cfb:delaware-blue-hens,custom_strike,DEL
+kalshi,cfb,060a7218-e96c-4c89-ad3d-468987226942,cfb:iowa-state-cyclones,custom_strike,ISU
+kalshi,cfb,0853d791-ca34-45fd-8ca7-02be5b2b9e47,cfb:houston-christian-huskies,custom_strike,HCU
+kalshi,cfb,08b9851e-b11a-4d1b-9be1-d7a745369b36,cfb:towson-tigers,custom_strike,TOWS
+kalshi,cfb,090e67b0-1460-4922-91f9-7f442b2eb856,cfb:new-mexico-lobos,custom_strike,UNM
+kalshi,cfb,095a3e5e-8e99-45b3-8a05-40996a7f5bfe,cfb:texas-longhorns,custom_strike,TEX
+kalshi,cfb,09c4de81-5187-42d0-b559-593874942123,cfb:charleston-southern-buccaneers,custom_strike,CHSO
+kalshi,cfb,0ac8aab5-3706-481a-a85c-7bc2f33606f7,cfb:marshall-thundering-herd,custom_strike,MRSH
+kalshi,cfb,0ac94a1a-15e0-4201-991e-af57de732f98,cfb:ul-monroe-warhawks,custom_strike,ULM
+kalshi,cfb,0b2cc0b5-8e58-499a-bdf1-3178b48b3689,cfb:central-washington-wildcats,custom_strike,CWU
+kalshi,cfb,0bf6c190-3556-4ad9-90f2-942a596cd45d,cfb:virginia-cavaliers,custom_strike,UVA
+kalshi,cfb,0c1080fa-b69c-48d6-b161-5694029980e8,cfb:hawaii-rainbow-warriors,custom_strike,HAW
+kalshi,cfb,0d1df751-249f-4240-8bb9-c4011b4ed780,cfb:south-dakota-state-jackrabbits,custom_strike,SDST
+kalshi,cfb,0e8ff0a5-43fa-4350-a45e-0998851bdaaa,cfb:florida-state-seminoles,custom_strike,FSU
+kalshi,cfb,0edfed6e-072f-4e43-829b-b20941a95b60,cfb:oregon-state-beavers,custom_strike,ORST
+kalshi,cfb,0f572bce-b1a9-4624-9f98-d50a0823bdcc,cfb:tusculum-pioneers,custom_strike,TC
+kalshi,cfb,10a492cd-2e14-4113-b6c9-28d80be0350f,cfb:stetson-hatters,custom_strike,STET
+kalshi,cfb,12f48f09-feae-4074-9ff1-2e5bae9c33fe,cfb:ucf-knights,custom_strike,UCF
+kalshi,cfb,1535c6e0-9f19-413c-940e-7212d0f834fa,cfb:arkansas-state-red-wolves,custom_strike,ARST
+kalshi,cfb,15544177-f899-4360-bd72-9091a2f6b7b2,cfb:mcneese-cowboys,custom_strike,MCNS
+kalshi,cfb,155a71bd-966e-4fc1-89bc-a6e3a07c328b,cfb:air-force-falcons,custom_strike,AFA
+kalshi,cfb,155b8f85-a763-46c9-a6d2-82dfea5a7cdc,cfb:byu-cougars,custom_strike,BYU
+kalshi,cfb,15f75603-cb42-4000-8110-af3c069e7c1d,cfb:washington-huskies,custom_strike,WASH
+kalshi,cfb,162dbdff-e1c7-42a2-b974-c5d68068de76,cfb:eastern-illinois-panthers,custom_strike,EIU
+kalshi,cfb,17b70f39-2dd0-4497-a8f2-d68baff1abc2,cfb:pittsburgh-panthers,custom_strike,PITT
+kalshi,cfb,1814c50e-be48-4b01-90e5-13a68e333b06,cfb:nicholls-colonels,custom_strike,NICH
+kalshi,cfb,184dec31-5e24-4390-9361-a135d3c97bf5,cfb:bucknell-bison,custom_strike,BUCK
+kalshi,cfb,19ba63dd-6a61-40d0-bf07-79ebb018188d,cfb:the-citadel-bulldogs,custom_strike,CIT
+kalshi,cfb,19e65a21-93aa-44d9-be82-9078509fcc6a,cfb:oklahoma-sooners,custom_strike,OKLA
+kalshi,cfb,1b8f516c-beb9-47e4-b651-7e989eda7d3b,cfb:portland-state-vikings,custom_strike,PRST
+kalshi,cfb,1d26f5cd-dcf9-48a6-85fa-d453edaf2efa,cfb:north-dakota-fighting-hawks,custom_strike,UND
+kalshi,cfb,1d27c970-07a1-4176-8eb0-b91bef710549,cfb:iowa-hawkeyes,custom_strike,IOWA
+kalshi,cfb,1d33ea52-cb53-4eae-9a17-f350d9db084a,cfb:mercer-bears,custom_strike,MER
+kalshi,cfb,1db5f6a2-6127-4b66-830a-10f5d8af4211,cfb:kentucky-wildcats,custom_strike,UK
+kalshi,cfb,1dd4fdd9-268f-446e-be5d-83dab0e0c7f4,cfb:stephen-f-austin-lumberjacks,custom_strike,SFA
+kalshi,cfb,1efc4e06-89bd-45ed-a580-5667af36aa02,cfb:navy-midshipmen,custom_strike,NAVY
+kalshi,cfb,1f4751c3-4393-4093-a859-da71ca90953f,cfb:stonehill-skyhawks,custom_strike,STNH
+kalshi,cfb,2007a77a-364c-479c-9ba2-445e07585545,cfb:bryant-bulldogs,custom_strike,BRY
+kalshi,cfb,20136afb-05f1-4d23-b7d6-df85d3315836,cfb:san-diego-toreros,custom_strike,USD
+kalshi,cfb,2046b24a-dc89-49bc-8f54-7b26e5d0b8ec,cfb:eastern-washington-eagles,custom_strike,EWU
+kalshi,cfb,2139a836-8327-4e44-8741-01265f098614,cfb:southern-jaguars,custom_strike,SOU
+kalshi,cfb,23b7bfb4-d82a-4b3d-9a7e-34f3ec7a7658,cfb:northern-arizona-lumberjacks,custom_strike,NAU
+kalshi,cfb,24779e22-4fa7-41de-9588-0a98e7d3758b,cfb:sacred-heart-pioneers,custom_strike,SHU
+kalshi,cfb,24f587ff-0cd0-42ed-b232-f3850407fc0a,cfb:michigan-wolverines,custom_strike,MICH
+kalshi,cfb,251f080f-22ed-4e5d-9126-8a11e1910b3a,cfb:wagner-seahawks,custom_strike,WAG
+kalshi,cfb,2726efb5-20bb-48b6-9af6-cd8d61310b16,cfb:franklin-pierce-ravens,custom_strike,FPU
+kalshi,cfb,27abd1c3-e02d-4d8f-941f-e313898a69ec,cfb:western-illinois-leathernecks,custom_strike,WIU
+kalshi,cfb,292dc322-c3f9-46d8-919c-d72a097bf829,cfb:kennesaw-state-owls,custom_strike,KENN
+kalshi,cfb,2a063f95-6320-451a-8175-1d85c9198790,cfb:penn-state-nittany-lions,custom_strike,PSU
+kalshi,cfb,2a8cd997-4354-46a3-b625-92ea82fb9ba0,cfb:uab-blazers,custom_strike,UAB
+kalshi,cfb,2d4b8148-d11d-44f4-9284-61da616770cc,cfb:missouri-tigers,custom_strike,MIZZ
+kalshi,cfb,2eafddaf-140c-4c46-9a18-3a8a9d671964,cfb:western-kentucky-hilltoppers,custom_strike,WKU
+kalshi,cfb,2ed60796-495c-4cfe-831c-7ab0cd3140fc,cfb:florida-am-rattlers,custom_strike,FAMU
+kalshi,cfb,2f2c303b-5000-48b7-aa2c-665f1da6ba0c,cfb:west-virginia-state-yellow-jackets,custom_strike,WVSU
+kalshi,cfb,32c6235b-341c-4d7b-bf83-fddd09cfaf89,cfb:memphis-tigers,custom_strike,MEM
+kalshi,cfb,32f24615-7c92-4575-aaa7-8d366d71a3c6,cfb:south-carolina-state-bulldogs,custom_strike,SCST
+kalshi,cfb,339366c5-6d28-41f6-a37e-31fc6ff60c3b,cfb:florida-gators,custom_strike,FLA
+kalshi,cfb,33e2ba83-e5e7-4f0c-8a5b-ae3823f69513,cfb:morgan-state-bears,custom_strike,MORG
+kalshi,cfb,35ce7734-dbbd-4c4e-985c-992d4d6b5a61,cfb:unlv-rebels,custom_strike,UNLV
+kalshi,cfb,378b4aa7-e3e3-401b-af77-e9355a4e6c87,cfb:colorado-state-rams,custom_strike,CSU
+kalshi,cfb,38123493-b5f5-4965-bb5e-9d74d90eb229,cfb:northern-illinois-huskies,custom_strike,NIU
+kalshi,cfb,383b2845-e118-43da-a0e8-974ad343b8e2,cfb:lafayette-leopards,custom_strike,LAF
+kalshi,cfb,38a403d2-b8a3-4fa0-bd88-e3632715d8a1,cfb:lindenwood-lions,custom_strike,LINW
+kalshi,cfb,39bbb91b-8351-4c69-be69-4c08206c6884,cfb:south-florida-bulls,custom_strike,USF
+kalshi,cfb,3a527168-1048-4cb3-ae17-13a86efde559,cfb:sacramento-state-hornets,custom_strike,SAC
+kalshi,cfb,3ae8d24d-bfdf-472b-b2e8-d45088e15391,cfb:north-dakota-state-bison,custom_strike,NDSU
+kalshi,cfb,3b2e88fe-6639-4e45-a75d-751c75b64f5f,cfb:southern-miss-golden-eagles,custom_strike,USM
+kalshi,cfb,3c51e13b-4cfc-4d04-9bb0-004b197b6f70,cfb:west-georgia-wolves,custom_strike,UWGA
+kalshi,cfb,3e9712a5-b6e6-4a8c-80ef-a73f20aaf631,cfb:arkansas-pine-bluff-golden-lions,custom_strike,ARPB
+kalshi,cfb,3fbc70e3-7139-46f2-bab5-4118da465aaf,cfb:william-mary-tribe,custom_strike,WM
+kalshi,cfb,40870436-059a-4dc3-8d34-d21afe96d326,cfb:arizona-state-sun-devils,custom_strike,ASU
+kalshi,cfb,40d8752b-143f-4cec-b54c-f6b47a2ac164,cfb:usc-trojans,custom_strike,USC
+kalshi,cfb,41b7f8fa-a692-46a3-b216-653e7800ca53,cfb:east-carolina-pirates,custom_strike,ECU
+kalshi,cfb,41c085ab-5d1e-49af-a138-d18ff0dc8488,cfb:southern-connecticut-state-owls,custom_strike,SCSU
+kalshi,cfb,421fb37a-2cf7-4b76-b0d5-100925a52520,cfb:west-florida-argonauts,custom_strike,UWFL
+kalshi,cfb,43eba189-c3db-47f6-9afd-3c6ff9bed001,cfb:morehead-state-eagles,custom_strike,MORE
+kalshi,cfb,443007f0-5854-4aee-94bd-f7c5b97739d2,cfb:duquesne-dukes,custom_strike,DUQ
+kalshi,cfb,448415cd-5adf-46d9-a896-ad784c1c318b,cfb:elon-phoenix,custom_strike,ELON
+kalshi,cfb,45c13c2b-38fd-4ea8-b382-fb54069c2ecb,cfb:prairie-view-am-panthers,custom_strike,PV
+kalshi,cfb,47bd6fd0-2ab9-448b-b698-f0bb15c5f2cc,cfb:maryland-terrapins,custom_strike,MD
+kalshi,cfb,49f26808-9595-45ec-946d-2aa58d67b782,cfb:sam-houston-bearkats,custom_strike,SHSU
+kalshi,cfb,4c159e73-9f81-4489-818e-a75b64a57cec,cfb:samford-bulldogs,custom_strike,SAM
+kalshi,cfb,4d04b3c4-de42-41ce-b7e0-a9ac9716ceb7,cfb:arizona-wildcats,custom_strike,ARIZ
+kalshi,cfb,4d2f02d9-4a24-4357-b378-f2118861c5dc,cfb:ohio-bobcats,custom_strike,OHIO
+kalshi,cfb,4d4d88c2-4a32-4c4f-8816-36e56b6119b5,cfb:southern-illinois-salukis,custom_strike,SIU
+kalshi,cfb,4da5d3e8-73c3-4f6f-84dd-fa29d5a934e9,cfb:uc-davis-aggies,custom_strike,UCD
+kalshi,cfb,4ee9a82b-0e34-4e13-a3c2-be77ddf34b22,cfb:st-thomas-tommies,custom_strike,UST
+kalshi,cfb,50e039e2-7981-4a71-9373-0d7a502909e4,cfb:wofford-terriers,custom_strike,WOF
+kalshi,cfb,54475ae3-49ac-4491-937a-62184e3e6a9f,cfb:gardner-webb-runnin-bulldogs,custom_strike,WEBB
+kalshi,cfb,547eaf27-448e-4498-ba41-9fb335f9e495,cfb:nevada-wolf-pack,custom_strike,NEV
+kalshi,cfb,569fde07-f267-4d17-9001-b6b323923850,cfb:east-texas-am-lions,custom_strike,ETAM
+kalshi,cfb,56f969a8-a2ef-42f7-bcd2-11d2abdb6bfb,cfb:fordham-rams,custom_strike,FOR
+kalshi,cfb,572cdd0f-f91f-4f48-b047-94d9b508477e,cfb:illinois-fighting-illini,custom_strike,ILL
+kalshi,cfb,57392e48-91ea-4934-85e7-28091cd76073,cfb:elizabeth-city-state-vikings,custom_strike,ECSU
+kalshi,cfb,58435bc1-489d-4661-b211-5037c934b192,cfb:virginia-tech-hokies,custom_strike,VT
+kalshi,cfb,586a7e29-a8b0-4fcd-9ccb-6b12df0162fe,cfb:eastern-michigan-eagles,custom_strike,EMU
+kalshi,cfb,5a725ffa-d397-45bc-abbf-a39e989507d0,cfb:long-island-university-sharks,custom_strike,LIU
+kalshi,cfb,5a758443-7736-44b0-b762-3ec0b3c280ab,cfb:southern-utah-thunderbirds,custom_strike,SUU
+kalshi,cfb,5a7a1616-73ed-4516-a411-a051455ce3c0,cfb:mississippi-state-bulldogs,custom_strike,MSST
+kalshi,cfb,5af0118b-3a61-45fd-9703-c167d20b8825,cfb:ball-state-cardinals,custom_strike,BALL
+kalshi,cfb,5b72466d-848b-42b1-9154-03fd1aa5be07,cfb:georgia-southern-eagles,custom_strike,GASO
+kalshi,cfb,5c8ee0ed-a25e-4827-97cf-32467c77f904,cfb:utsa-roadrunners,custom_strike,UTSA
+kalshi,cfb,5caeca01-c8a4-431d-bc5a-153c544cbe99,cfb:indiana-hoosiers,custom_strike,IND
+kalshi,cfb,5cf5c1b6-7e16-400e-9213-98bebc49667c,cfb:northern-colorado-bears,custom_strike,UNCO
+kalshi,cfb,5ee1b20c-932b-4033-9b9f-ea33d4331339,cfb:coastal-carolina-chanticleers,custom_strike,CCAR
+kalshi,cfb,5f9eb380-c875-493a-8ec5-7b26e27a4f6e,cfb:central-michigan-chippewas,custom_strike,CMU
+kalshi,cfb,629e0bb6-ec7d-4db6-956e-919dfdccd71e,cfb:delaware-state-hornets,custom_strike,DSU
+kalshi,cfb,62ed71ca-54e7-488b-aebe-87f5a7bdf93f,cfb:austin-peay-governors,custom_strike,PEAY
+kalshi,cfb,633c9bdd-9b1c-4e68-ad6b-7e554209d7db,cfb:tennessee-volunteers,custom_strike,TENN
+kalshi,cfb,63512fa9-9e9d-4b93-a7f3-6fb0a1412c18,cfb:bowling-green-falcons,custom_strike,BGSU
+kalshi,cfb,6578cfe6-e17c-46ff-a2f7-eb4a5cc2ec73,cfb:oregon-ducks,custom_strike,ORE
+kalshi,cfb,677805e1-9feb-41c6-b810-9b9f4997fb9a,cfb:tulane-green-wave,custom_strike,TULN
+kalshi,cfb,6a0aafe2-3ac5-4863-85cd-181ce0478a77,cfb:jackson-state-tigers,custom_strike,JKST
+kalshi,cfb,6d448d1b-775d-4f8c-bf6a-dc3190ccdf0d,cfb:tennessee-tech-golden-eagles,custom_strike,TNTC
+kalshi,cfb,6dafc587-bda4-450e-b94c-535b11de64fe,cfb:uconn-huskies,custom_strike,CONN
+kalshi,cfb,6e7fa257-9602-486e-820a-d489d22272e1,cfb:grambling-tigers,custom_strike,GRAM
+kalshi,cfb,6e968a1b-bb7b-4cfd-984d-6fe0ea2c64b4,cfb:minnesota-golden-gophers,custom_strike,MINN
+kalshi,cfb,6ef86191-9211-4ea4-bbe4-bb7cdc04ebf4,cfb:north-texas-mean-green,custom_strike,UNT
+kalshi,cfb,6f17d555-1dd5-4e67-b13c-eade3d57349a,cfb:northwestern-state-demons,custom_strike,NWST
+kalshi,cfb,70ddf80a-3853-481a-9903-05200c42c955,cfb:james-madison-dukes,custom_strike,JMU
+kalshi,cfb,71105e96-4ac4-416c-acc5-6df9745b4534,cfb:south-dakota-coyotes,custom_strike,SDAK
+kalshi,cfb,71190fe5-9e6c-4da6-8dde-00c5292314c7,cfb:maine-black-bears,custom_strike,ME
+kalshi,cfb,721c6368-9a6a-47f1-8fdb-302f25594b6e,cfb:utah-utes,custom_strike,UTAH
+kalshi,cfb,763afe17-0607-42d7-8d23-bbec306c1c4b,cfb:toledo-rockets,custom_strike,TOL
+kalshi,cfb,7764a181-5c88-46f6-9372-51c153f40f4b,cfb:butler-bulldogs,custom_strike,BUT
+kalshi,cfb,7780c9bf-4db2-4a56-bdda-03e8dc0374af,cfb:arkansas-razorbacks,custom_strike,ARK
+kalshi,cfb,784ef8cd-632a-47e2-b21a-072c25db2ec0,cfb:incarnate-word-cardinals,custom_strike,IW
+kalshi,cfb,7888ff21-64fa-43fa-98ac-8aafbe80e2d9,cfb:eastern-kentucky-colonels,custom_strike,EKY
+kalshi,cfb,7a47c2bf-3d5a-4cdd-b3cc-fce07250d1cb,cfb:rice-owls,custom_strike,RICE
+kalshi,cfb,7a77c54f-511d-4bcd-a4d5-7e84ea5eda89,cfb:new-mexico-state-aggies,custom_strike,NMSU
+kalshi,cfb,7bede978-7f5c-4445-adb6-9d8c6cbe8e20,cfb:furman-paladins,custom_strike,FUR
+kalshi,cfb,7d548f70-b3f7-480b-9ee9-cd6b600bbffc,cfb:app-state-mountaineers,custom_strike,APP
+kalshi,cfb,8035af46-2259-433c-ae79-2f0f7d88e789,cfb:miami-oh-redhawks,custom_strike,MOH
+kalshi,cfb,811682fa-9d13-4ecb-ab8a-03944ff5731e,cfb:youngstown-state-penguins,custom_strike,YSU
+kalshi,cfb,812c93ed-68ba-43ad-a243-ddf32c62e870,cfb:montana-state-bobcats,custom_strike,MTST
+kalshi,cfb,852e994c-dc14-452a-883d-ae3f4b892cea,cfb:villanova-wildcats,custom_strike,VILL
+kalshi,cfb,85b7d461-1342-48f6-aead-62f259d208b6,cfb:east-tennessee-state-buccaneers,custom_strike,ETSU
+kalshi,cfb,860eebd8-02af-4f30-8679-4f40580fac2a,cfb:wisconsin-badgers,custom_strike,WIS
+kalshi,cfb,862690f7-6570-4a15-acb8-58f49d496859,cfb:syracuse-orange,custom_strike,SYR
+kalshi,cfb,88318770-96ba-4f53-8784-de752baeea06,cfb:alabama-state-hornets,custom_strike,ALST
+kalshi,cfb,89e2fc30-bf0f-42a8-884f-e0494afdeb9b,cfb:kansas-state-wildcats,custom_strike,KSU
+kalshi,cfb,8a2f8873-c64f-4f88-b7ff-79a052e44765,cfb:stony-brook-seawolves,custom_strike,STON
+kalshi,cfb,8bb956de-6bd1-4a23-9c17-2650b9799ffe,cfb:western-michigan-broncos,custom_strike,WMU
+kalshi,cfb,8c2bb3a9-6c76-47f6-8ccb-eef514f2d166,cfb:texas-tech-red-raiders,custom_strike,TTU
+kalshi,cfb,8c5cbe47-721b-4a91-8d42-0d77138d2e69,cfb:boston-college-eagles,custom_strike,BC
+kalshi,cfb,8cd1c3b1-0e14-4583-b17b-939bb19d0589,cfb:tulsa-golden-hurricane,custom_strike,TLSA
+kalshi,cfb,8ce020e8-9b57-4b59-afb5-7ad24fad3e9e,cfb:baylor-bears,custom_strike,BAY
+kalshi,cfb,91964dd4-5d02-4b91-9b46-665a9e792df6,cfb:rutgers-scarlet-knights,custom_strike,RUTG
+kalshi,cfb,91f61259-0eed-4218-ac10-262fd5ec6df8,cfb:north-alabama-lions,custom_strike,UNA
+kalshi,cfb,92d7cf0d-355c-49fd-bada-c80338cbf879,cfb:central-arkansas-bears,custom_strike,CARK
+kalshi,cfb,936e69f2-9a82-4e97-a82f-d95e735d7926,cfb:north-carolina-central-eagles,custom_strike,NCCU
+kalshi,cfb,970f770a-bb53-48aa-8bfe-c9d332d8154d,cfb:ucla-bruins,custom_strike,UCLA
+kalshi,cfb,97d8759a-d9d8-4ffc-9745-116b80274d8b,cfb:alcorn-state-braves,custom_strike,ALCN
+kalshi,cfb,996c929d-3055-4461-bd67-aa69b971e345,cfb:wake-forest-demon-deacons,custom_strike,WAKE
+kalshi,cfb,9c0b84f0-52dd-48dd-a574-a576634ecc69,cfb:marist-red-foxes,custom_strike,MRST
+kalshi,cfb,9cc51183-55c0-4ad5-be46-35b6d74acd35,cfb:lehigh-mountain-hawks,custom_strike,LEH
+kalshi,cfb,9de6a1db-a275-4d1c-b1f5-678c250b3d24,cfb:texas-southern-tigers,custom_strike,TXSO
+kalshi,cfb,9ecd9d0a-0772-409a-9715-711518f3f134,cfb:ole-miss-rebels,custom_strike,MISS
+kalshi,cfb,9f275cb0-9c53-4483-8856-1dc07e9d7c8f,cfb:smu-mustangs,custom_strike,SMU
+kalshi,cfb,9fe8d636-d8ab-403a-b0f8-6c152f1883cf,cfb:murray-state-racers,custom_strike,MURR
+kalshi,cfb,a1a9b074-3b37-4077-908a-f25a6f962a4d,cfb:auburn-tigers,custom_strike,AUB
+kalshi,cfb,a1ac24c7-0d09-4f75-a0e6-f3da3c0e72d4,cfb:michigan-state-spartans,custom_strike,MSU
+kalshi,cfb,a3d9226b-b02b-406a-b9e0-e7deebeb2a6f,cfb:northern-iowa-panthers,custom_strike,UNI
+kalshi,cfb,a47620b5-5fac-400f-b01c-50018f17a645,cfb:akron-zips,custom_strike,AKR
+kalshi,cfb,a4a6a11a-d3fe-4a6c-9742-1cb853b47750,cfb:fresno-state-bulldogs,custom_strike,FRES
+kalshi,cfb,a52bbb42-bc1f-4445-beaf-c10f45a8f454,cfb:georgetown-hoyas,custom_strike,GTWN
+kalshi,cfb,a5ac112b-f124-4a55-8057-3592fd21cc0e,cfb:utah-tech-trailblazers,custom_strike,UTU
+kalshi,cfb,a5da86ec-c19c-4033-9561-ec5ed45ac9f0,cfb:washington-state-cougars,custom_strike,WSU
+kalshi,cfb,a73077eb-4cf1-4550-8e20-15a8747da266,cfb:san-diego-state-aztecs,custom_strike,SDSU
+kalshi,cfb,a791681b-d60e-4957-ae7b-8268d5a1a74d,cfb:west-virginia-mountaineers,custom_strike,WVU
+kalshi,cfb,a819a15b-e2f0-458b-9dc5-58523adf8091,cfb:lewis-clark-river-otters,custom_strike,LC
+kalshi,cfb,a918cf98-b685-4bbb-9293-7a23436076d0,cfb:louisville-cardinals,custom_strike,LOU
+kalshi,cfb,a92d6ac7-dbda-434a-b791-5b5959d1fb7b,cfb:georgia-bulldogs,custom_strike,UGA
+kalshi,cfb,aa153db2-cab2-4fcf-a4d3-ac0f83e6ce7e,cfb:texas-am-aggies,custom_strike,TXAM
+kalshi,cfb,aaa3ada7-3a06-4585-8d4b-7c89470d1085,cfb:weber-state-wildcats,custom_strike,WEB
+kalshi,cfb,ab0862ff-7453-43fb-9f28-728f2e8c5653,cfb:new-haven-chargers,custom_strike,NHC
+kalshi,cfb,ab3974f1-c2f4-43de-85a0-62e0dd0b94bd,cfb:massachusetts-minutemen,custom_strike,MASS
+kalshi,cfb,aba673ad-6df4-4cc1-8e01-76e53934aa11,cfb:florida-international-panthers,custom_strike,FIU
+kalshi,cfb,ac4a34f9-a1d1-4b82-b2a3-f349d64ac23c,cfb:oklahoma-state-cowboys,custom_strike,OKST
+kalshi,cfb,adf4bbc4-05b7-45fa-9916-da416f2ea481,cfb:san-jose-state-spartans,custom_strike,SJSU
+kalshi,cfb,aea0eb78-0883-4f89-b99e-03fb556bf5e8,cfb:north-carolina-at-aggies,custom_strike,NCAT
+kalshi,cfb,b07db1eb-af8b-4f67-8995-6bf311c7927d,cfb:vmi-keydets,custom_strike,VMI
+kalshi,cfb,b1800983-ed6c-458b-ad7a-fe6de55561fc,cfb:old-dominion-monarchs,custom_strike,ODU
+kalshi,cfb,b2c4c8ef-b6b0-40cf-854a-eb7b24ce5e2d,cfb:indiana-state-sycamores,custom_strike,INST
+kalshi,cfb,b3ab0e5c-0a4d-4d55-8487-d117afd0402f,cfb:lsu-tigers,custom_strike,LSU
+kalshi,cfb,b3ac30e0-f10a-42fe-80c1-43994996e4a8,cfb:miles-golden-bears,custom_strike,MILES
+kalshi,cfb,b4937c1f-1950-4f84-a9f7-62604e437398,cfb:utah-state-aggies,custom_strike,USU
+kalshi,cfb,b663f8f1-b765-40ba-a536-c402b935b6a8,cfb:montana-grizzlies,custom_strike,MONT
+kalshi,cfb,b7af1ebd-3316-492f-9fe5-89e94ba058d8,cfb:colgate-raiders,custom_strike,COLG
+kalshi,cfb,bb63ad49-2d07-442b-a61b-37a79da6ef01,cfb:vanderbilt-commodores,custom_strike,VAN
+kalshi,cfb,bbae6bc1-0dc9-448f-84e4-dd5c1059c4db,cfb:idaho-vandals,custom_strike,IDHO
+kalshi,cfb,bc0ffb76-a1ed-4c14-8525-9830f11ddce3,cfb:duke-blue-devils,custom_strike,DUKE
+kalshi,cfb,bcc3fa99-bf6b-481f-87e5-d24fe2bbef87,cfb:monmouth-hawks,custom_strike,MONM
+kalshi,cfb,be100287-e541-46dc-b313-680b764fefa7,cfb:mississippi-valley-state-delta-devils,custom_strike,MVSU
+kalshi,cfb,be107279-93fe-4a83-b57a-3d2cb2e81737,cfb:kent-state-golden-flashes,custom_strike,KENT
+kalshi,cfb,bf9c0c73-f449-49d1-a948-f0d907177168,cfb:kansas-jayhawks,custom_strike,KU
+kalshi,cfb,bfe03623-0584-4761-9f36-effd5af0ef5b,cfb:north-carolina-tar-heels,custom_strike,UNC
+kalshi,cfb,c42e1ab3-4311-4a65-b28d-d4d71e9e8cf9,cfb:texas-state-bobcats,custom_strike,TXST
+kalshi,cfb,c44b1872-445d-4309-8ac6-630461a9b00f,cfb:edward-waters-tigers,custom_strike,EWC
+kalshi,cfb,c73bbb5f-402c-4c10-9986-29c0f5b76ee8,cfb:central-connecticut-blue-devils,custom_strike,CCSU
+kalshi,cfb,c90827e3-fc0d-4921-b264-dc724c78e660,cfb:southeast-missouri-state-redhawks,custom_strike,SEMO
+kalshi,cfb,c9182799-0b38-48f5-8f5b-aac3ee3644ec,cfb:norfolk-state-spartans,custom_strike,NORF
+kalshi,cfb,c941d0d2-cc75-4fb3-85be-10eddb732347,cfb:davidson-wildcats,custom_strike,DAV
+kalshi,cfb,c9866078-c81e-4d18-a093-b74ed39cfafe,cfb:florida-atlantic-owls,custom_strike,FAU
+kalshi,cfb,c9ff894b-8cb2-4d7e-8979-d7e8b996d5f6,cfb:temple-owls,custom_strike,TEM
+kalshi,cfb,ca81522b-c6c8-4227-ba2b-62f717e29c75,cfb:colorado-state-rams,custom_strike,CSU
+kalshi,cfb,ccaf6134-72c9-4543-9968-2907358b0a72,cfb:california-golden-bears,custom_strike,CAL
+kalshi,cfb,ce517a4f-3a08-49b7-8c6b-998a27d6bf47,cfb:south-alabama-jaguars,custom_strike,USA
+kalshi,cfb,ce9ac1de-b027-4c6f-91e0-33e143a74f4c,cfb:holy-cross-crusaders,custom_strike,HC
+kalshi,cfb,cf8444da-91b3-4213-be43-9948fe53834f,cfb:se-louisiana-lions,custom_strike,SELA
+kalshi,cfb,d005a394-c6bf-49d9-b5bb-e3695e0e95b4,cfb:liberty-flames,custom_strike,LIB
+kalshi,cfb,d02cb013-fc71-47a8-81fe-29e0b6882e24,cfb:buffalo-bulls,custom_strike,BUFF
+kalshi,cfb,d5895b6e-e14a-4884-ab19-4cfaad380c04,cfb:chattanooga-mocs,custom_strike,CHAT
+kalshi,cfb,d74b3066-235e-4eb0-bd89-6888b1828334,cfb:cal-poly-mustangs,custom_strike,CP
+kalshi,cfb,d76c78bf-3249-4d7a-86d6-df7df6c0fb60,cfb:alabama-crimson-tide,custom_strike,ALA
+kalshi,cfb,d830e966-2fb1-4d87-bc35-0f8e60edb3f2,cfb:hampton-pirates,custom_strike,HAMP
+kalshi,cfb,d981e5d3-1c61-4038-ac55-8b5a36c4c3fd,cfb:idaho-state-bengals,custom_strike,IDST
+kalshi,cfb,dc3f22cf-921a-423f-9d1b-ed0289cc7ee7,cfb:stanford-cardinal,custom_strike,STAN
+kalshi,cfb,dcf096c6-b9c3-47c2-a34f-d7faf9a14a10,cfb:lamar-cardinals,custom_strike,LAM
+kalshi,cfb,ddaff44b-6899-434f-bc89-456e3d598be3,cfb:army-black-knights,custom_strike,ARMY
+kalshi,cfb,df25ea1b-c4b9-4f38-8e93-1b314d89a3f7,cfb:abilene-christian-wildcats,custom_strike,AC
+kalshi,cfb,e075fc6c-3596-42a9-99f0-c7c05b358808,cfb:south-carolina-gamecocks,custom_strike,SCAR
+kalshi,cfb,e19d5795-1f4f-4034-a3ab-9960d0b0b279,cfb:northwestern-wildcats,custom_strike,NW
+kalshi,cfb,e29b78dd-ca06-432f-8f2f-8d25aca47b9a,cfb:notre-dame-fighting-irish,custom_strike,ND
+kalshi,cfb,e355b997-56b0-403a-97f4-cad8649e2876,cfb:illinois-state-redbirds,custom_strike,ILST
+kalshi,cfb,e64b56ac-9932-453b-8c68-9ba9c7033cd6,cfb:wyoming-cowboys,custom_strike,WYO
+kalshi,cfb,e72adc95-046e-49bc-b16b-1495dc1dd4b7,cfb:missouri-state-bears,custom_strike,MOSU
+kalshi,cfb,e813189e-d2df-42c3-9dd4-e685d8fdac19,cfb:purdue-boilermakers,custom_strike,PUR
+kalshi,cfb,e9a0a3db-f084-4846-b825-2cb1fd1b2171,cfb:richmond-spiders,custom_strike,RICH
+kalshi,cfb,e9b72d42-ea8b-42be-9c23-695e6b7294b3,cfb:alabama-am-bulldogs,custom_strike,AAMU
+kalshi,cfb,ebabed1f-cd29-4f95-886f-aeeebd87f886,cfb:robert-morris-colonials,custom_strike,RMU
+kalshi,cfb,ec50afc5-3311-4ffe-bae3-f9af4a79f4ea,cfb:tennessee-state-tigers,custom_strike,TNST
+kalshi,cfb,ed0415f7-41a7-4f79-a071-850f9dc58667,cfb:nebraska-cornhuskers,custom_strike,NEB
+kalshi,cfb,f03f7cf0-5d2b-450f-b699-268de2c25880,cfb:bethune-cookman-wildcats,custom_strike,COOK
+kalshi,cfb,f057bce7-3b59-429f-bac3-cc417c1c7411,cfb:louisiana-tech-bulldogs,custom_strike,LT
+kalshi,cfb,f060e85c-9173-4f46-97b3-93644748c16e,cfb:clemson-tigers,custom_strike,CLEM
+kalshi,cfb,f0cbcf2f-e38d-476f-8d32-b808a25e6a7b,cfb:new-hampshire-wildcats,custom_strike,UNH
+kalshi,cfb,f17cc58a-4b13-4c14-b420-c3b7dd172fe4,cfb:miami-hurricanes,custom_strike,MIA
+kalshi,cfb,f35e0a7e-33c4-4e10-88d1-ddb07924443b,cfb:howard-bison,custom_strike,HOW
+kalshi,cfb,f41c0d18-8de2-45e4-ad95-81c05cf52dfb,cfb:louisiana-ragin-cajuns,custom_strike,ULL
+kalshi,cfb,f4a72eaf-dd14-4f0a-bca4-db3c40b45f48,cfb:rhode-island-rams,custom_strike,URI
+kalshi,cfb,f6333c46-3ac7-4530-b0d0-51795fb98813,cfb:houston-cougars,custom_strike,HOU
+kalshi,cfb,f6d4c4e8-1a70-4ef6-b44f-e54bdc0d92a4,cfb:ut-martin-skyhawks,custom_strike,UTM
+kalshi,cfb,f775c024-aa46-4bf4-9dfa-146cfb2b2ddd,cfb:kentucky-christian-knights,custom_strike,KCU
+kalshi,cfb,f7ccd724-fed5-42e6-b763-99b4a1907830,cfb:campbell-fighting-camels,custom_strike,CAMP
+kalshi,cfb,f855f22d-4762-447d-b367-40d0c8257039,cfb:utep-miners,custom_strike,UTEP
+kalshi,cfb,f975778e-fef0-48bf-8426-4cdc072ad804,cfb:drake-bulldogs,custom_strike,DRKE
+kalshi,cfb,f97e7103-657c-4983-b640-61cabe45c8fe,cfb:georgia-tech-yellow-jackets,custom_strike,GT
+kalshi,cfb,f9a98a3e-a046-494a-b4de-c565e43cace9,cfb:tarleton-state-texans,custom_strike,TARL
+kalshi,cfb,fa55b6b6-4267-410f-bd09-990e08a82be2,cfb:colorado-buffaloes,custom_strike,COLO
+kalshi,cfb,faa5d9ae-48b0-4f85-8f2f-8dcc92fde9f3,cfb:georgia-state-panthers,custom_strike,GAST
+kalshi,cfb,fb432ba8-14cd-4375-82aa-03e7a6599f58,cfb:presbyterian-blue-hose,custom_strike,PRE
+kalshi,cfb,fc19fcd1-1879-45c1-b031-f27d79b8eae5,cfb:merrimack-warriors,custom_strike,MRMK
 kalshi,epl,0a9eca41-bd4f-415c-b804-58214e97a77f,epl:eng.ipswich,custom_strike,IPS
 kalshi,epl,244308db-fa16-4065-905e-9053d68370e6,epl:eng.brentford,custom_strike,BRE
 kalshi,epl,246a91c5-f145-401f-bf0d-2a436e25a5f6,epl:eng.arsenal,custom_strike,ARS
@@ -173,6 +428,149 @@ polymarket,bun,114295,bun:ger.hamburg,teams[].id,Hamburger SV
 polymarket,bun,3285310,bun:ger.sc_paderborn_07,teams[].id,SC Paderborn 07
 polymarket,bun,3285311,bun:ger.sv_07_elversberg,teams[].id,SV 07 Elversberg
 polymarket,bun,3285565,bun:ger.schalke_04,teams[].id,FC Schalke 04
+polymarket,cfb,118230,cfb:smu-mustangs,teams[].id,Mustangs
+polymarket,cfb,118232,cfb:uconn-huskies,teams[].id,Huskies
+polymarket,cfb,118233,cfb:cincinnati-bearcats,teams[].id,Bearcats
+polymarket,cfb,118234,cfb:tulsa-golden-hurricane,teams[].id,Golden Hurricane
+polymarket,cfb,118235,cfb:houston-cougars,teams[].id,Cougars
+polymarket,cfb,118237,cfb:ucf-knights,teams[].id,Knights
+polymarket,cfb,118239,cfb:tulane-green-wave,teams[].id,Green Wave
+polymarket,cfb,118241,cfb:stony-brook-seawolves,teams[].id,Seawolves
+polymarket,cfb,118242,cfb:ualbany-great-danes,teams[].id,Great Danes
+polymarket,cfb,118244,cfb:maine-black-bears,teams[].id,Black Bears
+polymarket,cfb,118245,cfb:north-carolina-tar-heels,teams[].id,Tar Heels
+polymarket,cfb,118247,cfb:miami-hurricanes,teams[].id,Hurricanes
+polymarket,cfb,118248,cfb:louisville-cardinals,teams[].id,Cardinals
+polymarket,cfb,118249,cfb:notre-dame-fighting-irish,teams[].id,Fighting Irish
+polymarket,cfb,118250,cfb:duke-blue-devils,teams[].id,Blue Devils
+polymarket,cfb,118252,cfb:pittsburgh-panthers,teams[].id,Panthers
+polymarket,cfb,118253,cfb:florida-state-seminoles,teams[].id,Seminoles
+polymarket,cfb,118254,cfb:syracuse-orange,teams[].id,Orange
+polymarket,cfb,118255,cfb:virginia-tech-hokies,teams[].id,Hokies
+polymarket,cfb,118257,cfb:nc-state-wolfpack,teams[].id,Wolfpack
+polymarket,cfb,118258,cfb:wake-forest-demon-deacons,teams[].id,Demon Deacons
+polymarket,cfb,118262,cfb:duquesne-dukes,teams[].id,Dukes
+polymarket,cfb,118263,cfb:richmond-spiders,teams[].id,Spiders
+polymarket,cfb,118265,cfb:massachusetts-minutemen,teams[].id,Minutemen
+polymarket,cfb,118266,cfb:villanova-wildcats,teams[].id,Wildcats
+polymarket,cfb,118267,cfb:montana-grizzlies,teams[].id,Grizzlies
+polymarket,cfb,118270,cfb:north-dakota-fighting-hawks,teams[].id,Fighting Hawks
+polymarket,cfb,118272,cfb:idaho-vandals,teams[].id,Vandals
+polymarket,cfb,118277,cfb:southern-utah-thunderbirds,teams[].id,Thunderbirds
+polymarket,cfb,118279,cfb:coastal-carolina-chanticleers,teams[].id,Chanticleers
+polymarket,cfb,118280,cfb:gardner-webb-runnin-bulldogs,teams[].id,Runnin' Bulldogs
+polymarket,cfb,118281,cfb:liberty-flames,teams[].id,Flames
+polymarket,cfb,118283,cfb:presbyterian-blue-hose,teams[].id,Blue Hose
+polymarket,cfb,118284,cfb:campbell-fighting-camels,teams[].id,Fighting Camels
+polymarket,cfb,118285,cfb:iowa-hawkeyes,teams[].id,Hawkeyes
+polymarket,cfb,118287,cfb:indiana-hoosiers,teams[].id,Hoosiers
+polymarket,cfb,118288,cfb:purdue-boilermakers,teams[].id,Boilermakers
+polymarket,cfb,118289,cfb:michigan-wolverines,teams[].id,Wolverines
+polymarket,cfb,118290,cfb:wisconsin-badgers,teams[].id,Badgers
+polymarket,cfb,118292,cfb:ohio-state-buckeyes,teams[].id,Buckeyes
+polymarket,cfb,118293,cfb:nebraska-cornhuskers,teams[].id,Cornhuskers
+polymarket,cfb,118295,cfb:penn-state-nittany-lions,teams[].id,Nittany Lions
+polymarket,cfb,118296,cfb:illinois-fighting-illini,teams[].id,Fighting Illini
+polymarket,cfb,118297,cfb:rutgers-scarlet-knights,teams[].id,Scarlet Knights
+polymarket,cfb,118298,cfb:minnesota-golden-gophers,teams[].id,Golden Gophers
+polymarket,cfb,118299,cfb:oklahoma-sooners,teams[].id,Sooners
+polymarket,cfb,118303,cfb:texas-longhorns,teams[].id,Longhorns
+polymarket,cfb,118304,cfb:iowa-state-cyclones,teams[].id,Cyclones
+polymarket,cfb,118305,cfb:texas-tech-red-raiders,teams[].id,Red Raiders
+polymarket,cfb,118307,cfb:oklahoma-state-cowboys,teams[].id,Cowboys
+polymarket,cfb,118308,cfb:tcu-horned-frogs,teams[].id,Horned Frogs
+polymarket,cfb,118309,cfb:hawaii-rainbow-warriors,teams[].id,Rainbow Warriors
+polymarket,cfb,118313,cfb:william-mary-tribe,teams[].id,Tribe
+polymarket,cfb,118317,cfb:elon-phoenix,teams[].id,Phoenix
+polymarket,cfb,118319,cfb:delaware-blue-hens,teams[].id,Fightin' Blue Hens
+polymarket,cfb,118320,cfb:uab-blazers,teams[].id,Blazers
+polymarket,cfb,118321,cfb:middle-tennessee-blue-raiders,teams[].id,Blue Raiders
+polymarket,cfb,118322,cfb:marshall-thundering-herd,teams[].id,Thundering Herd
+polymarket,cfb,118325,cfb:utep-miners,teams[].id,Miners
+polymarket,cfb,118327,cfb:north-texas-mean-green,teams[].id,Mean Green
+polymarket,cfb,118328,cfb:charlotte-49ers,teams[].id,49ers
+polymarket,cfb,118332,cfb:rice-owls,teams[].id,Owls
+polymarket,cfb,118333,cfb:utsa-roadrunners,teams[].id,Roadrunners
+polymarket,cfb,118334,cfb:valparaiso-beacons,teams[].id,Beacons
+polymarket,cfb,118335,cfb:youngstown-state-penguins,teams[].id,Penguins
+polymarket,cfb,118338,cfb:monmouth-hawks,teams[].id,Hawks
+polymarket,cfb,118339,cfb:akron-zips,teams[].id,Zips
+polymarket,cfb,118340,cfb:kent-state-golden-flashes,teams[].id,Golden Flashes
+polymarket,cfb,118341,cfb:buffalo-bulls,teams[].id,Bulls
+polymarket,cfb,118342,cfb:ohio-bobcats,teams[].id,Bobcats
+polymarket,cfb,118345,cfb:toledo-rockets,teams[].id,Rockets
+polymarket,cfb,118347,cfb:central-michigan-chippewas,teams[].id,Chippewas
+polymarket,cfb,118351,cfb:hampton-pirates,teams[].id,Pirates
+polymarket,cfb,118357,cfb:north-carolina-at-aggies,teams[].id,Aggies
+polymarket,cfb,118358,cfb:north-central-college-cardinals,teams[].id,Eagles
+polymarket,cfb,118359,cfb:florida-am-rattlers,teams[].id,Rattlers
+polymarket,cfb,118362,cfb:illinois-state-redbirds,teams[].id,Redbirds
+polymarket,cfb,118363,cfb:southern-illinois-salukis,teams[].id,Salukis
+polymarket,cfb,118365,cfb:indiana-state-sycamores,teams[].id,Sycamores
+polymarket,cfb,118367,cfb:drake-bulldogs,teams[].id,Bulldogs
+polymarket,cfb,118372,cfb:nevada-wolf-pack,teams[].id,Wolf Pack
+polymarket,cfb,118374,cfb:unlv-rebels,teams[].id,Runnin' Rebels
+polymarket,cfb,118379,cfb:wagner-seahawks,teams[].id,Seahawks
+polymarket,cfb,118382,cfb:long-island-university-sharks,teams[].id,Sharks
+polymarket,cfb,118383,cfb:robert-morris-colonials,teams[].id,Colonials
+polymarket,cfb,118384,cfb:bryant-bulldogs,teams[].id,Bulldogs
+polymarket,cfb,118391,cfb:murray-state-racers,teams[].id,Racers
+polymarket,cfb,118393,cfb:austin-peay-governors,teams[].id,Governors
+polymarket,cfb,118395,cfb:oregon-ducks,teams[].id,Ducks
+polymarket,cfb,118396,cfb:usc-trojans,teams[].id,Trojans
+polymarket,cfb,118398,cfb:utah-utes,teams[].id,Utes
+polymarket,cfb,118399,cfb:washington-huskies,teams[].id,Huskies
+polymarket,cfb,118403,cfb:ucla-bruins,teams[].id,Bruins
+polymarket,cfb,118404,cfb:stanford-cardinal,teams[].id,Cardinal
+polymarket,cfb,118405,cfb:arizona-state-sun-devils,teams[].id,Sun Devils
+polymarket,cfb,118407,cfb:bucknell-bison,teams[].id,Bison
+polymarket,cfb,118408,cfb:navy-midshipmen,teams[].id,Midshipmen
+polymarket,cfb,118409,cfb:lehigh-mountain-hawks,teams[].id,Mountain Hawks
+polymarket,cfb,118410,cfb:colgate-raiders,teams[].id,Raiders
+polymarket,cfb,118411,cfb:army-black-knights,teams[].id,Black Knights
+polymarket,cfb,118415,cfb:kentucky-wildcats,teams[].id,Wildcats
+polymarket,cfb,118416,cfb:lsu-tigers,teams[].id,Tigers
+polymarket,cfb,118420,cfb:vanderbilt-commodores,teams[].id,Commodores
+polymarket,cfb,118421,cfb:ole-miss-rebels,teams[].id,Rebels
+polymarket,cfb,118422,cfb:alabama-crimson-tide,teams[].id,Crimson Tide
+polymarket,cfb,118423,cfb:arkansas-razorbacks,teams[].id,Razorbacks
+polymarket,cfb,118424,cfb:tennessee-volunteers,teams[].id,Volunteers
+polymarket,cfb,118428,cfb:chattanooga-mocs,teams[].id,Mocs
+polymarket,cfb,118430,cfb:furman-paladins,teams[].id,Paladins
+polymarket,cfb,118431,cfb:mercyhurst-lakers,teams[].id,Bears
+polymarket,cfb,118433,cfb:western-carolina-catamounts,teams[].id,Catamounts
+polymarket,cfb,118436,cfb:vmi-keydets,teams[].id,Keydets
+polymarket,cfb,118440,cfb:sam-houston-bearkats,teams[].id,Bearkats
+polymarket,cfb,118442,cfb:central-arkansas-bears,teams[].id,Bears
+polymarket,cfb,118445,cfb:northwestern-state-demons,teams[].id,Demons
+polymarket,cfb,118447,cfb:lamar-cardinals,teams[].id,Cardinals
+polymarket,cfb,118452,cfb:mississippi-valley-state-delta-devils,teams[].id,Delta Devils
+polymarket,cfb,118454,cfb:arkansas-pine-bluff-golden-lions,teams[].id,Golden Lions
+polymarket,cfb,118458,cfb:south-dakota-state-jackrabbits,teams[].id,Jackrabbits
+polymarket,cfb,118460,cfb:south-dakota-coyotes,teams[].id,Coyotes
+polymarket,cfb,118461,cfb:western-illinois-leathernecks,teams[].id,Leathernecks
+polymarket,cfb,118462,cfb:louisiana-ragin-cajuns,teams[].id,Ragin' Cajuns
+polymarket,cfb,118464,cfb:arkansas-state-red-wolves,teams[].id,Red Wolves
+polymarket,cfb,118465,cfb:georgia-state-panthers,teams[].id,Panthers
+polymarket,cfb,118469,cfb:texas-state-bobcats,teams[].id,Bobcats
+polymarket,cfb,118471,cfb:byu-cougars,teams[].id,Cougars
+polymarket,cfb,118494,cfb:tarleton-state-texans,teams[].id,Texans
+polymarket,cfb,118495,cfb:tusculum-pioneers,teams[].id,Pioneers
+polymarket,cfb,118497,cfb:st-thomas-tommies,teams[].id,Tommies
+polymarket,cfb,3286556,cfb:west-florida-argonauts,teams[].id,Argonauts
+polymarket,cfb,3286584,cfb:central-oklahoma-bronchos,teams[].id,Bronchos
+polymarket,cfb,3286630,cfb:morehead-state-eagles,teams[].id,Eagles
+polymarket,cfb,3286643,cfb:dayton-flyers,teams[].id,Flyers
+polymarket,cfb,3286648,cfb:miles-golden-bears,teams[].id,Golden Bears
+polymarket,cfb,3286666,cfb:stetson-hatters,teams[].id,Hatters
+polymarket,cfb,3286674,cfb:georgetown-hoyas,teams[].id,Hoyas
+polymarket,cfb,3286683,cfb:kentucky-christian-knights,teams[].id,Knights
+polymarket,cfb,3286749,cfb:marist-red-foxes,teams[].id,Red Foxes
+polymarket,cfb,3286778,cfb:kentucky-state-thorobreds,teams[].id,Thorobreds
+polymarket,cfb,3286792,cfb:san-diego-toreros,teams[].id,Toreros
+polymarket,cfb,3286799,cfb:elizabeth-city-state-vikings,teams[].id,Vikings
+polymarket,cfb,3286817,cfb:davidson-wildcats,teams[].id,Wildcats
+polymarket,cfb,3286828,cfb:west-virginia-state-yellow-jackets,teams[].id,Yellow Jackets
 polymarket,epl,100000,epl:eng.newcastle,teams[].id,Newcastle United FC
 polymarket,epl,100004,epl:eng.man_city,teams[].id,Manchester City FC
 polymarket,epl,100005,epl:eng.arsenal,teams[].id,Arsenal FC

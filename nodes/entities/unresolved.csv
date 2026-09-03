@@ -1,8 +1,366 @@
 league,source,reason,query,count
+cfb,text,ambiguous,Bulldogs,21
+cfb,text,ambiguous,Wildcats,21
+cfb,text,ambiguous,Tigers,19
+cfb,text,ambiguous,Bears,12
+cfb,text,ambiguous,Eagles,12
+cfb,text,ambiguous,Panthers,12
+cfb,text,ambiguous,Aggies,10
+cfb,text,ambiguous,Lions,9
+cfb,text,ambiguous,Owls,9
+cfb,text,ambiguous,Huskies,8
+cfb,text,ambiguous,Cardinals,7
+cfb,text,ambiguous,Cougars,7
+cfb,text,ambiguous,Rams,7
+cfb,text,ambiguous,Bison,6
+cfb,text,ambiguous,Bobcats,6
+cfb,text,ambiguous,Cowboys,6
+cfb,text,ambiguous,Spartans,6
 nfl,text,unknown,la,6
+cfb,text,ambiguous,Hornets,5
+cfb,text,ambiguous,Trojans,5
 nhl,text,unknown,las,5
+cfb,text,ambiguous,Broncos,4
+cfb,text,ambiguous,Buccaneers,4
+cfb,text,ambiguous,Bulls,4
+cfb,text,ambiguous,Colonels,4
+cfb,text,ambiguous,Dukes,4
+cfb,text,ambiguous,Falcons,4
+cfb,text,ambiguous,Gamecocks,4
+cfb,text,ambiguous,Golden Eagles,4
+cfb,text,ambiguous,Jaguars,4
+cfb,text,ambiguous,Knights,4
+cfb,text,ambiguous,Lumberjacks,4
+cfb,text,ambiguous,Mountaineers,4
+cfb,text,ambiguous,Mustangs,4
+cfb,text,ambiguous,Pirates,4
+cfb,text,ambiguous,Skyhawks,4
 nhl,text,unknown,cal,4
 nhl,text,unknown,lak,4
 nhl,text,unknown,mon,4
+cfb,text,ambiguous,Blue Devils,3
+cfb,text,ambiguous,Buffaloes,3
+cfb,text,ambiguous,Golden Bears,3
+cfb,text,ambiguous,Grizzlies,3
+cfb,text,ambiguous,Pioneers,3
+cfb,text,ambiguous,Vikings,3
+cfb,text,ambiguous,Warriors,3
+cfb,text,ambiguous,Yellow Jackets,3
+cfb,text,ambiguous,Bearcats,2
+cfb,text,ambiguous,Beavers,2
+cfb,text,ambiguous,Bengals,2
+cfb,text,ambiguous,Blazers,2
+cfb,text,ambiguous,Braves,2
+cfb,text,ambiguous,Bruins,2
+cfb,text,ambiguous,Chargers,2
+cfb,text,ambiguous,Crusaders,2
+cfb,text,ambiguous,Dragons,2
+cfb,text,ambiguous,Gators,2
+cfb,text,ambiguous,Hawks,2
+cfb,text,ambiguous,Hilltoppers,2
+cfb,text,ambiguous,Hurricanes,2
+cfb,text,ambiguous,Jayhawks,2
+cfb,text,ambiguous,Lakers,2
+cfb,text,ambiguous,Leopards,2
+cfb,text,ambiguous,Lobos,2
+cfb,text,ambiguous,Miners,2
+cfb,text,ambiguous,Monarchs,2
+cfb,text,ambiguous,Phoenix,2
+cfb,text,ambiguous,Raiders,2
+cfb,text,ambiguous,Rebels,2
+cfb,text,ambiguous,RedHawks,2
+cfb,text,ambiguous,Redhawks,2
+cfb,text,ambiguous,Seahawks,2
+cfb,text,ambiguous,TROY,2
+cfb,text,ambiguous,Terriers,2
+cfb,text,ambiguous,Trailblazers,2
+cfb,text,ambiguous,Troy,2
+cfb,text,ambiguous,Warhawks,2
+cfb,text,ambiguous,Wolverines,2
+cfb,text,ambiguous,Wolves,2
+cfb,text,ambiguous,troy,2
+cfb,text,unknown,ALBY,2
+cfb,text,unknown,Appalachian St.,2
+cfb,text,unknown,BUFF,2
+cfb,text,unknown,Ball St.,2
+cfb,text,unknown,CAMP,2
+cfb,text,unknown,CHAT,2
+cfb,text,unknown,COOK,2
+cfb,text,unknown,EKY,2
+cfb,text,unknown,East Tennessee St.,2
+cfb,text,unknown,Fightin' Blue Hens,2
+cfb,text,unknown,IND,2
+cfb,text,unknown,JVST,2
+cfb,text,unknown,Jacksonville St.,2
+cfb,text,unknown,Kent St.,2
+cfb,text,unknown,Louisiana-Monroe,2
+cfb,text,unknown,MIZZ,2
+cfb,text,unknown,MOH,2
+cfb,text,unknown,Miami (FL),2
+cfb,text,unknown,OKLA,2
+cfb,text,unknown,PEAY,2
+cfb,text,unknown,Penn St.,2
+cfb,text,unknown,Runnin' Rebels,2
+cfb,text,unknown,STON,2
+cfb,text,unknown,TXAM,2
+cfb,text,unknown,Tennessee-Martin,2
+cfb,text,unknown,University at Albany,2
+cfb,text,unknown,Utah St.,2
+cfb,text,unknown,Vaqueros,2
+cfb,text,unknown,WM,2
+cfb,text,unknown,abchr,2
+cfb,text,unknown,airf,2
+cfb,text,unknown,alaam,2
+cfb,text,unknown,alast,2
+cfb,text,unknown,albny,2
+cfb,text,unknown,alcst,2
+cfb,text,unknown,applst,2
+cfb,text,unknown,arkst,2
+cfb,text,unknown,arpb,2
+cfb,text,unknown,arzst,2
+cfb,text,unknown,aubrn,2
+cfb,text,unknown,ausp,2
+cfb,text,unknown,ballst,2
+cfb,text,unknown,bayl,2
+cfb,text,unknown,bcook,2
+cfb,text,unknown,boise,2
+cfb,text,unknown,boscol,2
+cfb,text,unknown,bowlgr,2
+cfb,text,unknown,but,2
+cfb,text,unknown,cah,2
+cfb,text,unknown,calpol,2
+cfb,text,unknown,camp,2
+cfb,text,unknown,charlt,2
+cfb,text,unknown,chat,2
+cfb,text,unknown,chs,2
+cfb,text,unknown,chsou,2
+cfb,text,unknown,cita,2
+cfb,text,unknown,clmsn,2
+cfb,text,unknown,cmich,2
+cfb,text,unknown,coast,2
+cfb,text,unknown,col,2
+cfb,text,unknown,colst,2
+cfb,text,unknown,delst,2
+cfb,text,unknown,dxst,2
+cfb,text,unknown,ecar,2
+cfb,text,unknown,eill,2
+cfb,text,unknown,ekent,2
+cfb,text,unknown,emich,2
+cfb,text,unknown,etnst,2
+cfb,text,unknown,ewash,2
+cfb,text,unknown,fl,2
+cfb,text,unknown,flam,2
+cfb,text,unknown,flatl,2
+cfb,text,unknown,flint,2
+cfb,text,unknown,fordm,2
+cfb,text,unknown,ga,2
+cfb,text,unknown,gardwb,2
+cfb,text,unknown,gas,2
+cfb,text,unknown,grmbst,2
+cfb,text,unknown,gtech,2
+cfb,text,unknown,hawaii,2
+cfb,text,unknown,holy,2
+cfb,text,unknown,houbap,2
+cfb,text,unknown,howrd,2
+cfb,text,unknown,idhst,2
+cfb,text,unknown,illst,2
+cfb,text,unknown,ind,2
+cfb,text,unknown,indst,2
+cfb,text,unknown,iowast,2
+cfb,text,unknown,jac,2
+cfb,text,unknown,jaxst,2
+cfb,text,unknown,jmad,2
+cfb,text,unknown,kan,2
+cfb,text,unknown,kanst,2
+cfb,text,unknown,kenest,2
+cfb,text,unknown,kentst,2
+cfb,text,unknown,lafay,2
+cfb,text,unknown,lamon,2
+cfb,text,unknown,lehi,2
+cfb,text,unknown,librty,2
+cfb,text,unknown,liub,2
+cfb,text,unknown,loulaf,2
+cfb,text,unknown,marsh,2
+cfb,text,unknown,mcnst,2
+cfb,text,unknown,merri,2
+cfb,text,unknown,mhud34ce7,2
+cfb,text,unknown,miaoh,2
+cfb,text,unknown,minnst,2
+cfb,text,unknown,missr,2
+cfb,text,unknown,monst,2
+cfb,text,unknown,morgst,2
+cfb,text,unknown,mphs,2
+cfb,text,unknown,mspst,2
+cfb,text,unknown,msrst,2
+cfb,text,unknown,mst,2
+cfb,text,unknown,msvlst,2
+cfb,text,unknown,mtnst,2
+cfb,text,unknown,murst,2
+cfb,text,unknown,nal,2
+cfb,text,unknown,narz,2
+cfb,text,unknown,ncol,2
+cfb,text,unknown,ndak,2
+cfb,text,unknown,ndkst,2
+cfb,text,unknown,nebr,2
+cfb,text,unknown,nhamp,2
+cfb,text,unknown,nhc,2
+cfb,text,unknown,nichls,2
+cfb,text,unknown,nill,2
+cfb,text,unknown,niowa,2
+cfb,text,unknown,nmx,2
+cfb,text,unknown,nmxst,2
+cfb,text,unknown,norfst,2
+cfb,text,unknown,ntx,2
+cfb,text,unknown,ohiost,2
+cfb,text,unknown,okl,2
+cfb,text,unknown,old,2
+cfb,text,unknown,oregst,2
+cfb,text,unknown,pennst,2
+cfb,text,unknown,portst,2
+cfb,text,unknown,pvam,2
+cfb,text,unknown,ri,2
+cfb,text,unknown,robms,2
+cfb,text,unknown,rutger,2
+cfb,text,unknown,sacred,2
+cfb,text,unknown,sala,2
+cfb,text,unknown,samf,2
+cfb,text,unknown,scarst,2
+cfb,text,unknown,sdkst,2
+cfb,text,unknown,selou,2
+cfb,text,unknown,semst,2
+cfb,text,unknown,sfaus,2
+cfb,text,unknown,sfl,2
+cfb,text,unknown,sill,2
+cfb,text,unknown,sjst,2
+cfb,text,unknown,smho,2
+cfb,text,unknown,soumis,2
+cfb,text,unknown,south,2
+cfb,text,unknown,stbr,2
+cfb,text,unknown,stnh,2
+cfb,text,unknown,sutah,2
+cfb,text,unknown,syra,2
+cfb,text,unknown,tarl,2
+cfb,text,unknown,templ,2
+cfb,text,unknown,tenst,2
+cfb,text,unknown,tentch,2
+cfb,text,unknown,tmrt,2
+cfb,text,unknown,tows,2
+cfb,text,unknown,tx,2
+cfb,text,unknown,txam,2
+cfb,text,unknown,txamc,2
+cfb,text,unknown,txs,2
+cfb,text,unknown,txtech,2
+cfb,text,unknown,ucdv,2
+cfb,text,unknown,utahst,2
+cfb,text,unknown,utrgv,2
+cfb,text,unknown,uwg,2
+cfb,text,unknown,vamil,2
+cfb,text,unknown,vand,2
+cfb,text,unknown,vtech,2
+cfb,text,unknown,washst,2
+cfb,text,unknown,wcar,2
+cfb,text,unknown,webst,2
+cfb,text,unknown,will,2
+cfb,text,unknown,wisc,2
+cfb,text,unknown,wkent,2
+cfb,text,unknown,wm,2
+cfb,text,unknown,wmich,2
+cfb,text,unknown,woff,2
+cfb,text,unknown,wvir,2
+cfb,text,unknown,wyom,2
+cfb,text,unknown,yngst,2
+cfb,text,ambiguous,Cavaliers,1
+cfb,text,ambiguous,Charlotte,1
+cfb,text,ambiguous,Marauders,1
+cfb,text,ambiguous,OSU,1
+cfb,text,ambiguous,Ravens,1
+cfb,text,ambiguous,Red Devils,1
+cfb,text,ambiguous,Saints,1
+cfb,text,unknown,AC,1
+cfb,text,unknown,AFA,1
+cfb,text,unknown,ARPB,1
+cfb,text,unknown,BUT,1
+cfb,text,unknown,CCAR,1
+cfb,text,unknown,CHAR,1
+cfb,text,unknown,CHS,1
+cfb,text,unknown,CWU,1
+cfb,text,unknown,Central Connecticut St.,1
+cfb,text,unknown,Central State (OH) Marauders,1
+cfb,text,unknown,Chicago State Cougars,1
+cfb,text,unknown,EWC,1
+cfb,text,unknown,FPU,1
+cfb,text,unknown,Grambling St.,1
+cfb,text,unknown,IW,1
+cfb,text,unknown,Iowa St.,1
+cfb,text,unknown,LINW,1
+cfb,text,unknown,Lane Dragons,1
+cfb,text,unknown,MCNS,1
+cfb,text,unknown,MOSU,1
+cfb,text,unknown,MURR,1
+cfb,text,unknown,Mississippi Valley St.,1
+cfb,text,unknown,NCST,1
+cfb,text,unknown,NHC,1
+cfb,text,unknown,NW,1
+cfb,text,unknown,Nicholls St.,1
+cfb,text,unknown,North Carolina St.,1
+cfb,text,unknown,North Dakota St.,1
+cfb,text,unknown,Northwestern St.,1
+cfb,text,unknown,Ohio St.,1
+cfb,text,unknown,PRE,1
+cfb,text,unknown,SCAR,1
+cfb,text,unknown,SCSU,1
+cfb,text,unknown,STNH,1
+cfb,text,unknown,South Carolina St.,1
+cfb,text,unknown,South Dakota St.,1
+cfb,text,unknown,Southeast Missouri St.,1
+cfb,text,unknown,Southeastern Louisiana,1
+cfb,text,unknown,Southern University,1
+cfb,text,unknown,TARL,1
+cfb,text,unknown,TC,1
+cfb,text,unknown,TOWS,1
+cfb,text,unknown,TWU,1
+cfb,text,unknown,Texas Wesleyan Rams,1
+cfb,text,unknown,ULL,1
+cfb,text,unknown,UST,1
+cfb,text,unknown,UT Rio Grande Valley,1
+cfb,text,unknown,UTRGV,1
+cfb,text,unknown,UWFL,1
+cfb,text,unknown,UWGA,1
+cfb,text,unknown,WEBB,1
+cfb,text,unknown,abc,1
+cfb,text,unknown,arz,1
+cfb,text,unknown,bwst,1
+cfb,text,unknown,cencon,1
+cfb,text,unknown,csuece6b3,1
+cfb,text,unknown,cwu,1
+cfb,text,unknown,dkc,1
+cfb,text,unknown,ewc,1
+cfb,text,unknown,flst,1
+cfb,text,unknown,fpu,1
+cfb,text,unknown,frest,1
+cfb,text,unknown,frnk,1
+cfb,text,unknown,incar,1
+cfb,text,unknown,jackst,1
+cfb,text,unknown,ksu67f319,1
+cfb,text,unknown,lc7d9922,1
+cfb,text,unknown,lcdbfc25,1
+cfb,text,unknown,linc,1
+cfb,text,unknown,loutch,1
+cfb,text,unknown,ncar,1
+cfb,text,unknown,ncst,1
+cfb,text,unknown,nmu,1
+cfb,text,unknown,nw,1
+cfb,text,unknown,presb,1
+cfb,text,unknown,sacst,1
+cfb,text,unknown,scsu,1
+cfb,text,unknown,tmc,1
+cfb,text,unknown,twu,1
+cfb,text,unknown,ucok,1
+cfb,text,unknown,uwfl,1
+cfb,text,unknown,valp,1
+cfb,text,unknown,vir,1
+cfb,text,unknown,vlb,1
+cfb,text,unknown,vsu206eca,1
+cfb,text,unknown,webc8a2e4,1
 nba,text,unknown,NYK,1
 nba,text,unknown,SAS,1
