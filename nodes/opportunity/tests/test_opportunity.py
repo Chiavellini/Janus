@@ -77,3 +77,35 @@ def test_an_evaluation_cannot_move_a_record_the_execution_path_owns(tmp_path: Pa
     o.transition(S.EXECUTION_PENDING, now=T + 1); o.transition(S.FAILED_HEDGE, now=T + 2)
     again = opps.observe(status=S.PROFITABLE_UNEXECUTED, now=T + 3, **kw)
     assert again.status is S.FAILED_HEDGE and again.last_seen_ts == T + 3, "refreshed, not moved"
+
+
+def test_every_block_reaches_every_other_block_and_the_evaluation_states():
+    """A record moves between block reasons as the books change (BLOCKED_MATCH -> BLOCKED_STALE on
+    a disconnect, BLOCKED_STALE -> BLOCKED_FEES on a resync). Until 2026-09-03 the table was built
+    by reading itself mid-loop, so the first block could reach no other block and the raise tore
+    the socket down on every reconnect."""
+    from nodes.opportunity.opportunity import TRANSITIONS
+    blocks = [s for s in S if s.is_block]
+    assert len(blocks) == 6
+    for a in blocks:
+        for b in blocks:
+            if a is not b:
+                assert b in TRANSITIONS[a], f"{a.value} -> {b.value}"
+        assert {S.DISCOVERED, S.PROFITABLE_UNEXECUTED, S.NO_EDGE} <= TRANSITIONS[a]
+        assert S.EXECUTION_PENDING not in TRANSITIONS[a], "a block never goes straight to execution"
+    o = Opportunity("o", "e", "cfb", S.BLOCKED_MATCH, T, T)
+    assert o.transition(S.BLOCKED_STALE, now=T + 1)
+    assert o.transition(S.BLOCKED_FEES, now=T + 2)
+    assert o.transition(S.BLOCKED_MATCH, now=T + 3)
+
+
+def test_the_store_folds_a_disconnect_into_a_blocked_match_record(tmp_path: Path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    opps = OpportunityStore(store)
+    kw = dict(event_id="espn:cfb:401858423", league="cfb", quantity=5.0, gross=None, fees=None,
+              settlement_buffer=None, net_profit=None, locked_return=None, legs=[])
+    opps.observe(status=S.BLOCKED_MATCH, now=T, blocked_by="single_venue", **kw)
+    o = opps.observe(status=S.BLOCKED_STALE, now=T + 1, blocked_by="polymarket:x:NOT_SYNCED", **kw)
+    assert o.status is S.BLOCKED_STALE
+    tr = store.con.execute("SELECT from_status, to_status FROM opportunity_transitions ORDER BY id").fetchall()
+    assert tr == [(None, "BLOCKED_MATCH"), ("BLOCKED_MATCH", "BLOCKED_STALE")]

@@ -54,9 +54,13 @@ TRANSITIONS: dict[S, frozenset] = {
     S.NO_EDGE: frozenset({S.DISCOVERED, S.PROFITABLE_UNEXECUTED, S.BLOCKED_MATCH, S.BLOCKED_RULES,
                           S.BLOCKED_STALE, S.BLOCKED_DEPTH, S.BLOCKED_FEES, S.BLOCKED_BALANCE}),
 }
-for _b in (S.BLOCKED_MATCH, S.BLOCKED_RULES, S.BLOCKED_STALE, S.BLOCKED_DEPTH, S.BLOCKED_FEES, S.BLOCKED_BALANCE):
-    TRANSITIONS[_b] = frozenset({S.DISCOVERED, S.PROFITABLE_UNEXECUTED, S.NO_EDGE} |
-                                {x for x in TRANSITIONS if x.is_block} - {_b})
+#: Every block may move to every other block and back to the three evaluation states. The set is
+#: fixed BEFORE the loop: reading `TRANSITIONS` while inserting into it gave each block only the
+#: blocks inserted before it, so BLOCKED_MATCH could reach no other block and a socket died on
+#: `BLOCKED_MATCH -> BLOCKED_STALE` on every reconnect (2026-09-03).
+_BLOCKS = (S.BLOCKED_MATCH, S.BLOCKED_RULES, S.BLOCKED_STALE, S.BLOCKED_DEPTH, S.BLOCKED_FEES, S.BLOCKED_BALANCE)
+for _b in _BLOCKS:
+    TRANSITIONS[_b] = frozenset({S.DISCOVERED, S.PROFITABLE_UNEXECUTED, S.NO_EDGE, *_BLOCKS} - {_b})
 
 
 #: Statuses an EVALUATION may move a record between. Everything from EXECUTION_PENDING on is
