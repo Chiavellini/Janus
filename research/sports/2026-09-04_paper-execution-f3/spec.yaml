@@ -1,0 +1,41 @@
+experiment_id: "janus-sports-paper-execution-f3-2026-09-04"
+date_registered: "2026-09-04"
+track: "sports/execution"
+row_kind: "F (forward evaluation; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F3"
+test_looks_spent: 0
+
+# IMMUTABLE ONCE THE LANE RUNS IN PAPER_EXECUTION.
+purpose: >
+  GATE_TO_LIVE step 7, the sports arm: PAPER_EXECUTION against live replicas with the same
+  coordinator that would trade, on the enabled leagues, until n actionable covers have been
+  cleared and paper-hedged. n is pre-computed on the recorded distribution (ledger L36).
+
+arm: "com.janus.live-stream with --mode PAPER_EXECUTION on --leagues enabled (nodes/entities/leagues.default_leagues()); paper venues fill against the books the cover was priced from, at the same instant (grids/live_stream/grid.py _execute); no order leaves the machine (kernel.schema.Mode.PAPER_EXECUTION.sends_real_orders is False)."
+
+window:
+  start: "the first [mode] PAPER_EXECUTION line in /Volumes/Kilos/janus/logs/live_stream.stdout.log after this row is appended"
+  end: "when n cleared covers exist, or the operator closes the row"
+
+definitions:
+  n: "30 — L36's n_for_paper, declared because fewer than 5 in-play, clean actionable rows existed on 2026-09-03 (all 19 profitable prints were SUSPECT). Recomputed on L36's next run ONLY to extend, never to shorten."
+  cleared_cover: "an opportunities row that reached EXECUTION_PENDING through nodes/risk.clear() (a RiskClearance minted, a reservation taken)"
+  paper_hedged: "the same row reaching HEDGED with hedge_filled == first_filled and unhedged == 0"
+  paper_locked_return: "the coordinator's realised paper return per cleared cover after fees, from the execution records"
+  refusals: "every clear() refusal by code (MODE, KILL_SWITCH, BREAKER, CLOCK_UNHEALTHY, FEE_SCHEDULE, VENUE_DISCONNECTED, STALE_BOOK, MIN_PROFIT, MIN_RETURN, LEAGUE_EXPOSURE, ...), counted from the lane's [risk] lines and the ledger"
+
+criteria:
+  - "Forward. No outcome is read before the window closes; no threshold is moved after."
+  - "Every cleared cover is paper-hedged: unhedged == 0 for all n. One unhedged paper leg is a STOP and a design finding, not a statistic."
+  - "The mean paper locked return over the n covers is reported with a 95% interval; the row claims nothing about it. It is the input to step 8's sizing, not a gate on edge."
+  - "Refusals are reported by code beside the n. LEAGUE_EXPOSURE refusals for leagues absent from nodes/risk/limits.toml are expected and are the operator's decision, not a defect."
+  - "Data-arrival SLA (the F2 lesson): ops/watchdog.py LANE_SILENT fires when the lane's report tick stops writing for 900 s while the process lives; CRASH_LOOP, CRASHED and NEVER_RAN as before. An alert that fired and went unanswered for a day voids the window from that point."
+
+outputs:
+  registration: "snooping_ledger.md row F3, result appended when the window closes"
+  records: "opportunities, opportunity_transitions, orders, venue_fills and capital_reservations in the tuple store; the lane's [exec] and [risk] lines"
+
+what_this_does_not_establish:
+  - "Fills. A paper fill is the priced book, not a venue's answer; L27's one-tick slippage is the only measured gap between them."
+  - "Edge. n covers with positive paper return are a sizing input; steps 5 and 6 still gate."

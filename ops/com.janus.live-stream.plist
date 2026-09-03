@@ -12,6 +12,9 @@
     <string>--pre-hours</string><string>6</string>
     <string>--discovery-period</string><string>300</string>
     <string>--report-period</string><string>60</string>
+    <!-- GATE step 7 (ledger F3, 2026-09-04): paper venues fill at the priced books; nothing leaves
+         the machine. nodes/risk.gate resolves the mode once and never escalates it. -->
+    <string>--mode</string><string>PAPER_EXECUTION</string>
   </array>
   <key>WorkingDirectory</key><string>/Users/bernardodelrio/Code/Janus</string>
 

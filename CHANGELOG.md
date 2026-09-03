@@ -418,3 +418,14 @@ the afternoon). Nothing crashed, so nothing alerted.
   `SOCKET_FLAPPING` (five or more reconnects or connect flips over the last fifteen health rows)
   and `SOCKET_ERROR` (the last error names one of our own exception classes and the socket was
   seen down). Against tonight's live store the second fires on both venues.
+- **Reconciled evaluations were being lost.** Once the socket callback stopped swallowing
+  exceptions into the transport, the restarted lane printed `[record] … ProgrammingError: SQLite
+  objects created in a thread can only be used in that same thread` for nine games in its first
+  minute: the Polymarket REST reconciler ran its whole pass in a worker thread, callbacks included,
+  so every evaluation a REST reconcile triggered died at the store. The pass is now two halves:
+  the fetch in the worker, the adoption and the callback on the event loop.
+- **L36, the recorded cover-cost distribution**, registered and run once (`nodes/cover_cost`,
+  `research/sports/2026-09-04_cover-cost-distribution`). BLOCKED_STALE holds most of the dwell in
+  every cell; `kalshi:HEARTBEAT_LOST` alone is 72% of in-play college football, which says the
+  Kalshi replica's heartbeat bound is wrong for a quiet market, not that the market is stale.
+  All 19 profitable prints are SUSPECT; the forward paper row's n is 30 by declaration.

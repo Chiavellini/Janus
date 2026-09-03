@@ -136,7 +136,7 @@ as a Janus *test look* is not, and would be double-dipping the same data.
 
 | # | Date | Arm | Window | Result |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| F3 | 2026-09-04 | `PAPER_EXECUTION` on the enabled leagues (mlb, nfl, epl, lal, bun, cfb, elc, el1, ita): the live lane with the same coordinator that would trade, paper venues filling at the priced books, no order leaving the machine (GATE step 7, sports arm) | From the first `[mode] PAPER_EXECUTION` line after this row until **n = 30** cleared covers (L36's declared n; recomputed only to extend) or the operator closes it. SLA: `LANE_SILENT` (900 s) + the daemon checks in `ops/watchdog.py`. | **PENDING.** Reports: every cleared cover paper-hedged (`unhedged == 0`, one miss is a STOP); mean paper locked return with a 95% interval, claimed as nothing; refusals by code (`LEAGUE_EXPOSURE` for leagues absent from `limits.toml` expected). Spec: `research/sports/2026-09-04_paper-execution-f3/spec.yaml`. |
 
 ---
 
