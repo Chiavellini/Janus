@@ -108,3 +108,30 @@ def test_capacity_is_reported_in_capital_not_just_contracts():
     r = got.best
     assert r.capital == pytest.approx(r.contracts * r.cost_per_contract)
     assert r.return_on_capital == pytest.approx(r.profit / r.capital)
+
+
+def test_the_frontier_stops_at_a_venue_balance_and_says_so():
+    offers = two([(0.40, 1000), (0.45, 5000)], [(0.40, 1000), (0.45, 5000)])
+    got = f(offers, balances={"polymarket": 800.0, "kalshi": 10_000.0})   # 1000 @ 0.40 fits; 6000 does not
+    assert got.rungs and got.limit_reason == "balance"
+    assert max(r.contracts for r in got.rungs) == 1000
+    assert f(offers, balances={"polymarket": 0.0, "kalshi": 0.0}).rungs == ()
+
+
+def test_fixed_costs_and_slippage_come_off_every_rung_and_are_labelled():
+    offers = two([(0.45, 1000)], [(0.45, 1000)])
+    plain = f(offers)
+    dear = f(offers, fixed_cost_usd=20.0, slippage_per_contract=0.02, slippage_modelled=True)
+    assert plain.best.profit == pytest.approx(100.0)
+    assert dear.best.profit == pytest.approx(1000 * (1 - 0.92) - 20.0)
+    assert dear.slippage_modelled and dear.slippage_per_contract == 0.02 and dear.fixed_cost_usd == 20.0
+    assert not plain.slippage_modelled, "unmeasured is labelled, never assumed zero"
+    assert f(offers, fixed_cost_usd=500.0).rungs == (), "a fixed cost larger than the edge is no frontier"
+
+
+def test_rungs_below_a_legs_minimum_are_skipped_not_fatal():
+    offers = two([(0.40, 3), (0.45, 1000)], [(0.40, 3), (0.45, 1000)])
+    offers["a"][0] = Leg("polymarket", liquidity_source_for("polymarket"), "pm", "m", bk([(0.40, 3), (0.45, 1000)]),
+                         {"fee_rate": 0.0}, min_order_contracts=5.0)
+    got = f(offers)
+    assert got.rungs and all(r.contracts >= 5.0 for r in got.rungs)

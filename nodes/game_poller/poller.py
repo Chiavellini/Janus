@@ -84,6 +84,9 @@ class GamePoller:
     #: venues' own rules text. None blocks the poller at spawn: an unproven settlement basis
     #: is how two venues pay differently on the same game.
     equivalence: SettlementEquivalence | None = None
+    #: venue -> {min_order_contracts, tick} as the venue reported (Polymarket: Gamma). A venue
+    #: absent here gets the schema defaults (1 contract, 1c), which is Kalshi's actual minimum.
+    order_limits: dict[str, Mapping[str, float]] = field(default_factory=dict)
 
     #: Set by the supervisor to stop pricing for a reason the poller cannot see (an unhealthy
     #: clock today; a kill switch or a venue disconnect later). Evaluations are still emitted,
@@ -189,8 +192,10 @@ class GamePoller:
                 if fees is None:
                     blocked = blocked or f"{v}:{outcome}:FEE_SCHEDULE_MISSING"
                     continue
+                lim = self.order_limits.get(v, {})
                 legs.append(Leg(v, liquidity_source_for(v), rep.market_id, rep.market_id, book,
-                                dict(fees)))
+                                dict(fees), min_order_contracts=float(lim.get("min_order_contracts", 1.0)),
+                                tick=float(lim.get("tick", 0.01))))
             # The complementary NO ladder is EXTRA depth, never a requirement: a fault on it
             # drops the leg, it does not block the cover the four primary books can price.
             rep = self.replicas.get(("kalshi_no", outcome))

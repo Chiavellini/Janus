@@ -27,6 +27,7 @@ _REJECT = {
     "settlement_not_equivalent": S.BLOCKED_RULES,
     "shared_liquidity_source": S.BLOCKED_MATCH,
     "quote_not_accepted": S.BLOCKED_DEPTH,
+    "below_min_order": S.BLOCKED_DEPTH,
 }
 
 #: `nodes/game_poller` blocked_by suffixes (`venue:outcome:<FAULT>`) -> status.

@@ -179,3 +179,25 @@ def test_screen_is_deterministic_over_frozen_books():
     a = C.best_cover(offers, 200, now_utc=1000.0, proof=MLB2)
     b = C.best_cover(offers, 200, now_utc=1000.0, proof=MLB2)
     assert a == b
+
+
+def test_fees_are_charged_per_level_and_a_vwap_fill_overstates_them():
+    """Two levels on Kalshi at 0.40 and 0.60 for 50 each: the true fee is the sum over the levels,
+    and the old single-VWAP fill at 0.50 charged strictly more (p(1-p) is concave)."""
+    from nodes.fees.models import Fill, KalshiQuadratic
+    offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m1", _bk([(0.40, 50), (0.60, 50)]), {"fee_multiplier": 1.0})],
+              "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.30, 10_000)]), {"fee_rate": 0.0})]}
+    cov = C.best_cover(offers, 100, now_utc=1000.0, proof=MLB2)
+    assert cov.ok
+    k = KalshiQuadratic()
+    per_level = k.entry_cost([Fill("kalshi", "m1", "a", "yes", 0.40, 50.0), Fill("kalshi", "m1", "a", "yes", 0.60, 50.0)],
+                             {"fee_multiplier": 1.0})
+    vwap = k.entry_cost([Fill("kalshi", "m1", "a", "yes", 0.50, 100.0)], {"fee_multiplier": 1.0})
+    assert abs(cov.fee_per_contract * 100 - per_level) < 1e-9 and per_level < vwap
+
+
+def test_a_size_below_a_legs_minimum_order_is_not_a_cover():
+    offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m1", _bk([(0.40, 1000)]))],
+              "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.30, 1000)]), min_order_contracts=5.0)]}
+    assert C.best_cover(offers, 3, now_utc=1000.0, proof=MLB2).reject_reason == C.REJECT_BELOW_MIN_ORDER
+    assert C.best_cover(offers, 5, now_utc=1000.0, proof=MLB2).ok

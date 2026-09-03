@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-03, after P5 of the v1 plan.
+Updated 2026-09-03, after P4 of the v1 plan.
 
 ## Done
 
@@ -17,23 +17,22 @@ with per-sid sequencing; a REST backstop for quiet Polymarket books; the complem
 streamed; `nodes/settle_wedge` — settlement equivalence as a second proof, priced from a measured
 rate (ledger L26), certified live on real MLB text; `CanonicalKey` as the join key; `nodes/risk` —
 limits, kill files, the latching breaker, the exposure ledger, the `RiskClearance` token and the
-mode gate, with three watchdog alarms.
+mode gate, with three watchdog alarms; the total-cost model (per-level fills, min order, balance,
+fixed cost, a labelled slippage term) and the `Opportunity` record with persisted frontiers.
 
 ## Now
 
-1. **P4 opportunity records + total-cost model**: the `Opportunity` record and allowed
-   transitions, per-level fills in `cover._fill_for`, min order size / balance / all-levels-
-   executable in `capacity`, the slippage buffer MEASURED from captured frames (until then
-   `slippage_modelled=False` caps the mode at PAPER), the frontier persisted.
-2. **P6 execution adapters** (disarmed): `kernel/execution_protocol`, `nodes/exec_kalshi`
+1. **P6 execution adapters** (disarmed): `kernel/execution_protocol`, `nodes/exec_kalshi`
    (REST signing generalised from the socket's, demo host), `nodes/exec_polymarket` (CLOB auth,
    EIP-712, wallet key in its own 600-mode file). Both journal-first, `post_json_once`,
    three-way fill state, and both require a `RiskClearance`.
-3. Then P7 coordinator, P8 paper simulator and battery, P9 control-plane polish, P10 Ashburn
+2. Then P7 coordinator, P8 paper simulator and battery, P9 control-plane polish, P10 Ashburn
    (gated), P11 promotion.
 
 Harvest and review the Polymarket NFL and NHL game templates when they list; until then those
-leagues block at `TEMPLATE_UNKNOWN`, which is correct.
+leagues block at `TEMPLATE_UNKNOWN`, which is correct. Measure the slippage buffer (the distribution
+of Kalshi best-ask moves inside the hedge window) from captured frames under a registered row once
+the live lane runs this tree and a day of capture exists; until then `slippage_modelled=False`.
 
 ## Not now, deliberately
 

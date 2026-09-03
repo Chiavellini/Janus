@@ -47,6 +47,7 @@ from nodes.discovery.discovery import co_listed, discover, record_events  # noqa
 from nodes.game_poller.poller import GamePoller, PollerState  # noqa: E402
 from nodes.settle_wedge.equivalence import SettlementEquivalence  # noqa: E402
 from nodes.settle_wedge.pair import certify_from_spec  # noqa: E402
+from nodes.opportunity.opportunity import Opportunity, OpportunityStore  # noqa: E402
 from nodes.opportunity.record import record_evaluation  # noqa: E402
 from kernel.schema import OpportunityStatus  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
@@ -84,6 +85,7 @@ class Supervisor:
     ks: KalshiStream | None = None
     ps: PolymarketStream | None = None
     store: TupleStore | None = None
+    opportunities: OpportunityStore | None = None
     spawned: int = 0
     reaped: int = 0
     blocked: dict[str, str] = field(default_factory=dict)
@@ -116,7 +118,8 @@ class Supervisor:
             p = GamePoller(gid, spec["league"], spec["outcomes"],
                            quantities=QUANTITIES, max_book_age_s=self.max_book_age_s,
                            min_return=MIN_RETURN, fee_params=spec["fee_params"],
-                           equivalence=eq if isinstance(eq, SettlementEquivalence) else None)
+                           equivalence=eq if isinstance(eq, SettlementEquivalence) else None,
+                           order_limits={"polymarket": spec.get("pm_limits") or {}})
             if p.state is PollerState.BLOCKED:
                 # An unproven outcome set or settlement basis never gets a subscription spent on it.
                 self.blocked[gid] = f"SPAWN:{p.block_reason}"
@@ -161,7 +164,8 @@ class Supervisor:
     # ── persistence ─────────────────────────────────────────────────────
     def _record(self, sup: Supervised, ev) -> None:
         rec = record_evaluation(self.store, ev, league=sup.poller.league,
-                                fee_params=sup.fee_params, hurdle=MIN_RETURN)
+                                fee_params=sup.fee_params, hurdle=MIN_RETURN,
+                                opportunities=self.opportunities)
         sup.written += int(rec.wrote)
         if rec.status is OpportunityStatus.PROFITABLE_UNEXECUTED:
             # Solve the size frontier on the SAME books that produced the edge. Doing it from the
@@ -175,6 +179,10 @@ class Supervisor:
                     if fr.actionable:
                         cap = (f"  N_max={fr.n_max:.0f} N*={fr.n_star:.0f} "
                                f"profit=${fr.best.profit:.2f} on ${fr.best.capital:.0f}")
+                    if self.opportunities is not None:
+                        opp = self.opportunities.live.get(Opportunity.id_for(ev.game_id, ev.quantity))
+                        if opp is not None:
+                            self.opportunities.record_frontier(opp, fr, now=ev.evaluated_utc)
             except Exception as exc:  # noqa: BLE001 -- reporting must never break the loop
                 cap = f"  (capacity failed: {type(exc).__name__})"
             print(f"  *** {rec.status.value} {sup.short_name} q={ev.quantity} cost={rec.cost:.4f} "
@@ -301,6 +309,7 @@ def main() -> int:
     sup = Supervisor([x.strip() for x in a.leagues.split(",") if x.strip()],
                      pre_hours=a.pre_hours, db=a.db, max_book_age_s=a.max_book_age)
     sup.store = TupleStore(a.db)
+    sup.opportunities = OpportunityStore(sup.store)
     sup.ks = KalshiStream(api_key=api_key, private_key=load_private_key(key_path))
     sup.ps = PolymarketStream()
     rest = Client("polymarket-rest", rate=4, burst=8, cache_dir=None)

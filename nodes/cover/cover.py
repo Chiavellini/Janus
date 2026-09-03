@@ -50,6 +50,7 @@ REJECT_NOT_EXHAUSTIVE = "outcome_set_not_proven_exhaustive"
 REJECT_NO_DEPTH = "insufficient_depth"
 REJECT_NOT_EXECUTABLE = "quote_not_accepted"
 REJECT_NO_PROOF = "cover_proof_missing"          # no CoverProof: neither proof reached the pricer
+REJECT_BELOW_MIN_ORDER = "below_min_order"        # a leg cannot be sent at this size
 
 
 @dataclass(frozen=True)
@@ -61,6 +62,10 @@ class Leg:
     market_id: str
     book: Book
     fee_overrides: Mapping[str, object] = field(default_factory=dict)
+    #: The venue's order limits for this market (Polymarket: Gamma orderMinSize / tick; Kalshi: 1
+    #: contract, 1c). A cover below a leg's minimum cannot be sent, so it is not a cover.
+    min_order_contracts: float = 1.0
+    tick: float = 0.01
     executable: bool = True
 
 
@@ -115,12 +120,34 @@ def walk_ladder(book: Book, contracts: float) -> tuple[float, bool]:
     return gross, need <= 1e-9
 
 
+def _fills_for(leg: Leg, contracts: float, order_seq: int) -> tuple[list[Fill], float, bool]:
+    """One Fill PER LADDER LEVEL consumed, all under one order_seq.
+
+    Fees are charged on the fills that actually happen (spec §6: "over the actual fills, not
+    merely added to the best ask"). A single VWAP fill slightly OVERSTATES a p(1-p) fee -- the
+    parabola is concave -- so the old shape was conservative but not exact, and Kalshi's ceil is
+    per order, which one order_seq for all the levels preserves.
+    """
+    need, gross, fills = contracts, 0.0, []
+    for q in leg.book.asks:
+        if need <= 1e-9:
+            break
+        take = min(need, q.size)
+        gross += take * q.price
+        need -= take
+        fills.append(Fill(venue=leg.venue, market_id=leg.market_id, outcome_id=leg.outcome_id,
+                          side="yes", price=q.price, contracts=take, liquidity="taker",
+                          order_seq=order_seq))
+    return fills, gross, need <= 1e-9
+
+
 def _fill_for(leg: Leg, contracts: float, order_seq: int) -> tuple[Fill, float, bool]:
-    gross, filled = walk_ladder(leg.book, contracts)
+    """The leg as ONE fill at VWAP -- candidate ranking only. Pricing uses `_fills_for`."""
+    fills, gross, filled = _fills_for(leg, contracts, order_seq)
     vwap = gross / contracts if contracts else 0.0
     return (Fill(venue=leg.venue, market_id=leg.market_id, outcome_id=leg.outcome_id,
-                 side="yes", price=vwap, contracts=contracts,
-                 liquidity="taker", order_seq=order_seq), gross, filled)
+                 side="yes", price=vwap, contracts=contracts, liquidity="taker",
+                 order_seq=order_seq), gross, filled)
 
 
 def price_leg(leg: Leg, contracts: float, *, order_seq: int = 0) -> LegCost:
@@ -136,12 +163,12 @@ def price_leg(leg: Leg, contracts: float, *, order_seq: int = 0) -> LegCost:
     return LegCost(leg.venue, leg.outcome_id, contracts, gross, fee, fill.price, filled)
 
 
-def _cover_fees(legs: Sequence[Leg], fills: Sequence[Fill]) -> tuple[float, float, str]:
+def _cover_fees(legs: Sequence[Leg], fills_per_leg: Sequence[Sequence[Fill]]) -> tuple[float, float, str]:
     """(entry fees, WORST-CASE settlement fees, the state that produces the worst case).
 
     WHY WORST CASE, NOT EXPECTED. Commission on net winnings is charged only where you finish
     ahead, so the total cost of a cover DEPENDS ON WHICH OUTCOME WINS. Exactly one will. An
-    "arbitrage" that is only profitable when the favourite wins is not an arbitrage — it is a
+    "arbitrage" that is only profitable when the favourite wins is not an arbitrage -- it is a
     directional bet with extra steps. Taking the max over settlement states is what makes the
     reported edge a guarantee rather than an average.
 
@@ -150,15 +177,15 @@ def _cover_fees(legs: Sequence[Leg], fills: Sequence[Fill]) -> tuple[float, floa
     would rate them free.
     """
     by_venue: dict[str, list[Fill]] = {}
-    for l, f in zip(legs, fills):
-        by_venue.setdefault(l.venue, []).append(f)
+    for l, fs in zip(legs, fills_per_leg):
+        by_venue.setdefault(l.venue, []).extend(fs)
 
     entry = sum(model_for(v).entry_cost(fs, params_for(v, _ov(legs, v)))
                 for v, fs in by_venue.items())
 
     worst, worst_state = 0.0, ""
-    for winner in fills:                      # exactly one outcome settles YES
-        won = {f.outcome_id: (f.outcome_id == winner.outcome_id) for f in fills}
+    for winner in legs:                       # exactly one outcome settles YES
+        won = {l.outcome_id: (l.outcome_id == winner.outcome_id) for l in legs}
         s = sum(model_for(v).settlement_cost(fs, won, params_for(v, _ov(legs, v)))
                 for v, fs in by_venue.items())
         if s > worst:
@@ -208,21 +235,25 @@ def price_combination(legs: Sequence[Leg], contracts: float, *, now_utc: float,
     if max_age is None or max_age > max_leg_age_s:
         return Cover(None, contracts, (), False, REJECT_STALE, max_age)
 
-    made = [_fill_for(l, contracts, i) for i, l in enumerate(legs)]
+    # Below a leg's minimum order the venue will not take it: not a cover, and named as such.
+    if any(contracts < l.min_order_contracts for l in legs):
+        return Cover(None, contracts, (), False, REJECT_BELOW_MIN_ORDER, max_age)
+
+    made = [_fills_for(l, contracts, i) for i, l in enumerate(legs)]
     if not all(filled for _, _, filled in made):
-        costs = tuple(LegCost(l.venue, l.outcome_id, contracts, g, 0.0, f.price, ok)
-                      for l, (f, g, ok) in zip(legs, made))
+        costs = tuple(LegCost(l.venue, l.outcome_id, contracts, g, 0.0, (g / contracts if contracts else 0.0), ok)
+                      for l, (_, g, ok) in zip(legs, made))
         return Cover(None, contracts, costs, False, REJECT_NO_DEPTH, max_age)
 
-    fills = [f for f, _, _ in made]
+    fills_per_leg = [fs for fs, _, _ in made]
     gross = sum(g for _, g, _ in made)
-    entry, settle, state = _cover_fees(legs, fills)
+    entry, settle, state = _cover_fees(legs, fills_per_leg)
     fee = entry + settle
     # The settlement-risk reserve: probability x worst-case loss on each bounded dimension,
     # charged at the fill prices. A cover is only a cover net of it.
-    buf = proof.settlement_buffer([(l.venue, f.price) for l, f in zip(legs, fills)])
-    costs = tuple(LegCost(l.venue, l.outcome_id, contracts, g, 0.0, f.price, True)
-                  for l, (f, g, _) in zip(legs, made))
+    buf = proof.settlement_buffer([(l.venue, g / contracts) for l, (_, g, _) in zip(legs, made)])
+    costs = tuple(LegCost(l.venue, l.outcome_id, contracts, g, 0.0, g / contracts, True)
+                  for l, (_, g, _) in zip(legs, made))
     return Cover((gross + fee) / contracts + buf, contracts, costs, True, None, max_age,
                  gross / contracts, fee / contracts, worst_settlement_state=state,
                  single_venue=len({l.venue for l in legs}) == 1,

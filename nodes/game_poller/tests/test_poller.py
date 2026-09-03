@@ -20,7 +20,8 @@ FEES = {"kalshi": {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 0.
 def mlb(**kw) -> GamePoller:
     kw.setdefault("fee_params", FEES)
     kw.setdefault("equivalence", mlb_equivalence())
-    return GamePoller("g1", "mlb", OUT, quantities=(100.0,), **kw)
+    kw.setdefault("quantities", (100.0,))
+    return GamePoller("g1", "mlb", OUT, **kw)
 
 
 def sync_all(p: GamePoller, *, kh=0.50, ka=0.50, ph=0.50, pa=0.50, now=T, size=5000.0,
@@ -236,3 +237,13 @@ def test_the_settlement_reserve_is_inside_the_cost():
     # cancellation 0.002*(0.70-0.5) + (postponed+suspended) 2*0.01*0.70, per contract
     assert abs(b.settlement_buffer_per_contract - (0.002 * 0.2 + 0.02 * 0.70)) < 1e-9
     assert abs((b.cost_per_contract - a.cost_per_contract) - b.settlement_buffer_per_contract) < 1e-9
+
+
+def test_the_venues_order_limits_reach_the_legs():
+    p = mlb(order_limits={"polymarket": {"min_order_contracts": 5.0, "tick": 0.01}}, quantities=(3.0, 100.0))
+    sync_all(p, kh=0.44, pa=0.44)
+    evs = p.on_event("kalshi", "K_H", now=T)
+    # 3 contracts: the Polymarket legs are below their minimum, so only the (dearer) Kalshi-only cover
+    # remains; at 100 the cross-venue cover is back.
+    assert evs[0].cover.ok and all(l.venue == "kalshi" for l in evs[0].cover.legs)
+    assert evs[1].cover.ok and {l.venue for l in evs[1].cover.legs} == {"kalshi", "polymarket"}

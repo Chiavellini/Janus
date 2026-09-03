@@ -48,15 +48,20 @@ VENUE_FEES: dict[str, VenueFeePin] = {
     # ── Per-contract parabolic ────────────────────────────────────────────
     "kalshi": VenueFeePin(
         "kalshi_quadratic", {"fee_type": "quadratic", "fee_multiplier": 1.0, "cash_apy": 0.0405},
-        "2026-07-24",
-        "taker 0.07 / maker 0.0175, ceil PER ORDER, no settlement fee. Multiplier is per-series: "
-        "crypto 1.0, S&P/NASDAQ 0.5. ALWAYS prefer the per-series value from the payload."),
+        "2026-09-02",
+        "taker 0.07 / maker 0.0175, ceil PER ORDER, no settlement fee. The multiplier is per SERIES "
+        "and this pin is a SCREENING fallback only: GET /series/KXMLBGAME reported "
+        "quadratic_with_maker_fees at 0.5 on 2026-09-02 (KXNFLGAME and KXNHLGAME: 1.0). The live "
+        "path passes the series value; KalshiQuadratic refuses a null multiplier."),
     "polymarket": VenueFeePin(
         "pm_quadratic", {"fee_rate": 0.07, "credit_rebate": False, "rebate_rate": 0.2},
-        "2026-07-24",
+        "2026-09-02",
         "Measured rate distribution across the live corpus: 0.04 -> 1,262 markets, 0.07 -> 372, "
         "0.05 -> 336, none -> 130. The pinned 0.07 is the MINORITY case and is kept only as a "
-        "conservative fallback. Sports is 0.05. rebateRate 0.2 semantics UNVERIFIED."),
+        "conservative fallback. Gamma game markets on 2026-09-02: feeType sports_fees_v2, "
+        "feeSchedule {rate 0.05, exponent 1, takerOnly, rebateRate 0.15}; a futures market read "
+        "0.03. The live path passes the market's feeSchedule; rebate semantics still UNVERIFIED, "
+        "makers stay out of v1."),
 
     # ── Same-book venues: different fee layer, SAME liquidity ─────────────
     # Robinhood charges a FLAT $0.01/contract/side commission + $0.01 exchange fee against

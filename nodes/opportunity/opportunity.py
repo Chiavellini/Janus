@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+"""The Opportunity record: one candidate cover, its total cost, its size frontier, and every
+status it passes through -- persisted with the books it was priced from.
+
+Spec §9/§12: opportunity transitions are persisted; full order-book context is retained around
+detected opportunities. An `Opportunity` is created when an evaluation first clears the
+discovery threshold or is PROFITABLE_UNEXECUTED, and `transition()` enforces the allowed moves
+so a record cannot skip from DETECTED to HEDGED or go backwards out of a terminal state.
+"""
+
+from __future__ import annotations
+
+import json
+import time
+from dataclasses import dataclass, field
+from typing import Mapping, Sequence
+
+from kernel.schema import OpportunityStatus as S
+from nodes.cover.capacity import Frontier
+from nodes.opportunity.thresholds import STRATEGY_VERSION
+
+OPPORTUNITY_DDL = """
+CREATE TABLE IF NOT EXISTS opportunities(
+  opportunity_id TEXT PRIMARY KEY, event_id TEXT NOT NULL, league TEXT NOT NULL,
+  strategy_version TEXT NOT NULL, status TEXT NOT NULL, first_seen_ts REAL NOT NULL,
+  last_seen_ts REAL NOT NULL, quantity REAL, gross REAL, fees REAL, settlement_buffer REAL,
+  slippage_buffer REAL, fixed_cost REAL, net_profit REAL, locked_return REAL,
+  n_max REAL, n_star REAL, limit_reason TEXT, slippage_modelled INTEGER, blocked_by TEXT,
+  legs_json TEXT, books_json TEXT);
+CREATE TABLE IF NOT EXISTS opportunity_transitions(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, opportunity_id TEXT NOT NULL,
+  from_status TEXT, to_status TEXT NOT NULL, detail TEXT);
+CREATE INDEX IF NOT EXISTS opportunity_transitions_opp ON opportunity_transitions(opportunity_id, seen_ts);
+CREATE TABLE IF NOT EXISTS frontiers(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, opportunity_id TEXT NOT NULL,
+  n_max REAL, n_star REAL, best_profit REAL, best_capital REAL, limit_reason TEXT,
+  slippage_per_contract REAL, slippage_modelled INTEGER, fixed_cost_usd REAL, rungs_json TEXT);
+CREATE INDEX IF NOT EXISTS frontiers_opp ON frontiers(opportunity_id, seen_ts);
+"""
+
+#: from -> allowed to. Terminal states allow nothing. Anything not listed is refused.
+TRANSITIONS: dict[S, frozenset] = {
+    S.DISCOVERED: frozenset({S.PROFITABLE_UNEXECUTED, S.NO_EDGE, S.BLOCKED_MATCH, S.BLOCKED_RULES,
+                             S.BLOCKED_STALE, S.BLOCKED_DEPTH, S.BLOCKED_FEES, S.BLOCKED_BALANCE}),
+    S.PROFITABLE_UNEXECUTED: frozenset({S.DISCOVERED, S.NO_EDGE, S.BLOCKED_MATCH, S.BLOCKED_RULES,
+                                        S.BLOCKED_STALE, S.BLOCKED_DEPTH, S.BLOCKED_FEES,
+                                        S.BLOCKED_BALANCE, S.EXECUTION_PENDING}),
+    S.EXECUTION_PENDING: frozenset({S.PARTIALLY_FILLED, S.HEDGED, S.FAILED_HEDGE, S.PROFITABLE_UNEXECUTED}),
+    S.PARTIALLY_FILLED: frozenset({S.HEDGED, S.FAILED_HEDGE}),
+    S.HEDGED: frozenset({S.SETTLED}),
+    S.FAILED_HEDGE: frozenset({S.SETTLED}),
+    S.SETTLED: frozenset({S.RECONCILED}),
+    S.RECONCILED: frozenset(),
+    S.NO_EDGE: frozenset({S.DISCOVERED, S.PROFITABLE_UNEXECUTED, S.BLOCKED_MATCH, S.BLOCKED_RULES,
+                          S.BLOCKED_STALE, S.BLOCKED_DEPTH, S.BLOCKED_FEES, S.BLOCKED_BALANCE}),
+}
+for _b in (S.BLOCKED_MATCH, S.BLOCKED_RULES, S.BLOCKED_STALE, S.BLOCKED_DEPTH, S.BLOCKED_FEES, S.BLOCKED_BALANCE):
+    TRANSITIONS[_b] = frozenset({S.DISCOVERED, S.PROFITABLE_UNEXECUTED, S.NO_EDGE} |
+                                {x for x in TRANSITIONS if x.is_block} - {_b})
+
+
+class IllegalTransition(Exception):
+    pass
+
+
+@dataclass
+class Opportunity:
+    opportunity_id: str
+    event_id: str
+    league: str
+    status: S
+    first_seen_ts: float
+    last_seen_ts: float
+    strategy_version: str = STRATEGY_VERSION
+    quantity: float | None = None
+    gross: float | None = None
+    fees: float | None = None
+    settlement_buffer: float | None = None
+    slippage_buffer: float | None = None
+    fixed_cost: float | None = None
+    net_profit: float | None = None
+    locked_return: float | None = None
+    n_max: float | None = None
+    n_star: float | None = None
+    limit_reason: str | None = None
+    slippage_modelled: bool = False
+    blocked_by: str | None = None
+    legs: list[dict] = field(default_factory=list)
+    books: dict = field(default_factory=dict)      # outcome -> [{venue, market_id, asks:[[p,s]..]}]
+    history: list[tuple[float, S | None, S, str]] = field(default_factory=list)
+
+    @staticmethod
+    def id_for(event_id: str, quantity: float) -> str:
+        return f"{event_id}:moneyline:{STRATEGY_VERSION}:{int(quantity)}"
+
+    def transition(self, to: S, *, now: float, detail: str = "") -> bool:
+        """Move if allowed. A no-op when unchanged. Raises on an illegal move."""
+        if to is self.status:
+            self.last_seen_ts = now
+            return False
+        if to not in TRANSITIONS.get(self.status, frozenset()):
+            raise IllegalTransition(f"{self.opportunity_id}: {self.status.value} -> {to.value}")
+        self.history.append((now, self.status, to, detail))
+        self.status, self.last_seen_ts = to, now
+        return True
+
+
+def books_snapshot(offers: Mapping[str, Sequence]) -> dict:
+    """The exact ladders a cover was priced from, compact: outcome -> legs -> asks."""
+    out: dict = {}
+    for outcome, legs in offers.items():
+        out[outcome] = [{"venue": l.venue, "market_id": l.market_id, "outcome_id": l.outcome_id,
+                         "source": l.book.source, "fetched_utc": l.book.fetched_utc,
+                         "asks": [[round(q.price, 6), round(q.size, 4)] for q in l.book.asks[:25]]}
+                        for l in legs]
+    return out
+
+
+class OpportunityStore:
+    """Persistence for records, transitions and frontiers. Idempotent upserts; append-on-change."""
+
+    def __init__(self, store):
+        self.store = store
+        store.ensure_ddl(OPPORTUNITY_DDL)
+        self.live: dict[str, Opportunity] = {}
+
+    def observe(self, *, event_id: str, league: str, quantity: float, status: S, now: float,
+                gross: float | None, fees: float | None, settlement_buffer: float | None,
+                net_profit: float | None, locked_return: float | None, blocked_by: str | None,
+                legs: list[dict], offers: Mapping[str, Sequence] | None = None,
+                detail: str = "") -> Opportunity:
+        """Fold one evaluation into the record for (event, quantity). Creates it on first sight."""
+        oid = Opportunity.id_for(event_id, quantity)
+        opp = self.live.get(oid)
+        moved = False
+        if opp is None:
+            opp = Opportunity(oid, event_id, league, status, now, now, quantity=quantity)
+            opp.history.append((now, None, status, detail))
+            self.live[oid] = opp
+            moved = True
+        else:
+            moved = opp.transition(status, now=now, detail=detail)
+        opp.gross, opp.fees, opp.settlement_buffer = gross, fees, settlement_buffer
+        opp.net_profit, opp.locked_return, opp.blocked_by, opp.legs = net_profit, locked_return, blocked_by, legs
+        # Keep the books from the EDGE. A later move to NO_EDGE must not overwrite what was priced.
+        if offers is not None and (not opp.books or status in (S.PROFITABLE_UNEXECUTED, S.DISCOVERED)):
+            opp.books = books_snapshot(offers)
+        self._upsert(opp)
+        if moved:
+            frm = opp.history[-1][1]
+            self.store.con.execute(
+                "INSERT INTO opportunity_transitions(seen_ts, opportunity_id, from_status, to_status, detail) "
+                "VALUES(?,?,?,?,?)", (now, oid, frm.value if frm else None, status.value, detail))
+        return opp
+
+    def record_frontier(self, opp: Opportunity, fr: Frontier, *, now: float) -> None:
+        opp.n_max, opp.n_star, opp.limit_reason = fr.n_max, fr.n_star, fr.limit_reason
+        opp.slippage_modelled, opp.slippage_buffer, opp.fixed_cost = fr.slippage_modelled, fr.slippage_per_contract, fr.fixed_cost_usd
+        self._upsert(opp)
+        self.store.con.execute(
+            "INSERT INTO frontiers(seen_ts, opportunity_id, n_max, n_star, best_profit, best_capital, limit_reason, "
+            "slippage_per_contract, slippage_modelled, fixed_cost_usd, rungs_json) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+            (now, opp.opportunity_id, fr.n_max, fr.n_star, fr.best.profit if fr.best else None,
+             fr.best.capital if fr.best else None, fr.limit_reason, fr.slippage_per_contract,
+             int(fr.slippage_modelled), fr.fixed_cost_usd,
+             json.dumps([[r.contracts, round(r.cost_per_contract, 6), round(r.profit, 4)] for r in fr.rungs])))
+
+    def _upsert(self, o: Opportunity) -> None:
+        self.store.con.execute(
+            "INSERT INTO opportunities VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+            "ON CONFLICT(opportunity_id) DO UPDATE SET status=excluded.status, last_seen_ts=excluded.last_seen_ts, "
+            "quantity=excluded.quantity, gross=excluded.gross, fees=excluded.fees, settlement_buffer=excluded.settlement_buffer, "
+            "slippage_buffer=excluded.slippage_buffer, fixed_cost=excluded.fixed_cost, net_profit=excluded.net_profit, "
+            "locked_return=excluded.locked_return, n_max=excluded.n_max, n_star=excluded.n_star, "
+            "limit_reason=excluded.limit_reason, slippage_modelled=excluded.slippage_modelled, blocked_by=excluded.blocked_by, "
+            "legs_json=excluded.legs_json, books_json=COALESCE(excluded.books_json, opportunities.books_json)",
+            (o.opportunity_id, o.event_id, o.league, o.strategy_version, o.status.value, o.first_seen_ts,
+             o.last_seen_ts, o.quantity, o.gross, o.fees, o.settlement_buffer, o.slippage_buffer, o.fixed_cost,
+             o.net_profit, o.locked_return, o.n_max, o.n_star, o.limit_reason, int(o.slippage_modelled),
+             o.blocked_by, json.dumps(o.legs), json.dumps(o.books) if o.books else None))

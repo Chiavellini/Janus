@@ -80,8 +80,14 @@ own schedule (Kalshi series `fee_type`/`fee_multiplier`, Polymarket `feeSchedule
 dict the registry pin is charged, which for Kalshi sports is 2× the real fee. `nodes/game_poller`
 refuses a leg without a schedule; a direct caller must not.
 
-**Min order size, balance and per-level executability are not modelled** (plan P4).
-`Leg.executable` is a per-leg boolean for sportsbook acceptance, not per level.
+**The total-cost model (2026-09-03).** Fees are charged over one `Fill` per ladder level actually
+consumed (a single VWAP fill overstated the concave p(1−p) fee). A size below any leg's
+`min_order_contracts` (Polymarket's Gamma `orderMinSize`; Kalshi 1) is `below_min_order`, not a
+cover. `frontier()` additionally takes per-venue `balances` (a rung whose venue capital exceeds
+its balance stops the frontier with `balance`; absent means zero), `fixed_cost_usd`, and
+`slippage_per_contract` with a `slippage_modelled` label that stays False until the buffer comes
+from a registered measurement of captured frames — a False label caps the mode at PAPER.
+`Leg.executable` remains a per-leg boolean for sportsbook acceptance, not per level.
 
 A cheaper same-venue cover can mask a real cross-venue one: `best_cover` returns the global
 cheapest and the caller then filters for `cross`, reporting `NO_EDGE`.

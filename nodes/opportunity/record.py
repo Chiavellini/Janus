@@ -13,7 +13,9 @@ from dataclasses import dataclass
 from typing import Mapping
 
 from kernel.schema import OpportunityStatus
+from nodes.opportunity.thresholds import EXECUTION_MIN_NET_PROFIT_USD
 from nodes.fees.targeting import hurdle_for
+from nodes.opportunity.opportunity import Opportunity
 from nodes.opportunity.status import status_for
 
 
@@ -25,10 +27,11 @@ class Recorded:
     cost: float | None
     fee: float | None
     locked_return: float | None
+    net_profit_usd: float | None = None
 
 
 def record_evaluation(store, ev, *, league: str, fee_params: Mapping[str, Mapping],
-                      hurdle: float) -> Recorded:
+                      hurdle: float, opportunities=None) -> Recorded:
     """Classify and offer one evaluation to `store.evaluation` (change-gated). Pure apart from
     the store write. `fee_params` are the venues' own schedules, so the hurdle charges what the
     cover charged."""
@@ -46,6 +49,9 @@ def record_evaluation(store, ev, *, league: str, fee_params: Mapping[str, Mappin
     status = status_for(cover_ok=ok, reject_reason=cov.reject_reason if cov else None,
                         blocked_by=ev.blocked_by, gross_per_contract=gross, cost_per_contract=cost,
                         single_venue=bool(ok and cov.single_venue), hurdle=hurdle)
+    net = (1.0 - cost) * ev.quantity if cost is not None else None
+    if status is OpportunityStatus.PROFITABLE_UNEXECUTED and net is not None and net < EXECUTION_MIN_NET_PROFIT_USD:
+        status = OpportunityStatus.DISCOVERED      # clears the return hurdle, not the dollar one
     wrote = store.evaluation(
         game_id=ev.game_id, league=league, quantity=ev.quantity, status=status.value,
         cost=cost, gross=gross, fees=fee, return_locked=ret,
@@ -56,4 +62,14 @@ def record_evaluation(store, ev, *, league: str, fee_params: Mapping[str, Mappin
         legs=[{"venue": l.venue, "outcome": l.outcome_id, "vwap": round(l.vwap, 6)}
               for l in (cov.legs if ok else ())],
         seen_ts=ev.evaluated_utc)
-    return Recorded(status, bool(wrote), gross, cost, fee, ret)
+    if opportunities is not None and (status is OpportunityStatus.PROFITABLE_UNEXECUTED
+                                      or status is OpportunityStatus.DISCOVERED
+                                      or Opportunity.id_for(ev.game_id, ev.quantity) in opportunities.live):
+        opportunities.observe(event_id=ev.game_id, league=league, quantity=ev.quantity, status=status,
+                              now=ev.evaluated_utc, gross=gross, fees=fee,
+                              settlement_buffer=cov.settlement_buffer_per_contract if ok else None,
+                              net_profit=net, locked_return=ret, blocked_by=ev.blocked_by,
+                              legs=[{"venue": l.venue, "outcome": l.outcome_id, "vwap": round(l.vwap, 6)}
+                                    for l in (cov.legs if ok else ())],
+                              offers=ev.offers if ok else None)
+    return Recorded(status, bool(wrote), gross, cost, fee, ret, net)

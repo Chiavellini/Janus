@@ -34,6 +34,7 @@ from nodes.discovery.discovery import load_specs
 from nodes.game_poller.poller import GamePoller, PollerState
 from nodes.settle_wedge.equivalence import SettlementEquivalence
 from nodes.settle_wedge.pair import certify_from_spec
+from nodes.opportunity.opportunity import OpportunityStore
 from nodes.opportunity.record import record_evaluation
 from nodes.store_tuples.store import TupleStore
 from nodes.stream_kalshi.stream import KalshiStream
@@ -64,9 +65,12 @@ class Harness:
     evaluations: int = 0
     written: int = 0
 
+    opportunities: OpportunityStore = field(init=False)
+
     def __post_init__(self) -> None:
         self.ks = KalshiStream(api_key="replay", private_key=None)
         self.ps = PolymarketStream()
+        self.opportunities = OpportunityStore(self.store)
 
     # MIRROR of grids/live_stream Supervisor.reconcile's spawn branch. Keep them identical.
     def spawn(self, game_id: str, spec: dict) -> bool:
@@ -76,7 +80,8 @@ class Harness:
         p = GamePoller(game_id, spec["league"], spec["outcomes"], quantities=self.quantities,
                        max_book_age_s=self.max_book_age_s, min_return=self.min_return,
                        fee_params=spec["fee_params"],
-                       equivalence=eq if isinstance(eq, SettlementEquivalence) else None)
+                       equivalence=eq if isinstance(eq, SettlementEquivalence) else None,
+                       order_limits={"polymarket": spec.get("pm_limits") or {}})
         if p.state is PollerState.BLOCKED:
             self.blocked[game_id] = f"SPAWN:{p.block_reason}"
             return False
@@ -99,7 +104,8 @@ class Harness:
             for ev in p.on_event("stream", market_id, now=now):
                 self.evaluations += 1
                 rec = record_evaluation(self.store, ev, league=self.leagues[gid],
-                                        fee_params=self.fee_params[gid], hurdle=self.min_return)
+                                        fee_params=self.fee_params[gid], hurdle=self.min_return,
+                                        opportunities=self.opportunities)
                 self.written += int(rec.wrote)
         return cb
 

@@ -32,7 +32,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping, Sequence
 
-from nodes.cover.cover import Cover, Leg, best_cover
+from nodes.cover.cover import Cover, Leg, REJECT_BELOW_MIN_ORDER, best_cover
 from nodes.settle_wedge.equivalence import CoverProof
 
 
@@ -59,6 +59,12 @@ class Frontier:
     n_star: float                 # size maximising total profit (0 if none)
     best: Rung | None             # the rung at n_star
     limit_reason: str             # why the frontier stops
+    #: The cost model this frontier was solved under. `slippage_modelled` is False until the
+    #: buffer comes from a registered measurement of captured frames; a False here caps the
+    #: mode at PAPER_EXECUTION (spec §6: conservative slippage buffer, never a guess).
+    slippage_per_contract: float = 0.0
+    slippage_modelled: bool = False
+    fixed_cost_usd: float = 0.0
 
     @property
     def actionable(self) -> bool:
@@ -87,11 +93,20 @@ def _breakpoints(offers: Mapping[str, Sequence[Leg]], cap: float) -> list[float]
 def frontier(offers: Mapping[str, Sequence[Leg]], *, now_utc: float,
              proof: CoverProof, max_leg_age_s: float = 5.0,
              hurdle: float = 0.0, cap: float = 100_000.0,
-             cross_venue_only: bool = True) -> Frontier:
+             cross_venue_only: bool = True, balances: Mapping[str, float] | None = None,
+             fixed_cost_usd: float = 0.0, slippage_per_contract: float = 0.0,
+             slippage_modelled: bool = False) -> Frontier:
     """Solve N_max and N_star by walking the ladders' own breakpoints.
 
     `hurdle` is a minimum return on capital; 0.0 asks only for a locked profit. `cross_venue_only`
     drops same-venue covers, which are the intra-venue no-arb control rather than an opportunity.
+
+    THE TOTAL-COST MODEL (spec §6). A rung's cost is gross + fees over actual fills + the
+    settlement reserve (all inside `Cover.cost_per_contract`) + `slippage_per_contract`, and its
+    profit is N * (1 - cost) - `fixed_cost_usd`. A rung is refused when a leg is below its venue's
+    minimum order (`min_order`) or when a venue's capital would exceed its `balances` entry
+    (`balance`; a venue absent from `balances` has zero). Absent `balances` means unchecked --
+    the caller (nodes/risk) must supply them before anything is sent.
     """
     rungs: list[Rung] = []
     reason = "cap_reached"
@@ -99,28 +114,42 @@ def frontier(offers: Mapping[str, Sequence[Leg]], *, now_utc: float,
         cov: Cover = best_cover(offers, n, now_utc=now_utc,
                                 max_leg_age_s=max_leg_age_s, proof=proof)
         if not cov.ok:
+            if cov.reject_reason == REJECT_BELOW_MIN_ORDER:
+                reason = "min_order"
+                continue                      # a larger rung may clear the minimum
             reason = cov.reject_reason or "not_priced"
             break
         if cross_venue_only and cov.single_venue:
             reason = "single_venue_only"
             continue
-        edge = cov.edge_per_contract or 0.0
-        cost = cov.cost_per_contract or 0.0
-        ret = 0.0 if cost <= 0 else edge / cost
+        cost = (cov.cost_per_contract or 0.0) + slippage_per_contract
+        edge = 1.0 - cost
+        profit = n * edge - fixed_cost_usd
+        capital = n * cost
+        ret = 0.0 if capital <= 0 else profit / capital
         # Strictly positive, not merely non-negative. A cover priced at exactly 1.0000 locks no
         # profit and is not capacity -- and it is the single most common state on a coherent
         # market, so admitting it would report a frontier on every pair in the universe.
-        if edge <= 0 or ret < hurdle:
+        if edge <= 0 or profit <= 0 or ret < hurdle:
             reason = "below_hurdle" if rungs else "never_above_hurdle"
             break
+        if balances is not None:
+            per_venue: dict[str, float] = {}
+            for lc in cov.legs:
+                per_venue[lc.venue] = per_venue.get(lc.venue, 0.0) + lc.gross
+            over = [v for v, usd in per_venue.items() if usd > float(balances.get(v, 0.0))]
+            if over:
+                reason = "balance"
+                break
         rungs.append(Rung(contracts=n, cost_per_contract=cost, edge_per_contract=edge,
-                          profit=n * edge, capital=n * cost,
+                          profit=profit, capital=capital,
                           venues=tuple(sorted({l.venue for l in cov.legs}))))
 
     if not rungs:
-        return Frontier((), 0.0, 0.0, None, reason)
+        return Frontier((), 0.0, 0.0, None, reason, slippage_per_contract, slippage_modelled, fixed_cost_usd)
     best = max(rungs, key=lambda r: r.profit)
-    return Frontier(tuple(rungs), rungs[-1].contracts, best.contracts, best, reason)
+    return Frontier(tuple(rungs), rungs[-1].contracts, best.contracts, best, reason,
+                    slippage_per_contract, slippage_modelled, fixed_cost_usd)
 
 
 def selftest() -> None:

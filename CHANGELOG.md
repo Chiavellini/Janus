@@ -230,3 +230,19 @@ ledger reserves before submission, releases only on both-venue reconciliation, j
 with matching runner and limits shas, positive caps and an unexpired date. The watchdog gained
 three risk alarms — kill file present, breaker latched, reservation unreconciled too long — each
 demonstrated firing in its selftest.
+
+---
+
+## 2026-09-03 — P4: the total-cost model and the opportunity record
+
+`nodes/cover`: fees over one fill per ladder level actually consumed; a size below a leg's
+venue minimum order is not a cover (`below_min_order`); `Leg` carries the venue's order limits,
+which discovery reads from Gamma and the poller passes through. `frontier()` takes balances,
+fixed costs and a slippage term with a `slippage_modelled` label that stays False — capping the
+mode at PAPER — until the buffer is measured from captured frames under a registered row.
+
+`nodes/opportunity`: `thresholds.py` (discovery gross edge > 0; execution locked return ≥ 1% and
+net profit ≥ $0.50, as importable constants), `opportunity.py` (the record, the allowed-transition
+table, `opportunities` / `opportunity_transitions` / `frontiers` with the priced books kept when
+the edge goes away). The supervisor and the replay both write through it. The fee registry pins
+are re-verified to 2026-09-02 with what the venues reported.
