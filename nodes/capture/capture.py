@@ -100,12 +100,17 @@ def read_frames(path: Path | str, venue: str | None = None) -> Iterator[Frame]:
     p = Path(path)
     v = venue or p.parent.parent.name
     with gzip.open(p, "rt", encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            d = json.loads(line)
-            yield Frame(v, float(d["t"]), d.get("m"), d["raw"])
+        try:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                d = json.loads(line)
+                yield Frame(v, float(d["t"]), d.get("m"), d["raw"])
+        except EOFError:
+            # The hour being written has no end-of-stream marker yet; what was flushed is complete
+            # up to the last full line, and a replay over the live hour reads exactly that.
+            return
 
 
 def capture_files(root: Path | str, venue: str, start_utc: float, end_utc: float) -> list[Path]:
