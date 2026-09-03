@@ -21,12 +21,19 @@ def mlb(**kw) -> GamePoller:
     return GamePoller("g1", "mlb", OUT, quantities=(100.0,), **kw)
 
 
-def sync_all(p: GamePoller, *, kh=0.50, ka=0.50, ph=0.50, pa=0.50, now=T, size=5000.0):
+def sync_all(p: GamePoller, *, kh=0.50, ka=0.50, ph=0.50, pa=0.50, now=T, size=5000.0,
+             no_h=None, no_a=None, no_size=5000.0):
+    """Sync the four primary books. The complementary NO replicas ("kalshi_no") are synced
+    only when a price is given; left alone they stay unsynced and are simply not offered."""
     prices = {("kalshi", "home"): kh, ("kalshi", "away"): ka,
-              ("polymarket", "home"): ph, ("polymarket", "away"): pa}
+              ("polymarket", "home"): ph, ("polymarket", "away"): pa,
+              ("kalshi_no", "home"): no_h, ("kalshi_no", "away"): no_a}
     for key, rep in p.replicas.items():
+        price = prices[key]
+        if price is None:
+            continue
         rep.subscribed(now)
-        rep.snapshot_in([(0.01, size)], [(prices[key], size)],
+        rep.snapshot_in([(0.01, size)], [(price, no_size if key[0] == "kalshi_no" else size)],
                         seq=1 if rep.verification != "external" else None, now=now)
 
 
@@ -162,3 +169,46 @@ def test_a_supervisor_halt_blocks_with_its_name_but_still_records():
     assert e.cover is None and e.blocked_by == "supervisor:halt:CLOCK_UNHEALTHY"
     p.halt = None
     assert p.on_event("kalshi", "K_H", now=T)[0].cover.ok
+
+
+# ── the complementary NO ladder ─────────────────────────────────────────────
+def test_the_no_ladder_registers_on_the_other_markets_ticker():
+    p = mlb()
+    regs = sorted((v, m, side) for v, m, side, _r in p.registrations())
+    assert regs == [("kalshi", "K_A", "no"), ("kalshi", "K_A", "yes"), ("kalshi", "K_H", "no"),
+                    ("kalshi", "K_H", "yes"), ("polymarket", "P_A", "yes"), ("polymarket", "P_H", "yes")]
+    assert p.replicas[("kalshi_no", "home")].market_id == "K_A", "NO on the AWAY market backs HOME"
+
+
+def test_the_no_ladder_is_extra_depth_and_a_cheaper_price_wins():
+    """Home via NO-on-away at 0.40 beats home via YES-on-home at 0.48; the cover takes it and the
+    liquidity_source guard still allows it (a different outcome_id on the same book family)."""
+    p = mlb()
+    sync_all(p, kh=0.48, pa=0.48, no_h=0.40)
+    e = p.on_event("kalshi", "K_A", now=T)[0]
+    assert e.cover.ok
+    ids = {l.outcome_id for l in e.cover.legs}
+    assert "K_A:NO" in ids and "K_H" not in ids
+
+
+def test_a_faulted_no_replica_never_blocks_the_primary_cover():
+    p = mlb()
+    sync_all(p, kh=0.48, pa=0.48, no_h=0.40)
+    from nodes.book_replica.replica import Fault
+    p.replicas[("kalshi_no", "home")].invalidate(Fault.SEQ_GAP)
+    e = p.on_event("kalshi", "K_H", now=T)[0]
+    assert e.cover.ok and e.blocked_by is None
+    assert "K_A:NO" not in {l.outcome_id for l in e.cover.legs}
+
+
+def test_a_rest_sourced_book_is_held_to_the_stricter_bound():
+    p = mlb(max_book_age_s=5.0, max_rest_book_age_s=2.0)
+    sync_all(p, kh=0.48, pa=0.48)
+    r = p.replicas[("polymarket", "home")]
+    r.reconcile([(0.01, 5000)], [(0.48, 5000)], now=T)          # adopted from REST at T
+    for rep in p.replicas.values():
+        rep.heartbeat(T + 3)
+    e = p.on_event("kalshi", "K_H", now=T + 3)[0]
+    assert e.cover is None and e.blocked_by == "polymarket:home:STALE", "3 s old: fine for ws, stale for rest"
+    r.snapshot_in([(0.01, 5000)], [(0.48, 5000)], now=T + 3)     # a socket snapshot relabels it ws
+    assert p.on_event("kalshi", "K_H", now=T + 3)[0].cover.ok

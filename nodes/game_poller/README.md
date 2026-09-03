@@ -75,3 +75,17 @@ and that a missing fee schedule blocks rather than defaults.
 `halt` is set by the supervisor for a reason the poller cannot see — an unhealthy clock today, a
 kill switch or a venue disconnect later. Evaluations are still emitted, blocked as
 `supervisor:halt:<reason>`, so an outage is recorded rather than silent.
+
+## The complementary NO ladder (streaming lane, 2026-09-02)
+
+A Kalshi event carries one market per participant, and NO on the other participant's market is
+the same exposure as YES on this one — a different order book with its own depth and price,
+carried in the same frames. Measured +67% to +563% takeable depth on live MLB; until now only
+the retired REST lane read it. Each outcome gets a `("kalshi_no", outcome)` replica registered
+on the *other* ticker with side `"no"`, offered as a third leg with `outcome_id "<ticker>:NO"`.
+It is **extra depth, never a requirement**: a fault on it drops the leg and does not block the
+cover the four primary books can price. `registrations()` is the one place the set of books a
+game is priced from is defined; the supervisor and the replay harness both register through it.
+
+REST-sourced books (after a Polymarket reconcile) are held to `max_rest_book_age_s`, stricter
+than `max_book_age_s`.

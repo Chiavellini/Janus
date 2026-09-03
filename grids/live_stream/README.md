@@ -72,3 +72,9 @@ retried rather than taking the loop down.
 On every report tick the supervisor writes both sockets' `stats()` to `socket_health` and checks
 each socket's clock monitor. If either venue's stamps run more than the bound away from local
 receipt, every poller is halted (`supervisor:halt:CLOCK_UNHEALTHY`) until the skew clears.
+
+## Depth backstop
+
+A `nodes/stream_polymarket.Reconciler` task runs beside the sockets (`--reconcile-period`),
+fetching `/book` for quiet Polymarket replicas and reconciling them. Its counters
+(`reconciles`, `rest_drift`) ride along in the Polymarket `stats()` and so in `socket_health`.

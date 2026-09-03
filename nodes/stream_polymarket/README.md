@@ -30,7 +30,12 @@ referenced a level we had never been sent. The check reports real drift, not fal
 
 Its limit, stated plainly: **it verifies the top of book only.** A level drifting deeper in the
 ladder is invisible to it, and `nodes/cover` walks the ladder — so a periodic REST reconciliation
-(`BookReplica.reconcile`) remains the backstop for depth. It is no longer the primary defence.
+(`BookReplica.reconcile`, driven by `reconcile.Reconciler` in this node since 2026-09-02) is the
+backstop for depth. It fetches only replicas that are SYNCED and past half their unverified
+budget — quiet markets, which the stream cannot verify — so a busy market is never reconciled
+against a REST snapshot a few hundred milliseconds behind its own socket. A disagreement adopts
+REST, reports `HASH_MISMATCH`, labels the book `source="rest"`, and the poller holds it to the
+stricter REST freshness bound.
 
 On mismatch the replica is invalidated, the drifted local ladder is dropped, and the asset is
 queued for an **unsubscribe/subscribe round trip** on the socket — the only way this channel

@@ -37,7 +37,8 @@ from typing import Any, Callable
 from kernel.redact import brief_error
 from nodes.book_replica.clock import ClockMonitor
 from nodes.book_replica.replica import BookReplica, Fault
-from nodes.stream_kalshi.protocol import (TickerBook, parse, subscribe_frame)
+from nodes.stream_kalshi.protocol import (TickerBook, parse, subscribe_frame,
+                                          unsubscribe_frame, update_subscription_frame)
 
 KALSHI_WS = "wss://api.elections.kalshi.com/trade-api/ws/v2"
 WS_PATH = "/trade-api/ws/v2"
@@ -96,6 +97,10 @@ class KalshiStream:
     #: that carry none (a venue change, and a loud one).
     last_seq: dict[int | None, int] = field(default_factory=dict)
     clock: ClockMonitor = field(default_factory=ClockMonitor)
+    #: The live subscription id from the venue's `subscribed` reply; None until acked or after
+    #: a full resubscribe. Slate changes go through update_subscription on this sid.
+    sid: int | None = None
+    _msg_id: int = 1
 
     frames: int = 0
     snapshots: int = 0
@@ -109,12 +114,12 @@ class KalshiStream:
     def register(self, ticker: str, replica: BookReplica, outcome: str = "yes",
                  on_update: Callable[[str, float], None] | None = None) -> None:
         self.regs.setdefault(ticker, []).append(Registration(replica, outcome, on_update))
-        self.resubscribe_needed = True
+        # A slate change is a DIFF the run loop sends as update_subscription. Only a sequence
+        # gap sets `resubscribe_needed`, which tears the subscription down instead.
 
     def unregister(self, ticker: str) -> None:
         self.regs.pop(ticker, None)
         self.books.pop(ticker, None)
-        self.resubscribe_needed = True
 
     @property
     def tickers(self) -> list[str]:
@@ -138,7 +143,9 @@ class KalshiStream:
             for reg in regs:
                 reg.replica.heartbeat(t)
 
-        if p.kind == "heartbeat":
+        if p.kind == "subscribed":
+            if p.sid is not None:
+                self.sid = p.sid
             return p.kind
         if p.kind in ("error", "ignored"):
             self.errors += 1
@@ -146,7 +153,8 @@ class KalshiStream:
             return p.kind
 
         # Subscription-level gap check, BEFORE anything is applied. A lost message may have
-        # belonged to any ticker on this socket, so the whole set is suspect.
+        # belonged to any ticker on this socket, so the whole set is suspect. An `ok` reply to
+        # update_subscription CONSUMES a seq (probed live), so it is counted here too.
         if p.seq is not None:
             last = self.last_seq.get(p.sid)
             if last is not None and p.seq > last + 1:
@@ -164,6 +172,8 @@ class KalshiStream:
                 return "gap"
             if last is None or p.seq > last:
                 self.last_seq[p.sid] = p.seq
+        if p.kind == "heartbeat":
+            return p.kind
 
         book = self.books.get(p.ticker)
         if book is None:
@@ -182,10 +192,14 @@ class KalshiStream:
                 reg.on_update(p.ticker, t)
         return p.kind
 
+    def _next_id(self) -> int:
+        self._msg_id += 1
+        return self._msg_id
+
     def stats(self) -> dict:
         return {"connected": self.connected, "tickers": len(self.regs), "frames": self.frames,
                 "snapshots": self.snapshots, "deltas": self.deltas, "seq_gaps": self.gaps,
-                "sids": sorted(k for k in self.last_seq if k is not None),
+                "sid": self.sid, "sids": sorted(k for k in self.last_seq if k is not None),
                 "errors": self.errors, "last_error": self.last_error, "clock": self.clock.stats(),
                 "age_s": round(time.time() - self.last_frame_utc, 2) if self.last_frame_utc else None}
 
@@ -212,15 +226,35 @@ class KalshiStream:
                     if on_state:
                         on_state("connected", f"{len(self.regs)} tickers")
                     subscribed: set[str] = set()
+                    self.sid = None
                     while not stop.is_set():
-                        if self.resubscribe_needed or set(self.tickers) != subscribed:
-                            subscribed = set(self.tickers)
+                        want = set(self.tickers)
+                        if self.resubscribe_needed and subscribed:
+                            # A gap: every replica is already invalidated. Tear the
+                            # subscription down and open a fresh one -- fresh snapshots, fresh seq.
                             self.resubscribe_needed = False
-                            if subscribed:
-                                await ws.send(json.dumps(subscribe_frame(subscribed)))
-                            else:
-                                await asyncio.sleep(0.5)
-                                continue
+                            if self.sid is not None:
+                                await ws.send(json.dumps(unsubscribe_frame([self.sid], self._next_id())))
+                            self.sid = None
+                            subscribed = set()
+                        if not subscribed and want:
+                            self.resubscribe_needed = False
+                            await ws.send(json.dumps(subscribe_frame(want, self._next_id())))
+                            subscribed = set(want)
+                        elif not want:
+                            await asyncio.sleep(0.5)
+                            continue
+                        elif want != subscribed and self.sid is not None:
+                            # A slate change costs one frame on the existing sid (probed live);
+                            # a second `subscribe` would open a second sid and duplicate frames.
+                            added, gone = want - subscribed, subscribed - want
+                            if added:
+                                await ws.send(json.dumps(update_subscription_frame(
+                                    self.sid, added, "add_markets", self._next_id())))
+                            if gone:
+                                await ws.send(json.dumps(update_subscription_frame(
+                                    self.sid, gone, "delete_markets", self._next_id())))
+                            subscribed = set(want)
                         raw = await asyncio.wait_for(ws.recv(), timeout=recv_timeout)
                         t_recv, m_recv = time.time(), time.monotonic()
                         if self.capture is not None:

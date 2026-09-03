@@ -49,7 +49,9 @@ from nodes.opportunity.record import record_evaluation  # noqa: E402
 from kernel.schema import OpportunityStatus  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
 from nodes.stream_kalshi.stream import KalshiStream, load_private_key  # noqa: E402
+from nodes.stream_polymarket.reconcile import Reconciler  # noqa: E402
 from nodes.stream_polymarket.stream import PolymarketStream  # noqa: E402
+from nodes.venue_polymarket.books import PM_CLOB, pm_book  # noqa: E402
 from ops import run_index  # noqa: E402
 
 DB = Path("/Volumes/Kilos/janus/tuples/tuples.sqlite")
@@ -118,12 +120,12 @@ class Supervisor:
             sup = Supervised(p, spec["short_name"], time.time(),
                              tuple(p.market_ids("kalshi")), tuple(p.market_ids("polymarket")),
                              fee_params=dict(spec["fee_params"]))
-            for (venue, _outcome), rep in p.replicas.items():
-                cb = self._on_update(gid)
+            cb = self._on_update(gid)
+            for venue, market_id, side, rep in p.registrations():
                 if venue == "kalshi":
-                    self.ks.register(rep.market_id, rep, "yes", on_update=cb)
+                    self.ks.register(market_id, rep, side, on_update=cb)
                 else:
-                    self.ps.register(rep.market_id, rep, on_update=cb)
+                    self.ps.register(market_id, rep, on_update=cb)
             self.live[gid] = sup
             self.spawned += 1
             print(f"[spawn] {spec['short_name']} ({spec['league']}, {spec['state']}) "
@@ -211,6 +213,8 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
     stop = asyncio.Event()
     tasks = [asyncio.create_task(sup.ks.run(stop, on_state=lambda k, d: print(f"  [kalshi {k}] {d}", flush=True))),
              asyncio.create_task(sup.ps.run(stop, on_state=lambda k, d: print(f"  [pm {k}] {d}", flush=True)))]
+    if sup.ps.reconciler is not None:
+        tasks.append(asyncio.create_task(sup.ps.reconciler.run(stop)))
     last_disc = 0.0
     last_report = time.time()
     try:
@@ -264,6 +268,8 @@ def main() -> int:
     ap.add_argument("--frames-root", type=Path, default=FRAMES_ROOT,
                     help="raw frame capture root (hour-rotated gzip JSONL per venue)")
     ap.add_argument("--no-capture", action="store_true", help="do not write raw frames")
+    ap.add_argument("--reconcile-period", type=float, default=5.0,
+                    help="seconds between Polymarket REST reconcile passes over quiet replicas")
     a = ap.parse_args()
 
     if a.self_test:
@@ -292,6 +298,13 @@ def main() -> int:
     sup.store = TupleStore(a.db)
     sup.ks = KalshiStream(api_key=api_key, private_key=load_private_key(key_path))
     sup.ps = PolymarketStream()
+    rest = Client("polymarket-rest", rate=4, burst=8, cache_dir=None)
+
+    def _fetch_pm(asset_id: str):
+        b = pm_book(rest.get_json(f"{PM_CLOB}/book", params={"token_id": asset_id}, use_cache=False), time.time())
+        return [(q.price, q.size) for q in b.bids], [(q.price, q.size) for q in b.asks]
+
+    sup.ps.reconciler = Reconciler(sup.ps, _fetch_pm, period_s=a.reconcile_period)
     if not a.no_capture:
         sup.ks.capture = FrameWriter("kalshi", a.frames_root)
         sup.ps.capture = FrameWriter("polymarket", a.frames_root)

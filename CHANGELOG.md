@@ -160,3 +160,31 @@ to the poller, so `evaluated_utc` is the venue message's arrival time live and o
 feeds captured frames into the same handlers, spawns pollers from the slate specs the supervisor
 persisted (`events.spec_json`), writes through the same `nodes/opportunity.record_evaluation`,
 and `compare()` diffs the rows against the live table. GATE step 4 is a command now.
+
+---
+
+## 2026-09-02 — P2: the market-data layer as the spec describes it
+
+**Provenance.** `Book` and `BookReplica` carry `source` (`ws`/`rest`), `server_utc` (Kalshi delta
+`ts_ms`, Polymarket event `timestamp`, else None) and `received_mono`. One receive time per frame
+feeds capture, `handle()`, the replica and the poller.
+
+**Sequence per sid.** Every Kalshi frame carries `sid`; the gap check is keyed on it. The old
+socket-wide counter could not see a gap once a second `subscribe` had opened a second sid — which
+the supervisor caused on every slate change. Probed live: `update_subscription` adds/removes
+markets on the existing sid, its `ok` consumes a seq, and the added market's snapshot lands on the
+same sid. The run loop now subscribes once and diffs; only a gap tears the subscription down.
+
+**The clock.** `ClockMonitor` per socket (venue stamps run 30–70 ms ahead of local receipt);
+seconds of skew halt every poller with `CLOCK_UNHEALTHY`. Socket health rows land in
+`socket_health` on the report tick.
+
+**The REST backstop.** `nodes/stream_polymarket/reconcile.py` gives `BookReplica.reconcile` its
+first production caller: quiet, SYNCED replicas past half their unverified budget are fetched and
+reconciled; disagreement adopts REST and reports. REST-sourced books get a stricter freshness bound.
+
+**The NO ladder** is in the streaming lane: each outcome gets a `kalshi_no` replica on the other
+market's ticker, offered as extra depth, never required. `GamePoller.registrations()` is the one
+definition of what a game is priced from; supervisor and replay both use it.
+
+`depth_truncated` is set on a Kalshi REST ladder as long as the request.

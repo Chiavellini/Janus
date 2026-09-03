@@ -75,11 +75,11 @@ class Harness:
             self.blocked[game_id] = f"EXHAUSTIVE:{p.block_reason}"
             return False
         cb = self._on_update(game_id)
-        for (venue, _outcome), rep in p.replicas.items():
+        for venue, market_id, side, rep in p.registrations():
             if venue == "kalshi":
-                self.ks.register(rep.market_id, rep, "yes", on_update=cb)
+                self.ks.register(market_id, rep, side, on_update=cb)
             else:
-                self.ps.register(rep.market_id, rep, on_update=cb)
+                self.ps.register(market_id, rep, on_update=cb)
         self.pollers[game_id] = p
         self.fee_params[game_id] = dict(spec["fee_params"])
         self.leagues[game_id] = spec["league"]

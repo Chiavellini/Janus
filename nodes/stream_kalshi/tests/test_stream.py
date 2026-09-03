@@ -331,3 +331,86 @@ def test_a_clock_skew_of_seconds_is_unhealthy():
     for seq in range(2, 60):
         s.handle(sid_frame(1, seq, "K1", ts_ms=int((T - 30.0) * 1000)), now=T)
     assert not s.clock.healthy and s.clock.stats()["worst_s"] == pytest.approx(30.0)
+
+
+# ── incremental subscription (probed live 2026-09-02) ────────────────────────
+def test_an_ok_reply_consumes_a_sequence_number():
+    """update_subscription's `ok` carried seq 324 and the added market's snapshot came at 325."""
+    s = KalshiStream(api_key="k", private_key=key())
+    s.register("K1", BookReplica("kalshi", "K1", verification="stream"), "yes")
+    s.handle(sid_frame(1, 323, "K1", "orderbook_snapshot"), now=T)
+    s.handle({"type": "ok", "id": 2, "sid": 1, "seq": 324, "msg": {"market_tickers": ["K1", "K2"]}}, now=T)
+    s.handle(sid_frame(1, 325, "K1"), now=T)
+    assert s.gaps == 0 and s.last_seq == {1: 325}
+
+
+def test_a_slate_change_is_one_update_subscription_frame_on_the_live_sid():
+    s = KalshiStream(api_key="k", private_key=key())
+    s.register("K1", BookReplica("kalshi", "K1", verification="stream"), "yes")
+    sent: list = []
+
+    class FakeWS:
+        def __init__(self): self.n = 0
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def send(self, m): sent.append(json.loads(m))
+        async def recv(self):
+            self.n += 1
+            if self.n == 1:
+                return json.dumps({"type": "subscribed", "id": 1, "msg": {"channel": "orderbook_delta", "sid": 7}})
+            if self.n == 2:
+                s.register("K2", BookReplica("kalshi", "K2", verification="stream"), "yes")
+                return json.dumps(sid_frame(7, 1, "K1", "orderbook_snapshot"))
+            if self.n == 3:
+                s.unregister("K1")
+                return json.dumps({"type": "ok", "id": 2, "sid": 7, "seq": 2, "msg": {"market_tickers": ["K1", "K2"]}})
+            raise asyncio.CancelledError
+
+    async def go():
+        stop = asyncio.Event()
+        try:
+            await asyncio.wait_for(s.run(stop, connect=lambda u, h: FakeWS()), timeout=1.0)
+        except (asyncio.CancelledError, asyncio.TimeoutError):
+            pass
+
+    asyncio.run(go())
+    cmds = [(f["cmd"], f["params"].get("action"), f["params"].get("market_tickers"), f["params"].get("sids")) for f in sent]
+    assert cmds[0] == ("subscribe", None, ["K1"], None)
+    assert ("update_subscription", "add_markets", ["K2"], [7]) in cmds
+    assert ("update_subscription", "delete_markets", ["K1"], [7]) in cmds
+    assert sum(1 for c in cmds if c[0] == "subscribe") == 1, "never a second subscribe: no duplicate sid"
+
+
+def test_a_gap_tears_the_subscription_down_and_opens_a_fresh_one():
+    s = KalshiStream(api_key="k", private_key=key())
+    s.register("K1", BookReplica("kalshi", "K1", verification="stream"), "yes")
+    sent: list = []
+
+    class FakeWS:
+        def __init__(self): self.n = 0
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def send(self, m): sent.append(json.loads(m))
+        async def recv(self):
+            self.n += 1
+            if self.n == 1:
+                return json.dumps({"type": "subscribed", "id": 1, "msg": {"channel": "orderbook_delta", "sid": 3}})
+            if self.n == 2:
+                return json.dumps(sid_frame(3, 1, "K1", "orderbook_snapshot"))
+            if self.n == 3:
+                return json.dumps(sid_frame(3, 9, "K1"))                 # gap
+            if self.n == 4:
+                return json.dumps({"type": "subscribed", "id": 3, "msg": {"channel": "orderbook_delta", "sid": 4}})
+            raise asyncio.CancelledError
+
+    async def go():
+        stop = asyncio.Event()
+        try:
+            await asyncio.wait_for(s.run(stop, connect=lambda u, h: FakeWS()), timeout=1.0)
+        except (asyncio.CancelledError, asyncio.TimeoutError):
+            pass
+
+    asyncio.run(go())
+    cmds = [f["cmd"] for f in sent]
+    assert cmds == ["subscribe", "unsubscribe", "subscribe"], cmds
+    assert sent[1]["params"]["sids"] == [3] and s.gaps == 1 and s.sid == 4

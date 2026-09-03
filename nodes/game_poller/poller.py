@@ -70,6 +70,9 @@ class GamePoller:
     outcomes: dict[str, dict[str, str]]
     quantities: tuple[float, ...] = (5.0, 25.0, 100.0)
     max_book_age_s: float = 5.0
+    #: A book adopted from a REST reconcile is a fallback and is held to a stricter bound
+    #: (spec §8: REST fallback visibly labelled, stricter freshness).
+    max_rest_book_age_s: float = 3.0
     min_return: float = 0.01
     #: venue -> fee params from the venue's OWN payload (Kalshi series fee_type/fee_multiplier;
     #: Polymarket market feeSchedule). A venue absent here blocks its legs with
@@ -107,11 +110,35 @@ class GamePoller:
                 self.replicas[(venue, outcome)] = BookReplica(
                     venue=venue, market_id=market_id,
                     verification="stream" if venue == "kalshi" else "external")
+        # THE COMPLEMENTARY NO LADDER. A Kalshi event carries one market per participant, and
+        # buying NO on the other participant's market is the same exposure as YES on this one:
+        # a different order book with its own depth and price, in the SAME orderbook frames.
+        # Measured +67% to +563% takeable depth on live MLB (a0a79f5) -- and until now only the
+        # retired REST lane read it. The replica keys as ("kalshi_no", outcome) and registers
+        # on the OTHER outcome's ticker with side "no".
+        if len(self.outcomes) == 2:
+            a, b = sorted(self.outcomes)
+            for outcome, other in ((a, b), (b, a)):
+                other_ticker = self.outcomes[other].get("kalshi")
+                if other_ticker:
+                    self.replicas[("kalshi_no", outcome)] = BookReplica(
+                        venue="kalshi", market_id=other_ticker, verification="stream")
 
     # ── subscriptions ───────────────────────────────────────────────────
     def market_ids(self, venue: str) -> list[str]:
         """What this poller needs the shared socket to subscribe to."""
         return [v[venue] for v in self.outcomes.values() if venue in v]
+
+    def registrations(self) -> list[tuple[str, str, str, BookReplica]]:
+        """(venue, market_id, side, replica) for every replica: what a supervisor registers with
+        the shared sockets. The supervisor and the replay harness both use this, so the set of
+        books a game is priced from is defined in exactly one place."""
+        out = []
+        for (key, _outcome), rep in self.replicas.items():
+            venue = "kalshi" if key == "kalshi_no" else key
+            side = "no" if key == "kalshi_no" else "yes"
+            out.append((venue, rep.market_id, side, rep))
+        return out
 
     def replica_for(self, venue: str, market_id: str) -> BookReplica | None:
         for (v, _o), r in self.replicas.items():
@@ -140,13 +167,9 @@ class GamePoller:
                 rep = self.replicas.get((v, outcome))
                 if rep is None:
                     continue
-                fault = rep.check(t, max_age_s=self.max_book_age_s)
-                if fault is not None:
-                    blocked = blocked or f"{v}:{outcome}:{fault.value}"
-                    continue
-                book = rep.snapshot(t, max_age_s=self.max_book_age_s)
-                if book is None or not book.asks:
-                    blocked = blocked or f"{v}:{outcome}:NO_ASKS"
+                book = self._usable(rep, t)
+                if isinstance(book, str):
+                    blocked = blocked or f"{v}:{outcome}:{book}"
                     continue
                 fees = self.fee_params.get(v)
                 if fees is None:
@@ -154,6 +177,15 @@ class GamePoller:
                     continue
                 legs.append(Leg(v, liquidity_source_for(v), rep.market_id, rep.market_id, book,
                                 dict(fees)))
+            # The complementary NO ladder is EXTRA depth, never a requirement: a fault on it
+            # drops the leg, it does not block the cover the four primary books can price.
+            rep = self.replicas.get(("kalshi_no", outcome))
+            fees = self.fee_params.get("kalshi")
+            if rep is not None and fees is not None:
+                book = self._usable(rep, t)
+                if not isinstance(book, str):
+                    legs.append(Leg("kalshi", liquidity_source_for("kalshi"), f"{rep.market_id}:NO",
+                                    rep.market_id, book, dict(fees)))
             if legs:
                 offers[outcome] = legs
 
@@ -176,6 +208,17 @@ class GamePoller:
             out.append(ev)
         return out
 
+    def _usable(self, rep: BookReplica, t: float):
+        """A Book, or the name of why not. REST-sourced books get the stricter bound."""
+        max_age = self.max_rest_book_age_s if rep.source == "rest" else self.max_book_age_s
+        fault = rep.check(t, max_age_s=max_age)
+        if fault is not None:
+            return fault.value
+        book = rep.snapshot(t, max_age_s=max_age)
+        if book is None or not book.asks:
+            return "NO_ASKS"
+        return book
+
     def drain(self) -> None:
         self.state = PollerState.DRAINING
 
@@ -183,4 +226,5 @@ class GamePoller:
         return {"game_id": self.game_id, "league": self.league, "state": self.state.value,
                 "events": self.events, "evaluations": self.evaluations,
                 "opportunities": self.opportunities, "block_reason": self.block_reason,
-                "replicas": {f"{v}:{o}": r.state.value for (v, o), r in self.replicas.items()}}
+                "replicas": {f"{v}:{o}": r.state.value for (v, o), r in self.replicas.items()},
+                "halt": self.halt}

@@ -82,3 +82,13 @@ neither. `stats()["sids"]` lists the live subscriptions; more than one after a s
 the full-resubscribe path opened a duplicate (plan P2b replaces it with `update_subscription`).
 
 Deltas carry `ts_ms`; snapshots carry no timestamp. `stats()["clock"]` is the skew monitor.
+
+## Slate changes are one frame (probed live 2026-09-02)
+
+The run loop sends one `subscribe` per socket and keeps the venue's `sid` from the `subscribed`
+reply. A game starting or ending is then `update_subscription` with `add_markets` /
+`delete_markets` on that sid: the venue answers `ok` (which **consumes a seq**, counted by the gap
+check) and the added market's snapshot arrives on the same sid. The old loop re-sent a full
+`subscribe` on every change, opening a second sid per change — duplicate frames, and a sequence
+the socket-wide gap check could not see. Only a sequence gap tears the subscription down
+(`unsubscribe` the sid, `subscribe` afresh: fresh snapshots, fresh seq).

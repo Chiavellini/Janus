@@ -98,7 +98,7 @@ class TickerBook:
 @dataclass(frozen=True)
 class Parsed:
     """One decoded frame."""
-    kind: str                # "snapshot" | "delta" | "heartbeat" | "error" | "ignored"
+    kind: str                # "snapshot" | "delta" | "subscribed" | "heartbeat" | "error" | "ignored"
     ticker: str = ""
     seq: int | None = None
     detail: str = ""
@@ -148,7 +148,9 @@ def parse(msg: dict, books: dict[str, TickerBook]) -> Parsed:
     ticker = ticker_of(msg)
     sutc = server_utc_of(body)
 
-    if typ in ("subscribed", "ok", "pong"):
+    if typ == "subscribed":
+        return Parsed("subscribed", ticker, seq, sid=sid)
+    if typ in ("ok", "pong"):
         return Parsed("heartbeat", ticker, seq, sid=sid)
     if typ == "error":
         return Parsed("error", ticker, seq, str(body or msg), sid=sid)
@@ -176,3 +178,14 @@ def subscribe_frame(tickers, msg_id: int = 1) -> dict:
 
 def unsubscribe_frame(sids, msg_id: int = 2) -> dict:
     return {"id": msg_id, "cmd": "unsubscribe", "params": {"sids": list(sids)}}
+
+
+def update_subscription_frame(sid: int, tickers, action: str, msg_id: int) -> dict:
+    """Add or remove markets on an EXISTING subscription. Probed live 2026-09-02: the venue
+    answers `ok` carrying the sid, the full remaining ticker list and a seq that CONSUMES a
+    sequence number (ok 324, then the new market's snapshot at 325), and the added market's
+    snapshot arrives on the same sid. So a slate change costs one frame, not a second
+    subscription with its own sequence."""
+    assert action in ("add_markets", "delete_markets"), action
+    return {"id": msg_id, "cmd": "update_subscription",
+            "params": {"sids": [int(sid)], "market_tickers": sorted(tickers), "action": action}}

@@ -171,12 +171,16 @@ class PolymarketStream:
             for reg in regs:
                 reg.replica.heartbeat(t)
 
+    #: Filled by the supervisor when a `reconcile.Reconciler` is attached; reported in stats().
+    reconciler: Any = None
+
     def stats(self) -> dict:
         return {"connected": self.connected, "assets": len(self.regs), "frames": self.frames,
                 "snapshots": self.snapshots, "changes": self.changes, "drift": self.drift,
                 "errors": self.errors, "checks": self.checks,
                 "agreement": None if self.agreement is None else round(self.agreement, 5),
                 "last_error": self.last_error, "clock": self.clock.stats(),
+                "reconcile": self.reconciler.stats() if self.reconciler is not None else None,
                 "age_s": round(time.time() - self.last_frame_utc, 2) if self.last_frame_utc else None}
 
     # ── transport ───────────────────────────────────────────────────────
