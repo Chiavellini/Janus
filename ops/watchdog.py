@@ -251,7 +251,14 @@ def selftest() -> None:
         con.commit(); con.close()
         assert any("UNRECONCILED_TOO_LONG" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "UNRECONCILED"
         con = sqlite3.connect(db); con.execute("DELETE FROM capital_reservations"); con.commit(); con.close()
-        # NO_CO_LISTED_GAMES: an events table with nothing co-listed for a day, in season
+        # NO_CO_LISTED_GAMES: discovery has written for a day in season without one co-listed game.
+        # (A fresh, empty registry is silent -- that fired falsely on the lane's first boot.)
+        assert not any("registry" in a for a in check(fresh("q"), now=NOW, slas={}, risk={**R, "in_season": True}))
+        from nodes.discovery.discovery import EVENTS_DDL
+        con = sqlite3.connect(db); con.executescript(EVENTS_DDL)
+        con.execute("INSERT INTO events(event_id, league, phase, first_seen_ts, last_seen_ts) VALUES('e','mlb','pre',?,?)",
+                    (NOW - 2 * 86400, NOW - 3600))
+        con.commit(); con.close()
         assert any("NO_CO_LISTED_GAMES" in a for a in check(fresh("q"), now=NOW, slas={}, risk={**R, "in_season": True})), "REGISTRY"
         assert not any("registry" in a for a in check(fresh("q"), now=NOW, slas={}, risk={**R, "in_season": False}))
     print("watchdog selftest OK — 7 job branches, 3 risk branches and the registry branch fired, healthy cases stayed quiet")

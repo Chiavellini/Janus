@@ -152,3 +152,13 @@ def test_the_slate_carries_the_tier_and_the_registry_dates_newborns(tmp_path: Pa
     assert registry_health(store, now=NOW + 2 * 86400)[0].startswith("registry: NO_CO_LISTED_GAMES")
     assert registry_health(store, now=NOW + 2 * 86400, in_season=False) == []
     store.close()
+
+
+def test_a_fresh_registry_is_silent_and_a_day_of_uncolisted_writes_is_not(tmp_path: Path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    assert registry_health(store, now=NOW) == [], "first boot: nothing to judge yet"
+    d = _discovery()
+    record_events(store, d, {}, {"espn:mlb:7": "PM_TOKEN_RESOLUTION"}, now=NOW)   # discovered, never co-listed
+    assert registry_health(store, now=NOW + 3600) == []
+    assert registry_health(store, now=NOW + 2 * 86400)[0].startswith("registry: NO_CO_LISTED_GAMES")
+    store.close()

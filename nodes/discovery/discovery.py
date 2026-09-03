@@ -360,8 +360,15 @@ def registry_health(store, *, now: float | None = None, in_season: bool = True,
     means discovery is broken, not that nothing is on."""
     t = now or time.time()
     store.ensure_ddl(EVENTS_DDL)
-    row = store.con.execute("SELECT MAX(last_seen_ts) FROM events WHERE phase LIKE '%:co_listed'").fetchone()
-    last = row[0] if row else None
-    if in_season and (last is None or t - last > max_silence_s):
-        return [f"registry: NO_CO_LISTED_GAMES — none seen for {int(t - last) if last else 'ever'}s (limit {int(max_silence_s)}s)"]
+    if not in_season:
+        return []
+    last = store.con.execute("SELECT MAX(last_seen_ts) FROM events WHERE phase LIKE '%:co_listed'").fetchone()[0]
+    if last is not None:
+        return ([f"registry: NO_CO_LISTED_GAMES — none seen for {int(t - last)}s (limit {int(max_silence_s)}s)"]
+                if t - last > max_silence_s else [])
+    # Nothing co-listed EVER: only a fault once discovery has been writing for a whole limit
+    # without one. A fresh registry (first boot) is silent, not alarmed.
+    oldest = store.con.execute("SELECT MIN(first_seen_ts) FROM events").fetchone()[0]
+    if oldest is not None and t - oldest > max_silence_s:
+        return [f"registry: NO_CO_LISTED_GAMES — discovery has written for {int(t - oldest)}s without one co-listed game"]
     return []
