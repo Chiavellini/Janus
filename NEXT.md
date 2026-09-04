@@ -4,75 +4,58 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-04, early, on main. HANDOFF.md (2026-09-03 21:30 UTC) is the last full handoff;
-this file says what happened after it and what is next.
+Updated 2026-09-04 ~00:30 UTC, on main. HANDOFF.md (2026-09-03 21:30 UTC) is the last full
+handoff; CHANGELOG.md carries everything since, dated.
 
-## Done since the handoff
+## Where it stands
 
-The lane was flapping and the watchdog could not see it: an `IllegalTransition` from a
-mis-built state table tore both sockets down 5–20 times a minute for most of 2026-09-03. Fixed
-(`nodes/opportunity`), plus: a record error can no longer reach a socket; the size frontier is
-computed again (`frontier(proof=…)`); the lane honours the arming override's caps
-(`clear(caps=…)`); the Polymarket REST reconciler applies on the event loop (its evaluations were
-dying on sqlite's thread check, silently); the watchdog gained `SOCKET_FLAPPING`, `SOCKET_ERROR`
-and `LANE_SILENT`. Ledger L36 (the cover-cost distribution, dwell-weighted, per league × quantity
-× phase × flapping) is registered and has one run: BLOCKED_STALE holds most of the dwell in every
-cell, `kalshi:HEARTBEAT_LOST` alone is 72% of in-play college football, all 19 profitable prints
-are SUSPECT, and n for the paper row is 30 by declaration. **F3 is registered and the lane runs
-`PAPER_EXECUTION`** (GATE step 7): paper venues, nothing leaves the machine.
+The lane runs `PAPER_EXECUTION` under ledger F3 on nine leagues. Since the handoff, four things
+that were silently wrong are fixed and on main: the state table that flapped both sockets
+(5–20 reconnects a minute all day), the frontier that never sized, the reconciler that lost its
+evaluations on sqlite's thread check, and — found by L37 — the discovery pass that ran its HTTP
+inside the event loop and blinded both sockets for 13% of every hour. The Kalshi fee pin was
+half the venue's charge and is re-pinned from the operator's real fill; every recorded cover cost
+before 2026-09-04 ~00:16Z understates a Kalshi taker leg by 0.035·P·(1−P) per contract.
+
+**The Kalshi proof filled** (`proofs/kalshi_20260904T000452Z.json`: 2 taker at 0.35, then the
+"cancelled" resting bid was hit as a maker at 0.25 — 3 contracts of KC YES, $0.95). It STOPped on
+the fee pin, correctly; the cancel had gone to the wrong shard, also fixed. `--settle` runs itself
+when the market resolves (a watcher in the agent's session; if it did not, run it). The
+Polymarket proof has not run.
 
 ## Now — what is left, and whose it is
 
-**Yours, because I am not permitted to place orders, move money, or write the override:**
-0. **Fund Kalshi's shard 3** (`python3 ops/kalshi_shards.py --show`, then
-   `--move --to 3 --usd 20 --confirm`). The 2026-09-03 proof was refused `user_not_found` there.
-1. **Rewrite the override at main's current sha** — the one on disk pins `07541fc` and main has
-   moved twice since; `resolve_mode` refuses it. `python3 ops/arming_override.py --force --mode
-   LIMITED_LIVE --signed-by "Bernardo" --stake-usd 5 --max-contracts 10 --day-notional-usd 20
-   --statement "…names both venues…"`. **Nothing merges to main between this and the two
-   `--settle` files.**
-2. **The Kalshi proof**: `python3 ops/kalshi_live_proof.py --ticker <live KXMLBGAME-*>` dry, then
-   `--arm`; `--settle <file>` after the game. The live tickers are in the store:
-   `sqlite3 /Volumes/Kilos/janus/tuples/tuples.sqlite "select short_name, kalshi_event, pm_slug from events where league='mlb' and phase='in:co_listed'"`.
-3. **The Polymarket proof**: `python3 ops/polymarket_live_proof.py --slug <pm_slug> --outcome "<label>"`
-   dry, then `--arm`; `--settle <file>`. The wallet key file is in place; its funding is yours.
-4. **IAM for the box**: carve `iam:PassRole` on `arn:aws:iam::986420598115:role/janus-box` out of
-   the `janus-scope` deny (a `NotResource`) or delete the admin user's inline
-   `EarshotDenyDirectBoxLaunch`; then `ops/box/launch.sh --go`, the SSM secrets
-   (`python3 ops/box/creds.py --dry-run` lists them), and `ops/box/latency.py --host box` for L34.
-5. **`nodes/risk/limits.toml`** has no per-league cap for cfb, epl, lal, bun, elc, el1 or ita, so
-   the ledger refuses those at `LEAGUE_EXPOSURE` even on paper. Your numbers, your file.
-6. **Push main.** Nothing has been pushed since `1479bd6`; the box's SSM sha pointer is stale.
-7. Label the blind gold set `nodes/match_generic/gold/nonsports.csv` (ledger L31).
+**Yours, because I cannot send an order or write the override:**
+1. **Rewrite the override** — main moved twice since yours (`93a82a8` → `2d2a803`); `resolve_mode`
+   refuses it. Same command as before, `--force`.
+2. **A second Kalshi proof** so one file passes all six checks (the first fails `resting_cancelled`
+   and `fee_ok` on record, both fixed since), then **the Polymarket proof**, dry run and `--arm`,
+   any live two-sided game. Then `--settle` both. I run `--check`, flip BATTERY, close the changelog.
+3. IAM for the box; `limits.toml` per-league caps for cfb and the soccer leagues; push main
+   (nothing pushed since `1479bd6`, the box's SSM sha pointer is stale).
+4. Label `nodes/match_generic/gold/nonsports.csv` (L31).
 
 **Mine, in order:**
-1. **The Kalshi heartbeat bound.** L36 says a quiet Kalshi market is called HEARTBEAT_LOST most of
-   the time it is watched in-play (cfb) and pre-game (everywhere). A quiet market is not a stale
-   one; the replica's heartbeat timeout needs the venue's actual keep-alive cadence measured (a
-   descriptive row from captured frames) before the bound moves. Until then most of the lane's
-   dwell is BLOCKED_STALE by our own rule.
-2. After the armed proofs: `--check` both files, flip the BATTERY rows, append the fee
-   reconciliation.
-3. The `[clock] HALT` print is per poller (nineteen lines per event); make it one line, and
-   measure how often the clock check actually flips.
-4. Tennis rates (`tennis.walkover_rate` from the Sackmann results files; `delayed_gt7d_rate`
+1. Re-run L37 on a clean hour after the discovery split, then re-run L36: with the sockets fed and
+   fees right, the cover-cost table is the real first cut. Recompute n for F3 only to extend.
+2. `--check` the settled Kalshi proof; BATTERY rows; the fee reconciliation note.
+3. Tennis rates (`tennis.walkover_rate` from the Sackmann results files; `delayed_gt7d_rate`
    needs a declared proxy or tennis stays blocked by name), then the replay option that trusts
    socket snapshots for the Polymarket side.
-5. Three-way execution through a Polymarket NO token (a leg covering a SET of outcomes), the
-   191 unresolved batch-2 soccer names, the football-data.org snapshotter (your token).
-6. L28 census runs five more days; L36 re-runs after a clean day to see if n can be computed.
+4. Three-way execution through a Polymarket NO token; the 191 unresolved batch-2 soccer names;
+   the football-data.org snapshotter (your token).
+5. L28 census runs five more days.
 
 **Time:** F3 accrues under launchd. `python3 ops/watchdog.py` must stay quiet; `LANE_SILENT`,
-`SOCKET_FLAPPING` and `SOCKET_ERROR` are the alarms that would have caught yesterday.
+`SOCKET_FLAPPING` and `SOCKET_ERROR` are the alarms that would have caught 2026-09-03.
 
 ## Not now, deliberately
 
-Any real order before the two proofs settle and the operator rewrites the override. Ashburn
-before L34 is measured. `venue_cloudbet`, `venue_sxbet`, makers on Polymarket. Registering a
-league by editing a flag. Moving the heartbeat bound before its cadence is measured.
+Any real order before the proofs settle and the override is rewritten. Ashburn before L34 is
+measured. `venue_cloudbet`, `venue_sxbet`, makers on Polymarket. Registering a league by editing
+a flag. Moving the 15 s heartbeat bound: L37 says the bound was never the problem.
 
 ## The question that actually matters
 
-L36 answered the first cut: **with the sockets flapping, almost nothing was priced; with them
-steady, MLB in-play cost sits at p50 1.030 and about 1% of the dwell is within a cent of
-actionable.** The next cut is the same table over a clean day, and the heartbeat bound.
+L36's first run was taken with the sockets starved and the fees at half. The honest answer to
+"what does a cover cost" starts with the first clean day after 2026-09-04 00:25Z.
