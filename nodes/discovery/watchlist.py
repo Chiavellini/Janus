@@ -38,6 +38,14 @@ def kalshi_watch(series: list[str], cl: Client, *, now: float, ahead_h: float) -
 
 def pm_watch(tags: list[str | int], cl: Client, *, now: float, ahead_h: float) -> list[tuple[str, str]]:
     """(yes token, event slug) for every game market under the tags starting within the window."""
+    return [(tok, e.event_id) for e in pm_watch_events(tags, cl, now=now, ahead_h=ahead_h) for tok in e.tokens]
+
+
+def pm_watch_events(tags: list[str | int], cl: Client, *, now: float, ahead_h: float) -> list[GameEvent]:
+    """The GameEvents behind pm_watch: slug, gameStartTime, participants, tokens. Kept (2026-09-04)
+    so the supervisor can record each event's FIRST-SEEN start -- Polymarket rewrites
+    gameStartTime in place on the same slug when a match moves, which is exactly the delay the
+    tennis settlement wedge needs measured (nodes/watch_settle)."""
     out = []
     for tag in tags:
         evs = []
@@ -51,7 +59,7 @@ def pm_watch(tags: list[str | int], cl: Client, *, now: float, ahead_h: float) -
                 break
         for e in pm_events(str(tag), evs):
             if in_window(e, now, back_h=3.0, ahead_h=ahead_h):
-                out += [(tok, e.event_id) for tok in e.tokens]
+                out.append(e)
     return out
 
 

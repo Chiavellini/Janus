@@ -44,7 +44,8 @@ from kernel.fetch import Client  # noqa: E402
 from kernel.redact import brief_error  # noqa: E402
 from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
 from nodes.cover.capacity import frontier  # noqa: E402
-from nodes.discovery.watchlist import Watchlist, kalshi_watch, pm_watch  # noqa: E402
+from nodes.discovery.watchlist import Watchlist, kalshi_watch, pm_watch_events  # noqa: E402
+from nodes.watch_settle.settle import record_watch  # noqa: E402
 from nodes.entities.leagues import LEAGUES, default_leagues  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, first_seen, record_events  # noqa: E402
 from nodes.slate.slate import next_transition, windows_for  # noqa: E402
@@ -142,6 +143,7 @@ class Supervisor:
     watch: Watchlist | None = None
     capture_series: tuple[str, ...] = ()
     capture_pm_tags: tuple = ()
+    watch_rows: int = 0
 
     # ── discovery ───────────────────────────────────────────────────────
     def discover(self) -> dict[str, dict]:
@@ -195,14 +197,19 @@ class Supervisor:
         kc = Client("kalshi-watch", rate=4, burst=8, cache_dir=None)
         pc = Client("polymarket-watch", rate=4, burst=8, cache_dir=None)
         k_now = kalshi_watch(list(self.capture_series), kc, now=now, ahead_h=self.pre_hours) if self.capture_series else []
-        p_now = pm_watch(list(self.capture_pm_tags), pc, now=now, ahead_h=self.pre_hours) if self.capture_pm_tags else []
-        return k_now, p_now
+        p_events = pm_watch_events(list(self.capture_pm_tags), pc, now=now, ahead_h=self.pre_hours) if self.capture_pm_tags else []
+        p_now = [(tok, e.event_id) for e in p_events for tok in e.tokens]
+        return k_now, p_now, p_events
 
     def apply_watch(self, fetched) -> tuple[int, int]:
         if fetched is None:
             return (0, 0)
-        k_now, p_now = fetched
-        return self.watch.sync(self.ks, self.ps, k_now, p_now)
+        k_now, p_now, p_events = fetched
+        added, removed = self.watch.sync(self.ks, self.ps, k_now, p_now)
+        if self.store is not None and p_events:
+            # First-seen starts for the settlement-timing collector (nodes/watch_settle, ledger F4).
+            self.watch_rows = record_watch(self.store, p_events, now=time.time())
+        return added, removed
 
     # ── lifecycle ───────────────────────────────────────────────────────
     def reconcile(self, slate: dict[str, dict]) -> None:
@@ -434,7 +441,7 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
                     try:
                         added, removed = sup.apply_watch(await asyncio.to_thread(sup.fetch_watch))
                         if added or removed:
-                            print(f"[watch] capture-only +{added} -{removed}: {sup.watch.stats()}", flush=True)
+                            print(f"[watch] capture-only +{added} -{removed}: {sup.watch.stats()} rows={sup.watch_rows}", flush=True)
                     except Exception as exc:  # noqa: BLE001 -- capture-only must never break discovery
                         print(f"[watch FAILED] {type(exc).__name__}: {exc}", flush=True)
                     print(f"[slate] {len(slate)} co-listed games {sup.tiers}, {len(sup.live)} pollers, "

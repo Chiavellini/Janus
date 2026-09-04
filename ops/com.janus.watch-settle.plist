@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.janus.watch-settle</string>
+  <!-- The daily resolver for nodes/watch_settle: which capture-only events resolved, and when,
+       against the start the lane first saw. Off-peak; one run a day is the row's cadence. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/bernardodelrio/Code/Janus/ops/run_node.sh</string>
+    <string>watch_settle</string>
+    <string>/Users/bernardodelrio/Code/Janus/research/sports/2026-09-04_tennis-delay-forward/measure.py</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/bernardodelrio/Code/Janus</string>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>13</integer><key>Minute</key><integer>30</integer></dict>
+  <key>RunAtLoad</key><false/>
+  <key>ProcessType</key><string>Background</string>
+  <key>Nice</key><integer>15</integer>
+</dict>
+</plist>

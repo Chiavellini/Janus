@@ -123,3 +123,18 @@ def test_the_report_tick_names_a_stall_apart_from_a_clock_fault(tmp_path: Path, 
     sup.ps.clock = type(sup.ps.clock)()
     sup.on_report_tick(now=T + 18)
     assert s.poller.halt is None
+
+
+def test_apply_watch_records_first_seen_starts_for_the_settlement_collector(tmp_path: Path):
+    from nodes.discovery.census import GameEvent
+    from nodes.discovery.watchlist import Watchlist
+    from nodes.discovery.tests.test_watchlist import FakeSocket
+    sup, _ = _supervisor(tmp_path)
+    sup.watch, sup.ks, sup.ps = Watchlist(), FakeSocket(), FakeSocket()
+    sup.capture_pm_tags = ("tennis",)
+    e = GameEvent("polymarket", "tennis", "atp-x-y-2026-09-05", "2026-09-05", T + 3600, ["X", "Y"], [], 1, True, None, None, None, ["tokX"])
+    assert sup.apply_watch(([], [("tokX", e.event_id)], [e])) == (1, 0)
+    assert sup.watch_rows == 1
+    row = sup.store.con.execute("SELECT event_id, start_utc, league_hint FROM watch_events").fetchone()
+    assert row == ("atp-x-y-2026-09-05", T + 3600, "atp")
+    assert sup.apply_watch(None) == (0, 0)

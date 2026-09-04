@@ -71,6 +71,8 @@ SLAS: dict[str, Sla] = {
     # L28, the co-listing census: one run a day at 14:00 local for seven days (com.janus.census).
     # A day and two hours of silence means the calendar job did not fire or did not finish.
     "census": Sla(kind="oneshot", max_age_s=26 * 3600),
+    # nodes/watch_settle's daily resolver (research/sports/2026-09-04_tennis-delay-forward), 13:30 local.
+    "watch_settle": Sla(kind="oneshot", max_age_s=26 * 3600),
     # Nothing is currently scheduled except this watchdog. Every Janus collector was stopped on
     # 2026-09-02 (see CHANGELOG.md); the sports lane has never had a plist. Entries return here
     # when a lane is actually deployed -- registering an SLA for a job that does not run is

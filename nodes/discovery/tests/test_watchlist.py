@@ -2,7 +2,7 @@
 """Capture-only subscriptions: selected by window, registered once, unregistered when gone, never priced."""
 from __future__ import annotations
 
-from nodes.discovery.watchlist import Watchlist, kalshi_watch, pm_watch
+from nodes.discovery.watchlist import Watchlist, kalshi_watch, pm_watch, pm_watch_events
 
 NOW = 1_788_449_600.0   # 2026-09-03T15:33Z
 
@@ -57,3 +57,12 @@ def test_sync_registers_new_unregisters_gone_and_never_prices():
     assert w.sync(ks, ps, [("K2", "KXWTAMATCH")], [("T1", "s1"), ("T2", "s2")]) == (1, 1)
     assert ks.unregistered == ["K1"] and set(ps.registered) == {"T1", "T2"}
     assert w.stats() == {"kalshi": 1, "polymarket": 2, "registered": 4, "unregistered": 1}
+
+
+def test_pm_watch_events_keep_the_start_and_participants_behind_the_tokens():
+    ev = {"slug": "wta-a-b-2026-09-03", "teams": [], "markets": [
+        {"slug": "wta-a-b-2026-09-03", "sportsMarketType": "moneyline", "gameStartTime": "2026-09-03 17:00:00+00",
+         "outcomes": '["A", "B"]', "clobTokenIds": '["tokA", "tokB"]', "createdAt": "2026-09-01T00:00:00Z", "bestBid": 0.4, "bestAsk": 0.6}]}
+    got = pm_watch_events(["tennis"], FakeClient(pm={"tennis": [ev]}), now=NOW, ahead_h=24.0)
+    assert len(got) == 1 and got[0].event_id == "wta-a-b-2026-09-03" and got[0].participants == ["A", "B"]
+    assert got[0].start_utc and got[0].tokens == ["tokA"]
