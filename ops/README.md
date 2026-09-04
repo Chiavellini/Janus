@@ -48,3 +48,8 @@ run beside the lane shows up as seconds of receive lag on both sockets. Until th
 - Watch `loop` on the lane's report line and `socket_health.loop_lag_s`; a `[clock] HALT STALL`
   line means the lane fell behind real time, and every book it priced in that tick was that old.
 - `launchd` cannot raise the lane's priority without root; `Nice` stays at 0.
+
+Measured 2026-09-04 01:00Z: a full `pytest` run under `nice -n 19` still stalled the lane 10.9 s and
+7.3 s on consecutive ticks (the host pages, and nice does not help paging). Run the full suite only
+when the lane's stall does not matter (no game in play) or on another machine; run targeted test
+directories otherwise.
