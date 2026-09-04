@@ -46,7 +46,7 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — first real Kalshi fill (2026-09-04 00:04Z): 2 taker at 0.35 + 1 maker at 0.25, balance reconciled to the cent. Fee STOP fired correctly on the old pin.
 - [ ] NOT PROVED — a Kalshi proof file passing all six checks (the first fails `resting_cancelled` and `fee_ok` on record; both causes fixed). Needs one clean armed re-run. OPERATOR.
 - [ ] NOT DONE — the Polymarket proof: no real Polymarket order has ever been sent. OPERATOR.
-- [ ] NOT DONE — `--settle` of the Kalshi proof: automatic when MIA @ KC resolves (a watcher is running).
+- [x] DONE — the Kalshi proof settled: KC won, 3 contracts paid $3.00 against $0.95 staked and $0.035 fees, realized +$2.01, balance reconciled to the cent, reservation released; checklist 5 of 7 (the two failures on record are the fixed cancel routing and fee pin).
 - [ ] NOT DONE — three-way soccer execution: a draw is priced as a third outcome but the planner is two-leg only; needs the Polymarket NO-token design. Until then soccer contributes evidence, not trades.
 - [ ] NOT DONE — `nodes/risk/limits.toml` has no per-league cap for cfb or any soccer league: those are refused at reservation even on paper. OPERATOR decision.
 - [ ] NOT DONE — the arming override must be rewritten at main's current sha before any armed run. OPERATOR.
