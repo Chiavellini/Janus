@@ -466,3 +466,14 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
   `apply_discovery()` / `apply_watch()` on the loop (the reconciler's shape). L36's HEARTBEAT_LOST
   dwell was the lane starving itself; the row re-runs after a clean hour.
 - `[clock]` prints once per tick with the poller count, not once per poller.
+- **The clock flip was the lane falling behind real time.** Checklist A1. Receive lag measured
+  from the raw capture (received minus the venue's own stamp) was 10–20 s p50 in busy minutes on
+  Kalshi and up to 85 s on Polymarket, both together, while the process used a fifth of a core:
+  the Mac is starved (15 MB free, 5 of 6 GB swap, other agents, collectors) and every heavy job
+  beside the lane, this session's test suites included, showed up as seconds of lag. The clock
+  monitor was an unbounded EWMA that never forgot and was fed once per price change in a batch;
+  it is now a 60 s windowed median, one sample per frame, re-arming after a quiet spell. The lane
+  carries a loop probe (a 250 ms sleep's overshoot, `socket_health.loop_lag_s`, `loop` on the
+  report line) and the halt names its cause: `HALT STALL 12.4s` (LOOP_STALLED) or
+  `HALT CLOCK kalshi` (CLOCK_UNHEALTHY). Halting stays; it was right. L38 registered to measure
+  the stall over 24 h beside L34. `ops/README.md` says what not to run beside the lane.

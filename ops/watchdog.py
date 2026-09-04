@@ -336,8 +336,8 @@ def selftest() -> None:
         con = sqlite3.connect(db); con.executescript(_TS.SOCKET_HEALTH_DDL)
 
         def health(venue, i, connected, errors, last):
-            con.execute("INSERT INTO socket_health VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                        (NOW - (15 - i) * 60, venue, connected, 10, 100 * i, 0, 0, 0, 0, 0.99, errors, 0.0, 1, 1.0, last))
+            con.execute("INSERT INTO socket_health VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (NOW - (15 - i) * 60, venue, connected, 10, 100 * i, 0, 0, 0, 0, 0.99, errors, 0.0, 1, 1.0, last, 0.0))
         for i in range(15):                                          # a quiet, connected socket
             health("kalshi", i, 1, 0, None)
         con.commit()

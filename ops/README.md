@@ -36,3 +36,15 @@ firing test.
 
 `DISABLED` holds deliberately-stopped jobs (reported as info, never as alerts) so an unloaded lane
 does not alarm forever.
+
+## Host hygiene while the lane is live on the Mac (2026-09-04)
+
+The lane's books are only as fresh as its event loop is prompt, and this Mac is starved
+(swap in use, other agents, collectors). Ledger L37 and L38: a test suite or a capture analysis
+run beside the lane shows up as seconds of receive lag on both sockets. Until the box exists:
+
+- Run `python3 -m pytest` and any `research/**/measure.py` under `nice -n 19`, one at a time, and
+  never inside a window a research row is reading from the capture.
+- Watch `loop` on the lane's report line and `socket_health.loop_lag_s`; a `[clock] HALT STALL`
+  line means the lane fell behind real time, and every book it priced in that tick was that old.
+- `launchd` cannot raise the lane's priority without root; `Nice` stays at 0.

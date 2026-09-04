@@ -122,6 +122,15 @@ class Supervisor:
     blocked: dict[str, str] = field(default_factory=dict)
     #: (game_id, exception class) -> count of evaluations whose record raised; see _on_update.
     record_errors: dict[tuple[str, str], int] = field(default_factory=dict)
+    #: Event-loop stall since the last report tick: the worst overshoot of a 250 ms sleep, and the
+    #: readings, from the probe in run(). A stalled loop stamps every received frame late, so
+    #: every freshness bound is off by this much (2026-09-04: 10-100 s on a starved host).
+    loop_lag_max_s: float = 0.0
+    loop_lag_readings: list = field(default_factory=list)
+    #: The bound past which the loop's own lag halts pricing, same figure as the clock's.
+    max_loop_lag_s: float = 5.0
+    #: The last tick's verdict on the loop; what the risk gate sees between ticks.
+    stalled: bool = False
     tiers: dict[str, int] = field(default_factory=dict)
     wake_state: tuple = ("WAKE", None, None)
     #: Capture-only subscriptions for what the slate cannot co-list yet (tennis has no ESPN anchor):
@@ -284,22 +293,48 @@ class Supervisor:
             if self.coordinator is not None:
                 self._execute(sup, ev, rec)
 
+    def loop_probe_reading(self, overshoot_s: float) -> None:
+        self.loop_lag_readings.append(overshoot_s)
+        if overshoot_s > self.loop_lag_max_s:
+            self.loop_lag_max_s = overshoot_s
+
+    def loop_stalled(self) -> bool:
+        """Stalled at the last tick, or stalled since it."""
+        return self.stalled or self.loop_lag_max_s > self.max_loop_lag_s
+
+    def clock_ok(self) -> bool:
+        """What the risk gate is told: both venues' stamps inside the bound AND the loop prompt."""
+        return all(st_.clock.healthy for st_ in (self.ks, self.ps) if st_ is not None) and not self.loop_stalled()
+
     def on_report_tick(self, now: float | None = None) -> None:
         """Persist socket health, and fail closed on an unhealthy clock: every freshness bound
-        in the system is `now - updated_utc`, so a stepped clock makes every book fiction."""
+        in the system is `now - updated_utc`, so a stepped clock makes every book fiction.
+
+        Two causes, named apart (2026-09-04). STALL: the loop probe overshot the bound, so every
+        frame on BOTH sockets was stamped late -- the lane is behind real time, not the clocks.
+        CLOCK: a venue's stamps sit outside the bound while the loop was prompt -- a clock step
+        or the venue stamping late. Both halt pricing; only the second is a clock finding."""
         t = now or time.time()
+        lag = self.loop_lag_max_s
+        self.stalled = lag > self.max_loop_lag_s
         for venue, st_ in (("kalshi", self.ks), ("polymarket", self.ps)):
             if st_ is not None:
-                self.store.socket_health(venue=venue, stats=st_.stats(), seen_ts=t)
+                self.store.socket_health(venue=venue, stats={**st_.stats(), "loop_lag_s": round(lag, 3)}, seen_ts=t)
         bad = [v for v, st_ in (("kalshi", self.ks), ("polymarket", self.ps))
                if st_ is not None and not st_.clock.healthy]
-        halt = "CLOCK_UNHEALTHY" if bad else None
+        if self.loop_stalled():
+            halt, why = "LOOP_STALLED", f"HALT STALL {lag:.1f}s" + (f" (stamps off on {','.join(bad)})" if bad else "")
+        elif bad:
+            halt, why = "CLOCK_UNHEALTHY", f"HALT CLOCK {','.join(bad)}"
+        else:
+            halt, why = None, "healthy again"
         changed = 0
         for sup in self.live.values():
             changed += int(sup.poller.halt != halt)
             sup.poller.halt = halt
         if changed:
-            print(f"[clock] {'HALT ' + ','.join(bad) if bad else 'healthy again'} ({changed} pollers)", flush=True)
+            print(f"[clock] {why} ({changed} pollers)", flush=True)
+        self.loop_lag_max_s, self.loop_lag_readings = 0.0, []
 
     def _execute(self, sup: Supervised, ev, rec) -> None:
         """PAPER and above: plan from the priced cover, clear it through nodes/risk, run the machine.
@@ -328,8 +363,7 @@ class Supervisor:
             balances = None if any(b is None for b in got.values()) else got
         connected = {"kalshi": bool(self.ks and self.ks.connected), "polymarket": bool(self.ps and self.ps.connected)}
         clearance = clear(cand, mode=self.mode, limits=self.limits, ledger=self.ledger, kill=self.kill,
-                          breaker=self.breaker, fills_today=(), clock_healthy=all(
-                              st_.clock.healthy for st_ in (self.ks, self.ps) if st_ is not None),
+                          breaker=self.breaker, fills_today=(), clock_healthy=self.clock_ok(),
                           fee_schedules_ok=bool(sup.fee_params.get("kalshi") and sup.fee_params.get("polymarket")),
                           balances=balances, venues_connected=connected, caps=self.caps or None)
         if hasattr(clearance, "code"):
@@ -346,6 +380,7 @@ class Supervisor:
         return {"live": len(self.live), "mode": self.mode.value, "executions": self.executions, "spawned": self.spawned, "reaped": self.reaped,
                 "evaluations": sum(s.evaluations for s in self.live.values()),
                 "record_errors": sum(self.record_errors.values()),
+                "loop_lag_max_s": round(self.loop_lag_max_s, 3),
                 "rows": sum(s.written for s in self.live.values()),
                 "kalshi": self.ks.stats() if self.ks else None,
                 "polymarket": self.ps.stats() if self.ps else None}
@@ -367,6 +402,15 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
              asyncio.create_task(sup.ps.run(stop, on_state=lambda k, d: print(f"  [pm {k}] {d}", flush=True)))]
     if sup.ps.reconciler is not None:
         tasks.append(asyncio.create_task(sup.ps.reconciler.run(stop)))
+
+    async def loop_probe(period: float = 0.25) -> None:
+        # The one honest measure of the loop: how late a sleep wakes. Everything the sockets
+        # stamp is late by at least this much when it is large.
+        while not stop.is_set():
+            t0 = time.monotonic()
+            await asyncio.sleep(period)
+            sup.loop_probe_reading(max(0.0, time.monotonic() - t0 - period))
+    tasks.append(asyncio.create_task(loop_probe()))
     last_disc = 0.0
     last_report = time.time()
     try:
@@ -396,6 +440,7 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
                     await asyncio.sleep(15)
                     break
             if time.time() - last_report > report_period:
+                lag_for_print = sup.loop_lag_max_s        # the tick resets it
                 sup.on_report_tick()
                 sup.store.commit()
                 for st_ in (sup.ks, sup.ps):
@@ -407,7 +452,7 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
                       f"evals={st['evaluations']} rows={st['rows']} | "
                       f"kalshi {k.get('frames',0)}f/{k.get('seq_gaps',0)}gap | "
                       f"pm {p.get('frames',0)}f/{p.get('drift',0)}drift/"
-                      f"{p.get('agreement')}", flush=True)
+                      f"{p.get('agreement')} | loop {lag_for_print:.1f}s", flush=True)
                 last_report = time.time()
             await asyncio.sleep(1)
     finally:

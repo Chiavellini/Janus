@@ -302,23 +302,36 @@ CREATE TABLE IF NOT EXISTS socket_health(
   seen_ts REAL NOT NULL, venue TEXT NOT NULL, connected INTEGER, subscriptions INTEGER,
   frames INTEGER, snapshots INTEGER, updates INTEGER, seq_gaps INTEGER, drift INTEGER,
   agreement REAL, errors INTEGER, clock_offset_s REAL, clock_healthy INTEGER, age_s REAL,
-  last_error TEXT);
+  last_error TEXT, loop_lag_s REAL);
 CREATE INDEX IF NOT EXISTS socket_health_ts ON socket_health(venue, seen_ts);
 """
 
+    def _add_column_if_missing(self, table: str, column: str, decl: str) -> None:
+        """A column added after the table shipped. CREATE IF NOT EXISTS leaves an old table as it
+        was, so a new column is an ALTER, once, guarded."""
+        cols = {r[1] for r in self.con.execute(f"PRAGMA table_info({table})")}
+        if column not in cols:
+            self.con.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+
     def socket_health(self, *, venue: str, stats: dict[str, Any], seen_ts: float | None = None) -> None:
         """One row per report tick per socket. This used to live only in stdout, which is not
-        rotated; a run's frame counts, gaps, drift rate and agreement survived nowhere."""
-        self.ensure_ddl(self.SOCKET_HEALTH_DDL)
+        rotated; a run's frame counts, gaps, drift rate and agreement survived nowhere.
+        `loop_lag_s` (2026-09-04) is the supervisor's event-loop stall since the last tick: the
+        receive timestamps behind every freshness bound are only as good as the loop is prompt."""
+        if self.SOCKET_HEALTH_DDL not in self._ddl_applied:
+            self.ensure_ddl(self.SOCKET_HEALTH_DDL)
+            self._add_column_if_missing("socket_health", "loop_lag_s", "REAL")
         clock = stats.get("clock") or {}
         self.con.execute(
-            "INSERT INTO socket_health VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO socket_health(seen_ts, venue, connected, subscriptions, frames, snapshots, updates, seq_gaps, "
+            "drift, agreement, errors, clock_offset_s, clock_healthy, age_s, last_error, loop_lag_s) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (seen_ts or time.time(), venue, int(bool(stats.get("connected"))),
              stats.get("tickers", stats.get("assets")), stats.get("frames"), stats.get("snapshots"),
              stats.get("deltas", stats.get("changes")), stats.get("seq_gaps"), stats.get("drift"),
              stats.get("agreement"), stats.get("errors"), clock.get("offset_s"),
              None if clock.get("healthy") is None else int(bool(clock["healthy"])),
-             stats.get("age_s"), stats.get("last_error") or None))
+             stats.get("age_s"), stats.get("last_error") or None, stats.get("loop_lag_s")))
 
     def commit(self) -> None:
         self.con.commit()

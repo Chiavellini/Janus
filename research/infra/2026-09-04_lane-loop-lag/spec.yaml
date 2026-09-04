@@ -1,0 +1,42 @@
+experiment_id: "janus-infra-lane-loop-lag-2026-09-04"
+date_registered: "2026-09-04"
+track: "infra/host"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L38"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE FIRST RUN.
+purpose: >
+  The Mac that runs the lane is starved (2026-09-04: 15 MB free, 5 of 6 GB swap in use, load 4-5,
+  other agents and collectors on it). Receive lag measured from the capture was 10-20 s p50 in
+  busy minutes on Kalshi and up to 85 s on Polymarket, both together, while the lane's own
+  process used a fifth of a core: the event loop was being starved, not busy. The lane now
+  carries a loop probe (a 250 ms sleep's overshoot, max per report tick, socket_health.loop_lag_s).
+  This row characterises it over the first 24 h so the box decision (L34) has the Mac's stall
+  figure beside the Mac's latency figure.
+
+source:
+  rows: "socket_health.loop_lag_s in /Volumes/Kilos/janus/tuples/tuples.sqlite, one per report tick per venue (identical across venues within a tick), from the first tick after the 2026-09-04 A1 restart"
+  code: "this directory's measure.py"
+
+window: "the first 24 h of ticks after the A1 restart; re-runnable for any later day"
+
+definitions:
+  tick_lag: "loop_lag_s of a tick: the worst overshoot of the probe's 250 ms sleep since the previous tick"
+  stalled_tick: "tick_lag > 5 s (the same bound the clock check uses)"
+  share_stalled: "stalled ticks / ticks, per hour and over the day"
+  quantiles: "p50 / p90 / p99 / max of tick_lag per hour"
+  coincidence: "share of stalled ticks whose minute also holds a [slate] line in the lane log (discovery) -- reported, not modelled"
+
+criteria:
+  - "Descriptive. No hypothesis, no look. Reads no price, no outcome."
+  - "Reported per hour: ticks, quantiles, share_stalled; and the coincidence with discovery."
+  - "Nothing in the lane changes on this row's numbers. It informs L34's execution-host verdict and the operator's choice of what else runs on the Mac."
+
+outputs:
+  results: "research/infra/2026-09-04_lane-loop-lag/results_<run>.json"
+  verdict: "research/infra/2026-09-04_lane-loop-lag/verdict.md (appended per run)"
+
+what_this_does_not_establish:
+  - "Why the host stalls (swap, other processes, the discovery thread's GIL share): the probe measures the effect, not the cause."

@@ -325,3 +325,17 @@ def test_an_empty_subscription_set_never_connects():
 
     asyncio.run(go())
     assert attempts == []
+
+
+def test_a_batched_price_change_frame_is_one_clock_sample():
+    """One frame carrying many price changes was fed to the monitor once per change, so a single
+    late-dequeued batch moved the estimate by itself (2026-09-04)."""
+    s = PolymarketStream()
+    r = BookReplica("polymarket", A, verification="stream")
+    s.register(A, r)
+    s.handle(BOOK, now=T)
+    ch = change(0.18, 4, bb=0.19, ba=0.20)
+    ch["price_changes"] = ch["price_changes"] * 5
+    ch["timestamp"] = str(int((T + 1 - 0.03) * 1000))
+    s.handle(ch, now=T + 1)
+    assert s.clock.stats()["samples"] == 1

@@ -194,3 +194,21 @@ def test_a_few_stale_stamps_cannot_halt_the_lane():
     assert c.healthy, "19 samples: no verdict yet"
     c.observe(10_000.0, 100.0)
     assert not c.healthy
+
+
+def test_the_clock_window_forgets_and_re_arms():
+    """2026-09-04: the EWMA never forgot, so it oscillated around the bound once a minute for
+    hours. Samples older than the window drop out; the verdict needs min_samples INSIDE it."""
+    from nodes.book_replica.clock import ClockMonitor
+    c = ClockMonitor(window_s=60.0, max_skew_s=5.0, min_samples=3)
+    for i in range(5):
+        c.observe(1000.0 + i, 1000.0 + i - 30.0)         # 30 s behind: unhealthy
+    assert not c.healthy and c.stats()["offset_s"] == pytest.approx(30.0) and c.window_n == 5
+    c.observe(1100.0, 1100.0 - 0.05)                     # a minute later: the old samples are gone
+    assert c.window_n == 1 and c.healthy, "one fresh sample, no verdict: re-armed"
+    c.observe(1101.0, 1101.0 - 0.05); c.observe(1102.0, 1102.0 - 0.05)
+    assert c.healthy and c.stats()["offset_s"] == pytest.approx(0.05)
+    assert c.stats()["worst_s"] == pytest.approx(30.0), "the worst sample is remembered for the record"
+    # a median, not a mean: one late frame in a prompt window does not move the verdict
+    c.observe(1103.0, 1103.0 - 40.0)
+    assert c.healthy and c.stats()["offset_s"] == pytest.approx(0.05)

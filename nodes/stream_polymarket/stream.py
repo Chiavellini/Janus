@@ -115,12 +115,15 @@ class PolymarketStream:
         self._beat(t)
 
         kinds: list[str] = []
+        stamped = False
         for ev in events_in(raw):
             for p in parse_event(ev, self.books):
                 kinds.append(p.kind)
-                if p.kind == "change":
-                    # A `book` carries the ladder's last-change time, not the send time.
+                if p.kind == "change" and not stamped:
+                    # A `book` carries the ladder's last-change time, not the send time. One
+                    # frame is one clock sample, however many price changes it batches.
                     self.clock.observe(t, p.server_utc)
+                    stamped = True
                 if p.kind == "error":
                     self.errors += 1
                     self.last_error = p.detail

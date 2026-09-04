@@ -11,7 +11,8 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — the discovery pass no longer freezes the sockets (L37: 13% of every hour lost). Fixed 00:25Z; 178k frames, zero gaps over 15 s across two passes.
 - [x] DONE — Polymarket REST reconciler applies on the loop (its evaluations were being lost).
 - [x] DONE — watchdog alarms that would have caught all of the above: SOCKET_FLAPPING, SOCKET_ERROR, LANE_SILENT. Each demonstrated firing in `--selftest`.
-- [ ] NOT DONE — the clock-health check flips HALT/healthy about once a minute and blocks every poller for that tick. Unexplained.
+- [x] DONE — the clock-health flip explained and named: the lane's event loop was being starved by the host (L37/L38), so both venues' stamps arrived 10–85 s late; the clock check is now a 60 s windowed median that re-arms, one sample per frame, and the halt says STALL (loop probe past 5 s) or CLOCK (stamps off with a prompt loop). Halting stays; it was right.
+- [ ] NOT DONE — the host itself: 15 MB free, 5 of 6 GB swap, other agents and collectors. Until the box, heavy jobs beside the lane cost it seconds of lag (ops/README.md host hygiene). L38 measures it over 24 h.
 - [ ] NOT DONE — Kalshi keepalive ping timeouts still cause an occasional venue-side reconnect (one at 00:27Z). Venue behaviour; the resubscribe is clean.
 
 ## B. Pricing (what a cover costs)

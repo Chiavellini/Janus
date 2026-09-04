@@ -38,6 +38,7 @@ _FAULT = {
     "NO_ASKS": S.BLOCKED_DEPTH,
     "FEE_SCHEDULE_MISSING": S.BLOCKED_FEES,
     "CLOCK_UNHEALTHY": S.BLOCKED_STALE,       # every freshness bound is fiction on a bad clock
+    "LOOP_STALLED": S.BLOCKED_STALE,          # the lane fell behind real time; every book is that old
 }
 
 

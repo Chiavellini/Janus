@@ -86,3 +86,19 @@ def test_socket_health_lands_with_the_clock_verdict(store):
     rows = store.con.execute("SELECT venue, subscriptions, updates, drift, agreement, clock_healthy, last_error "
                              "FROM socket_health ORDER BY venue").fetchall()
     assert rows == [("kalshi", 4, 96, None, None, 1, None), ("polymarket", 4, 90, 2, 0.993, 0, "drift")]
+
+
+def test_socket_health_gains_loop_lag_on_an_old_table(tmp_path):
+    """The column was added after the table shipped; an existing store gets it by ALTER, once."""
+    import sqlite3
+    db = tmp_path / "old.sqlite"
+    con = sqlite3.connect(db)
+    con.execute("CREATE TABLE socket_health(seen_ts REAL NOT NULL, venue TEXT NOT NULL, connected INTEGER, subscriptions INTEGER, "
+                "frames INTEGER, snapshots INTEGER, updates INTEGER, seq_gaps INTEGER, drift INTEGER, agreement REAL, errors INTEGER, "
+                "clock_offset_s REAL, clock_healthy INTEGER, age_s REAL, last_error TEXT)")
+    con.commit(); con.close()
+    st = TupleStore(db, enforce_volume=False)
+    st.socket_health(venue="kalshi", stats={"connected": True, "frames": 1, "clock": {"offset_s": 0.1, "healthy": True}, "loop_lag_s": 2.5}, seen_ts=1.0)
+    st.socket_health(venue="kalshi", stats={"connected": True, "frames": 2, "clock": {}}, seen_ts=2.0)
+    rows = st.con.execute("SELECT seen_ts, loop_lag_s FROM socket_health ORDER BY seen_ts").fetchall()
+    assert rows == [(1.0, 2.5), (2.0, None)]

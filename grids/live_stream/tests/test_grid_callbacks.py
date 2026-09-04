@@ -86,3 +86,29 @@ def test_discovery_is_split_into_a_network_half_and_a_state_half(monkeypatch, tm
     assert sup.wake_state[0] == "DRAIN"
     assert sup.discover() == {}, "the synchronous form is the composition"
     assert sup.fetch_watch() is None and sup.apply_watch(None) == (0, 0)
+
+
+def test_the_report_tick_names_a_stall_apart_from_a_clock_fault(tmp_path: Path, capsys):
+    """Both halt pricing; only one is a clock finding. The loop probe decides which."""
+    from nodes.stream_kalshi.stream import KalshiStream
+    from nodes.stream_polymarket.stream import PolymarketStream
+    sup, s = _supervisor(tmp_path)
+    sup.ks, sup.ps = KalshiStream(api_key="k", private_key=None), PolymarketStream()
+    sup.on_report_tick(now=T)
+    assert s.poller.halt is None and sup.clock_ok()
+    for i in range(25):                                      # the venue's stamps 30 s off, loop prompt
+        sup.ks.clock.observe(T + i * 0.1, T + i * 0.1 - 30.0)
+    sup.on_report_tick(now=T + 3)
+    assert s.poller.halt == "CLOCK_UNHEALTHY" and not sup.clock_ok()
+    assert "[clock] HALT CLOCK kalshi" in capsys.readouterr().out
+    sup.ks.clock = type(sup.ks.clock)()                      # clocks fine, the loop stalled
+    sup.loop_probe_reading(12.4)
+    sup.on_report_tick(now=T + 6)
+    assert s.poller.halt == "LOOP_STALLED" and not sup.clock_ok()
+    out = capsys.readouterr().out
+    assert "[clock] HALT STALL 12.4s" in out
+    row = sup.store.con.execute("SELECT loop_lag_s FROM socket_health ORDER BY seen_ts DESC LIMIT 1").fetchone()
+    assert row[0] == 12.4, "the stall is on the record beside the clock"
+    assert sup.loop_lag_max_s == 0.0, "the tick resets the probe"
+    sup.on_report_tick(now=T + 9)
+    assert s.poller.halt is None and sup.clock_ok() and "healthy again" in capsys.readouterr().out
