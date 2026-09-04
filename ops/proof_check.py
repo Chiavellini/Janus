@@ -132,11 +132,16 @@ def check_proof(proof: dict, *, reservation_row: Callable[[str], dict | None] | 
     if settled:
         result = str(settled.get("result", "")).lower()
         won = result == str(proof.get("won_when", "yes")).lower()
+        # --settle records the venue's fills on the proof's orders, late ones included (a resting bid
+        # hit after the file was written, 2026-09-04); the arithmetic is over those when present.
+        settled_fills = settled.get("fills") or fills
         expected = sum(_f(f.get("contracts")) * ((1.0 if won else 0.0) - _f(f.get("price"))) - _f(f.get("charged"))
-                       for f in fills)
+                       for f in settled_fills)
         realized = _f(settled.get("realized_usd"))
+        late = sum(1 for f in settled_fills if f.get("late"))
         out.append(Finding("settled_pnl", abs(realized - expected) <= CENT,
-                           f"result {result!r}: realized {realized:+.4f}, expected {expected:+.4f}"))
+                           f"result {result!r}: realized {realized:+.4f}, expected {expected:+.4f} over {len(settled_fills)} fill(s)"
+                           + (f", {late} filled after the proof file was written" if late else "")))
     if reservation_row is None or open_rows_for_event is None:
         out.append(Finding("reservation", False, "SKIPPED: ledger not reachable (pass --db)"))
     else:

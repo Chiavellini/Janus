@@ -281,3 +281,20 @@ def test_settle_takes_the_venues_fills_on_the_proofs_orders_not_the_files_memory
     late = got[1]
     assert late["late"] and late["contracts"] == 1.0 and late["price"] == 0.25 and late["charged"] == 0.0033 and late["taker"] is False
     assert got[0]["pinned"] == 0.0319, "the file's own record is kept as written"
+
+
+def test_a_settled_proof_counts_the_late_fill_the_settle_step_found(tmp_path):
+    """The resting bid hit after the file was written (2026-09-04): --settle recorded it under
+    settled.fills, and the PnL arithmetic must be over those, not the file's original fills."""
+    proof = {"ticker": "T", "won_when": "yes", "balance_before": 61.2445, "reservation_id": "r",
+             "steps": [{"resting": {"venue_order_id": "a"}, "after_cancel": {"raw_status": "canceled", "filled_contracts": 0.0}},
+                       {"ioc": {"state": "FILLED", "filled_contracts": 2.0}, "status": {"state": "FILLED", "final": True, "filled_contracts": 2.0},
+                        "fills": [{"fill_id": "f1", "contracts": 2.0, "price": 0.35, "charged": 0.0319, "pinned": 0.0319, "excess": 0.0, "taker": True}],
+                        "balance_after": 60.5126}],
+             "settled": {"result": "yes", "realized_usd": 2.0148,
+                         "fills": [{"fill_id": "f0", "contracts": 1.0, "price": 0.25, "charged": 0.0033, "pinned": None, "excess": 0.0, "taker": False, "late": True},
+                                   {"fill_id": "f1", "contracts": 2.0, "price": 0.35, "charged": 0.0319, "pinned": 0.0319, "excess": 0.0, "taker": True}]}}
+    f = by_name(proof_check.check_proof(proof, reservation_row=lambda r: {"released_utc": 1.0, "release_reason": "proof settled: yes"},
+                                        open_rows_for_event=lambda e: 0))
+    assert f["settled_pnl"].ok, f["settled_pnl"].detail
+    assert "1 filled after the proof file was written" in f["settled_pnl"].detail
