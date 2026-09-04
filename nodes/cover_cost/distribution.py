@@ -136,6 +136,14 @@ def in_windows(t: float, windows: Sequence[tuple[float, float]]) -> bool:
     return any(a <= t <= b for a, b in windows)
 
 
+def era_of(t: float, eras: Sequence[tuple[str, float]]) -> str:
+    label = "pre"
+    for name, start in eras:
+        if t >= start:
+            label = name
+    return label
+
+
 def phase_of(t: float, game: Mapping | None, last_row_ts: float) -> str:
     """pre | in | end | post. `end` is the last END_WINDOW_S before the game's end, where the end is
     the post transition when one was recorded and the game's last evaluation row otherwise."""
@@ -152,8 +160,12 @@ def phase_of(t: float, game: Mapping | None, last_row_ts: float) -> str:
 
 
 def distribute(rows: Sequence[Row], games: Mapping[str, dict], flaps: Sequence[tuple[float, float]],
-               *, dwell_cap_s: float = DWELL_CAP_S) -> dict:
-    """Cells keyed (league, quantity, phase, flapping) plus the profitable-row audit and the n."""
+               *, dwell_cap_s: float = DWELL_CAP_S, eras: Sequence[tuple[str, float]] = ()) -> dict:
+    """Cells keyed (league, quantity, phase, flapping[, era]) plus the profitable-row audit and the n.
+
+    `eras` = [(label, start_ts), ...] in order: a row is labelled with the last era whose start it
+    has passed, and a row before the first era gets the label "pre". Used to keep rows priced
+    under a wrong fee pin apart from rows priced after the re-pin (2026-09-04)."""
     by_key: dict[tuple[str, float], list[Row]] = defaultdict(list)
     for r in rows:
         by_key[(r.game_id, r.quantity)].append(r)
@@ -173,7 +185,8 @@ def distribute(rows: Sequence[Row], games: Mapping[str, dict], flaps: Sequence[t
             dwell = max(0.0, min(dwell_cap_s, nxt - r.seen_ts))
             phase = phase_of(r.seen_ts, games.get(gid), last_ts[gid])
             flapping = in_windows(r.seen_ts, flaps)
-            c = cells[(r.league, q, phase, flapping)]
+            key = (r.league, q, phase, flapping) + ((era_of(r.seen_ts, eras),) if eras else ())
+            c = cells[key]
             c.rows += 1
             c.dwell_s += dwell
             c.by_status[r.status] += dwell
@@ -190,7 +203,8 @@ def distribute(rows: Sequence[Row], games: Mapping[str, dict], flaps: Sequence[t
                 profitable.append({"seen_ts": r.seen_ts, "game_id": gid, "league": r.league, "quantity": q,
                                    "phase": phase, "flapping": flapping, "cost": r.cost,
                                    "return_locked": r.return_locked, "stale_within_60s": near_stale})
-    out = {"cells": {f"{k[0]}|{k[1]:g}|{k[2]}|{'flap' if k[3] else 'clean'}": v.summary() for k, v in sorted(cells.items())},
+    out = {"cells": {"|".join([k[0], f"{k[1]:g}", k[2], "flap" if k[3] else "clean", *k[4:]]): v.summary()
+                     for k, v in sorted(cells.items())},
            "profitable": sorted(profitable, key=lambda d: d["seen_ts"]),
            "n_for_paper": paper_n(profitable)}
     return out

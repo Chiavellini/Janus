@@ -1,0 +1,67 @@
+{
+ "captured_utc": "2026-09-04T00:10Z",
+ "source": "GET /trade-api/v2/portfolio/fills and /portfolio/orders/{id}, production, the 2026-09-04 execution proof (kalshi_20260904T000452Z.json)",
+ "series": {
+  "ticker": "KXMLBGAME",
+  "fee_type": "quadratic_with_maker_fees",
+  "fee_multiplier": 0.5,
+  "fee_changes": [
+   {
+    "fee_multiplier": 0.5,
+    "fee_type": "quadratic_with_maker_fees",
+    "scheduled_ts": "2026-08-07T04:59:45.131Z"
+   },
+   {
+    "fee_multiplier": 1,
+    "fee_type": "quadratic_with_maker_fees",
+    "scheduled_ts": "2025-10-04T07:00:00Z"
+   }
+  ]
+ },
+ "fill": {
+  "action": "buy",
+  "book_side": "bid",
+  "count_fp": "2.00",
+  "created_time": "2026-09-04T00:04:49.649572Z",
+  "exchange_index": 3,
+  "fee_cost": "0.031900",
+  "fill_id": "0721cf56-c159-9397-62ec-12a503fdb65d",
+  "is_taker": true,
+  "market_ticker": "KXMLBGAME-26SEP031940MIAKC-KC",
+  "no_price_dollars": "0.6500",
+  "order_id": "01a069bb-78e8-7b9c-b30b-7a5b8959f794",
+  "outcome_side": "yes",
+  "side": "yes",
+  "subaccount_number": 0,
+  "ticker": "KXMLBGAME-26SEP031940MIAKC-KC",
+  "trade_id": "0721cf56-c159-9397-62ec-12a503fdb65d",
+  "ts": 1788480289,
+  "yes_price_dollars": "0.3500"
+ },
+ "order": {
+  "action": "buy",
+  "book_side": "bid",
+  "client_order_id": "748239ff97024bafbff9b6445c125ddc",
+  "created_time": "2026-09-04T00:04:49.649572Z",
+  "exchange_index": 3,
+  "fill_count_fp": "2.00",
+  "initial_count_fp": "2.00",
+  "last_update_time": "2026-09-04T00:04:49.649572Z",
+  "maker_fees_dollars": "0.000000",
+  "maker_fill_cost_dollars": "0.000000",
+  "no_price_dollars": "0.6500",
+  "order_id": "01a069bb-78e8-7b9c-b30b-7a5b8959f794",
+  "outcome_side": "yes",
+  "remaining_count_fp": "0.00",
+  "self_trade_prevention_type": "taker_at_cross",
+  "side": "yes",
+  "status": "executed",
+  "subaccount_number": 0,
+  "taker_fees_dollars": "0.031900",
+  "taker_fill_cost_dollars": "0.700000",
+  "ticker": "KXMLBGAME-26SEP031940MIAKC-KC",
+  "type": "limit",
+  "user_id": "ee17d2c2-789c-415e-bfe5-46287857c2c0",
+  "yes_price_dollars": "0.3500"
+ }
+}

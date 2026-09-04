@@ -19,6 +19,9 @@ SEAL = datetime(2026, 9, 2, tzinfo=timezone.utc).timestamp()
 DECLARED_FLAPS = [(datetime(2026, 9, 3, 16, 54, tzinfo=timezone.utc).timestamp(), datetime(2026, 9, 3, 18, 50, tzinfo=timezone.utc).timestamp()),
                   (datetime(2026, 9, 3, 22, 50, tzinfo=timezone.utc).timestamp(), datetime(2026, 9, 3, 23, 26, tzinfo=timezone.utc).timestamp())]
 THIN_S = 60.0
+#: Kalshi taker fees on sports were pinned at half the venue's charge until the 2026-09-04 re-pin
+#: (CHANGELOG 2026-09-04); rows priced before it are reported apart, never mixed.
+ERAS = [("fee-half", SEAL), ("fee-repinned", datetime(2026, 9, 4, 0, 45, tzinfo=timezone.utc).timestamp())]
 
 
 def main() -> int:
@@ -30,7 +33,7 @@ def main() -> int:
     games = load_games(con)
     flaps = load_flap_windows(con, declared=DECLARED_FLAPS)
     con.close()
-    res = distribute(rows, games, flaps)
+    res = distribute(rows, games, flaps, eras=ERAS)
     res.update({"run": run, "db": str(db), "since": SEAL, "until": now.timestamp(), "rows": len(rows),
                 "excluded_old_vocabulary": excluded, "games": len({r.game_id for r in rows}),
                 "flap_windows": len(flaps), "flap_seconds": round(sum(b - a for a, b in flaps), 1)})
@@ -39,7 +42,7 @@ def main() -> int:
     lines = [f"\n## Run {run}", "",
              f"{len(rows)} rows in the lane's vocabulary since the seal over {res['games']} games; {excluded} rows of the "
              f"old vocabulary excluded; {len(flaps)} flap windows ({res['flap_seconds']:.0f} s).", "",
-             "| cell | rows | dwell s | priced | near 1¢ | profitable | cost p50 | p90 | min | statuses (dwell share) | blocked reasons (dwell share) |",
+             "| cell (league, q, phase, flap, fee era) | rows | dwell s | priced | near 1¢ | profitable | cost p50 | p90 | min | statuses (dwell share) | blocked reasons (dwell share) |",
              "|---|---|---|---|---|---|---|---|---|---|---|"]
     fmt = lambda v: "—" if v is None else f"{v:.4f}"
     for key, c in res["cells"].items():

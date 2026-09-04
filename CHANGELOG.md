@@ -429,3 +429,27 @@ the afternoon). Nothing crashed, so nothing alerted.
   every cell; `kalshi:HEARTBEAT_LOST` alone is 72% of in-play college football, which says the
   Kalshi replica's heartbeat bound is wrong for a quiet market, not that the market is stale.
   All 19 profitable prints are SUSPECT; the forward paper row's n is 30 by declaration.
+
+## 2026-09-04 — the Kalshi proof filled, and two things it proved were wrong
+
+The operator's armed run (`proofs/kalshi_20260904T000452Z.json`, MIA @ KC, 2 contracts at 0.35)
+filled and reconciled to the balance. Its checklist failed twice, and both failures were ours.
+
+- **The fee pin was half the venue's charge.** KXMLBGAME reports `quadratic_with_maker_fees` with
+  `fee_multiplier 0.5` (a scheduled series fee change since 2026-08-07, `GET /series/fee_changes`),
+  and the model applied the multiplier to the taker coefficient. The venue charged exactly
+  0.07 × 2 × 0.35 × 0.65 = $0.031900: the full coefficient, kept to the hundredth of a cent. The
+  proof STOPped on `FEE_ABOVE_PIN` and latched `kill/live`, as designed. Re-pinned from the fill
+  as a frozen fixture (`nodes/fees/tests/fixtures/kalshi_fill_20260904_KXMLBGAME.json`): for that
+  fee type the taker coefficient is unscaled and the order fee is ceil'd at $0.0001; the maker side
+  is unverified and pinned conservatively at the unscaled 0.0175; plain `quadratic` is unchanged.
+  Consequence: every Kalshi sports leg the lane priced before this carried half its real fee, so
+  every recorded cover cost on a Kalshi taker leg understates by 0.035 × P × (1−P) per contract
+  (about 0.8¢ at the money). L36's first run carries that; its next run will not.
+- **The resting bid was never cancelled.** The adapter's DELETE went bare, the venue looked on
+  shard 0, answered 404, and the adapter swallowed the 404. The bid rested on shard 3 the whole
+  time. Cancels (and `cancel_all`) now carry the market's `exchange_index`, or auto-route by
+  ticker when the shard is unreadable; a 404 lands in `last_error`; `ops/kalshi_cancel_all.py` is
+  the operator's hand tool for anything already resting.
+- The Polymarket proof was refused `KILL_LIVE` because the Kalshi STOP had latched the switch;
+  that is the ordering the gate asks for.

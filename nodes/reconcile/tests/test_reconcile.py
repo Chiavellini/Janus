@@ -32,11 +32,13 @@ def test_unconfirmed_orders_are_asked_about_and_an_unresolved_poll_stays_unconfi
 def test_a_fee_above_the_pinned_curve_is_a_stop(tmp_path: Path):
     j = Journal(TupleStore(tmp_path / "t.sqlite", enforce_volume=False))
     fees = {"kalshi": {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 0.5}}
-    ok = FillRecord("kalshi", "v1", "f1", 100.0, 0.50, 0.88, True, 1.0, True)        # ceil(87.5c) = 88c
-    dear = FillRecord("kalshi", "v1", "f2", 100.0, 0.50, 1.75, True, 1.0, True)      # charged at 1.0x
+    # quadratic_with_maker_fees: the venue charges the full 0.07 (production fill 2026-09-04), so the
+    # pin for 100 @ 0.50 is $1.75 exactly; a charge at or under it is fine, a cent over is a STOP.
+    ok = FillRecord("kalshi", "v1", "f1", 100.0, 0.50, 1.75, True, 1.0, True)
+    dear = FillRecord("kalshi", "v1", "f2", 100.0, 0.50, 1.76, True, 1.0, True)
     f = check_fees(j, [ok, dear], fees)
-    assert not f[0].stop and f[0].pinned_usd == pytest.approx(0.88)
-    assert f[1].stop and f[1].excess_usd == pytest.approx(0.87)
+    assert not f[0].stop and f[0].pinned_usd == pytest.approx(1.75)
+    assert f[1].stop and f[1].excess_usd == pytest.approx(0.01)
 
 
 def test_settlement_uses_each_venues_own_result_and_a_no_leg_wins_when_its_ticker_loses():

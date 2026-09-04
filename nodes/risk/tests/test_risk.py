@@ -149,8 +149,9 @@ def test_refusals_come_in_the_fail_closed_order(kill, breaker):
     kill.latch("event-espn:mlb:1", "test")
     assert clear(cand(), ledger=L, **env).code == "KILL_SWITCH"
     (kill.root / "event-espn:mlb:1").unlink()
-    fills = [RealizedFill("f", FillState.UNCONFIRMED, 0.0, "2026-09-03")]
-    assert clear(cand(), ledger=L, **{**env, "fills_today": fills, "now": 1_788_500_000.0}).code == "BREAKER" or True
+    from nodes.risk.breaker import day_of
+    fills = [RealizedFill("f", FillState.UNCONFIRMED, 0.0, day_of())]     # today's, whatever today is
+    assert clear(cand(), ledger=L, **{**env, "fills_today": fills}).code == "BREAKER"
     assert clear(cand(), ledger=L, **{**env, "clock_healthy": False}).code == "CLOCK_UNHEALTHY"
     assert clear(cand(), ledger=L, **{**env, "fee_schedules_ok": False}).code == "FEE_SCHEDULE"
     assert clear(cand(), ledger=L, **{**env, "venues_connected": {"kalshi": True}}).code == "VENUE_DISCONNECTED"

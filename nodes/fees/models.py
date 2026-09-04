@@ -133,36 +133,51 @@ class KalshiQuadratic(_Base):
     NASDAQ series carry 0.035, so a hardcoded 0.07 overstates index markets by 2x.
 
     `fee_multiplier` MUST come from the series payload (GET /series/{ticker}). Missing or null
-    is an error, not a default -- silently defaulting is how the PM 0.07 bug survived, and it
-    is how the live lane charged sports at 1.0x for a month when KXMLBGAME reports 0.5 with
-    `fee_type: quadratic_with_maker_fees`. The registry pin supplies 1.0 as a labelled
-    SCREENING fallback; the live pricing path passes the series value as an override, and
-    `nodes/game_poller` blocks a leg whose schedule was never fetched.
+    is an error, not a default -- silently defaulting is how the PM 0.07 bug survived.
+
+    RE-PINNED 2026-09-04 from a production fill (tests/fixtures/kalshi_fill_20260904_KXMLBGAME.json,
+    the execution proof): KXMLBGAME reports `fee_type: quadratic_with_maker_fees, fee_multiplier:
+    0.5` (a scheduled series fee change since 2026-08-07), and the venue charged a 2-contract taker
+    fill at 0.35 exactly 0.07 x 2 x 0.35 x 0.65 = 0.031900 -- the FULL taker coefficient, the
+    multiplier NOT applied, and the fee kept to the hundredth of a cent, not rounded up to the
+    cent. So for `quadratic_with_maker_fees` the taker coefficient is 0.07 unscaled and the order
+    fee is ceil'd at $0.0001; the maker side of that fee type has no fill yet and is pinned
+    conservatively at the unscaled 0.0175. The plain `quadratic` type keeps the multiplier and the
+    per-order ceil to the cent (its pins were verified on crypto, not re-verified today). The lane
+    had priced every sports leg at half its real Kalshi fee until this pin.
     """
     id: str = "kalshi_quadratic"
     taker_coeff: float = 0.07
     maker_coeff: float = 0.0175          # 4x cheaper; exactly +1c/contract saved in the 20-80c band
 
-    def entry_cost(self, fills: Sequence[Fill], params: Mapping[str, Any]) -> float:
+    @staticmethod
+    def _tier(params: Mapping[str, Any]) -> tuple[float, float]:
+        """(coefficient multiplier, rounding unit in dollars) for the params' fee_type."""
         mult = params.get("fee_multiplier")
         if mult is None:
             raise ValueError("kalshi fee_multiplier missing or null: pass the series payload value "
                              "(or the registry pin via params_for); it is never defaulted here")
-        # Only the quadratic fee_type honours the multiplier; others are flat-rate at 1x.
-        if not str(params.get("fee_type") or "quadratic").startswith("quadratic"):
-            mult = 1.0
+        ft = str(params.get("fee_type") or "quadratic")
+        if ft == "quadratic_with_maker_fees":
+            return 1.0, 0.0001              # verified 2026-09-04: multiplier not applied, 1/100 cent
+        if ft.startswith("quadratic"):
+            return float(mult), 0.01
+        return 1.0, 0.01                    # flat-rate types: 1x, whole cents
+
+    def entry_cost(self, fills: Sequence[Fill], params: Mapping[str, Any]) -> float:
+        mult, unit = self._tier(params)
         by_order: dict[tuple, list[Fill]] = defaultdict(list)
         for f in fills:
             by_order[(f.market_id, f.order_seq, f.liquidity)].append(f)
-        total_cents = 0.0
+        total = 0.0
         for (_mid, _seq, liq), group in by_order.items():
-            coeff = (self.maker_coeff if liq == "maker" else self.taker_coeff) * float(mult)
+            coeff = (self.maker_coeff if liq == "maker" else self.taker_coeff) * mult
             if coeff <= 0:
                 continue
-            # One ceil for the whole order, summed over its (possibly multi-price) fills.
-            raw = sum(coeff * 100.0 * f.contracts * f.price * (1.0 - f.price) for f in group)
-            total_cents += math.ceil(round(raw, _CEIL_DP))
-        return total_cents / 100.0
+            # One ceil for the whole order (to `unit`), summed over its (possibly multi-price) fills.
+            raw = sum(coeff * f.contracts * f.price * (1.0 - f.price) for f in group) / unit
+            total += math.ceil(round(raw, _CEIL_DP)) * unit
+        return round(total, 6)
 
     def carry_credit(self, fills, hold_days, params):
         apy = params.get("cash_apy", 0.0405)     # Kalshi pays on cash AND open positions
@@ -170,9 +185,10 @@ class KalshiQuadratic(_Base):
         return -notional * apy * (hold_days / 365.0)
 
     def screening_coeff(self, params: Mapping[str, Any]) -> float:
-        mult = params.get("fee_multiplier") or 1.0
+        ft = str(params.get("fee_type") or "quadratic")
+        mult = 1.0 if ft == "quadratic_with_maker_fees" or not ft.startswith("quadratic") else float(params.get("fee_multiplier") or 1.0)
         liq = params.get("liquidity", "taker")
-        return (self.maker_coeff if liq == "maker" else self.taker_coeff) * float(mult)
+        return (self.maker_coeff if liq == "maker" else self.taker_coeff) * mult
 
 
 @dataclass(frozen=True)

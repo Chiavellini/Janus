@@ -160,9 +160,10 @@ def test_the_fee_schedule_reaches_the_cover_verbatim():
     sync_all(p, kh=0.48, pa=0.48)
     e = p.on_event("kalshi", "K_H", now=T)[0]
     assert {l.venue for l in e.cover.legs} == {"kalshi", "polymarket"}
-    # Kalshi 0.5x on a 0.48 fill: 0.07*0.5*100*100*0.48*0.52 = 87.36c -> ceil 88c (175c at 1.0x).
+    # Kalshi quadratic_with_maker_fees on a 0.48 fill: the venue charges the full 0.07 (production
+    # fill 2026-09-04), kept to the hundredth of a cent: 0.07*100*0.48*0.52 = $1.7472 exactly.
     # PM at the market's 0.03: 100*0.03*0.48*0.52 = 74.88c (124.8c at the hardcoded 0.05).
-    expected = 0.88 + 100 * 0.03 * 0.48 * 0.52
+    expected = 1.7472 + 100 * 0.03 * 0.48 * 0.52
     assert abs(e.cover.fee_per_contract * 100.0 - expected) < 1e-9
 
 

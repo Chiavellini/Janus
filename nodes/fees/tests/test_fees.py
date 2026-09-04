@@ -263,6 +263,27 @@ def test_a_null_multiplier_is_an_error_not_a_default():
         k.entry_cost(f, {})
     with pytest.raises(ValueError, match="fee_multiplier"):
         k.entry_cost(f, {"fee_multiplier": None})
-    # 0.5x tier: 0.07*0.5*100*100*0.25 = 87.5c, ceil per order -> 88c. Half the 175c the lane charged.
+    # quadratic_with_maker_fees: the multiplier is NOT applied to the taker fee (production fill,
+    # 2026-09-04, below) and the fee is kept to the hundredth of a cent: 0.07*100*0.25 = $1.75 exactly.
     assert abs(k.entry_cost(f, {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 0.5})
-               - 0.88) < 1e-9
+               - 1.75) < 1e-9
+    # plain quadratic keeps the multiplier and the per-order ceil to the cent
+    assert abs(k.entry_cost(f, {"fee_type": "quadratic", "fee_multiplier": 0.5}) - 0.88) < 1e-9
+
+
+def test_the_pin_reproduces_the_2026_09_04_production_fill_to_the_hundredth_of_a_cent():
+    """GATE step 8: the charged fee is the pin. KXMLBGAME (quadratic_with_maker_fees, multiplier 0.5,
+    a scheduled series fee change since 2026-08-07) charged 2 taker contracts at 0.35 exactly
+    0.031900 = 0.07 x 2 x 0.35 x 0.65. The old pin said ceil(0.035 x ...) = 2c and the proof
+    STOPped on FEE_ABOVE_PIN. The fixture is the venue's own fill and order records."""
+    import json
+    from pathlib import Path
+    fx = json.loads((Path(__file__).parent / "fixtures" / "kalshi_fill_20260904_KXMLBGAME.json").read_text())
+    fill, series = fx["fill"], fx["series"]
+    assert fill["is_taker"] and fill["outcome_side"] == "yes"
+    k = fm.KalshiQuadratic()
+    f = [fm.Fill("kalshi", fill["ticker"], "kc", "buy", float(fill["yes_price_dollars"]), float(fill["count_fp"]))]
+    params = fr.params_for("kalshi", {"fee_type": series["fee_type"], "fee_multiplier": series["fee_multiplier"]})
+    assert abs(k.entry_cost(f, params) - float(fill["fee_cost"])) < 1e-9
+    assert abs(float(fx["order"]["taker_fees_dollars"]) - float(fill["fee_cost"])) < 1e-9
+    assert abs(k.screening_coeff(params) - 0.07) < 1e-12, "the lane's screen must charge sports the full coefficient"

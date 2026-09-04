@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 
-from nodes.cover_cost.distribution import (Row, distribute, in_windows, load_flap_windows, load_rows,
+from nodes.cover_cost.distribution import (Row, distribute, era_of, in_windows, load_flap_windows, load_rows,
                                            paper_n, phase_of, reason_of)
 
 T = 1_000_000.0
@@ -81,3 +81,11 @@ def test_the_old_vocabulary_is_excluded_and_counted():
                      (T - 100, "g", "mlb", 5.0, "NO_EDGE", 1.02, -0.02, 2.0, None)])
     rows, excluded = load_rows(con, since=T)
     assert [x.status for x in rows] == ["NO_EDGE"] and excluded == 2
+
+
+def test_fee_eras_keep_rows_priced_under_different_pins_apart():
+    rows = [r(0, "NO_EDGE", cost=1.02, cfa=2.0), r(100, "NO_EDGE", cost=1.03, cfa=3.0)]
+    games = {"g": {"start": T - 3600, "post": T + 9000}}
+    out = distribute(rows, games, [], eras=[("fee-half", T - 10), ("fee-repinned", T + 50)])
+    assert set(out["cells"]) == {"mlb|5|in|clean|fee-half", "mlb|5|in|clean|fee-repinned"}
+    assert era_of(T - 100, [("a", T)]) == "pre" and era_of(T, [("a", T)]) == "a"
