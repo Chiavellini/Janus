@@ -54,7 +54,8 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] RUNNING — live shadow evidence (from the 2026-09-02 seal; clean from 2026-09-04 00:25Z).
 - [x] RUNNING — F3, PAPER_EXECUTION: 0 of 30 cleared covers so far.
 - [ ] NOT PROVED — fees reconciled on Polymarket (needs its proof).
-- [ ] NOT DONE — LIMITED_LIVE for the lane itself (needs both proofs, F3 complete, override, caps).
+- [x] DONE — operator decision 2026-09-04 (GATE amendment row): test trading only, no serious amounts, until L36 re-run on clean data shows in-play actionable covers. Real orders = the two proofs under $5 / 10 contracts / $20 a day.
+- [ ] NOT DONE — LIMITED_LIVE for the lane itself (needs both proofs, F3 complete, a new dated GATE row from the operator, override, caps).
 - [ ] NOT DONE — PRODUCTION.
 
 ## F. The Ashburn box
