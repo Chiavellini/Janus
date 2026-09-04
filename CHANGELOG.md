@@ -518,3 +518,12 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
   tokens is dropped by the venue after 20–30 s; closed markets alone do not do it; the tokens of
   matches already under way do. Bisection in progress; the reconnect is clean and the slate's
   own books resync within a second, so this costs capture continuity on tennis, not pricing.
+- **F3's first cleared cover, and the settlement pass it needed.** At 03:05:41Z the paper lane
+  cleared and paper-hedged STL @ LAD at q=100 (Polymarket LAD YES 0.45 + Kalshi NO on LAD 0.50,
+  cost 0.9744, N_max 625). Nothing then settled a hedged execution against the game's result or
+  released its capital: the reservation sat open and the watchdog said UNRECONCILED_TOO_LONG.
+  `nodes/reconcile/settle_executions` now runs in the lane every five minutes (PAPER and above):
+  finished games' executions, each venue's own result (Kalshi per ticker, Polymarket per moneyline
+  market, three-way included), `reconcile.settle` over the recorded orders, release when every leg
+  is final, SETTLED -> RECONCILED on the execution and the opportunity, one `execution_settlements`
+  row with the realized PnL. Network in a worker, state on the loop. Paper and real settle alike.

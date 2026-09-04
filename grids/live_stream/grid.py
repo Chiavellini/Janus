@@ -58,6 +58,7 @@ from nodes.exec_polymarket.client import PolymarketExecution, PyClobTransport, T
 from nodes.execution.journal import Journal  # noqa: E402
 from nodes.opportunity.opportunity import books_snapshot  # noqa: E402
 from nodes.opportunity.thresholds import STRATEGY_VERSION  # noqa: E402
+from nodes.reconcile.settle_executions import apply_settlements, fetch_results, pending  # noqa: E402
 from nodes.risk.breaker import LossBreaker  # noqa: E402
 from nodes.risk.clearance import Candidate, clear  # noqa: E402
 from nodes.risk.gate import resolve_mode  # noqa: E402
@@ -84,6 +85,8 @@ MIN_RETURN = 0.01
 #: state change or the 15 s heartbeat still prices immediately. 2026-09-04: from ~3,400 to a few
 #: hundred evaluations a second. Captures before the sha that introduced it replay to different rows.
 EVAL_INTERVAL_S = 0.2
+#: How often finished games' executions are settled against the venues' results (PAPER and above).
+SETTLE_PERIOD_S = 300.0
 
 
 @dataclass
@@ -429,8 +432,22 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
     tasks.append(asyncio.create_task(loop_probe()))
     last_disc = 0.0
     last_report = time.time()
+    last_settle = time.time()
     try:
         while not _STOP:
+            if sup.ledger is not None and time.time() - last_settle > SETTLE_PERIOD_S:
+                # Finished games: settle every execution still holding capital against each venue's
+                # own result (nodes/reconcile/settle_executions). Network in a worker, state here.
+                last_settle = time.time()
+                try:
+                    items = pending(sup.store)
+                    if items:
+                        winners = await asyncio.to_thread(fetch_results, items, Client("settle", rate=4, burst=8, cache_dir=None))
+                        got = apply_settlements(sup.store, sup.ledger, None, sup.opportunities, items, winners)
+                        if got["settled"] or got["unreleasable"]:
+                            print(f"[settle ] {got}", flush=True)
+                except Exception as exc:  # noqa: BLE001 -- settlement must never kill the loop
+                    print(f"[settle FAILED] {brief_error(exc)}", flush=True)
             if time.time() - last_disc > discovery_period:
                 try:
                     # The network halves run in a worker so the sockets keep being read (L37);

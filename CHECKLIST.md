@@ -57,7 +57,8 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 
 - [x] DONE — frozen venue fixtures, WebSocket replay, reconnect and sequence-gap tests, partial-fill and ambiguous-order tests.
 - [x] RUNNING — live shadow evidence (from the 2026-09-02 seal; clean from 2026-09-04 00:25Z).
-- [x] RUNNING — F3, PAPER_EXECUTION: 0 of 30 cleared covers so far.
+- [x] RUNNING — F3, PAPER_EXECUTION: 1 of 30 cleared covers (STL @ LAD, 03:05Z, +2.6% locked at q=100, paper-hedged). Its realized paper PnL lands when the game settles.
+- [x] DONE — the settlement pass: hedged executions settle against each venue's result every five minutes, capital released, `execution_settlements` rows (the coordinator had stopped at HEDGED with the reservation held).
 - [ ] NOT PROVED — fees reconciled on Polymarket (needs its proof).
 - [x] DONE — operator decision 2026-09-04 (GATE amendment row): test trading only, no serious amounts, until L36 re-run on clean data shows in-play actionable covers. Real orders = the two proofs under $5 / 10 contracts / $20 a day.
 - [ ] NOT DONE — LIMITED_LIVE for the lane itself (needs both proofs, F3 complete, a new dated GATE row from the operator, override, caps).
