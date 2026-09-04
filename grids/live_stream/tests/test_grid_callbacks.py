@@ -59,3 +59,30 @@ def test_a_record_failure_is_counted_and_never_reaches_the_socket(tmp_path: Path
     monkeypatch.undo()
     cb("K_H", T + 3)          # and it recovers without a reconnect
     assert sup.record_errors == {("g1", "RuntimeError"): 2}
+
+
+def test_discovery_is_split_into_a_network_half_and_a_state_half(monkeypatch, tmp_path: Path):
+    """Ledger L37 (2026-09-04): the discovery pass ran its HTTP inside the event loop and silenced
+    both sockets for 43-107 s every five minutes. The network half must touch nothing the loop
+    owns, and the composition must equal the old synchronous discover()."""
+    import threading
+    from types import SimpleNamespace
+    import grids.live_stream.grid as G
+    threads = {}
+
+    def fake_discover(leagues, now, live, pre_hours, pc, kc):
+        threads["fetch"] = threading.get_ident()
+        return SimpleNamespace(games=[], fee_errors={"kalshi": {"mlb": "boom"}})
+
+    monkeypatch.setattr(G, "discover", fake_discover)
+    monkeypatch.setattr(G, "co_listed", lambda d, first_seen, now: ({}, {"g": "INCOMPLETE"}))
+    monkeypatch.setattr(G, "record_events", lambda store, d, slate, blocked: threads.setdefault("record", threading.get_ident()))
+    sup = Supervisor(["mlb"])
+    sup.store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    fetched = sup.fetch_discovery()
+    assert "record" not in threads, "the network half never touches the store"
+    slate = sup.apply_discovery(*fetched)
+    assert slate == {} and sup.blocked == {"g": "INCOMPLETE", "fees:kalshi:mlb": "FEE_SCHEDULE: boom"}
+    assert sup.wake_state[0] == "DRAIN"
+    assert sup.discover() == {}, "the synchronous form is the composition"
+    assert sup.fetch_watch() is None and sup.apply_watch(None) == (0, 0)

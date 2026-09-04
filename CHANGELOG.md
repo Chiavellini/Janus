@@ -453,3 +453,16 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
   the operator's hand tool for anything already resting.
 - The Polymarket proof was refused `KILL_LIVE` because the Kalshi STOP had latched the switch;
   that is the ordering the gate asks for.
+- **The proof's resting bid filled after all.** At 00:13Z, nine minutes after the file was
+  written, someone hit the 0.25 bid the proof believed cancelled: 1 contract, maker, fee
+  $0.0033 = 0.0175 × 0.25 × 0.75 — the maker coefficient is unscaled too, now in the fixture.
+  The position is 3 contracts of KC YES. `--settle` now settles every venue fill on the proof's
+  own orders, not the file's memory (`merge_venue_fills`), and the ledger's reservation follows.
+- **L37, the Kalshi socket cadence** (`research/infra/2026-09-04_kalshi-socket-cadence`): Kalshi
+  sends no heartbeat frames; the clean hour carried 915,247 deltas at a 1 ms median gap and still
+  went silent ten times for 43–107 s, 13.2% of the hour past the 15 s bound. Every silence starts
+  at the discovery pass, whose HTTP ran synchronously inside the event loop. **The bound stays;
+  discovery moves off the loop**: `fetch_discovery()` / `fetch_watch()` in a worker thread,
+  `apply_discovery()` / `apply_watch()` on the loop (the reconciler's shape). L36's HEARTBEAT_LOST
+  dwell was the lane starving itself; the row re-runs after a clean hour.
+- `[clock]` prints once per tick with the poller count, not once per poller.

@@ -134,11 +134,24 @@ class Supervisor:
     def discover(self) -> dict[str, dict]:
         """Games that are live (or nearly) AND co-listed on both venues, with their outcome map
         and the fee params each venue reported. `nodes/discovery` owns all of it; this grid only
-        composes. Blocks are REPLACED each pass so a cleared block does not linger."""
+        composes. Blocks are REPLACED each pass so a cleared block does not linger.
+
+        Two halves, because the run loop must not block on the network: `fetch_discovery()` is
+        the HTTP (ESPN, Kalshi, Polymarket; 43-107 s on 2026-09-04) and runs in a worker thread;
+        `apply_discovery()` is the store and the supervisor's state and runs on the loop. Run
+        synchronously, this method is their composition."""
+        return self.apply_discovery(*self.fetch_discovery())
+
+    def fetch_discovery(self):
+        """The network half. Touches no store, no socket, no supervisor state. Ledger L37
+        (2026-09-04): run inline, this starved both sockets for 13% of every hour."""
         now = datetime.now(timezone.utc)
         pc = Client("polymarket", rate=5, burst=8, cache_dir=None)
         kc = Client("kalshi", rate=4, burst=8, cache_dir=None)
-        d = discover(self.leagues, now, True, self.pre_hours, pc, kc)
+        return now, discover(self.leagues, now, True, self.pre_hours, pc, kc)
+
+    def apply_discovery(self, now: datetime, d) -> dict[str, dict]:
+        """The state half. MUST run on the event-loop thread (sqlite, replicas)."""
         seen = first_seen(self.store) if self.store is not None else {}
         slate, blocked = co_listed(d, first_seen=seen, now=now.timestamp())
         self.tiers = {}
@@ -158,14 +171,24 @@ class Supervisor:
         return slate
 
     def sync_watch(self) -> tuple[int, int]:
-        """Capture-only markets: subscribe what the venues list now, drop what is gone."""
+        """Capture-only markets: subscribe what the venues list now, drop what is gone.
+        Same split as discovery: `fetch_watch()` off the loop, `apply_watch()` on it."""
+        return self.apply_watch(self.fetch_watch())
+
+    def fetch_watch(self):
         if self.watch is None or not (self.capture_series or self.capture_pm_tags):
-            return (0, 0)
+            return None
         now = time.time()
         kc = Client("kalshi-watch", rate=4, burst=8, cache_dir=None)
         pc = Client("polymarket-watch", rate=4, burst=8, cache_dir=None)
         k_now = kalshi_watch(list(self.capture_series), kc, now=now, ahead_h=self.pre_hours) if self.capture_series else []
         p_now = pm_watch(list(self.capture_pm_tags), pc, now=now, ahead_h=self.pre_hours) if self.capture_pm_tags else []
+        return k_now, p_now
+
+    def apply_watch(self, fetched) -> tuple[int, int]:
+        if fetched is None:
+            return (0, 0)
+        k_now, p_now = fetched
         return self.watch.sync(self.ks, self.ps, k_now, p_now)
 
     # ── lifecycle ───────────────────────────────────────────────────────
@@ -271,10 +294,12 @@ class Supervisor:
         bad = [v for v, st_ in (("kalshi", self.ks), ("polymarket", self.ps))
                if st_ is not None and not st_.clock.healthy]
         halt = "CLOCK_UNHEALTHY" if bad else None
+        changed = 0
         for sup in self.live.values():
-            if sup.poller.halt != halt:
-                print(f"[clock] {'HALT ' + ','.join(bad) if bad else 'healthy again'}", flush=True)
+            changed += int(sup.poller.halt != halt)
             sup.poller.halt = halt
+        if changed:
+            print(f"[clock] {'HALT ' + ','.join(bad) if bad else 'healthy again'} ({changed} pollers)", flush=True)
 
     def _execute(self, sup: Supervised, ev, rec) -> None:
         """PAPER and above: plan from the priced cover, clear it through nodes/risk, run the machine.
@@ -348,10 +373,13 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
         while not _STOP:
             if time.time() - last_disc > discovery_period:
                 try:
-                    slate = sup.discover()
+                    # The network halves run in a worker so the sockets keep being read (L37);
+                    # the state halves run here, on the loop, where the store and replicas live.
+                    now_d, d = await asyncio.to_thread(sup.fetch_discovery)
+                    slate = sup.apply_discovery(now_d, d)
                     sup.reconcile(slate)
                     try:
-                        added, removed = sup.sync_watch()
+                        added, removed = sup.apply_watch(await asyncio.to_thread(sup.fetch_watch))
                         if added or removed:
                             print(f"[watch] capture-only +{added} -{removed}: {sup.watch.stats()}", flush=True)
                     except Exception as exc:  # noqa: BLE001 -- capture-only must never break discovery

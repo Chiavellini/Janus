@@ -1,0 +1,46 @@
+{
+  "bound_s": 15.0,
+  "run": "2026-09-04T00:21:00.306808+00:00",
+  "windows": {
+    "clean_2026-09-03T2330Z": {
+      "frames": 915247,
+      "by_kind": {
+        "orderbook_delta": 914529,
+        "orderbook_snapshot": 704,
+        "subscribed": 14
+      },
+      "gap_p50": 0.001,
+      "gap_p90": 0.003,
+      "gap_p99": 0.017,
+      "gap_max": 106.646,
+      "gaps_over_bound": 10,
+      "share_over_bound": 0.1324,
+      "heartbeat_n": 0,
+      "heartbeat_p50": null,
+      "heartbeat_p99": null,
+      "heartbeat_max": null,
+      "first_frame": "2026-09-03T23:30:00.000463+00:00",
+      "last_frame": "2026-09-04T00:21:06.152612+00:00"
+    },
+    "flapping_2026-09-03T1700Z": {
+      "frames": 21359,
+      "by_kind": {
+        "orderbook_delta": 19637,
+        "orderbook_snapshot": 866,
+        "subscribed": 856
+      },
+      "gap_p50": 0.004,
+      "gap_p90": 0.039,
+      "gap_p99": 1.995,
+      "gap_max": 27.658,
+      "gaps_over_bound": 7,
+      "share_over_bound": 0.0105,
+      "heartbeat_n": 0,
+      "heartbeat_p50": null,
+      "heartbeat_p99": null,
+      "heartbeat_max": null,
+      "first_frame": "2026-09-03T17:00:01.139234+00:00",
+      "last_frame": "2026-09-03T17:59:57.298409+00:00"
+    }
+  }
+}

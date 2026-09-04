@@ -1,0 +1,43 @@
+experiment_id: "janus-infra-kalshi-socket-cadence-2026-09-04"
+date_registered: "2026-09-04"
+track: "infra/streams"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L37"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE FIRST RUN.
+purpose: >
+  L36's first run says kalshi:HEARTBEAT_LOST holds 72% of in-play college-football dwell and
+  15-29% of pre-game dwell in every league. The replica calls the connection dead when no frame
+  of any kind has arrived on the Kalshi socket for heartbeat_timeout_s = 15 s
+  (nodes/book_replica/replica.py; nodes/stream_kalshi/stream.py refreshes every replica on every
+  frame). Before that bound moves, measure what the socket actually delivers: the gap between
+  consecutive frames, per hour, from the raw capture.
+
+source:
+  frames: "/Volumes/Kilos/janus/frames/kalshi/<date>/<hour>.jsonl.gz, every frame the socket received, with received_utc (nodes/capture)"
+  code: "this directory's measure.py over nodes.capture.read_frames / iter_capture"
+
+window:
+  clean: "2026-09-03T23:30Z to 2026-09-04T00:30Z, after the reconnect loop was fixed and the lane restarted (23:26Z) -- one hour with the sockets steady"
+  flapping: "2026-09-03T17:00Z to 2026-09-03T18:00Z, inside the declared loop window, for contrast"
+
+definitions:
+  gap: "received_utc(frame i+1) - received_utc(frame i) over ALL frames of the hour, any kind (heartbeat, delta, snapshot, subscribed, ok)"
+  heartbeat_gap: "the same over frames whose type is heartbeat only"
+  share_over_bound: "seconds in which the running gap exceeds 15 s, divided by the hour"
+  by_kind: "frame counts per type"
+
+criteria:
+  - "Descriptive. No hypothesis, no look. Reads no price, no outcome."
+  - "Reported: p50/p90/p99/max gap, heartbeat p50/p99/max, share_over_bound, frame counts by kind, for each window."
+  - "The bound moves ONLY if the clean hour shows the venue's own heartbeat cadence plainly (a tight p99) and the chosen bound sits above its max with margin; else the bound stays and the finding is that the socket, not the bound, is the problem."
+
+outputs:
+  results: "research/infra/2026-09-04_kalshi-socket-cadence/results.json"
+  verdict: "research/infra/2026-09-04_kalshi-socket-cadence/verdict.md"
+
+what_this_does_not_establish:
+  - "Anything about Polymarket's socket, which is verified per message and by REST."
+  - "That a quiet market's book is fresh. Liveness is the connection; freshness stays per market."
