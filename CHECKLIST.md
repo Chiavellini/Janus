@@ -58,7 +58,7 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 
 - [x] DONE — frozen venue fixtures, WebSocket replay, reconnect and sequence-gap tests, partial-fill and ambiguous-order tests.
 - [x] RUNNING — live shadow evidence (from the 2026-09-02 seal; clean from 2026-09-04 00:25Z).
-- [x] RUNNING — F3, PAPER_EXECUTION: 1 of 30 cleared covers (STL @ LAD, 03:05Z, +2.6% locked at q=100, paper-hedged). Its realized paper PnL lands when the game settles.
+- [x] RUNNING — F3, PAPER_EXECUTION: 1 of 33 cleared covers (n extended from 30 by L36's clean-data run) (STL @ LAD, 03:05Z, +2.6% locked at q=100, paper-hedged). Its realized paper PnL lands when the game settles.
 - [x] DONE — the settlement pass: hedged executions settle against each venue's result every five minutes, capital released, `execution_settlements` rows (the coordinator had stopped at HEDGED with the reservation held).
 - [ ] NOT PROVED — fees reconciled on Polymarket (needs its proof).
 - [x] DONE — operator decision 2026-09-04 (GATE amendment row): test trading only, no serious amounts, until L36 re-run on clean data shows in-play actionable covers. Real orders = the two proofs under $5 / 10 contracts / $20 a day.
@@ -79,4 +79,4 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 
 - [ ] NOT DONE — label the blind gold set `nodes/match_generic/gold/nonsports.csv` (L31). OPERATOR.
 - [ ] NOT DONE — forward football-data.org snapshotter for true original kickoff dates (needs the operator's free token); until then soccer rates are a FLOOR proxy.
-- [ ] NOT DONE — L36 re-run and L37 re-run on the first clean hour; recompute F3's n only to extend.
+- [x] DONE — L37 re-run on the clean hour (0.44% past the bound, was 13.2%; bound stays) and L36 re-run on clean data (95 in-play actionable rows; n = 33, F3 extended).
