@@ -37,6 +37,7 @@ _L30 = "research/sports/2026-09-03_nfl-settlement-wedge-rates-v2/spec.yaml"
 _L33 = "research/sports/2026-09-03_soccer-settlement-wedge-rates/spec.yaml"
 _L32 = "research/sports/2026-09-03_cfb-settlement-wedge-rates/spec.yaml"
 _L35 = "research/sports/2026-09-03_soccer-settlement-wedge-rates-batch2/spec.yaml"
+_L39 = "research/sports/2026-09-04_tennis-settlement-wedge-rates/spec.yaml"
 EVIDENCE: dict[str, Evidence] = {
     "mlb.postponed_gt2d_rate": Evidence(
         "mlb.postponed_gt2d_rate", 0.004762, 2100,
@@ -137,6 +138,15 @@ EVIDENCE: dict[str, Evidence] = {
         "soccer.ita.cancelled_rate", 0.000000, 1520,
         "openfootball Serie A season files 2021-22..2024-25: scheduled N(N-1) minus played", "2026-09-03", _L35,
         "0 of 1520: every season parsed to exactly N(N-1) league matches (playoff rounds excluded)."),
+    # tennis.delayed_gt7d_rate is deliberately ABSENT: no results archive keeps a match's scheduled
+    # date, so it waits on a forward row over the lane's own Polymarket gameStartTime records (L39,
+    # CHECKLIST C). Tennis blocks by name until then; this entry alone does not price it.
+    "tennis.walkover_rate": Evidence(
+        "tennis.walkover_rate", 0.007955, 26398,
+        "ATP main tour (Tennismylife/TML-Database, the Sackmann layout) and WTA (VictorSquidWei/tennis_wta, a Sackmann fork), "
+        "seasons 2021-2025, team ties (level D) excluded; commits pinned under the row", "2026-09-04", _L39,
+        "210 of 26398 main-draw matches were walkovers (score W/O): ATP 98 of 13598 = 0.0072, WTA 112 of 12800 = 0.0088. "
+        "Retirements (789) and defaults (4) are ruled SAME and not counted here."),
 }
 
 

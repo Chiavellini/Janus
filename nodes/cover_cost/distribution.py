@@ -121,12 +121,15 @@ def load_flap_windows(con: sqlite3.Connection, *, declared: Iterable[tuple[float
     a venue where the later row is disconnected or its error count rose, plus the declared
     windows (the 2026-09-03 loop pre-dates the reconnect counter)."""
     out = list(declared)
+    cols = {r[1] for r in con.execute("PRAGMA table_info(socket_health)")}
+    lag_col = ", loop_lag_s" if "loop_lag_s" in cols else ", NULL"
     prev: dict[str, tuple[float, int]] = {}
-    for ts, venue, connected, errors in con.execute("SELECT seen_ts, venue, connected, errors FROM socket_health ORDER BY seen_ts"):
+    for ts, venue, connected, errors, lag in con.execute(f"SELECT seen_ts, venue, connected, errors{lag_col} FROM socket_health ORDER BY seen_ts"):
         e = int(errors or 0)
         if venue in prev:
             pts, pe = prev[venue]
-            if not connected or e > pe:
+            # a disconnect, a reconnect, or (since 2026-09-04) a stalled loop: the tick's books were late
+            if not connected or e > pe or (lag is not None and float(lag) > 5.0):
                 out.append((pts, float(ts)))
         prev[venue] = (float(ts), e)
     return sorted(out)

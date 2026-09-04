@@ -12,6 +12,7 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — Polymarket REST reconciler applies on the loop (its evaluations were being lost).
 - [x] DONE — watchdog alarms that would have caught all of the above: SOCKET_FLAPPING, SOCKET_ERROR, LANE_SILENT. Each demonstrated firing in `--selftest`.
 - [x] DONE — the clock-health flip explained and named: the lane's event loop was being starved by the host (L37/L38), so both venues' stamps arrived 10–85 s late; the clock check is now a 60 s windowed median that re-arms, one sample per frame, and the halt says STALL (loop probe past 5 s) or CLOCK (stamps off with a prompt loop). Halting stays; it was right.
+- [ ] NOT DONE — throughput: in bursts (startup, many live games) the loop is not blocked but saturated — 3,000 frames and 3,400 evaluations a second — and the venue stamps fall 14–42 s behind while the probe's overshoot stays under 5 s. The halt catches it (`HALT CLOCK` with both venues off). The fix is coalescing: evaluate a game at most once per N ms or only on a top-of-book change at the priced depth, instead of on every delta. Not started.
 - [ ] NOT DONE — the host itself: 15 MB free, 5 of 6 GB swap, other agents and collectors. Until the box, heavy jobs beside the lane cost it seconds of lag (ops/README.md host hygiene). L38 measures it over 24 h.
 - [ ] NOT DONE — Kalshi keepalive ping timeouts still cause an occasional venue-side reconnect (one at 00:27Z). Venue behaviour; the resubscribe is clean.
 
@@ -28,7 +29,8 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 
 - [x] DONE — 20 leagues registered; 9 enabled and trading on paper: mlb, nfl, epl, lal, bun, cfb, elc, el1, ita.
 - [x] DONE — tennis CAPTURED (raw frames from both venues, ~35k tennis frames per half hour tonight, 62 markets on the watchlist).
-- [ ] NOT DONE — tennis PRICED: `tennis.walkover_rate` and `tennis.delayed_gt7d_rate` unmeasured, so atp/wta block by name. Walkovers are measurable from the Sackmann results files; the delay rate has no results-archive source and needs a declared proxy.
+- [x] DONE — `tennis.walkover_rate` measured and registered (L39: 0.7955%, 210 of 26,398 main-draw matches 2021–2025; Sackmann's repositories were gone from GitHub, so a live ATP database in his layout and a WTA fork are frozen under the row).
+- [ ] NOT DONE — `tennis.delayed_gt7d_rate`: no results archive keeps a match's scheduled date, so it is not measurable backward. Design for a forward row F4: persist, for every tennis market on the capture-only watchlist, Polymarket's `gameStartTime` at first sight and the market's resolution time later (a `watch_events` table written by `apply_watch`, resolution polled by the daily census job); register F4 only once that collector is seen writing (the F2 lesson). Until it accrues, atp/wta block by name.
 - [ ] NOT DONE — tennis REPLAYABLE offline: the Polymarket side needs the lane's REST verification, which is not captured.
 - [ ] NOT DONE — NBA, WNBA, NHL: settlement templates not reviewed (Kalshi lists no NHL yet).
 - [ ] NOT DONE — MLS, Ligue 1, Eredivisie, Primeira Liga, Scottish Prem, Belgian: no source for postponement rates; blocked by name.

@@ -1,0 +1,47 @@
+experiment_id: "janus-sports-tennis-settlement-wedge-rates-2026-09-04"
+date_registered: "2026-09-04"
+track: "sports/settlement"
+row_kind: "L (descriptive characterization; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L39"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE FIRST RUN. Registered before any score column is read for its result;
+# the inputs were frozen and only their schema, row counts and tourney_level values inspected.
+purpose: >
+  nodes/settle_wedge rules the Kalshi KX{ATP,WTA}MATCH / Polymarket tennis match pair BOUNDED on
+  two dimensions: a walkover or withdrawal before the first ball (Kalshi fair price, Polymarket
+  50-50; evidence key tennis.walkover_rate) and a match completed more than seven days late
+  (Kalshi holds up to two weeks, Polymarket 50-50 past 7 days; key tennis.delayed_gt7d_rate).
+  Without both, every tennis cover blocks by name. This row measures the first from frozen
+  results files and states plainly that the second has no source in any results archive.
+
+source:
+  atp: "Tennismylife/TML-Database, the Sackmann layout, ATP main tour, commit pinned in inputs/PROVENANCE.md; seasons 2021-2025 (Jeff Sackmann's own tennis_atp/tennis_wta repositories were gone from GitHub on 2026-09-04)."
+  wta: "VictorSquidWei/tennis_wta, a fork of the Sackmann WTA files, commit pinned in inputs/PROVENANCE.md; seasons 2021-2025."
+  code: "this directory's measure.py"
+
+window: "seasons 2021, 2022, 2023, 2024, 2025 (2025 partial to the freeze date). 2020 excluded as the pandemic season, by the same reasoning as the NFL and soccer rows."
+
+definitions:
+  population: "every row of the season file whose tourney_level is not D (Davis Cup / Billie Jean King Cup team ties are not the individual match markets both venues list). Rows with level D are counted and reported apart."
+  walkover: "a row whose score field contains the token W/O (the Sackmann convention: the match was not played; one player advanced). Reported per tour per season and pooled."
+  retirement: "a row whose score contains RET (retired mid-match) -- ruled SAME on both venues already (the match has a winner on both); reported for context, not registered."
+  default: "a row whose score contains DEF (defaulted mid-match) -- SAME on both venues; reported for context."
+  walkover_rate: "walkovers / population, pooled over both tours and all seasons; the per-tour rate reported beside it. The registered value is the pooled rate (the pair policy is one template for both tours)."
+  delayed_gt7d_rate: "NOT MEASURABLE FROM THESE FILES: a row carries the tournament's start date, never the match's scheduled or played date, so a match completed more than 7 days after its scheduled start is invisible. No results archive keeps the schedule. The honest source is forward: the lane already records every tennis event Polymarket lists with its gameStartTime; a forward row (F4, to be registered separately) compares that with the market's resolution time. Until it accrues, tennis.delayed_gt7d_rate stays EVIDENCE_UNMEASURED and tennis stays blocked by name."
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no look. No outcome is read."
+  - "Parse gate: every season file yields at least 2,000 rows with a non-empty score on at least 99% of rows; a file failing it is reported and its season excluded, said so."
+  - "Registration: tennis.walkover_rate is registered in nodes/settle_wedge/evidence.py at the pooled value with this row as research_ref and the per-tour values in the note. tennis.delayed_gt7d_rate is NOT registered by this row."
+
+outputs:
+  results: "research/sports/2026-09-04_tennis-settlement-wedge-rates/results.json"
+  verdict: "research/sports/2026-09-04_tennis-settlement-wedge-rates/verdict.md"
+  evidence_registration: "nodes/settle_wedge/evidence.py: tennis.walkover_rate"
+
+what_this_does_not_establish:
+  - "That tennis prices: it cannot until the delay rate exists (F4)."
+  - "Anything about doubles (a pair is not a player entity) or qualifying rounds (not in the main-draw files and not what the venues list)."
+  - "Edge. A settlement rate prices a reserve; it claims nothing about a return."

@@ -50,18 +50,29 @@ def measure(start: float, end: float) -> dict:
 
 
 def main() -> int:
+    """No arguments: the two registered windows. `measure.py <name> <start-iso> <end-iso>`: one more
+    window (a re-run on a clean hour), appended to the verdict, results in results_<name>.json."""
+    windows = dict(WINDOWS)
+    if len(sys.argv) == 4:
+        windows = {sys.argv[1]: (datetime.fromisoformat(sys.argv[2]), datetime.fromisoformat(sys.argv[3]))}
     res = {"bound_s": BOUND_S, "run": datetime.now(timezone.utc).isoformat(), "windows": {}}
-    for name, (a, b) in WINDOWS.items():
+    for name, (a, b) in windows.items():
         res["windows"][name] = measure(a.timestamp(), b.timestamp())
-    (HERE / "results.json").write_text(json.dumps(res, indent=2) + "\n")
-    lines = ["# L37 — Kalshi socket cadence (descriptive)", "",
-             f"Bound under test: {BOUND_S:.0f} s without any frame = HEARTBEAT_LOST. Run {res['run']}.", "",
+    out = HERE / ("results.json" if len(sys.argv) != 4 else f"results_{sys.argv[1]}.json")
+    out.write_text(json.dumps(res, indent=2) + "\n")
+    lines = [] if len(sys.argv) == 4 else ["# L37 — Kalshi socket cadence (descriptive)", ""]
+    lines += [f"\n## Run {res['run']}" if len(sys.argv) == 4 else f"Bound under test: {BOUND_S:.0f} s without any frame = HEARTBEAT_LOST. Run {res['run']}.", "",
              "| window | frames | by kind | gap p50 / p90 / p99 / max (s) | gaps > bound | share of hour past bound | heartbeat n / p50 / p99 / max (s) |",
              "|---|---|---|---|---|---|---|"]
     for name, w in res["windows"].items():
         lines.append(f"| {name} | {w['frames']} | {json.dumps(w['by_kind'])} | {w['gap_p50']} / {w['gap_p90']} / {w['gap_p99']} / {w['gap_max']} | "
                      f"{w['gaps_over_bound']} | {w['share_over_bound']} | {w['heartbeat_n']} / {w['heartbeat_p50']} / {w['heartbeat_p99']} / {w['heartbeat_max']} |")
-    (HERE / "verdict.md").write_text("\n".join(lines) + "\n")
+    v = HERE / "verdict.md"
+    if len(sys.argv) == 4 and v.exists():
+        with v.open("a") as fh:
+            fh.write("\n".join(lines) + "\n")
+    else:
+        v.write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
     return 0
 

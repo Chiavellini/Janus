@@ -477,3 +477,12 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
   report line) and the halt names its cause: `HALT STALL 12.4s` (LOOP_STALLED) or
   `HALT CLOCK kalshi` (CLOCK_UNHEALTHY). Halting stays; it was right. L38 registered to measure
   the stall over 24 h beside L34. `ops/README.md` says what not to run beside the lane.
+- After the A1 restart: a 9 s stall in the first minute (19 pollers spawning, 130 subscriptions),
+  then stamps 14–42 s behind with the loop overshoot under 5 s — saturation, not blocking: ~3,000
+  frames and ~3,400 evaluations a second in bursts. The halt names it. Coalescing evaluations is
+  the next throughput item (CHECKLIST A).
+- **L39, tennis walkover rate**, registered and run: 0.7955% pooled (ATP 0.72%, WTA 0.88%) over
+  26,398 main-draw matches 2021–2025. Jeff Sackmann's repositories were gone from GitHub on
+  2026-09-04; the same layout is frozen from a live ATP database and a WTA fork, commits pinned.
+  The delay rate has no backward source (files carry tournament starts, never match dates) and
+  waits on a forward collector; tennis still blocks by name.

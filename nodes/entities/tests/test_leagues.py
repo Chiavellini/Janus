@@ -56,5 +56,6 @@ def test_enablement_names_what_each_league_lacks():
     for c in ("fl1", "ere", "por", "scop", "bel1"):  # registered and reviewed; no archive to measure from
         assert enablement(c) == [f"EVIDENCE_UNMEASURED:soccer.{c}.cancelled_rate", f"EVIDENCE_UNMEASURED:soccer.{c}.postponed_gt48h_rate"], c
     for c in ("atp", "wta"):
-        assert enablement(c) == ["EVIDENCE_UNMEASURED:tennis.delayed_gt7d_rate", "EVIDENCE_UNMEASURED:tennis.walkover_rate"], c   # one rate pair for both tours
+        # one rate pair for both tours; the walkover rate is registered (L39), the delay rate has no source yet
+        assert enablement(c) == ["EVIDENCE_UNMEASURED:tennis.delayed_gt7d_rate"], c
     assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "cfb", "elc", "el1", "ita"]

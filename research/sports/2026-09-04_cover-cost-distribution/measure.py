@@ -21,7 +21,8 @@ DECLARED_FLAPS = [(datetime(2026, 9, 3, 16, 54, tzinfo=timezone.utc).timestamp()
 THIN_S = 60.0
 #: Kalshi taker fees on sports were pinned at half the venue's charge until the 2026-09-04 re-pin
 #: (CHANGELOG 2026-09-04); rows priced before it are reported apart, never mixed.
-ERAS = [("fee-half", SEAL), ("fee-repinned", datetime(2026, 9, 4, 0, 45, tzinfo=timezone.utc).timestamp())]
+ERAS = [("fee-half", SEAL), ("fee-repinned", datetime(2026, 9, 4, 0, 16, tzinfo=timezone.utc).timestamp()),
+        ("fee-repinned+probe", datetime(2026, 9, 4, 0, 55, 44, tzinfo=timezone.utc).timestamp())]   # the A1 restart: stalls on the record
 
 
 def main() -> int:

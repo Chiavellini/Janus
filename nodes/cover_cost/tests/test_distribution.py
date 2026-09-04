@@ -51,6 +51,9 @@ def test_flap_windows_come_from_socket_health_and_the_declared_loop():
                     [(T, "kalshi", 1, 0), (T + 60, "kalshi", 1, 0), (T + 120, "kalshi", 0, 0), (T + 180, "kalshi", 1, 3), (T + 240, "kalshi", 1, 3)])
     w = load_flap_windows(con, declared=[(T + 900, T + 1000)])
     assert w == [(T + 60, T + 120), (T + 120, T + 180), (T + 900, T + 1000)]
+    con.execute("ALTER TABLE socket_health ADD COLUMN loop_lag_s REAL")
+    con.execute("INSERT INTO socket_health VALUES(?,?,?,?,?)", (T + 300, "kalshi", 1, 3, 9.0))
+    assert (T + 240, T + 300) in load_flap_windows(con), "a stalled tick is a flap window too"
     assert in_windows(T + 90, w) and not in_windows(T + 30, w) and in_windows(T + 950, w)
 
 

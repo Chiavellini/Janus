@@ -1,0 +1,158 @@
+{
+  "run": "2026-09-04T01:00:41.400314+00:00",
+  "gate": {
+    "atp_2021": {
+      "rows": 2735,
+      "scored": 2735,
+      "passed": true
+    },
+    "atp_2022": {
+      "rows": 2918,
+      "scored": 2918,
+      "passed": true
+    },
+    "atp_2023": {
+      "rows": 2995,
+      "scored": 2995,
+      "passed": true
+    },
+    "atp_2024": {
+      "rows": 3076,
+      "scored": 3076,
+      "passed": true
+    },
+    "atp_2025": {
+      "rows": 2944,
+      "scored": 2944,
+      "passed": true
+    },
+    "wta_2021": {
+      "rows": 2597,
+      "scored": 2597,
+      "passed": true
+    },
+    "wta_2022": {
+      "rows": 2594,
+      "scored": 2594,
+      "passed": true
+    },
+    "wta_2023": {
+      "rows": 2810,
+      "scored": 2810,
+      "passed": true
+    },
+    "wta_2024": {
+      "rows": 2689,
+      "scored": 2689,
+      "passed": true
+    },
+    "wta_2025": {
+      "rows": 2795,
+      "scored": 2795,
+      "passed": true
+    }
+  },
+  "per_season": {
+    "atp_2021": {
+      "population": 2606,
+      "team_ties_excluded": 129,
+      "walkovers": 20,
+      "retirements": 61,
+      "defaults": 1,
+      "walkover_rate": 0.007675
+    },
+    "atp_2022": {
+      "population": 2710,
+      "team_ties_excluded": 208,
+      "walkovers": 17,
+      "retirements": 69,
+      "defaults": 1,
+      "walkover_rate": 0.006273
+    },
+    "atp_2023": {
+      "population": 2772,
+      "team_ties_excluded": 223,
+      "walkovers": 19,
+      "retirements": 72,
+      "defaults": 1,
+      "walkover_rate": 0.006854
+    },
+    "atp_2024": {
+      "population": 2816,
+      "team_ties_excluded": 260,
+      "walkovers": 20,
+      "retirements": 88,
+      "defaults": 1,
+      "walkover_rate": 0.007102
+    },
+    "atp_2025": {
+      "population": 2694,
+      "team_ties_excluded": 250,
+      "walkovers": 22,
+      "retirements": 105,
+      "defaults": 0,
+      "walkover_rate": 0.008166
+    },
+    "wta_2021": {
+      "population": 2538,
+      "team_ties_excluded": 59,
+      "walkovers": 27,
+      "retirements": 83,
+      "defaults": 0,
+      "walkover_rate": 0.010638
+    },
+    "wta_2022": {
+      "population": 2369,
+      "team_ties_excluded": 225,
+      "walkovers": 27,
+      "retirements": 84,
+      "defaults": 0,
+      "walkover_rate": 0.011397
+    },
+    "wta_2023": {
+      "population": 2538,
+      "team_ties_excluded": 272,
+      "walkovers": 22,
+      "retirements": 72,
+      "defaults": 0,
+      "walkover_rate": 0.008668
+    },
+    "wta_2024": {
+      "population": 2610,
+      "team_ties_excluded": 79,
+      "walkovers": 18,
+      "retirements": 84,
+      "defaults": 0,
+      "walkover_rate": 0.006897
+    },
+    "wta_2025": {
+      "population": 2745,
+      "team_ties_excluded": 50,
+      "walkovers": 18,
+      "retirements": 71,
+      "defaults": 0,
+      "walkover_rate": 0.006557
+    }
+  },
+  "by_tour": {
+    "atp": {
+      "population": 13598,
+      "walkovers": 98,
+      "walkover_rate": 0.007207
+    },
+    "wta": {
+      "population": 12800,
+      "walkovers": 112,
+      "walkover_rate": 0.00875
+    }
+  },
+  "pooled": {
+    "population": 26398,
+    "walkovers": 210,
+    "retirements": 789,
+    "defaults": 4,
+    "team_ties_excluded": 1755,
+    "walkover_rate": 0.007955
+  },
+  "delayed_gt7d_rate": "NOT MEASURABLE from results files (no match dates); forward row F4 to be registered"
+}
