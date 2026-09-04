@@ -4,58 +4,57 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-04 ~00:30 UTC, on main. HANDOFF.md (2026-09-03 21:30 UTC) is the last full
-handoff; CHANGELOG.md carries everything since, dated.
+Updated 2026-09-04 ~03:30 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+story; HANDOFF.md (2026-09-03 21:30 UTC) the last full handoff.
 
 ## Where it stands
 
-The lane runs `PAPER_EXECUTION` under ledger F3 on nine leagues. Since the handoff, four things
-that were silently wrong are fixed and on main: the state table that flapped both sockets
-(5–20 reconnects a minute all day), the frontier that never sized, the reconciler that lost its
-evaluations on sqlite's thread check, and — found by L37 — the discovery pass that ran its HTTP
-inside the event loop and blinded both sockets for 13% of every hour. The Kalshi fee pin was
-half the venue's charge and is re-pinned from the operator's real fill; every recorded cover cost
-before 2026-09-04 ~00:16Z understates a Kalshi taker leg by 0.035·P·(1−P) per contract.
+The lane runs `PAPER_EXECUTION` under ledger F3 on nine leagues, and tonight it became a
+different machine: it prices a game once per 200 ms instead of on every delta (loop lag 0.1 s
+where it was 10–85 s), the clock check says whether the host stalled or a clock stepped, the
+Kalshi fee curve is pinned from the operator's real fills (taker and maker), three-way soccer
+executes as two legs through the Polymarket NO token, tennis has its walkover rate and a forward
+collector for its delay rate, and the Polymarket capture no longer subscribes the ITF token that
+got the socket dropped every 30 s. The operator's decision stands: test trading only until L36
+on clean data shows in-play actionable covers (GATE 2026-09-04 row).
 
-**The Kalshi proof filled** (`proofs/kalshi_20260904T000452Z.json`: 2 taker at 0.35, then the
-"cancelled" resting bid was hit as a maker at 0.25 — 3 contracts of KC YES, $0.95). It STOPped on
-the fee pin, correctly; the cancel had gone to the wrong shard, also fixed. `--settle` runs itself
-when the market resolves (a watcher in the agent's session; if it did not, run it). The
-Polymarket proof has not run.
+**Not proved:** any edge. F3 is 0 of 30. All 19 profitable prints in history were closing books
+under a broken socket with fees at half. The first honest data is tonight's.
 
 ## Now — what is left, and whose it is
 
 **Yours, because I cannot send an order or write the override:**
-1. **Rewrite the override** — main moved twice since yours (`93a82a8` → `2d2a803`); `resolve_mode`
-   refuses it. Same command as before, `--force`.
-2. **A second Kalshi proof** so one file passes all six checks (the first fails `resting_cancelled`
-   and `fee_ok` on record, both fixed since), then **the Polymarket proof**, dry run and `--arm`,
-   any live two-sided game. Then `--settle` both. I run `--check`, flip BATTERY, close the changelog.
-3. IAM for the box; `limits.toml` per-league caps for cfb and the soccer leagues; push main
-   (nothing pushed since `1479bd6`, the box's SSM sha pointer is stale).
+1. **Rewrite the override** (main moved several times tonight; `resolve_mode` refuses the one on
+   disk). Then **one clean Kalshi proof** and **the Polymarket proof** (never run), dry and `--arm`;
+   `--settle` both. I run `--check`, flip BATTERY, close the changelog.
+2. `nodes/risk/limits.toml`: per-league caps for cfb and the soccer leagues, or paper refuses them
+   at `LEAGUE_EXPOSURE` (expected until you decide).
+3. IAM for the box; push main (nothing pushed since `1479bd6`; the SSM sha is stale); the five
+   secrets into SSM; `latency.py --host box` for L34.
 4. Label `nodes/match_generic/gold/nonsports.csv` (L31).
 
 **Mine, in order:**
-1. Re-run L37 on a clean hour after the discovery split, then re-run L36: with the sockets fed and
-   fees right, the cover-cost table is the real first cut. Recompute n for F3 only to extend.
-2. `--check` the settled Kalshi proof; BATTERY rows; the fee reconciliation note.
-3. Tennis rates (`tennis.walkover_rate` from the Sackmann results files; `delayed_gt7d_rate`
-   needs a declared proxy or tennis stays blocked by name), then the replay option that trusts
-   socket snapshots for the Polymarket side.
-4. Three-way execution through a Polymarket NO token; the 191 unresolved batch-2 soccer names;
-   the football-data.org snapshotter (your token).
-5. L28 census runs five more days.
+1. Read the 10:10Z re-runs of L37 (clean hour 02:00–03:00Z) and L36 (three fee eras, stall
+   windows); recompute F3's n only to extend.
+2. Register F4 once `com.janus.watch-settle` (13:30 local) resolves its first rows; tennis then
+   prices when the delay rate has a value.
+3. Watch the first European soccer game under the new lane (the NO leg in `legs_json`, an
+   `[exec]` or `LEAGUE_EXPOSURE` line): three-way execution is built, not yet seen live.
+4. L38 over the first 24 h of `loop_lag_s`, beside L34 for the box decision.
+5. Then the census's next competitions (UFC needs a card parser; KBO/NPB need citations and
+   templates), the 191 unresolved batch-2 names, the football-data.org snapshotter (your token).
 
 **Time:** F3 accrues under launchd. `python3 ops/watchdog.py` must stay quiet; `LANE_SILENT`,
-`SOCKET_FLAPPING` and `SOCKET_ERROR` are the alarms that would have caught 2026-09-03.
+`SOCKET_FLAPPING`, `SOCKET_ERROR` and `HALT STALL` are the alarms that would have caught
+2026-09-03. Do not run the full test suite beside a live game on this Mac (ops/README.md).
 
 ## Not now, deliberately
 
 Any real order before the proofs settle and the override is rewritten. Ashburn before L34 is
-measured. `venue_cloudbet`, `venue_sxbet`, makers on Polymarket. Registering a league by editing
-a flag. Moving the 15 s heartbeat bound: L37 says the bound was never the problem.
+measured. `venue_cloudbet`, `venue_sxbet`, makers on Polymarket. Registering a league by editing a
+flag. Widening the Polymarket capture back to ITF until the venue-side drop is understood.
 
 ## The question that actually matters
 
-L36's first run was taken with the sockets starved and the fees at half. The honest answer to
-"what does a cover cost" starts with the first clean day after 2026-09-04 00:25Z.
+Unchanged: what does a cover cost, per competition and quantity, on clean data. The first clean
+night is tonight; L36's 10:10Z run is the first honest cut, and the paper window is the test.
