@@ -35,7 +35,7 @@ Soccer is three-way and a two-leg "cover" there pays nothing on a draw.
 from __future__ import annotations
 
 import itertools
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Mapping, Sequence
 
 from nodes.fees.models import Fill
@@ -67,6 +67,10 @@ class Leg:
     min_order_contracts: float = 1.0
     tick: float = 0.01
     executable: bool = True
+    #: The proven outcome ids this leg pays $1 on. Empty = "the outcome it is filed under" (filled
+    #: in by best_cover from the offers key). A Polymarket NO token on a three-way market covers
+    #: the OTHER two outcomes: that is how a soccer cover is two legs (2026-09-04).
+    covers: frozenset = frozenset()
 
 
 @dataclass(frozen=True)
@@ -184,12 +188,16 @@ def _cover_fees(legs: Sequence[Leg], fills_per_leg: Sequence[Sequence[Fill]]) ->
                 for v, fs in by_venue.items())
 
     worst, worst_state = 0.0, ""
-    for winner in legs:                       # exactly one outcome settles YES
-        won = {l.outcome_id: (l.outcome_id == winner.outcome_id) for l in legs}
+    # Exactly one PROVEN OUTCOME settles; a leg wins when its covered set holds it. Iterating
+    # legs (as before 2026-09-04) under-enumerates once a leg covers more than one outcome.
+    compound = any(len(l.covers) > 1 for l in legs)
+    states = sorted(set().union(*(l.covers for l in legs))) if compound else [l.outcome_id for l in legs]
+    for state in states:
+        won = {l.outcome_id: (state in l.covers) if compound else (l.outcome_id == state) for l in legs}
         s = sum(model_for(v).settlement_cost(fs, won, params_for(v, _ov(legs, v)))
                 for v, fs in by_venue.items())
         if s > worst:
-            worst, worst_state = s, winner.outcome_id
+            worst, worst_state = s, state
     return entry, worst, worst_state
 
 
@@ -212,6 +220,24 @@ def price_combination(legs: Sequence[Leg], contracts: float, *, now_utc: float,
     """
     if not isinstance(proof, CoverProof):
         return Cover(None, contracts, (), False, REJECT_NO_PROOF)
+
+    # THE PARTITION. The legs' covered sets must be pairwise disjoint and together equal the
+    # proven outcome set: two YES legs on a three-way game are a directional bet, and two legs
+    # both paying on the draw are double exposure. Legs with an empty `covers` are taken as
+    # covering the outcome they were filed under (best_cover stamps it; a direct caller must).
+    sets = [set(l.covers) if l.covers else {l.outcome_id} for l in legs]
+    seen_out: set = set()
+    for c in sets:
+        if c & seen_out:
+            return Cover(None, contracts, (), False, REJECT_NOT_EXHAUSTIVE)
+        seen_out |= c
+    if any(len(c) > 1 for c in sets):
+        # a compound leg names proven outcome ids, so the union can be checked exactly
+        if seen_out != set(proof.outcome_ids):
+            return Cover(None, contracts, (), False, REJECT_NOT_EXHAUSTIVE)
+    elif len(legs) != len(proof.outcome_ids):
+        # singleton legs may carry venue ids as outcome names; the count is what can be checked
+        return Cover(None, contracts, (), False, REJECT_NOT_EXHAUSTIVE)
 
     if any(not l.executable for l in legs):
         return Cover(None, contracts, (), False, REJECT_NOT_EXECUTABLE)
@@ -280,9 +306,14 @@ def best_cover(offers: Mapping[str, Sequence[Leg]], contracts: float, *, now_utc
         return Cover(None, contracts, (), False, REJECT_NO_DEPTH)
 
     ranked: list[list[Leg]] = []
-    for _, legs in sorted(offers.items()):
+    keys = sorted(offers)
+    for key in keys:
+        legs = offers[key]
         scored = []
         for l in legs:
+            # a leg filed under an outcome covers it; a compound key ("a|b") names its set
+            if not l.covers:
+                l = replace(l, covers=frozenset(key.split("|")))
             c = price_leg(l, contracts)
             # unfillable legs sort last but are not discarded — a 2-venue market where one leg is
             # thin must report insufficient_depth, not silently fall back to the other venue
@@ -291,15 +322,28 @@ def best_cover(offers: Mapping[str, Sequence[Leg]], contracts: float, *, now_utc
         ranked.append([l for _, l in scored[:top_k]])
 
     best = Cover(None, contracts, (), False, REJECT_NO_DEPTH)
-    for combo in itertools.product(*ranked):
-        cov = price_combination(list(combo), contracts, now_utc=now_utc,
-                                max_leg_age_s=max_leg_age_s, proof=proof)
-        if not cov.ok:
-            if not best.ok and best.reject_reason in (REJECT_NO_DEPTH, None):
-                best = cov          # keep the most informative rejection
-            continue
-        if not best.ok or cov.cost_per_contract < best.cost_per_contract:
-            best = cov
+    # Every subset of keys whose covered sets partition the proven outcome set is a candidate
+    # shape: {home, draw, away} as three legs, or {home} + {draw|away} as two. One leg per key.
+    proven = set(proof.outcome_ids) if isinstance(proof, CoverProof) else set(keys)
+    shapes = [tuple(keys)]
+    if any("|" in k for k in keys) and proven:
+        shapes = []
+        for r in range(1, len(keys) + 1):
+            for subset in itertools.combinations(keys, r):
+                sets = [frozenset(k.split("|")) for k in subset]
+                if sum(len(x) for x in sets) == len(proven) and set().union(*sets) == proven:
+                    shapes.append(subset)
+    idx = {k: i for i, k in enumerate(keys)}
+    for shape in shapes:
+        for combo in itertools.product(*(ranked[idx[k]] for k in shape)):
+            cov = price_combination(list(combo), contracts, now_utc=now_utc,
+                                    max_leg_age_s=max_leg_age_s, proof=proof)
+            if not cov.ok:
+                if not best.ok and best.reject_reason in (REJECT_NO_DEPTH, None):
+                    best = cov          # keep the most informative rejection
+                continue
+            if not best.ok or cov.cost_per_contract < best.cost_per_contract:
+                best = cov
     return best
 
 

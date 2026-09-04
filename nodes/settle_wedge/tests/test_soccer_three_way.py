@@ -94,9 +94,20 @@ def test_the_proof_needs_the_draw_and_a_three_leg_cover_prices():
     cov = price_combination(legs, 100.0, now_utc=T, max_leg_age_s=30.0, proof=cp)
     assert cov.ok and len(cov.legs) == 3
     assert cov.gross_per_contract == 0.96 and cov.cost_per_contract > 0.96
-    # without the draw leg the same proof cannot price: a two-leg "cover" is not one
+    # without the draw leg the same proof cannot price: two singleton legs on a three-outcome
+    # proof are not a partition (the pricer checks it since 2026-09-04, not only the poller's prove())
     two_legs = price_combination(legs[:1] + legs[2:], 100.0, now_utc=T, max_leg_age_s=30.0, proof=cp)
-    assert two_legs.ok, "price_combination prices what it is given; the poller's prove() is the gate"
+    assert not two_legs.ok and two_legs.reject_reason == "outcome_set_not_proven_exhaustive"
+    # but Kalshi YES home + Polymarket NO home (covering draw and away) IS a cover, in two legs
+    no_home = Leg("polymarket", "pm_clob", "tok-h:NO", "tok-h-no", bk(0.55), fees_p, covers=frozenset({"draw", "away"}))
+    two_way = price_combination([legs[0], no_home], 100.0, now_utc=T, max_leg_age_s=30.0, proof=cp)
+    assert two_way.ok and len(two_way.legs) == 2 and two_way.gross_per_contract == 0.95
+    assert two_way.worst_settlement_state in ("", "home", "draw", "away")   # '' when no venue charges at settlement
+    # and best_cover finds the two-leg shape from a compound offers key
+    offers = {"home": [legs[0]], "draw": [legs[1]], "away": [legs[2]], "away|draw": [no_home]}
+    from nodes.cover.cover import best_cover
+    best = best_cover(offers, 100.0, now_utc=T, max_leg_age_s=30.0, proof=cp)
+    assert best.ok and len(best.legs) == 2 and best.cost_per_contract < cov.cost_per_contract
 
 
 def test_college_football_texts_hash_to_their_templates_and_the_tie_cannot_fire():

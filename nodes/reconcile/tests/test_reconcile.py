@@ -54,3 +54,15 @@ def test_settlement_uses_each_venues_own_result_and_a_no_leg_wins_when_its_ticke
     assert r2[1].state is FillState.UNCONFIRMED and not releasable(r2)
     r3 = settle(legs=[{**legs[0], "final": False}], winners={"polymarket": "P_H"}, now=1.0)
     assert r3[0].state is FillState.UNCONFIRMED, "a Polymarket fill not yet CONFIRMED on-chain is not realized"
+
+
+
+def test_a_polymarket_no_leg_wins_when_its_yes_twin_loses():
+    legs = [{"venue": "polymarket", "client_order_id": "a", "outcome_id": "P_H:NO", "side": "buy_yes",
+             "contracts": 100.0, "price": 0.50, "fee_usd": 1.0, "state": "FILLED", "final": True},
+            {"venue": "kalshi", "client_order_id": "b", "outcome_id": "K_H", "side": "buy_yes",
+             "contracts": 100.0, "price": 0.40, "fee_usd": 1.0, "state": "FILLED", "final": True}]
+    draw = settle(legs=legs, winners={"polymarket": "P_D", "kalshi": "K_D"})
+    assert draw[0].realized_usd == 100 - 50 - 1 and draw[1].realized_usd == -40 - 1
+    home = settle(legs=legs, winners={"polymarket": "P_H", "kalshi": "K_H"})
+    assert home[0].realized_usd == -50 - 1 and home[1].realized_usd == 100 - 40 - 1

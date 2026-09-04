@@ -81,3 +81,22 @@ def test_three_way_soccer_yields_three_yes_tokens_by_team_name_and_draw():
     # a three-way event missing its draw market yields nothing rather than two thirds of a cover
     del ev["markets"][1]
     assert pm_outcome_tokens(ev, slug) == {}
+
+
+
+def test_three_way_no_tokens_come_from_the_team_markets_never_the_draw():
+    """A real EPL event frozen 2026-09-04 (both clobTokenIds per market). NO on a team market pays
+    on the other two outcomes; the draw market is skipped (its cancellation clause differs)."""
+    import json
+    from pathlib import Path
+    from nodes.venue_polymarket.books import pm_outcome_no_tokens, pm_outcome_tokens
+    ev = json.loads((Path(__file__).parent / "fixtures" / "gamma_epl_three_way_event_2026-09-04.json").read_text())
+    ev["teams"] = [{"name": "Ipswich Town", "abbreviation": "ips"}, {"name": "Liverpool", "abbreviation": "liv"}]
+    slug = ev["slug"]
+    yes = pm_outcome_tokens(ev, slug)
+    no = pm_outcome_no_tokens(ev, slug)
+    assert set(yes) == {"Ipswich Town", "Liverpool", "Draw"} and set(no) == {"Ipswich Town", "Liverpool"}
+    for name in no:
+        toks = json.loads(next(m["clobTokenIds"] for m in ev["markets"] if m["slug"].endswith("-" + {"Ipswich Town": "ips", "Liverpool": "liv"}[name])))
+        assert yes[name] == toks[0] and no[name] == toks[1] and no[name] != yes[name]
+    assert pm_outcome_no_tokens({"slug": "x", "markets": [{"slug": "x", "clobTokenIds": '["a","b"]', "outcomes": '["A","B"]'}]}, "x") == {}, "two-outcome games have no NO market"

@@ -97,7 +97,9 @@ def settle(*, legs: Sequence[dict], winners: Mapping[str, str], now: float | Non
             out.append(RealizedFill(leg["client_order_id"], FillState.UNCONFIRMED, 0.0, day_of(t)))
             continue
         bought = leg["outcome_id"]
-        if leg["venue"] == "kalshi" and bought.endswith(":NO"):
+        if bought.endswith(":NO"):
+            # Kalshi's complementary NO on the other ticker, or Polymarket's NO token on a
+            # three-way team market (2026-09-04): pays when the game did NOT go to its YES twin.
             won = w != bought[:-3]
         else:
             won = w == bought

@@ -44,7 +44,7 @@ from nodes.schedule_espn import espn
 from nodes.settle_wedge.pair import certify_from_spec, records_from_spec, summary
 from nodes.settle_wedge.records import record_equivalence, record_rules
 from nodes.venue_kalshi.books import fetch_kalshi_series, kalshi_fee_params
-from nodes.venue_polymarket.books import pm_fee_params, pm_order_limits, pm_primary_market, pm_token_map
+from nodes.venue_polymarket.books import pm_outcome_no_tokens, pm_fee_params, pm_order_limits, pm_primary_market, pm_token_map
 
 #: Hours ahead of first pitch/puck to start watching a pre-game market.
 DEFAULT_PRE_HOURS = 6.0
@@ -263,11 +263,21 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
                 continue
             outcomes: dict[str, dict] = {}
             slug = next(iter(rows.values()))["pm_event"]
+            # Three-way: the NO token of each TEAM market pays on the other two outcomes, which
+            # is how a soccer cover is executed as two legs (nodes/game_poller, nodes/cover).
+            no_by_label = pm_outcome_no_tokens(d.tokens.get(slug, (None, {}))[1] or {}, slug) if n_out == 3 else {}
+            no_by_ent: dict[str, str] = {}
+            for name, tok_no in no_by_label.items():
+                res = resolver.resolve(league, text=name, venue="polymarket")
+                if res.ok:
+                    no_by_ent[res.entity_id] = tok_no
             for ent, m in rows.items():
                 tok = tok_by.get((m["pm_event"], ent))
                 if not tok:
                     break
                 outcomes[ent] = {"kalshi": m["kalshi_outcome"], "polymarket": tok}
+                if ent in no_by_ent:
+                    outcomes[ent]["polymarket_no"] = no_by_ent[ent]
             if len(outcomes) != n_out:
                 detail = d.token_errors.get(slug)
                 blocked[gid] = "PM_TOKEN_RESOLUTION" + (f": {detail}" if detail else "")

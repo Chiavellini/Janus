@@ -164,9 +164,8 @@ def test_a_fresh_registry_is_silent_and_a_day_of_uncolisted_writes_is_not(tmp_pa
     store.close()
 
 
-def test_a_three_way_soccer_game_carries_six_ids_and_blocks_without_its_draw_token():
-    """EPL: two teams and the draw on both venues; the slate spec has three outcomes, the draw keyed
-    DRAW_ENTITY on both, and a missing draw token is an incomplete match, never a two-leg cover."""
+def _three_way_fixture():
+    """Arsenal v Chelsea on both venues with the draw: the shared three-way slate fixture."""
     from nodes.match_sports.sports_match import DRAW_ENTITY
     from nodes.settle_wedge.policy import KALSHI_EPL_GAME_V1, POLYMARKET_SOCCER_GAME_V2
     r = Resolver.load()
@@ -194,6 +193,15 @@ def test_a_three_way_soccer_game_carries_six_ids_and_blocks_without_its_draw_tok
           "markets": [{"slug": slug + "-ars", "sportsMarketType": "moneyline", "orderMinSize": 5, "orderPriceMinTickSize": 0.01,
                        "feeSchedule": {"rate": 0.05}},
                       {"slug": slug + "-draw", "sportsMarketType": "moneyline"}, {"slug": slug + "-che", "sportsMarketType": "moneyline"}]}
+    return g, r, rows, names, ev, ars, che, slug
+
+
+def test_a_three_way_soccer_game_carries_six_ids_and_blocks_without_its_draw_token():
+    """EPL: two teams and the draw on both venues; the slate spec has three outcomes, the draw keyed
+    DRAW_ENTITY on both, and a missing draw token is an incomplete match, never a two-leg cover."""
+    from nodes.match_sports.sports_match import DRAW_ENTITY
+    from nodes.settle_wedge.policy import KALSHI_EPL_GAME_V1, POLYMARKET_SOCCER_GAME_V2
+    g, r, rows, names, ev, ars, che, slug = _three_way_fixture()
     d = Discovery(NOW, [g], {}, {"epl": (rows, {}, r)}, {slug: (names, ev)}, {},
                   fee_params={"kalshi": {"epl": {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 1.0}},
                               "polymarket": {slug: {"fee_rate": 0.05}}})
@@ -213,3 +221,24 @@ def test_a_three_way_soccer_game_carries_six_ids_and_blocks_without_its_draw_tok
     d3 = Discovery(NOW, [g], {}, {"epl": (rows[1:], {}, r)}, {slug: (names, ev)}, {})
     _, blocked3 = co_listed(d3)
     assert blocked3 == {"espn:epl:9": "INCOMPLETE_EXACT_THREE_OUTCOME_MATCH"}
+
+
+def test_a_three_way_spec_carries_the_no_token_of_each_team_market():
+    """2026-09-04: NO on a team market pays on the other two outcomes; the spec carries it as
+    `polymarket_no`, taken from the team markets' second clobTokenId, never from the draw."""
+    import json
+    from nodes.discovery.discovery import Discovery, co_listed
+    from nodes.match_sports.sports_match import DRAW_ENTITY
+    g, r, rows, names, ev, ars, che, slug = _three_way_fixture()
+    for m in ev["markets"]:
+        suffix = m["slug"].rsplit("-", 1)[-1]
+        m["clobTokenIds"] = json.dumps([f"tok-{suffix}", f"tok-{suffix}-no"])
+    d = Discovery(NOW, [g], {}, {"epl": (rows, {}, r)}, {slug: (names, ev)}, {},
+                  fee_params={"kalshi": {"epl": {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 1.0}},
+                              "polymarket": {slug: {"fee_rate": 0.05}}})
+    slate, blocked = co_listed(d)
+    assert blocked == {}, blocked
+    spec = slate["espn:epl:9"]
+    assert spec["outcomes"][ars] == {"kalshi": "KXEPLGAME-26SEP14CHEARS-ARS", "polymarket": "tok-ars", "polymarket_no": "tok-ars-no"}
+    assert spec["outcomes"][che]["polymarket_no"] == "tok-che-no"
+    assert "polymarket_no" not in spec["outcomes"][DRAW_ENTITY]

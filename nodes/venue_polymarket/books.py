@@ -142,6 +142,26 @@ def pm_outcome_tokens(event: dict, slug: str) -> dict[str, str]:
     return out if len(out) == 3 else {}
 
 
+def pm_outcome_no_tokens(event: dict, slug: str) -> dict[str, str]:
+    """outcome label -> NO token, three-way games only (each side is its own Yes/No market, so
+    NO on a team market pays on the other two outcomes). Never the draw market: its cancellation
+    clause differs and the certified template is the team text. {} for a two-outcome game."""
+    markets = (event or {}).get("markets") or []
+    by_abbrev = {str(t.get("abbreviation", "")).lower(): t.get("name") for t in (event or {}).get("teams") or []}
+    out: dict[str, str] = {}
+    for m in markets:
+        ms = str(m.get("slug", ""))
+        if not ms.startswith(slug + "-") or m.get("sportsMarketType") != "moneyline":
+            continue
+        toks = m.get("clobTokenIds")
+        if isinstance(toks, str):
+            toks = json.loads(toks)
+        suffix = ms[len(slug) + 1:]
+        if toks and len(toks) == 2 and suffix != "draw" and suffix in by_abbrev and by_abbrev[suffix]:
+            out[str(by_abbrev[suffix])] = str(toks[1])
+    return out
+
+
 def pm_token_map(slugs, cl: Client) -> dict[str, tuple[str, str]]:
     """slug -> ({outcome_label: token}, event) for the FULL-GAME moneyline market only.
 

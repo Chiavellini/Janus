@@ -486,3 +486,24 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
   2026-09-04; the same layout is frozen from a live ATP database and a WTA fork, commits pinned.
   The delay rate has no backward source (files carry tournament starts, never match dates) and
   waits on a forward collector; tennis still blocks by name.
+
+## 2026-09-04 (night) — coalescing, three-way soccer as two legs, and the tennis collector
+
+- **Coalescing.** The poller prices a game at most once per 200 ms on quiet books (the frame's
+  receive time, so replay reproduces it); a replica state change or the 15 s heartbeat still
+  prices on its frame. Live: ~2,000 evaluations a minute where there were ~250,000, loop lag
+  0.1 s. Captures before `f0bcef5` replay to different rows (nodes/replay/README.md).
+- **Three-way soccer executes as two legs.** A `Leg` now carries `covers`, the proven outcomes it
+  pays on; `price_combination` checks that a cover's legs partition the proven outcome set
+  (`outcome_set_not_proven_exhaustive` was declared in 2026-08 and never used; it is now); the
+  settlement enumeration runs over outcomes, not legs. Discovery carries the NO token of each
+  team market (`polymarket_no`; never the draw market), the poller keeps a replica on it and files
+  its leg under the compound key of the outcomes it covers, and `best_cover` prices every shape
+  whose keys partition the set: {home, draw, away} as three legs or {home} + {draw|away} as two.
+  Plan and coordinator are untouched: the NO leg is a `buy_yes` of the NO token, Polymarket
+  leads FOK, Kalshi hedges IOC. Reconcile pays a `:NO` leg on either venue when its YES twin
+  loses. The settlement buffer still charges the NO leg against the cancellation state in which
+  it wins (conservative, named in `CoverProof.settlement_buffer`). Frozen: a real EPL event with
+  both token ids per market.
+- **Polymarket keep-alive at 4 s.** At 10.0 s, the venue's own limit, a quiet feed (eight late
+  games at 03:00Z) dropped the socket every 30 s with "no close frame"; busy feeds had hidden it.

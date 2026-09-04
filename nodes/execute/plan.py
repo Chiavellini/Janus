@@ -65,7 +65,10 @@ def marginal_price(book: Book, contracts: float) -> float | None:
 
 
 def _leg_side(leg: Leg) -> tuple[str, str]:
-    """(market_id, side). A Kalshi complementary-NO leg has outcome_id '<ticker>:NO'."""
+    """(market_id, side). A Kalshi complementary-NO leg has outcome_id '<ticker>:NO' and is a
+    buy_no on that ticker. A Polymarket NO leg (outcome_id '<yes token>:NO', market_id = the NO
+    token) is a buy_yes of the NO token: Polymarket outcomes are separate tokens (the adapter
+    refuses any other side, by design)."""
     if leg.venue == "kalshi" and leg.outcome_id.endswith(":NO"):
         return leg.market_id, "buy_no"
     return leg.market_id, "buy_yes"

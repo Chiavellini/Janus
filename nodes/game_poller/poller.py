@@ -133,6 +133,8 @@ class GamePoller:
         self.proof = cp
         for outcome, venues in self.outcomes.items():
             for venue, market_id in venues.items():
+                if venue == "polymarket_no":
+                    continue                      # built below, keyed ("polymarket_no", outcome)
                 # Kalshi's seq is per SUBSCRIPTION, so its replicas are verified by the stream.
                 # Polymarket has no sequence at all and needs an outside REST check.
                 self.replicas[(venue, outcome)] = BookReplica(
@@ -151,11 +153,27 @@ class GamePoller:
                 if other_ticker:
                     self.replicas[("kalshi_no", outcome)] = BookReplica(
                         venue="kalshi", market_id=other_ticker, verification="stream")
+        # THE POLYMARKET NO TOKEN (2026-09-04). On a three-way game every side is its own Yes/No
+        # market, so NO on a team market pays on the OTHER TWO outcomes: one leg covering a set,
+        # which is what makes a soccer cover two legs (Kalshi YES on the side + Polymarket NO on
+        # it). Discovery carries the token as `polymarket_no`; the replica keys ("polymarket_no",
+        # outcome) and its leg is filed under the compound key of the outcomes it covers.
+        for outcome, venues in self.outcomes.items():
+            tok_no = venues.get("polymarket_no")
+            if tok_no:
+                self.replicas[("polymarket_no", outcome)] = BookReplica(
+                    venue="polymarket", market_id=tok_no, verification="external")
 
     # ── subscriptions ───────────────────────────────────────────────────
     def market_ids(self, venue: str) -> list[str]:
-        """What this poller needs the shared socket to subscribe to."""
-        return [v[venue] for v in self.outcomes.values() if venue in v]
+        """What this poller needs the shared socket to subscribe to: every replica's market on
+        that venue, NO tokens included (derived from the replicas so a reap unregisters all)."""
+        out: list[str] = []
+        for (key, _outcome), rep in self.replicas.items():
+            v = "kalshi" if key in ("kalshi", "kalshi_no") else "polymarket"
+            if v == venue and rep.market_id not in out:
+                out.append(rep.market_id)
+        return out
 
     def registrations(self) -> list[tuple[str, str, str, BookReplica]]:
         """(venue, market_id, side, replica) for every replica: what a supervisor registers with
@@ -163,8 +181,8 @@ class GamePoller:
         books a game is priced from is defined in exactly one place."""
         out = []
         for (key, _outcome), rep in self.replicas.items():
-            venue = "kalshi" if key == "kalshi_no" else key
-            side = "no" if key == "kalshi_no" else "yes"
+            venue = {"kalshi_no": "kalshi", "polymarket_no": "polymarket"}.get(key, key)
+            side = "no" if key == "kalshi_no" else "yes"          # a PM NO token is its own asset
             out.append((venue, rep.market_id, side, rep))
         return out
 
@@ -200,6 +218,8 @@ class GamePoller:
         for outcome, venues in self.outcomes.items():
             legs = []
             for v in venues:
+                if v == "polymarket_no":          # a token, not a venue: its leg is built below
+                    continue
                 rep = self.replicas.get((v, outcome))
                 if rep is None:
                     continue
@@ -226,8 +246,23 @@ class GamePoller:
                                     rep.market_id, book, dict(fees)))
             if legs:
                 offers[outcome] = legs
+            # THE POLYMARKET NO LEG: extra depth covering the other outcomes, never a requirement.
+            rep = self.replicas.get(("polymarket_no", outcome))
+            fees = self.fee_params.get("polymarket")
+            if rep is not None and fees is not None and len(self.outcomes) > 2:
+                book = self._usable(rep, t)
+                if not isinstance(book, str):
+                    others = frozenset(self.outcomes) - {outcome}
+                    key = "|".join(sorted(others))
+                    lim = self.order_limits.get("polymarket", {})
+                    yes_tok = venues.get("polymarket", "")
+                    offers.setdefault(key, []).append(
+                        Leg("polymarket", liquidity_source_for("polymarket"), f"{yes_tok}:NO", rep.market_id, book,
+                            dict(fees), min_order_contracts=float(lim.get("min_order_contracts", 1.0)),
+                            tick=float(lim.get("tick", 0.01)), covers=others))
 
-        ready = len(offers) == len(self.outcomes) and blocked is None
+        covered = set().union(*(frozenset(k.split("|")) for k in offers)) if offers else set()
+        ready = covered >= set(self.outcomes) and blocked is None
         self.state = PollerState.WATCHING if ready else PollerState.WARMING
 
         out = []

@@ -151,7 +151,15 @@ class CoverProof:
             raise TypeError("CoverProof cannot be constructed directly; call certify_cover().")
 
     def settlement_buffer(self, legs: Sequence[tuple[str, float]]) -> float:
+        # NOTE (2026-09-04): a Polymarket NO leg on a three-way team market is charged like any
+        # Polymarket leg, including against the cancellation state in which it actually wins (the
+        # team markets resolve No). Conservative by construction; named here, not refined.
         return self.equivalence.settlement_buffer(legs)
+
+    @property
+    def outcome_ids(self) -> tuple[str, ...]:
+        """The proven outcome set, sorted at mint; what a cover's legs must partition."""
+        return tuple(self.exhaustive.outcome_ids)
 
 
 def certify_cover(exhaustive: ExhaustiveOutcomeSet,

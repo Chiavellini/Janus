@@ -1,0 +1,49 @@
+{
+ "id": "888268",
+ "slug": "epl-ips-liv-2026-09-04",
+ "title": "Ipswich Town FC vs. Liverpool FC",
+ "startDate": "2026-08-22T04:00:13Z",
+ "endDate": "2026-09-04T19:00:00Z",
+ "closed": false,
+ "markets": [
+  {
+   "id": "3772660",
+   "slug": "epl-ips-liv-2026-09-04-ips",
+   "question": "Will Ipswich Town FC win on 2026-09-04?",
+   "outcomes": "[\"Yes\", \"No\"]",
+   "clobTokenIds": "[\"12231723805370888223804588062955572178314655849111226199880732783390643749045\", \"46728665852079231850766811074645073527041117008185599376046371576141319390788\"]",
+   "sportsMarketType": "moneyline",
+   "gameStartTime": "2026-09-04 19:00:00+00",
+   "closed": false,
+   "outcomePrices": "[\"0.155\", \"0.845\"]",
+   "orderMinSize": 5,
+   "orderPriceMinTickSize": 0.01
+  },
+  {
+   "id": "3772673",
+   "slug": "epl-ips-liv-2026-09-04-draw",
+   "question": "Will Ipswich Town FC vs. Liverpool FC end in a draw?",
+   "outcomes": "[\"Yes\", \"No\"]",
+   "clobTokenIds": "[\"1214527475529065774601973208110202737766819153469391363232501347086180773835\", \"78750515827071533171749126745679443330143284910428860198446982709710167332570\"]",
+   "sportsMarketType": "moneyline",
+   "gameStartTime": "2026-09-04 19:00:00+00",
+   "closed": false,
+   "outcomePrices": "[\"0.195\", \"0.805\"]",
+   "orderMinSize": 5,
+   "orderPriceMinTickSize": 0.01
+  },
+  {
+   "id": "3772686",
+   "slug": "epl-ips-liv-2026-09-04-liv",
+   "question": "Will Liverpool FC win on 2026-09-04?",
+   "outcomes": "[\"Yes\", \"No\"]",
+   "clobTokenIds": "[\"108139521151208593612435010554732399747718180281984157644971129306389158148224\", \"65250270314055333199332657045196712555405506900230201125685290764316037245808\"]",
+   "sportsMarketType": "moneyline",
+   "gameStartTime": "2026-09-04 19:00:00+00",
+   "closed": false,
+   "outcomePrices": "[\"0.645\", \"0.355\"]",
+   "orderMinSize": 5,
+   "orderPriceMinTickSize": 0.01
+  }
+ ]
+}

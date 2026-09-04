@@ -12,9 +12,10 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — Polymarket REST reconciler applies on the loop (its evaluations were being lost).
 - [x] DONE — watchdog alarms that would have caught all of the above: SOCKET_FLAPPING, SOCKET_ERROR, LANE_SILENT. Each demonstrated firing in `--selftest`.
 - [x] DONE — the clock-health flip explained and named: the lane's event loop was being starved by the host (L37/L38), so both venues' stamps arrived 10–85 s late; the clock check is now a 60 s windowed median that re-arms, one sample per frame, and the halt says STALL (loop probe past 5 s) or CLOCK (stamps off with a prompt loop). Halting stays; it was right.
-- [ ] NOT DONE — throughput: in bursts (startup, many live games) the loop is not blocked but saturated — 3,000 frames and 3,400 evaluations a second — and the venue stamps fall 14–42 s behind while the probe's overshoot stays under 5 s. The halt catches it (`HALT CLOCK` with both venues off). The fix is coalescing: evaluate a game at most once per N ms or only on a top-of-book change at the priced depth, instead of on every delta. Not started.
+- [x] DONE — throughput: the poller coalesces to one pricing per 200 ms per game on quiet books (state changes and the 15 s heartbeat still price at once; replay reproduces it). Live: ~2,000 evaluations a minute where there were ~250,000; loop lag 0.1 s.
 - [ ] NOT DONE — the host itself (a full test suite beside the lane, even under nice, stalled it 11 s at 01:00Z; the lane's own restart stalls it 9 s): 15 MB free, 5 of 6 GB swap, other agents and collectors. Until the box, heavy jobs beside the lane cost it seconds of lag (ops/README.md host hygiene). L38 measures it over 24 h.
 - [ ] NOT DONE — Kalshi keepalive ping timeouts still cause an occasional venue-side reconnect (one at 00:27Z). Venue behaviour; the resubscribe is clean.
+- [x] DONE — Polymarket dropped the socket every 30 s on a quiet feed because our keep-alive ran at the venue's 10 s limit; now 4 s.
 
 ## B. Pricing (what a cover costs)
 
@@ -47,7 +48,7 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [ ] NOT PROVED — a Kalshi proof file passing all six checks (the first fails `resting_cancelled` and `fee_ok` on record; both causes fixed). Needs one clean armed re-run. OPERATOR.
 - [ ] NOT DONE — the Polymarket proof: no real Polymarket order has ever been sent. OPERATOR.
 - [x] DONE — the Kalshi proof settled: KC won, 3 contracts paid $3.00 against $0.95 staked and $0.035 fees, realized +$2.01, balance reconciled to the cent, reservation released; checklist 5 of 7 (the two failures on record are the fixed cancel routing and fee pin).
-- [ ] NOT DONE — three-way soccer execution: a draw is priced as a third outcome but the planner is two-leg only; needs the Polymarket NO-token design. Until then soccer contributes evidence, not trades.
+- [x] DONE — three-way soccer executes as two legs: Kalshi YES on a side + Polymarket NO on that side (the NO token pays on the other two outcomes). Legs carry the outcomes they cover, the pricer checks the partition, plan and coordinator unchanged. NOT PROVED live until a soccer game is in play under the new lane (European kickoffs).
 - [ ] NOT DONE — `nodes/risk/limits.toml` has no per-league cap for cfb or any soccer league: those are refused at reservation even on paper. OPERATOR decision.
 - [ ] NOT DONE — the arming override must be rewritten at main's current sha before any armed run. OPERATOR.
 

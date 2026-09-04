@@ -278,3 +278,58 @@ def test_the_venues_order_limits_reach_the_legs():
     # remains; at 100 the cross-venue cover is back.
     assert evs[0].cover.ok and all(l.venue == "kalshi" for l in evs[0].cover.legs)
     assert evs[1].cover.ok and {l.venue for l in evs[1].cover.legs} == {"kalshi", "polymarket"}
+
+
+
+OUT3 = {"home": {"kalshi": "K_H", "polymarket": "P_H", "polymarket_no": "P_H_NO"},
+        "draw": {"kalshi": "K_D", "polymarket": "P_D"},
+        "away": {"kalshi": "K_A", "polymarket": "P_A", "polymarket_no": "P_A_NO"}}
+
+
+def epl(**kw) -> GamePoller:
+    from nodes.settle_wedge.fixtures import epl_equivalence
+    kw.setdefault("fee_params", FEES)
+    kw.setdefault("equivalence", epl_equivalence())
+    kw.setdefault("quantities", (100.0,))
+    return GamePoller("g3", "epl", OUT3, **kw)
+
+
+def _sync(rep, price, now=T, size=5000.0):
+    rep.subscribed(now)
+    rep.snapshot_in([(0.01, size)], [(price, size)], seq=1 if rep.verification != "external" else None, now=now)
+
+
+def test_a_three_way_poller_carries_the_polymarket_no_replicas_and_subscribes_them():
+    """2026-09-04: NO on a team market pays on the other two outcomes, so a soccer cover is two
+    legs. The replica keys ("polymarket_no", outcome), registers as a Polymarket asset, and is
+    in market_ids() so the reap unsubscribes it."""
+    p = epl()
+    assert p.state is PollerState.WARMING, p.block_reason
+    assert ("polymarket_no", "home") in p.replicas and ("polymarket_no", "away") in p.replicas
+    assert ("polymarket_no", "draw") not in p.replicas and ("kalshi_no", "home") not in p.replicas
+    regs = {(v, m, side) for v, m, side, _ in p.registrations()}
+    assert ("polymarket", "P_H_NO", "yes") in regs and ("polymarket", "P_A_NO", "yes") in regs
+    assert set(p.market_ids("polymarket")) == {"P_H", "P_D", "P_A", "P_H_NO", "P_A_NO"}
+    assert set(p.market_ids("kalshi")) == {"K_H", "K_D", "K_A"}
+
+
+def test_a_three_way_cover_prices_as_two_legs_through_the_no_token():
+    p = epl()
+    for key, px in {("kalshi", "home"): 0.40, ("kalshi", "draw"): 0.30, ("kalshi", "away"): 0.35,
+                    ("polymarket", "home"): 0.42, ("polymarket", "draw"): 0.30, ("polymarket", "away"): 0.36,
+                    ("polymarket_no", "home"): 0.50, ("polymarket_no", "away"): 0.62}.items():
+        _sync(p.replicas[key], px)
+    e = p.on_event("polymarket", "P_H_NO", now=T)[0]
+    assert p.state is PollerState.WATCHING and e.cover is not None and e.cover.ok, e.blocked_by
+    assert "away|draw" in e.offers and e.offers["away|draw"][0].covers == frozenset({"away", "draw"})
+    assert e.offers["away|draw"][0].outcome_id == "P_H:NO" and e.offers["away|draw"][0].market_id == "P_H_NO"
+    # Kalshi YES home 0.40 + Polymarket NO home 0.50 = 0.90 gross beats any three-leg shape (0.40+0.30+0.35)
+    assert len(e.cover.legs) == 2 and abs(e.cover.gross_per_contract - 0.90) < 1e-9
+    assert {lc.outcome_id for lc in e.cover.legs} == {"K_H", "P_H:NO"}
+    # the NO leg is extra depth, never a requirement: without it the three-leg cover still prices
+    p2 = epl()
+    for key, px in {("kalshi", "home"): 0.40, ("kalshi", "draw"): 0.30, ("kalshi", "away"): 0.35,
+                    ("polymarket", "home"): 0.42, ("polymarket", "draw"): 0.30, ("polymarket", "away"): 0.36}.items():
+        _sync(p2.replicas[key], px)
+    e2 = p2.on_event("kalshi", "K_H", now=T)[0]
+    assert e2.cover is not None and e2.cover.ok and len(e2.cover.legs) == 3

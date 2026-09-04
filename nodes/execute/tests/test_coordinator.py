@@ -218,3 +218,22 @@ def test_the_factory_refuses_real_modes_without_real_adapters(tmp_path):
     with pytest.raises(ValueError):
         build_venues(Mode.DEMO_EXECUTION, j)
     assert set(build_venues(Mode.OFFLINE_REPLAY, j)) == {"kalshi", "polymarket"}
+
+
+
+def test_a_polymarket_no_leg_plans_as_buy_yes_of_the_no_token():
+    """Three-way soccer as two legs: Kalshi YES home + Polymarket NO home (covering draw and away).
+    Polymarket outcomes are separate tokens, so the NO leg is a buy_yes of the NO token id."""
+    from nodes.settle_wedge.fixtures import epl_cover_proof
+    from nodes.cover.cover import best_cover
+    proof = epl_cover_proof(["home", "draw", "away"])
+    offs = {"home": [Leg("kalshi", "kalshi_clob", "K_H", "K_H", bk([(0.40, 5000)]), FEES_K)],
+            "draw": [Leg("polymarket", "pm_clob", "P_D", "P_D", bk([(0.30, 5000)]), FEES_P)],
+            "away": [Leg("polymarket", "pm_clob", "P_A", "P_A", bk([(0.36, 5000)]), FEES_P)],
+            "away|draw": [Leg("polymarket", "pm_clob", "P_H:NO", "P_H_NO", bk([(0.50, 5000)]), FEES_P, covers=frozenset({"away", "draw"}))]}
+    cov = best_cover(offs, 100.0, now_utc=T, proof=proof)
+    assert cov.ok and len(cov.legs) == 2
+    p = plan_from_cover(opportunity_id="o", event_id="e", league="epl", cov=cov, offers=offs)
+    assert p is not None
+    assert p.first.venue == "polymarket" and p.first.market_id == "P_H_NO" and p.first.side == "buy_yes" and p.first.outcome_id == "P_H:NO"
+    assert p.hedge.venue == "kalshi" and p.hedge.market_id == "K_H" and p.hedge.side == "buy_yes"

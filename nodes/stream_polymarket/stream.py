@@ -37,7 +37,10 @@ from nodes.stream_polymarket.protocol import (AssetBook, PING, PONG, events_in, 
                                               parse_event, subscribe_frame)
 
 PM_WS = "wss://ws-subscriptions-clob.polymarket.com/ws/market"
-PING_INTERVAL_S = 10.0
+#: The venue's limit is 10 s. At 10.0 the pinger raced the venue's idle timer whenever the feed
+#: was quiet (03:00Z 2026-09-04, eight late games: a drop every 30 s with 'no close frame');
+#: busy feeds hid it. Half the limit leaves the jitter room it needs.
+PING_INTERVAL_S = 4.0
 
 
 @dataclass
