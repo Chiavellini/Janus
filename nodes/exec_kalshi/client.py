@@ -6,7 +6,9 @@ Verified 2026-09-03 against production with read-only calls: the REST scheme is 
 (RSA-PSS over timestamp + METHOD + path, `KALSHI-ACCESS-*` headers); GET /portfolio/balance and
 GET /portfolio/orders answer. Order endpoints from the v2 docs:
     POST   /portfolio/events/orders            side bid|ask (YES terms), count/price fixed-point
-    DELETE /portfolio/events/orders/{order_id}
+    DELETE /portfolio/events/orders/{order_id}?exchange_index=N   (routes to the order's shard;
+           without it the venue looks on shard 0 and answers 404 -- the 2026-09-04 proof left its
+           resting bid open on shard 3 that way)
     GET    /portfolio/orders/{order_id}        status resting|canceled|executed, *_fp counts
     GET    /portfolio/fills                    fee_cost, is_taker, count_fp
 Buying NO is an `ask` at 1 - price: the venue quotes everything in YES terms.
@@ -130,6 +132,15 @@ class KalshiExecution:
         self._shards[ticker] = idx
         return idx
 
+    def _route(self, ticker: str | None) -> dict:
+        """Query parameters that put a per-order call on the order's shard: the market's
+        `exchange_index` when it is known, else auto-routing by `market_ticker` (-1). Never bare:
+        a bare call defaults to shard 0."""
+        if not ticker:
+            return {}
+        idx = self.shard_of(ticker)
+        return {"exchange_index": idx} if idx >= 0 else {"exchange_index": AUTO_ROUTE, "market_ticker": ticker}
+
     # ── the order path ───────────────────────────────────────────────────
     def submit(self, req: OrderRequest, clearance) -> Ack:
         t = self.clock()
@@ -241,10 +252,12 @@ class KalshiExecution:
             row = self.journal.get(client_order_id)
         path = f"{API}/portfolio/events/orders/{row['venue_order_id']}"
         try:
-            self.client.delete_json(self.base_url + path, headers=self._headers("DELETE", path))
+            self.client.delete_json(self.base_url + path, headers=self._headers("DELETE", path),
+                                    params=self._route(row.get("market_id")))
         except urllib.error.HTTPError as e:
-            if e.code != 404:
-                self.last_error = f"HTTP {e.code}"
+            # 404 included: on a sharded exchange it means "not on this shard", which is exactly the
+            # failure the status poll below must be allowed to see as a still-resting order.
+            self.last_error = f"cancel HTTP {e.code}"
         except Exception as exc:  # noqa: BLE001
             self.last_error = brief_error(exc)
         st = self.status(client_order_id)         # the venue's word on what was filled before the cancel
@@ -312,7 +325,8 @@ class KalshiExecution:
         for o in d.get("orders") or []:
             p = f"{API}/portfolio/events/orders/{o['order_id']}"
             try:
-                self.client.delete_json(self.base_url + p, headers=self._headers("DELETE", p))
+                self.client.delete_json(self.base_url + p, headers=self._headers("DELETE", p),
+                                        params=self._route(o.get("ticker")))
                 n += 1
             except Exception as exc:  # noqa: BLE001
                 self.last_error = brief_error(exc)

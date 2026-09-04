@@ -200,11 +200,14 @@ class Client:
         with urllib.request.urlopen(req, timeout=self.timeout) as r:
             return json.loads(r.read().decode())
 
-    def delete_json(self, url: str, *, headers: dict | None = None):
+    def delete_json(self, url: str, *, headers: dict | None = None, params: dict | None = None):
         """One non-retried DELETE (order cancellation). A cancel is idempotent at the venue, but a
-        retry here would hide whether the FIRST attempt reached it; the caller reconciles."""
+        retry here would hide whether the FIRST attempt reached it; the caller reconciles.
+        `params` become the query string (Kalshi routes a cancel by `exchange_index`)."""
         self.bucket.take()
         self.stats["requests"] += 1
+        if params:
+            url = url + ("&" if "?" in url else "?") + urllib.parse.urlencode(params)
         req = urllib.request.Request(url, method="DELETE",
                                      headers={"User-Agent": USER_AGENT, "Accept": "application/json",
                                               **(headers or {})})

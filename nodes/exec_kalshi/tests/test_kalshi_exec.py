@@ -40,8 +40,8 @@ class FakeClient:
         out = self.gets.pop(0)
         if isinstance(out, Exception): raise out
         return out
-    def delete_json(self, url, *, headers=None):
-        self.calls.append(("DELETE", url, None, headers))
+    def delete_json(self, url, *, headers=None, params=None):
+        self.calls.append(("DELETE", url, params, headers))
         out = self.deletes.pop(0) if self.deletes else {}
         if isinstance(out, Exception): raise out
         return out
@@ -143,12 +143,38 @@ def test_fills_and_balance_and_cancel_all(tmp_path):
     fc = FakeClient(gets=[{"fills": [{"fill_id": "f1", "order_id": "ord-1", "outcome_side": "yes", "count_fp": "10.00",
                                       "yes_price_dollars": "0.44", "fee_cost": "0.10", "is_taker": True, "ts": 999}]},
                           {"balance_dollars": "61.24"},
-                          {"orders": [{"order_id": "a"}, {"order_id": "b"}]}])
+                          {"orders": [{"order_id": "a", "ticker": "KXMLBGAME-X-STL"}, {"order_id": "b", "ticker": "KXMLBGAME-X-STL"}]}])
     v, j = venue(tmp_path, fc)
     fs = v.fills(since_utc=0)
     assert fs[0].contracts == 10.0 and fs[0].fee_usd == 0.10 and fs[0].final
     assert v.balance().available_usd == 61.24
     assert v.cancel_all() == 2 and [c[0] for c in fc.calls[-2:]] == ["DELETE", "DELETE"]
+    assert [c[2] for c in fc.calls[-2:]] == [{"exchange_index": 3}, {"exchange_index": 3}], "each cancel goes to the order's shard"
+
+
+def test_a_cancel_is_routed_to_the_orders_shard_and_a_404_is_not_silence(tmp_path):
+    """2026-09-04: the proof's resting bid was DELETEd bare, the venue looked on shard 0, answered
+    404, the adapter swallowed it, and the bid stayed open on shard 3. The cancel now carries the
+    market's exchange_index (or asks for auto-routing by ticker), and a 404 lands in last_error
+    while the status poll reports the order as it is."""
+    import urllib.error
+    fc = FakeClient(posts=[{"order": {"order_id": "k1", "status": "resting", "remaining_count_fp": "1.00"}}],
+                    gets=[{"order": {"order_id": "k1", "status": "resting", "fill_count_fp": "0.00"}}],
+                    deletes=[urllib.error.HTTPError("u", 404, "not found", {}, None)])
+    v, _ = venue(tmp_path, fc)
+    v.submit(req(time_in_force="gtc"), clearance_for(tmp_path, mode=Mode.DEMO_EXECUTION))
+    st = v.cancel("c1")
+    dele = [c for c in fc.calls if c[0] == "DELETE"][0]
+    assert dele[2] == {"exchange_index": 3}
+    assert "404" in v.last_error and st.open and st.raw_status == "resting", "the venue's word, not the adapter's hope"
+    fc2 = FakeClient(posts=[{"order": {"order_id": "k2", "status": "resting", "remaining_count_fp": "1.00"}}],
+                     gets=[{"order": {"order_id": "k2", "status": "canceled", "fill_count_fp": "0.00"}}])
+    fc2.market = RuntimeError("venue down")
+    v2, _ = venue(tmp_path, fc2)
+    v2.submit(req(client_order_id="c2", opportunity_id="o2", time_in_force="gtc"), clearance_for(tmp_path, mode=Mode.DEMO_EXECUTION, opportunity_id="o2"))
+    v2.cancel("c2")
+    dele = [c for c in fc2.calls if c[0] == "DELETE"][0]
+    assert dele[2] == {"exchange_index": -1, "market_ticker": "KXMLBGAME-X-STL"}, "unreadable shard: auto-route by ticker"
 
 
 def test_the_key_never_reaches_a_log_field_and_the_mode_gate_holds(tmp_path):
