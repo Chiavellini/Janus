@@ -41,7 +41,14 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
             con = sqlite3.connect(f"file:{dbp}?mode=ro", uri=True)
             rows = con.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='capital_reservations'").fetchall()
             if rows:
-                oldest = con.execute("SELECT MIN(created_utc) FROM capital_reservations WHERE released_utc IS NULL").fetchone()[0]
+                # A reservation behind a HEDGED (or settled, awaiting release) execution is committed
+                # capital held to the game's settlement, not an unreconciled fill; the settlement
+                # pass releases it when the venues resolve (2026-09-04). Only the rest are late.
+                has_ex = con.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='executions'").fetchall()
+                q = ("SELECT MIN(r.created_utc) FROM capital_reservations r LEFT JOIN executions e ON e.reservation_id = r.reservation_id "
+                     "WHERE r.released_utc IS NULL AND (e.state IS NULL OR e.state NOT IN ('HEDGED', 'SETTLED'))") if has_ex else \
+                    "SELECT MIN(created_utc) FROM capital_reservations WHERE released_utc IS NULL"
+                oldest = con.execute(q).fetchone()[0]
                 if oldest is not None and t - oldest > max_unreconciled_s:
                     out.append(f"risk: UNRECONCILED_TOO_LONG — a reservation has been open {int(t - oldest)}s "
                                f"(limit {int(max_unreconciled_s)}s); both venues must reconcile before release")

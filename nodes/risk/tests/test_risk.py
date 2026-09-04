@@ -265,3 +265,21 @@ def test_the_day_notional_survives_a_release_when_the_ledger_is_durable(tmp_path
     L.release(r.reservation_id, reason="filled", now=1001.0)
     assert L.day_notional_usd(1002.0) == 8.0, "a filled-and-released order still spent the day's notional"
     assert L.day_notional_usd(86400.0 + 1.0) == 0.0, "yesterday's rows do not count"
+
+
+def test_a_hedged_executions_reservation_is_committed_capital_not_an_unreconciled_fill(tmp_path):
+    import sqlite3
+    from nodes.risk.health import risk_alerts
+    db = tmp_path / "t.sqlite"
+    con = sqlite3.connect(db)
+    con.execute("CREATE TABLE capital_reservations(reservation_id TEXT, event_id TEXT, league TEXT, per_venue_json TEXT, opportunity_id TEXT, created_utc REAL, released_utc REAL, release_reason TEXT)")
+    con.execute("CREATE TABLE executions(execution_id TEXT, reservation_id TEXT, state TEXT)")
+    con.execute("INSERT INTO capital_reservations VALUES('hedged','e','mlb','{}',NULL,?,NULL,NULL)", (1000.0,))
+    con.execute("INSERT INTO executions VALUES('x','hedged','HEDGED')")
+    con.commit()
+    kw = dict(kill_root=tmp_path / "kill", breaker_path=tmp_path / "kill" / "breaker.json", db_path=db, max_unreconciled_s=60)
+    assert risk_alerts(now=10_000.0, **kw) == [], "held to settlement, by design"
+    con.execute("INSERT INTO capital_reservations VALUES('stuck','e2','mlb','{}',NULL,?,NULL,NULL)", (1000.0,))
+    con.execute("INSERT INTO executions VALUES('y','stuck','LEG_A_SUBMITTED')")
+    con.commit()
+    assert any("UNRECONCILED_TOO_LONG" in a for a in risk_alerts(now=10_000.0, **kw)), "an unhedged one is late"

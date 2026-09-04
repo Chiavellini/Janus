@@ -1,6 +1,6 @@
 # CHECKLIST — where Janus stands, what is not done, what is not proved
 
-*2026-09-04 ~01:00 UTC. A status list, deliberately blunt. Each line is one of: DONE (and how it
+*2026-09-04 ~03:45 UTC. A status list, deliberately blunt. Each line is one of: DONE (and how it
 is known), RUNNING (accruing), NOT DONE, or NOT PROVED (built, never demonstrated end to end).
 Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 
@@ -15,6 +15,7 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — throughput: the poller coalesces to one pricing per 200 ms per game on quiet books (state changes and the 15 s heartbeat still price at once; replay reproduces it). Live: ~2,000 evaluations a minute where there were ~250,000; loop lag 0.1 s.
 - [ ] NOT DONE — the host itself (a full test suite beside the lane, even under nice, stalled it 11 s at 01:00Z; the lane's own restart stalls it 9 s): 15 MB free, 5 of 6 GB swap, other agents and collectors. Until the box, heavy jobs beside the lane cost it seconds of lag (ops/README.md host hygiene). L38 measures it over 24 h.
 - [ ] NOT DONE — Kalshi keepalive ping timeouts still cause an occasional venue-side reconnect (one at 00:27Z). Venue behaviour; the resubscribe is clean.
+- [ ] NOT PROVED — the Polymarket socket drops: probed token by token, one ITF match's token alone got the socket dropped every ~30 s; ITF is now out of the capture and the last restart shows zero drops, but the venue-side cause is not understood.
 - [x] DONE — Polymarket dropped the socket every 30 s on a quiet feed because our keep-alive ran at the venue's 10 s limit; now 4 s.
 
 ## B. Pricing (what a cover costs)
