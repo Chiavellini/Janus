@@ -31,7 +31,8 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — 20 leagues registered; 9 enabled and trading on paper: mlb, nfl, epl, lal, bun, cfb, elc, el1, ita.
 - [x] DONE — tennis CAPTURED (raw frames from both venues, ~35k tennis frames per half hour tonight, 62 markets on the watchlist).
 - [x] DONE — `tennis.walkover_rate` measured and registered (L39: 0.7955%, 210 of 26,398 main-draw matches 2021–2025; Sackmann's repositories were gone from GitHub, so a live ATP database in his layout and a WTA fork are frozen under the row).
-- [ ] NOT DONE — `tennis.delayed_gt7d_rate`: no results archive keeps a match's scheduled date, so it is not measurable backward. Design for a forward row F4: persist, for every tennis market on the capture-only watchlist, Polymarket's `gameStartTime` at first sight and the market's resolution time later (a `watch_events` table written by `apply_watch`, resolution polled by the daily census job); register F4 only once that collector is seen writing (the F2 lesson). Until it accrues, atp/wta block by name.
+- [x] DONE — the forward collector for `tennis.delayed_gt7d_rate`: `nodes/watch_settle` records every capture-only Polymarket event's first-seen `gameStartTime` (86 rows in its first pass: 12 atp, 1 wta, 73 itf) and the daily job `com.janus.watch-settle` (13:30 local, watchdog SLA) resolves them at Gamma (winner / HALF / open). First resolver run: 23 checked, all still open.
+- [ ] NOT DONE — register F4 once the resolver has written its first resolved rows (tomorrow's run); until the row accrues, atp/wta block by name.
 - [ ] NOT DONE — tennis REPLAYABLE offline: the Polymarket side needs the lane's REST verification, which is not captured.
 - [ ] NOT DONE — NBA, WNBA, NHL: settlement templates not reviewed (Kalshi lists no NHL yet).
 - [ ] NOT DONE — MLS, Ligue 1, Eredivisie, Primeira Liga, Scottish Prem, Belgian: no source for postponement rates; blocked by name.

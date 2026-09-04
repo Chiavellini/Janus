@@ -41,7 +41,8 @@ def pm_watch(tags: list[str | int], cl: Client, *, now: float, ahead_h: float) -
     return [(tok, e.event_id) for e in pm_watch_events(tags, cl, now=now, ahead_h=ahead_h) for tok in e.tokens]
 
 
-def pm_watch_events(tags: list[str | int], cl: Client, *, now: float, ahead_h: float) -> list[GameEvent]:
+def pm_watch_events(tags: list[str | int], cl: Client, *, now: float, ahead_h: float,
+                    prefixes: tuple[str, ...] = ("atp-", "wta-")) -> list[GameEvent]:
     """The GameEvents behind pm_watch: slug, gameStartTime, participants, tokens. Kept (2026-09-04)
     so the supervisor can record each event's FIRST-SEEN start -- Polymarket rewrites
     gameStartTime in place on the same slug when a match moves, which is exactly the delay the
@@ -58,6 +59,11 @@ def pm_watch_events(tags: list[str | int], cl: Client, *, now: float, ahead_h: f
             if len(d) < 100:
                 break
         for e in pm_events(str(tag), evs):
+            # The `tennis` tag carries ITF, challengers and doubles; the capture is for the tours the
+            # registry knows. 2026-09-04: one ITF market's token got the whole socket dropped by
+            # the venue every ~30 s (probed token by token), and ITF was 73 of 86 events that night.
+            if prefixes and not e.event_id.startswith(prefixes):
+                continue
             if in_window(e, now, back_h=3.0, ahead_h=ahead_h):
                 out.append(e)
     return out

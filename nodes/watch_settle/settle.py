@@ -87,36 +87,65 @@ def fetch_pm_event(slug: str, cl) -> dict | None:
 
 
 def resolve_pending(store, cl, *, now: float | None = None, min_age_s: float = 3600.0, limit: int = 300,
-                    fetch=fetch_pm_event) -> dict:
+                    fetch=fetch_pm_event, lock_wait_s: float = 150.0) -> dict:
     """Ask the venue about every unresolved event whose start is at least `min_age_s` old, oldest
-    first. A match is resolved when its moneyline market is closed with a winner or at 0.5/0.5."""
+    first. A match is resolved when its moneyline market is closed with a winner or at 0.5/0.5.
+
+    The network runs first, against a read; the writes land in ONE short transaction afterwards,
+    retried for up to `lock_wait_s`: the live lane holds a write transaction between its report
+    ticks (about a minute), and a second process writing row by row hits `database is locked`
+    (2026-09-04, the first run)."""
     t = now or time.time()
     store.ensure_ddl(WATCH_EVENTS_DDL)
     rows = store.con.execute(
         "SELECT event_id FROM watch_events WHERE venue='polymarket' AND resolved_seen_ts IS NULL AND start_utc IS NOT NULL "
         "AND start_utc < ? ORDER BY start_utc LIMIT ?", (t - min_age_s, limit)).fetchall()
     out = {"checked": 0, "resolved": 0, "half": 0, "open": 0, "errors": 0}
+    notes: list[tuple] = []      # (event_id, note)
+    done: list[tuple] = []       # (event_id, result)
     for (slug,) in rows:
         out["checked"] += 1
         try:
             ev = fetch(slug, cl)
         except Exception as exc:  # noqa: BLE001 -- one failed fetch must not stop the pass
             out["errors"] += 1
-            store.con.execute("UPDATE watch_events SET last_checked_ts=?, resolve_note=? WHERE venue='polymarket' AND event_id=?",
-                              (t, f"fetch failed: {type(exc).__name__}", slug))
+            notes.append((slug, f"fetch failed: {type(exc).__name__}"))
             continue
         ms = [m for m in (ev or {}).get("markets") or [] if m.get("sportsMarketType") == "moneyline"] if ev else []
         market = next((m for m in ms if m.get("slug") == slug), ms[0] if ms else None)
         res = polymarket_outcome(market)
         if res is None:
             out["open"] += 1
-            store.con.execute("UPDATE watch_events SET last_checked_ts=?, resolve_note=? WHERE venue='polymarket' AND event_id=?",
-                              (t, "not resolved" if ev else "event not found", slug))
+            notes.append((slug, "not resolved" if ev else "event not found"))
             continue
         out["resolved" if res != "HALF" else "half"] += 1
-        store.con.execute("UPDATE watch_events SET last_checked_ts=?, resolved_seen_ts=?, result=?, resolve_note=NULL "
-                          "WHERE venue='polymarket' AND event_id=?", (t, t, res, slug))
+        done.append((slug, res))
+    _write_with_retry(store, t, notes, done, lock_wait_s)
     return out
+
+
+def _write_with_retry(store, t: float, notes: list, done: list, lock_wait_s: float) -> None:
+    import sqlite3
+    deadline = time.time() + lock_wait_s
+    while True:
+        try:
+            con = store.con
+            con.commit()                      # close any implicit transaction before an explicit one
+            con.execute("BEGIN IMMEDIATE")
+            con.executemany("UPDATE watch_events SET last_checked_ts=?, resolve_note=? WHERE venue='polymarket' AND event_id=?",
+                            [(t, note, slug) for slug, note in notes])
+            con.executemany("UPDATE watch_events SET last_checked_ts=?, resolved_seen_ts=?, result=?, resolve_note=NULL "
+                            "WHERE venue='polymarket' AND event_id=?", [(t, t, res, slug) for slug, res in done])
+            con.commit()
+            return
+        except sqlite3.OperationalError as exc:
+            try:
+                store.con.rollback()
+            except Exception:  # noqa: BLE001
+                pass
+            if "locked" not in str(exc) or time.time() > deadline:
+                raise
+            time.sleep(2.0)
 
 
 def delay_rows(store, *, leagues: Sequence[str] = ("atp", "wta")) -> list[tuple]:

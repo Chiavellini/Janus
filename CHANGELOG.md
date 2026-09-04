@@ -507,3 +507,14 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
   both token ids per market.
 - **Polymarket keep-alive at 4 s.** At 10.0 s, the venue's own limit, a quiet feed (eight late
   games at 03:00Z) dropped the socket every 30 s with "no close frame"; busy feeds had hidden it.
+- **The tennis settlement collector** (`nodes/watch_settle`): the capture-only watchlist keeps its
+  events, the lane records each Polymarket event's first-seen start (immutable; the venue rewrites
+  it in place when a match moves), and `com.janus.watch-settle` resolves them daily at Gamma:
+  winner, HALF (0.5/0.5), or open. Writes land in one retried transaction: the live lane holds a
+  write transaction between report ticks and the first run hit `database is locked`. F4 registers
+  once the first rows resolve. 86 rows after the first pass, mostly ITF.
+- **Polymarket still drops the capture socket every ~30 s at night**, ping fix or not. Probed
+  read-only: a socket on the eight live games' tokens stays up; one on the 72 tennis capture
+  tokens is dropped by the venue after 20–30 s; closed markets alone do not do it; the tokens of
+  matches already under way do. Bisection in progress; the reconnect is clean and the slate's
+  own books resync within a second, so this costs capture continuity on tennis, not pricing.

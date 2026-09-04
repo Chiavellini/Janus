@@ -66,3 +66,14 @@ def test_pm_watch_events_keep_the_start_and_participants_behind_the_tokens():
     got = pm_watch_events(["tennis"], FakeClient(pm={"tennis": [ev]}), now=NOW, ahead_h=24.0)
     assert len(got) == 1 and got[0].event_id == "wta-a-b-2026-09-03" and got[0].participants == ["A", "B"]
     assert got[0].start_utc and got[0].tokens == ["tokA"]
+
+
+def test_pm_watch_keeps_only_the_tours_the_registry_knows():
+    def ev(slug):
+        return {"slug": slug, "teams": [], "markets": [{"slug": slug, "sportsMarketType": "moneyline", "gameStartTime": "2026-09-03 17:00:00+00",
+                "outcomes": '["A","B"]', "clobTokenIds": '["t-' + slug + '","u"]', "createdAt": "2026-09-01T00:00:00Z"}]}
+    cl = FakeClient(pm={"tennis": [ev("atp-a-b-2026-09-03"), ev("wta-c-d-2026-09-03"), ev("itf-e-f-2026-09-03"), ev("atp-doubles-g-h-2026-09-03")]})
+    got = [e.event_id for e in pm_watch_events(["tennis"], cl, now=NOW, ahead_h=24.0)]
+    assert got == ["atp-a-b-2026-09-03", "wta-c-d-2026-09-03", "atp-doubles-g-h-2026-09-03"], "ITF is out; the prefix is the filter"
+    assert [e.event_id for e in pm_watch_events(["tennis"], cl, now=NOW, ahead_h=24.0, prefixes=())] == \
+        ["atp-a-b-2026-09-03", "wta-c-d-2026-09-03", "itf-e-f-2026-09-03", "atp-doubles-g-h-2026-09-03"]
