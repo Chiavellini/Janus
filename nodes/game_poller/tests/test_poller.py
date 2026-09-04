@@ -107,6 +107,7 @@ def test_a_stale_replica_blocks_even_with_a_live_socket():
 
 
 def test_evaluation_happens_per_event_not_per_tick_of_a_clock():
+    """Default (no window): every event prices."""
     p = mlb()
     sync_all(p, kh=0.48, pa=0.48)
     before = p.evaluations
@@ -114,6 +115,33 @@ def test_evaluation_happens_per_event_not_per_tick_of_a_clock():
         p.on_event("kalshi", "K_H", now=T)
     assert p.evaluations == before + 25
     assert p.events >= 25
+
+
+def test_the_coalescing_window_prices_once_per_interval_but_never_hides_a_state_change():
+    """2026-09-04: ~3,400 evaluations a second saturated the loop. Inside the window an event is
+    folded, not priced; the 15 s heartbeat and any replica state/fault change still price on
+    the frame they happen, so replay stays faithful and no BLOCKED transition is lost."""
+    p = mlb(min_eval_interval_s=0.2)
+    sync_all(p, kh=0.48, pa=0.48)
+    assert len(p.on_event("kalshi", "K_H", now=T)) == 1
+    for i in range(25):
+        assert p.on_event("kalshi", "K_H", now=T + 0.001 * i) == [], "inside the window: folded, not priced"
+    assert p.skipped == 25 and p.evaluations == 1
+    assert len(p.on_event("kalshi", "K_H", now=T + 0.25)) == 1, "past the window: priced"
+    for i in range(25):
+        p.on_event("kalshi", "K_H", now=T + 0.25 + 0.3 * (i + 1))
+    assert p.evaluations == 27, "spaced past the window: every one prices"
+    # a replica fault inside the window prices immediately, with the fault on the row
+    t2 = T + 0.25 + 0.3 * 26
+    sync_all(p, kh=0.48, pa=0.48, now=t2)                    # fresh books, priced on this frame
+    assert len(p.on_event("kalshi", "K_H", now=t2)) == 1
+    p.replicas[("polymarket", "home")].invalidate(__import__("nodes.book_replica.replica", fromlist=["Fault"]).Fault.HASH_MISMATCH)
+    ev = p.on_event("polymarket", "P_H", now=t2 + 0.01)
+    assert ev and ev[0].blocked_by and "HASH_MISMATCH" in ev[0].blocked_by, "a fault inside the window prices at once"
+    # the heartbeat prices even when nothing changed
+    ev = p.on_event("kalshi", "K_H", now=t2 + 0.02)
+    assert ev == []
+    assert len(p.on_event("kalshi", "K_H", now=t2 + 15.5)) == 1, "the 15 s heartbeat is due"
 
 
 def test_it_reports_its_subscriptions_per_venue():

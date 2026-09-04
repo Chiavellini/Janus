@@ -112,3 +112,14 @@ def test_the_report_tick_names_a_stall_apart_from_a_clock_fault(tmp_path: Path, 
     assert sup.loop_lag_max_s == 0.0, "the tick resets the probe"
     sup.on_report_tick(now=T + 9)
     assert s.poller.halt is None and sup.clock_ok() and "healthy again" in capsys.readouterr().out
+    # the tick after a stall: the clock window still holds the late stamps; that is aftermath, not a clock fault
+    sup.loop_probe_reading(30.0)
+    for i in range(25):
+        sup.ps.clock.observe(T + 12 + i * 0.1, T + 12 + i * 0.1 - 30.0)
+    sup.on_report_tick(now=T + 12)
+    assert s.poller.halt == "LOOP_STALLED"
+    sup.on_report_tick(now=T + 15)                         # loop prompt now, stamps still off
+    assert s.poller.halt == "LOOP_STALLED" and "HALT CLOCK" not in capsys.readouterr().out, "aftermath, not a clock fault"
+    sup.ps.clock = type(sup.ps.clock)()
+    sup.on_report_tick(now=T + 18)
+    assert s.poller.halt is None

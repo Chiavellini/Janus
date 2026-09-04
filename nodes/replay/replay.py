@@ -61,6 +61,9 @@ class Harness:
     """The supervisor's shape without its sockets or its clock."""
     store: TupleStore
     quantities: tuple[float, ...] = QUANTITIES
+    #: mirrors grids/live_stream/grid.EVAL_INTERVAL_S; a capture replays only against rows the
+    #: same interval produced.
+    eval_interval_s: float = 0.2
     max_book_age_s: float = 5.0
     min_return: float = MIN_RETURN
     #: Settlement rates; None = the evidence registry, exactly as the supervisor uses it.
@@ -112,6 +115,7 @@ class Harness:
         eq = certify_from_spec(spec, spec["league"], rates=self.rates)
         p = GamePoller(game_id, spec["league"], spec["outcomes"], quantities=self.quantities,
                        max_book_age_s=self.max_book_age_s, min_return=self.min_return,
+                       min_eval_interval_s=self.eval_interval_s,      # mirrors grid.EVAL_INTERVAL_S
                        fee_params=spec["fee_params"],
                        equivalence=eq if isinstance(eq, SettlementEquivalence) else None,
                        order_limits={"polymarket": spec.get("pm_limits") or {}})

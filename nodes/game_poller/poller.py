@@ -92,6 +92,17 @@ class GamePoller:
     #: clock today; a kill switch or a venue disconnect later). Evaluations are still emitted,
     #: blocked with this name, so the outage is recorded rather than silent.
     halt: str | None = None
+    #: COALESCING (2026-09-04, ledger L37/L38). Every delta on either socket used to re-price
+    #: the game -- ~3,400 evaluations a second in bursts, the loop saturated, and the venues'
+    #: stamps fell 14-42 s behind. Inside this window (measured on the caller's `now`, the frame's
+    #: receive time, so replay reproduces it exactly) an event is folded into the books and not
+    #: priced, UNLESS the store's 15 s heartbeat is due or a replica's state or fault changed,
+    #: so every BLOCKED/STALE transition still lands on the frame it happened. 0.0 = every event.
+    min_eval_interval_s: float = 0.0
+    heartbeat_s: float = 15.0
+    _last_eval_utc: float = field(default=-1e18, repr=False)
+    _last_marks: dict = field(default_factory=dict, repr=False)
+    skipped: int = 0
 
     state: PollerState = PollerState.WARMING
     replicas: dict[tuple[str, str], BookReplica] = field(default_factory=dict)
@@ -176,6 +187,14 @@ class GamePoller:
             return []
         if self.state is PollerState.DRAINING:
             return []
+        if self.min_eval_interval_s > 0:
+            marks = {k: (r.state, r.last_fault) for k, r in self.replicas.items()}
+            since = t - self._last_eval_utc
+            if since < self.min_eval_interval_s and since < self.heartbeat_s and marks == self._last_marks:
+                self.skipped += 1
+                return []
+            self._last_marks = marks
+        self._last_eval_utc = t
 
         offers, blocked = {}, (f"supervisor:halt:{self.halt}" if self.halt else None)
         for outcome, venues in self.outcomes.items():
@@ -242,7 +261,7 @@ class GamePoller:
         self.state = PollerState.DRAINING
 
     def stats(self) -> dict:
-        return {"game_id": self.game_id, "league": self.league, "state": self.state.value,
+        return {"game_id": self.game_id, "league": self.league, "state": self.state.value, "skipped": self.skipped,
                 "events": self.events, "evaluations": self.evaluations,
                 "opportunities": self.opportunities, "block_reason": self.block_reason,
                 "replicas": {f"{v}:{o}": r.state.value for (v, o), r in self.replicas.items()},

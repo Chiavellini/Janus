@@ -79,6 +79,10 @@ from ops import run_index  # noqa: E402
 from kernel.paths import DB  # noqa: E402,F401
 QUANTITIES = (5.0, 25.0, 100.0)
 MIN_RETURN = 0.01
+#: A game is priced at most this often on quiet books (nodes/game_poller coalescing); a replica
+#: state change or the 15 s heartbeat still prices immediately. 2026-09-04: from ~3,400 to a few
+#: hundred evaluations a second. Captures before the sha that introduced it replay to different rows.
+EVAL_INTERVAL_S = 0.2
 
 
 @dataclass
@@ -207,8 +211,10 @@ class Supervisor:
             if gid in self.live:
                 continue
             eq = certify_from_spec(spec, spec["league"])
+            # EVAL_INTERVAL_S is mirrored in nodes/replay/replay.py (Harness.spawn): replay must
+            # coalesce exactly as the lane did or the rows differ.
             p = GamePoller(gid, spec["league"], spec["outcomes"],
-                           quantities=QUANTITIES, max_book_age_s=self.max_book_age_s,
+                           quantities=QUANTITIES, max_book_age_s=self.max_book_age_s, min_eval_interval_s=EVAL_INTERVAL_S,
                            min_return=MIN_RETURN, fee_params=spec["fee_params"],
                            equivalence=eq if isinstance(eq, SettlementEquivalence) else None,
                            order_limits={"polymarket": spec.get("pm_limits") or {}})
@@ -316,7 +322,7 @@ class Supervisor:
         or the venue stamping late. Both halt pricing; only the second is a clock finding."""
         t = now or time.time()
         lag = self.loop_lag_max_s
-        self.stalled = lag > self.max_loop_lag_s
+        stalled_prev, self.stalled = self.stalled, lag > self.max_loop_lag_s
         for venue, st_ in (("kalshi", self.ks), ("polymarket", self.ps)):
             if st_ is not None:
                 self.store.socket_health(venue=venue, stats={**st_.stats(), "loop_lag_s": round(lag, 3)}, seen_ts=t)
@@ -324,6 +330,9 @@ class Supervisor:
                if st_ is not None and not st_.clock.healthy]
         if self.loop_stalled():
             halt, why = "LOOP_STALLED", f"HALT STALL {lag:.1f}s" + (f" (stamps off on {','.join(bad)})" if bad else "")
+        elif bad and stalled_prev:
+            # The clock window is 60 s; the tick after a stall still holds the late stamps.
+            halt, why = "LOOP_STALLED", f"HALT STALL aftermath (stamps off on {','.join(bad)})"
         elif bad:
             halt, why = "CLOCK_UNHEALTHY", f"HALT CLOCK {','.join(bad)}"
         else:

@@ -179,8 +179,11 @@ class KalshiStream:
         book = self.books.get(p.ticker)
         if book is None:
             return "ignored"
+        projected: dict[str, tuple] = {}
         for reg in self.regs.get(p.ticker, ()):
-            bids, asks = book.project(reg.outcome)
+            if reg.outcome not in projected:                  # two registrations per ticker: sort once
+                projected[reg.outcome] = book.project(reg.outcome)
+            bids, asks = projected[reg.outcome]
             if p.kind == "snapshot":
                 reg.replica.snapshot_in(bids, asks, seq=p.seq, now=t, server_utc=p.server_utc, mono=mono)
                 self.snapshots += 1

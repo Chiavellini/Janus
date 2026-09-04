@@ -55,3 +55,8 @@ coordinator: every `PROFITABLE_UNEXECUTED` evaluation is planned, cleared throug
 (with the harness's own kill directory and ledger) and executed against the replayed books on
 the replayed clock, so `executions` / `orders` rows are reproducible row for row. This is the
 pre-capital battery's substrate: a captured day replays into a full paper trading record.
+
+**Coalescing boundary (2026-09-04).** The poller prices a game at most once per
+`eval_interval_s` on quiet books (mirrored between the grid and this harness). A capture recorded
+before the sha that introduced the window replays to different rows than the lane wrote then;
+parity is claimed only across captures and rows produced under the same interval.
