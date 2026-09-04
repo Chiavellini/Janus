@@ -287,3 +287,10 @@ def test_the_pin_reproduces_the_2026_09_04_production_fill_to_the_hundredth_of_a
     assert abs(k.entry_cost(f, params) - float(fill["fee_cost"])) < 1e-9
     assert abs(float(fx["order"]["taker_fees_dollars"]) - float(fill["fee_cost"])) < 1e-9
     assert abs(k.screening_coeff(params) - 0.07) < 1e-12, "the lane's screen must charge sports the full coefficient"
+    # the proof's resting bid was hit at 00:13Z (is_taker false): the maker coefficient is unscaled too,
+    # 0.0175 x 1 x 0.25 x 0.75 = 0.0032812 -> 0.0033 at the hundredth of a cent
+    mk = fx["maker_fill"]
+    assert not mk["is_taker"]
+    fm_ = [fm.Fill("kalshi", mk["ticker"], "kc", "buy", float(mk["yes_price_dollars"]), float(mk["count_fp"]), liquidity="maker")]
+    assert abs(k.entry_cost(fm_, params) - float(mk["fee_cost"])) < 1e-9
+    assert abs(float(fx["maker_order"]["maker_fees_dollars"]) - float(mk["fee_cost"])) < 1e-9

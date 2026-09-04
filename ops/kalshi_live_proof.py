@@ -214,6 +214,19 @@ def execute_steps(venue, *, ticker: str, series: str, fees: dict, ask: float, re
     return proof
 
 
+def merge_venue_fills(proof: dict, venue_fills) -> list[dict]:
+    """PURE. The proof's recorded fills, plus every venue fill on the proof's own order ids the file
+    did not know about (a resting bid hit after the file was written). Keyed by fill id."""
+    mine = {s.get(k, {}).get("venue_order_id") for s in proof["steps"] for k in ("resting", "ioc", "status", "after_cancel")}
+    mine.discard(None)
+    out = {f["fill_id"]: dict(f) for s in proof["steps"] for f in s.get("fills", [])}
+    for f in venue_fills:
+        if f.venue_order_id in mine and f.fill_id not in out:
+            out[f.fill_id] = {"fill_id": f.fill_id, "contracts": f.contracts, "price": f.price, "charged": f.fee_usd,
+                              "pinned": None, "excess": 0.0, "taker": f.is_taker, "late": True}
+    return sorted(out.values(), key=lambda d: d["fill_id"])
+
+
 def run_settle(a) -> int:
     proof = json.loads(Path(a.settle).read_text())
     api_key, key_path = os.environ.get("JANUS_KALSHI_API_KEY"), os.environ.get("JANUS_KALSHI_PRIVATE_KEY_PATH")
@@ -223,23 +236,33 @@ def run_settle(a) -> int:
     if r is None:
         print(f"{proof['ticker']}: not settled yet ({m.get('market', m).get('status')})")
         return 1
+    store = TupleStore(a.db)
+    ledger = ExposureLedger(store)
+    venue = None
+    if api_key and key_path:
+        venue = KalshiExecution(api_key, load_private_key(key_path), Journal(store), __import__("kernel.schema", fromlist=["Mode"]).Mode.LIMITED_LIVE, base_url=PROD_BASE)
     fills = [f for s in proof["steps"] for f in s.get("fills", [])]
+    if venue is not None:
+        # The venue's word, not the proof's memory: on 2026-09-04 the resting bid the proof believed
+        # cancelled was hit nine minutes after the file was written. Every fill on the proof's own
+        # orders since it started is settled, whether or not the file knew about it.
+        started = datetime.fromisoformat(proof["started_utc"]).timestamp()
+        fills = merge_venue_fills(proof, venue.fills(since_utc=started - 60))
+        print(f"[fills  ] {len(fills)} on the proof's orders per the venue" +
+              (" (the file knew fewer; it is updated)" if len(fills) > sum(len(s.get('fills', [])) for s in proof['steps']) else ""))
     legs = [{"venue": "kalshi", "client_order_id": f["fill_id"], "outcome_id": proof["ticker"], "side": "buy_yes",
              "contracts": f["contracts"], "price": f["price"], "fee_usd": f["charged"], "state": "FILLED", "final": True}
             for f in fills]
     realized = settle(legs=legs, winners={"kalshi": proof["ticker"] if r == "yes" else "other"})
     pnl = sum(x.realized_usd for x in realized)
     print(f"[settle ] {proof['ticker']} result={r}: realized {pnl:+.4f} USD over {len(fills)} fills; releasable={releasable(realized)}")
-    store = TupleStore(a.db)
-    ledger = ExposureLedger(store)
     if releasable(realized) and ledger.release(proof["reservation_id"], reason=f"proof settled: {r}"):
         print("[ledger ] reservation released")
-    if api_key and key_path:
-        venue = KalshiExecution(api_key, load_private_key(key_path), Journal(store), __import__("kernel.schema", fromlist=["Mode"]).Mode.LIMITED_LIVE, base_url=PROD_BASE)
+    if venue is not None:
         b = venue.balance()
         if b is not None:
             print(f"[balance] before {proof['balance_before']:.4f} now {b.available_usd:.4f} (delta {b.available_usd - proof['balance_before']:+.4f})")
-    Path(a.settle).write_text(json.dumps({**proof, "settled": {"result": r, "realized_usd": pnl,
+    Path(a.settle).write_text(json.dumps({**proof, "settled": {"result": r, "realized_usd": pnl, "fills": fills,
                                                               "at": datetime.now(timezone.utc).isoformat()}}, indent=2, default=str) + "\n")
     store.commit(); store.close()
     return 0

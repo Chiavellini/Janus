@@ -264,3 +264,20 @@ def test_arming_override_pins_the_runner_and_the_limits_and_refuses_to_overwrite
     assert r2.returncode == 2 and "--force" in r2.stderr
     r3, _ = write_override(tmp_path, "--force")
     assert r3.returncode == 0
+
+
+def test_settle_takes_the_venues_fills_on_the_proofs_orders_not_the_files_memory():
+    """2026-09-04: the resting bid the proof believed cancelled was hit nine minutes after the
+    file was written. Settlement must cover every fill on the proof's own orders."""
+    from ops.kalshi_live_proof import merge_venue_fills
+    proof = {"steps": [{"resting": {"venue_order_id": "rest-1"}, "after_cancel": {"venue_order_id": "rest-1"}},
+                       {"ioc": {"venue_order_id": "ioc-1"}, "status": {"venue_order_id": "ioc-1"},
+                        "fills": [{"fill_id": "f-ioc", "contracts": 2.0, "price": 0.35, "charged": 0.0319, "pinned": 0.0319, "excess": 0.0, "taker": True}]}]}
+    venue_fills = [FillRecord("kalshi", "ioc-1", "f-ioc", 2.0, 0.35, 0.0319, True, 1.0, True),
+                   FillRecord("kalshi", "rest-1", "f-late", 1.0, 0.25, 0.0033, False, 2.0, True),
+                   FillRecord("kalshi", "someone-elses", "f-other", 5.0, 0.5, 0.1, True, 3.0, True)]
+    got = merge_venue_fills(proof, venue_fills)
+    assert [f["fill_id"] for f in got] == ["f-ioc", "f-late"]
+    late = got[1]
+    assert late["late"] and late["contracts"] == 1.0 and late["price"] == 0.25 and late["charged"] == 0.0033 and late["taker"] is False
+    assert got[0]["pinned"] == 0.0319, "the file's own record is kept as written"
