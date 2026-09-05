@@ -13,7 +13,7 @@ kalshi = 250.0
 polymarket = 250.0
 
 [events]
-max_simultaneous = 3
+max_simultaneous = 6               # was 3 until 2026-09-05: three held paper covers refused every new one at MAX_EVENTS
 max_event_notional_usd = 200.0
 
 [events.per_league_usd]
@@ -22,6 +22,17 @@ nba = 200.0
 wnba = 200.0
 nhl = 200.0
 nfl = 200.0
+# Added 2026-09-05 at the operator's decision (paper scale). Absent = 0 = refused at
+# LEAGUE_EXPOSURE; 142 profitable cfb prints were refused that way in F3's first day.
+cfb = 200.0
+epl = 200.0
+lal = 200.0
+bun = 200.0
+elc = 200.0
+el1 = 200.0
+ita = 200.0
+atp = 200.0
+wta = 200.0
 
 [loss]
 max_daily_realized_usd = 25.0    # the latching breaker; human reset

@@ -49,7 +49,8 @@ def ok_env(**kw):
 def test_limits_load_with_a_pin_and_absent_is_zero_not_unlimited():
     assert LIMITS.sha and len(LIMITS.sha) == 16
     assert LIMITS.venue_cap("kalshi") == 250.0 and LIMITS.venue_cap("sxbet") == 0.0
-    assert LIMITS.league_cap("epl") == 0.0 and LIMITS.min_locked_return == 0.01
+    assert LIMITS.league_cap("epl") == 200.0, "paper caps for the enabled leagues, 2026-09-05"
+    assert LIMITS.league_cap("khl") == 0.0 and LIMITS.min_locked_return == 0.01, "absent is zero, not unlimited"
 
 
 # ── kill switches ────────────────────────────────────────────────────────────
@@ -98,13 +99,15 @@ def test_every_cap_refuses_before_anything_is_reserved():
     assert not isinstance(r, Refused) and L.total_usd() == 88.0
     assert L.reserve(event_id="e1", league="mlb", per_venue_usd={"kalshi": 1.0}, limits=LIMITS).code == "EVENT_IN_FLIGHT"
     assert L.reserve(event_id="e2", league="mlb", per_venue_usd={"kalshi": 150.0, "polymarket": 100.0}, limits=LIMITS).code == "EVENT_NOTIONAL"
-    assert L.reserve(event_id="e2", league="epl", per_venue_usd={"kalshi": 10.0}, limits=LIMITS).code == "LEAGUE_EXPOSURE"
+    assert L.reserve(event_id="e2", league="khl", per_venue_usd={"kalshi": 10.0}, limits=LIMITS).code == "LEAGUE_EXPOSURE"
     assert L.reserve(event_id="e2", league="mlb", per_venue_usd={"sxbet": 10.0}, limits=LIMITS).code == "VENUE_CAPITAL"
     assert L.reserve(event_id="e2", league="mlb", per_venue_usd={"kalshi": 90.0, "polymarket": 90.0}, limits=LIMITS).code == "UNRESOLVED_EXPOSURE"
     assert not isinstance(L.reserve(event_id="e2", league="mlb", per_venue_usd={"kalshi": 60.0, "polymarket": 60.0}, limits=LIMITS), Refused)
     assert not isinstance(L.reserve(event_id="e3", league="mlb", per_venue_usd={"kalshi": 10.0}, limits=LIMITS), Refused)
-    assert L.reserve(event_id="e4", league="mlb", per_venue_usd={"kalshi": 1.0}, limits=LIMITS).code == "MAX_EVENTS"
-    assert L.total_usd() == 218.0 and L.venue_usd("kalshi") == 114.0 and L.league_usd("mlb") == 218.0
+    for e in ("e4", "e5", "e6"):        # max_simultaneous is 6 since 2026-09-05 (was 3)
+        assert not isinstance(L.reserve(event_id=e, league="mlb", per_venue_usd={"kalshi": 1.0}, limits=LIMITS), Refused), e
+    assert L.reserve(event_id="e7", league="mlb", per_venue_usd={"kalshi": 1.0}, limits=LIMITS).code == "MAX_EVENTS"
+    assert L.total_usd() == 221.0 and L.venue_usd("kalshi") == 117.0 and L.league_usd("mlb") == 221.0
 
 
 def test_reservations_survive_a_restart_and_release_records_why(tmp_path):
