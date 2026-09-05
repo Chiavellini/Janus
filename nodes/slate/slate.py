@@ -36,7 +36,18 @@ TYPICAL_DURATION_S: dict[str, int] = {
     "wnba": 2 * 3600,
     "nhl":  2 * 3600 + 1800,
     "epl":  2 * 3600,            # 90' + stoppage + half time
+    "cfb":  3 * 3600 + 1800,     # ~3h30m
+    "atp":  2 * 3600 + 1800,     # best-of-three; a five-set major runs longer and the settle window absorbs it
+    "wta":  2 * 3600 + 1800,
 }
+#: Every other registered soccer competition runs the EPL clock (2026-09-05; the six-league list
+#: this table started from is the "spelled out in three places" problem nodes/entities/leagues fixed).
+try:
+    from nodes.entities.leagues import SOCCER as _SOCCER
+    for _c in _SOCCER:
+        TYPICAL_DURATION_S.setdefault(_c, TYPICAL_DURATION_S["epl"])
+except Exception:  # noqa: BLE001 -- the slate must import without the registry (offline tools)
+    pass
 DEFAULT_DURATION_S = 3 * 3600
 
 #: Wake this long before first pitch. The open is where a market is thinnest and most dislocated.

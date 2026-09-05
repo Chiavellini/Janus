@@ -10,6 +10,8 @@ never zero risk). Filling a key without a research reference is the one thing th
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from dataclasses import dataclass
 from typing import Mapping
 
@@ -38,6 +40,8 @@ _L33 = "research/sports/2026-09-03_soccer-settlement-wedge-rates/spec.yaml"
 _L32 = "research/sports/2026-09-03_cfb-settlement-wedge-rates/spec.yaml"
 _L35 = "research/sports/2026-09-03_soccer-settlement-wedge-rates-batch2/spec.yaml"
 _L39 = "research/sports/2026-09-04_tennis-settlement-wedge-rates/spec.yaml"
+_F4_DIR = "research/sports/2026-09-04_tennis-delay-forward"
+_F4 = _F4_DIR + "/spec.yaml"
 EVIDENCE: dict[str, Evidence] = {
     "mlb.postponed_gt2d_rate": Evidence(
         "mlb.postponed_gt2d_rate", 0.004762, 2100,
@@ -138,9 +142,6 @@ EVIDENCE: dict[str, Evidence] = {
         "soccer.ita.cancelled_rate", 0.000000, 1520,
         "openfootball Serie A season files 2021-22..2024-25: scheduled N(N-1) minus played", "2026-09-03", _L35,
         "0 of 1520: every season parsed to exactly N(N-1) league matches (playoff rounds excluded)."),
-    # tennis.delayed_gt7d_rate is deliberately ABSENT: no results archive keeps a match's scheduled
-    # date, so it waits on a forward row over the lane's own Polymarket gameStartTime records (L39,
-    # CHECKLIST C). Tennis blocks by name until then; this entry alone does not price it.
     "tennis.walkover_rate": Evidence(
         "tennis.walkover_rate", 0.007955, 26398,
         "ATP main tour (Tennismylife/TML-Database, the Sackmann layout) and WTA (VictorSquidWei/tennis_wta, a Sackmann fork), "
@@ -148,6 +149,29 @@ EVIDENCE: dict[str, Evidence] = {
         "210 of 26398 main-draw matches were walkovers (score W/O): ATP 98 of 13598 = 0.0072, WTA 112 of 12800 = 0.0088. "
         "Retirements (789) and defaults (4) are ruled SAME and not counted here."),
 }
+
+
+
+def _tennis_delay() -> Evidence:
+    """tennis.delayed_gt7d_rate has no backward source (L39: results files carry tournament starts,
+    never match dates). It is measured FORWARD by nodes/watch_settle over the lane's own Polymarket
+    gameStartTime records (ledger F4, registered 2026-09-05). The registered value is the row's
+    pre-declared estimator -- the one-sided 95% upper bound (rule of three at zero events) while
+    n < 300, the point estimate after -- read from the newest results file of the row, so the
+    reserve shrinks as the row accrues and never rests on a point estimate of a rare event from a
+    small n. The fallback pins the first resolved run (0 of 42) if the results directory is absent."""
+    from nodes.watch_settle.settle import registered_delay_rate
+    got = registered_delay_rate(Path(__file__).resolve().parents[2] / _F4_DIR)
+    value, n, run = got if got else (3.0 / 42, 42, "20260904T193007Z (pinned fallback)")
+    return Evidence("tennis.delayed_gt7d_rate", round(value, 6), n,
+                    "the lane's own Polymarket first-seen gameStartTime per ATP/WTA event (nodes/watch_settle), resolved daily at Gamma "
+                    "(com.janus.watch-settle, 13:30 local); ITF excluded", "2026-09-05", _F4,
+                    f"UPPER BOUND, not a point estimate: one-sided 95% (rule of three at zero events) over n resolved tennis rows "
+                    f"while n < 300, per the row's spec; latest run {run}. The delay clock runs from the FIRST-SEEN start; "
+                    f"resolution time is the poll time (a +-24 h box), which can only lengthen a delay.")
+
+
+EVIDENCE["tennis.delayed_gt7d_rate"] = _tennis_delay()
 
 
 def rates(overrides: Mapping[str, float] | None = None) -> dict[str, float]:

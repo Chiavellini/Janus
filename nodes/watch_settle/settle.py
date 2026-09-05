@@ -22,6 +22,9 @@ Reads no price, claims no edge.
 from __future__ import annotations
 
 import json
+from pathlib import Path
+
+import json
 import time
 from typing import Iterable, Sequence
 
@@ -156,3 +159,35 @@ def delay_rows(store, *, leagues: Sequence[str] = ("atp", "wta")) -> list[tuple]
         f"SELECT event_id, league_hint, start_utc, start_utc_last, resolved_seen_ts, result FROM watch_events "
         f"WHERE venue='polymarket' AND resolved_seen_ts IS NOT NULL AND league_hint IN ({q}) ORDER BY start_utc",
         tuple(leagues)).fetchall()
+
+
+def upper_bound_95(events: int, n: int) -> float | None:
+    """The one-sided 95% upper bound on a rate from `events` of `n`: the rule of three (3/n) when no
+    event has been seen, the Wilson upper bound otherwise. This is F4's REGISTERED value for
+    `tennis.delayed_gt7d_rate` while n is small (spec: never the point estimate below n = 300):
+    a reserve priced from an upper bound can only overstate the wedge, never understate it.
+    None when n is 0."""
+    if n <= 0:
+        return None
+    if events <= 0:
+        return min(1.0, 3.0 / n)
+    z = 1.6449                      # one-sided 95%
+    ph = events / n
+    den = 1 + z * z / n
+    centre = ph + z * z / (2 * n)
+    half = z * ((ph * (1 - ph) / n + z * z / (4 * n * n)) ** 0.5)
+    return min(1.0, (centre + half) / den)
+
+
+def registered_delay_rate(results_dir) -> tuple[float, int, str] | None:
+    """(value, n, run) from the newest `results_*.json` of the forward row: the upper bound over the
+    resolved tennis rows, or the point estimate once n >= 300. None when no results file exists."""
+    files = sorted(Path(results_dir).glob("results_*.json"))
+    if not files:
+        return None
+    d = json.loads(files[-1].read_text())
+    n, late = int(d.get("resolved_tennis_rows") or 0), int(d.get("delayed_gt7d") or 0)
+    if n <= 0:
+        return None
+    value = (late / n) if n >= 300 else upper_bound_95(late, n)
+    return float(value), n, str(d.get("run", files[-1].stem))

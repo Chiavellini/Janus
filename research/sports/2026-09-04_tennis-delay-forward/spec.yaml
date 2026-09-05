@@ -1,0 +1,49 @@
+experiment_id: "janus-sports-tennis-delay-forward-f4-2026-09-05"
+date_registered: "2026-09-05"
+track: "sports/settlement"
+row_kind: "F (forward evaluation; descriptive; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F4"
+test_looks_spent: 0
+
+# IMMUTABLE FROM REGISTRATION. Written honestly AFTER the collector's first two resolver runs
+# (2026-09-04 03:28Z: 23 checked, 0 resolved; 19:30Z: 146 checked, 115 resolved, 42 tennis rows, 0
+# completed more than 7 days late), because the collector and its daily job were built on 2026-09-04
+# (CHANGELOG) before anyone wrote this file. Nothing below was chosen to fit those 42 rows: the
+# estimator is the UPPER bound, the most conservative choice available, and the criteria read no
+# price and no outcome.
+purpose: >
+  nodes/settle_wedge rules the Kalshi KX{ATP,WTA}MATCH / Polymarket tennis match pair BOUNDED on
+  postponement: a match completed more than seven days after its scheduled start (Kalshi holds up to
+  two weeks and pays the result; Polymarket resolves 50-50 past seven days). L39 showed no results
+  archive keeps a match's scheduled date. This row measures the rate FORWARD from the lane's own
+  records: every ATP/WTA event Polymarket lists, its first-seen gameStartTime, and its resolution.
+
+arm: "nodes/watch_settle: the live lane records each capture-only Polymarket tennis event's FIRST-SEEN gameStartTime (immutable; the venue rewrites it in place when a match moves) and its latest start; com.janus.watch-settle (13:30 local, watchdog SLA 26 h) asks Gamma daily for every event whose start is at least an hour old and records winner / HALF (0.5-0.5) / open with the poll time. research/sports/2026-09-04_tennis-delay-forward/measure.py is the job; it appends a dated section to verdict.md and writes results_<run>.json."
+
+window:
+  start: "2026-09-04 02:58Z, the first watch_events row (86 events after the first pass)"
+  end: "open; re-read daily. The registered value is refreshed by every run. The row is CLOSED for re-reading only if the collector stops (watchdog STALE on watch_settle)."
+
+definitions:
+  population: "resolved watch_events rows, venue polymarket, league_hint in (atp, wta). ITF is excluded (not a registered league; its tokens got the capture socket dropped and it left the capture 2026-09-04)."
+  delayed_gt7d: "resolved_seen_ts - start_utc (FIRST-SEEN) > 7 x 86400 s and result is not HALF. The clock runs from the first-seen start and stops at the POLL time, which is up to 24 h after the venue resolved: a delay can only be over-counted, never under."
+  half: "result HALF: the market closed 0.5/0.5 (the venue's own 50-50 outcome, whatever caused it). Reported apart; it is the Polymarket side of the wedge realised."
+  start_moved_gt1h: "abs(start_utc_last - start_utc) > 3600: the venue moved the start after first sight. Context, not a rate."
+  registered_value: "tennis.delayed_gt7d_rate in nodes/settle_wedge/evidence.py = upper_bound_95(delayed_gt7d, n) while n < 300 -- the one-sided 95% upper bound (rule of three, 3/n, at zero events; Wilson upper otherwise) -- and the point estimate delayed_gt7d / n once n >= 300. Read from the newest results file at import (nodes.watch_settle.settle.registered_delay_rate). At the first resolved run (0 of 42) this is 0.0714, about 3.6 cents of reserve per Polymarket contract, which prices most tennis covers out until n grows. That is intended: a rare-event reserve from a small n rests on an upper bound or on nothing."
+
+criteria:
+  - "Forward, descriptive. No hypothesis, no significance test, no look. Reads no price."
+  - "The estimator above is fixed at registration and is not changed after any run. The n = 300 switch to the point estimate is declared here, before n exists."
+  - "Data-arrival SLA: ops/watchdog.py watch_settle oneshot 26 h (STALE/HUNG/FAILED); com.janus.live-stream LANE_SILENT covers the collector's writes. A day unanswered voids the window from that point."
+  - "The first 42 rows (resolved 2026-09-04 19:30Z) were seen before this spec existed and are stated so; they are included, because excluding them would not change the estimator's form and would leave n at 0."
+
+outputs:
+  results: "research/sports/2026-09-04_tennis-delay-forward/results_<run>.json (delayed_gt7d, half, n, registered_upper_bound_95)"
+  verdict: "research/sports/2026-09-04_tennis-delay-forward/verdict.md, a dated section per run"
+  evidence_registration: "nodes/settle_wedge/evidence.py: tennis.delayed_gt7d_rate (UPPER BOUND, note says so); atp and wta enable by name from 2026-09-05"
+
+what_this_does_not_establish:
+  - "The delay rate itself, until n is large: the registered value is a bound."
+  - "Anything about doubles, qualifying, or ITF."
+  - "Edge. A settlement reserve prices a wedge; it claims nothing about a return."

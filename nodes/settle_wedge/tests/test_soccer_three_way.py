@@ -165,8 +165,11 @@ def test_tennis_texts_hash_to_their_templates_across_tournaments_and_block_on_un
               .replace("January 17 at 7:00PM ET", "October 10 at 8:00AM ET").replace("Australian Open", "Shanghai Masters"))
     p = harvest_polymarket({"slug": "s", "description": p_text}, participants=("Jannik Sinner", "Alexander Zverev"), retrieved_at=T, scrub=scrub)
     assert p.template_hash == POLYMARKET_TENNIS_MATCH_V1.template_hash, p.template_text
+    # Since F4 (2026-09-05) both tennis rates are registered, so the pair CERTIFIES at the registry's
+    # values: L39's walkover rate and the forward row's UPPER BOUND on the delay rate.
+    from nodes.settle_wedge.evidence import EVIDENCE
     got = certify(k, p, league="atp")
-    assert isinstance(got, NotEquivalent) and got.code == "EVIDENCE_UNMEASURED" and got.context["evidence_key"].startswith("tennis.")
+    assert isinstance(got, SettlementEquivalence) and got.rates["tennis.delayed_gt7d_rate"] == EVIDENCE["tennis.delayed_gt7d_rate"].value
     rates = {"tennis.walkover_rate": 0.02, "tennis.delayed_gt7d_rate": 0.001}
     eq = certify(k, p, league="atp", rates=rates)
     assert isinstance(eq, SettlementEquivalence)
