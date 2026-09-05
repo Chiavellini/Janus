@@ -326,6 +326,23 @@ CREATE INDEX IF NOT EXISTS event_transitions_event ON event_transitions(event_id
 """
 
 
+def record_spawn_block(store, event_id: str, reason: str, *, now: float | None = None) -> None:
+    """A co-listed game the lane refused to spawn a poller for (unproven outcome set or settlement
+    basis) gets its reason on the event's row and a transition, so the record explains an
+    evening without a poller. `record_events` carries the reason forward while the game stays on
+    the slate (the supervisor passes it back in `blocked`)."""
+    t = now or time.time()
+    store.ensure_ddl(EVENTS_DDL)
+    row = store.con.execute("SELECT phase, block_reason FROM events WHERE event_id=?", (event_id,)).fetchone()
+    if row is None:
+        return
+    if row[1] != reason:
+        store.con.execute("UPDATE events SET block_reason=?, last_seen_ts=? WHERE event_id=?", (reason, t, event_id))
+        store.con.execute("INSERT INTO event_transitions(seen_ts, event_id, phase, block_reason) VALUES(?,?,?,?)",
+                          (t, event_id, row[0], reason))
+        store.con.commit()
+
+
 def record_events(store, d: Discovery, slate: Mapping[str, dict], blocked: Mapping[str, str],
                   *, now: float | None = None) -> int:
     """Upsert every discovered game; append a transition only when phase or block changes.

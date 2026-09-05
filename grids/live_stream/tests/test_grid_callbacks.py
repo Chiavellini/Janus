@@ -138,3 +138,33 @@ def test_apply_watch_records_first_seen_starts_for_the_settlement_collector(tmp_
     row = sup.store.con.execute("SELECT event_id, start_utc, league_hint FROM watch_events").fetchone()
     assert row == ("atp-x-y-2026-09-05", T + 3600, "atp")
     assert sup.apply_watch(None) == (0, 0)
+
+
+def test_a_spawn_block_is_said_once_and_written_to_the_event_row(tmp_path: Path, capsys):
+    """2026-09-04: LIV @ IPS and KOE @ VFB were co-listed all evening and never spawned; the reason
+    (TEMPLATE_UNKNOWN) lived in an in-memory dict, the [slate] line printed a count, and
+    events.block_reason stayed null. Now the reason is printed once and persisted, and survives
+    the next discovery pass."""
+    import json
+    from nodes.discovery.discovery import EVENTS_DDL
+    sup = Supervisor(["epl"])
+    sup.store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    sup.store.ensure_ddl(EVENTS_DDL)
+    sup.opportunities = OpportunityStore(sup.store)
+    spec = {"league": "epl", "short_name": "LIV @ IPS", "outcomes": {"epl:ips": {"kalshi": "K-IPS", "polymarket": "t-ips"},
+                                                                     "epl:liv": {"kalshi": "K-LIV", "polymarket": "t-liv"},
+                                                                     "draw": {"kalshi": "K-TIE", "polymarket": "t-draw"}},
+            "fee_params": {"kalshi": FEES["kalshi"], "polymarket": FEES["polymarket"]}, "rules": {},
+            "settlement": {"result": "BLOCKED", "code": "TEMPLATE_UNKNOWN", "detail": "polymarket rules text matches no reviewed template (template_hash 7580dcecfba14bc3)"}}
+    sup.store.con.execute("INSERT INTO events(event_id, league, phase, spec_json, first_seen_ts, last_seen_ts) VALUES('g9','epl','in:co_listed',?,?,?)",
+                          (json.dumps(spec), T, T))
+    sup.store.con.commit()
+    sup.reconcile({"g9": spec})
+    sup.reconcile({"g9": spec})
+    out = capsys.readouterr().out
+    assert out.count("[spawn-blocked] LIV @ IPS (epl) SPAWN:") == 1, out
+    assert "TEMPLATE_UNKNOWN" in out and "7580dcecfba14bc3" in out
+    assert "g9" not in sup.live and sup.blocked["g9"].startswith("SPAWN:")
+    reason = sup.store.con.execute("SELECT block_reason FROM events WHERE event_id='g9'").fetchone()[0]
+    assert reason and "TEMPLATE_UNKNOWN" in reason
+    assert sup.store.con.execute("SELECT COUNT(*) FROM event_transitions WHERE event_id='g9'").fetchone()[0] == 1

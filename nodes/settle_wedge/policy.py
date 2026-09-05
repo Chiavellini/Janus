@@ -303,7 +303,35 @@ POLYMARKET_SOCCER_GAME_V1 = Template(
               revision_policy="consensus of credible reporting after 2h", dispute_mechanism="uma",
               settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
 
-_SOCCER_PM = (POLYMARKET_SOCCER_GAME_V1, POLYMARKET_SOCCER_GAME_V2)
+POLYMARKET_SOCCER_GAME_V3 = Template(
+    "polymarket_soccer_game_v3", "polymarket", frozenset(SOCCER), "2026-09-05",
+    # epl-ips-liv-2026-09-04-ips, market.description, read from the lane's own harvested spec
+    # (events.spec_json) after LIV @ IPS and KOE @ VFB spent 2026-09-04 blocked at TEMPLATE_UNKNOWN
+    # (template_hash 7580dcecfba14bc3). The third live text: V2's Flashscore / Sofascore fallbacks
+    # WITHOUT V2's trailing "no acceptable data within 24 hours -> 50-50 / Draw" sentence. Diffed
+    # against V1 and V2 sentence by sentence: postponement, cancellation, the 90-minute period, the
+    # official source and the revision rule are word for word V1/V2, so the pair verdicts are
+    # `_soccer_verdicts`, unchanged. The dropped sentence was never ruled on: V1 never had it.
+    "In the upcoming game, scheduled for September 4, 2026\nIf Ipswich Town FC wins, this market will "
+    "resolve to \"Yes\".\nOtherwise, this market will resolve to \"No\".\nIf the game is postponed, this market"
+    " will remain open until the game has been completed.\nIf the game is canceled entirely, with no "
+    "make-up game, this market will resolve \"No\".\nThis market refers only to the outcome within the first"
+    " 90 minutes of regular play plus stoppage time.\n\nThe primary resolution source for this market is "
+    "the official statistics of the event as recognized by the governing body or event organizers. "
+    "However, if the governing body or event organizers have not published final match statistics within "
+    "2 hours after the event's conclusion, data from Flashscore may be used; if Flashscore data is "
+    "unavailable, data from Sofascore may be used; if neither is available, a consensus of credible "
+    "reporting may be used instead. All markets will settle based on the official final result as "
+    "recognized by the governing body or event organizers. Revisions to officially declared final scores "
+    "made after market resolution will not be accounted for in determining the outcome.",
+    ("Ipswich Town", "Ipswich Town FC", "Liverpool", "Liverpool FC"),
+    SettleRef(source_agency="official statistics of the governing body", oracle="uma",
+              void_policy=VoidPolicy.UNKNOWN, tie_policy=TiePolicy.UNKNOWN, ot_included=False,
+              dnp_policy=VoidPolicy.UNKNOWN, retirement_policy=None,
+              revision_policy="consensus of credible reporting after 2h", dispute_mechanism="uma",
+              settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
+_SOCCER_PM = (POLYMARKET_SOCCER_GAME_V1, POLYMARKET_SOCCER_GAME_V2, POLYMARKET_SOCCER_GAME_V3)
 
 
 def _soccer_verdicts(code: str) -> tuple[Verdict, ...]:

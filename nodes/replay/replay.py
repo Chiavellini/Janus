@@ -120,7 +120,9 @@ class Harness:
                        equivalence=eq if isinstance(eq, SettlementEquivalence) else None,
                        order_limits={"polymarket": spec.get("pm_limits") or {}})
         if p.state is PollerState.BLOCKED:
-            self.blocked[game_id] = f"SPAWN:{p.block_reason}"
+            st = spec.get("settlement") or {}
+            self.blocked[game_id] = f"SPAWN:{p.block_reason}" + (f" ({st.get('code')}: {str(st.get('detail', ''))[:120]})"
+                                                                if st.get("result") == "BLOCKED" else "")
             return False
         cb = self._on_update(game_id)
         for venue, market_id, side, rep in p.registrations():
