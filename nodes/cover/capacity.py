@@ -37,10 +37,15 @@ from nodes.settle_wedge.equivalence import CoverProof
 
 
 #: The slippage buffer, from ledger L27 (research/sports/2026-09-03_kalshi-hedge-window-slippage):
-#: the p95 adverse move of the Kalshi YES ask at 100 contracts inside the 3 s hedge window,
-#: 2152 samples over 8 tickers, run 20260903T061757Z. One tick. Re-runs append; this pin moves only
-#: with a new run's registered value.
-SLIPPAGE_PER_CONTRACT = 0.0100
+#: the p95 adverse move of the Kalshi YES ask at 100 contracts inside the 3 s hedge window. Run
+#: 20260905T104523Z: 32,149,854 delta instants over 326 tickers (MLB, cfb, ATP/WTA/Challenger
+#: capture, 2026-09-03 to 2026-09-05) -> FOUR ticks, where the 2026-09-03 run (2,152 samples, 8 MLB
+#: tickers) gave one. The row's rule is mechanical (p95 at 3 s once n >= 2,000 over >= 4 tickers)
+#: and the pin follows it. Consequence, stated: at 0.04 per contract the frontier clears almost no
+#: cover the lane has printed (median locked return ~0.03), so F5 accrues little until a sharper,
+#: stratified slippage row (per league, clean windows only, weighted by time not by delta count,
+#: at the walked depth) is registered and run -- a NEW row, never an edit to this one.
+SLIPPAGE_PER_CONTRACT = 0.0400
 SLIPPAGE_MODELLED = True
 SLIPPAGE_RESEARCH_REF = "research/sports/2026-09-03_kalshi-hedge-window-slippage/spec.yaml"
 

@@ -10,7 +10,7 @@ story.
 ## Where it stands
 
 The lane runs `PAPER_EXECUTION` under ledger **F5** (n = 37) on eleven leagues since the 07:53Z
-restart: the nine of yesterday plus ATP and WTA. F3 stopped itself: its first unhedged paper leg
+restart (re-restarted ~10:55Z for the L27 pin; see below): the nine of yesterday plus ATP and WTA. F3 stopped itself: its first unhedged paper leg
 (MIL @ CIN, 35.82 of 100) was the coordinator sending a VWAP budget as a per-level IOC limit, and
 the fix, the settlement of partial fills, the persisted execution transitions, pinned paper fees,
 and two new watchdog alarms went in together. Soccer had never spawned a poller because Polymarket
@@ -39,7 +39,7 @@ is not nothing and is not edge. F5 (execution) and L27 (the gap to a fill) are w
 4. Label `nodes/match_generic/gold/nonsports.csv` (1 / 0 per pair, blind to the key).
 
 **Mine, in order:**
-1. L27: rewrite `research/sports/2026-09-03_kalshi-hedge-window-slippage/measure.py` to stream (a per-ticker deque over the 3 s window, not every point in memory — the 07:57Z attempt died at 08:07Z on this host with no output), then run it on a quiet slate under nice; the pin moves only if the run clears the row's bar (n ≥ 2,000 at 3 s, ≥ 4 tickers).
+1. **Register and run a stratified slippage row** (L41): per league, clean windows only (L36's flap windows and the stall/clock halts excluded), weighted by time rather than by delta instant, at the depth the pricer actually walked for each print. L27 registered 0.0400 over 326 pooled tickers (mostly thin tennis capture books) and that reserve prices out nearly every cover the lane has printed; whether MLB or college football in play deserves 4¢ or 1¢ is exactly what the stratified row answers. L27 is not edited.
 2. Watch the first soccer cover under F5 (the `[exec]` line with a `:NO` leg), and the first tennis
    pollers; a tennis cover will almost certainly price out on the 3.6¢ delay reserve until F4's n
    grows — that is the design, say so if asked.

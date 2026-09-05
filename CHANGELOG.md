@@ -576,4 +576,4 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
   awaiting `FD_TOKEN`. **`ops/harvest_templates.py`**: step 3 of the unblock workflow as a tool.
 - `grids/live_sports` and `nodes/slate` read the league registry instead of a six-league list;
   the slate has a duration for every registered league.
-- **L27's re-run did not complete**: attempted 07:57Z over all captures, the process died at 08:07Z with no output on a host with ~80 MB free; the script keeps every point in memory. Deferred to a streaming rewrite on a quiet slate; the 0.0100 pin stands.
+- **L27 re-run, registered 0.0400.** The first attempt died on the 03:00Z hour the SIGBUS cut mid-member (the capture reader now stops at a cut instead of raising). The full run: 32.1M delta instants over 326 tickers, p95 adverse move at 3 s = 4 ticks, four times the 8-ticker MLB pin. The row's rule is mechanical and the pin follows it; the consequence -- a 4¢ reserve prices out nearly every cover printed so far -- is stated in the ledger, and a stratified row is the next registration.
