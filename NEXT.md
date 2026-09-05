@@ -39,7 +39,7 @@ is not nothing and is not edge. F5 (execution) and L27 (the gap to a fill) are w
 4. Label `nodes/match_generic/gold/nonsports.csv` (1 / 0 per pair, blind to the key).
 
 **Mine, in order:**
-1. L27's re-run result into the ledger (running at 07:57Z); the slippage pin if it clears its bar.
+1. L27: rewrite `research/sports/2026-09-03_kalshi-hedge-window-slippage/measure.py` to stream (a per-ticker deque over the 3 s window, not every point in memory — the 07:57Z attempt died at 08:07Z on this host with no output), then run it on a quiet slate under nice; the pin moves only if the run clears the row's bar (n ≥ 2,000 at 3 s, ≥ 4 tickers).
 2. Watch the first soccer cover under F5 (the `[exec]` line with a `:NO` leg), and the first tennis
    pollers; a tennis cover will almost certainly price out on the 3.6¢ delay reserve until F4's n
    grows — that is the design, say so if asked.

@@ -20,7 +20,7 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — L36, the cover-cost distribution, run three times; third run 2026-09-05 07:44Z on the clean window: 336 profitable prints, 127 in-play clean actionable rows, n = 37 for the paper row.
 - [x] DONE — **L40, a SUSPECT rule that can be false**: L36's ±60 s same-game clause fires on 335 of 336 prints under coalescing. L40 asks whether a replica THIS print was priced from faulted in the 60 s BEFORE it: **15 of 292 prints are clean** (12 cfb in play, median locked return 2.5%; 3 mlb). Not fills, not returns.
 - [ ] NOT PROVED — **that any actionable cover exists after fees.** The paper lane has settled three covers (+$5.00 gross, +$0.75, and a PARTIAL at −$2.73) and L40 says one print in twenty survives a falsifiable rule. That is evidence the prints are not all artefacts; it is not edge. F5 and L27 are the rows that test it.
-- [x] RUNNING — L27 slippage re-run over the cfb/MLB captures (started 2026-09-05 07:57Z; result appended to the ledger when it lands).
+- [ ] NOT DONE — L27 slippage re-run. Attempted 2026-09-05 07:57Z over all 44 Kalshi capture files (791 MB); the process died at 08:07Z with no output and no crash report, on a host with ~80 MB free — the script holds every (time, ask) point of every ticker in memory. Not re-run beside 29 live pollers. Needs a streaming rewrite of `measure.py` (same criteria; the spec is untouched) and a quiet slate or the box. The pin stays 0.0100 from the 2026-09-03 tick.
 
 ## C. Coverage (which events)
 
