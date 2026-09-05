@@ -168,6 +168,43 @@ class OpportunityStore:
                 "VALUES(?,?,?,?,?)", (now, oid, frm.value if frm else None, status.value, detail))
         return opp
 
+    def move(self, opp: Opportunity, status: S, *, now: float, detail: str = "") -> bool:
+        """An execution-owned status change (EXECUTION_PENDING and everything after it), persisted
+        with its transition row. Until 2026-09-05 the coordinator called `transition()` and
+        `_upsert()` directly, and the transition INSERT lived only in `observe()`: the
+        `opportunities` row moved while `opportunity_transitions` never saw EXECUTION_PENDING,
+        HEDGED or RECONCILED -- F3's own `cleared_cover` predicate counted zero against four
+        executions. Raises IllegalTransition like `transition()`; a no-op returns False."""
+        frm = opp.status
+        if not opp.transition(status, now=now, detail=detail):
+            self._upsert(opp)
+            return False
+        self._upsert(opp)
+        self.store.con.execute(
+            "INSERT INTO opportunity_transitions(seen_ts, opportunity_id, from_status, to_status, detail) "
+            "VALUES(?,?,?,?,?)", (now, opp.opportunity_id, frm.value, status.value, detail))
+        return True
+
+    def load(self, opportunity_id: str) -> Opportunity | None:
+        """The record from its row when it is not in `live` (the lane restarted; the settlement
+        pass runs hours after the execution). Numbers and legs come back; books and history do
+        not (books stay in the row; history is `opportunity_transitions`)."""
+        opp = self.live.get(opportunity_id)
+        if opp is not None:
+            return opp
+        r = self.store.con.execute(
+            "SELECT opportunity_id, event_id, league, strategy_version, status, first_seen_ts, last_seen_ts, quantity, gross, "
+            "fees, settlement_buffer, slippage_buffer, fixed_cost, net_profit, locked_return, n_max, n_star, limit_reason, "
+            "slippage_modelled, blocked_by, legs_json FROM opportunities WHERE opportunity_id=?", (opportunity_id,)).fetchone()
+        if r is None:
+            return None
+        opp = Opportunity(r[0], r[1], r[2], S(r[4]), r[5], r[6], strategy_version=r[3], quantity=r[7], gross=r[8], fees=r[9],
+                          settlement_buffer=r[10], slippage_buffer=r[11], fixed_cost=r[12], net_profit=r[13],
+                          locked_return=r[14], n_max=r[15], n_star=r[16], limit_reason=r[17], slippage_modelled=bool(r[18]),
+                          blocked_by=r[19], legs=json.loads(r[20]) if r[20] else [])
+        self.live[opportunity_id] = opp
+        return opp
+
     def record_frontier(self, opp: Opportunity, fr: Frontier, *, now: float) -> None:
         opp.n_max, opp.n_star, opp.limit_reason = fr.n_max, fr.n_star, fr.limit_reason
         opp.slippage_modelled, opp.slippage_buffer, opp.fixed_cost = fr.slippage_modelled, fr.slippage_per_contract, fr.fixed_cost_usd

@@ -122,10 +122,20 @@ class ExecutionState(str, Enum):
         return self in _EXECUTION_FAILURES
 
     @property
+    def holds_position(self) -> bool:
+        """A failure that may have left contracts on a venue: leg A filled and the hedge did not
+        (fully). Not terminal -- it ends at RECONCILED through the settlement pass, which marks
+        the hedged part as a cover and the rest at the venue's result (2026-09-05, F3's STOP)."""
+        return self in _HOLDING_FAILURES
+
+    @property
     def is_terminal(self) -> bool:
-        return self is ExecutionState.RECONCILED or self in _EXECUTION_FAILURES
+        return self is ExecutionState.RECONCILED or (self in _EXECUTION_FAILURES and self not in _HOLDING_FAILURES)
 
 
+_HOLDING_FAILURES = frozenset({
+    ExecutionState.PARTIAL_FILL, ExecutionState.HEDGE_SLIPPAGE_EXCEEDED, ExecutionState.UNKNOWN_PROVIDER_STATE,
+})
 _EXECUTION_FAILURES = frozenset({
     ExecutionState.ORDER_REJECTED, ExecutionState.ORDER_TIMEOUT,
     ExecutionState.UNKNOWN_PROVIDER_STATE, ExecutionState.PARTIAL_FILL,

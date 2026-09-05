@@ -9,12 +9,22 @@ UNCONFIRMED leaves no position. Leg B is the hedge, on the venue whose REST ack 
 count synchronously and whose fee is deterministic. The order is never reversed at runtime, and
 the partial-fill policy is pre-declared here rather than improvised (GATE cross-venue #2).
 
-The hedge limit is the most a contract may cost on leg B for the cover still to clear the
-execution threshold after what leg A actually paid; above it the coordinator stops
-(HEDGE_SLIPPAGE_EXCEEDED) rather than chase.
+THE HEDGE LIMIT IS A PER-LEVEL PRICE, THE BUDGET IS A VWAP (2026-09-05). Until F3's first
+unhedged paper leg the coordinator sent `hedge_budget` -- the most the hedge may AVERAGE for the
+cover still to clear the hurdle after what leg A paid -- as the IOC's limit. An IOC limit is
+per level: the venue fills nothing above it. MIL @ CIN, q=100: the pricer walked Kalshi
+64.18 @ 0.84 + 35.82 @ 0.85 (VWAP 0.8436, under the 0.8452 budget) and the IOC at 0.8452 took
+the 0.84 level and stopped; two more attempts at the same limit against the same book filled
+nothing, 35.82 contracts sat unhedged. So: `hedge_limit` is the worst level the pricer walked
+for this size, tightened by any amount leg A paid over its own priced VWAP and floored to the
+venue tick; `hedge_budget` is kept and recorded so a hedge that averaged above it is labelled
+ABOVE_BUDGET (a cover below the hurdle, still a cover -- hedging beats an open leg). Above the
+limit the coordinator stops (HEDGE_SLIPPAGE_EXCEEDED) rather than chase.
 """
 
 from __future__ import annotations
+
+import math
 
 from dataclasses import dataclass
 from typing import Mapping, Sequence
@@ -35,6 +45,8 @@ class LegPlan:
     limit_price: float        # the worst level the walk consumed, for the size
     contracts: float
     time_in_force: str
+    vwap: float = 0.0         # what the pricer expects this leg to average at this size
+    tick: float = 0.01        # the venue's price increment for this market
 
 
 @dataclass(frozen=True)
@@ -49,9 +61,18 @@ class Plan:
     fee_per_contract: float          # from the cover, at this size
     strategy_version: str = STRATEGY_VERSION
 
-    def hedge_limit(self, first_paid: float) -> float:
-        """The most the hedge may pay per contract, given what leg A actually paid."""
+    def hedge_budget(self, first_paid: float) -> float:
+        """The most the hedge may AVERAGE per contract for the cover to clear the hurdle, given
+        what leg A actually paid. A VWAP, never an order limit; recorded beside every attempt."""
         return round(self.max_cost_per_contract - self.fee_per_contract - first_paid, 4)
+
+    def hedge_limit(self, first_paid: float) -> float:
+        """The IOC limit for leg B: the worst level the pricer walked for this size, less what leg
+        A paid over its own priced VWAP, floored to the hedge venue's tick."""
+        overpay = max(0.0, first_paid - self.first.vwap) if self.first.vwap else 0.0
+        raw = self.hedge.limit_price - overpay
+        tick = self.hedge.tick or 0.01
+        return round(math.floor(raw / tick + 1e-9) * tick, 4)
 
 
 def marginal_price(book: Book, contracts: float) -> float | None:
@@ -93,6 +114,6 @@ def plan_from_cover(*, opportunity_id: str, event_id: str, league: str, cov: Cov
             return None
         market_id, side = _leg_side(leg)
         plans[venue] = LegPlan(venue, market_id, lc.outcome_id, side, limit, cov.contracts,
-                               "fok" if venue == FIRST_VENUE else "ioc")
+                               "fok" if venue == FIRST_VENUE else "ioc", vwap=float(lc.vwap), tick=float(leg.tick or 0.01))
     return Plan(opportunity_id, event_id, league, cov.contracts, plans[FIRST_VENUE], plans[HEDGE_VENUE],
                 max_cost_per_contract=1.0 / (1.0 + hurdle), fee_per_contract=float(cov.fee_per_contract or 0.0))

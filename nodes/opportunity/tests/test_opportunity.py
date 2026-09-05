@@ -109,3 +109,33 @@ def test_the_store_folds_a_disconnect_into_a_blocked_match_record(tmp_path: Path
     assert o.status is S.BLOCKED_STALE
     tr = store.con.execute("SELECT from_status, to_status FROM opportunity_transitions ORDER BY id").fetchall()
     assert tr == [(None, "BLOCKED_MATCH"), ("BLOCKED_MATCH", "BLOCKED_STALE")]
+
+
+def test_move_persists_the_execution_owned_transition_and_load_rehydrates_after_a_restart(tmp_path):
+    """2026-09-05: the coordinator moved the row's status without a transitions row, so F3's
+    `cleared_cover` (an EXECUTION_PENDING transition) counted zero against four executions."""
+    from nodes.opportunity.opportunity import IllegalTransition, Opportunity, OpportunityStore
+    from nodes.store_tuples.store import TupleStore
+    from kernel.schema import OpportunityStatus as S
+    st = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    opps = OpportunityStore(st)
+    o = opps.observe(event_id="espn:mlb:9", league="mlb", quantity=100.0, status=S.PROFITABLE_UNEXECUTED, now=1000.0,
+                     gross=0.9, fees=0.01, settlement_buffer=0.0, net_profit=9.0, locked_return=0.09, blocked_by=None, legs=[{"venue": "kalshi"}])
+    assert opps.move(o, S.EXECUTION_PENDING, now=1001.0, detail="DETECTED") is True
+    assert opps.move(o, S.EXECUTION_PENDING, now=1002.0) is False, "a no-op move writes no transition"
+    assert opps.move(o, S.HEDGED, now=1003.0, detail="HEDGED") is True
+    rows = st.con.execute("SELECT from_status, to_status, detail FROM opportunity_transitions WHERE opportunity_id=? ORDER BY id", (o.opportunity_id,)).fetchall()
+    assert rows[-2:] == [("PROFITABLE_UNEXECUTED", "EXECUTION_PENDING", "DETECTED"), ("EXECUTION_PENDING", "HEDGED", "HEDGED")]
+    try:
+        opps.move(o, S.DISCOVERED, now=1004.0)
+        raise AssertionError("HEDGED -> DISCOVERED must be refused")
+    except IllegalTransition:
+        pass
+    # the lane restarts: `live` is empty, the row is not
+    fresh = OpportunityStore(st)
+    assert fresh.live == {}
+    back = fresh.load(o.opportunity_id)
+    assert back is not None and back.status is S.HEDGED and back.legs == [{"venue": "kalshi"}] and back.quantity == 100.0
+    assert fresh.load("nope") is None
+    assert fresh.move(back, S.SETTLED, now=1005.0, detail="+5.0") is True
+    assert st.con.execute("SELECT status FROM opportunities WHERE opportunity_id=?", (o.opportunity_id,)).fetchone()[0] == "SETTLED"

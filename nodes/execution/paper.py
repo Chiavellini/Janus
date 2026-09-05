@@ -35,6 +35,10 @@ class PaperVenue:
     #: (nodes/cover.Frontier.slippage_modelled); a test may set it.
     adverse_move: float = 0.0
     balance_usd: float = 1_000.0
+    #: The venue's fee params for the markets being filled (as the pricer used them). When set, a
+    #: paper fill carries the PINNED taker fee, so paper PnL is net as F3/F5 define it; until
+    #: 2026-09-05 every paper order recorded fee_usd 0.0 and the +$5.00 of STL @ LAD was gross.
+    fee_params: dict = field(default_factory=dict)
     seed: int = 0
     clock: Callable[[], float] = time.time
     mono: Callable[[], float] = time.monotonic
@@ -85,16 +89,31 @@ class PaperVenue:
         state = (FillState.FILLED if filled >= req.contracts - 1e-9 else
                  FillState.PARTIAL if filled > 0 else FillState.UNFILLED)
         avg = gross / filled if filled else None
+        fee = self._pinned_fee(req, taken) if filled else 0.0
         oid = f"paper-{req.client_order_id}"
-        ack = Ack(self.venue, req.client_order_id, oid, state, filled, avg, 0.0, state.value.lower(),
+        ack = Ack(self.venue, req.client_order_id, oid, state, filled, avg, fee, state.value.lower(),
                   t + self.latency_s, open=(req.time_in_force == "gtc" and need > 1e-9))
-        self.balance_usd -= gross
+        self.balance_usd -= gross + fee
         self._orders[req.client_order_id] = ack
         if filled:
-            self._fills.append(FillRecord(self.venue, oid, f"{oid}-f1", filled, avg, 0.0, True, t, True))
+            self._fills.append(FillRecord(self.venue, oid, f"{oid}-f1", filled, avg, fee, True, t, True))
             self.journal.record_fill(self._fills[-1])
         self.journal.record(ack, kind="ack", now=t)
         return ack
+
+    def _pinned_fee(self, req: OrderRequest, taken: list) -> float:
+        """The pinned taker fee over the levels actually taken, through the same fee model the
+        cover was priced with. 0.0 when this venue has no fee params set (tests, shadow)."""
+        if not self.fee_params:
+            return 0.0
+        from nodes.fees.models import Fill
+        from nodes.fees.registry import model_for, params_for
+        fills = [Fill(venue=self.venue, market_id=req.market_id, outcome_id=req.outcome_id, side="yes",
+                      price=px, contracts=n, liquidity="taker", order_seq=0) for px, n in taken]
+        try:
+            return float(model_for(self.venue).entry_cost(fills, params_for(self.venue, self.fee_params)))
+        except Exception:  # noqa: BLE001 -- a fee model that cannot price this venue is not a reason to lose the fill
+            return 0.0
 
     def cancel(self, client_order_id: str) -> Ack:
         a = self._orders.get(client_order_id)

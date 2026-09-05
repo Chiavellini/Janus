@@ -51,6 +51,7 @@ class Coordinator:
     kill: object | None = None                # nodes/risk.KillSwitches, optional
     balances: Callable[[], Mapping[str, float] | None] | None = None
     executions: dict[str, Execution] = field(default_factory=dict)
+    opp_refusals: dict[str, int] = field(default_factory=dict)
 
     # ── the machine ──────────────────────────────────────────────────────
     def execute(self, plan: Plan, clearance: RiskClearance, *, offers_books: dict | None = None,
@@ -105,17 +106,19 @@ class Coordinator:
         if ack.state is FillState.PARTIAL:
             self._opp(ex, S.PARTIALLY_FILLED, self.clock())
 
-        # LEG B: Kalshi, IOC, for exactly what leg A filled, at the hedge limit.
-        limit = plan.hedge_limit(ex.first_avg_price or plan.first.limit_price)
-        if limit < plan.hedge.limit_price - 1e-9 and limit < 0.01:
-            return self._fail(ex, X.HEDGE_SLIPPAGE_EXCEEDED, f"hedge limit {limit:.4f} is not a price", release=False)
+        # LEG B: Kalshi, IOC, for exactly what leg A filled, at the walked level (the limit); the
+        # VWAP budget rides beside it in the record (nodes/execute/plan.py, 2026-09-05).
+        paid = ex.first_avg_price or plan.first.limit_price
+        limit, budget = plan.hedge_limit(paid), plan.hedge_budget(paid)
+        if limit < 0.01:
+            return self._fail(ex, X.HEDGE_SLIPPAGE_EXCEEDED, f"hedge limit {limit:.4f} is not a price (budget {budget:.4f})", release=False)
         deadline = self.mono() + self.hedge_deadline_s
         attempts = 0
         while ex.unhedged > 1e-9 and self.mono() < deadline and attempts < clearance.max_hedge_submits:
             attempts += 1
             req_b = self._request(plan, plan.hedge, ex.unhedged, max(limit, 0.01), hedge=True)
             ex.hedge_client_ids.append(req_b.client_order_id)
-            self.records.move(ex, X.LEG_B_SUBMITTED, now=self.clock(), detail=f"attempt {attempts} limit {limit:.4f}")
+            self.records.move(ex, X.LEG_B_SUBMITTED, now=self.clock(), detail=f"attempt {attempts} limit {limit:.4f} budget {budget:.4f}")
             hb = self.venues[plan.hedge.venue].submit(req_b, clearance)
             hb = self._settle_ack(plan.hedge.venue, hb, deadline_mono=deadline)
             if hb.state is FillState.UNCONFIRMED:
@@ -135,7 +138,9 @@ class Coordinator:
                     break
                 self.sleep(self.poll_interval_s)
         if ex.unhedged <= 1e-9:
-            self.records.move(ex, X.HEDGED, now=self.clock(), detail=f"{ex.hedge_filled} hedged @ {ex.hedge_avg_price}")
+            above = (ex.hedge_avg_price or 0.0) > budget + 1e-9
+            self.records.move(ex, X.HEDGED, now=self.clock(), detail=f"{ex.hedge_filled} hedged @ {ex.hedge_avg_price}"
+                              + (f" ABOVE_BUDGET {budget:.4f}: below the hurdle, still a cover" if above else ""))
             self._opp(ex, S.HEDGED, self.clock())
             return ex
         reason = X.HEDGE_SLIPPAGE_EXCEEDED if attempts and ex.hedge_filled == 0 else X.PARTIAL_FILL
@@ -172,13 +177,20 @@ class Coordinator:
         return ex
 
     def _opp(self, ex: Execution, status: S, now: float) -> None:
+        """The opportunity record follows the execution. Persisted WITH its transition row
+        (`OpportunityStore.move`); a refused move is counted and printed once per cause rather
+        than swallowed -- the machine must not break, but silence is how F3's predicate went
+        uncountable (2026-09-05)."""
         if self.opportunities is None:
             return
-        opp = self.opportunities.live.get(ex.opportunity_id)
+        load = getattr(self.opportunities, "load", None)
+        opp = load(ex.opportunity_id) if load is not None else self.opportunities.live.get(ex.opportunity_id)
         if opp is None:
             return
         try:
-            if opp.transition(status, now=now, detail=ex.state.value):
-                self.opportunities._upsert(opp)
-        except Exception:  # noqa: BLE001 -- the record must not break the machine; the transition table is pinned by tests
-            pass
+            self.opportunities.move(opp, status, now=now, detail=ex.state.value)
+        except Exception as exc:  # noqa: BLE001 -- the record must not break the machine; the transition table is pinned by tests
+            key = f"{type(exc).__name__}:{opp.status.value}->{status.value}"
+            self.opp_refusals[key] = self.opp_refusals.get(key, 0) + 1
+            if self.opp_refusals[key] == 1:
+                print(f"  [exec] opportunity record refused {key}: {exc}", flush=True)

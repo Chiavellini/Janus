@@ -47,7 +47,7 @@ from nodes.cover.capacity import frontier  # noqa: E402
 from nodes.discovery.watchlist import Watchlist, kalshi_watch, pm_watch_events  # noqa: E402
 from nodes.watch_settle.settle import record_watch  # noqa: E402
 from nodes.entities.leagues import LEAGUES, default_leagues  # noqa: E402
-from nodes.discovery.discovery import co_listed, discover, first_seen, record_events  # noqa: E402
+from nodes.discovery.discovery import co_listed, discover, first_seen, record_events, record_spawn_block  # noqa: E402
 from nodes.slate.slate import next_transition, windows_for  # noqa: E402
 from nodes.execute.coordinator import Coordinator  # noqa: E402
 from nodes.execute.plan import plan_from_cover  # noqa: E402
@@ -180,12 +180,17 @@ class Supervisor:
         nxt = next_transition(wins, now.timestamp())
         self.wake_state = ("WAKE" if any(w.covers(now.timestamp()) for w in wins) else "DRAIN",
                            nxt[0] if nxt else None, nxt[1] if nxt else None)
-        self.blocked = dict(blocked)
+        # A spawn block (below) survives the discovery pass that would otherwise null it: the
+        # 5-minute upsert writes `blocked` into events.block_reason, so a game still on the slate
+        # keeps its SPAWN reason until it certifies (2026-09-05: two co-listed European games were
+        # blocked at TEMPLATE_UNKNOWN for a whole evening and nothing said so).
+        kept = {g: r for g, r in self.blocked.items() if str(r).startswith("SPAWN:") and g in slate and g not in blocked}
+        self.blocked = {**dict(blocked), **kept}
         for venue, errs in d.fee_errors.items():
             for key, err in errs.items():
                 self.blocked[f"fees:{venue}:{key}"] = f"FEE_SCHEDULE: {err}"
         if self.store is not None:
-            record_events(self.store, d, slate, blocked)
+            record_events(self.store, d, slate, {**dict(blocked), **kept})
         return slate
 
     def sync_watch(self) -> tuple[int, int]:
@@ -230,7 +235,16 @@ class Supervisor:
                            order_limits={"polymarket": spec.get("pm_limits") or {}})
             if p.state is PollerState.BLOCKED:
                 # An unproven outcome set or settlement basis never gets a subscription spent on it.
-                self.blocked[gid] = f"SPAWN:{p.block_reason}"
+                # Said once per game per reason and written to the event's row: the poller only
+                # knows SETTLEMENT_UNPROVEN, the certify code and detail are in the spec.
+                st = spec.get("settlement") or {}
+                reason = f"SPAWN:{p.block_reason}" + (f" ({st.get('code')}: {str(st.get('detail', ''))[:120]})"
+                                                      if st.get("result") == "BLOCKED" else "")
+                if self.blocked.get(gid) != reason:
+                    print(f"[spawn-blocked] {spec['short_name']} ({spec['league']}) {reason}", flush=True)
+                    if self.store is not None:
+                        record_spawn_block(self.store, gid, reason, now=time.time())
+                self.blocked[gid] = reason
                 continue
             sup = Supervised(p, spec["short_name"], time.time(),
                              tuple(p.market_ids("kalshi")), tuple(p.market_ids("polymarket")),
@@ -371,6 +385,8 @@ class Supervisor:
                 if v is not None and hasattr(v, "books"):
                     side = "buy_no" if (l.venue == "kalshi" and l.outcome_id.endswith(":NO")) else "buy_yes"
                     v.books[(l.market_id, side)] = l.book
+                    if hasattr(v, "fee_params"):
+                        v.fee_params = dict(sup.fee_params.get(l.venue) or {})    # paper fills carry the pinned fee
         max_age = max((ev.evaluated_utc - l.book.fetched_utc) for legs in offers.values() for l in legs)
         cand = Candidate(plan.opportunity_id, ev.game_id, sup.poller.league,
                          ((plan.first.venue, plan.first.contracts, plan.first.limit_price),
@@ -464,7 +480,8 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
                     print(f"[slate] {len(slate)} co-listed games {sup.tiers}, {len(sup.live)} pollers, "
                           f"box {sup.wake_state[0]}" + (f" -> {sup.wake_state[1]} in "
                           f"{int(sup.wake_state[2] - time.time())}s" if sup.wake_state[1] else "")
-                          + (f", blocked: {len(sup.blocked)}" if sup.blocked else ""), flush=True)
+                          + ((f", blocked: {len(sup.blocked)}" + (f" (spawn {n_spawn})" if (n_spawn := sum(1 for r in sup.blocked.values() if str(r).startswith('SPAWN:'))) else ""))
+                             if sup.blocked else ""), flush=True)
                 except Exception as exc:  # noqa: BLE001 -- discovery must never kill the loop
                     print(f"[slate FAILED] {type(exc).__name__}: {exc}", flush=True)
                     traceback.print_exc()

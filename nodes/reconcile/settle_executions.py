@@ -32,27 +32,48 @@ SETTLEMENTS_DDL = """
 CREATE TABLE IF NOT EXISTS execution_settlements(
   execution_id TEXT PRIMARY KEY, opportunity_id TEXT NOT NULL, event_id TEXT NOT NULL, league TEXT NOT NULL,
   mode TEXT NOT NULL, settled_ts REAL NOT NULL, kalshi_winner TEXT, polymarket_winner TEXT,
-  realized_usd REAL NOT NULL, released INTEGER NOT NULL, legs_json TEXT NOT NULL);
+  realized_usd REAL NOT NULL, released INTEGER NOT NULL, legs_json TEXT NOT NULL,
+  kind TEXT, hedged_contracts REAL, unhedged_contracts REAL, cover_usd REAL, directional_usd REAL);
 """
-OPEN_STATES = (X.HEDGED.value, X.SETTLED.value)          # SETTLED without release: retry
+#: Columns added after the table first existed (one production row on 2026-09-05); added in place.
+_SETTLEMENT_COLUMNS = {"kind": "TEXT", "hedged_contracts": "REAL", "unhedged_contracts": "REAL",
+                       "cover_usd": "REAL", "directional_usd": "REAL"}
+#: Hedged, or settled without release (retry), or a HOLDING failure: leg A filled and the hedge did
+#: not (fully). The last kind is F3's STOP condition (MIL @ CIN, 2026-09-05): it settles too -- the
+#: hedged part as a cover, the remainder as a directional position at the venue's result -- or its
+#: reservation is never released and the watchdog alarms forever.
+OPEN_STATES = (X.HEDGED.value, X.SETTLED.value, *(x.value for x in X if x.holds_position))
+
+
+def _ensure_columns(store) -> None:
+    have = {r[1] for r in store.con.execute("PRAGMA table_info(execution_settlements)").fetchall()}
+    for col, typ in _SETTLEMENT_COLUMNS.items():
+        if col not in have:
+            store.con.execute(f"ALTER TABLE execution_settlements ADD COLUMN {col} {typ}")
 
 
 def pending(store, *, now: float | None = None, grace_s: float = 6 * 3600.0) -> list[dict]:
     """Executions still holding capital whose game has ended, with the event spec beside them."""
     t = now or time.time()
+    marks = ",".join("?" * len(OPEN_STATES))
     rows = store.con.execute(
         "SELECT e.execution_id, e.opportunity_id, e.event_id, e.league, e.mode, e.state, e.reservation_id, "
-        "ev.pm_slug, ev.spec_json, ev.phase, ev.start_utc FROM executions e LEFT JOIN events ev ON ev.event_id = e.event_id "
-        "WHERE e.released = 0 AND e.state IN (?, ?)", OPEN_STATES).fetchall()
+        "ev.pm_slug, ev.spec_json, ev.phase, ev.start_utc, e.first_filled, e.hedge_filled, e.first_avg_price, e.hedge_avg_price "
+        f"FROM executions e LEFT JOIN events ev ON ev.event_id = e.event_id WHERE e.released = 0 AND e.state IN ({marks})",
+        OPEN_STATES).fetchall()
     out = []
     for r in rows:
         phase, start = r[9] or "", r[10]
         ended = phase.startswith("post") or (start is not None and t - float(start) > grace_s)
         if not ended:
             continue
+        if X(r[5]).holds_position and not (r[11] or 0.0) > 0:
+            continue            # a holding failure with nothing filled on leg A holds nothing
         spec = json.loads(r[8]) if r[8] else {}
         out.append({"execution_id": r[0], "opportunity_id": r[1], "event_id": r[2], "league": r[3], "mode": r[4],
-                    "state": r[5], "reservation_id": r[6], "pm_slug": r[7], "outcomes": spec.get("outcomes") or {}})
+                    "state": r[5], "reservation_id": r[6], "pm_slug": r[7], "outcomes": spec.get("outcomes") or {},
+                    "first_filled": float(r[11] or 0.0), "hedge_filled": float(r[12] or 0.0),
+                    "first_avg_price": r[13], "hedge_avg_price": r[14]})
     return out
 
 
@@ -112,6 +133,7 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
     """The state half. Settles every execution both venues have resolved; the rest wait."""
     t = now or time.time()
     store.ensure_ddl(SETTLEMENTS_DDL)
+    _ensure_columns(store)
     out = {"settled": 0, "waiting": 0, "unreleasable": 0}
     for it in items:
         w = winners.get(it["execution_id"]) or {}
@@ -128,23 +150,49 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
         pnl = sum(x.realized_usd for x in realized)
         ok = releasable(realized)
         released = bool(ok and it.get("reservation_id") and ledger.release(it["reservation_id"], reason=f"settled: {w}", now=t))
+        split = _split(it, legs, pnl)
         store.con.execute(
-            "INSERT OR REPLACE INTO execution_settlements VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT OR REPLACE INTO execution_settlements(execution_id, opportunity_id, event_id, league, mode, settled_ts, "
+            "kalshi_winner, polymarket_winner, realized_usd, released, legs_json, kind, hedged_contracts, unhedged_contracts, "
+            "cover_usd, directional_usd) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (it["execution_id"], it["opportunity_id"], it["event_id"], it["league"], it["mode"], t,
-             w.get("kalshi"), w.get("polymarket"), pnl, int(released), json.dumps(legs)))
+             w.get("kalshi"), w.get("polymarket"), pnl, int(released), json.dumps(legs), split["kind"],
+             split["hedged"], split["unhedged"], split["cover_usd"], split["directional_usd"]))
         store.con.execute("UPDATE executions SET state=?, released=?, last_utc=?, detail=? WHERE execution_id=?",
                           (X.RECONCILED.value if released else X.SETTLED.value, int(released), t,
-                           f"settled {pnl:+.4f} USD" + ("" if released else "; not releasable"), it["execution_id"]))
+                           f"settled {pnl:+.4f} USD ({split['kind']})" + ("" if released else "; not releasable"), it["execution_id"]))
         store.con.execute("INSERT INTO execution_transitions(seen_ts, execution_id, from_state, to_state, detail) VALUES(?,?,?,?,?)",
                           (t, it["execution_id"], it["state"], X.RECONCILED.value if released else X.SETTLED.value, f"{pnl:+.4f}"))
-        opp = opportunities.live.get(it["opportunity_id"]) if opportunities is not None else None
-        if opp is not None and opp.status is S.HEDGED:
-            opp.transition(S.SETTLED, now=t, detail=f"{pnl:+.4f}")
-            if released:
-                opp.transition(S.RECONCILED, now=t)
-            opportunities._upsert(opp)
+        if opportunities is not None:
+            load = getattr(opportunities, "load", None)
+            opp = load(it["opportunity_id"]) if load is not None else opportunities.live.get(it["opportunity_id"])
+            if opp is not None and opp.status in (S.HEDGED, S.FAILED_HEDGE):
+                opportunities.move(opp, S.SETTLED, now=t, detail=f"{pnl:+.4f}")
+                if released:
+                    opportunities.move(opp, S.RECONCILED, now=t)
         out["settled" if released else "unreleasable"] += 1
-        log(f"[settle ] {it['event_id']} {it['mode']} realized {pnl:+.4f} USD; kalshi={w.get('kalshi')} polymarket={str(w.get('polymarket'))[:12]}"
+        log(f"[settle ] {it['event_id']} {it['mode']} {split['kind']} realized {pnl:+.4f} USD"
+            + (f" (cover {split['cover_usd']:+.4f}, directional {split['directional_usd']:+.4f} on {split['unhedged']} unhedged)"
+               if split["kind"] == "PARTIAL" else "")
+            + f"; kalshi={w.get('kalshi')} polymarket={str(w.get('polymarket'))[:12]}"
             + ("; reservation released" if released else "; NOT released"))
     store.con.commit()
     return out
+
+
+def _split(it: dict, legs: list[dict], pnl: float) -> dict:
+    """COVER when every first-leg contract was hedged; PARTIAL otherwise, with the realized PnL
+    split into the hedged part (a cover: h x (1 - price_a - price_b) less its pro-rata fees) and
+    the directional remainder (everything else, marked at the venue's result). The split is
+    descriptive -- the venue paid one number -- and exists so a PARTIAL row is never read as a
+    cover's return."""
+    first, hedge = float(it.get("first_filled") or 0.0), float(it.get("hedge_filled") or 0.0)
+    h, u = min(first, hedge), max(0.0, first - hedge)
+    if first <= 0 or u <= 1e-9:
+        return {"kind": "COVER", "hedged": round(h, 4), "unhedged": 0.0, "cover_usd": round(pnl, 4), "directional_usd": 0.0}
+    pa, pb = float(it.get("first_avg_price") or 0.0), float(it.get("hedge_avg_price") or 0.0)
+    fees = sum(float(l.get("fee_usd") or 0.0) for l in legs if float(l.get("contracts") or 0.0) > 0)
+    filled = sum(float(l.get("contracts") or 0.0) for l in legs)
+    cover = h * (1.0 - pa - pb) - (fees * (2 * h / filled) if filled else 0.0)
+    return {"kind": "PARTIAL", "hedged": round(h, 4), "unhedged": round(u, 4),
+            "cover_usd": round(cover, 4), "directional_usd": round(pnl - cover, 4)}

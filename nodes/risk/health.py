@@ -9,6 +9,7 @@ import sqlite3
 import time
 from pathlib import Path
 
+from kernel.schema import ExecutionState
 from nodes.risk.breaker import BREAKER_PATH
 from nodes.risk.kill import KILL_ROOT
 
@@ -45,13 +46,27 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
                 # capital held to the game's settlement, not an unreconciled fill; the settlement
                 # pass releases it when the venues resolve (2026-09-04). Only the rest are late.
                 has_ex = con.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='executions'").fetchall()
+                held = "', '".join(["HEDGED", "SETTLED", *sorted(x.value for x in ExecutionState if x.holds_position)])
                 q = ("SELECT MIN(r.created_utc) FROM capital_reservations r LEFT JOIN executions e ON e.reservation_id = r.reservation_id "
-                     "WHERE r.released_utc IS NULL AND (e.state IS NULL OR e.state NOT IN ('HEDGED', 'SETTLED'))") if has_ex else \
+                     f"WHERE r.released_utc IS NULL AND (e.state IS NULL OR e.state NOT IN ('{held}'))") if has_ex else \
                     "SELECT MIN(created_utc) FROM capital_reservations WHERE released_utc IS NULL"
                 oldest = con.execute(q).fetchone()[0]
                 if oldest is not None and t - oldest > max_unreconciled_s:
                     out.append(f"risk: UNRECONCILED_TOO_LONG — a reservation has been open {int(t - oldest)}s "
                                f"(limit {int(max_unreconciled_s)}s); both venues must reconcile before release")
+                # UNHEDGED_POSITION: leg A filled, the hedge did not (fully), capital still held. This is
+                # the forward paper row's STOP condition (F3 spec: "one unhedged paper leg is a STOP and a
+                # design finding"), so it alarms at once, one line per execution, until the settlement
+                # pass marks it and releases it (2026-09-05, MIL @ CIN 35.82 unhedged for three hours).
+                if has_ex:
+                    cols = {r[1] for r in con.execute("PRAGMA table_info(executions)").fetchall()}
+                    if {"first_filled", "unhedged", "event_id", "last_utc"} <= cols:
+                        holding = "', '".join(sorted(x.value for x in ExecutionState if x.holds_position))
+                        for row in con.execute(
+                                "SELECT execution_id, event_id, state, unhedged, first_filled, last_utc FROM executions "
+                                f"WHERE released = 0 AND first_filled > 0 AND state IN ('{holding}') ORDER BY last_utc").fetchall():
+                            out.append(f"risk: UNHEDGED_POSITION — {row[0][:8]} {row[1]} {row[2]} {row[3]:g}/{row[4]:g} "
+                                       f"unhedged for {int(t - (row[5] or t))}s (the paper row's STOP condition)")
             con.close()
         except sqlite3.Error as exc:
             out.append(f"risk: LEDGER_UNREADABLE — {type(exc).__name__}")

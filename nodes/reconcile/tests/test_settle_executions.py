@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+
+import pytest
 from pathlib import Path
 
 from kernel.schema import OpportunityStatus as S
@@ -97,3 +99,88 @@ def test_the_other_result_and_an_open_venue(tmp_path):
     apply_settlements(st, ledger, None, opps, items, winners, now=T + 1, log=lambda s: None)
     # PM LAD YES won (+100 - 45); Kalshi NO on LAD lost (-50): net +5.00 -- a cover pays the same either way
     assert st.con.execute("SELECT realized_usd FROM execution_settlements").fetchone()[0] == 5.0
+
+
+def _partial(tmp_path: Path):
+    """Execution 69852b86, MIL @ CIN, 2026-09-05 00:49:35Z: Polymarket CIN YES 100 @ 0.13 filled;
+    Kalshi MIL YES hedge 64.18 @ 0.84 PARTIAL, two more attempts UNFILLED; 35.82 unhedged."""
+    st = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    st.ensure_ddl(EVENTS_DDL); st.ensure_ddl(EXECUTION_DDL); st.ensure_ddl(JOURNAL_DDL)
+    CIN, MIL = "tok-cin", "tok-mil"
+    spec = {"outcomes": {"mlb:cin": {"kalshi": "K-CIN", "polymarket": CIN}, "mlb:mil": {"kalshi": "K-MIL", "polymarket": MIL}}}
+    oid = Opportunity.id_for("espn:mlb:401816802", 100.0)
+    st.con.execute("INSERT INTO events(event_id, league, start_utc, phase, pm_slug, spec_json, first_seen_ts, last_seen_ts) VALUES(?,?,?,?,?,?,?,?)",
+                   ("espn:mlb:401816802", "mlb", T - 4 * 3600, "post:co_listed", "mlb-mil-cin-2026-09-04", json.dumps(spec), T - 5 * 3600, T))
+    ledger = ExposureLedger(st)
+    res = ledger.reserve(event_id="espn:mlb:401816802", league="mlb", per_venue_usd={"kalshi": 85.0, "polymarket": 13.0}, limits=load_limits(),
+                         opportunity_id=oid, now=T - 3600)
+    st.con.execute("INSERT INTO executions(execution_id, opportunity_id, event_id, league, mode, state, started_utc, last_utc, quantity, "
+                   "first_filled, first_avg_price, hedge_filled, hedge_avg_price, unhedged, reservation_id, released) "
+                   "VALUES('x2',?,'espn:mlb:401816802','mlb','PAPER_EXECUTION','PARTIAL_FILL',?,?,100,100,0.13,64.18,0.84,35.82,?,0)",
+                   (oid, T - 3600, T - 3600, res.reservation_id))
+    ins = ("INSERT INTO orders(client_order_id, venue, mode, market_id, outcome_id, side, price, contracts, time_in_force, opportunity_id, state, "
+           "filled_contracts, avg_price, fee_usd, submitted_utc, last_utc) VALUES(?,?,'PAPER_EXECUTION',?,?,?,?,?,?,?,?,?,?,?,?,?)")
+    st.con.execute(ins, ("a", "polymarket", CIN, CIN, "buy_yes", 0.13, 100, "fok", oid, "FILLED", 100, 0.13, 0.0, T - 3600, T - 3600))
+    st.con.execute(ins, ("b1", "kalshi", "K-MIL", "K-MIL", "buy_yes", 0.8452, 100, "ioc", oid, "PARTIAL", 64.18, 0.84, 0.0, T - 3600, T - 3600))
+    st.con.execute(ins, ("b2", "kalshi", "K-MIL", "K-MIL", "buy_yes", 0.8452, 35.82, "ioc", oid, "UNFILLED", 0, None, 0.0, T - 3600, T - 3600))
+    st.con.execute(ins, ("b3", "kalshi", "K-MIL", "K-MIL", "buy_yes", 0.8452, 35.82, "ioc", oid, "UNFILLED", 0, None, 0.0, T - 3600, T - 3600))
+    opps = OpportunityStore(st)
+    o = opps.observe(status=S.PROFITABLE_UNEXECUTED, now=T - 3600, event_id="espn:mlb:401816802", league="mlb", quantity=100.0, gross=0.97, fees=0.01,
+                     settlement_buffer=0.0, net_profit=1.5, locked_return=0.015, blocked_by=None, legs=[])
+    opps.move(o, S.EXECUTION_PENDING, now=T - 3599); opps.move(o, S.FAILED_HEDGE, now=T - 3598)
+    st.con.commit()
+    fresh = OpportunityStore(st)            # the lane restarted since: `live` is empty
+    return st, ledger, fresh, res.reservation_id, oid, CIN, MIL
+
+
+def _fetchers2(kalshi: dict, pm_label: str | None, CIN, MIL):
+    def fk(ticker, cl):
+        r = kalshi.get(ticker)
+        return {"market": {"status": "settled" if r else "active", "result": r or ""}}
+    def fe(slug):
+        return {"markets": [{"slug": slug, "sportsMarketType": "moneyline", "closed": True, "outcomes": '["Milwaukee Brewers","Cincinnati Reds"]',
+                             "clobTokenIds": json.dumps([MIL, CIN]), "outcomePrices": '["1","0"]' if pm_label == "MIL" else '["0","1"]'}]}
+    return fk, fe
+
+
+def test_a_partial_fill_settles_as_a_cover_plus_a_directional_remainder_and_releases(tmp_path):
+    st, ledger, opps, rid, oid, CIN, MIL = _partial(tmp_path)
+    items = pending(st, now=T)
+    assert [i["state"] for i in items] == ["PARTIAL_FILL"], "a holding failure with a filled first leg is pending"
+    fk, fe = _fetchers2({"K-CIN": "yes", "K-MIL": "no"}, "CIN", CIN, MIL)           # the Reds won
+    winners = fetch_results(items, None, fetch_kalshi=fk, fetch_event=fe)
+    out = apply_settlements(st, ledger, None, opps, items, winners, now=T, log=lambda s: None)
+    assert out == {"settled": 1, "waiting": 0, "unreleasable": 0}
+    row = st.con.execute("SELECT realized_usd, released, kind, hedged_contracts, unhedged_contracts, cover_usd, directional_usd FROM execution_settlements").fetchone()
+    # PM CIN YES won: +100 - 13 = +87.00; Kalshi MIL YES lost: -64.18 x 0.84 = -53.91; total +33.09
+    assert row[0] == pytest.approx(33.0888, abs=1e-3) and row[1] == 1 and row[2] == "PARTIAL"
+    assert row[3] == pytest.approx(64.18) and row[4] == pytest.approx(35.82)
+    # the hedged 64.18 were a cover at 1 - 0.13 - 0.84 = 0.03 each: +1.93; the rest is directional
+    assert row[5] == pytest.approx(64.18 * 0.03, abs=1e-3) and row[6] == pytest.approx(row[0] - row[5], abs=1e-3)
+    assert st.con.execute("SELECT state, released FROM executions").fetchone() == ("RECONCILED", 1)
+    assert st.con.execute("SELECT released_utc IS NOT NULL FROM capital_reservations WHERE reservation_id=?", (rid,)).fetchone()[0] == 1
+    moves = [r[0] for r in st.con.execute("SELECT to_status FROM opportunity_transitions WHERE opportunity_id=? ORDER BY id", (oid,)).fetchall()]
+    assert moves[-3:] == ["FAILED_HEDGE", "SETTLED", "RECONCILED"], moves
+    assert pending(st, now=T) == []
+
+
+def test_the_partial_fill_losing_side(tmp_path):
+    st, ledger, opps, rid, oid, CIN, MIL = _partial(tmp_path)
+    items = pending(st, now=T)
+    fk, fe = _fetchers2({"K-CIN": "no", "K-MIL": "yes"}, "MIL", CIN, MIL)           # the Brewers won
+    winners = fetch_results(items, None, fetch_kalshi=fk, fetch_event=fe)
+    apply_settlements(st, ledger, None, opps, items, winners, now=T, log=lambda s: None)
+    row = st.con.execute("SELECT realized_usd, kind, cover_usd, directional_usd FROM execution_settlements").fetchone()
+    # PM CIN YES lost: -13.00; Kalshi MIL YES won on 64.18: +64.18 x 0.16 = +10.27; total -2.73
+    assert row[0] == pytest.approx(-2.7312, abs=1e-3) and row[1] == "PARTIAL"
+    assert row[2] == pytest.approx(64.18 * 0.03, abs=1e-3), "the cover part pays the same either way"
+    assert row[3] == pytest.approx(row[0] - row[2], abs=1e-3)
+
+
+def test_a_hedged_cover_is_kind_cover(tmp_path):
+    st, ledger, opps, rid = _hedged(tmp_path)
+    items = pending(st, now=T)
+    fk, fe = _fetchers({"K-LAD": "no", "K-STL": "yes"}, "STL")
+    apply_settlements(st, ledger, None, opps, items, fetch_results(items, None, fetch_kalshi=fk, fetch_event=fe), now=T, log=lambda s: None)
+    # (the fixture's execution row records no fill counts; a COVER row carries the whole PnL as cover_usd)
+    assert st.con.execute("SELECT kind, unhedged_contracts, cover_usd, directional_usd FROM execution_settlements").fetchone() == ("COVER", 0.0, 5.0, 0.0)

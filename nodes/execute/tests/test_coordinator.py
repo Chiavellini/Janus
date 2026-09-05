@@ -68,8 +68,11 @@ def test_the_plan_leads_with_polymarket_and_hedges_on_kalshi_at_the_walked_limit
     assert p.hedge.venue == "kalshi" and p.hedge.time_in_force == "ioc"
     assert p.first.limit_price == 0.44 and p.hedge.limit_price == 0.44
     assert p.max_cost_per_contract == pytest.approx(1 / 1.01)
-    # what the hedge may pay if leg A paid 0.44: the cost ceiling minus fees minus 0.44
-    assert p.hedge_limit(0.44) == pytest.approx(round(1 / 1.01 - cov.fee_per_contract - 0.44, 4))
+    # the BUDGET is what the hedge may average if leg A paid 0.44: the cost ceiling minus fees minus 0.44
+    assert p.hedge_budget(0.44) == pytest.approx(round(1 / 1.01 - cov.fee_per_contract - 0.44, 4))
+    # the LIMIT is the level the pricer walked to (one level here), tightened only by leg-A overpay
+    assert p.hedge_limit(0.44) == pytest.approx(0.44) and p.first.vwap == pytest.approx(0.44)
+    assert p.hedge_limit(0.46) == pytest.approx(0.42), "two cents overpaid on leg A come off the hedge limit"
     assert marginal_price(bk([(0.40, 10), (0.45, 10)]), 15) == 0.45 and marginal_price(bk([(0.40, 10)]), 15) is None
 
 
@@ -237,3 +240,80 @@ def test_a_polymarket_no_leg_plans_as_buy_yes_of_the_no_token():
     assert p is not None
     assert p.first.venue == "polymarket" and p.first.market_id == "P_H_NO" and p.first.side == "buy_yes" and p.first.outcome_id == "P_H:NO"
     assert p.hedge.venue == "kalshi" and p.hedge.market_id == "K_H" and p.hedge.side == "buy_yes"
+
+
+#: MIL @ CIN, 2026-09-05 00:49:35Z, execution 69852b86 -- the exact ladders from books_json. F3's
+#: first unhedged paper leg: the pricer walked Kalshi to 0.85 for q=100 (64.18 @ 0.84 + 35.82 @
+#: 0.85, VWAP 0.8436) while the coordinator sent the 0.8452 VWAP budget as the IOC limit.
+MIL_CIN_2026_09_04 = {
+    "cin": [Leg("polymarket", "pm_clob", "P_CIN", "P_CIN", bk([(0.13, 21604.45)]), FEES_P)],
+    "mil": [Leg("kalshi", "kalshi_clob", "K_MIL", "K_MIL", bk([(0.84, 64.18), (0.85, 155.0), (0.86, 10.0)]), FEES_K)],
+}
+
+
+def test_the_hedge_limit_is_the_walked_level_not_the_vwap_budget_mil_cin(tmp_path):
+    co, vs, store, clk, opps = harness(tmp_path)
+    offs = MIL_CIN_2026_09_04
+    oid = Opportunity.id_for("espn:mlb:401816802", 100.0)
+    p, cov = plan_for(offs, oid=oid)
+    assert p.hedge.limit_price == pytest.approx(0.85), "the pricer walked into the 0.85 level"
+    assert p.hedge.vwap == pytest.approx((64.18 * 0.84 + 35.82 * 0.85) / 100)
+    budget = p.hedge_budget(0.13)
+    assert budget < 0.85 and budget > p.hedge.vwap, "the VWAP clears the budget; the marginal level does not"
+    assert p.hedge_limit(0.13) == pytest.approx(0.85)
+    for v in vs.values():
+        v.books = {"P_CIN": offs["cin"][0].book, "K_MIL": offs["mil"][0].book}
+    opps.observe(event_id="espn:mlb:401816802", league="mlb", quantity=100.0, status=S.PROFITABLE_UNEXECUTED, now=T,
+                 gross=0.97, fees=0.01, settlement_buffer=0.0, net_profit=1.5, locked_return=0.015, blocked_by=None, legs=[])
+    ex = co.execute(p, clearance_for(tmp_path, opportunity_id=oid, now_mono=100.0), venues_connected={"kalshi": True, "polymarket": True})
+    assert ex.state is X.HEDGED and ex.unhedged == 0.0 and ex.hedge_filled == pytest.approx(100.0)
+    assert ex.hedge_avg_price == pytest.approx(0.8436, abs=1e-4)
+    details = [r[0] for r in store.con.execute("SELECT detail FROM execution_transitions WHERE to_state='LEG_B_SUBMITTED'").fetchall()]
+    assert details == [f"attempt 1 limit 0.8500 budget {budget:.4f}"], details
+    assert "ABOVE_BUDGET" not in ex.detail, "0.8436 averaged under the budget: a cover at the hurdle"
+    # every execution-owned status change now lands in opportunity_transitions (F3's predicate)
+    moves = [r[0] for r in store.con.execute("SELECT to_status FROM opportunity_transitions WHERE opportunity_id=? ORDER BY id", (oid,)).fetchall()]
+    assert moves[-2:] == ["EXECUTION_PENDING", "HEDGED"], moves
+
+
+def test_leg_a_overpay_tightens_the_limit_and_a_moved_book_is_slippage_not_a_chase(tmp_path):
+    co, vs, store, clk, opps = harness(tmp_path)
+    offs = MIL_CIN_2026_09_04
+    p, _ = plan_for(offs)
+    # pure arithmetic: leg A averaging 0.15 against a priced 0.13 takes two ticks off the hedge limit.
+    # (A limit FOK never fills ABOVE its limit, so overpay is bounded by limit - vwap on a layered book.)
+    assert p.hedge_limit(0.15) == pytest.approx(0.83) and p.hedge_limit(0.13) == pytest.approx(0.85)
+    # the Kalshi book moved above the walked 0.85 between pricing and the hedge: HEDGE_SLIPPAGE_EXCEEDED,
+    # leg A held, nothing chased, capital kept (a holding failure, not terminal)
+    vs["polymarket"].books = {"P_CIN": offs["cin"][0].book}
+    vs["kalshi"].books = {"K_MIL": bk([(0.86, 155.0), (0.87, 10.0)])}
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0), venues_connected={"kalshi": True, "polymarket": True})
+    assert ex.state is X.HEDGE_SLIPPAGE_EXCEEDED and ex.first_filled == 100.0 and ex.hedge_filled == 0.0 and not ex.released
+    assert X.HEDGE_SLIPPAGE_EXCEEDED.holds_position and not X.HEDGE_SLIPPAGE_EXCEEDED.is_terminal
+
+
+def test_a_hedge_that_averages_above_the_budget_is_still_a_cover_and_says_so(tmp_path):
+    """The book moved between pricing and the hedge: the 0.84 level is gone, 0.85 remains. The IOC at
+    the walked level fills the whole hedge at 0.85 -- above the VWAP budget, below the hurdle, and
+    labelled. Hedging beats an unhedged leg (plan.py docstring)."""
+    co, vs, store, clk, opps = harness(tmp_path)
+    offs = MIL_CIN_2026_09_04
+    p, _ = plan_for(offs)
+    vs["polymarket"].books = {"P_CIN": offs["cin"][0].book}
+    vs["kalshi"].books = {"K_MIL": bk([(0.85, 155.0), (0.86, 10.0)])}
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0), venues_connected={"kalshi": True, "polymarket": True})
+    assert ex.state is X.HEDGED and ex.hedge_avg_price == pytest.approx(0.85) and "ABOVE_BUDGET" in ex.detail
+
+
+def test_paper_fills_carry_the_pinned_fee_when_the_venue_knows_its_params(tmp_path):
+    co, vs, store, clk, opps = harness(tmp_path)
+    offs = offers()
+    p, cov = plan_for(offs)
+    for v in vs.values():
+        v.books = {"P_H": offs["home"][0].book, "K_A": offs["away"][0].book}
+    vs["kalshi"].fee_params = dict(FEES_K); vs["polymarket"].fee_params = dict(FEES_P)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0), venues_connected={"kalshi": True, "polymarket": True})
+    assert ex.state is X.HEDGED
+    fees = {r[0]: r[1] for r in store.con.execute("SELECT venue, fee_usd FROM orders WHERE state='FILLED'").fetchall()}
+    assert fees["kalshi"] > 0 and fees["polymarket"] > 0, fees
+    assert fees["kalshi"] + fees["polymarket"] == pytest.approx(cov.fee_per_contract * 100, rel=0.05), "the cover priced these fees"
