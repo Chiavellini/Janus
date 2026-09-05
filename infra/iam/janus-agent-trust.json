@@ -1,9 +1,9 @@
 {
   "Version": "2012-10-17",
   "Statement": [{
+    "Sid": "AccountPrincipalsMayAssume",
     "Effect": "Allow",
     "Principal": {"AWS": "arn:aws:iam::986420598115:root"},
-    "Action": "sts:AssumeRole",
-    "Condition": {"NumericLessThan": {"aws:MultiFactorAuthAge": "43200"}}
+    "Action": "sts:AssumeRole"
   }]
 }
