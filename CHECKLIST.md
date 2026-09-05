@@ -1,82 +1,74 @@
 # CHECKLIST — where Janus stands, what is not done, what is not proved
 
-*2026-09-04 ~03:45 UTC. A status list, deliberately blunt. Each line is one of: DONE (and how it
+*2026-09-05 ~08:30 UTC. A status list, deliberately blunt. Each line is one of: DONE (and how it
 is known), RUNNING (accruing), NOT DONE, or NOT PROVED (built, never demonstrated end to end).
 Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 
 ## A. The observation lane (watching both venues)
 
-- [x] DONE — two websockets, one poller per co-listed game, evaluations stored on material change. Verified by the lane log and `stream_evaluations`.
-- [x] DONE — the reconnect loop that flapped both sockets all of 2026-09-03 (state-table bug). Fixed, tested; zero reconnects from our own code since 23:26Z.
-- [x] DONE — the discovery pass no longer freezes the sockets (L37: 13% of every hour lost). Fixed 00:25Z; 178k frames, zero gaps over 15 s across two passes.
-- [x] DONE — Polymarket REST reconciler applies on the loop (its evaluations were being lost).
-- [x] DONE — watchdog alarms that would have caught all of the above: SOCKET_FLAPPING, SOCKET_ERROR, LANE_SILENT. Each demonstrated firing in `--selftest`.
-- [x] DONE — the clock-health flip explained and named: the lane's event loop was being starved by the host (L37/L38), so both venues' stamps arrived 10–85 s late; the clock check is now a 60 s windowed median that re-arms, one sample per frame, and the halt says STALL (loop probe past 5 s) or CLOCK (stamps off with a prompt loop). Halting stays; it was right.
-- [x] DONE — throughput: the poller coalesces to one pricing per 200 ms per game on quiet books (state changes and the 15 s heartbeat still price at once; replay reproduces it). Live: ~2,000 evaluations a minute where there were ~250,000; loop lag 0.1 s.
-- [ ] NOT DONE — the host itself (a full test suite beside the lane, even under nice, stalled it 11 s at 01:00Z; the lane's own restart stalls it 9 s): 15 MB free, 5 of 6 GB swap, other agents and collectors. Until the box, heavy jobs beside the lane cost it seconds of lag (ops/README.md host hygiene). L38 measures it over 24 h.
-- [ ] NOT DONE — Kalshi keepalive ping timeouts still cause an occasional venue-side reconnect (one at 00:27Z). Venue behaviour; the resubscribe is clean.
-- [ ] NOT PROVED — the Polymarket socket drops: probed token by token, one ITF match's token alone got the socket dropped every ~30 s; ITF is now out of the capture and the last restart shows zero drops, but the venue-side cause is not understood.
-- [x] DONE — Polymarket dropped the socket every 30 s on a quiet feed because our keep-alive ran at the venue's 10 s limit; now 4 s.
+- [x] DONE — two websockets, one poller per co-listed game, evaluations stored on material change; coalesced to one pricing per 200 ms per game (loop lag p50 0.04 s over the first 24 h, L38).
+- [x] DONE — the reconnect loop, the discovery pass off the loop, the REST reconciler on the loop, the clock check that names STALL vs CLOCK (2026-09-03/04). Zero reconnects from our own code since; venue-side drops 2–3 a day.
+- [x] DONE — watchdog alarms demonstrated firing in `--selftest`: SOCKET_FLAPPING, SOCKET_ERROR, LANE_SILENT, and since 2026-09-05 **SIGNAL_EXIT** (a daemon's signal death reported even after launchd restarts it) and **UNHEDGED_POSITION** (the paper row's STOP condition).
+- [x] DONE — spawn blocks are said once per game (`[spawn-blocked] <game> <reason>`) and written to `events.block_reason`; on 2026-09-04 two co-listed European games sat unspawned all evening with the reason in memory only.
+- [ ] NOT DONE — **the host.** The lane died of a SIGBUS (exit 138) at 03:35:05Z 2026-09-05 after 24 h: 63 MB RAM free, 5.5 of 7 GB swap, three unrelated Python processes bus-errored within 100 s. launchd restarted it in 1 s. L38: the lane's own loop is prompt (0.6% of ticks past 5 s, all in the first hours after a restart); the host is what fails. Until the box, heavy jobs beside the lane cost it seconds and paging can kill it (ops/README.md).
+- [ ] NOT PROVED — the Polymarket socket drops on the tennis capture: ITF is out of the capture, drops are 2–3 a day; the venue-side cause is not understood.
 
 ## B. Pricing (what a cover costs)
 
-- [x] DONE — fees read from each venue's payload; Kalshi curve re-pinned from a real fill 2026-09-04 (taker 0.07 and maker 0.0175 unscaled, to the hundredth of a cent). Fixture in `nodes/fees/tests/fixtures`.
-- [x] DONE — settlement-wedge rules for 9 leagues with cited rules, reviewed templates and measured rates (MLB L26, NFL L30, cfb L32, EPL/La Liga/Bundesliga L33, Championship/League One/Serie A L35).
-- [x] DONE — the size frontier is computed again (`frontier(proof=)` bug).
-- [x] DONE — L36, the cover-cost distribution, registered and run once. First run is tainted: sockets starved, fees at half. Re-run due on the first clean hour.
-- [ ] NOT PROVED — that any actionable cover exists on these two venues after fees. All 19 profitable prints in history were closing books under a broken socket. This is the question the project exists to answer; the clean data starts 2026-09-04 00:25Z.
-- [ ] NOT DONE — slippage row L27 re-run after NFL/NBA traffic (registered as one tick from one MLB evening).
+- [x] DONE — fees read from each venue's payload; Kalshi curve pinned from real fills (taker 0.07, maker 0.0175 unscaled). **Paper fills now carry the pinned fee** (every paper order before 2026-09-05 recorded fee_usd 0.0).
+- [x] DONE — settlement-wedge rules for 11 enabled leagues with cited rules, reviewed templates and measured rates (MLB L26, NFL L30, cfb L32, EPL/La Liga/Bundesliga L33, Championship/League One/Serie A L35, tennis L39 + F4). Polymarket soccer template **V3** registered 2026-09-05 (the venue dropped its 24-hour clause; hash `7580dcecfba14bc3`).
+- [x] DONE — L36, the cover-cost distribution, run three times; third run 2026-09-05 07:44Z on the clean window: 336 profitable prints, 127 in-play clean actionable rows, n = 37 for the paper row.
+- [x] DONE — **L40, a SUSPECT rule that can be false**: L36's ±60 s same-game clause fires on 335 of 336 prints under coalescing. L40 asks whether a replica THIS print was priced from faulted in the 60 s BEFORE it: **15 of 292 prints are clean** (12 cfb in play, median locked return 2.5%; 3 mlb). Not fills, not returns.
+- [ ] NOT PROVED — **that any actionable cover exists after fees.** The paper lane has settled three covers (+$5.00 gross, +$0.75, and a PARTIAL at −$2.73) and L40 says one print in twenty survives a falsifiable rule. That is evidence the prints are not all artefacts; it is not edge. F5 and L27 are the rows that test it.
+- [x] RUNNING — L27 slippage re-run over the cfb/MLB captures (started 2026-09-05 07:57Z; result appended to the ledger when it lands).
 
 ## C. Coverage (which events)
 
-- [x] DONE — 20 leagues registered; 9 enabled and trading on paper: mlb, nfl, epl, lal, bun, cfb, elc, el1, ita.
-- [x] DONE — tennis CAPTURED (raw frames from both venues, ~35k tennis frames per half hour tonight, 62 markets on the watchlist).
-- [x] DONE — `tennis.walkover_rate` measured and registered (L39: 0.7955%, 210 of 26,398 main-draw matches 2021–2025; Sackmann's repositories were gone from GitHub, so a live ATP database in his layout and a WTA fork are frozen under the row).
-- [x] DONE — the forward collector for `tennis.delayed_gt7d_rate`: `nodes/watch_settle` records every capture-only Polymarket event's first-seen `gameStartTime` (86 rows in its first pass: 12 atp, 1 wta, 73 itf) and the daily job `com.janus.watch-settle` (13:30 local, watchdog SLA) resolves them at Gamma (winner / HALF / open). First resolver run: 23 checked, all still open.
-- [ ] NOT DONE — register F4 once the resolver has written its first resolved rows (tomorrow's run); until the row accrues, atp/wta block by name.
-- [ ] NOT DONE — tennis REPLAYABLE offline: the Polymarket side needs the lane's REST verification, which is not captured.
-- [ ] NOT DONE — NBA, WNBA, NHL: settlement templates not reviewed (Kalshi lists no NHL yet).
-- [ ] NOT DONE — MLS, Ligue 1, Eredivisie, Primeira Liga, Scottish Prem, Belgian: no source for postponement rates; blocked by name.
-- [ ] NOT DONE — UFC, table tennis, esports, KBO, NPB, Argentine Primera and the rest of the census's 82 competitions: not registered (need citation, templates, rates; UFC also a card-aware schedule parser).
-- [x] RUNNING — the co-listing census (L28): 2 of 7 daily runs; 1,025 co-listed events across 82 competitions; the rank is read at 4+ runs.
-- [ ] NOT DONE — 191 unresolved batch-2 soccer names and 1,070 tennis names in `nodes/entities/unresolved.csv`.
+- [x] DONE — 20 leagues registered; **11 enabled and trading on paper**: mlb, nfl, epl, lal, bun, cfb, elc, el1, ita, **atp, wta** (tennis since 2026-09-05, F4).
+- [x] DONE — F4 registered: `tennis.delayed_gt7d_rate` is the forward row's one-sided 95% UPPER BOUND (0 of 42 → 0.0714, ~3.6¢ of reserve per Polymarket contract) until n reaches 300; the daily resolver refreshes it. The spec says plainly it was written after the first two resolver runs.
+- [x] DONE — `nodes/watch_fd`, the football-data.org snapshotter (F6, registered before any run): fl1, ere, por unblock from it; truer rates than the FLOOR proxy for epl, lal, bun, ita, elc at a season. **Awaits the operator's `FD_TOKEN`**; the job is written and not loaded.
+- [x] DONE — `ops/harvest_templates.py --league nba|wnba|nhl`: prints which template each venue's text hashes to, or the unknown text verbatim, the day the venues list the league.
+- [ ] NOT DONE — NBA, WNBA, NHL: the venues list no game markets yet; templates cannot be reviewed until they do (basketball moves to a Kalshi shard 2026-09-10).
+- [ ] NOT DONE — MLS, Scottish Premiership, Belgian Pro League: not on football-data.org's free tier; no postponement source; blocked by name.
+- [ ] NOT DONE — UFC (census rank 2 by score; needs a card-aware schedule from Polymarket events, a rule citation covering draw / no contest / cancelled bout, both texts, and a measured no-contest rate), KBO and NPB (ties after 12 innings need each venue's rule and a measured tie rate), esports and table tennis (alias tables; $10 median touch). The census (L28) has 3 of 7 runs; fewer than 4 orders nothing. Do not start before today's 20:00Z run.
+- [ ] OUT OF SCOPE BY STRUCTURE — **golf**: no head-to-head game market on either venue (the census lists none); the canonical key is two or three participants. Nothing to build.
+- [ ] NOT DONE — tennis REPLAYABLE offline: the lane's Polymarket REST verification is not captured, and capture-only events are not in the `events` spec table.
+- [ ] NOT DONE — unresolved names in `nodes/entities/unresolved.csv`: 636 rows (cfb 358, batch-2 soccer ~200, **tennis 80** — the "1,070 tennis names" in earlier notes was wrong). Mostly Kalshi 3-letter abbreviations; rows for `aliases_manual.csv`.
+- [x] RUNNING — the co-listing census (L28): 3 of 7 daily runs (1,022 co-listed events, 87 competition rows); the rank is read at 4+.
 
 ## D. Execution (placing the two legs)
 
-- [x] DONE — two-leg coordinator, partial-fill policy, ambiguous-order recovery, single-use risk clearance, exposure ledger: all in code with tests.
-- [x] DONE — the lane enforces the arming override's caps (was only the proof scripts).
-- [x] DONE — Kalshi orders and cancels carry the market's exchange shard (collateral is per shard since 2026-08-24).
-- [x] DONE — first real Kalshi fill (2026-09-04 00:04Z): 2 taker at 0.35 + 1 maker at 0.25, balance reconciled to the cent. Fee STOP fired correctly on the old pin.
-- [ ] NOT PROVED — a Kalshi proof file passing all six checks (the first fails `resting_cancelled` and `fee_ok` on record; both causes fixed). Needs one clean armed re-run. OPERATOR.
+- [x] DONE — two-leg coordinator, partial-fill policy, ambiguous-order recovery, single-use risk clearance, exposure ledger, arming-override caps, Kalshi shards, first real Kalshi fill and its settlement (+$2.01).
+- [x] DONE — **the hedge limit is the walked level, not the VWAP budget** (`30c8511`). F3's first unhedged paper leg (MIL @ CIN, 35.82 of 100) came from sending the budget as a per-level IOC limit. The budget is recorded beside every attempt; a hedge that averages above it is labelled ABOVE_BUDGET. Fixture `MIL_CIN_2026_09_04` reproduces the exact ladders.
+- [x] DONE — **holding failures settle**: PARTIAL_FILL / HEDGE_SLIPPAGE_EXCEEDED / UNKNOWN_PROVIDER_STATE end at RECONCILED through the settlement pass, the hedged part as a cover and the rest at the venue's result (`kind`, `cover_usd`, `directional_usd` on the row). Live: MIL @ CIN settled −$2.73 (cover +$1.93, directional −$4.66) and released.
+- [x] DONE — execution-owned statuses (EXECUTION_PENDING, HEDGED, SETTLED, RECONCILED) reach `opportunity_transitions` (`OpportunityStore.move`); F3's own predicate had counted zero.
+- [x] DONE — three-way soccer executes as two legs (Kalshi YES + Polymarket NO). All ten co-listed soccer games spawned pollers on the 2026-09-05 restart. **NOT PROVED live until a soccer cover clears** (the weekend's European kickoffs).
+- [x] DONE — `nodes/risk/limits.toml`: paper caps for cfb, the six soccer leagues and both tennis tours; six simultaneous events (operator decision 2026-09-05). **The arming override's `limits_sha` pin moved: regenerate before any armed run.**
+- [ ] NOT PROVED — a Kalshi proof file passing all seven checks (the first fails `resting_cancelled` and `fee_ok` on record; both causes fixed). Needs one clean armed re-run. OPERATOR.
 - [ ] NOT DONE — the Polymarket proof: no real Polymarket order has ever been sent. OPERATOR.
-- [x] DONE — the Kalshi proof settled: KC won, 3 contracts paid $3.00 against $0.95 staked and $0.035 fees, realized +$2.01, balance reconciled to the cent, reservation released; checklist 5 of 7 (the two failures on record are the fixed cancel routing and fee pin).
-- [x] DONE — three-way soccer executes as two legs: Kalshi YES on a side + Polymarket NO on that side (the NO token pays on the other two outcomes). Legs carry the outcomes they cover, the pricer checks the partition, plan and coordinator unchanged. NOT PROVED live until a soccer game is in play under the new lane (European kickoffs).
-- [ ] NOT DONE — `nodes/risk/limits.toml` has no per-league cap for cfb or any soccer league: those are refused at reservation even on paper. OPERATOR decision.
-- [ ] NOT DONE — the arming override must be rewritten at main's current sha before any armed run. OPERATOR.
+- [ ] NOT DONE — the arming override rewritten at main's current sha and the new limits sha. OPERATOR (`python3 ops/arming_override.py --mode LIMITED_LIVE … --force`).
 
 ## E. The gate to real capital (GATE_TO_LIVE.md)
 
 - [x] DONE — frozen venue fixtures, WebSocket replay, reconnect and sequence-gap tests, partial-fill and ambiguous-order tests.
-- [x] RUNNING — live shadow evidence (from the 2026-09-02 seal; clean from 2026-09-04 00:25Z).
-- [x] RUNNING — F3, PAPER_EXECUTION: 1 of 33 cleared covers (n extended from 30 by L36's clean-data run) (STL @ LAD, 03:05Z, +2.6% locked at q=100, paper-hedged). Its realized paper PnL lands when the game settles.
-- [x] DONE — the settlement pass: hedged executions settle against each venue's result every five minutes, capital released, `execution_settlements` rows (the coordinator had stopped at HEDGED with the reservation held).
+- [x] DONE — **F3 STOPPED by its own criterion 2** (one unhedged paper leg) on 2026-09-05; its window is also void from the 24 h SIGBUS gap. Verdict: `research/sports/2026-09-04_paper-execution-f3/verdict.md`. 4 executions, 3 hedged, 3 settled.
+- [x] RUNNING — **F5, PAPER_EXECUTION, n = 37**: from the 2026-09-05 07:53Z restart, on 11 leagues, with the walked-level hedge, pinned paper fees, and the STOP detected by UNHEDGED_POSITION. 0 of 37.
+- [x] DONE — the settlement pass, every five minutes, paper and real alike; PARTIAL rows included.
 - [ ] NOT PROVED — fees reconciled on Polymarket (needs its proof).
-- [x] DONE — operator decision 2026-09-04 (GATE amendment row): test trading only, no serious amounts, until L36 re-run on clean data shows in-play actionable covers. Real orders = the two proofs under $5 / 10 contracts / $20 a day.
-- [ ] NOT DONE — LIMITED_LIVE for the lane itself (needs both proofs, F3 complete, a new dated GATE row from the operator, override, caps).
+- [x] DONE — operator decision 2026-09-04 (GATE amendment row): test trading only until L36 on clean data shows in-play actionable covers. L40 is the first honest cut of that (15 clean prints); the decision stands until the operator says otherwise.
+- [ ] NOT DONE — LIMITED_LIVE for the lane itself (needs both proofs, F5 complete, a new dated GATE row from the operator, the override, caps).
 - [ ] NOT DONE — PRODUCTION.
 
 ## F. The Ashburn box
 
-- [x] DONE — launch script, cloud-init, systemd units, credential materialiser, latency tool, tests, runbook.
-- [ ] NOT DONE — IAM: `janus-scope` denies `iam:PassRole` on `janus-box`; the admin user's inline `EarshotDenyDirectBoxLaunch` denies `ec2:RunInstances`. OPERATOR.
-- [ ] NOT DONE — no instance has ever been launched.
-- [ ] NOT DONE — main not pushed to GitHub since `1479bd6`; the SSM sha pointer is stale by ten commits. OPERATOR.
+- [x] DONE — launch script, cloud-init, systemd units, credential materialiser, latency tool, tests, runbook; IAM policy files committed 2026-09-05 as written (the agent trust dropped its MFA-age condition — operator decision to commit as is).
+- [ ] NOT DONE — IAM applied; no instance has ever been launched. OPERATOR.
+- [ ] NOT DONE — main not pushed to GitHub since `1479bd6`; the SSM sha pointer is stale by many commits. OPERATOR.
 - [ ] NOT DONE — the five secrets into SSM. OPERATOR.
-- [ ] NOT PROVED — L34 latency bar (box p50 under half the Mac's to both venues AND Polymarket answering 200). Decides execution host vs observation host.
-- [ ] NOT DONE — the other agent's trust policy dropped its MFA condition; flagged, unchanged.
+- [ ] NOT PROVED — L34 latency bar (box p50 under half the Mac's to both venues AND Polymarket answering 200). L38 now says the Mac is an observation host that pages to death under load; the box decision has its other half.
 
 ## G. Housekeeping
 
-- [ ] NOT DONE — label the blind gold set `nodes/match_generic/gold/nonsports.csv` (L31). OPERATOR.
-- [ ] NOT DONE — forward football-data.org snapshotter for true original kickoff dates (needs the operator's free token); until then soccer rates are a FLOOR proxy.
-- [x] DONE — L37 re-run on the clean hour (0.44% past the bound, was 13.2%; bound stays) and L36 re-run on clean data (95 in-play actionable rows; n = 33, F3 extended).
+- [ ] NOT DONE — label the blind gold set `nodes/match_generic/gold/nonsports.csv` (L31; 1 / 0 per pair, blind to the key). `score_gold.py` now computes the row's per-stratum bar. OPERATOR.
+- [ ] NOT DONE — `FD_TOKEN` for `nodes/watch_fd` (free at football-data.org). OPERATOR.
+- [x] DONE — L37 clean-hour re-run (bound stays), L36 third run (n = 37), L38 (loop lag), L40 (the falsifiable SUSPECT rule), F3 verdict, F4/F5/F6 registered; the other agents' research results and IAM files committed.

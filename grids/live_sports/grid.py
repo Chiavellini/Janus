@@ -353,7 +353,7 @@ def _interesting(result: dict) -> bool:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--leagues", default="mlb,nfl,nba,wnba,nhl,epl")
+    ap.add_argument("--leagues", default="enabled", help="comma list, or 'enabled' = nodes/entities/leagues.default_leagues()")
     ap.add_argument("--include-near", action="store_true")
     ap.add_argument("--pre-hours", type=float, default=DEFAULT_PRE_HOURS,
                     help="watch pre-game markets starting within N hours (default 6)")
@@ -383,7 +383,9 @@ def main() -> None:
               f"{len(d.tokens)} PM token maps")
         return
 
-    leagues = [x.strip() for x in a.leagues.split(",") if x.strip()]
+    from nodes.entities.leagues import default_leagues
+
+    leagues = default_leagues() if a.leagues == "enabled" else [x.strip() for x in a.leagues.split(",") if x.strip()]
     signal.signal(signal.SIGTERM, _on_signal)
     signal.signal(signal.SIGINT, _on_signal)
 

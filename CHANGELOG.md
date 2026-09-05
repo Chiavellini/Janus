@@ -527,3 +527,53 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
   market, three-way included), `reconcile.settle` over the recorded orders, release when every leg
   is final, SETTLED -> RECONCILED on the execution and the opportunity, one `execution_settlements`
   row with the realized PnL. Network in a worker, state on the loop. Paper and real settle alike.
+
+## 2026-09-05 — F3 stops itself, the lane is rebuilt around what it exposed, tennis enables, soccer spawns
+
+- **The other trees' work committed.** The previous agent's L36 and L37 results (the files
+  `9790176` described), the tennis resolver's three runs, census run 3, and the infra agent's IAM
+  files (the agent trust drops its MFA-age condition; committed as written at the operator's
+  decision).
+- **F3 STOPPED by its own criterion 2.** Execution `69852b86` (MIL @ CIN, 00:49:35Z, q=100) left
+  35.82 contracts unhedged after three IOC attempts. Cause: `plan.hedge_limit()` returned the
+  VWAP *budget* (1/1.01 − fee − leg A = 0.8452) and the coordinator sent it as the IOC's
+  per-level limit; the pricer had walked the Kalshi ladder to 0.85. Now the limit is the walked
+  level less any leg-A overpay, floored to the tick; the budget is recorded beside every attempt
+  and a hedge averaging above it is labelled ABOVE_BUDGET. Fixture `MIL_CIN_2026_09_04`.
+- **Holding failures settle.** PARTIAL_FILL, HEDGE_SLIPPAGE_EXCEEDED and UNKNOWN_PROVIDER_STATE
+  are no longer terminal: the settlement pass marks the hedged part as a cover and the rest at the
+  venue's result (`kind`, `hedged_contracts`, `unhedged_contracts`, `cover_usd`, `directional_usd`)
+  and releases capital. MIL @ CIN settled live at −$2.73 (cover +$1.93, directional −$4.66).
+- **Execution transitions persist.** `OpportunityStore.move()` writes the row the coordinator
+  never did; `load()` rehydrates after a restart. F3's `cleared_cover` predicate had counted zero.
+- **Paper fills carry the pinned fee.** Every paper order before today recorded fee_usd 0.0.
+- **The lane died of a SIGBUS** (exit 138) at 03:35:05Z after 24 h — the host paging (63 MB free,
+  5.5 of 7 GB swap; three unrelated Python processes within 100 s) — and launchd restarted it in
+  1 s with no alarm. `SIGNAL_EXIT` now reports a daemon's signal death inside 24 h even after a
+  restart; `UNHEDGED_POSITION` alarms at once on a holding failure. Both fire in `--selftest`.
+- **Soccer never spawned.** LIV @ IPS and KOE @ VFB were co-listed all of 2026-09-04 and blocked at
+  TEMPLATE_UNKNOWN: Polymarket's soccer description is now V2 without its 24-hour no-data sentence
+  (hash `7580dcecfba14bc3`). The reason lived in a dict; now `[spawn-blocked]` prints once per game
+  and the reason lands on `events.block_reason`. V3 registered from the lane's own harvested text
+  with V1/V2's verdicts. On the restart all ten co-listed soccer games spawned.
+- **Risk limits** (operator decision): paper caps for cfb, the six soccer leagues and both tennis
+  tours; six simultaneous events (three held covers had refused every new one at MAX_EVENTS).
+  The override's `limits_sha` moved; it must be regenerated before any armed run.
+- **F5 registered** at n = 37 (L36's third run: 127 in-play clean actionable rows) and the lane
+  restarted at 07:53Z on eleven leagues.
+- **F4 registered; tennis enables.** `tennis.delayed_gt7d_rate` is the forward row's one-sided 95%
+  upper bound (0 of 42 → 0.0714) until n reaches 300, refreshed from the newest results file at
+  import. The spec states it was written after the first two resolver runs.
+- **L38 executed**: loop lag 0.6% past 5 s over the first 24 h, all in the first hours after the
+  restart; the lane is prompt, the host is not.
+- **L40 registered and run**: L36's SUSPECT clause fired on 335 of 336 prints under coalescing.
+  L40 asks whether a replica THIS print was priced from faulted in the 60 s before it: 15 of 292
+  clean (12 cfb in play, median 2.5%; 3 mlb). A priced book no recorded fault contradicts, not a
+  fill.
+- **L31's scorer** computes the registered bar (per-stratum rejection precision ≥ 0.95, 1/0
+  labels) instead of the phase-1 gate it carried.
+- **`nodes/watch_fd` and F6**: the football-data.org snapshotter, registered before any run,
+  awaiting `FD_TOKEN`. **`ops/harvest_templates.py`**: step 3 of the unblock workflow as a tool.
+- `grids/live_sports` and `nodes/slate` read the league registry instead of a six-league list;
+  the slate has a duration for every registered league.
+

@@ -59,28 +59,29 @@ python3 -m grids.live_stream.grid --leagues mlb --once     # one discovery pass,
 
 ## State of the evidence — read this before trusting any number
 
-- **No actionable cover has ever been observed.** The streaming lane (`grids/live_stream`) has run
-  over a handful of MLB games at ~200–300 evaluations/s; the best cover cost seen is 1.0020, about
-  1.2¢ from the 1% hurdle on a lopsided game, median ~1.02–1.03. Tennis: 13 co-listed pairs, zero
-  actionable frontiers. Stage 3 (interim, 8 of 40 polls): prices diverge by ~2¢ several times a
-  day and the fee floor eats it.
-- **Fees were wrong on both legs until 2026-09-02.** Kalshi sports series report
-  `fee_multiplier 0.5` (`quadratic_with_maker_fees`); the lane charged 1.0×. Polymarket's rate was
-  hardcoded rather than read from the market's `feeSchedule`. Every "cents from actionable" number
-  before this date overstates the Kalshi fee by 2×. Fees now come from the venues' own payloads,
-  and a leg whose schedule was not fetched is blocked (`FEE_SCHEDULE_MISSING`), never defaulted.
+- **Opportunities print; edge is not shown.** On clean data (since 2026-09-04 00:25Z) the lane
+  recorded 292 profitable prints across MLB and college football. Under L36's SUSPECT label all
+  but one were suspect; under L40's rule that can be false (a fault on a replica the print was
+  priced from, in the minute before it) **15 are clean**: 12 college football in play at a 2.5%
+  median locked return, 3 MLB. Three paper covers have settled (+$5.00 gross, +$0.75, and one
+  PARTIAL at −$2.73 whose cause is fixed). A clean print is a priced book, not a fill.
+- **The paper window is F5** (n = 37, from 2026-09-05 07:53Z). F3 stopped itself on its first
+  unhedged paper leg — a design finding (the hedge limit was a VWAP budget sent as a per-level IOC
+  limit), fixed at `30c8511` — and is void from a 24 h SIGBUS gap besides.
+- **Fees come from the venues' own payloads** since 2026-09-02; the Kalshi curve is pinned from
+  real fills (taker 0.07, maker 0.0175, unscaled); paper fills carry the pinned fee since
+  2026-09-05. Every "cents from actionable" number before 2026-09-04 overstates the Kalshi fee.
 - **Both proofs gate every cover.** `nodes/rules_exhaustive` proves the outcome set is complete;
-  `nodes/settle_wedge` proves the two venues pay equivalently, from their own rules text against
-  reviewed templates, and prices the bounded residual (MLB: a makeup more than two days out, a
-  cancellation) from a registered measurement (ledger L26: 10 of 2,100 games, 0 cancellations).
-  MLB certifies; NFL and NHL block until their Polymarket game text is harvested and reviewed.
-- **Coverage is nine registered leagues (`nodes/entities/leagues.py`), one of which lacks nothing.**
-  MLB and NFL certify (NFL from ledger L30: 4 of 2,640 games moved more than 48 h, 1 cancelled,
-  2020 excluded by decision). EPL, La Liga and the Bundesliga certify as three-outcome covers
-  on L33, a round-window proxy labelled FLOOR (the EPL reserve is large: 3.8% of matches were
-  played more than 48 h after their round). College football certifies on L32 (a FLOOR for FCS). MLS blocks on
-  unmeasured rates. NBA/WNBA/NHL have rules and no templates. The co-listing census (L28,
-  daily) ranks every competition both venues list; it found 1,021 co-listed events on day one.
+  `nodes/settle_wedge` proves the two venues pay equivalently from their own rules text against
+  reviewed templates (a venue rewording moves the hash and blocks the league — soccer, 2026-09-04)
+  and prices the bounded residual from a registered measurement.
+- **Coverage is 20 registered leagues, 11 enabled** (`nodes/entities/leagues.py`): mlb, nfl, epl,
+  lal, bun, cfb, elc, el1, ita, atp, wta. Tennis prices on an upper-bound reserve (F4) until its
+  forward row accrues. NBA/WNBA/NHL await the venues' listings; MLS and three soccer leagues await
+  a postponement source (`nodes/watch_fd` is built and awaits a token); UFC, KBO, NPB await the
+  census's fourth run. Golf has no head-to-head market on either venue.
+- **The host is the weak part.** The lane's loop is prompt (L38); the Mac pages under load and
+  killed the lane once with a SIGBUS. The Ashburn box (L34) is the fix and is the operator's.
 
 ## History
 

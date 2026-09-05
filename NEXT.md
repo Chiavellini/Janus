@@ -4,57 +4,64 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-04 ~03:30 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
-story; HANDOFF.md (2026-09-03 21:30 UTC) the last full handoff.
+Updated 2026-09-05 ~08:30 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+story.
 
 ## Where it stands
 
-The lane runs `PAPER_EXECUTION` under ledger F3 on nine leagues, and tonight it became a
-different machine: it prices a game once per 200 ms instead of on every delta (loop lag 0.1 s
-where it was 10–85 s), the clock check says whether the host stalled or a clock stepped, the
-Kalshi fee curve is pinned from the operator's real fills (taker and maker), three-way soccer
-executes as two legs through the Polymarket NO token, tennis has its walkover rate and a forward
-collector for its delay rate, and the Polymarket capture no longer subscribes the ITF token that
-got the socket dropped every 30 s. The operator's decision stands: test trading only until L36
-on clean data shows in-play actionable covers (GATE 2026-09-04 row).
+The lane runs `PAPER_EXECUTION` under ledger **F5** (n = 37) on eleven leagues since the 07:53Z
+restart: the nine of yesterday plus ATP and WTA. F3 stopped itself: its first unhedged paper leg
+(MIL @ CIN, 35.82 of 100) was the coordinator sending a VWAP budget as a per-level IOC limit, and
+the fix, the settlement of partial fills, the persisted execution transitions, pinned paper fees,
+and two new watchdog alarms went in together. Soccer had never spawned a poller because Polymarket
+reworded its description; V3 is registered and all ten co-listed soccer games spawned on the
+restart. The lane died once, unseen, of a SIGBUS after 24 h; the host is the reason.
 
-**Not proved:** any edge. F3 is 0 of 30. All 19 profitable prints in history were closing books
-under a broken socket with fees at half. The first honest data is tonight's.
+**What the event history says about edge.** 292 profitable prints on clean data. Under L36's label
+all but one were SUSPECT; under L40's rule that can be false, **15 are clean** (12 college football
+in play at a 2.5% median locked return, 3 MLB). Three paper covers have settled (+$5.00 gross,
++$0.75, and a PARTIAL at −$2.73 that the fix prevents). One print in twenty surviving a real check
+is not nothing and is not edge. F5 (execution) and L27 (the gap to a fill) are what test it.
 
 ## Now — what is left, and whose it is
 
 **Yours, because I cannot send an order or write the override:**
-1. **Rewrite the override** (main moved several times tonight; `resolve_mode` refuses the one on
-   disk). Then **one clean Kalshi proof** and **the Polymarket proof** (never run), dry and `--arm`;
-   `--settle` both. I run `--check`, flip BATTERY, close the changelog.
-2. `nodes/risk/limits.toml`: per-league caps for cfb and the soccer leagues, or paper refuses them
-   at `LEAGUE_EXPOSURE` (expected until you decide).
-3. IAM for the box; push main (nothing pushed since `1479bd6`; the SSM sha is stale); the five
-   secrets into SSM; `latency.py --host box` for L34.
-4. Label `nodes/match_generic/gold/nonsports.csv` (L31).
+1. **Regenerate the override** — `nodes/risk/limits.toml` changed (paper caps, six events), so its
+   `limits_sha` pin moved along with the runner sha:
+   `python3 ops/arming_override.py --mode LIMITED_LIVE --signed-by "…" --statement "…Kalshi and Polymarket…" --stake-usd 5 --max-contracts 10 --day-notional-usd 20 --expires-hours 24 --force`.
+   Then **one clean Kalshi proof** and **the first Polymarket proof**, dry then `--arm`, `--settle`
+   both; I run `--check` and flip BATTERY.
+2. **`FD_TOKEN`** (free, football-data.org) into the credentials env, then
+   `launchctl bootstrap gui/$(id -u) ops/com.janus.watch-fd.plist` and move `watch_fd` from
+   DISABLED to SLAS in `ops/watchdog.py`. F6 starts accruing; fl1/ere/por unblock at 100 matches.
+3. IAM for the box; push main (nothing pushed since `1479bd6`); the five secrets into SSM;
+   `latency.py --host box` for L34. L38 says the Mac pages to death under load.
+4. Label `nodes/match_generic/gold/nonsports.csv` (1 / 0 per pair, blind to the key).
 
 **Mine, in order:**
-1. Read the 10:10Z re-runs of L37 (clean hour 02:00–03:00Z) and L36 (three fee eras, stall
-   windows); recompute F3's n only to extend.
-2. Register F4 once `com.janus.watch-settle` (13:30 local) resolves its first rows; tennis then
-   prices when the delay rate has a value.
-3. Watch the first European soccer game under the new lane (the NO leg in `legs_json`, an
-   `[exec]` or `LEAGUE_EXPOSURE` line): three-way execution is built, not yet seen live.
-4. L38 over the first 24 h of `loop_lag_s`, beside L34 for the box decision.
-5. Then the census's next competitions (UFC needs a card parser; KBO/NPB need citations and
-   templates), the 191 unresolved batch-2 names, the football-data.org snapshotter (your token).
+1. L27's re-run result into the ledger (running at 07:57Z); the slippage pin if it clears its bar.
+2. Watch the first soccer cover under F5 (the `[exec]` line with a `:NO` leg), and the first tennis
+   pollers; a tennis cover will almost certainly price out on the 3.6¢ delay reserve until F4's n
+   grows — that is the design, say so if asked.
+3. The census's 4th run today 20:00Z; when the rank is readable, UFC first (card-aware schedule,
+   draw / no-contest rule, both texts, a measured no-contest rate), then KBO/NPB (the tie rate).
+   `ops/harvest_templates.py --league nba` the day Kalshi lists basketball (shard move 2026-09-10).
+4. A second L40 run after the weekend's soccer; if the clean count stays near 5%, the next question
+   is what those 15 prints have in common (league, time in game, quantity) — a new row, not a look.
+5. Tennis REPLAYABLE (capture the REST verification; spawn from `watch_events`).
 
-**Time:** F3 accrues under launchd. `python3 ops/watchdog.py` must stay quiet; `LANE_SILENT`,
-`SOCKET_FLAPPING`, `SOCKET_ERROR` and `HALT STALL` are the alarms that would have caught
-2026-09-03. Do not run the full test suite beside a live game on this Mac (ops/README.md).
+**Time:** F5 accrues under launchd. `python3 ops/watchdog.py` shows one expected line for the next
+24 h (`SIGNAL_EXIT … restarted since`); anything else is news. Do not run the full test suite beside
+a live game on this Mac (ops/README.md).
 
 ## Not now, deliberately
 
-Any real order before the proofs settle and the override is rewritten. Ashburn before L34 is
-measured. `venue_cloudbet`, `venue_sxbet`, makers on Polymarket. Registering a league by editing a
-flag. Widening the Polymarket capture back to ITF until the venue-side drop is understood.
+Any real order before the proofs settle and the override is regenerated. Ashburn before L34 is
+measured. Registering UFC/KBO/NPB before the census has four runs. Widening the Polymarket capture
+back to ITF. Editing L36's or L40's criteria: a rule that disappoints gets a new row.
 
 ## The question that actually matters
 
-Unchanged: what does a cover cost, per competition and quantity, on clean data. The first clean
-night is tonight; L36's 10:10Z run is the first honest cut, and the paper window is the test.
+Unchanged: what does a cover cost, per competition and quantity, on clean data — and now, more
+sharply: are the fifteen clean prints real fills? F5 answers the second on paper; the Polymarket
+proof is the first real one.

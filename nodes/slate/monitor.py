@@ -37,7 +37,7 @@ def slate(leagues: list[str], days: int, *, use_cache: bool = False) -> tuple[li
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--leagues", default="mlb,nfl,nba,wnba,nhl,epl")
+    ap.add_argument("--leagues", default="enabled", help="comma list, or 'enabled' = nodes/entities/leagues.default_leagues()")
     ap.add_argument("--days", type=int, default=3)
     ap.add_argument("--lead-min", type=int, default=30)
     ap.add_argument("--settle-min", type=int, default=45)
@@ -46,7 +46,8 @@ def main() -> int:
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
 
-    leagues = [x.strip() for x in a.leagues.split(",") if x.strip()]
+    from nodes.entities.leagues import default_leagues
+    leagues = default_leagues() if a.leagues == "enabled" else [x.strip() for x in a.leagues.split(",") if x.strip()]
     games, failures = slate(leagues, a.days)
     wins = windows_for(games, lead_s=a.lead_min * 60, settle_s=a.settle_min * 60)
     now = time.time()
