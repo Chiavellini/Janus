@@ -63,7 +63,13 @@ def normalise_template(text: str, participants: Sequence[str], scrub: Sequence[s
             if len(tail) >= 2:
                 names.add(tail)
         # ... and by the name without its nickname (Polymarket college football: "Morehead State"
-        # for "Morehead State Eagles"). Short heads ("St.") are left alone.
+        # for "Morehead State Eagles"; "Kent State" for "Kent State Golden Flashes", a two-word
+        # mascot -- 2026-09-05, one cfb game blocked at TEMPLATE_UNKNOWN for a text identical to
+        # V1): every head of two or more words. Short heads ("St.") are left alone.
+        for i in range(len(words) - 1, 1, -1):
+            head = " ".join(words[:i])
+            if len(head) > 3:
+                names.add(head)
         head = n.rsplit(" ", 1)[0] if " " in n else ""
         if len(head) > 3:
             names.add(head)

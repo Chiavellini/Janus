@@ -196,3 +196,16 @@ def test_polymarket_has_two_tennis_texts_and_both_certify():
     p = harvest_polymarket({"slug": "s", "description": text}, participants=("Iga Swiatek", "Coco Gauff"), retrieved_at=T, scrub=scrub)
     assert p.template_hash == POLYMARKET_TENNIS_MATCH_V2.template_hash, p.template_text
     assert verdicts_for(KALSHI_TENNIS_MATCH_V1.template_id, "polymarket_tennis_match_v2") == verdicts_for(KALSHI_TENNIS_MATCH_V1.template_id, "polymarket_tennis_match_v1")
+
+
+def test_a_two_word_mascot_dropped_by_the_venue_still_hashes_to_the_cfb_template():
+    """2026-09-05: Polymarket wrote "Kent State" for "Kent State Golden Flashes"; only one-word heads
+    were stripped, the text (identical to V1) hashed elsewhere, and KENT @ SC blocked at
+    TEMPLATE_UNKNOWN. Every multi-word head of a participant name is stripped."""
+    from nodes.settle_wedge.policy import POLYMARKET_CFB_GAME_V1
+    text = (POLYMARKET_CFB_GAME_V1.sample_text.replace("August 27 at 8:00PM ET", "September 5 at 12:45PM ET")
+            .replace("Louisiana Christian", "Kent State").replace("Northwestern State", "South Carolina"))
+    p = harvest_polymarket({"slug": "cfb-kentst-sc-2026-09-05", "description": text},
+                           participants=("Golden Flashes", "Kent St.", "Kent State Golden Flashes", "South Carolina", "South Carolina Gamecocks"),
+                           retrieved_at=T)
+    assert p.template_hash == POLYMARKET_CFB_GAME_V1.template_hash, p.template_text
