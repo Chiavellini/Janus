@@ -31,6 +31,13 @@ WHAT IT DETECTS, and why each check is here rather than an obvious alternative:
                 TypeError, ...) and the socket was seen down or its error count rose in the
                 window: a bug in the record or pricing path reaching the transport, not the
                 venue hanging up.
+  SIGNAL_EXIT   a daemon's run ended with exit >= 128 (a signal) inside `signal_window_s`, even
+                though launchd has already started it again. On 2026-09-05 the lane died of a
+                SIGBUS (exit 138; the host was paging) after 24 h and restarted 1 s later: one
+                start in the hour is under CRASH_LOOP, and the FAILED check only reads the LAST
+                row, which was the new start. A forward row's window has a hole nobody saw.
+  UNHEDGED_POSITION  (nodes/risk/health) an execution whose first leg filled and whose hedge
+                did not, still holding capital: the paper row's STOP condition, alarmed at once.
 
 PER GATE_TO_LIVE.md:29-32 -- "every alarm demonstrated firing against a fake target; a monitor
 that has never emitted is untested (Kilos found three silent monitor bugs this way)" -- selftest()
@@ -57,6 +64,15 @@ class Sla:
     kind: str                       # "daemon" (should run continuously) | "oneshot"
     max_age_s: float                # oneshot: max time since last completion
     max_starts_per_hour: int = 4    # daemon: more restarts than this is a crash loop
+    signal_window_s: float = 24 * 3600   # daemon: a signal exit this recent is reported even after a restart
+
+
+def _signal_name(exit_code: int) -> str:
+    import signal as _sig
+    try:
+        return _sig.Signals(exit_code - 128).name
+    except (ValueError, AttributeError):
+        return f"signal {exit_code - 128}"
 
 
 #: Registered jobs. A job absent here is reported as UNREGISTERED rather than ignored --
@@ -210,6 +226,16 @@ def check(index: Path = INDEX, *, now: float | None = None,
         last = hist[-1]
         age = now - last.get("ts", 0)
 
+        if sla.kind == "daemon":
+            # A signal death followed by launchd's restart leaves the FAILED row second-to-last,
+            # where the checks below never look. Report it once per window, without `continue`.
+            for r in hist:
+                code = r.get("exit")
+                if r.get("status") == "FAILED" and isinstance(code, int) and code >= 128 and now - r.get("ts", 0) <= sla.signal_window_s:
+                    restarted = any(x.get("status") == "started" and x.get("ts", 0) > r.get("ts", 0) for x in hist)
+                    alerts.append(f"{job}: SIGNAL_EXIT — exited {code} ({_signal_name(code)}) {int(now - r.get('ts', 0))}s ago"
+                                  + ("; restarted since (a gap in any forward row's window)" if restarted else "; not restarted"))
+
         if last.get("status") == "started":
             if not _pid_alive(last.get("pid")):
                 alerts.append(f"{job}: CRASHED — started {int(age)}s ago, pid "
@@ -295,6 +321,22 @@ def selftest() -> None:
         _append(p, {"ts": NOW, "job": "stranger", "status": "OK", "exit": 0})
         assert any("UNREGISTERED" in a for a in check(p, now=NOW, slas={}, risk={})), "UNREGISTERED"
 
+        # SIGNAL_EXIT — the 2026-09-05 signature: a FAILED 138 row, then launchd's new start row.
+        # Neither CRASH_LOOP (one start) nor FAILED (last row is a start) sees it.
+        p = fresh("d2")
+        _append(p, {"ts": NOW - 90000, "job": "j", "run_id": "r0", "status": "started", "pid": dead_pid})
+        _append(p, {"ts": NOW - 7200, "job": "j", "run_id": "r0", "status": "FAILED", "exit": 138})
+        _append(p, {"ts": NOW - 7199, "job": "j", "run_id": "r1", "status": "started", "pid": os.getpid()})
+        got = check(p, now=NOW, slas=S, risk={})
+        assert any("SIGNAL_EXIT" in a and "138" in a and "restarted since" in a for a in got), got
+        assert not any("FAILED —" in a or "CRASH_LOOP" in a for a in got), got
+        # a plain non-zero exit before a restart is not a signal; a signal exit older than the window is quiet
+        p = fresh("d3")
+        _append(p, {"ts": NOW - 7200, "job": "j", "run_id": "r0", "status": "FAILED", "exit": 1})
+        _append(p, {"ts": NOW - 90000, "job": "j", "run_id": "rz", "status": "FAILED", "exit": 138})
+        _append(p, {"ts": NOW - 7199, "job": "j", "run_id": "r1", "status": "started", "pid": os.getpid()})
+        assert not any("SIGNAL_EXIT" in a for a in check(p, now=NOW, slas=S, risk={})), "exit 1 / stale 138 are quiet"
+
         # QUIET: a healthy daemon must produce NO alert (a monitor that always fires is noise)
         p = fresh("h")
         _append(p, {"ts": NOW - 120, "job": "j", "status": "started", "pid": os.getpid()})
@@ -323,6 +365,22 @@ def selftest() -> None:
         con.commit(); con.close()
         assert any("UNRECONCILED_TOO_LONG" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "UNRECONCILED"
         con = sqlite3.connect(db); con.execute("DELETE FROM capital_reservations"); con.commit(); con.close()
+        # UNHEDGED_POSITION: leg A filled, hedge short, capital held -- the paper row's STOP condition.
+        # A HEDGED execution and a released PARTIAL_FILL are both quiet.
+        con = sqlite3.connect(db)
+        con.execute("CREATE TABLE executions(execution_id TEXT, opportunity_id TEXT, event_id TEXT, league TEXT, mode TEXT, state TEXT, "
+                    "started_utc REAL, last_utc REAL, quantity REAL, first_filled REAL, hedge_filled REAL, unhedged REAL, "
+                    "reservation_id TEXT, released INTEGER)")
+        con.execute("INSERT INTO executions VALUES('hedgedok','o','e','mlb','PAPER_EXECUTION','HEDGED',?,?,100,100,100,0,'r1',0)", (NOW - 100, NOW - 100))
+        con.execute("INSERT INTO executions VALUES('oldpart','o','e','mlb','PAPER_EXECUTION','PARTIAL_FILL',?,?,100,100,64,36,'r2',1)", (NOW - 100, NOW - 100))
+        con.commit()
+        assert not any("UNHEDGED_POSITION" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "hedged / released are quiet"
+        con.execute("INSERT INTO executions VALUES('69852b86x','o','espn:mlb:401816802','mlb','PAPER_EXECUTION','PARTIAL_FILL',?,?,100,100,64.18,35.82,'r3',0)", (NOW - 3600, NOW - 3600))
+        con.commit()
+        got = check(fresh("q"), now=NOW, slas={}, risk=R)
+        assert any("UNHEDGED_POSITION" in a and "69852b86" in a and "35.82/100" in a for a in got), got
+        assert not any("UNRECONCILED_TOO_LONG" in a for a in got), "a holding failure is the UNHEDGED alarm's business, not a late reconcile"
+        con.execute("DROP TABLE executions"); con.commit(); con.close()
         # NO_CO_LISTED_GAMES: discovery has written for a day in season without one co-listed game.
         # (A fresh, empty registry is silent -- that fired falsely on the lane's first boot.)
         assert not any("registry" in a for a in check(fresh("q"), now=NOW, slas={}, risk={**R, "in_season": True}))
@@ -370,7 +428,7 @@ def selftest() -> None:
         con.execute("UPDATE socket_health SET seen_ts = seen_ts - 7200 WHERE venue='polymarket'"); con.commit()
         assert not any("socket" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "stale health rows are silent"
         con.close()
-    print("watchdog selftest OK — 7 job branches, 3 risk branches, the registry branch and 3 socket branches fired; healthy cases stayed quiet")
+    print("watchdog selftest OK — 8 job branches, 4 risk branches, the registry branch and 3 socket branches fired; healthy cases stayed quiet")
 
 
 def main() -> int:
