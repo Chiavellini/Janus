@@ -1,0 +1,5517 @@
+{
+  "cells": {
+    "cfb|100|end|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0461,
+        "kalshi:NO_ASKS": 0.1279,
+        "kalshi:STALE": 0.7316,
+        "polymarket:HASH_MISMATCH": 0.0009,
+        "polymarket:STALE": 0.0572
+      },
+      "cost_min": 0.8984,
+      "cost_p50": 1.0322,
+      "cost_p90": 1.0449,
+      "dwell_s": 2953.3,
+      "near_actionable_share": 0.0011,
+      "priced_share": 0.0824,
+      "profitable_share": 0.001,
+      "rows": 601,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.1279,
+        "BLOCKED_FEES": 0.0012,
+        "BLOCKED_MATCH": 0.045,
+        "BLOCKED_STALE": 0.7897,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.0352,
+        "PROFITABLE_UNEXECUTED": 0.001
+      }
+    },
+    "cfb|100|end|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:HEARTBEAT_LOST": 0.1341,
+        "kalshi:NOT_SYNCED": 0.0012,
+        "kalshi:NO_ASKS": 0.2905,
+        "kalshi:STALE": 0.0807,
+        "supervisor:CLOCK_UNHEALTHY": 0.4936
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 1487.1,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 57,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.2905,
+        "BLOCKED_STALE": 0.7095
+      }
+    },
+    "cfb|100|in|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.1304,
+        "kalshi:HEARTBEAT_LOST": 0.1935,
+        "kalshi:NO_ASKS": 0.0206,
+        "kalshi:STALE": 0.0997,
+        "polymarket:HASH_MISMATCH": 0.0148,
+        "polymarket:HEARTBEAT_LOST": 0.0065,
+        "polymarket:STALE": 0.0596,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0078,
+        "supervisor:CLOCK_UNHEALTHY": 0.3982
+      },
+      "cost_min": 0.9722,
+      "cost_p50": 1.0231,
+      "cost_p90": 1.063,
+      "dwell_s": 21551.8,
+      "near_actionable_share": 0.0015,
+      "priced_share": 0.1993,
+      "profitable_share": 0.0014,
+      "rows": 6442,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0206,
+        "BLOCKED_FEES": 0.0172,
+        "BLOCKED_MATCH": 0.1132,
+        "BLOCKED_STALE": 0.7801,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.0675,
+        "PROFITABLE_UNEXECUTED": 0.0014
+      }
+    },
+    "cfb|100|in|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0855,
+        "kalshi:NO_ASKS": 0.0786,
+        "kalshi:STALE": 0.1322,
+        "polymarket:HASH_MISMATCH": 0.0504,
+        "polymarket:HEARTBEAT_LOST": 0.0223,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:STALE": 0.0477,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0131,
+        "supervisor:CLOCK_UNHEALTHY": 0.5146
+      },
+      "cost_min": 0.9859,
+      "cost_p50": 1.0269,
+      "cost_p90": 1.0431,
+      "dwell_s": 18613.7,
+      "near_actionable_share": 0.0004,
+      "priced_share": 0.141,
+      "profitable_share": 0.0,
+      "rows": 2767,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0786,
+        "BLOCKED_FEES": 0.0011,
+        "BLOCKED_MATCH": 0.0843,
+        "BLOCKED_STALE": 0.7804,
+        "DISCOVERED": 0.0003,
+        "NO_EDGE": 0.0552,
+        "PROFITABLE_UNEXECUTED": 0.0
+      }
+    },
+    "cfb|100|in|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.1031,
+        "kalshi:NO_ASKS": 0.16,
+        "kalshi:STALE": 0.3355,
+        "polymarket:HASH_MISMATCH": 0.0057,
+        "polymarket:HEARTBEAT_LOST": 0.0029,
+        "polymarket:NOT_SYNCED": 0.0097,
+        "polymarket:STALE": 0.086,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0048,
+        "supervisor:CLOCK_UNHEALTHY": 0.0611,
+        "supervisor:LOOP_STALLED": 0.1509
+      },
+      "cost_min": 0.9749,
+      "cost_p50": 1.0147,
+      "cost_p90": 1.0349,
+      "dwell_s": 12115.7,
+      "near_actionable_share": 0.0007,
+      "priced_share": 0.1832,
+      "profitable_share": 0.0003,
+      "rows": 1902,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.16,
+        "BLOCKED_FEES": 0.0063,
+        "BLOCKED_MATCH": 0.0968,
+        "BLOCKED_STALE": 0.6567,
+        "DISCOVERED": 0.0004,
+        "NO_EDGE": 0.0794,
+        "PROFITABLE_UNEXECUTED": 0.0003
+      }
+    },
+    "cfb|100|in|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0469,
+        "kalshi:HEARTBEAT_LOST": 0.0087,
+        "kalshi:NOT_SYNCED": 0.0023,
+        "kalshi:NO_ASKS": 0.0198,
+        "kalshi:STALE": 0.055,
+        "polymarket:HASH_MISMATCH": 0.0104,
+        "polymarket:HEARTBEAT_LOST": 0.0116,
+        "polymarket:NOT_SYNCED": 0.0021,
+        "polymarket:STALE": 0.024,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0119,
+        "supervisor:CLOCK_UNHEALTHY": 0.7898
+      },
+      "cost_min": 1.0042,
+      "cost_p50": 1.0304,
+      "cost_p90": 1.0598,
+      "dwell_s": 21348.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0644,
+      "profitable_share": 0.0,
+      "rows": 4838,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0198,
+        "BLOCKED_FEES": 0.0009,
+        "BLOCKED_MATCH": 0.0461,
+        "BLOCKED_STALE": 0.9157,
+        "NO_EDGE": 0.0175
+      }
+    },
+    "cfb|100|in|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0266,
+        "kalshi:NO_ASKS": 0.0233,
+        "kalshi:STALE": 0.0511,
+        "polymarket:HASH_MISMATCH": 0.0101,
+        "polymarket:HEARTBEAT_LOST": 0.0253,
+        "polymarket:NOT_SYNCED": 0.0123,
+        "polymarket:STALE": 0.0266,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0035,
+        "supervisor:CLOCK_UNHEALTHY": 0.8139
+      },
+      "cost_min": 0.9794,
+      "cost_p50": 1.0252,
+      "cost_p90": 1.0392,
+      "dwell_s": 6613.1,
+      "near_actionable_share": 0.0012,
+      "priced_share": 0.0338,
+      "profitable_share": 0.0012,
+      "rows": 529,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0233,
+        "BLOCKED_MATCH": 0.0266,
+        "BLOCKED_STALE": 0.9429,
+        "NO_EDGE": 0.0059,
+        "PROFITABLE_UNEXECUTED": 0.0012
+      }
+    },
+    "cfb|100|in|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0427,
+        "kalshi:HEARTBEAT_LOST": 0.0373,
+        "kalshi:NOT_SYNCED": 0.0025,
+        "kalshi:NO_ASKS": 0.0611,
+        "kalshi:STALE": 0.1259,
+        "polymarket:HASH_MISMATCH": 0.0086,
+        "polymarket:HEARTBEAT_LOST": 0.0065,
+        "polymarket:NOT_SYNCED": 0.0167,
+        "polymarket:STALE": 0.0438,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0106,
+        "supervisor:CLOCK_UNHEALTHY": 0.5276,
+        "supervisor:LOOP_STALLED": 0.0872
+      },
+      "cost_min": 0.8584,
+      "cost_p50": 1.0195,
+      "cost_p90": 1.0402,
+      "dwell_s": 24094.9,
+      "near_actionable_share": 0.0029,
+      "priced_share": 0.0721,
+      "profitable_share": 0.0025,
+      "rows": 2183,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0611,
+        "BLOCKED_FEES": 0.0041,
+        "BLOCKED_MATCH": 0.0386,
+        "BLOCKED_STALE": 0.8668,
+        "DISCOVERED": 0.0004,
+        "NO_EDGE": 0.0266,
+        "PROFITABLE_UNEXECUTED": 0.0025
+      }
+    },
+    "cfb|100|pre|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0452,
+        "kalshi:HEARTBEAT_LOST": 0.1428,
+        "kalshi:NOT_SYNCED": 0.0251,
+        "kalshi:NO_ASKS": 0.0026,
+        "kalshi:STALE": 0.2545,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.095,
+        "polymarket:STALE": 0.1563,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1037,
+        "supervisor:CLOCK_UNHEALTHY": 0.1524
+      },
+      "cost_min": 0.9891,
+      "cost_p50": 1.0151,
+      "cost_p90": 1.037,
+      "dwell_s": 123773.6,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0677,
+      "profitable_share": 0.0,
+      "rows": 6575,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0026,
+        "BLOCKED_FEES": 0.0009,
+        "BLOCKED_MATCH": 0.0442,
+        "BLOCKED_STALE": 0.9297,
+        "NO_EDGE": 0.0224,
+        "PROFITABLE_UNEXECUTED": 0.0
+      }
+    },
+    "cfb|100|pre|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0418,
+        "kalshi:STALE": 0.1515,
+        "polymarket:HEARTBEAT_LOST": 0.097,
+        "polymarket:STALE": 0.0859,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0641,
+        "supervisor:CLOCK_UNHEALTHY": 0.5013
+      },
+      "cost_min": 1.0054,
+      "cost_p50": 1.0066,
+      "cost_p90": 1.0097,
+      "dwell_s": 3423.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.1002,
+      "profitable_share": 0.0,
+      "rows": 219,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0418,
+        "BLOCKED_STALE": 0.8998,
+        "NO_EDGE": 0.0584
+      }
+    },
+    "cfb|100|pre|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "polymarket:STALE": 0.067,
+        "supervisor:CLOCK_UNHEALTHY": 0.3957,
+        "supervisor:LOOP_STALLED": 0.4873
+      },
+      "cost_min": 1.0085,
+      "cost_p50": 1.0085,
+      "cost_p90": 1.0085,
+      "dwell_s": 283.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.05,
+      "profitable_share": 0.0,
+      "rows": 16,
+      "status_share": {
+        "BLOCKED_STALE": 0.95,
+        "NO_EDGE": 0.05
+      }
+    },
+    "cfb|100|pre|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0098,
+        "kalshi:HEARTBEAT_LOST": 0.0188,
+        "kalshi:NOT_SYNCED": 0.1902,
+        "kalshi:NO_ASKS": 0.0045,
+        "kalshi:STALE": 0.0483,
+        "polymarket:HASH_MISMATCH": 0.0007,
+        "polymarket:HEARTBEAT_LOST": 0.0161,
+        "polymarket:NOT_SYNCED": 0.0031,
+        "polymarket:STALE": 0.0296,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0222,
+        "supervisor:CLOCK_UNHEALTHY": 0.6393
+      },
+      "cost_min": 1.0055,
+      "cost_p50": 1.0117,
+      "cost_p90": 1.0332,
+      "dwell_s": 23069.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0272,
+      "profitable_share": 0.0,
+      "rows": 1010,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0045,
+        "BLOCKED_FEES": 0.0011,
+        "BLOCKED_MATCH": 0.0087,
+        "BLOCKED_STALE": 0.9683,
+        "NO_EDGE": 0.0174
+      }
+    },
+    "cfb|100|pre|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0371,
+        "kalshi:STALE": 0.0556,
+        "polymarket:HEARTBEAT_LOST": 0.0319,
+        "polymarket:NOT_SYNCED": 0.0066,
+        "polymarket:STALE": 0.0414,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0079,
+        "supervisor:CLOCK_UNHEALTHY": 0.8164
+      },
+      "cost_min": 1.0057,
+      "cost_p50": 1.0088,
+      "cost_p90": 1.0088,
+      "dwell_s": 1241.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0403,
+      "profitable_share": 0.0,
+      "rows": 75,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0371,
+        "BLOCKED_STALE": 0.9597,
+        "NO_EDGE": 0.0031
+      }
+    },
+    "cfb|100|pre|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0224,
+        "kalshi:STALE": 0.1342,
+        "polymarket:HEARTBEAT_LOST": 0.0715,
+        "polymarket:STALE": 0.1612,
+        "supervisor:CLOCK_UNHEALTHY": 0.5239
+      },
+      "cost_min": 1.0086,
+      "cost_p50": 1.0086,
+      "cost_p90": 1.0088,
+      "dwell_s": 225.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.1092,
+      "profitable_share": 0.0,
+      "rows": 16,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0224,
+        "BLOCKED_STALE": 0.8908,
+        "NO_EDGE": 0.0868
+      }
+    },
+    "cfb|25|end|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0395,
+        "kalshi:NO_ASKS": 0.1279,
+        "kalshi:STALE": 0.7316,
+        "polymarket:HASH_MISMATCH": 0.0009,
+        "polymarket:STALE": 0.0572
+      },
+      "cost_min": 0.8837,
+      "cost_p50": 1.0312,
+      "cost_p90": 1.0397,
+      "dwell_s": 2953.3,
+      "near_actionable_share": 0.0019,
+      "priced_share": 0.0824,
+      "profitable_share": 0.001,
+      "rows": 611,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.1279,
+        "BLOCKED_FEES": 0.0013,
+        "BLOCKED_MATCH": 0.0382,
+        "BLOCKED_STALE": 0.7897,
+        "DISCOVERED": 0.0007,
+        "NO_EDGE": 0.0412,
+        "PROFITABLE_UNEXECUTED": 0.001
+      }
+    },
+    "cfb|25|end|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:HEARTBEAT_LOST": 0.1341,
+        "kalshi:NOT_SYNCED": 0.0012,
+        "kalshi:NO_ASKS": 0.2905,
+        "kalshi:STALE": 0.0807,
+        "supervisor:CLOCK_UNHEALTHY": 0.4936
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 1487.1,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 57,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.2905,
+        "BLOCKED_STALE": 0.7095
+      }
+    },
+    "cfb|25|in|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.1318,
+        "kalshi:HEARTBEAT_LOST": 0.1935,
+        "kalshi:NO_ASKS": 0.0206,
+        "kalshi:STALE": 0.0997,
+        "polymarket:HASH_MISMATCH": 0.0148,
+        "polymarket:HEARTBEAT_LOST": 0.0065,
+        "polymarket:STALE": 0.0596,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0078,
+        "supervisor:CLOCK_UNHEALTHY": 0.3981
+      },
+      "cost_min": 0.9719,
+      "cost_p50": 1.0225,
+      "cost_p90": 1.0564,
+      "dwell_s": 21554.5,
+      "near_actionable_share": 0.0062,
+      "priced_share": 0.1994,
+      "profitable_share": 0.0013,
+      "rows": 4398,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0206,
+        "BLOCKED_FEES": 0.0268,
+        "BLOCKED_MATCH": 0.1051,
+        "BLOCKED_STALE": 0.78,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.0661,
+        "PROFITABLE_UNEXECUTED": 0.0013
+      }
+    },
+    "cfb|25|in|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0828,
+        "kalshi:NO_ASKS": 0.0786,
+        "kalshi:STALE": 0.1322,
+        "polymarket:HASH_MISMATCH": 0.0504,
+        "polymarket:HEARTBEAT_LOST": 0.0223,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:STALE": 0.0477,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0131,
+        "supervisor:CLOCK_UNHEALTHY": 0.5146
+      },
+      "cost_min": 0.9853,
+      "cost_p50": 1.0261,
+      "cost_p90": 1.0372,
+      "dwell_s": 18613.7,
+      "near_actionable_share": 0.0004,
+      "priced_share": 0.141,
+      "profitable_share": 0.0,
+      "rows": 2275,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0786,
+        "BLOCKED_FEES": 0.0016,
+        "BLOCKED_MATCH": 0.0812,
+        "BLOCKED_STALE": 0.7804,
+        "DISCOVERED": 0.0004,
+        "NO_EDGE": 0.0578
+      }
+    },
+    "cfb|25|in|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0983,
+        "kalshi:NO_ASKS": 0.16,
+        "kalshi:STALE": 0.3355,
+        "polymarket:HASH_MISMATCH": 0.0057,
+        "polymarket:HEARTBEAT_LOST": 0.0029,
+        "polymarket:NOT_SYNCED": 0.0097,
+        "polymarket:STALE": 0.086,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0048,
+        "supervisor:CLOCK_UNHEALTHY": 0.0611,
+        "supervisor:LOOP_STALLED": 0.1509
+      },
+      "cost_min": 0.9596,
+      "cost_p50": 1.014,
+      "cost_p90": 1.0342,
+      "dwell_s": 12115.7,
+      "near_actionable_share": 0.0022,
+      "priced_share": 0.1832,
+      "profitable_share": 0.0001,
+      "rows": 1826,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.16,
+        "BLOCKED_FEES": 0.008,
+        "BLOCKED_MATCH": 0.0903,
+        "BLOCKED_STALE": 0.6567,
+        "DISCOVERED": 0.001,
+        "NO_EDGE": 0.0838,
+        "PROFITABLE_UNEXECUTED": 0.0001
+      }
+    },
+    "cfb|25|in|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.044,
+        "kalshi:HEARTBEAT_LOST": 0.0087,
+        "kalshi:NOT_SYNCED": 0.0023,
+        "kalshi:NO_ASKS": 0.0198,
+        "kalshi:STALE": 0.055,
+        "polymarket:HASH_MISMATCH": 0.0104,
+        "polymarket:HEARTBEAT_LOST": 0.0116,
+        "polymarket:NOT_SYNCED": 0.0021,
+        "polymarket:STALE": 0.024,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0118,
+        "supervisor:CLOCK_UNHEALTHY": 0.7897
+      },
+      "cost_min": 0.9838,
+      "cost_p50": 1.028,
+      "cost_p90": 1.05,
+      "dwell_s": 21352.1,
+      "near_actionable_share": 0.001,
+      "priced_share": 0.0646,
+      "profitable_share": 0.0,
+      "rows": 3227,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0198,
+        "BLOCKED_FEES": 0.0021,
+        "BLOCKED_MATCH": 0.0419,
+        "BLOCKED_STALE": 0.9156,
+        "DISCOVERED": 0.0006,
+        "NO_EDGE": 0.02
+      }
+    },
+    "cfb|25|in|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0216,
+        "kalshi:NO_ASKS": 0.0233,
+        "kalshi:STALE": 0.0511,
+        "polymarket:HASH_MISMATCH": 0.0101,
+        "polymarket:HEARTBEAT_LOST": 0.0253,
+        "polymarket:NOT_SYNCED": 0.0123,
+        "polymarket:STALE": 0.0266,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0035,
+        "supervisor:CLOCK_UNHEALTHY": 0.8139
+      },
+      "cost_min": 0.9794,
+      "cost_p50": 1.0209,
+      "cost_p90": 1.0349,
+      "dwell_s": 6613.1,
+      "near_actionable_share": 0.0012,
+      "priced_share": 0.0338,
+      "profitable_share": 0.0012,
+      "rows": 466,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0233,
+        "BLOCKED_FEES": 0.0,
+        "BLOCKED_MATCH": 0.0216,
+        "BLOCKED_STALE": 0.9429,
+        "NO_EDGE": 0.0109,
+        "PROFITABLE_UNEXECUTED": 0.0012
+      }
+    },
+    "cfb|25|in|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0463,
+        "kalshi:HEARTBEAT_LOST": 0.0373,
+        "kalshi:NOT_SYNCED": 0.0025,
+        "kalshi:NO_ASKS": 0.0611,
+        "kalshi:STALE": 0.1259,
+        "polymarket:HASH_MISMATCH": 0.0086,
+        "polymarket:HEARTBEAT_LOST": 0.0065,
+        "polymarket:NOT_SYNCED": 0.0167,
+        "polymarket:STALE": 0.0435,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0106,
+        "supervisor:CLOCK_UNHEALTHY": 0.5276,
+        "supervisor:LOOP_STALLED": 0.0872
+      },
+      "cost_min": 0.8534,
+      "cost_p50": 1.0173,
+      "cost_p90": 1.0389,
+      "dwell_s": 24094.7,
+      "near_actionable_share": 0.0029,
+      "priced_share": 0.0724,
+      "profitable_share": 0.0019,
+      "rows": 1942,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0611,
+        "BLOCKED_FEES": 0.0053,
+        "BLOCKED_MATCH": 0.0409,
+        "BLOCKED_STALE": 0.8665,
+        "DISCOVERED": 0.001,
+        "NO_EDGE": 0.0232,
+        "PROFITABLE_UNEXECUTED": 0.0019
+      }
+    },
+    "cfb|25|pre|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0431,
+        "kalshi:HEARTBEAT_LOST": 0.1428,
+        "kalshi:NOT_SYNCED": 0.0251,
+        "kalshi:NO_ASKS": 0.0026,
+        "kalshi:STALE": 0.2545,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.095,
+        "polymarket:STALE": 0.1563,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1037,
+        "supervisor:CLOCK_UNHEALTHY": 0.1524
+      },
+      "cost_min": 0.9893,
+      "cost_p50": 1.0144,
+      "cost_p90": 1.0349,
+      "dwell_s": 123773.6,
+      "near_actionable_share": 0.0002,
+      "priced_share": 0.0677,
+      "profitable_share": 0.0,
+      "rows": 6583,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0026,
+        "BLOCKED_FEES": 0.0021,
+        "BLOCKED_MATCH": 0.041,
+        "BLOCKED_STALE": 0.9297,
+        "DISCOVERED": 0.0002,
+        "NO_EDGE": 0.0244
+      }
+    },
+    "cfb|25|pre|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0418,
+        "kalshi:STALE": 0.1515,
+        "polymarket:HEARTBEAT_LOST": 0.097,
+        "polymarket:STALE": 0.0859,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0641,
+        "supervisor:CLOCK_UNHEALTHY": 0.5013
+      },
+      "cost_min": 1.0054,
+      "cost_p50": 1.0066,
+      "cost_p90": 1.0097,
+      "dwell_s": 3423.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.1002,
+      "profitable_share": 0.0,
+      "rows": 219,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0418,
+        "BLOCKED_STALE": 0.8998,
+        "NO_EDGE": 0.0584
+      }
+    },
+    "cfb|25|pre|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "polymarket:STALE": 0.067,
+        "supervisor:CLOCK_UNHEALTHY": 0.3957,
+        "supervisor:LOOP_STALLED": 0.4873
+      },
+      "cost_min": 1.0078,
+      "cost_p50": 1.0078,
+      "cost_p90": 1.0078,
+      "dwell_s": 283.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.05,
+      "profitable_share": 0.0,
+      "rows": 16,
+      "status_share": {
+        "BLOCKED_STALE": 0.95,
+        "NO_EDGE": 0.05
+      }
+    },
+    "cfb|25|pre|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.011,
+        "kalshi:HEARTBEAT_LOST": 0.0188,
+        "kalshi:NOT_SYNCED": 0.1902,
+        "kalshi:NO_ASKS": 0.0045,
+        "kalshi:STALE": 0.0483,
+        "polymarket:HASH_MISMATCH": 0.0007,
+        "polymarket:HEARTBEAT_LOST": 0.0161,
+        "polymarket:NOT_SYNCED": 0.0031,
+        "polymarket:STALE": 0.0296,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0222,
+        "supervisor:CLOCK_UNHEALTHY": 0.6393
+      },
+      "cost_min": 1.0028,
+      "cost_p50": 1.0118,
+      "cost_p90": 1.0332,
+      "dwell_s": 23069.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0272,
+      "profitable_share": 0.0,
+      "rows": 1010,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0045,
+        "BLOCKED_FEES": 0.0019,
+        "BLOCKED_MATCH": 0.009,
+        "BLOCKED_STALE": 0.9683,
+        "NO_EDGE": 0.0162
+      }
+    },
+    "cfb|25|pre|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0371,
+        "kalshi:STALE": 0.0556,
+        "polymarket:HEARTBEAT_LOST": 0.0319,
+        "polymarket:NOT_SYNCED": 0.0066,
+        "polymarket:STALE": 0.0414,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0079,
+        "supervisor:CLOCK_UNHEALTHY": 0.8164
+      },
+      "cost_min": 1.0057,
+      "cost_p50": 1.0088,
+      "cost_p90": 1.0088,
+      "dwell_s": 1241.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0403,
+      "profitable_share": 0.0,
+      "rows": 75,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0371,
+        "BLOCKED_STALE": 0.9597,
+        "NO_EDGE": 0.0031
+      }
+    },
+    "cfb|25|pre|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0224,
+        "kalshi:STALE": 0.1342,
+        "polymarket:HEARTBEAT_LOST": 0.0715,
+        "polymarket:STALE": 0.1612,
+        "supervisor:CLOCK_UNHEALTHY": 0.5239
+      },
+      "cost_min": 1.0078,
+      "cost_p50": 1.0078,
+      "cost_p90": 1.0088,
+      "dwell_s": 225.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.1092,
+      "profitable_share": 0.0,
+      "rows": 16,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0224,
+        "BLOCKED_STALE": 0.8908,
+        "NO_EDGE": 0.0868
+      }
+    },
+    "cfb|5|end|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0379,
+        "kalshi:NO_ASKS": 0.1279,
+        "kalshi:STALE": 0.7316,
+        "polymarket:HASH_MISMATCH": 0.0009,
+        "polymarket:STALE": 0.0572
+      },
+      "cost_min": 0.8595,
+      "cost_p50": 1.0287,
+      "cost_p90": 1.0371,
+      "dwell_s": 2953.3,
+      "near_actionable_share": 0.0025,
+      "priced_share": 0.0824,
+      "profitable_share": 0.0005,
+      "rows": 592,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.1279,
+        "BLOCKED_FEES": 0.0021,
+        "BLOCKED_MATCH": 0.0358,
+        "BLOCKED_STALE": 0.7897,
+        "DISCOVERED": 0.0017,
+        "NO_EDGE": 0.0423,
+        "PROFITABLE_UNEXECUTED": 0.0005
+      }
+    },
+    "cfb|5|end|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:HEARTBEAT_LOST": 0.1341,
+        "kalshi:NOT_SYNCED": 0.0012,
+        "kalshi:NO_ASKS": 0.2905,
+        "kalshi:STALE": 0.0807,
+        "supervisor:CLOCK_UNHEALTHY": 0.4936
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 1487.1,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 57,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.2905,
+        "BLOCKED_STALE": 0.7095
+      }
+    },
+    "cfb|5|in|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.1281,
+        "kalshi:HEARTBEAT_LOST": 0.1935,
+        "kalshi:NO_ASKS": 0.0206,
+        "kalshi:STALE": 0.0997,
+        "polymarket:HASH_MISMATCH": 0.0148,
+        "polymarket:HEARTBEAT_LOST": 0.0065,
+        "polymarket:STALE": 0.0596,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0078,
+        "supervisor:CLOCK_UNHEALTHY": 0.3982
+      },
+      "cost_min": 0.9725,
+      "cost_p50": 1.022,
+      "cost_p90": 1.0509,
+      "dwell_s": 21552.6,
+      "near_actionable_share": 0.0102,
+      "priced_share": 0.1993,
+      "profitable_share": 0.0,
+      "rows": 3228,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0206,
+        "BLOCKED_FEES": 0.0276,
+        "BLOCKED_MATCH": 0.1005,
+        "BLOCKED_STALE": 0.78,
+        "DISCOVERED": 0.0016,
+        "NO_EDGE": 0.0696
+      }
+    },
+    "cfb|5|in|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0859,
+        "kalshi:NO_ASKS": 0.0786,
+        "kalshi:STALE": 0.1322,
+        "polymarket:HASH_MISMATCH": 0.0504,
+        "polymarket:HEARTBEAT_LOST": 0.0223,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:STALE": 0.0477,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0131,
+        "supervisor:CLOCK_UNHEALTHY": 0.5146
+      },
+      "cost_min": 0.9833,
+      "cost_p50": 1.0228,
+      "cost_p90": 1.035,
+      "dwell_s": 18611.9,
+      "near_actionable_share": 0.0006,
+      "priced_share": 0.1409,
+      "profitable_share": 0.0,
+      "rows": 1781,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0786,
+        "BLOCKED_FEES": 0.0031,
+        "BLOCKED_MATCH": 0.0827,
+        "BLOCKED_STALE": 0.7805,
+        "DISCOVERED": 0.0006,
+        "NO_EDGE": 0.0545
+      }
+    },
+    "cfb|5|in|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.1007,
+        "kalshi:NO_ASKS": 0.16,
+        "kalshi:STALE": 0.3355,
+        "polymarket:HASH_MISMATCH": 0.0057,
+        "polymarket:HEARTBEAT_LOST": 0.0029,
+        "polymarket:NOT_SYNCED": 0.0097,
+        "polymarket:STALE": 0.086,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0048,
+        "supervisor:CLOCK_UNHEALTHY": 0.0611,
+        "supervisor:LOOP_STALLED": 0.1509
+      },
+      "cost_min": 0.9549,
+      "cost_p50": 1.0134,
+      "cost_p90": 1.0332,
+      "dwell_s": 12115.7,
+      "near_actionable_share": 0.0024,
+      "priced_share": 0.1832,
+      "profitable_share": 0.0,
+      "rows": 1759,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.16,
+        "BLOCKED_FEES": 0.0131,
+        "BLOCKED_MATCH": 0.0876,
+        "BLOCKED_STALE": 0.6567,
+        "DISCOVERED": 0.0023,
+        "NO_EDGE": 0.0803
+      }
+    },
+    "cfb|5|in|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0357,
+        "kalshi:HEARTBEAT_LOST": 0.008,
+        "kalshi:NOT_SYNCED": 0.0021,
+        "kalshi:NO_ASKS": 0.0181,
+        "kalshi:STALE": 0.0503,
+        "polymarket:HASH_MISMATCH": 0.0095,
+        "polymarket:HEARTBEAT_LOST": 0.0106,
+        "polymarket:NOT_SYNCED": 0.003,
+        "polymarket:STALE": 0.0219,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0108,
+        "supervisor:CLOCK_UNHEALTHY": 0.8089
+      },
+      "cost_min": 0.9854,
+      "cost_p50": 1.0225,
+      "cost_p90": 1.046,
+      "dwell_s": 23357.5,
+      "near_actionable_share": 0.0022,
+      "priced_share": 0.0569,
+      "profitable_share": 0.0,
+      "rows": 1963,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0181,
+        "BLOCKED_FEES": 0.0034,
+        "BLOCKED_MATCH": 0.0323,
+        "BLOCKED_STALE": 0.9249,
+        "DISCOVERED": 0.0012,
+        "NO_EDGE": 0.0201
+      }
+    },
+    "cfb|5|in|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.024,
+        "kalshi:NO_ASKS": 0.0233,
+        "kalshi:STALE": 0.0511,
+        "polymarket:HASH_MISMATCH": 0.0101,
+        "polymarket:HEARTBEAT_LOST": 0.0253,
+        "polymarket:NOT_SYNCED": 0.0123,
+        "polymarket:STALE": 0.0266,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0035,
+        "supervisor:CLOCK_UNHEALTHY": 0.8139
+      },
+      "cost_min": 0.9794,
+      "cost_p50": 1.0197,
+      "cost_p90": 1.0349,
+      "dwell_s": 6613.1,
+      "near_actionable_share": 0.0013,
+      "priced_share": 0.0338,
+      "profitable_share": 0.0,
+      "rows": 415,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0233,
+        "BLOCKED_MATCH": 0.024,
+        "BLOCKED_STALE": 0.9429,
+        "DISCOVERED": 0.0013,
+        "NO_EDGE": 0.0085
+      }
+    },
+    "cfb|5|in|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0463,
+        "kalshi:HEARTBEAT_LOST": 0.0373,
+        "kalshi:NOT_SYNCED": 0.0025,
+        "kalshi:NO_ASKS": 0.0611,
+        "kalshi:STALE": 0.1259,
+        "polymarket:HASH_MISMATCH": 0.0086,
+        "polymarket:HEARTBEAT_LOST": 0.0065,
+        "polymarket:NOT_SYNCED": 0.0167,
+        "polymarket:STALE": 0.0435,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0106,
+        "supervisor:CLOCK_UNHEALTHY": 0.5276,
+        "supervisor:LOOP_STALLED": 0.0872
+      },
+      "cost_min": 0.8534,
+      "cost_p50": 1.017,
+      "cost_p90": 1.0349,
+      "dwell_s": 24094.1,
+      "near_actionable_share": 0.0035,
+      "priced_share": 0.0724,
+      "profitable_share": 0.0004,
+      "rows": 1757,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0611,
+        "BLOCKED_FEES": 0.0059,
+        "BLOCKED_MATCH": 0.0404,
+        "BLOCKED_STALE": 0.8666,
+        "DISCOVERED": 0.003,
+        "NO_EDGE": 0.0226,
+        "PROFITABLE_UNEXECUTED": 0.0004
+      }
+    },
+    "cfb|5|pre|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0421,
+        "kalshi:HEARTBEAT_LOST": 0.1428,
+        "kalshi:NOT_SYNCED": 0.0251,
+        "kalshi:NO_ASKS": 0.0026,
+        "kalshi:STALE": 0.2545,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.095,
+        "polymarket:STALE": 0.1563,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1037,
+        "supervisor:CLOCK_UNHEALTHY": 0.1524
+      },
+      "cost_min": 0.9893,
+      "cost_p50": 1.0133,
+      "cost_p90": 1.0332,
+      "dwell_s": 123773.6,
+      "near_actionable_share": 0.0002,
+      "priced_share": 0.0677,
+      "profitable_share": 0.0,
+      "rows": 6508,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0026,
+        "BLOCKED_FEES": 0.0064,
+        "BLOCKED_MATCH": 0.0357,
+        "BLOCKED_STALE": 0.9297,
+        "DISCOVERED": 0.0002,
+        "NO_EDGE": 0.0254
+      }
+    },
+    "cfb|5|pre|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0418,
+        "kalshi:STALE": 0.1515,
+        "polymarket:HEARTBEAT_LOST": 0.097,
+        "polymarket:STALE": 0.0859,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0641,
+        "supervisor:CLOCK_UNHEALTHY": 0.5013
+      },
+      "cost_min": 1.0054,
+      "cost_p50": 1.0067,
+      "cost_p90": 1.0097,
+      "dwell_s": 3423.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.1002,
+      "profitable_share": 0.0,
+      "rows": 219,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0418,
+        "BLOCKED_STALE": 0.8998,
+        "NO_EDGE": 0.0584
+      }
+    },
+    "cfb|5|pre|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "polymarket:STALE": 0.067,
+        "supervisor:CLOCK_UNHEALTHY": 0.3957,
+        "supervisor:LOOP_STALLED": 0.4873
+      },
+      "cost_min": 1.0078,
+      "cost_p50": 1.0078,
+      "cost_p90": 1.0078,
+      "dwell_s": 283.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.05,
+      "profitable_share": 0.0,
+      "rows": 16,
+      "status_share": {
+        "BLOCKED_STALE": 0.95,
+        "NO_EDGE": 0.05
+      }
+    },
+    "cfb|5|pre|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0138,
+        "kalshi:HEARTBEAT_LOST": 0.0188,
+        "kalshi:NOT_SYNCED": 0.1902,
+        "kalshi:NO_ASKS": 0.0045,
+        "kalshi:STALE": 0.0483,
+        "polymarket:HASH_MISMATCH": 0.0007,
+        "polymarket:HEARTBEAT_LOST": 0.0161,
+        "polymarket:NOT_SYNCED": 0.0031,
+        "polymarket:STALE": 0.0296,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0222,
+        "supervisor:CLOCK_UNHEALTHY": 0.6393
+      },
+      "cost_min": 1.0032,
+      "cost_p50": 1.0127,
+      "cost_p90": 1.0332,
+      "dwell_s": 23069.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0272,
+      "profitable_share": 0.0,
+      "rows": 1010,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0045,
+        "BLOCKED_FEES": 0.0036,
+        "BLOCKED_MATCH": 0.0101,
+        "BLOCKED_STALE": 0.9683,
+        "NO_EDGE": 0.0134
+      }
+    },
+    "cfb|5|pre|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0371,
+        "kalshi:STALE": 0.0556,
+        "polymarket:HEARTBEAT_LOST": 0.0319,
+        "polymarket:NOT_SYNCED": 0.0066,
+        "polymarket:STALE": 0.0414,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0079,
+        "supervisor:CLOCK_UNHEALTHY": 0.8164
+      },
+      "cost_min": 1.0057,
+      "cost_p50": 1.0088,
+      "cost_p90": 1.0088,
+      "dwell_s": 1241.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0403,
+      "profitable_share": 0.0,
+      "rows": 75,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0371,
+        "BLOCKED_STALE": 0.9597,
+        "NO_EDGE": 0.0031
+      }
+    },
+    "cfb|5|pre|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0224,
+        "kalshi:STALE": 0.1342,
+        "polymarket:HEARTBEAT_LOST": 0.0715,
+        "polymarket:STALE": 0.1612,
+        "supervisor:CLOCK_UNHEALTHY": 0.5239
+      },
+      "cost_min": 1.0078,
+      "cost_p50": 1.0078,
+      "cost_p90": 1.0088,
+      "dwell_s": 225.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.1092,
+      "profitable_share": 0.0,
+      "rows": 16,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0224,
+        "BLOCKED_STALE": 0.8908,
+        "NO_EDGE": 0.0868
+      }
+    },
+    "lal|100|end|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.6395,
+        "polymarket:HASH_MISMATCH": 0.0149
+      },
+      "cost_min": 1.0076,
+      "cost_p50": 1.0201,
+      "cost_p90": 1.0332,
+      "dwell_s": 108.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.9851,
+      "profitable_share": 0.0,
+      "rows": 144,
+      "status_share": {
+        "BLOCKED_FEES": 0.0022,
+        "BLOCKED_MATCH": 0.6373,
+        "BLOCKED_STALE": 0.0149,
+        "NO_EDGE": 0.3456
+      }
+    },
+    "lal|100|in|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0535,
+        "kalshi:HEARTBEAT_LOST": 0.0039,
+        "kalshi:NOT_SYNCED": 0.0007,
+        "kalshi:STALE": 0.0061,
+        "polymarket:HASH_MISMATCH": 0.0221,
+        "polymarket:NOT_SYNCED": 0.0005,
+        "polymarket:STALE": 0.471,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0312,
+        "supervisor:CLOCK_UNHEALTHY": 0.2464
+      },
+      "cost_min": 1.0111,
+      "cost_p50": 1.0546,
+      "cost_p90": 1.0732,
+      "dwell_s": 4207.7,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2181,
+      "profitable_share": 0.0,
+      "rows": 1750,
+      "status_share": {
+        "BLOCKED_FEES": 0.0021,
+        "BLOCKED_MATCH": 0.0514,
+        "BLOCKED_STALE": 0.7819,
+        "NO_EDGE": 0.1645
+      }
+    },
+    "lal|100|pre|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0039,
+        "kalshi:NOT_SYNCED": 0.5389,
+        "kalshi:STALE": 0.1253,
+        "polymarket:HEARTBEAT_LOST": 0.1769,
+        "polymarket:NOT_SYNCED": 0.0509,
+        "polymarket:STALE": 0.0942
+      },
+      "cost_min": 1.0443,
+      "cost_p50": 1.0443,
+      "cost_p90": 1.0543,
+      "dwell_s": 1338.3,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0138,
+      "profitable_share": 0.0,
+      "rows": 77,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0039,
+        "BLOCKED_STALE": 0.9862,
+        "NO_EDGE": 0.0099
+      }
+    },
+    "lal|25|end|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.6383,
+        "polymarket:HASH_MISMATCH": 0.0149
+      },
+      "cost_min": 1.0028,
+      "cost_p50": 1.0208,
+      "cost_p90": 1.0336,
+      "dwell_s": 108.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.9851,
+      "profitable_share": 0.0,
+      "rows": 143,
+      "status_share": {
+        "BLOCKED_FEES": 0.0028,
+        "BLOCKED_MATCH": 0.6356,
+        "BLOCKED_STALE": 0.0149,
+        "NO_EDGE": 0.3467
+      }
+    },
+    "lal|25|in|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.1103,
+        "kalshi:HEARTBEAT_LOST": 0.0039,
+        "kalshi:NOT_SYNCED": 0.0007,
+        "kalshi:STALE": 0.0061,
+        "polymarket:HASH_MISMATCH": 0.0221,
+        "polymarket:NOT_SYNCED": 0.0005,
+        "polymarket:STALE": 0.471,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0312,
+        "supervisor:CLOCK_UNHEALTHY": 0.2464
+      },
+      "cost_min": 1.0113,
+      "cost_p50": 1.0547,
+      "cost_p90": 1.0727,
+      "dwell_s": 4207.7,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2181,
+      "profitable_share": 0.0,
+      "rows": 1252,
+      "status_share": {
+        "BLOCKED_FEES": 0.0024,
+        "BLOCKED_MATCH": 0.1079,
+        "BLOCKED_STALE": 0.7819,
+        "NO_EDGE": 0.1077
+      }
+    },
+    "lal|25|pre|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0039,
+        "kalshi:NOT_SYNCED": 0.5389,
+        "kalshi:STALE": 0.1253,
+        "polymarket:HEARTBEAT_LOST": 0.1769,
+        "polymarket:NOT_SYNCED": 0.0509,
+        "polymarket:STALE": 0.0942
+      },
+      "cost_min": 1.0443,
+      "cost_p50": 1.0443,
+      "cost_p90": 1.0543,
+      "dwell_s": 1338.3,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0138,
+      "profitable_share": 0.0,
+      "rows": 77,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0039,
+        "BLOCKED_STALE": 0.9862,
+        "NO_EDGE": 0.0099
+      }
+    },
+    "lal|5|end|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0314,
+        "kalshi:NOT_SYNCED": 0.7825,
+        "polymarket:HASH_MISMATCH": 0.0725
+      },
+      "cost_min": 0.9956,
+      "cost_p50": 1.0331,
+      "cost_p90": 1.0356,
+      "dwell_s": 337.5,
+      "near_actionable_share": 0.0001,
+      "priced_share": 0.1451,
+      "profitable_share": 0.0,
+      "rows": 118,
+      "status_share": {
+        "BLOCKED_FEES": 0.0008,
+        "BLOCKED_MATCH": 0.0305,
+        "BLOCKED_STALE": 0.8549,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.1136
+      }
+    },
+    "lal|5|end|flap|fee-half": {
+      "blocked_reason_share": {
+        "kalshi:HEARTBEAT_LOST": 0.0727,
+        "kalshi:NOT_SYNCED": 0.9273
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 320.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 15,
+      "status_share": {
+        "BLOCKED_STALE": 1.0
+      }
+    },
+    "lal|5|in|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.1135,
+        "kalshi:HEARTBEAT_LOST": 0.0039,
+        "kalshi:NOT_SYNCED": 0.0007,
+        "kalshi:STALE": 0.0061,
+        "polymarket:HASH_MISMATCH": 0.0221,
+        "polymarket:NOT_SYNCED": 0.0005,
+        "polymarket:STALE": 0.471,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0312,
+        "supervisor:CLOCK_UNHEALTHY": 0.2464
+      },
+      "cost_min": 1.0067,
+      "cost_p50": 1.0547,
+      "cost_p90": 1.0682,
+      "dwell_s": 4207.7,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2181,
+      "profitable_share": 0.0,
+      "rows": 924,
+      "status_share": {
+        "BLOCKED_FEES": 0.0074,
+        "BLOCKED_MATCH": 0.106,
+        "BLOCKED_STALE": 0.7819,
+        "NO_EDGE": 0.1046
+      }
+    },
+    "lal|5|pre|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0039,
+        "kalshi:NOT_SYNCED": 0.5389,
+        "kalshi:STALE": 0.1253,
+        "polymarket:HEARTBEAT_LOST": 0.1769,
+        "polymarket:NOT_SYNCED": 0.0509,
+        "polymarket:STALE": 0.0942
+      },
+      "cost_min": 1.0451,
+      "cost_p50": 1.0451,
+      "cost_p90": 1.0543,
+      "dwell_s": 1338.3,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0138,
+      "profitable_share": 0.0,
+      "rows": 77,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0039,
+        "BLOCKED_STALE": 0.9862,
+        "NO_EDGE": 0.0099
+      }
+    },
+    "mlb|100|end|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0045,
+        "kalshi:NO_ASKS": 0.0039,
+        "kalshi:STALE": 0.0256,
+        "polymarket:HASH_MISMATCH": 0.0001,
+        "polymarket:STALE": 0.0043,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0284,
+        "supervisor:CLOCK_UNHEALTHY": 0.1051
+      },
+      "cost_min": 0.9921,
+      "cost_p50": 1.0293,
+      "cost_p90": 1.0346,
+      "dwell_s": 7401.1,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.8326,
+      "profitable_share": 0.0,
+      "rows": 4110,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0039,
+        "BLOCKED_FEES": 0.0007,
+        "BLOCKED_MATCH": 0.0039,
+        "BLOCKED_STALE": 0.1635,
+        "NO_EDGE": 0.8281
+      }
+    },
+    "mlb|100|end|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.222,
+        "kalshi:STALE": 0.0006,
+        "polymarket:HASH_MISMATCH": 0.015,
+        "polymarket:STALE": 0.0029,
+        "supervisor:LOOP_STALLED": 0.0969
+      },
+      "cost_min": 1.0157,
+      "cost_p50": 1.0383,
+      "cost_p90": 1.0439,
+      "dwell_s": 1442.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.8846,
+      "profitable_share": 0.0,
+      "rows": 511,
+      "status_share": {
+        "BLOCKED_FEES": 0.0237,
+        "BLOCKED_MATCH": 0.1983,
+        "BLOCKED_STALE": 0.1154,
+        "NO_EDGE": 0.6627
+      }
+    },
+    "mlb|100|end|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:HEARTBEAT_LOST": 0.0886,
+        "kalshi:NO_ASKS": 0.1677,
+        "kalshi:STALE": 0.0989,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0245,
+        "supervisor:CLOCK_UNHEALTHY": 0.293,
+        "supervisor:LOOP_STALLED": 0.3273
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 888.3,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 28,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.1677,
+        "BLOCKED_STALE": 0.8323
+      }
+    },
+    "mlb|100|in|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.1395,
+        "kalshi:HEARTBEAT_LOST": 0.0014,
+        "kalshi:STALE": 0.0028,
+        "polymarket:HASH_MISMATCH": 0.0053,
+        "polymarket:HEARTBEAT_LOST": 0.0012,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:NO_ASKS": 0.0055,
+        "polymarket:STALE": 0.1226,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0648,
+        "supervisor:CLOCK_UNHEALTHY": 0.1566
+      },
+      "cost_min": 0.9903,
+      "cost_p50": 1.0276,
+      "cost_p90": 1.035,
+      "dwell_s": 21833.6,
+      "near_actionable_share": 0.0067,
+      "priced_share": 0.6398,
+      "profitable_share": 0.0,
+      "rows": 9052,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0055,
+        "BLOCKED_FEES": 0.0053,
+        "BLOCKED_MATCH": 0.1342,
+        "BLOCKED_STALE": 0.3547,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.5002
+      }
+    },
+    "mlb|100|in|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0659,
+        "kalshi:STALE": 0.0134,
+        "polymarket:HASH_MISMATCH": 0.0567,
+        "polymarket:HEARTBEAT_LOST": 0.0008,
+        "polymarket:STALE": 0.028,
+        "supervisor:CLOCK_UNHEALTHY": 0.5149
+      },
+      "cost_min": 0.9388,
+      "cost_p50": 1.0389,
+      "cost_p90": 1.0445,
+      "dwell_s": 6884.0,
+      "near_actionable_share": 0.0044,
+      "priced_share": 0.3861,
+      "profitable_share": 0.0043,
+      "rows": 1425,
+      "status_share": {
+        "BLOCKED_FEES": 0.0221,
+        "BLOCKED_MATCH": 0.0438,
+        "BLOCKED_STALE": 0.6139,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.3158,
+        "PROFITABLE_UNEXECUTED": 0.0043
+      }
+    },
+    "mlb|100|in|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.1496,
+        "kalshi:CROSSED_BOOK": 0.0299,
+        "polymarket:HASH_MISMATCH": 0.0029,
+        "polymarket:HEARTBEAT_LOST": 0.0009,
+        "polymarket:NOT_SYNCED": 0.0114,
+        "polymarket:STALE": 0.0171,
+        "supervisor:CLOCK_UNHEALTHY": 0.0276,
+        "supervisor:LOOP_STALLED": 0.1065
+      },
+      "cost_min": 1.0047,
+      "cost_p50": 1.0421,
+      "cost_p90": 1.0446,
+      "dwell_s": 7629.4,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.8037,
+      "profitable_share": 0.0,
+      "rows": 2225,
+      "status_share": {
+        "BLOCKED_FEES": 0.0173,
+        "BLOCKED_MATCH": 0.1323,
+        "BLOCKED_STALE": 0.1963,
+        "NO_EDGE": 0.6541
+      }
+    },
+    "mlb|100|in|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0746,
+        "kalshi:HEARTBEAT_LOST": 0.0059,
+        "kalshi:NOT_SYNCED": 0.2253,
+        "kalshi:STALE": 0.0143,
+        "polymarket:HASH_MISMATCH": 0.0075,
+        "polymarket:HEARTBEAT_LOST": 0.087,
+        "polymarket:NOT_SYNCED": 0.0022,
+        "polymarket:NO_ASKS": 0.0159,
+        "polymarket:STALE": 0.176,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1385,
+        "supervisor:CLOCK_UNHEALTHY": 0.2461
+      },
+      "cost_min": 0.8482,
+      "cost_p50": 1.0257,
+      "cost_p90": 1.0276,
+      "dwell_s": 14004.0,
+      "near_actionable_share": 0.0032,
+      "priced_share": 0.0813,
+      "profitable_share": 0.0028,
+      "rows": 1199,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0159,
+        "BLOCKED_FEES": 0.0022,
+        "BLOCKED_MATCH": 0.0723,
+        "BLOCKED_STALE": 0.9028,
+        "DISCOVERED": 0.0004,
+        "NO_EDGE": 0.0036,
+        "PROFITABLE_UNEXECUTED": 0.0028
+      }
+    },
+    "mlb|100|in|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0258,
+        "kalshi:STALE": 0.0024,
+        "polymarket:HASH_MISMATCH": 0.0185,
+        "polymarket:HEARTBEAT_LOST": 0.0432,
+        "polymarket:NOT_SYNCED": 0.0184,
+        "polymarket:STALE": 0.0202,
+        "supervisor:CLOCK_UNHEALTHY": 0.8139
+      },
+      "cost_min": 1.0061,
+      "cost_p50": 1.0336,
+      "cost_p90": 1.0443,
+      "dwell_s": 2451.5,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0834,
+      "profitable_share": 0.0,
+      "rows": 269,
+      "status_share": {
+        "BLOCKED_FEES": 0.0113,
+        "BLOCKED_MATCH": 0.0145,
+        "BLOCKED_STALE": 0.9166,
+        "NO_EDGE": 0.0576
+      }
+    },
+    "mlb|100|in|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0538,
+        "kalshi:HEARTBEAT_LOST": 0.0365,
+        "kalshi:STALE": 0.0328,
+        "polymarket:HASH_MISMATCH": 0.014,
+        "polymarket:HEARTBEAT_LOST": 0.0038,
+        "polymarket:NOT_SYNCED": 0.0349,
+        "polymarket:STALE": 0.0473,
+        "supervisor:CLOCK_UNHEALTHY": 0.5277,
+        "supervisor:LOOP_STALLED": 0.0936
+      },
+      "cost_min": 0.9341,
+      "cost_p50": 1.039,
+      "cost_p90": 1.0445,
+      "dwell_s": 8734.7,
+      "near_actionable_share": 0.0034,
+      "priced_share": 0.2094,
+      "profitable_share": 0.002,
+      "rows": 1008,
+      "status_share": {
+        "BLOCKED_FEES": 0.0104,
+        "BLOCKED_MATCH": 0.0434,
+        "BLOCKED_STALE": 0.7906,
+        "DISCOVERED": 0.0003,
+        "NO_EDGE": 0.1533,
+        "PROFITABLE_UNEXECUTED": 0.002
+      }
+    },
+    "mlb|100|pre|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.1913,
+        "kalshi:HEARTBEAT_LOST": 0.2663,
+        "kalshi:NOT_SYNCED": 0.0196,
+        "kalshi:STALE": 0.1507,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.0123,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:STALE": 0.1644,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0374,
+        "supervisor:CLOCK_UNHEALTHY": 0.1444
+      },
+      "cost_min": 1.0142,
+      "cost_p50": 1.0268,
+      "cost_p90": 1.0276,
+      "dwell_s": 74750.2,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2048,
+      "profitable_share": 0.0,
+      "rows": 6834,
+      "status_share": {
+        "BLOCKED_FEES": 0.0201,
+        "BLOCKED_MATCH": 0.1713,
+        "BLOCKED_STALE": 0.7952,
+        "NO_EDGE": 0.0135
+      }
+    },
+    "mlb|100|pre|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0824,
+        "kalshi:STALE": 0.1185,
+        "polymarket:HEARTBEAT_LOST": 0.0068,
+        "polymarket:STALE": 0.1842,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0314,
+        "supervisor:CLOCK_UNHEALTHY": 0.5052
+      },
+      "cost_min": 1.0269,
+      "cost_p50": 1.0282,
+      "cost_p90": 1.0399,
+      "dwell_s": 3326.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.154,
+      "profitable_share": 0.0,
+      "rows": 299,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0824,
+        "BLOCKED_STALE": 0.846,
+        "NO_EDGE": 0.0715
+      }
+    },
+    "mlb|100|pre|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:STALE": 0.0,
+        "polymarket:STALE": 0.0304,
+        "supervisor:CLOCK_UNHEALTHY": 0.3402,
+        "supervisor:LOOP_STALLED": 0.5989
+      },
+      "cost_min": 1.0269,
+      "cost_p50": 1.0269,
+      "cost_p90": 1.0269,
+      "dwell_s": 448.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0305,
+      "profitable_share": 0.0,
+      "rows": 30,
+      "status_share": {
+        "BLOCKED_STALE": 0.9695,
+        "NO_EDGE": 0.0305
+      }
+    },
+    "mlb|100|pre|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0233,
+        "kalshi:HEARTBEAT_LOST": 0.0108,
+        "kalshi:NOT_SYNCED": 0.3147,
+        "kalshi:STALE": 0.0433,
+        "polymarket:HASH_MISMATCH": 0.0029,
+        "polymarket:HEARTBEAT_LOST": 0.0149,
+        "polymarket:NOT_SYNCED": 0.001,
+        "polymarket:STALE": 0.0448,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.017,
+        "supervisor:CLOCK_UNHEALTHY": 0.5244
+      },
+      "cost_min": 1.0142,
+      "cost_p50": 1.0257,
+      "cost_p90": 1.0275,
+      "dwell_s": 24133.4,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0261,
+      "profitable_share": 0.0,
+      "rows": 1219,
+      "status_share": {
+        "BLOCKED_FEES": 0.0017,
+        "BLOCKED_MATCH": 0.0216,
+        "BLOCKED_STALE": 0.9739,
+        "NO_EDGE": 0.0028
+      }
+    },
+    "mlb|100|pre|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0012,
+        "kalshi:STALE": 0.0483,
+        "polymarket:HEARTBEAT_LOST": 0.0731,
+        "polymarket:NOT_SYNCED": 0.0142,
+        "polymarket:STALE": 0.0147,
+        "supervisor:CLOCK_UNHEALTHY": 0.8309
+      },
+      "cost_min": 1.0282,
+      "cost_p50": 1.0399,
+      "cost_p90": 1.0399,
+      "dwell_s": 1262.7,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0188,
+      "profitable_share": 0.0,
+      "rows": 78,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0012,
+        "BLOCKED_STALE": 0.9812,
+        "NO_EDGE": 0.0177
+      }
+    },
+    "mlb|100|pre|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:STALE": 0.3211,
+        "polymarket:HEARTBEAT_LOST": 0.0186,
+        "polymarket:STALE": 0.0608,
+        "supervisor:CLOCK_UNHEALTHY": 0.2141,
+        "supervisor:LOOP_STALLED": 0.2919
+      },
+      "cost_min": 1.0269,
+      "cost_p50": 1.0269,
+      "cost_p90": 1.0399,
+      "dwell_s": 1063.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0935,
+      "profitable_share": 0.0,
+      "rows": 66,
+      "status_share": {
+        "BLOCKED_STALE": 0.9065,
+        "NO_EDGE": 0.0935
+      }
+    },
+    "mlb|25|end|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0044,
+        "kalshi:NO_ASKS": 0.0039,
+        "kalshi:STALE": 0.0256,
+        "polymarket:HASH_MISMATCH": 0.0001,
+        "polymarket:STALE": 0.0043,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0284,
+        "supervisor:CLOCK_UNHEALTHY": 0.1052
+      },
+      "cost_min": 0.8886,
+      "cost_p50": 1.0294,
+      "cost_p90": 1.0343,
+      "dwell_s": 7398.5,
+      "near_actionable_share": 0.0007,
+      "priced_share": 0.8325,
+      "profitable_share": 0.0,
+      "rows": 2652,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0039,
+        "BLOCKED_FEES": 0.001,
+        "BLOCKED_MATCH": 0.0035,
+        "BLOCKED_STALE": 0.1635,
+        "NO_EDGE": 0.8281
+      }
+    },
+    "mlb|25|end|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.1709,
+        "kalshi:STALE": 0.0006,
+        "polymarket:HASH_MISMATCH": 0.015,
+        "polymarket:STALE": 0.0029,
+        "supervisor:LOOP_STALLED": 0.097
+      },
+      "cost_min": 0.987,
+      "cost_p50": 1.0383,
+      "cost_p90": 1.0439,
+      "dwell_s": 1440.8,
+      "near_actionable_share": 0.0002,
+      "priced_share": 0.8845,
+      "profitable_share": 0.0,
+      "rows": 447,
+      "status_share": {
+        "BLOCKED_FEES": 0.0245,
+        "BLOCKED_MATCH": 0.1464,
+        "BLOCKED_STALE": 0.1155,
+        "DISCOVERED": 0.0002,
+        "NO_EDGE": 0.7134
+      }
+    },
+    "mlb|25|end|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:HEARTBEAT_LOST": 0.0886,
+        "kalshi:NO_ASKS": 0.1677,
+        "kalshi:STALE": 0.0989,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0245,
+        "supervisor:CLOCK_UNHEALTHY": 0.293,
+        "supervisor:LOOP_STALLED": 0.3273
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 888.3,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 28,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.1677,
+        "BLOCKED_STALE": 0.8323
+      }
+    },
+    "mlb|25|in|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.134,
+        "kalshi:HEARTBEAT_LOST": 0.0014,
+        "kalshi:STALE": 0.0028,
+        "polymarket:HASH_MISMATCH": 0.0053,
+        "polymarket:HEARTBEAT_LOST": 0.0012,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:NO_ASKS": 0.0055,
+        "polymarket:STALE": 0.1226,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0649,
+        "supervisor:CLOCK_UNHEALTHY": 0.1566
+      },
+      "cost_min": 0.8647,
+      "cost_p50": 1.0276,
+      "cost_p90": 1.035,
+      "dwell_s": 21827.4,
+      "near_actionable_share": 0.0105,
+      "priced_share": 0.6397,
+      "profitable_share": 0.0,
+      "rows": 6571,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0055,
+        "BLOCKED_FEES": 0.0064,
+        "BLOCKED_MATCH": 0.1276,
+        "BLOCKED_STALE": 0.3548,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.5056
+      }
+    },
+    "mlb|25|in|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0587,
+        "kalshi:STALE": 0.0134,
+        "polymarket:HASH_MISMATCH": 0.0567,
+        "polymarket:HEARTBEAT_LOST": 0.0008,
+        "polymarket:STALE": 0.028,
+        "supervisor:CLOCK_UNHEALTHY": 0.5149
+      },
+      "cost_min": 0.9388,
+      "cost_p50": 1.0383,
+      "cost_p90": 1.0443,
+      "dwell_s": 6884.0,
+      "near_actionable_share": 0.0047,
+      "priced_share": 0.3861,
+      "profitable_share": 0.0043,
+      "rows": 1225,
+      "status_share": {
+        "BLOCKED_FEES": 0.0231,
+        "BLOCKED_MATCH": 0.0356,
+        "BLOCKED_STALE": 0.6139,
+        "DISCOVERED": 0.0003,
+        "NO_EDGE": 0.3228,
+        "PROFITABLE_UNEXECUTED": 0.0043
+      }
+    },
+    "mlb|25|in|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.133,
+        "kalshi:CROSSED_BOOK": 0.0299,
+        "polymarket:HASH_MISMATCH": 0.0029,
+        "polymarket:HEARTBEAT_LOST": 0.0009,
+        "polymarket:NOT_SYNCED": 0.0115,
+        "polymarket:STALE": 0.0171,
+        "supervisor:CLOCK_UNHEALTHY": 0.0276,
+        "supervisor:LOOP_STALLED": 0.1067
+      },
+      "cost_min": 1.0045,
+      "cost_p50": 1.0419,
+      "cost_p90": 1.0443,
+      "dwell_s": 7618.1,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.8034,
+      "profitable_share": 0.0,
+      "rows": 1992,
+      "status_share": {
+        "BLOCKED_FEES": 0.0197,
+        "BLOCKED_MATCH": 0.1133,
+        "BLOCKED_STALE": 0.1966,
+        "NO_EDGE": 0.6704
+      }
+    },
+    "mlb|25|in|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0742,
+        "kalshi:HEARTBEAT_LOST": 0.0059,
+        "kalshi:NOT_SYNCED": 0.2253,
+        "kalshi:STALE": 0.0143,
+        "polymarket:HASH_MISMATCH": 0.0075,
+        "polymarket:HEARTBEAT_LOST": 0.087,
+        "polymarket:NOT_SYNCED": 0.0022,
+        "polymarket:NO_ASKS": 0.0159,
+        "polymarket:STALE": 0.176,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1385,
+        "supervisor:CLOCK_UNHEALTHY": 0.2461
+      },
+      "cost_min": 0.8482,
+      "cost_p50": 1.026,
+      "cost_p90": 1.0276,
+      "dwell_s": 14004.0,
+      "near_actionable_share": 0.0032,
+      "priced_share": 0.0813,
+      "profitable_share": 0.0029,
+      "rows": 1199,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0159,
+        "BLOCKED_FEES": 0.0022,
+        "BLOCKED_MATCH": 0.072,
+        "BLOCKED_STALE": 0.9028,
+        "DISCOVERED": 0.0004,
+        "NO_EDGE": 0.0039,
+        "PROFITABLE_UNEXECUTED": 0.0029
+      }
+    },
+    "mlb|25|in|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0245,
+        "kalshi:STALE": 0.0024,
+        "polymarket:HASH_MISMATCH": 0.0185,
+        "polymarket:HEARTBEAT_LOST": 0.0432,
+        "polymarket:NOT_SYNCED": 0.0184,
+        "polymarket:STALE": 0.0202,
+        "supervisor:CLOCK_UNHEALTHY": 0.8139
+      },
+      "cost_min": 1.004,
+      "cost_p50": 1.0329,
+      "cost_p90": 1.0443,
+      "dwell_s": 2451.5,
+      "near_actionable_share": 0.0012,
+      "priced_share": 0.0834,
+      "profitable_share": 0.0,
+      "rows": 251,
+      "status_share": {
+        "BLOCKED_FEES": 0.0114,
+        "BLOCKED_MATCH": 0.0131,
+        "BLOCKED_STALE": 0.9166,
+        "NO_EDGE": 0.059
+      }
+    },
+    "mlb|25|in|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0469,
+        "kalshi:HEARTBEAT_LOST": 0.0365,
+        "kalshi:STALE": 0.0328,
+        "polymarket:HASH_MISMATCH": 0.014,
+        "polymarket:HEARTBEAT_LOST": 0.0038,
+        "polymarket:NOT_SYNCED": 0.0349,
+        "polymarket:STALE": 0.0473,
+        "supervisor:CLOCK_UNHEALTHY": 0.5279,
+        "supervisor:LOOP_STALLED": 0.0937
+      },
+      "cost_min": 0.9341,
+      "cost_p50": 1.037,
+      "cost_p90": 1.0445,
+      "dwell_s": 8730.9,
+      "near_actionable_share": 0.0034,
+      "priced_share": 0.2091,
+      "profitable_share": 0.0009,
+      "rows": 976,
+      "status_share": {
+        "BLOCKED_FEES": 0.0107,
+        "BLOCKED_MATCH": 0.0362,
+        "BLOCKED_STALE": 0.7909,
+        "DISCOVERED": 0.0015,
+        "NO_EDGE": 0.1598,
+        "PROFITABLE_UNEXECUTED": 0.0009
+      }
+    },
+    "mlb|25|pre|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.1829,
+        "kalshi:HEARTBEAT_LOST": 0.2663,
+        "kalshi:NOT_SYNCED": 0.0196,
+        "kalshi:STALE": 0.1507,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.0123,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:STALE": 0.1644,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0374,
+        "supervisor:CLOCK_UNHEALTHY": 0.1444
+      },
+      "cost_min": 1.0144,
+      "cost_p50": 1.0268,
+      "cost_p90": 1.0276,
+      "dwell_s": 74750.2,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2048,
+      "profitable_share": 0.0,
+      "rows": 6833,
+      "status_share": {
+        "BLOCKED_FEES": 0.0201,
+        "BLOCKED_MATCH": 0.1628,
+        "BLOCKED_STALE": 0.7952,
+        "NO_EDGE": 0.0219
+      }
+    },
+    "mlb|25|pre|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0824,
+        "kalshi:STALE": 0.1185,
+        "polymarket:HEARTBEAT_LOST": 0.0068,
+        "polymarket:STALE": 0.1842,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0314,
+        "supervisor:CLOCK_UNHEALTHY": 0.5052
+      },
+      "cost_min": 1.0269,
+      "cost_p50": 1.0282,
+      "cost_p90": 1.0399,
+      "dwell_s": 3326.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.154,
+      "profitable_share": 0.0,
+      "rows": 299,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0824,
+        "BLOCKED_STALE": 0.846,
+        "NO_EDGE": 0.0715
+      }
+    },
+    "mlb|25|pre|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:STALE": 0.0,
+        "polymarket:STALE": 0.0304,
+        "supervisor:CLOCK_UNHEALTHY": 0.3402,
+        "supervisor:LOOP_STALLED": 0.5989
+      },
+      "cost_min": 1.0269,
+      "cost_p50": 1.0269,
+      "cost_p90": 1.0269,
+      "dwell_s": 448.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0305,
+      "profitable_share": 0.0,
+      "rows": 30,
+      "status_share": {
+        "BLOCKED_STALE": 0.9695,
+        "NO_EDGE": 0.0305
+      }
+    },
+    "mlb|25|pre|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0233,
+        "kalshi:HEARTBEAT_LOST": 0.0108,
+        "kalshi:NOT_SYNCED": 0.3147,
+        "kalshi:STALE": 0.0433,
+        "polymarket:HASH_MISMATCH": 0.0029,
+        "polymarket:HEARTBEAT_LOST": 0.0149,
+        "polymarket:NOT_SYNCED": 0.001,
+        "polymarket:STALE": 0.0448,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.017,
+        "supervisor:CLOCK_UNHEALTHY": 0.5244
+      },
+      "cost_min": 1.0144,
+      "cost_p50": 1.026,
+      "cost_p90": 1.0276,
+      "dwell_s": 24133.4,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0261,
+      "profitable_share": 0.0,
+      "rows": 1219,
+      "status_share": {
+        "BLOCKED_FEES": 0.0017,
+        "BLOCKED_MATCH": 0.0216,
+        "BLOCKED_STALE": 0.9739,
+        "NO_EDGE": 0.0028
+      }
+    },
+    "mlb|25|pre|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0012,
+        "kalshi:STALE": 0.0483,
+        "polymarket:HEARTBEAT_LOST": 0.0731,
+        "polymarket:NOT_SYNCED": 0.0142,
+        "polymarket:STALE": 0.0147,
+        "supervisor:CLOCK_UNHEALTHY": 0.8309
+      },
+      "cost_min": 1.0282,
+      "cost_p50": 1.0399,
+      "cost_p90": 1.0399,
+      "dwell_s": 1262.7,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0188,
+      "profitable_share": 0.0,
+      "rows": 78,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0012,
+        "BLOCKED_STALE": 0.9812,
+        "NO_EDGE": 0.0177
+      }
+    },
+    "mlb|25|pre|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:STALE": 0.3211,
+        "polymarket:HEARTBEAT_LOST": 0.0186,
+        "polymarket:STALE": 0.0608,
+        "supervisor:CLOCK_UNHEALTHY": 0.2141,
+        "supervisor:LOOP_STALLED": 0.2919
+      },
+      "cost_min": 1.0269,
+      "cost_p50": 1.0269,
+      "cost_p90": 1.0399,
+      "dwell_s": 1063.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0935,
+      "profitable_share": 0.0,
+      "rows": 66,
+      "status_share": {
+        "BLOCKED_STALE": 0.9065,
+        "NO_EDGE": 0.0935
+      }
+    },
+    "mlb|5|end|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0048,
+        "kalshi:NO_ASKS": 0.0039,
+        "kalshi:STALE": 0.0256,
+        "polymarket:HASH_MISMATCH": 0.0001,
+        "polymarket:STALE": 0.0043,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0284,
+        "supervisor:CLOCK_UNHEALTHY": 0.1052
+      },
+      "cost_min": 0.874,
+      "cost_p50": 1.0302,
+      "cost_p90": 1.0346,
+      "dwell_s": 7397.9,
+      "near_actionable_share": 0.001,
+      "priced_share": 0.8325,
+      "profitable_share": 0.0,
+      "rows": 1903,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0039,
+        "BLOCKED_FEES": 0.002,
+        "BLOCKED_MATCH": 0.0028,
+        "BLOCKED_STALE": 0.1636,
+        "NO_EDGE": 0.8278
+      }
+    },
+    "mlb|5|end|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.1475,
+        "kalshi:STALE": 0.0006,
+        "polymarket:HASH_MISMATCH": 0.015,
+        "polymarket:STALE": 0.0029,
+        "supervisor:LOOP_STALLED": 0.097
+      },
+      "cost_min": 0.9823,
+      "cost_p50": 1.0372,
+      "cost_p90": 1.0439,
+      "dwell_s": 1440.8,
+      "near_actionable_share": 0.0003,
+      "priced_share": 0.8845,
+      "profitable_share": 0.0,
+      "rows": 409,
+      "status_share": {
+        "BLOCKED_FEES": 0.0103,
+        "BLOCKED_MATCH": 0.1372,
+        "BLOCKED_STALE": 0.1155,
+        "DISCOVERED": 0.0002,
+        "NO_EDGE": 0.7369
+      }
+    },
+    "mlb|5|end|flap|fee-half": {
+      "blocked_reason_share": {
+        "kalshi:NOT_SYNCED": 0.2362,
+        "kalshi:STALE": 0.1436,
+        "polymarket:HEARTBEAT_LOST": 0.4746,
+        "polymarket:NOT_SYNCED": 0.1456
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 649.1,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 32,
+      "status_share": {
+        "BLOCKED_STALE": 1.0
+      }
+    },
+    "mlb|5|end|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:HEARTBEAT_LOST": 0.0886,
+        "kalshi:NO_ASKS": 0.1677,
+        "kalshi:STALE": 0.0989,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0245,
+        "supervisor:CLOCK_UNHEALTHY": 0.293,
+        "supervisor:LOOP_STALLED": 0.3273
+      },
+      "cost_min": null,
+      "cost_p50": null,
+      "cost_p90": null,
+      "dwell_s": 888.3,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0,
+      "profitable_share": 0.0,
+      "rows": 28,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.1677,
+        "BLOCKED_STALE": 0.8323
+      }
+    },
+    "mlb|5|in|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.1352,
+        "kalshi:HEARTBEAT_LOST": 0.0014,
+        "kalshi:STALE": 0.0028,
+        "polymarket:HASH_MISMATCH": 0.0053,
+        "polymarket:HEARTBEAT_LOST": 0.0012,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:NO_ASKS": 0.0055,
+        "polymarket:STALE": 0.122,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0648,
+        "supervisor:CLOCK_UNHEALTHY": 0.1566
+      },
+      "cost_min": 0.77,
+      "cost_p50": 1.0299,
+      "cost_p90": 1.035,
+      "dwell_s": 21836.2,
+      "near_actionable_share": 0.0093,
+      "priced_share": 0.6404,
+      "profitable_share": 0.0,
+      "rows": 5103,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0055,
+        "BLOCKED_FEES": 0.0165,
+        "BLOCKED_MATCH": 0.1186,
+        "BLOCKED_STALE": 0.3542,
+        "DISCOVERED": 0.0001,
+        "NO_EDGE": 0.5051
+      }
+    },
+    "mlb|5|in|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.049,
+        "kalshi:STALE": 0.0134,
+        "polymarket:HASH_MISMATCH": 0.0567,
+        "polymarket:HEARTBEAT_LOST": 0.0008,
+        "polymarket:STALE": 0.028,
+        "supervisor:CLOCK_UNHEALTHY": 0.5149
+      },
+      "cost_min": 0.9357,
+      "cost_p50": 1.0349,
+      "cost_p90": 1.0443,
+      "dwell_s": 6884.0,
+      "near_actionable_share": 0.0047,
+      "priced_share": 0.3861,
+      "profitable_share": 0.0,
+      "rows": 1007,
+      "status_share": {
+        "BLOCKED_FEES": 0.0207,
+        "BLOCKED_MATCH": 0.0284,
+        "BLOCKED_STALE": 0.6139,
+        "DISCOVERED": 0.0047,
+        "NO_EDGE": 0.3324
+      }
+    },
+    "mlb|5|in|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.1234,
+        "kalshi:CROSSED_BOOK": 0.0299,
+        "polymarket:HASH_MISMATCH": 0.0029,
+        "polymarket:HEARTBEAT_LOST": 0.0009,
+        "polymarket:NOT_SYNCED": 0.0115,
+        "polymarket:STALE": 0.0171,
+        "supervisor:CLOCK_UNHEALTHY": 0.0276,
+        "supervisor:LOOP_STALLED": 0.1067
+      },
+      "cost_min": 0.9844,
+      "cost_p50": 1.0417,
+      "cost_p90": 1.0441,
+      "dwell_s": 7618.1,
+      "near_actionable_share": 0.0002,
+      "priced_share": 0.8034,
+      "profitable_share": 0.0,
+      "rows": 1719,
+      "status_share": {
+        "BLOCKED_FEES": 0.0188,
+        "BLOCKED_MATCH": 0.1047,
+        "BLOCKED_STALE": 0.1966,
+        "DISCOVERED": 0.0,
+        "NO_EDGE": 0.68
+      }
+    },
+    "mlb|5|in|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0468,
+        "kalshi:HEARTBEAT_LOST": 0.0063,
+        "kalshi:NOT_SYNCED": 0.2447,
+        "kalshi:STALE": 0.0584,
+        "polymarket:HASH_MISMATCH": 0.0057,
+        "polymarket:HEARTBEAT_LOST": 0.0721,
+        "polymarket:NOT_SYNCED": 0.0684,
+        "polymarket:NO_ASKS": 0.0121,
+        "polymarket:STALE": 0.1751,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.1173,
+        "supervisor:CLOCK_UNHEALTHY": 0.187
+      },
+      "cost_min": 0.8482,
+      "cost_p50": 1.026,
+      "cost_p90": 1.03,
+      "dwell_s": 18428.7,
+      "near_actionable_share": 0.0028,
+      "priced_share": 0.053,
+      "profitable_share": 0.0003,
+      "rows": 1355,
+      "status_share": {
+        "BLOCKED_DEPTH": 0.0121,
+        "BLOCKED_FEES": 0.002,
+        "BLOCKED_MATCH": 0.0449,
+        "BLOCKED_STALE": 0.9349,
+        "DISCOVERED": 0.0022,
+        "NO_EDGE": 0.0038,
+        "PROFITABLE_UNEXECUTED": 0.0003
+      }
+    },
+    "mlb|5|in|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0235,
+        "kalshi:STALE": 0.0024,
+        "polymarket:HASH_MISMATCH": 0.0185,
+        "polymarket:HEARTBEAT_LOST": 0.0432,
+        "polymarket:NOT_SYNCED": 0.0184,
+        "polymarket:STALE": 0.0202,
+        "supervisor:CLOCK_UNHEALTHY": 0.8139
+      },
+      "cost_min": 1.004,
+      "cost_p50": 1.0329,
+      "cost_p90": 1.0443,
+      "dwell_s": 2451.5,
+      "near_actionable_share": 0.0012,
+      "priced_share": 0.0834,
+      "profitable_share": 0.0,
+      "rows": 223,
+      "status_share": {
+        "BLOCKED_FEES": 0.0114,
+        "BLOCKED_MATCH": 0.0121,
+        "BLOCKED_STALE": 0.9166,
+        "NO_EDGE": 0.0599
+      }
+    },
+    "mlb|5|in|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "(none)": 0.0393,
+        "kalshi:HEARTBEAT_LOST": 0.0365,
+        "kalshi:STALE": 0.0328,
+        "polymarket:HASH_MISMATCH": 0.014,
+        "polymarket:HEARTBEAT_LOST": 0.0038,
+        "polymarket:NOT_SYNCED": 0.0349,
+        "polymarket:STALE": 0.0473,
+        "supervisor:CLOCK_UNHEALTHY": 0.5279,
+        "supervisor:LOOP_STALLED": 0.0937
+      },
+      "cost_min": 0.9341,
+      "cost_p50": 1.0352,
+      "cost_p90": 1.0445,
+      "dwell_s": 8730.9,
+      "near_actionable_share": 0.0035,
+      "priced_share": 0.2091,
+      "profitable_share": 0.0,
+      "rows": 875,
+      "status_share": {
+        "BLOCKED_FEES": 0.011,
+        "BLOCKED_MATCH": 0.0283,
+        "BLOCKED_STALE": 0.7909,
+        "DISCOVERED": 0.0024,
+        "NO_EDGE": 0.1674
+      }
+    },
+    "mlb|5|pre|clean|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.182,
+        "kalshi:HEARTBEAT_LOST": 0.2663,
+        "kalshi:NOT_SYNCED": 0.0196,
+        "kalshi:STALE": 0.1507,
+        "polymarket:HASH_MISMATCH": 0.0,
+        "polymarket:HEARTBEAT_LOST": 0.0123,
+        "polymarket:NOT_SYNCED": 0.0,
+        "polymarket:STALE": 0.1644,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0374,
+        "supervisor:CLOCK_UNHEALTHY": 0.1444
+      },
+      "cost_min": 1.016,
+      "cost_p50": 1.03,
+      "cost_p90": 1.03,
+      "dwell_s": 74750.2,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.2048,
+      "profitable_share": 0.0,
+      "rows": 6836,
+      "status_share": {
+        "BLOCKED_FEES": 0.0201,
+        "BLOCKED_MATCH": 0.1619,
+        "BLOCKED_STALE": 0.7952,
+        "NO_EDGE": 0.0228
+      }
+    },
+    "mlb|5|pre|clean|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0824,
+        "kalshi:STALE": 0.1185,
+        "polymarket:HEARTBEAT_LOST": 0.0068,
+        "polymarket:STALE": 0.1842,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.0314,
+        "supervisor:CLOCK_UNHEALTHY": 0.5052
+      },
+      "cost_min": 1.0269,
+      "cost_p50": 1.0282,
+      "cost_p90": 1.0399,
+      "dwell_s": 3326.8,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.154,
+      "profitable_share": 0.0,
+      "rows": 299,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0824,
+        "BLOCKED_STALE": 0.846,
+        "NO_EDGE": 0.0715
+      }
+    },
+    "mlb|5|pre|clean|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:STALE": 0.0,
+        "polymarket:STALE": 0.0304,
+        "supervisor:CLOCK_UNHEALTHY": 0.3402,
+        "supervisor:LOOP_STALLED": 0.5989
+      },
+      "cost_min": 1.0269,
+      "cost_p50": 1.0269,
+      "cost_p90": 1.0269,
+      "dwell_s": 448.0,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0305,
+      "profitable_share": 0.0,
+      "rows": 30,
+      "status_share": {
+        "BLOCKED_STALE": 0.9695,
+        "NO_EDGE": 0.0305
+      }
+    },
+    "mlb|5|pre|flap|fee-half": {
+      "blocked_reason_share": {
+        "(none)": 0.0233,
+        "kalshi:HEARTBEAT_LOST": 0.0108,
+        "kalshi:NOT_SYNCED": 0.3147,
+        "kalshi:STALE": 0.0433,
+        "polymarket:HASH_MISMATCH": 0.0029,
+        "polymarket:HEARTBEAT_LOST": 0.0149,
+        "polymarket:NOT_SYNCED": 0.001,
+        "polymarket:STALE": 0.0448,
+        "polymarket:UNVERIFIED_TOO_LONG": 0.017,
+        "supervisor:CLOCK_UNHEALTHY": 0.5244
+      },
+      "cost_min": 1.016,
+      "cost_p50": 1.026,
+      "cost_p90": 1.03,
+      "dwell_s": 24133.4,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0261,
+      "profitable_share": 0.0,
+      "rows": 1219,
+      "status_share": {
+        "BLOCKED_FEES": 0.0017,
+        "BLOCKED_MATCH": 0.0216,
+        "BLOCKED_STALE": 0.9739,
+        "NO_EDGE": 0.0028
+      }
+    },
+    "mlb|5|pre|flap|fee-repinned": {
+      "blocked_reason_share": {
+        "(none)": 0.0012,
+        "kalshi:STALE": 0.0483,
+        "polymarket:HEARTBEAT_LOST": 0.0731,
+        "polymarket:NOT_SYNCED": 0.0142,
+        "polymarket:STALE": 0.0147,
+        "supervisor:CLOCK_UNHEALTHY": 0.8309
+      },
+      "cost_min": 1.0282,
+      "cost_p50": 1.0399,
+      "cost_p90": 1.0399,
+      "dwell_s": 1262.7,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0188,
+      "profitable_share": 0.0,
+      "rows": 78,
+      "status_share": {
+        "BLOCKED_MATCH": 0.0012,
+        "BLOCKED_STALE": 0.9812,
+        "NO_EDGE": 0.0177
+      }
+    },
+    "mlb|5|pre|flap|fee-repinned+probe": {
+      "blocked_reason_share": {
+        "kalshi:STALE": 0.3211,
+        "polymarket:HEARTBEAT_LOST": 0.0186,
+        "polymarket:STALE": 0.0608,
+        "supervisor:CLOCK_UNHEALTHY": 0.2141,
+        "supervisor:LOOP_STALLED": 0.2919
+      },
+      "cost_min": 1.0269,
+      "cost_p50": 1.0269,
+      "cost_p90": 1.0399,
+      "dwell_s": 1063.9,
+      "near_actionable_share": 0.0,
+      "priced_share": 0.0935,
+      "profitable_share": 0.0,
+      "rows": 66,
+      "status_share": {
+        "BLOCKED_STALE": 0.9065,
+        "NO_EDGE": 0.0935
+      }
+    }
+  },
+  "db": "/Volumes/Kilos/janus/tuples/tuples.sqlite",
+  "excluded_old_vocabulary": 6025,
+  "flap_seconds": 109006.7,
+  "flap_windows": 1199,
+  "games": 34,
+  "n_for_paper": {
+    "basis": "power",
+    "in_play_clean_actionable_rows": 95,
+    "median_locked_return": 0.02888,
+    "n": 33,
+    "sigma_locked_return": 0.01458
+  },
+  "profitable": [
+    {
+      "cost": 0.97138848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02945425088837784,
+      "seen_ts": 1788458920.2956958,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.97138848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.02945425088837784,
+      "seen_ts": 1788458920.2956958,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93058848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.07458884511443764,
+      "seen_ts": 1788459028.253119,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93048848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.07470433164309573,
+      "seen_ts": 1788459028.253119,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.92018848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.08673388304100485,
+      "seen_ts": 1788459152.403022,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.92018848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.08673388304100485,
+      "seen_ts": 1788459152.403022,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.84818848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.17898323731065055,
+      "seen_ts": 1788459497.015429,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8481884799999999,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.1789832373106507,
+      "seen_ts": 1788459497.015429,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8481884799999999,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.1789832373106507,
+      "seen_ts": 1788459497.015429,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85458848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.17015384995594607,
+      "seen_ts": 1788459500.209562,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8574884799999999,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.16619642516946714,
+      "seen_ts": 1788459500.209562,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85258848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.17289879403484318,
+      "seen_ts": 1788459500.2382789,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85848848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.16483799526348916,
+      "seen_ts": 1788459500.4119492,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85458848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.17015384995594607,
+      "seen_ts": 1788459500.479723,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8601884800000001,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.16253591305942602,
+      "seen_ts": 1788459500.528203,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85858848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.16470232631120327,
+      "seen_ts": 1788459500.528203,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93058848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.07458884511443764,
+      "seen_ts": 1788460356.7065642,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93048848,
+      "flapping": true,
+      "game_id": "espn:mlb:401816789",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.07470433164309573,
+      "seen_ts": 1788460356.7065642,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9891432,
+      "flapping": false,
+      "game_id": "espn:cfb:401867889",
+      "league": "cfb",
+      "phase": "pre",
+      "quantity": 100.0,
+      "return_locked": 0.01097596384426441,
+      "seen_ts": 1788464551.637795,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9896207345999999,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.010488124426975923,
+      "seen_ts": 1788479495.172004,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9826207345999999,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.017686646320438964,
+      "seen_ts": 1788479495.188062,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9791276364,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.021317306165253697,
+      "seen_ts": 1788479496.1256151,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9719276364,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02888318280976086,
+      "seen_ts": 1788479496.772811,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9722207345999997,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.028573002417428918,
+      "seen_ts": 1788479496.772811,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9719276364,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02888318280976086,
+      "seen_ts": 1788479504.499948,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9722207345999997,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.028573002417428918,
+      "seen_ts": 1788479504.499948,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.972318434,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02846965050957786,
+      "seen_ts": 1788479509.656724,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.972318434,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.02846965050957786,
+      "seen_ts": 1788479509.656724,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.972318434,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02846965050957786,
+      "seen_ts": 1788479515.686671,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.972318434,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.02846965050957786,
+      "seen_ts": 1788479515.686671,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.972318434,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02846965050957786,
+      "seen_ts": 1788479523.118263,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.972318434,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.02846965050957786,
+      "seen_ts": 1788479523.118263,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9197559999999999,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.0872448779893799,
+      "seen_ts": 1788480433.480733,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9197559999999999,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.0872448779893799,
+      "seen_ts": 1788480433.480733,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93009624,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.07515755573853301,
+      "seen_ts": 1788480458.2329779,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93009624,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.07515755573853301,
+      "seen_ts": 1788480458.2329779,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93317465152,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.07161076264893354,
+      "seen_ts": 1788480459.222601,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9353853228800001,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.06907813875147716,
+      "seen_ts": 1788480460.806365,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9391661907200001,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.06477427518271547,
+      "seen_ts": 1788480460.806365,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9365411897599999,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.0677586965035272,
+      "seen_ts": 1788480460.8484962,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9471953374400001,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.05574844012927253,
+      "seen_ts": 1788480460.8484962,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.94115345728,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.06252598050276591,
+      "seen_ts": 1788480460.860669,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9423037241599999,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.06122895873242195,
+      "seen_ts": 1788480460.879908,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.94460089792,
+      "flapping": true,
+      "game_id": "espn:mlb:401816793",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.05864815733500588,
+      "seen_ts": 1788480460.8879008,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9859102563200001,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.014291101638998245,
+      "seen_ts": 1788482175.9842181,
+      "stale_within_60s": false
+    },
+    {
+      "cost": 0.9387828,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.06520911972396594,
+      "seen_ts": 1788482589.5784,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9387797999999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.06521252374625025,
+      "seen_ts": 1788482589.5784,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9387828,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.06520911972396594,
+      "seen_ts": 1788482593.869403,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9387797999999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.06521252374625025,
+      "seen_ts": 1788482593.869403,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9471107999999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.05584267437347361,
+      "seen_ts": 1788482600.419991,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9622618,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.03921822522727189,
+      "seen_ts": 1788482600.419991,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9495868,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.0530896175052139,
+      "seen_ts": 1788482601.3001301,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9638097999999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.03754910979323935,
+      "seen_ts": 1788482601.3001301,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9582988,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.0435158637368637,
+      "seen_ts": 1788482602.270814,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9670257999999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.034098573171470775,
+      "seen_ts": 1788482602.270814,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9599588,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.04171137344644374,
+      "seen_ts": 1788482602.3523998,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9545788000000001,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.04758245207205517,
+      "seen_ts": 1788482603.711166,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9595588,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.04214561942426035,
+      "seen_ts": 1788482605.8620439,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9595588,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.04214561942426035,
+      "seen_ts": 1788482606.599926,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9666138,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.03453933722030456,
+      "seen_ts": 1788482606.599926,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9491788,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.05354228307669747,
+      "seen_ts": 1788482611.727206,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9491788,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.05354228307669747,
+      "seen_ts": 1788482611.727206,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.950229143488,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.05237774157221321,
+      "seen_ts": 1788482613.131387,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9516628,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.05079236048734906,
+      "seen_ts": 1788482615.594383,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.960612143488,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.041002871740702794,
+      "seen_ts": 1788482615.594383,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9684461434880001,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.03258194244891525,
+      "seen_ts": 1788482616.328843,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9616388,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.03989148524373183,
+      "seen_ts": 1788482617.207513,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9657868,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.03542520978750181,
+      "seen_ts": 1788482617.694613,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9699481434880001,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.030982951731761032,
+      "seen_ts": 1788482617.694613,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9699348,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.030997135065161097,
+      "seen_ts": 1788482617.707912,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9712961434880001,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.02955211621547485,
+      "seen_ts": 1788482617.707912,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9576028,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.044274306633188654,
+      "seen_ts": 1788482618.9908302,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.990043143488,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.010056992543699829,
+      "seen_ts": 1788482619.436995,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9862211434879999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.013971365958823328,
+      "seen_ts": 1788482619.7399669,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9862211434879999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.013971365958823328,
+      "seen_ts": 1788482619.886862,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.982578143488,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.017730759255599887,
+      "seen_ts": 1788482620.0858262,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9862211434879999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.013971365958823328,
+      "seen_ts": 1788482620.263561,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9620508,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.03944614982909428,
+      "seen_ts": 1788482620.43086,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.988671143488,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.011458670141855415,
+      "seen_ts": 1788482620.43086,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9661147999999998,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.035073678614591326,
+      "seen_ts": 1788482620.44261,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9900251434880001,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.010075356749887254,
+      "seen_ts": 1788482620.44261,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9682668,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.03277319846141582,
+      "seen_ts": 1788482620.9808571,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.95638176,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.045607561566209744,
+      "seen_ts": 1788482649.485934,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.970850096,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.030025133766892007,
+      "seen_ts": 1788482649.485934,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.967754024,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.033320425645680406,
+      "seen_ts": 1788482649.6070132,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.970850096,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.030025133766892007,
+      "seen_ts": 1788482649.6214888,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.94602152,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.05705840602864939,
+      "seen_ts": 1788482649.713121,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.94601852,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.05706175815670081,
+      "seen_ts": 1788482649.713121,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.95638176,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.045607561566209744,
+      "seen_ts": 1788482649.9006479,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.95637876,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.045610841462016584,
+      "seen_ts": 1788482649.9006479,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9522356639999998,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.05016020487970318,
+      "seen_ts": 1788482649.992403,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9553422360000001,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.046745304789392636,
+      "seen_ts": 1788482649.992403,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.97704824,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.023490917910051184,
+      "seen_ts": 1788482650.020065,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9729201439999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.027833585486950377,
+      "seen_ts": 1788482650.064847,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.983778896,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.016488566756162643,
+      "seen_ts": 1788482650.064847,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9863664560000001,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.013821986663342029,
+      "seen_ts": 1788482650.127754,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9791382879999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02130619571890349,
+      "seen_ts": 1788482650.585122,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9853334319999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.014884878076480514,
+      "seen_ts": 1788482650.585122,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9770722399999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.023465777719772363,
+      "seen_ts": 1788482650.623125,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9843004080000001,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.015950000500253705,
+      "seen_ts": 1788482650.623125,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9770692400000001,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.023468920176015304,
+      "seen_ts": 1788482650.675574,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.966732,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.034412846580024206,
+      "seen_ts": 1788482650.817208,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.966729,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.03441605661979733,
+      "seen_ts": 1788482650.817208,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9744841799999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.02618392429931503,
+      "seen_ts": 1788482651.135443,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.98995554,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.010146374856390049,
+      "seen_ts": 1788482651.23044,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9859384464,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.014262100896200587,
+      "seen_ts": 1788482651.334312,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.964661952,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.03663257157259578,
+      "seen_ts": 1788482651.3634958,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9833558864,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.01692582902099965,
+      "seen_ts": 1788482651.3634958,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9868579679999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.013317045031955483,
+      "seen_ts": 1788482651.4052548,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.986863968,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.013310884200810157,
+      "seen_ts": 1788482651.55504,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9754062016,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.025213904073664625,
+      "seen_ts": 1788482651.708159,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9654891712,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.03574439758563706,
+      "seen_ts": 1788482651.726879,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9696272671999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.031324132300556744,
+      "seen_ts": 1788482651.778309,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9721041248,
+      "flapping": false,
+      "game_id": "espn:mlb:401816788",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02869638600262015,
+      "seen_ts": 1788482651.796055,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9794188,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.0210136868926755,
+      "seen_ts": 1788482962.0014908,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9794158,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.02101681430910146,
+      "seen_ts": 1788482962.0014908,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9899382800000001,
+      "flapping": true,
+      "game_id": "espn:cfb:401866622",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.010163987193221723,
+      "seen_ts": 1788483392.8553998,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.98951628,
+      "flapping": true,
+      "game_id": "espn:cfb:401866622",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.010594792841609411,
+      "seen_ts": 1788483393.0266728,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.98998928,
+      "flapping": true,
+      "game_id": "espn:cfb:401866622",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.01011194787886999,
+      "seen_ts": 1788483393.0732071,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9898908,
+      "flapping": true,
+      "game_id": "espn:cfb:401866622",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.010212439594347216,
+      "seen_ts": 1788483648.9938939,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9899658,
+      "flapping": true,
+      "game_id": "espn:cfb:401866622",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.010135905705025358,
+      "seen_ts": 1788483657.727743,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9661508,
+      "flapping": true,
+      "game_id": "espn:cfb:401866622",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.03503511046101709,
+      "seen_ts": 1788483658.871716,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9661508,
+      "flapping": true,
+      "game_id": "espn:cfb:401866622",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.03503511046101709,
+      "seen_ts": 1788483658.871716,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9557632,
+      "flapping": true,
+      "game_id": "espn:cfb:401866622",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.0462842679023423,
+      "seen_ts": 1788483658.986055,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9557632,
+      "flapping": true,
+      "game_id": "espn:cfb:401866622",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.0462842679023423,
+      "seen_ts": 1788483658.986055,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9856944019999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401858424",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.01451321826620264,
+      "seen_ts": 1788489976.0631309,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.975113402,
+      "flapping": true,
+      "game_id": "espn:cfb:401858424",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.025521747469531793,
+      "seen_ts": 1788489979.660769,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.975113402,
+      "flapping": true,
+      "game_id": "espn:cfb:401858424",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.025521747469531793,
+      "seen_ts": 1788489979.660769,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9645214019999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401858424",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.03678362960783745,
+      "seen_ts": 1788489980.604887,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.964518402,
+      "flapping": true,
+      "game_id": "espn:cfb:401858424",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.036786854378751344,
+      "seen_ts": 1788489980.604887,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9645214019999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401858424",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.03678362960783745,
+      "seen_ts": 1788489984.76136,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.964518402,
+      "flapping": true,
+      "game_id": "espn:cfb:401858424",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.036786854378751344,
+      "seen_ts": 1788489984.76136,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.988469,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.011665515054088653,
+      "seen_ts": 1788490840.5699399,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9786159999999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.021851267504312284,
+      "seen_ts": 1788490842.859505,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9817689999999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.018569541307578576,
+      "seen_ts": 1788490842.859505,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9856120000000002,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.01459803654987951,
+      "seen_ts": 1788490843.059659,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9786159999999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.021851267504312284,
+      "seen_ts": 1788490843.2610712,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9841608,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.016094117953082517,
+      "seen_ts": 1788491143.90153,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9641328,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.037201514148258404,
+      "seen_ts": 1788491144.125407,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9641328,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.037201514148258404,
+      "seen_ts": 1788491144.125407,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9541008,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.04810728593876038,
+      "seen_ts": 1788491144.525575,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9540978,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.04811058153577129,
+      "seen_ts": 1788491144.525575,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9641328,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.037201514148258404,
+      "seen_ts": 1788491149.208152,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9641328,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.037201514148258404,
+      "seen_ts": 1788491149.208152,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9753528,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.025270035621982097,
+      "seen_ts": 1788491149.40961,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9819588,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.018372664922397947,
+      "seen_ts": 1788491149.40961,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9363761599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.0679468815182139,
+      "seen_ts": 1788491240.731203,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9363731599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.06795030306080119,
+      "seen_ts": 1788491240.731203,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.91570416,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.09205575739658102,
+      "seen_ts": 1788491241.3347368,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.91570116,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.09205933516563415,
+      "seen_ts": 1788491241.3347368,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.90534416,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.10455232847583625,
+      "seen_ts": 1788491241.9793978,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.90534416,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.10455232847583625,
+      "seen_ts": 1788491241.9793978,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.90824416,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.10102552159542653,
+      "seen_ts": 1788491242.184115,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.90534416,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.10455232847583625,
+      "seen_ts": 1788491242.3852959,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8949761599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.11734819841458134,
+      "seen_ts": 1788491242.796885,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8949761599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.11734819841458134,
+      "seen_ts": 1788491242.796885,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8973591599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.11438100213965618,
+      "seen_ts": 1788491242.796885,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8960111599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.11605752767632949,
+      "seen_ts": 1788491243.0041049,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.88459616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.13045934994789038,
+      "seen_ts": 1788491243.216425,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8970441599999998,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.11477232068485933,
+      "seen_ts": 1788491243.216425,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.90326916,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.1070897184179298,
+      "seen_ts": 1788491243.216425,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8949761599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.11734819841458134,
+      "seen_ts": 1788491243.421281,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8949761599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.11734819841458134,
+      "seen_ts": 1788491243.421281,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8949731599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.11735194382812561,
+      "seen_ts": 1788491243.421281,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.88459616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.13045934994789038,
+      "seen_ts": 1788491243.657571,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.88458816,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.13046957354708438,
+      "seen_ts": 1788491243.657571,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.88458816,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.13046957354708438,
+      "seen_ts": 1788491243.657571,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8887471599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.12517940423010762,
+      "seen_ts": 1788491244.070761,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.87419616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.14390802174193948,
+      "seen_ts": 1788491244.479806,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8741921599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.14391325586813788,
+      "seen_ts": 1788491244.479806,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8766611599999998,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.1406915757508867,
+      "seen_ts": 1788491244.479806,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8679561599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.15213192334506867,
+      "seen_ts": 1788491244.682278,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.87294016,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.14555389455332202,
+      "seen_ts": 1788491244.682278,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8778291599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.13917382284270452,
+      "seen_ts": 1788491244.682278,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.87419616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.14390802174193948,
+      "seen_ts": 1788491244.884046,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8741921599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.14391325586813788,
+      "seen_ts": 1788491244.884046,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8741891599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.14391718149422042,
+      "seen_ts": 1788491244.884046,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.86377616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.15770733936440198,
+      "seen_ts": 1788491245.568054,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.86377616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.15770733936440198,
+      "seen_ts": 1788491245.568054,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.86377616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.15770733936440198,
+      "seen_ts": 1788491245.568054,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8533561600000001,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.17184365318227718,
+      "seen_ts": 1788491246.0348501,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85335216,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.1718491460782146,
+      "seen_ts": 1788491246.0348501,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8583541599999998,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.16502027554686785,
+      "seen_ts": 1788491246.0348501,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.85960816,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.16332073906790281,
+      "seen_ts": 1788491247.022503,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8627341599999998,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.15910560444250896,
+      "seen_ts": 1788491247.022503,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.86377616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.15770733936440198,
+      "seen_ts": 1788491247.22787,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.86377616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.15770733936440198,
+      "seen_ts": 1788491247.22787,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.86377616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.15770733936440198,
+      "seen_ts": 1788491247.22787,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.87419616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.14390802174193948,
+      "seen_ts": 1788491248.5516338,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8741921599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.14391325586813788,
+      "seen_ts": 1788491248.5516338,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8741891599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.14391718149422042,
+      "seen_ts": 1788491248.5516338,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.88459616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.13045934994789038,
+      "seen_ts": 1788491250.071368,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.88458816,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.13046957354708438,
+      "seen_ts": 1788491250.071368,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.88458816,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.13046957354708438,
+      "seen_ts": 1788491250.071368,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.87419616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.14390802174193948,
+      "seen_ts": 1788491250.27344,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8741921599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.14391325586813788,
+      "seen_ts": 1788491250.27344,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8793891599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.1371529755950143,
+      "seen_ts": 1788491250.27344,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8741891599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.14391718149422042,
+      "seen_ts": 1788491250.4790359,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8643007199999998,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.15700470549185733,
+      "seen_ts": 1788491251.562016,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.86429672,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.15701006015619262,
+      "seen_ts": 1788491251.562016,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.86429372,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.15701407618697028,
+      "seen_ts": 1788491251.562016,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8677100905999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.15245865045608134,
+      "seen_ts": 1788491251.9688818,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.87419616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.14390802174193948,
+      "seen_ts": 1788491252.177077,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8741921599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.14391325586813788,
+      "seen_ts": 1788491252.177077,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8741891599999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.14391718149422042,
+      "seen_ts": 1788491252.177077,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.88459616,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.13045934994789038,
+      "seen_ts": 1788491252.413074,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.88458816,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.13046957354708438,
+      "seen_ts": 1788491252.413074,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.889258041856,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.12453298472608332,
+      "seen_ts": 1788491252.413074,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8944816,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.117965981636738,
+      "seen_ts": 1788491252.613152,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8944736000000001,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.11797598050965383,
+      "seen_ts": 1788491252.613152,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8944736000000001,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.11797598050965383,
+      "seen_ts": 1788491252.613152,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8840816,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 5.0,
+      "return_locked": 0.13111730862852475,
+      "seen_ts": 1788491253.4185228,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8840776,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.13112242635714327,
+      "seen_ts": 1788491253.4185228,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8840746,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.13112626468399832,
+      "seen_ts": 1788491253.4185228,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.90381848,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.10641685485342148,
+      "seen_ts": 1788491253.618581,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.90381548,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.10642052734038146,
+      "seen_ts": 1788491253.618581,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9195791839999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.08745393262403389,
+      "seen_ts": 1788491253.827085,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9225313159999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.08397404256789487,
+      "seen_ts": 1788491253.827085,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9117028320000002,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.09684862753612652,
+      "seen_ts": 1788491254.25721,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.919577684,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.0874557064610107,
+      "seen_ts": 1788491254.25721,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9195791839999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.08745393262403389,
+      "seen_ts": 1788491255.5164218,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9225313159999999,
+      "flapping": true,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.08397404256789487,
+      "seen_ts": 1788491255.5164218,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9845870000000001,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.01565427940852347,
+      "seen_ts": 1788491271.957218,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.94417928,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.05912089068508265,
+      "seen_ts": 1788491557.853146,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.94417928,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.05912089068508265,
+      "seen_ts": 1788491557.853146,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.93409128,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.07055918560764216,
+      "seen_ts": 1788491558.055253,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9340882800000001,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.07056262390959438,
+      "seen_ts": 1788491558.055253,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9844959600000001,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.015748200734109603,
+      "seen_ts": 1788491561.973651,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.97436296,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02631159131911172,
+      "seen_ts": 1788491564.10336,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.97436296,
+      "flapping": true,
+      "game_id": "espn:mlb:401816796",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.02631159131911172,
+      "seen_ts": 1788491564.10336,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9854624,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.014752059540780085,
+      "seen_ts": 1788492559.10542,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9749264,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02571845423408375,
+      "seen_ts": 1788492559.8211179,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9815654000000001,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.01878081684623343,
+      "seen_ts": 1788492559.8211179,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9877734,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.012377940122704231,
+      "seen_ts": 1788492560.0211961,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9854624,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.014752059540780085,
+      "seen_ts": 1788492560.435174,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9749264,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.02571845423408375,
+      "seen_ts": 1788492560.635373,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9749234,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.025721610538838237,
+      "seen_ts": 1788492560.635373,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9854624,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.014752059540780085,
+      "seen_ts": 1788492563.473959,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9860733999999999,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.014123289402188644,
+      "seen_ts": 1788492641.2828789,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9781064,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.022383658873922057,
+      "seen_ts": 1788492950.922682,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9595979999999998,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "return_locked": 0.04210304731773114,
+      "seen_ts": 1788493104.950173,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.98869,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "return_locked": 0.011439379380796855,
+      "seen_ts": 1788493104.950173,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8595344,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 5.0,
+      "return_locked": 0.16342056815876127,
+      "seen_ts": 1788493305.130562,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8836686399999999,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.13164590745236826,
+      "seen_ts": 1788493305.130562,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8983922011600001,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.1130996002734712,
+      "seen_ts": 1788493305.130562,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8798144,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 5.0,
+      "return_locked": 0.13660335634424717,
+      "seen_ts": 1788493306.210913,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.90394864,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.10625754135765947,
+      "seen_ts": 1788493306.210913,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9599502011600001,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.041720704669475465,
+      "seen_ts": 1788493306.210913,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.950148064,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.05246754467943645,
+      "seen_ts": 1788493308.020021,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9549672160000001,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.04715636646525453,
+      "seen_ts": 1788493308.020021,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.943292468,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.06011659577886082,
+      "seen_ts": 1788493308.220026,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9586607486240001,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.043121877510199115,
+      "seen_ts": 1788493308.220026,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9226204680000001,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.08386929911466035,
+      "seen_ts": 1788493308.4219468,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9379887486240001,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.06611086909834313,
+      "seen_ts": 1788493308.4219468,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8949761599999999,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 5.0,
+      "return_locked": 0.11734819841458134,
+      "seen_ts": 1788493308.622467,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.901892468,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.10877963336090306,
+      "seen_ts": 1788493308.622467,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.917986748624,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.08934034341882639,
+      "seen_ts": 1788493308.622467,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.91473704,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.09321035037566643,
+      "seen_ts": 1788493308.8291872,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.96813348096,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.032915418861871444,
+      "seen_ts": 1788493308.8291872,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.975870176,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.02472646935364481,
+      "seen_ts": 1788493309.672365,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9661508,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.03503511046101709,
+      "seen_ts": 1788493311.6395452,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.97341512,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.027310938009674674,
+      "seen_ts": 1788493311.6395452,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9487004,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.05407355156591059,
+      "seen_ts": 1788493474.3261352,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9487004,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.05407355156591059,
+      "seen_ts": 1788493474.3261352,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9695068,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.03145228068539591,
+      "seen_ts": 1788493474.726989,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9775298,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.022986716108296643,
+      "seen_ts": 1788493474.726989,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9197548,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.0872462965129402,
+      "seen_ts": 1788493474.928792,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.9396958,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 100.0,
+      "return_locked": 0.06417417210974023,
+      "seen_ts": 1788493474.928792,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.8726086400000003,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 5.0,
+      "return_locked": 0.14598911145321652,
+      "seen_ts": 1788493475.880527,
+      "stale_within_60s": true
+    },
+    {
+      "cost": 0.915349883264,
+      "flapping": false,
+      "game_id": "espn:cfb:401856776",
+      "league": "cfb",
+      "phase": "end",
+      "quantity": 25.0,
+      "return_locked": 0.0924784263195079,
+      "seen_ts": 1788493475.880527,
+      "stale_within_60s": true
+    }
+  ],
+  "rows": 147325,
+  "run": "20260904T042839Z",
+  "since": 1788307200.0,
+  "until": 1788496119.281886
+}

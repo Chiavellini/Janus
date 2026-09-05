@@ -1,0 +1,27 @@
+{
+  "bound_s": 15.0,
+  "run": "2026-09-04T04:28:29.376848+00:00",
+  "windows": {
+    "clean2_2026-09-04T0200Z": {
+      "frames": 386249,
+      "by_kind": {
+        "orderbook_delta": 386052,
+        "orderbook_snapshot": 184,
+        "ok": 9,
+        "subscribed": 4
+      },
+      "gap_p50": 0.002,
+      "gap_p90": 0.011,
+      "gap_p99": 0.057,
+      "gap_max": 24.516,
+      "gaps_over_bound": 3,
+      "share_over_bound": 0.0044,
+      "heartbeat_n": 0,
+      "heartbeat_p50": null,
+      "heartbeat_p99": null,
+      "heartbeat_max": null,
+      "first_frame": "2026-09-04T02:26:53.682078+00:00",
+      "last_frame": "2026-09-04T02:59:59.999837+00:00"
+    }
+  }
+}

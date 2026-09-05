@@ -33,3 +33,9 @@ the other failure (856 `subscribed` frames in an hour: the reconnect loop).
 **Verdict: the bound stays at 15 s.** The venue's cadence is not the problem; the lane blocks its
 own receive loop. The fix is the discovery pass off the loop (the same shape as the reconciler
 fix of 2026-09-03), after which this row re-runs on a clean hour. Claims nothing about edge.
+
+## Run 2026-09-04T04:28:29.376848+00:00
+
+| window | frames | by kind | gap p50 / p90 / p99 / max (s) | gaps > bound | share of hour past bound | heartbeat n / p50 / p99 / max (s) |
+|---|---|---|---|---|---|---|
+| clean2_2026-09-04T0200Z | 386249 | {"orderbook_delta": 386052, "orderbook_snapshot": 184, "ok": 9, "subscribed": 4} | 0.002 / 0.011 / 0.057 / 24.516 | 3 | 0.0044 | 0 / None / None / None |
