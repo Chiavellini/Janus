@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 from kernel.schema import Book, Quote  # noqa: E402
-from nodes.capture.capture import read_frames  # noqa: E402
+from nodes.capture.capture import CORRUPT_FILES, read_frames  # noqa: E402
 from nodes.stream_kalshi.protocol import TickerBook, parse  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
@@ -75,6 +75,7 @@ def main() -> int:
     run = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     res = {"spec": "research/sports/2026-09-03_kalshi-hedge-window-slippage/spec.yaml", "run": run,
            "files": len(files), "frames": frames, "tickers": sorted(series), "thin_excluded": thin,
+           "corrupt_files": dict(CORRUPT_FILES),          # hours cut mid-member (a lane death); read up to the cut
            "reference_quantity": Q, "windows": stats, "preliminary": preliminary,
            "registered_value": None if preliminary else stats["3.0"]["p95"]}
     (HERE / f"results_{run}.json").write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")

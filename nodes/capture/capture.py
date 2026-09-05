@@ -17,6 +17,7 @@ Reader and writer share one format so a captured hour round-trips byte-for-byte.
 from __future__ import annotations
 
 import gzip
+import zlib
 import json
 import time
 from dataclasses import dataclass
@@ -95,8 +96,16 @@ class FrameWriter:
                 "current": "/".join(self._key) if self._key else None}
 
 
+#: Files whose stream was cut mid-member, by path: what was read before the cut is complete, the
+#: rest of that hour is gone. Read by callers that want to say so (L27 reports it).
+CORRUPT_FILES: dict[str, str] = {}
+
+
 def read_frames(path: Path | str, venue: str | None = None) -> Iterator[Frame]:
-    """Frames from one capture file, in the order they were received."""
+    """Frames from one capture file, in the order they were received. A file cut mid-member (the
+    lane died of a SIGBUS at 03:35:05Z 2026-09-05 and launchd appended a fresh member to the same
+    hour) yields every frame before the cut and then stops; the cut is recorded in CORRUPT_FILES,
+    never raised into a research run."""
     p = Path(path)
     v = venue or p.parent.parent.name
     with gzip.open(p, "rt", encoding="utf-8") as fh:
@@ -105,11 +114,18 @@ def read_frames(path: Path | str, venue: str | None = None) -> Iterator[Frame]:
                 line = line.strip()
                 if not line:
                     continue
-                d = json.loads(line)
-                yield Frame(v, float(d["t"]), d.get("m"), d["raw"])
+                try:
+                    d = json.loads(line)
+                    fr = Frame(v, float(d["t"]), d.get("m"), d["raw"])
+                except (ValueError, KeyError, TypeError):
+                    continue                    # a torn line at a cut: skip it, the stream error follows
+                yield fr
         except EOFError:
             # The hour being written has no end-of-stream marker yet; what was flushed is complete
             # up to the last full line, and a replay over the live hour reads exactly that.
+            return
+        except (zlib.error, gzip.BadGzipFile, OSError) as exc:
+            CORRUPT_FILES[str(p)] = f"{type(exc).__name__}: {exc}"
             return
 
 

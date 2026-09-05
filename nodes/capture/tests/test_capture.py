@@ -48,3 +48,34 @@ def test_merge_orders_by_receive_time_and_is_stable_within_a_venue():
     p = [Frame("polymarket", 2.0, None, "p1"), Frame("polymarket", 3.0, None, "p2")]
     assert [f.raw for f in merge([k, p])] == ["k1", "p1", "k2", "k3", "p2"]
     assert list(merge([[], []])) == []
+
+
+def test_a_member_cut_mid_stream_yields_what_came_before_and_stops(tmp_path: Path):
+    """2026-09-05: the lane died of a SIGBUS mid-hour; launchd appended a fresh gzip member to the
+    same file. The first member is cut; zlib raises 'invalid block type' mid-stream, and every
+    offline job over that hour died on it (L27's first re-run). The reader keeps the frames before
+    the cut, records the file, and never raises into a research run."""
+    import gzip as _gz
+    import json as _js
+    from nodes.capture.capture import CORRUPT_FILES, read_frames
+    good = b"".join(_js.dumps({"t": 1000.0 + i, "raw": f"frame {i} " + "x" * 40}).encode() + b"\n" for i in range(20000))
+    member = _gz.compress(good)
+    cut = member[: (3 * len(member)) // 4] + b"\x00\xff\x13garbage-from-a-truncated-write\xff" * 8
+    fresh = _gz.compress(b"".join(_js.dumps({"t": 50000.0 + i, "raw": f"after {i}"}).encode() + b"\n" for i in range(3)))
+    p = tmp_path / "kalshi" / "2026-09-05" / "03.jsonl.gz"
+    p.parent.mkdir(parents=True)
+    p.write_bytes(cut + fresh)
+    frames = list(read_frames(p))              # must not raise
+    pre = {1000.0 + i for i in range(20000)}
+    known = pre | {50000.0 + i for i in range(3)}
+    assert frames and all(f.received_utc in known for f in frames), "nothing invented"
+    assert any(f.received_utc in pre for f in frames), "what came before the cut is kept"
+    # gzip may resync onto the fresh member (those frames are real) or give up at the garbage; either way
+    # nothing is raised, and a stream that ends in garbage with no fresh member is recorded as cut
+    p2 = tmp_path / "kalshi" / "2026-09-05" / "02.jsonl.gz"
+    p2.write_bytes(cut)
+    frames2 = list(read_frames(p2))
+    assert frames2 and all(f.received_utc in pre for f in frames2)
+    ok = tmp_path / "kalshi" / "2026-09-05" / "04.jsonl.gz"
+    ok.write_bytes(fresh)
+    assert len(list(read_frames(ok))) == 3 and str(ok) not in CORRUPT_FILES
