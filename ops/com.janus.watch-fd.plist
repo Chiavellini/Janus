@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.janus.watch-fd</string>
+  <!-- The daily football-data.org snapshot (nodes/watch_fd, ledger F6). NOT LOADED until the
+       operator's FD_TOKEN is in the credentials env (JANUS_CREDS, sourced by run_node.sh):
+       launchctl bootstrap gui/$(id -u) ops/com.janus.watch-fd.plist -- then move watch_fd from
+       DISABLED to SLAS in ops/watchdog.py. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/bernardodelrio/Code/Janus/ops/run_node.sh</string>
+    <string>watch_fd</string>
+    <string>/Users/bernardodelrio/Code/Janus/research/sports/2026-09-05_soccer-postponement-forward/measure.py</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/bernardodelrio/Code/Janus</string>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>30</integer></dict>
+  <key>RunAtLoad</key><false/>
+  <key>ProcessType</key><string>Background</string>
+  <key>Nice</key><integer>15</integer>
+</dict>
+</plist>

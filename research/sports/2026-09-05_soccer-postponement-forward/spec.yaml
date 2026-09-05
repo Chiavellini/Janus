@@ -1,0 +1,46 @@
+experiment_id: "janus-sports-soccer-postponement-forward-f6-2026-09-05"
+date_registered: "2026-09-05"
+track: "sports/settlement"
+row_kind: "F (forward evaluation; descriptive; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F6"
+test_looks_spent: 0
+
+# IMMUTABLE FROM REGISTRATION. Written before any snapshot exists: the job cannot run until the
+# operator supplies a football-data.org token (FD_TOKEN), and no row of fd_matches exists.
+purpose: >
+  Every soccer postponement and cancellation rate in nodes/settle_wedge/evidence.py is a round-window
+  proxy over openfootball season files, labelled FLOOR (L33, L35), and six registered leagues (mls,
+  fl1, ere, por, scop, bel1) have no source at all. football-data.org keeps the status flags but
+  rewrites kickoff dates in place, so the honest use of it is FORWARD: snapshot the fixture lists
+  daily, keep each match's first-seen kickoff, and count the matches that ended more than 48 hours
+  from it or were cancelled. This row measures that per competition as it accrues.
+
+arm: "nodes/watch_fd/snapshot.py: fetch_matches per free-tier competition (PL, ELC, PD, BL1, SA, FL1, DED, PPL), record with first-seen kickoff immutable, rates over the TERMINAL denominator. Daily job com.janus.watch-fd (14:30 local) via research/sports/2026-09-05_soccer-postponement-forward/measure.py; results_<run>.json and a dated verdict section per run."
+
+window:
+  start: "the first fd_matches row (the first run after FD_TOKEN exists)"
+  end: "open; re-read daily. The registered values refresh with every run."
+
+definitions:
+  population: "matches of a competition first seen with a non-terminal status, now terminal (FINISHED, AWARDED, CANCELLED). A match first seen already terminal is excluded: its first-seen kickoff is not an original."
+  moved_gt48h: "abs(utc_date_last - utc_date_first) > 48 h and terminal"
+  cancelled: "status_last CANCELLED"
+  registered_values: "soccer.<code>.postponed_gt48h_rate and soccer.<code>.cancelled_rate = the one-sided 95% upper bound (rule of three at zero events; Wilson otherwise; nodes.watch_settle.settle.upper_bound_95) over the competition's terminal matches while they number fewer than 300, the point estimate after -- the same estimator as F4, declared before any count exists. A competition registers only when it has at least 100 terminal matches first seen open (about a third of a season); below that the row reports and registers nothing."
+  supersession: "for epl, lal, bun, ita, elc the forward value REPLACES the FLOOR proxy in evidence.py once the competition passes 300 terminal matches (a full season): the proxy's note records the hand-over date. Until then the proxy stands."
+
+criteria:
+  - "Forward, descriptive. No hypothesis, no look. Reads no price, no market."
+  - "The estimator and the 100 / 300 thresholds are fixed here and are not changed after any run."
+  - "Coverage is the free tier's: mls, scop, bel1 and el1 are NOT measured by this row and stay blocked by name (mls, scop, bel1) or on the proxy (el1)."
+  - "Data-arrival SLA: ops/watchdog.py watch_fd oneshot 26 h once the job is registered in SLAS (it sits in DISABLED until FD_TOKEN exists, so a job that cannot run does not alarm forever)."
+
+outputs:
+  results: "research/sports/2026-09-05_soccer-postponement-forward/results_<run>.json"
+  verdict: "research/sports/2026-09-05_soccer-postponement-forward/verdict.md"
+  evidence_registration: "nodes/settle_wedge/evidence.py: soccer.<code>.postponed_gt48h_rate / cancelled_rate for fl1, ere, por when they pass 100 terminal matches; hand-over for the proxied five at 300"
+
+what_this_does_not_establish:
+  - "Rates for mls, scop, bel1: no source yet."
+  - "Anything before the first run: the row is a design until the token exists."
+  - "Edge. A settlement reserve prices a wedge; it claims nothing about a return."

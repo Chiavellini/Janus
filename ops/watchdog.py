@@ -109,6 +109,8 @@ DISABLED: dict[str, str] = {
     "track_b": "stopped 2026-09-02; IBKR/Track B track retired. Collector removed. Plist preserved; restore with launchctl bootstrap.",
     "wti_ladder": "stopped 2026-09-02; commodities track retired. Collector removed. Plist preserved; restore with launchctl bootstrap.",
     "ibkr_archive": "stopped 2026-09-02; IBKR track retired. Collector removed. Plist preserved; restore with launchctl bootstrap.",
+    "watch_fd": "built 2026-09-05 (nodes/watch_fd, ledger F6); awaits the operator's football-data.org token (FD_TOKEN). "
+                "Bootstrap ops/com.janus.watch-fd.plist, then move this entry to SLAS as Sla(kind='oneshot', max_age_s=26 * 3600).",
 }
 
 
