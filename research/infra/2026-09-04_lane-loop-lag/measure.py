@@ -27,19 +27,40 @@ def q(xs, p):
 
 
 def slate_minutes(log: Path) -> set[int]:
-    """Minutes (epoch // 60) holding a [slate] line, read from the tick line before it."""
-    out, tick = set(), None
+    """Minutes (epoch // 60) holding a [slate] line, read from the tick line before it.
+
+    The lane's tick lines carry HH:MM:SSZ and no date. The log spans days, so the date is
+    reconstructed by walking the ticks: a tick earlier in the day than the previous one is a
+    midnight wrap; the last tick is anchored to the log's mtime (the lane writes continuously).
+    Before 2026-09-05 this stamped today's date on every line, so a window crossing midnight
+    mis-attributed the coincidence column."""
+    out: set[int] = set()
     if not log.exists():
         return out
+    ticks: list[tuple[int, int]] = []          # (day_index, seconds_of_day) per line index holding a tick
+    slate_after: list[int] = []                # indices into ticks: the tick before each [slate] line
+    day, prev = 0, None
     for line in log.read_text(errors="replace").splitlines():
         m = re.match(r"\[(\d\d):(\d\d):(\d\d)Z\]", line)
         if m:
-            tick = tuple(int(x) for x in m.groups())
-        elif line.startswith("[slate]") and tick:
-            # date is not on the line; the lane log is today's, and the row is a coincidence count
-            now = datetime.now(timezone.utc)
-            t = now.replace(hour=tick[0], minute=tick[1], second=tick[2], microsecond=0).timestamp()
-            out.add(int(t // 60))
+            h, mi, se = (int(x) for x in m.groups())
+            sod = h * 3600 + mi * 60 + se
+            if prev is not None and sod < prev - 600:      # a wrap, not a reordered line
+                day += 1
+            prev = sod
+            ticks.append((day, sod))
+        elif line.startswith("[slate]") and ticks:
+            slate_after.append(len(ticks) - 1)
+    if not ticks:
+        return out
+    last_day, last_sod = ticks[-1]
+    mtime = datetime.fromtimestamp(log.stat().st_mtime, timezone.utc)
+    anchor = mtime.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+    if last_sod > mtime.hour * 3600 + mtime.minute * 60 + mtime.second + 3600:
+        anchor -= 86400.0                      # the file was last written just after midnight
+    for i in slate_after:
+        d, sod = ticks[i]
+        out.add(int((anchor - (last_day - d) * 86400.0 + sod) // 60))
     return out
 
 

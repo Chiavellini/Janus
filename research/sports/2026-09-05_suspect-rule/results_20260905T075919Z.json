@@ -1,0 +1,301 @@
+{
+  "cells": {
+    "cfb": {
+      "clean": 12,
+      "clean_median_return": 0.02458,
+      "clean_sigma_return": 0.00972,
+      "prints": 172
+    },
+    "cfb|100": {
+      "clean": 10,
+      "clean_median_return": 0.02174,
+      "clean_sigma_return": 0.00873,
+      "prints": 89
+    },
+    "cfb|25": {
+      "clean": 2,
+      "clean_median_return": 0.03589,
+      "clean_sigma_return": 0.00546,
+      "prints": 61
+    },
+    "cfb|5": {
+      "clean": 0,
+      "clean_median_return": null,
+      "clean_sigma_return": null,
+      "prints": 22
+    },
+    "cfb|end": {
+      "clean": 0,
+      "clean_median_return": null,
+      "clean_sigma_return": null,
+      "prints": 33
+    },
+    "cfb|in": {
+      "clean": 12,
+      "clean_median_return": 0.02458,
+      "clean_sigma_return": 0.00972,
+      "prints": 139
+    },
+    "mlb": {
+      "clean": 3,
+      "clean_median_return": 0.02669,
+      "clean_sigma_return": 0.00724,
+      "prints": 120
+    },
+    "mlb|100": {
+      "clean": 2,
+      "clean_median_return": 0.01902,
+      "clean_sigma_return": 0.00768,
+      "prints": 65
+    },
+    "mlb|25": {
+      "clean": 1,
+      "clean_median_return": 0.02669,
+      "clean_sigma_return": null,
+      "prints": 54
+    },
+    "mlb|5": {
+      "clean": 0,
+      "clean_median_return": null,
+      "clean_sigma_return": null,
+      "prints": 1
+    },
+    "mlb|end": {
+      "clean": 0,
+      "clean_median_return": null,
+      "clean_sigma_return": null,
+      "prints": 25
+    },
+    "mlb|in": {
+      "clean": 3,
+      "clean_median_return": 0.02669,
+      "clean_sigma_return": 0.00724,
+      "prints": 95
+    }
+  },
+  "clean": 15,
+  "clean_rows": [
+    {
+      "cost": 0.9859102563200001,
+      "flapping": false,
+      "game_id": "espn:cfb:401858423",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.014291101638998245,
+      "seen_ts": 1788482175.9842181,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.96029,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "replicas": 2,
+      "return_locked": 0.041352091555675916,
+      "seen_ts": 1788563775.972053,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.961147,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.04042357724676873,
+      "seen_ts": 1788563775.972053,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.9704728,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 25.0,
+      "replicas": 2,
+      "return_locked": 0.03042558225227948,
+      "seen_ts": 1788569205.179772,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.9773098,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.023216998335635224,
+      "seen_ts": 1788569205.179772,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.9747158,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.025940074019524438,
+      "seen_ts": 1788569205.38422,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.9732088,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.027528727648167602,
+      "seen_ts": 1788569205.595808,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.9704728,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.03042558225227948,
+      "seen_ts": 1788569205.821179,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.986602264,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.0135796728721069,
+      "seen_ts": 1788571259.358171,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.9801462000000001,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.020255957733652307,
+      "seen_ts": 1788571259.609927,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.98954552,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.010564930858360154,
+      "seen_ts": 1788571263.775687,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.98459884,
+      "flapping": false,
+      "game_id": "espn:cfb:401864495",
+      "league": "cfb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.01564206596058962,
+      "seen_ts": 1788573458.306404,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.9740036799999999,
+      "flapping": false,
+      "game_id": "espn:mlb:401816809",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 25.0,
+      "replicas": 2,
+      "return_locked": 0.0266901660987565,
+      "seen_ts": 1788583336.4083352,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.9740006800000001,
+      "flapping": false,
+      "game_id": "espn:mlb:401816809",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.026693328386587917,
+      "seen_ts": 1788583336.4083352,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    },
+    {
+      "cost": 0.988786218,
+      "flapping": false,
+      "game_id": "espn:mlb:401816811",
+      "league": "mlb",
+      "phase": "in",
+      "quantity": 100.0,
+      "replicas": 2,
+      "return_locked": 0.01134095701969018,
+      "seen_ts": 1788583557.5664482,
+      "stale_before_60s": false,
+      "suspect_v2": false,
+      "unmapped_legs": 0
+    }
+  ],
+  "flap_windows": 1203,
+  "prints": 292,
+  "run": "20260905T075919Z",
+  "since": 1788481500.0,
+  "suspect": 277,
+  "until": 1788595159.386934,
+  "why": {
+    "end": 58,
+    "flapping": 120,
+    "no_mapped_replica": 0,
+    "stale_before_60s": 243
+  }
+}

@@ -184,3 +184,29 @@ def test_shared_surname_survives_for_adjudication():
     """Warren Buffett net worth vs "Trump praises Warren Buffett" shares the SUBJECT but differs in
     predicate. Necessary-not-sufficient: it must reach the adjudicator, not be dropped here."""
     assert no_shared_subject({"shared_tokens": ["august", "buffett", "warren"]}) is None
+
+
+def test_score_gold_scores_rejection_precision_per_stratum_with_1_0_labels(tmp_path):
+    """Ledger L31's bar: of a stratum's NOT_EQUIVALENT verdicts, the share labelled 0 (not the same
+    contract) must reach 0.95; UNDECIDED reports its share labelled 1 and licenses nothing."""
+    import json
+    from nodes.match_generic.score_gold import load_labels, score
+    key = ([{"pair_id": i, "verdict": "NOT_EQUIVALENT", "reason": "STRIKE_MISMATCH"} for i in range(20)]
+           + [{"pair_id": 20 + i, "verdict": "NOT_EQUIVALENT", "reason": "SUBJECT_MISMATCH"} for i in range(4)]
+           + [{"pair_id": 30 + i, "verdict": "UNDECIDED", "reason": "UNDECIDED"} for i in range(4)])
+    gold = tmp_path / "g.csv"
+    rows = ["pair_id,label,note,kalshi_text,pm_text"]
+    rows += [f"{i},0,,a,b" for i in range(19)] + ["19,1,,a,b"]                 # 19 of 20 rejections right: 0.95, trusted
+    rows += ["20,0,,a,b", "21,1,,a,b", "22,1,,a,b", "23,UNSURE,,a,b"]           # 1 of 3 graded rejections right: not trusted
+    rows += ["30,1,,a,b", "31,1,,a,b", "32,0,,a,b"]                              # UNDECIDED: 2 of 3 the same contract
+    gold.write_text("\n".join(rows) + "\n")
+    labels, unsure, bad = load_labels(gold)
+    assert unsure == 1 and bad == {} and len(labels) == 26
+    res = score(labels, key)
+    st = res["strata"]
+    assert st["STRIKE_MISMATCH"]["precision"] == 0.95 and st["STRIKE_MISMATCH"]["trusted"] is True
+    assert st["SUBJECT_MISMATCH"]["rejected"] == 3 and st["SUBJECT_MISMATCH"]["precision"] == round(1 / 3, 4) and not st["SUBJECT_MISMATCH"]["trusted"]
+    assert st["UNDECIDED"]["undecided_share_labelled_1"] == round(2 / 3, 4) and st["UNDECIDED"]["rejected"] == 0
+    assert res["pooled_rejection_precision"] == round(20 / 23, 4)
+    bad_gold = tmp_path / "b.csv"; bad_gold.write_text("pair_id,label,note,kalshi_text,pm_text\n0,maybe,,a,b\n")
+    assert load_labels(bad_gold)[2] == {0: "MAYBE"}

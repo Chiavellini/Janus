@@ -1,0 +1,43 @@
+experiment_id: "janus-sports-suspect-rule-l40-2026-09-05"
+date_registered: "2026-09-05"
+track: "sports/cover-cost"
+row_kind: "L (descriptive characterization; re-runnable; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L40"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE FIRST RUN. Registered before the rule is run over any print. What IS known
+# at registration: L36's third run (2026-09-05 07:44Z) labelled 335 of 336 profitable prints SUSPECT,
+# because its +-60 s same-game stale clause is near-universal under coalescing. The count of clean
+# prints under THIS rule is not known and is not guessed here.
+purpose: >
+  L36's SUSPECT label was designed before coalescing and fires on essentially every profitable
+  print, so it cannot separate a real print from a print priced off a bad book. Its criteria are
+  immutable, so this row registers a sharper, falsifiable rule and reports how many profitable
+  prints survive it, per league, quantity and phase, with the clean prints' locked-return
+  distribution. It is the first honest read of "are these prints real"; it decides nothing.
+
+arm: "nodes/cover_cost/suspect.py over stream_evaluations, events.spec_json (outcome -> market map) and L36's flap windows (nodes/cover_cost/distribution.load_flap_windows), from the seal 2026-09-04 00:25Z to the run time."
+
+definitions:
+  print: "a stream_evaluations row with status PROFITABLE_UNEXECUTED, with its legs_json (venue, market id, vwap)."
+  replica: "(venue, outcome key) as the poller names it in blocked_by: `venue:outcome:FAULT`. A leg's market id maps to its outcome key through the event's outcomes map; a Kalshi `T:NO` leg maps to T's outcome (the NO book is the same ticker's stream folded); a Polymarket NO token maps to its YES twin's outcome."
+  stale_before_60s: "a stale-family fault (STALE, HASH_MISMATCH, HEARTBEAT_LOST, UNVERIFIED_TOO_LONG, NOT_SYNCED, SEQ_GAP, CROSSED_BOOK) recorded on a replica the print was priced from, at a time t with seen_ts - 60 <= t <= seen_ts. Faults AFTER the print do not count: a book cannot be retroactively bad."
+  flapping: "L36's definition, unchanged: inside a socket flap window."
+  end: "L36's phase `end`: the last 600 s before the game's end (closing books)."
+  suspect_v2: "flapping OR end OR stale_before_60s OR no leg could be mapped to a replica (an unmapped print is not trusted)."
+  clean: "not suspect_v2."
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no look. Reads no outcome."
+  - "Reported per run: prints, clean, suspect, the count each clause fired; per league / quantity / phase the clean count and the clean prints' median and sigma of locked return; every clean print listed (time, game, quantity, cost, return)."
+  - "The rule is fixed here. If it too proves near-universal or near-empty, the finding is reported and a further row registers a different rule; this one is not edited."
+  - "A clean print is NOT an executed cover and NOT a fill; it is a priced book that no recorded fault contradicts. F5 is what tests execution; L27 is what measures the gap to a fill."
+
+outputs:
+  results: "research/sports/2026-09-05_suspect-rule/results_<run>.json"
+  verdict: "research/sports/2026-09-05_suspect-rule/verdict.md, a dated section per run"
+
+what_this_does_not_establish:
+  - "Edge. A clean print is a cost at a priced book, not a return."
+  - "That the fault record is complete: a fault the replica did not detect is invisible to both rules."
