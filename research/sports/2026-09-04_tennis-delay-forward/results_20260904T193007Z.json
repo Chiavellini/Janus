@@ -1,0 +1,18 @@
+{
+  "run": "20260904T193007Z",
+  "resolve": {
+    "checked": 146,
+    "resolved": 115,
+    "half": 0,
+    "open": 31,
+    "errors": 0
+  },
+  "resolved_tennis_rows": 42,
+  "delayed_gt7d": 0,
+  "half": 0,
+  "start_moved_gt1h": 4,
+  "delayed_gt7d_rate": 0.0,
+  "half_rate": 0.0,
+  "late_rows": [],
+  "half_rows": []
+}
