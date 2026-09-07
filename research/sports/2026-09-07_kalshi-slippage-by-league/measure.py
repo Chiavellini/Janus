@@ -8,6 +8,7 @@ import glob
 import json
 import sqlite3
 import sys
+import time
 from bisect import bisect_right
 from collections import defaultdict, deque
 from datetime import datetime, timezone
@@ -92,8 +93,18 @@ def main() -> int:
         for (q, w), worst in item[2].items():
             hist[(lg, q, w)][round(worst, 4)] += weight
 
+    missing: list[str] = []
     for f in files:
         books: dict[str, TickerBook] = {}
+        # The external volume answered ENOENT once for a file that exists (2026-09-07, 2026-09-05/01);
+        # wait it out before giving a file up, and say which ones were given up.
+        for attempt in range(6):
+            if Path(f).exists():
+                break
+            time.sleep(5)
+        else:
+            missing.append(f)
+            continue
         for fr in read_frames(f, "kalshi"):
             frames += 1
             try:
@@ -149,11 +160,12 @@ def main() -> int:
     run = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     res = {"spec": "research/sports/2026-09-07_kalshi-slippage-by-league/spec.yaml", "run": run, "files": len(files), "frames": frames,
            "instants_dropped_in_flap_windows": dropped, "flap_windows": len(flaps), "corrupt_files": dict(CORRUPT_FILES),
+           "missing_files": missing,
            "leagues": stats, "registered_p95_3s_q25": registered}
     (HERE / f"results_{run}.json").write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")
     fmt = lambda x: "—" if x is None else f"{x:.4f}"  # noqa: E731
     lines = [f"\n## Run {run}", "", f"{len(files)} capture files, {frames} frames; {dropped} instants dropped inside {len(flaps)} flap/stall windows; "
-             f"corrupt files read up to the cut: {len(CORRUPT_FILES)}.", "",
+             f"corrupt files read up to the cut: {len(CORRUPT_FILES)}; files listed then missing: {len(missing)}.", "",
              "| league | tickers | instants | q5 p95 @3s | q25 p50 / p90 / p95 / p99 @3s | q25 p95 @1s | q100 p95 @3s | q25 share>0 (time) | registered |",
              "|---|---|---|---|---|---|---|---|---|"]
     for league in sorted(stats, key=lambda l: -stats[l]["instants"]):
