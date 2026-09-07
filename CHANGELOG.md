@@ -615,4 +615,4 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
 - **The Ashburn box launched** (05:45Z, `i-0c86891ee306de0b8`) as the pilot's host after the read-only survey's fixes; cloud-init, L34 and the box's paper lane (F7) follow in this entry's successor.
 - **Box bring-up**: the first boot had no AWS CLI on the image and cloned nothing (fixed: snap aws-cli, fatal on an empty pointer); the re-bootstrap through SSM cloned `24611d1`, materialised the secrets into `/run/janus`, and the suite is green on the box once `numpy`/`pandas` are in the venv (pinned now; the meta test no longer scans the venv inside the tree).
 - **L34 executed**, same hour on both hosts: Kalshi 184 → 51 ms p50, CLOB 309 → 184 ms, CLOB 200 from the box. Bar (half) met on Kalshi, not on the CLOB. **OBSERVATION_HOST**; the box runs the paper series F7.
-
+- **The box's paper lane started** at 06:04Z (`[mode] PAPER_EXECUTION`, both sockets connected, loop 0.1 s): ledger F7's clock runs. The Mac's F5 continues until the 48 h cutover decision.
