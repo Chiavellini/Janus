@@ -44,8 +44,8 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — execution-owned statuses (EXECUTION_PENDING, HEDGED, SETTLED, RECONCILED) reach `opportunity_transitions` (`OpportunityStore.move`); F3's own predicate had counted zero.
 - [x] DONE — three-way soccer executes as two legs (Kalshi YES + Polymarket NO). All ten co-listed soccer games spawned pollers on the 2026-09-05 restart. **NOT PROVED live until a soccer cover clears** (the weekend's European kickoffs).
 - [x] DONE — `nodes/risk/limits.toml`: paper caps for cfb, the six soccer leagues and both tennis tours; six simultaneous events (operator decision 2026-09-05). **The arming override's `limits_sha` pin moved: regenerate before any armed run.**
-- [x] DONE — Kalshi proof, second run 2026-09-07 02:56Z: 2 @ 0.78, fee at the pin to the hundredth of a cent, balance to the cent, cancel confirmed on the venue; 6 of 6 before settlement, `--settle` runs after the game.
-- [x] DONE — **the first real Polymarket order** 2026-09-07 04:42Z: FOK 5 @ 0.39 matched as 5.131577 @ 0.38 (V2 fills by notional); the balance moved by fills + exactly the pinned fee; 6 of 6 before settlement, `--settle` after the game. On the way: the adapter moved to CLOB V2 / pUSD / signature type 3 (CHANGELOG 2026-09-07).
+- [x] DONE — Kalshi proof, second run 2026-09-07 02:56Z: 2 @ 0.78, fee at the pin to the hundredth of a cent, balance to the cent, cancel confirmed on the venue; **settled +$0.42 on the result, 7 of 7 checks** (2026-09-07 05:55Z).
+- [x] DONE — **the first real Polymarket order** 2026-09-07 04:42Z: FOK 5 @ 0.39 matched as 5.131577 @ 0.38 (V2 fills by notional); the balance moved by fills + exactly the pinned fee; **settled +$3.18 on the result, 7 of 7 checks** (2026-09-07 05:57Z). On the way: the adapter moved to CLOB V2 / pUSD / signature type 3 (CHANGELOG 2026-09-07).
 - [x] DONE — the arming override rewritten by the operator 2026-09-07 (three times, as the runner sha moved under it; it expires 2026-09-08).
 
 ## E. The gate to real capital (GATE_TO_LIVE.md)
@@ -62,9 +62,9 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 ## F. The Ashburn box
 
 - [x] DONE — launch script, cloud-init, systemd units, credential materialiser, latency tool, tests, runbook; IAM policy files committed 2026-09-05 as written (the agent trust dropped its MFA-age condition — operator decision to commit as is).
-- [ ] NOT DONE — IAM applied; no instance has ever been launched. OPERATOR.
+- [x] DONE — IAM: the admin's inline deny keeps its Earshot-instance protection and no longer denies RunInstances (2026-09-07); the janus-box role, profile and SSM core were already in place.
 - [ ] NOT DONE — main not pushed to GitHub since `1479bd6`; the SSM sha pointer is stale by many commits. OPERATOR.
-- [ ] NOT DONE — the five secrets into SSM. OPERATOR.
+- [x] DONE — the eight SSM parameters (two pointers, six SecureStrings) are in; the repo token is the GitHub login's and should be replaced by a read-only fine-grained token.
 - [ ] NOT PROVED — L34 latency bar (box p50 under half the Mac's to both venues AND Polymarket answering 200). L38 now says the Mac is an observation host that pages to death under load; the box decision has its other half.
 
 ## G. Housekeeping

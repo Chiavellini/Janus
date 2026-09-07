@@ -611,4 +611,6 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
 - The lane: F5 at 32 of 37 hedged covers (all settled positive on paper, +$41.73), the first live
   three-way soccer covers among them; a second SIGBUS at 02:19Z (host paging), restarted by launchd
   and reported by SIGNAL_EXIT; Kalshi cfb template V2 (neutral-site wording) registered.
+- **Both proofs settled, 7 of 7 each** (05:55Z): Kalshi +$0.4159 on the Dodgers' win (2 × 0.22 − 0.0241), Polymarket +$3.1816 (5.131577 × 0.62 − 0.0604), reservations released. GATE_TO_LIVE step 8 is complete on both venues.
+- **The Ashburn box launched** (05:45Z, `i-0c86891ee306de0b8`) as the pilot's host after the read-only survey's fixes; cloud-init, L34 and the box's paper lane (F7) follow in this entry's successor.
 
