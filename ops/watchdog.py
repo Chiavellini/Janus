@@ -38,6 +38,12 @@ WHAT IT DETECTS, and why each check is here rather than an obvious alternative:
                 row, which was the new start. A forward row's window has a hole nobody saw.
   UNHEDGED_POSITION  (nodes/risk/health) an execution whose first leg filled and whose hedge
                 did not, still holding capital: the paper row's STOP condition, alarmed at once.
+  OVERRIDE_STALE  (nodes/risk/health) the box's drop-in says LIMITED_LIVE but the arming override
+                has expired, is missing, or pins another code tree or other limits: the lane
+                refuses real orders (ARM_STALE) and a restart would crash-loop. Only where a
+                drop-in exists (the Mac has none, so the Mac's watchdog never says this).
+  OVERRIDE_EXPIRING  under 24 h left on the override while the drop-in says LIMITED_LIVE: the
+                day's release paste (ops/box/release.sh) is due.
 
 PER GATE_TO_LIVE.md:29-32 -- "every alarm demonstrated firing against a fake target; a monitor
 that has never emitted is untested (Kilos found three silent monitor bugs this way)" -- selftest()
@@ -372,7 +378,9 @@ def selftest() -> None:
         import sqlite3
         kill = Path(d) / "kill"; kill.mkdir()
         brk = kill / "breaker.json"; db = Path(d) / "t.sqlite"
-        R = dict(kill_root=kill, breaker_path=brk, db_path=db, max_unreconciled_s=60, in_season=False)
+        conf = Path(d) / "mode.conf"                         # the box's drop-in; absent on the Mac
+        R = dict(kill_root=kill, breaker_path=brk, db_path=db, max_unreconciled_s=60, in_season=False,
+                 mode_conf=conf, code_sha="c0detree", limits_sha="11m1t5")
         assert check(fresh("q"), now=NOW, slas={}, risk=R) == [], "quiet risk state must be silent"
         (kill / "venue-kalshi").write_text("{}")
         assert any("KILL_FILE_PRESENT" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "KILL_FILE"
@@ -403,6 +411,39 @@ def selftest() -> None:
         assert any("UNHEDGED_POSITION" in a and "69852b86" in a and "35.82/100" in a for a in got), got
         assert not any("UNRECONCILED_TOO_LONG" in a for a in got), "a holding failure is the UNHEDGED alarm's business, not a late reconcile"
         con.execute("DROP TABLE executions"); con.commit(); con.close()
+        # OVERRIDE_STALE / OVERRIDE_EXPIRING: judged only where a drop-in says LIMITED_LIVE (the box).
+        # The Mac has no drop-in and must never say either; a paper drop-in is quiet too.
+        from datetime import datetime as _dt, timezone as _tz
+        ov = kill / "arming_override.json"
+
+        def stamp(offset_s):
+            return _dt.fromtimestamp(NOW + offset_s, tz=_tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        good_ov = {"operator_statement": "I approve.", "signed_by": "operator", "mode": "LIMITED_LIVE", "runner_sha": "head",
+                   "code_sha": "c0detree", "limits_sha": "11m1t5", "caps": {"stake_usd": 12.0}, "expires_utc": stamp(48 * 3600)}
+        ov.write_text(json.dumps({**good_ov, "expires_utc": stamp(-60)}))
+        assert not any("OVERRIDE" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "no drop-in (the Mac): quiet"
+        exec_line = "[Service]\nExecStart=\nExecStart=/usr/bin/zsh /opt/janus/ops/run_node.sh live_stream -m grids.live_stream.grid --mode {}\n"
+        conf.write_text(exec_line.format("PAPER_EXECUTION"))
+        assert not any("OVERRIDE" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "a paper drop-in: quiet"
+        conf.write_text(exec_line.format("LIMITED_LIVE"))
+        ov.write_text(json.dumps(good_ov))
+        assert not any("OVERRIDE" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "48 h left and matching: quiet"
+        ov.write_text(json.dumps({**good_ov, "expires_utc": stamp(6 * 3600)}))
+        got = check(fresh("q"), now=NOW, slas={}, risk=R)
+        assert any("OVERRIDE_EXPIRING" in a and "6.0 h left" in a for a in got) and not any("OVERRIDE_STALE" in a for a in got), got
+        ov.write_text(json.dumps({**good_ov, "expires_utc": stamp(-60)}))
+        got = check(fresh("q"), now=NOW, slas={}, risk=R)
+        assert any("OVERRIDE_STALE" in a and "expired" in a for a in got) and not any("EXPIRING" in a for a in got), got
+        ov.write_text(json.dumps({**good_ov, "code_sha": "another"}))
+        assert any("OVERRIDE_STALE" in a and "code tree" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "a deploy moved the tree"
+        ov.write_text(json.dumps({**good_ov, "limits_sha": "other"}))
+        assert any("OVERRIDE_STALE" in a and "limits" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "limits changed"
+        ov.write_text(json.dumps({k: v for k, v in good_ov.items() if k != "code_sha"}))
+        assert any("OVERRIDE_STALE" in a and "missing or incomplete" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "an old file"
+        ov.unlink()
+        assert any("OVERRIDE_STALE" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "no override under a live drop-in"
+        conf.unlink()
+        assert not any("OVERRIDE" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "drop-in gone: quiet again"
         # NO_CO_LISTED_GAMES: discovery has written for a day in season without one co-listed game.
         # (A fresh, empty registry is silent -- that fired falsely on the lane's first boot.)
         assert not any("registry" in a for a in check(fresh("q"), now=NOW, slas={}, risk={**R, "in_season": True}))
@@ -450,7 +491,8 @@ def selftest() -> None:
         con.execute("UPDATE socket_health SET seen_ts = seen_ts - 7200 WHERE venue='polymarket'"); con.commit()
         assert not any("socket" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "stale health rows are silent"
         con.close()
-    print("watchdog selftest OK — 8 job branches, 4 risk branches, the registry branch and 3 socket branches fired; healthy cases stayed quiet")
+    print("watchdog selftest OK — 8 job branches, 6 risk branches (the two override alarms among them), the registry branch "
+          "and 3 socket branches fired; healthy cases stayed quiet")
 
 
 def main() -> int:
