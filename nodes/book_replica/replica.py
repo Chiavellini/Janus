@@ -145,11 +145,13 @@ class BookReplica:
         were refused STALE on Kalshi books whose socket carried 250 frames a second -- quiet
         markets between plays and points, priced as if the feed had died. The hard bounds stay: a
         dead connection is HEARTBEAT_LOST at `heartbeat_timeout_s`, an externally verified replica
-        decays to UNVERIFIED_TOO_LONG at `max_unverified_s`, and a REST-sourced ladder is as old as
-        the fetch that produced it (the socket had just been shown wrong for that market).
+        decays to UNVERIFIED_TOO_LONG at `max_unverified_s`. A REST-adopted ladder counts the
+        socket too: after the adoption the socket is the only source of change, the next
+        top-of-book hash or REST check re-verifies it within the same bounds as any other book,
+        and holding it STALE until a change arrived kept every quiet Polymarket draw and pre-game
+        book blocked for hours (2026-09-07 14:00Z: 1,440 draw and ~2,500 MLB evaluations on the
+        box). The `source` label stays on the Book so the provenance is visible downstream.
         """
-        if self.source == "rest":
-            return max(self.updated_utc, self.verified_utc)
         return max(self.updated_utc, self.verified_utc, self.heartbeat_utc)
 
     # ── data ────────────────────────────────────────────────────────────

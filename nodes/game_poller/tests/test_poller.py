@@ -245,9 +245,9 @@ def test_a_rest_sourced_book_is_held_to_the_stricter_bound():
     r = p.replicas[("polymarket", "home")]
     r.reconcile([(0.01, 5000)], [(0.48, 5000)], now=T)          # adopted from REST at T
     for rep in p.replicas.values():
-        rep.heartbeat(T + 3)
+        rep.heartbeat(T + 0.5)                                    # the last frame on either socket
     e = p.on_event("kalshi", "K_H", now=T + 3)[0]
-    assert e.cover is None and e.blocked_by == "polymarket:home:STALE", "3 s old: fine for ws, stale for rest"
+    assert e.cover is None and e.blocked_by == "polymarket:home:STALE", "2.5 s since the last proof: fine for ws, stale for rest"
     r.snapshot_in([(0.01, 5000)], [(0.48, 5000)], now=T + 3)     # a socket snapshot relabels it ws
     assert p.on_event("kalshi", "K_H", now=T + 3)[0].cover.ok
 

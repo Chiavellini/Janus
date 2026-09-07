@@ -152,13 +152,15 @@ def test_a_quiet_polymarket_book_is_current_until_its_verification_bound_not_its
     assert r.check(T + 31, max_age_s=5.0) is Fault.UNVERIFIED_TOO_LONG
 
 
-def test_a_rest_sourced_ladder_is_as_old_as_its_fetch():
+def test_a_rest_adopted_ladder_is_current_on_a_live_socket_and_keeps_its_label():
     r = polymarket()
     r.heartbeat(T + 10)
     assert r.reconcile([(0.55, 100)], [(0.61, 100)], now=T + 10) is Fault.HASH_MISMATCH   # adopted REST
     r.heartbeat(T + 20)
-    assert r.check(T + 20, max_age_s=5.0) is Fault.STALE, "the socket was just shown wrong; only the fetch counts"
-    assert r.snapshot(T + 12, max_age_s=5.0).fetched_utc == T + 10
+    b = r.snapshot(T + 20, max_age_s=5.0)
+    assert b is not None and b.fetched_utc == T + 20 and b.source == "rest"
+    r.heartbeat(T + 41)
+    assert r.check(T + 41, max_age_s=5.0) is Fault.UNVERIFIED_TOO_LONG, "the 30 s verification bound still holds"
 
 
 # ── incoherence ─────────────────────────────────────────────────────────
