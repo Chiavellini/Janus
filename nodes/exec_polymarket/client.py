@@ -55,6 +55,7 @@ class ClobTransport(Protocol):
 
 class PyClobTransport:
     """The real thing, through py_clob_client. Built only for real-order modes."""
+    last_error: str | None = None
 
     def __init__(self, host: str = "https://clob.polymarket.com", chain_id: int = 137):
         try:
@@ -74,6 +75,8 @@ class PyClobTransport:
         self._c = ClobClient(host, key=key, chain_id=chain_id, signature_type=sig_type, funder=funder)
         self._c.set_api_creds(self._c.create_or_derive_api_creds())
         self._OrderArgs, self._OrderType = OrderArgs, OrderType
+        self._sig_type = sig_type
+        self.last_error: str | None = None
 
     def post_order(self, *, token_id: str, price: float, size: float, order_type: str) -> dict:
         args = self._OrderArgs(token_id=token_id, price=price, size=size, side="BUY")
@@ -91,10 +94,17 @@ class PyClobTransport:
         return list(self._c.get_trades(TradeParams(after=int(after_ts))))
 
     def balance_usd(self) -> float | None:
+        """The wallet's USDC collateral, in dollars. py_clob_client's get_balance_allowance() needs a
+        BalanceAllowanceParams (asset type and the signature type the wallet trades with); called
+        bare it dereferences None and raises, which this swallowed into 'balance could not be
+        confirmed' on the first armed Polymarket proof (2026-09-07). Now the error is kept."""
         try:
-            d = self._c.get_balance_allowance()
+            from py_clob_client.clob_types import AssetType, BalanceAllowanceParams  # type: ignore
+            params = BalanceAllowanceParams(asset_type=AssetType.COLLATERAL, signature_type=self._sig_type)
+            d = self._c.get_balance_allowance(params)
             return float(d.get("balance", 0)) / 1e6
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            self.last_error = f"{type(exc).__name__}: {exc}"
             return None
 
     def cancel_all(self) -> int:

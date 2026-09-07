@@ -179,6 +179,12 @@ def execute_steps(venue, *, ticker: str, series: str, fees: dict, ask: float, re
     print(f"[resting] status {st1.state.value} open={st1.open} filled={st1.filled_contracts}")
     cx = venue.cancel(r1.client_order_id)
     print(f"[cancel ] {cx.state.value} {cx.raw_status} filled={cx.filled_contracts}")
+    # The venue processes a cancel asynchronously: on 2026-09-07 the status read straight after the
+    # DELETE still said 'resting' and the file recorded it, while the venue said 'canceled' minutes
+    # later. Poll until the order is final (or 6 s), and record the venue's final word.
+    if cx.open:
+        cx = _poll(venue, r1.client_order_id, seconds=6.0, step=poll_step)
+        print(f"[cancel ] confirmed {cx.state.value} {cx.raw_status} open={cx.open} filled={cx.filled_contracts}")
     proof["steps"].append({"resting": ack1.__dict__, "after_cancel": cx.__dict__})
     if cx.filled_contracts > 0:
         print("the resting bid filled (the book moved through it): counted as part of the fill proof")
@@ -242,6 +248,16 @@ def run_settle(a) -> int:
     if api_key and key_path:
         venue = KalshiExecution(api_key, load_private_key(key_path), Journal(store), __import__("kernel.schema", fromlist=["Mode"]).Mode.LIMITED_LIVE, base_url=PROD_BASE)
     fills = [f for s in proof["steps"] for f in s.get("fills", [])]
+    if venue is not None:
+        # A cancel the file recorded as still 'resting' (the status read before the venue processed
+        # it, 2026-09-07) is re-read now; the venue's final word replaces it, and the check reads that.
+        for step in proof["steps"]:
+            cx = step.get("after_cancel")
+            if cx and cx.get("open") and cx.get("client_order_id"):
+                now_st = venue.status(cx["client_order_id"])
+                if now_st.final:
+                    step["after_cancel"] = {**now_st.__dict__, "note": f"re-read at settle: was {cx.get('raw_status')!r} right after the cancel"}
+                    print(f"[cancel ] re-read at settle: {now_st.state.value} {now_st.raw_status} open={now_st.open} filled={now_st.filled_contracts}")
     if venue is not None:
         # The venue's word, not the proof's memory: on 2026-09-04 the resting bid the proof believed
         # cancelled was hit nine minutes after the file was written. Every fill on the proof's own

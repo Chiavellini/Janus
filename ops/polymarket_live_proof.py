@@ -165,7 +165,7 @@ def run_proof(a, transport_factory=None) -> int:
     venue = PolymarketExecution(transport, journal, resolved.mode)
     bal0 = venue.balance()
     if bal0 is None:
-        print("balance could not be confirmed; refusing", file=sys.stderr)
+        print(f"balance could not be confirmed; refusing ({getattr(transport, 'last_error', None) or 'no error recorded'})", file=sys.stderr)
         return 2
     ledger, breaker = ExposureLedger(store), LossBreaker(kill=kill)
     event_id = f"proof:{p['token']}"
@@ -212,6 +212,9 @@ def execute_steps(venue, *, slug: str, outcome: str, token: str, fees: dict, ask
     print(f"[resting] status {st1.state.value} open={st1.open} matched={st1.filled_contracts}")
     cx = venue.cancel(r1.client_order_id)
     print(f"[cancel ] {cx.state.value} {cx.raw_status} matched={cx.filled_contracts}")
+    if cx.open:                    # a cancel is processed asynchronously; record the venue's final word (2026-09-07, Kalshi)
+        cx = _poll(venue, r1.client_order_id, seconds=6.0, step=poll_step)
+        print(f"[cancel ] confirmed {cx.state.value} {cx.raw_status} open={cx.open} matched={cx.filled_contracts}")
     proof["steps"].append({"resting": ack1.__dict__, "after_cancel": cx.__dict__})
     if cx.filled_contracts > 0:
         print("the resting bid matched (the book moved through it): counted as part of the fill proof")
