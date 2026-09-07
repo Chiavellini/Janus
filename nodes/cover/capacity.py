@@ -51,7 +51,13 @@ SLIPPAGE_RESEARCH_REF = "research/sports/2026-09-03_kalshi-hedge-window-slippage
 #: Per league, from ledger L41 (the stratified row: clean windows only, time-weighted, p95 at 3 s
 #: and q = 25), registered only for a league with >= 2,000 instants over >= 4 tickers. Empty until
 #: the row's values are entered from its results file; every other league keeps the pooled pin.
-SLIPPAGE_BY_LEAGUE: dict[str, float] = {}
+SLIPPAGE_BY_LEAGUE: dict[str, float] = {
+    # INTERIM (2026-09-07 20:50Z, the operator's decision): MLB from L27's FIRST run
+    # (20260903T061757Z: 8 MLB tickers, 2,152 delta instants, p95 at 3 s = 0.0100). Thin, and the
+    # only per-league number that exists before L41 lands (~2 h). L41's rule replaces it; the
+    # pooled 0.04 stays for every other league until then.
+    "mlb": 0.0100,
+}
 SLIPPAGE_BY_LEAGUE_RESEARCH_REF = "research/sports/2026-09-07_kalshi-slippage-by-league/spec.yaml"
 
 

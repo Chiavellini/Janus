@@ -149,11 +149,12 @@ def test_the_registered_slippage_is_the_default_and_is_labelled_modelled():
 
 def test_the_per_league_slippage_table_falls_back_to_the_pooled_pin():
     from nodes.cover import capacity
-    assert capacity.slippage_for("mlb") == pytest.approx(capacity.SLIPPAGE_PER_CONTRACT)
+    assert capacity.slippage_for("nhl") == pytest.approx(capacity.SLIPPAGE_PER_CONTRACT)
     assert capacity.slippage_for(None) == pytest.approx(capacity.SLIPPAGE_PER_CONTRACT)
-    capacity.SLIPPAGE_BY_LEAGUE["mlb"] = 0.01
+    assert capacity.slippage_for("mlb") == pytest.approx(0.01), "the interim MLB value from L27 run 1 (2026-09-07)"
+    capacity.SLIPPAGE_BY_LEAGUE["nhl"] = 0.02
     try:
-        assert capacity.slippage_for("mlb") == pytest.approx(0.01)
+        assert capacity.slippage_for("nhl") == pytest.approx(0.02)
         assert capacity.slippage_for("cfb") == pytest.approx(capacity.SLIPPAGE_PER_CONTRACT)
     finally:
-        capacity.SLIPPAGE_BY_LEAGUE.pop("mlb", None)
+        capacity.SLIPPAGE_BY_LEAGUE.pop("nhl", None)
