@@ -99,9 +99,12 @@ LEAGUES: dict[str, League] = {
     # texts hash to the tennis templates (ops/harvest_templates.py --league itf).
     "itf":  League("itf", "ITF", "KXITFMATCH", "tennis", "itf", None, anchor="venue_structured",
                    kalshi_series_extra=("KXITFWMATCH",),
-                   template_scrub=(r"in the \d{4} .*? (?:Men|Women)(?:'s)? Singles [A-Za-z0-9 ]+? (?=after a ball)",
-                                   r"in the [A-Z][A-Za-z0-9 .'-]*?(?: (?:ATP|WTA))?,",
-                                   r"official information from (?:the )?[A-Z][A-Za-z0-9 .'-]*?\.")),
+                   # ITF texts name the tournament by code ("M25 Rabat", "W15 Campulung", a
+                   # "(moved from ...)" note) and the round by word ("Qualifying", "Round of 32");
+                   # Kalshi's has no "Men's Singles" and Polymarket's names the ITF as the source.
+                   template_scrub=(r"in the \d{4} [MW]\d{2} [^,]*? (?:Round of \d+|Main Draw|Qualifying|Quarterfinals?|Semifinals?|Finals?) (?=after a ball)",
+                                   r"in the [MW]\d{2} [^,]*?, (?:Qualifying|Main Draw|Round of \d+|Quarterfinals?|Semifinals?|Finals?)[^,]*?,",
+                                   r"official information from (?:the )?International Tennis Federation \(ITF\)\.")),
     # Not yet: UCL. Entities are keyed per league (lal:esp.real_madrid) and a club plays in its domestic
     # league AND the Champions League, so its one Kalshi team id would map to two entities and the
     # xref table refuses the collision. A club must become one entity across competitions first.

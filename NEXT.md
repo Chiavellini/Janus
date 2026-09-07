@@ -4,37 +4,42 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-07 ~16:20 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-07 ~18:25 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
 
-**The box is LIMITED_LIVE since 16:18Z (F8's clock).** The operator's 2026-09-07 GATE row (small
-real fills on every live event, $12 / 25 / $60, breaker $25) is in the file; the override pins
-runner `5a07e4e` and limits `222330ad…`, expires 2026-09-14. Two order-path holes were closed the
-same afternoon before arming (CHANGELOG, third 2026-09-07 entry) and the path is instrumented:
-one `[latency]` line per execution, `ops/latency_report.py` for the table. **Any deploy to the box
-invalidates the override**: `ops/box/update.sh`, then the operator re-runs
-`ops/box/write_override.sh` and `ops/box/mode.sh LIMITED_LIVE` (the classifier blocks the agent
-from running those two).
+**The box is LIMITED_LIVE since 16:18Z (F8) on `5a07e4e`.** At 17:47Z, LAA @ BOS in play, it
+priced its first actionable covers: 25 and 100 contracts at a 4.6 % locked return, refused
+`CAP_STAKE` by the override ($23.25 and $94 against the $12 cap); the same books at 5 contracts
+stay under the $0.10 profit floor because the pooled 4c slippage reserve takes $0.20 of the
+$0.22. Every refusal first fetched both venues' balances on the event loop and stalled it 5.6 s.
+Fixed on main (caps and floor refused before any round trip); the box has it after the release.
 
-**Three refusals of good books were found and fixed today** (CHANGELOG 2026-09-07, second
-entry). Every tennis match that went live after a lane start never synced its Kalshi replica;
-every Kalshi book quiet for 5 s on a live socket was called STALE (a third of a million cfb
-evaluations in F5); Serie A pointed at Gamma's futures tag and produced nothing for four days
-with no reason printed. All three shipped in `ca2d36d`; both lanes restarted on it at 07:00Z.
-Whether tennis and Serie A now price is **NOT PROVED until today's games**: the Mac and the box
-both watch, and the next `[spawn]` / `[discovery]` lines say.
+**Main (`b290bb3`+) carries the day's second wave**, none of it on the box yet: the coverage
+audit (every unpaired game names its missing venue side; `[unpaired]` / `[near-miss]` lines;
+`ops/coverage_report.py`; `COVERAGE_GAP`), tennis by the venues' rosters (live player entities,
+Kalshi tennis resolved by full name, Challenger series, the ITF league enabled with its two
+reviewed templates: 70 co-listed ITF matches today), the 48 h pairing universe, the Kalshi cursor,
+the code-tree pin (`kernel/code_sha`), the live override check (`[arm] STALE`, `ARM_STALE`),
+`OVERRIDE_EXPIRING` / `OVERRIDE_STALE`, the cross-host kill (`/janus/kill/*` in SSM), and
+`ops/box/release.sh`, the operator's one daily paste.
 
-**Two paper series run** (F5 on the Mac, F7 on the box), each with an era note at the restart.
-Not a current bug: the 3,435 `IllegalTransition` reconnects in the Mac's log are from 2026-09-03.
+**Two paper series** (F5 Mac on main; the box's F7 ended when F8 started). L41 runs (3 h+).
 
 ## Now — what is left, and whose it is
 
-**Yours:** after each deploy to the box, the two pastes again (`bash ops/box/write_override.sh
-"<the same statement>" 12 25 60 168` then `bash ops/box/mode.sh LIMITED_LIVE`); the way back at
-any time is `bash ops/box/mode.sh PAPER_EXECUTION`. Later: replace `/janus/repo/token` with a
-read-only token; rotate the Polymarket signer key after the pilot.
+**Yours:**
+1. **The release** (one paste, from `/Users/bernardodelrio/Code/Janus` after `git pull`):
+   `bash ops/box/release.sh <sha>` in the quiet hour, or `--now` tonight: the lane holds no
+   position and its refusals are what stalls it. The script refuses while a co-listed game is in
+   play unless `--now`. After it, the override pins the executable tree, so a docs commit no longer
+   needs a re-sign.
+2. **The stake cap.** $12 per order admits only the 5-contract size, which the 4c reserve holds
+   under the $0.10 floor; L41's per-league reserve is what frees it. A $25 cap would have admitted
+   tonight's 25-contract covers ($23.25). That is a new dated GATE row if you want it; the agent
+   does not raise caps.
+3. Later: a read-only repo token in SSM; rotate the Polymarket signer key after the pilot.
 
 **Mine, in order:**
 1. Today's games on both hosts: `[discovery]` for ita, `[spawn]` for tennis, MLB and Monday-night

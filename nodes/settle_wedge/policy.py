@@ -661,6 +661,82 @@ POLYMARKET_TENNIS_MATCH_V2 = Template(
               terms_url=None, provenance="api_field"),
     scrub=TENNIS_SCRUB)
 
+ITF_SCRUB = LEAGUES["itf"].template_scrub
+
+KALSHI_ITF_MATCH_V1 = Template(
+    "kalshi_itf_match_v1", "kalshi", frozenset({"itf"}), "2026-09-07",
+    # KXITFWMATCH-26SEP08POPDUM-POP, rules_primary + "\n" + rules_secondary. Not the tour text: a
+    # match that never starts resolves every market to $0.50 (the tour text says "a fair price in
+    # accordance with the rules"), and a player who withdraws after the first ball resolves to No.
+    "If Alessia Popescu wins the Popescu vs Dumitru professional tennis match in the 2026 W15 Campulung Round of 32 "
+    "after a ball has been played, then the market resolves to Yes.\nThe following market refers to the Popescu vs "
+    "Dumitru professional tennis match in the 2026 W15 Campulung Round of 32 after a ball has been played. If the "
+    "match does not occur (signaled by a ball being played) due to a player injury, walkover, forfeiture, or any other "
+    "cancellation (all before the match starts), all markets will resolve to $0.50. If a player withdraws or forfeits "
+    "after a match has started, that player will resolve to No. If this match is postponed or delayed, the market will "
+    "remain open and close after the rescheduled match has finished (within two weeks).\n\nKalshi is not affiliated, "
+    "associated, authorized, endorsed by, or in any way officially connected with the Governing League. All trademarks, "
+    "logos, and brand names are the property of their respective owners.",
+    ("Alessia Popescu", "Dumitru"),
+    SettleRef(source_agency="ITF", oracle="kalshi", void_policy=VoidPolicy.RESOLVE_FIFTY,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=True, dnp_policy=VoidPolicy.RESOLVE_FIFTY,
+              retirement_policy="a player who withdraws or forfeits after the match has started resolves to No (the opponent advances)",
+              revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"),
+    scrub=ITF_SCRUB)
+
+POLYMARKET_ITF_MATCH_V1 = Template(
+    "polymarket_itf_match_v1", "polymarket", frozenset({"itf"}), "2026-09-07",
+    # itf-calin-mcdona-2026-09-07, market.description: the tour's V2 wording with the ITF as the source.
+    "This market refers to the tennis match between Albert Calin and Brendan McDonald in the M25 Rabat, Qualifying, "
+    "originally scheduled for September 7, 2026 at 9:00AM ET.\n\nThis market will resolve to 'Albert Calin' if Albert "
+    "Calin advances against Brendan McDonald.\n\nThis market will resolve to 'Brendan McDonald' if Brendan McDonald "
+    "advances against Albert Calin.\n\nIf the match is canceled (not played at all), ends in a tie, or a winner has not "
+    "been determined by September 21, 2026, 11:59 PM ET (14 days after the scheduled start), this market will resolve "
+    "to 50-50.\n\nIf the match begins but is not completed, and one player advances due to the opponent's retirement, "
+    "default, or disqualification, this market will resolve to the player who advances.\n\nIf the match ends in a "
+    "walkover (player withdraws before the start and the other advances automatically), this market will resolve to "
+    "50-50.\n\nThe primary resolution source will be official information from the International Tennis Federation "
+    "(ITF). A consensus of credible reporting may also be used.",
+    ("Albert Calin", "Brendan McDonald"),
+    SettleRef(source_agency="the ITF's official information", oracle="uma", void_policy=VoidPolicy.RESOLVE_FIFTY,
+              tie_policy=TiePolicy.RESOLVE_FIFTY, ot_included=True, dnp_policy=VoidPolicy.RESOLVE_FIFTY,
+              retirement_policy="the player who advances after a retirement, default or disqualification; a walkover is 50-50",
+              revision_policy="consensus of credible reporting", dispute_mechanism="uma", settle_lag_h_p50=None,
+              terms_url=None, provenance="api_field"),
+    scrub=ITF_SCRUB)
+
+
+def _itf_verdicts() -> tuple[Verdict, ...]:
+    """Kalshi ITF match vs Polymarket ITF match (2026-09-07). Closer than the tour pair: BOTH venues
+    pay half a dollar a side on a match that never starts, so the walkover dimension is SAME and
+    carries no reserve; both wait 14 days on a delay, and part only past it."""
+    delayed = "tennis.delayed_gt7d_rate"
+    return (
+        Verdict("official_source", "SAME", "both settle on the ITF's official result."),
+        Verdict("winner_determination", "SAME", "the player who wins or advances, both venues."),
+        Verdict("overtime", "NA", "a tennis match has no clock."),
+        Verdict("tie", "NA", "a tennis match has no draw; Polymarket's tie clause cannot fire."),
+        Verdict("retirement", "SAME", "after the first ball Kalshi resolves the withdrawing player to No and Polymarket to "
+                "the player who advances: the same payout."),
+        Verdict("player_non_participation", "SAME", "a walkover, withdrawal or cancellation before the first ball: Kalshi "
+                "resolves every market to $0.50, Polymarket 50-50."),
+        Verdict("cancellation", "SAME", "a cancellation before the first ball is the walkover above; after it the match has a result."),
+        Verdict("postponement", "BOUNDED",
+                "both wait 14 days for a rescheduled match; past that Kalshi's text is silent (a fair price) while "
+                "Polymarket resolves 50-50. The tour's measured >7-day delay rate bounds the >14-day one from above; "
+                "an ITF-specific rate is the forward row's to measure.",
+                evidence_key=delayed, loss_model="pm_half_vs_kalshi_result"),
+        Verdict("suspended", "SAME", "a suspended match resumes and both venues wait for the result (within 14 days)."),
+        Verdict("abandoned", "SAME", "an abandoned match is a retirement or a cancellation, ruled above."),
+        Verdict("dispute_revision", "SAME", "terminal outcome is the official result on both; mechanisms differ."),
+        Verdict("settlement_timing", "SAME", "payouts agree; timing differs and is the risk ledger's job."),
+    )
+
+
+_ITF_K_PM = _itf_verdicts()
+
+
 def _tennis_verdicts() -> tuple[Verdict, ...]:
     """Kalshi tennis match (either tour) vs Polymarket tennis match. Both venues advance the opponent
     of a player who retires or is defaulted after the first ball; they part on the match that never
@@ -702,7 +778,8 @@ TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V
                                                               *_SOCCER_PM, *_SOCCER_KALSHI.values(),
                                                               KALSHI_CFB_GAME_V1, KALSHI_CFB_GAME_V2, POLYMARKET_CFB_GAME_V1,
                                                               KALSHI_TENNIS_MATCH_V1, POLYMARKET_TENNIS_MATCH_V1,
-                                                              POLYMARKET_TENNIS_MATCH_V2)}
+                                                              POLYMARKET_TENNIS_MATCH_V2,
+                                                              KALSHI_ITF_MATCH_V1, POLYMARKET_ITF_MATCH_V1)}
 
 
 def template_for(template_hash: str) -> Template | None:
@@ -777,6 +854,7 @@ PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
     ("kalshi_cfb_game_v2", "polymarket_cfb_game_v1"): _CFB_K_PM,
     ("kalshi_tennis_match_v1", "polymarket_tennis_match_v1"): _TENNIS_K_PM,
     ("kalshi_tennis_match_v1", "polymarket_tennis_match_v2"): _TENNIS_K_PM,
+    ("kalshi_itf_match_v1", "polymarket_itf_match_v1"): _ITF_K_PM,
     **{(t.template_id, pm.template_id): _soccer_verdicts(code) for code, t in _SOCCER_KALSHI.items() for pm in _SOCCER_PM},
 }
 

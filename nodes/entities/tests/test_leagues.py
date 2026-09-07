@@ -59,13 +59,14 @@ def test_enablement_names_what_each_league_lacks():
     for c in ("atp", "wta"):
         # one rate pair for both tours: the walkover rate (L39) and, since 2026-09-05, the forward delay rate (F4, an upper bound)
         assert enablement(c) == [], c
-    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "cfb", "elc", "el1", "ita", "atp", "wta"]
+    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "cfb", "elc", "el1", "ita", "atp", "wta", "itf"]
 
 
-def test_a_league_may_own_more_than_one_kalshi_series_and_itf_is_registered_but_not_enabled():
+def test_a_league_may_own_more_than_one_kalshi_series_and_itf_is_registered():
     assert league_for_series("KXATPCHALLENGERMATCH") == "atp" and league_for_series("KXWTACHALLENGERMATCH") == "wta"
     assert league_for_series("KXATPMATCH") == "atp"
     assert LEAGUES["atp"].kalshi_series_all == ("KXATPMATCH", "KXATPCHALLENGERMATCH")
     assert league_for_series("KXITFWMATCH") == "itf" and LEAGUES["itf"].pm_prefix == "itf"
-    # registered is not enabled: the ITF rules texts must hash to a reviewed template first
-    assert "itf" not in default_leagues() and enablement("itf")
+    # enabled since its two templates were reviewed (2026-09-07): the ITF pair is closer than the
+    # tour pair (both venues pay half a dollar a side on a match that never starts)
+    assert "itf" in default_leagues() and enablement("itf") == []
