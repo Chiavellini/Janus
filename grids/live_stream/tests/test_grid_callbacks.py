@@ -206,3 +206,70 @@ def test_a_stale_arm_refuses_real_orders_before_anything_is_minted(tmp_path: Pat
     sup.mode = Mode.PAPER_EXECUTION
     sup.override_path.unlink()
     assert sup.check_arm() is None, "paper has no arm to go stale"
+
+
+def test_a_real_execution_leaves_the_socket_loop_one_at_a_time_and_writes_the_store_from_the_loop(tmp_path: Path, capsys):
+    """2026-09-07: the machine ran inside the venue's receive callback; every real cover blocked
+    frame reading for its round trips, the probe declared a STALL and the gate refused the next
+    cover CLOCK_UNHEALTHY. Now: the callback returns at once, a second cover during the flight is
+    refused IN_FLIGHT, the machine's store writes run on the loop thread, and the bookkeeping
+    (count, backoff after a rejected leg A) lands when the flight ends."""
+    import asyncio
+    import threading
+    import time
+    from types import SimpleNamespace
+    from nodes.execute.on_loop import OnLoop
+    from kernel.schema import Mode as _M
+    sup, s = _supervisor(tmp_path)
+    sup.mode = _M.LIMITED_LIVE
+    sup.caps = {"stake_usd": 1000.0, "max_contracts": 1000.0}
+    sup.limits = SimpleNamespace(min_net_profit_usd=0.0, sha="x")
+    threads, seen = [], []
+
+    class Venue:
+        def balance(self):
+            time.sleep(0.05)                                    # a round trip, in the worker
+            return SimpleNamespace(available_usd=500.0)
+    sup.venues = {"kalshi": Venue(), "polymarket": Venue()}
+    sup.ks = sup.ps = SimpleNamespace(connected=True, clock=SimpleNamespace(healthy=True))
+
+    class Records:
+        def start(self, *a, **k):
+            threads.append(threading.get_ident())
+    records = OnLoop(Records())
+    sup.on_loop.append(records)
+
+    def execute(plan, clearance, **k):
+        seen.append(threading.get_ident())
+        records.start(None)                                     # a store write, from the worker
+        time.sleep(0.2)
+        return SimpleNamespace(state=SimpleNamespace(value="ORDER_REJECTED"), first_filled=0.0, first_avg_price=None,
+                               hedge_filled=0.0, hedge_avg_price=None, unhedged=0.0, detail="leg A rejected: test",
+                               stages={}, released=False, reservation_id="r")
+    sup.coordinator = SimpleNamespace(execute=execute)
+    sync_all(s.poller, kh=0.44, ka=0.99, ph=0.99, pa=0.44)
+
+    def _clear(cand, **k):
+        return SimpleNamespace(opportunity_id=cand.opportunity_id, reservation=None, max_hedge_submits=1, valid=lambda *_: True)
+    import grids.live_stream.grid as G
+    old = G.clear
+    G.clear = _clear
+    try:
+        async def main():
+            loop_thread = threading.get_ident()
+            t0 = time.monotonic()
+            sup._on_update("g1")("K_H", T)
+            assert time.monotonic() - t0 < 0.05, "the callback did not wait for the machine"
+            assert sup.in_flight == "g1" and len(sup.exec_tasks) == 1
+            await asyncio.sleep(0.1)                            # the balances are being fetched in the worker
+            sup._on_update("g1")("K_H", T + 0.1)                # a second cover during the flight
+            out = capsys.readouterr().out
+            assert "IN_FLIGHT g1" in out and sup.executions == 0
+            await asyncio.gather(*sup.exec_tasks)
+            assert sup.in_flight is None and sup.executions == 1
+            assert seen and seen[0] != loop_thread, "the machine ran in a worker"
+            assert threads == [loop_thread], "its store write ran on the loop thread"
+            assert sup.backoff.get("g1"), "the rejected leg A set the backoff"
+        asyncio.run(main())
+    finally:
+        G.clear = old

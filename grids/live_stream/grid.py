@@ -51,6 +51,7 @@ from nodes.entities.leagues import LEAGUES, default_leagues  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, first_seen, record_events, record_spawn_block  # noqa: E402
 from nodes.slate.slate import next_transition, windows_for  # noqa: E402
 from nodes.execute.coordinator import Coordinator  # noqa: E402
+from nodes.execute.on_loop import OnLoop  # noqa: E402
 from nodes.execute.plan import plan_from_cover  # noqa: E402
 from nodes.execute.records import ExecutionRecords  # noqa: E402
 from nodes.execute.venues import build_venues  # noqa: E402
@@ -160,6 +161,13 @@ class Supervisor:
     #: round trip on the event loop; the books had moved and the lane kept re-sending).
     backoff: dict[str, float] = field(default_factory=dict)
     backoff_s: float = 20.0
+    #: The game whose real cover is executing in the worker thread, or None. One at a time: a
+    #: second cover during a flight is refused IN_FLIGHT before any round trip (2026-09-07).
+    in_flight: str | None = None
+    #: The store-touching collaborators of the machine and the venues (records, opportunities,
+    #: the order journal), wrapped so a call from the worker runs on the loop thread.
+    on_loop: list = field(default_factory=list)
+    exec_tasks: set = field(default_factory=set)
     capture_series: tuple[str, ...] = ()
     capture_pm_tags: tuple = ()
     watch_rows: int = 0
@@ -505,28 +513,86 @@ class Supervisor:
                             except Exception as exc:  # noqa: BLE001 -- the flag must not break the loop
                                 print(f"  [risk] flag write failed: {type(exc).__name__}", flush=True)
                 return
-        balances = None
         if self.mode.sends_real_orders:
-            m = time.monotonic()
-            got = {}
-            for v, venue in self.venues.items():        # ONE round trip per venue (it was two, 2026-09-07)
-                b = venue.balance()
-                got[v] = b.available_usd if b else None
-            balances = None if any(b is None for b in got.values()) else got
-            pre["balances_ms"] = round((time.monotonic() - m) * 1000.0, 2)
-        connected = {"kalshi": bool(self.ks and self.ks.connected), "polymarket": bool(self.ps and self.ps.connected)}
+            # The round trips (balances, POSTs, settle polling: 0.2-10 s) leave the socket loop.
+            # Until 2026-09-07 the whole machine ran here, inside the venue's receive callback:
+            # no frame was read while a cover executed, the probe then declared a STALL and the
+            # gate refused the next cover CLOCK_UNHEALTHY (four stalls of 6-11 s on the box, one
+            # across a 13 % print). One flight at a time; the store is written from the loop only.
+            if self.in_flight is not None:
+                key = f"{sup.short_name}:IN_FLIGHT"
+                if self.said.get(key) != self.in_flight:
+                    self.said[key] = self.in_flight
+                    print(f"  [risk] refused {sup.short_name}: IN_FLIGHT {self.in_flight} is executing", flush=True)
+                return
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None                            # no loop (tests, a harness): the machine runs here
+            if loop is not None:
+                self.in_flight = ev.game_id
+                for px in self.on_loop:
+                    px.loop = loop
+                task = loop.create_task(self._execute_off_loop(sup, ev, plan, cand, offers, pre, m_entry))
+                self.exec_tasks.add(task)
+                task.add_done_callback(self.exec_tasks.discard)
+                return
+        balances = self._balances(pre) if self.mode.sends_real_orders else None
+        clearance = self._clear(sup, cand, balances, pre)
+        if clearance is None:
+            return
+        pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
+        ex = self.coordinator.execute(plan, clearance, offers_books=books_snapshot(offers),
+                                      venues_connected=self._connected(), pre_stages=pre)
+        self._after_execution(sup, ev, ex)
+
+    def _balances(self, pre: dict) -> dict | None:
+        m = time.monotonic()
+        got = {}
+        for v, venue in self.venues.items():        # ONE round trip per venue (it was two, 2026-09-07)
+            b = venue.balance()
+            got[v] = b.available_usd if b else None
+        pre["balances_ms"] = round((time.monotonic() - m) * 1000.0, 2)
+        return None if any(b is None for b in got.values()) else got
+
+    def _connected(self) -> dict[str, bool]:
+        return {"kalshi": bool(self.ks and self.ks.connected), "polymarket": bool(self.ps and self.ps.connected)}
+
+    def _clear(self, sup: Supervised, cand: Candidate, balances: dict | None, pre: dict):
+        """The risk gate, on the loop (it mints the reservation in the ledger). None when refused."""
         m = time.monotonic()
         clearance = clear(cand, mode=self.mode, limits=self.limits, ledger=self.ledger, kill=self.kill,
                           breaker=self.breaker, fills_today=(), clock_healthy=self.clock_ok(),
                           fee_schedules_ok=bool(sup.fee_params.get("kalshi") and sup.fee_params.get("polymarket")),
-                          balances=balances, venues_connected=connected, caps=self.caps or None)
+                          balances=balances, venues_connected=self._connected(), caps=self.caps or None)
         pre["clear_ms"] = round((time.monotonic() - m) * 1000.0, 2)
         if hasattr(clearance, "code"):
             print(f"  [risk] refused {sup.short_name}: {clearance.code} {clearance.detail}", flush=True)
-            return
-        pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
-        ex = self.coordinator.execute(plan, clearance, offers_books=books_snapshot(offers), venues_connected=connected,
-                                      pre_stages=pre)
+            return None
+        return clearance
+
+    async def _execute_off_loop(self, sup: Supervised, ev, plan, cand: Candidate, offers: dict, pre: dict, m_entry: float) -> None:
+        """Balances in a worker, the gate on the loop, the machine in a worker (its records,
+        opportunity moves and journal rows come back to the loop through OnLoop), the
+        bookkeeping on the loop. Nothing here raises into the loop; the flight always clears."""
+        try:
+            balances = await asyncio.to_thread(self._balances, pre)
+            clearance = self._clear(sup, cand, balances, pre)
+            if clearance is None:
+                return
+            pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
+            books = books_snapshot(offers)
+            connected = self._connected()
+            ex = await asyncio.to_thread(self.coordinator.execute, plan, clearance, offers_books=books,
+                                         venues_connected=connected, pre_stages=pre)
+            self._after_execution(sup, ev, ex)
+        except Exception as exc:  # noqa: BLE001 -- an execution bug must never kill the loop; it is said and counted
+            self.record_errors[(ev.game_id, "exec:" + type(exc).__name__)] = self.record_errors.get((ev.game_id, "exec:" + type(exc).__name__), 0) + 1
+            print(f"  [exec FAILED] {sup.short_name} {brief_error(exc)}", flush=True)
+        finally:
+            self.in_flight = None
+
+    def _after_execution(self, sup: Supervised, ev, ex) -> None:
         self.executions += 1
         print(f"  [exec] {sup.short_name} {ex.state.value} first={ex.first_filled}@{ex.first_avg_price} "
               f"hedge={ex.hedge_filled}@{ex.hedge_avg_price} unhedged={ex.unhedged} {ex.detail}", flush=True)
@@ -728,7 +794,8 @@ def main() -> int:
     sup.code_sha = code_sha
     print(f"[code] tree {code_sha} runner {head_sha[:12]} limits {limits.sha}", flush=True)
     if sup.mode.rank >= Mode.PAPER_EXECUTION.rank:
-        journal = Journal(sup.store)
+        journal = OnLoop(Journal(sup.store))      # the venues journal from the worker thread (_execute_off_loop)
+        sup.on_loop.append(journal)
         # Real venues, built only for the modes that need them, from credentials that are named
         # by environment variable and never appear on the command line or in a log.
         def kalshi_factory(host: str):
@@ -752,9 +819,11 @@ def main() -> int:
         sup.limits, sup.kill = limits, kill
         sup.breaker = LossBreaker(kill=kill)
         sup.ledger = ExposureLedger(sup.store)
-        sup.coordinator = Coordinator(sup.venues, ExecutionRecords(sup.store), sup.mode,
+        records, opps = OnLoop(ExecutionRecords(sup.store)), OnLoop(sup.opportunities)
+        sup.on_loop += [records, opps]
+        sup.coordinator = Coordinator(sup.venues, records, sup.mode,
                                       hedge_deadline_s=limits.max_hedge_latency_ms / 1000.0,
-                                      opportunities=sup.opportunities, kill=kill)
+                                      opportunities=opps, kill=kill)
     print(f"[mode] {sup.mode.value}", flush=True)
     sup.ks = KalshiStream(api_key=api_key, private_key=load_private_key(key_path))
     sup.ps = PolymarketStream()

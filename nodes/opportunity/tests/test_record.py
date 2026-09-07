@@ -16,7 +16,7 @@ def test_a_priced_evaluation_lands_with_the_venues_own_hurdle(tmp_path: Path):
     store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
     p = mlb()
     sync_all(p, kh=0.44, ka=0.99, ph=0.99, pa=0.44)
-    ev = p.on_event("kalshi", "K_H", now=T)[0]
+    ev = p.on_event("kalshi", "K_H", now=T)[-1]        # the 100-contract rung (the venues' smallest size, 3, is priced first since 2026-09-07)
     rec = record_evaluation(store, ev, league="mlb", fee_params=FEES, hurdle=0.01)
     assert rec.status is S.PROFITABLE_UNEXECUTED and rec.wrote
     row = store.con.execute("SELECT status, gross, cost, required_ask_sum, cents_from_actionable, legs_json "

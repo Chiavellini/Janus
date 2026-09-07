@@ -866,3 +866,30 @@ both orders from Mexico); a Polymarket leg under $1 of notional is now `below_mi
 cover (`PM_MIN_NOTIONAL_USD`), never sent; an order the venue no longer has is a final no-fill and
 releases; leg A has its own 6 s settle window (`Coordinator.leg_a_settle_s`) since a marketable CLOB
 order can sit `delayed` for seconds, and the hedge window arms only once leg A is known.
+
+## 2026-09-07 — the smallest size is the venues', computed per market
+
+The operator: "as long as there is a single contract we should take it". The lane priced fixed
+rungs (5, 10, 25, 100) and executed the smallest profitable one, so the floor was 5 where a venue
+would take 2 (a 50-cent token) and unsendable where it needed 9 (a 12-cent token under the $1
+CLOB minimum). `nodes/game_poller/poller.smallest_executable` now takes, per evaluation, the
+largest of 1, each leg's share minimum (Gamma's `orderMinSize`) and ceil($1 / best ask) on the
+Polymarket legs, and the quantities priced are that size plus the fixed rungs above it. Replay
+runs the same poller (parity unchanged); F5/F8 carry the era note. `991afe7`, released to the
+box 22:01Z; within minutes sizes 6-9, 12, 17 and 34 were priced beside 5, 10, 25, 100. Tests that
+counted one evaluation per event now count two.
+
+## 2026-09-07 — real executions leave the socket loop
+
+Four loop stalls of 5.8-10.9 s on the box (20:57-21:20Z), each refusing every cover
+CLOCK_UNHEALTHY while it lasted, one across a 13 % print on RSO @ ELC at 5 contracts. Not the host
+(1 vCPU at 40 %, chrony offset microseconds): the executions themselves. The machine ran inside
+the venue's receive callback, so a real cover's balance calls, POSTs and settle polling (0.2-10 s)
+stopped both sockets, the probe then called it a stall, and the gate refused the next cover. Now
+`Supervisor._execute` hands a real cover to `_execute_off_loop`: balances in a worker thread, the
+risk gate on the loop (it mints the reservation), the coordinator in the worker with its records,
+opportunity moves and order journal wrapped in `nodes/execute/on_loop.OnLoop` (a call from the
+worker is queued to the loop's thread and awaited; the store keeps its one connection on one
+thread), the bookkeeping on the loop. One flight at a time: a second cover during a flight is
+refused IN_FLIGHT before any round trip. Paper modes and the harnesses, which never leave the
+loop, run the machine exactly as before.

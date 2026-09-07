@@ -48,7 +48,7 @@ def test_a_profitable_cover_records_its_books_transitions_and_frontier(tmp_path:
     opps = OpportunityStore(store)
     p = mlb()
     sync_all(p, kh=0.44, ka=0.99, ph=0.99, pa=0.44)
-    ev = p.on_event("kalshi", "K_H", now=T)[0]
+    ev = p.on_event("kalshi", "K_H", now=T)[-1]        # the 100-contract rung (the venues' smallest size, 3, is priced first since 2026-09-07)
     rec = record_evaluation(store, ev, league="mlb", fee_params=FEES, hurdle=0.01, opportunities=opps)
     assert rec.status is S.PROFITABLE_UNEXECUTED
     opp = opps.live[Opportunity.id_for("g1", 100.0)]
@@ -60,7 +60,7 @@ def test_a_profitable_cover_records_its_books_transitions_and_frontier(tmp_path:
     assert store.con.execute("SELECT COUNT(*) FROM frontiers").fetchone()[0] == 1
     # the market goes away: a transition to NO_EDGE is recorded, the books from the edge are kept
     sync_all(p, kh=0.60, ka=0.99, ph=0.99, pa=0.60, now=T + 1)
-    ev2 = p.on_event("kalshi", "K_H", now=T + 1)[0]
+    ev2 = p.on_event("kalshi", "K_H", now=T + 1)[-1]
     record_evaluation(store, ev2, league="mlb", fee_params=FEES, hurdle=0.01, opportunities=opps)
     tr = store.con.execute("SELECT from_status, to_status FROM opportunity_transitions ORDER BY id").fetchall()
     assert tr == [(None, "PROFITABLE_UNEXECUTED"), ("PROFITABLE_UNEXECUTED", "NO_EDGE")]
