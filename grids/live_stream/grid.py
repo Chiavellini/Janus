@@ -43,7 +43,7 @@ if str(ROOT) not in sys.path:
 from kernel.fetch import Client  # noqa: E402
 from kernel.redact import brief_error  # noqa: E402
 from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
-from nodes.cover.capacity import frontier  # noqa: E402, slippage_for
+from nodes.cover.capacity import frontier, slippage_for  # noqa: E402
 from nodes.discovery.watchlist import Watchlist, kalshi_watch, pm_watch_events  # noqa: E402
 from nodes.watch_settle.settle import record_watch  # noqa: E402
 from nodes.entities.leagues import LEAGUES, default_leagues  # noqa: E402
@@ -195,9 +195,9 @@ class Supervisor:
         # The matcher has always computed these reasons; nothing read them, so Serie A produced
         # zero Polymarket events for four days and looked like a league with no games on.
         games_by_league: dict[str, int] = {}
-        for g in d.games:
+        for g in getattr(d, "games", ()) or ():
             games_by_league[g.league] = games_by_league.get(g.league, 0) + 1
-        for league, (matches, stats, _r) in sorted(d.per_league.items()):
+        for league, (matches, stats, _r) in sorted((getattr(d, "per_league", None) or {}).items()):
             if matches or not games_by_league.get(league):
                 continue
             reasons = stats.get("matcher_reasons") or {}
