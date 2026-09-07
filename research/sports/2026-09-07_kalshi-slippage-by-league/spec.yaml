@@ -1,0 +1,44 @@
+experiment_id: "janus-sports-kalshi-slippage-by-league-l41-2026-09-07"
+date_registered: "2026-09-07"
+track: "sports/execution"
+row_kind: "L (descriptive characterization; re-runnable; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L41"
+test_looks_spent: 0
+
+# IMMUTABLE AFTER THE FIRST RUN. Registered before any per-league number is read. What IS known:
+# L27's pooled p95 at 3 s over 326 tickers is 0.04 per contract, and that pool is mostly thin
+# tennis capture books measured at a 100-contract depth; nothing per league is known.
+purpose: >
+  L27 prices the hedge-window slippage as ONE number over every Kalshi ticker the lane ever
+  captured, weighted by delta instant (a burst around one jump counts many times), including
+  flapping and stalled windows, at a 100-contract depth. That reserve (0.04) prices out nearly every
+  cover the lane prints. This row asks the same question per league, on clean windows, weighted by
+  time, at the sizes the pilot actually trades, so the reserve is the league's own.
+
+source:
+  frames: "/Volumes/Kilos/janus/frames/kalshi/**/*.jsonl.gz replayed through nodes/stream_kalshi/protocol.parse (L27's loop)"
+  clean_windows: "nodes/cover_cost/distribution.load_flap_windows over the Mac's socket_health (disconnects, reconnects, loop lag > 5 s) -- every delta instant inside one is dropped"
+  league: "the ticker's series prefix (before the first '-') through nodes/entities/leagues.league_for_series; unregistered series are reported as 'other'"
+
+definitions:
+  instant: "a Kalshi orderbook delta or snapshot at receive time t, with the YES ask price at depth q (the level at which cumulative ask size reaches q)"
+  move: "max over t' in (t, t + w] of ask_q(t') - ask_q(t), floored at 0, for w in 0.5 s, 1 s, 3 s"
+  weight: "the time from the instant to the next instant on the same ticker, capped at 60 s -- a quiet book's one instant counts for its dwell, a burst's many instants for theirs"
+  quantities: "q = 5 and q = 25 contracts (the pilot's cap sizes); q = 100 reported for continuity with L27"
+  statistic: "the time-weighted p50 / p90 / p95 / p99 of the move per (league, q, w), with the instant count n and the ticker count beside it"
+  registered_value: "per league, the time-weighted p95 at w = 3 s and q = 25, when that league has n >= 2,000 instants over >= 4 tickers; otherwise the league keeps L27's pooled value. Registered in nodes/cover/capacity.py SLIPPAGE_BY_LEAGUE with this row as research_ref; the pooled value stays the fallback."
+
+criteria:
+  - "Descriptive. No hypothesis, no significance test, no look. Reads no outcome, no PnL."
+  - "Each re-run appends its own results file and verdict section; the registered value moves only with a run's value; nothing is edited."
+  - "A league below 2,000 instants or 4 tickers is reported and NOT registered (fallback to L27)."
+
+outputs:
+  results: "research/sports/2026-09-07_kalshi-slippage-by-league/results_<run>.json"
+  verdict: "research/sports/2026-09-07_kalshi-slippage-by-league/verdict.md"
+  registration: "nodes/cover/capacity.py SLIPPAGE_BY_LEAGUE"
+
+what_this_does_not_establish:
+  - "Polymarket-side slippage (the FOK leads; its slippage is a rejection, not a price)."
+  - "Anything about edge; a reserve prices a cost."
