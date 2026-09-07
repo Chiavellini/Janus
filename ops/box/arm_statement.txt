@@ -1,1 +1,1 @@
-I approve live trading at small size on all live events the lane covers, from the box, at $12 per order, 25 contracts and $60 a day, with the realized-loss breaker at $25.
+I approve live trading at the smallest executable size on all live events the lane covers, from the box: $12 per order, 10 contracts per leg, $250 a day, with the realized-loss breaker at $25. A cap that refuses the smallest size is a defect, not a limit.

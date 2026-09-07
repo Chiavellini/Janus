@@ -93,6 +93,17 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
             out.append(f"risk: BREAKER_LATCHED — {d.get('reason', '')}")
     dbp = Path(db_path)
     if dbp.exists():
+        # CAP_BINDS_SMALLEST: the lane refused a cover at the smallest quantity it prices because of
+        # the override's cap. By the operator's rule (GATE row 2026-09-07) that is a misconfiguration;
+        # it repeats for a day so it cannot be missed.
+        try:
+            from nodes.risk.flags import recent_flags
+            rows = recent_flags(dbp, "CAP_BINDS_SMALLEST", now=t)
+            if rows:
+                out.append(f"risk: CAP_BINDS_SMALLEST — {len(rows)} in 24 h, last: {rows[0][1]}; the override's cap refuses the "
+                           "smallest size the lane prices (raise the cap or lower QUANTITIES; a GATE row)")
+        except Exception as exc:  # noqa: BLE001
+            out.append(f"risk: FLAGS_UNREADABLE — {type(exc).__name__}")
         try:
             con = sqlite3.connect(f"file:{dbp}?mode=ro", uri=True)
             rows = con.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='capital_reservations'").fetchall()

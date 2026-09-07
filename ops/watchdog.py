@@ -342,6 +342,19 @@ def selftest() -> None:
         _append(p, {"ts": NOW - 9999, "job": "j", "status": "started", "pid": os.getpid()})
         assert any("HUNG" in a for a in check(p, now=NOW, slas=S1, risk={})), "HUNG"
 
+        # CAP_BINDS_SMALLEST — the override's cap refused the smallest quantity the lane prices
+        from nodes.risk.flags import raise_flag, recent_flags
+        from nodes.risk.health import risk_alerts as _ra
+        from nodes.store_tuples.store import TupleStore as _TS2
+        fdb = Path(d) / "flags.sqlite"
+        fst = _TS2(fdb, enforce_volume=False)
+        assert not any("CAP_BINDS_SMALLEST" in a for a in _ra(kill_root=Path(d) / "k0", breaker_path=Path(d) / "k0" / "b.json", db_path=fdb, now=NOW)), "no flag: quiet"
+        raise_flag(fst, "CAP_BINDS_SMALLEST", "LAA @ BOS CAP_STAKE 23.25 > 12.00 q=5", now=NOW - 60)
+        fst.close()
+        assert recent_flags(fdb, "CAP_BINDS_SMALLEST", now=NOW) and any(
+            "CAP_BINDS_SMALLEST" in a and "LAA @ BOS" in a for a in _ra(kill_root=Path(d) / "k0", breaker_path=Path(d) / "k0" / "b.json", db_path=fdb, now=NOW)), "CAP_BINDS_SMALLEST"
+        assert not any("CAP_BINDS_SMALLEST" in a for a in _ra(kill_root=Path(d) / "k0", breaker_path=Path(d) / "k0" / "b.json", db_path=fdb, now=NOW + 2 * 86400)), "a day later it is history"
+
         # COVERAGE_GAP — the census says both venues list it inside the lane's window, the lane did not pair it
         from ops.coverage_report import coverage_alerts
         from nodes.store_tuples.store import TupleStore as _TS

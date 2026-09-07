@@ -844,3 +844,14 @@ stopped, the override, the switch. Two template defects showed up in the bring-u
 first: the ITF Polymarket template shared the tour V2 text's hash and had displaced it (every
 tour match blocked LEAGUE_MISMATCH), and the tennis scrub missed Challenger tournament phrases
 (one Kalshi text hashed per tournament). The registry now asserts every template hash is unique.
+
+## 2026-09-07 — caps that never block the smallest executable size
+
+The operator's rule: "the smallest amount that doesn't cause fill failures". Of today's three
+failures to act, one was a cap (the $12 per-order cap refusing 25 and 100 contracts while the
+5-contract size sat under the profit floor because of the pooled 4c reserve), one was the reserve
+itself (L41's job), one was the geoblock (Mexico). New GATE row: $12 per order, 10 contracts per
+leg, $250 a day (from $60, which was five covers a day); breaker $25; capital limits unchanged.
+`CAP_BINDS_SMALLEST`: a cap refusal at the smallest priced quantity is printed, written to the
+store's `lane_flags`, and alarmed by the watchdog with a selftest branch. `ops/box/release.sh`
+takes the caps from `JANUS_ARM_CAPS` (default the row's); the standing statement text updated.

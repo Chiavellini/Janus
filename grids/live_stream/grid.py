@@ -44,6 +44,7 @@ from kernel.fetch import Client  # noqa: E402
 from kernel.redact import brief_error  # noqa: E402
 from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
 from nodes.cover.capacity import frontier, slippage_for  # noqa: E402
+from nodes.risk.flags import raise_flag  # noqa: E402
 from nodes.discovery.watchlist import Watchlist, kalshi_watch, pm_watch_events  # noqa: E402
 from nodes.watch_settle.settle import record_watch  # noqa: E402
 from nodes.entities.leagues import LEAGUES, default_leagues  # noqa: E402
@@ -486,6 +487,15 @@ class Supervisor:
                 if self.said.get(key) != early[1][:12]:          # once per game, code and size, not per print
                     self.said[key] = early[1][:12]
                     print(f"  [risk] refused {sup.short_name}: {early[0]} {early[1]} (q={ev.quantity:g}, before any round trip)", flush=True)
+                    if early[0] in ("CAP_STAKE", "CAP_CONTRACTS") and ev.quantity <= min(QUANTITIES):
+                        # The operator's rule (GATE row 2026-09-07): a cap that refuses the SMALLEST
+                        # size the lane prices is a defect, not a limit. Said, stored, alarmed.
+                        print(f"  [risk] CAP_BINDS_SMALLEST {sup.short_name}: {early[0]} {early[1]} at q={ev.quantity:g}", flush=True)
+                        if self.store is not None:
+                            try:
+                                raise_flag(self.store, "CAP_BINDS_SMALLEST", f"{sup.short_name} {early[0]} {early[1]} q={ev.quantity:g}")
+                            except Exception as exc:  # noqa: BLE001 -- the flag must not break the loop
+                                print(f"  [risk] flag write failed: {type(exc).__name__}", flush=True)
                 return
         balances = None
         if self.mode.sends_real_orders:
