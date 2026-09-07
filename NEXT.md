@@ -4,13 +4,13 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-07 ~20:30 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-07 ~20:40 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
 
 **The lane is LIMITED_LIVE on the Mexico box** (`i-0a8c073c72dcdae11`, `mx-central-1a`) since
-20:22Z on `f71f66d`; every box command needs `JANUS_BOX_REGION=mx-central-1
+20:22Z, on `eb70b11` since 20:37Z (caps $12 per order, 10 contracts per leg, $250 a day; the smallest executable size, never bigger); every box command needs `JANUS_BOX_REGION=mx-central-1
 JANUS_BOX_ID=i-0a8c073c72dcdae11`. Virginia is stopped (its first real order was geoblocked by the
 CLOB; its data volume keeps the record). L34 from Mexico: Kalshi 92 ms, CLOB 214 ms (the Mac 170 /
 273). 55 co-listed games at the switch, 17 in play; ITF and Challenger included. Funded: Kalshi
