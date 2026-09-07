@@ -796,3 +796,24 @@ series, and windows, not the join.
   the box, and warns about games in play (their pollers' state is what a restart costs).
 - Funding, the operator's: Kalshi shard 0 $247.86 (shard 3, the tennis shard, still $22.43);
   Polymarket read from the box at the time of the entry.
+
+## 2026-09-07 — the box's first real order: Polymarket geoblocks the Ashburn host
+
+At 18:45Z a 5-contract cover on ATL @ PHI cleared every check on the box and the Polymarket leg
+came back **HTTP 403, "Trading restricted in your region"**. The CLOB serves reads to AWS Virginia
+(L34's 200s) and refuses order entry from it. No order was placed, no money moved, the Kalshi hedge
+was never sent. The proofs had run from the Mac, whose egress is Mexico City, where the CLOB
+accepts orders.
+
+- The adapter read the 403 as an ambiguous transport failure (UNCONFIRMED): the reservation was
+  held, status was polled 31 times over 3.3 s, and the game sat EVENT_IN_FLIGHT. Now a CLOB answer
+  of 400/401/403/404/422 is a definite REJECTED (`HTTP_<code>`, journaled as a reject, released);
+  a 403 naming the region latches `PolymarketExecution.geoblocked`, and the lane refuses every
+  cover cheaply (`VENUE_GEOBLOCKED`, said once) until a restart from a permitted host. A 5xx stays
+  UNCONFIRMED: the venue may still have taken the order.
+- The `[latency]` line of that execution, the first from the path's stamps on a real venue:
+  frame→eval 1.25 ms, balances 141.6 ms (both venues, from the box), clearance 2.7 ms, leg A
+  submit→ack 341 ms (the 403), 31 polls to the 3 s deadline.
+- What it means: real two-leg execution cannot run from a US-hosted box. The Polymarket leg needs a
+  host in a permitted jurisdiction; the Mac's (Mexico) is the one that has worked. The region of
+  the next box is the operator's decision (CHANGELOG records the fact; NEXT.md the choice).

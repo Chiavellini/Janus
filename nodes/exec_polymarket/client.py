@@ -138,8 +138,13 @@ class PolymarketExecution:
     fee_params: Any = None
     submits: int = 0
     unconfirmed: int = 0
+    rejected_http: int = 0
     last_fee_source: str = ""
     last_error: str = ""
+    #: Set when the CLOB answered 403 "Trading restricted in your region": this host cannot place
+    #: Polymarket orders at all (2026-09-07, the Ashburn box's first real order). The lane refuses
+    #: every cover cheaply from then on; only a restart from a permitted host clears it.
+    geoblocked: str | None = None
     _requests: dict[str, OrderRequest] = field(default_factory=dict)
 
     def submit(self, req: OrderRequest, clearance) -> Ack:
@@ -158,9 +163,21 @@ class PolymarketExecution:
         try:
             d = self.transport.post_order(token_id=req.market_id, price=req.price, size=req.contracts,
                                           order_type=ORDER_TYPE[req.time_in_force])
-        except Exception as exc:  # noqa: BLE001 -- ambiguous: the CLOB may hold the order
-            self.unconfirmed += 1
+        except Exception as exc:  # noqa: BLE001 -- ambiguous unless the venue itself answered
             self.last_error = brief_error(exc)
+            code = getattr(exc, "status_code", None)
+            if code in (400, 401, 403, 404, 422):
+                # The CLOB answered and did not take the order: a definite refusal, not an ambiguous
+                # transport failure. Read as UNCONFIRMED it held the reservation, polled status for
+                # 3 s and left the game EVENT_IN_FLIGHT (2026-09-07, HTTP 403 on the box).
+                self.rejected_http += 1
+                if code == 403 and "region" in self.last_error.lower():
+                    self.geoblocked = self.last_error
+                ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None,
+                          f"HTTP_{code}", self.clock(), detail=self.last_error)
+                self.journal.record(ack, kind="reject", raw={"error": self.last_error, "status_code": code})
+                return ack
+            self.unconfirmed += 1
             ack = Ack(self.venue, req.client_order_id, None, FillState.UNCONFIRMED, 0.0, None, None,
                       "TRANSPORT", self.clock(), detail=self.last_error)
             self.journal.record(ack, kind="unconfirmed", raw={"error": self.last_error})

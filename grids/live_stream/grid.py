@@ -464,6 +464,13 @@ class Supervisor:
         # profitable print at q=25 and q=100 fetched both venues' balances -- two round trips on
         # the event loop -- only to be refused CAP_STAKE by the override. Dozens a minute stalled
         # the loop 5.6 s with 17 pollers live. The caps and the profit floor are known here.
+        blocked_venue = getattr(self.venues.get("polymarket"), "geoblocked", None)
+        if blocked_venue:
+            if self.said.get("polymarket:geoblocked") != "said":
+                self.said["polymarket:geoblocked"] = "said"
+                print(f"  [risk] refused every cover: VENUE_GEOBLOCKED polymarket -- {blocked_venue[:120]} "
+                      f"(this host cannot place Polymarket orders; restart from a permitted host)", flush=True)
+            return
         if self.caps and self.mode.risks_capital:
             stake = sum(c * p for _v, c, p in cand.legs)
             most = max(c for _v, c, _p in cand.legs)

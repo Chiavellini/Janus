@@ -130,3 +130,22 @@ def test_the_mode_gate_and_the_optional_library(tmp_path, monkeypatch):
     monkeypatch.setattr(builtins, "__import__", no_clob)
     with pytest.raises(TransportUnavailable, match="pip install"):
         PyClobTransport()
+
+
+def test_a_venue_http_refusal_is_rejected_and_a_geoblock_latches(tmp_path):
+    """2026-09-07, the box's first real order: 403 "Trading restricted in your region" was read as an
+    ambiguous transport failure, held the reservation and polled status for 3 s."""
+    class PolyApiException(Exception):
+        def __init__(self, code, msg):
+            super().__init__(f"PolyApiException[status_code={code}, error_message={msg!r}]")
+            self.status_code = code
+    v, j = venue(tmp_path, FakeTransport(posts=[PolyApiException(403, {"error": "Trading restricted in your region"})]))
+    ack = v.submit(req(), cl(tmp_path))
+    assert ack.state is FillState.REJECTED and ack.raw_status == "HTTP_403" and "region" in ack.detail
+    assert j.get("c1")["state"] == "REJECTED" and v.unconfirmed == 0 and v.rejected_http == 1
+    assert v.geoblocked and "region" in v.geoblocked
+    v2, j2 = venue(tmp_path / "b", FakeTransport(posts=[PolyApiException(400, {"error": "invalid amount"})]))
+    ack2 = v2.submit(req(), cl(tmp_path / "b"))
+    assert ack2.state is FillState.REJECTED and ack2.raw_status == "HTTP_400" and v2.geoblocked is None
+    v3, j3 = venue(tmp_path / "c", FakeTransport(posts=[PolyApiException(502, {"error": "bad gateway"})]))
+    assert v3.submit(req(), cl(tmp_path / "c")).state is FillState.UNCONFIRMED, "a 5xx may still have taken the order"
