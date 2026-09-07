@@ -50,7 +50,7 @@ sudo -u janus python3 -m venv "$JROOT/.venv"
 sudo -u janus "$JROOT/.venv/bin/pip" install -q --upgrade pip
 # py-clob-client-v2, not py-clob-client: Polymarket replaced its exchange on 2026-04-28 (CLOB V2, pUSD);
 # the V1 client reads a balance of 0.00 and its orders are refused (CHANGELOG 2026-09-07).
-sudo -u janus "$JROOT/.venv/bin/pip" install -q cryptography websockets pyyaml boto3 httpx eth-account py-clob-client-v2 pytest
+sudo -u janus "$JROOT/.venv/bin/pip" install -q cryptography websockets numpy pandas boto3 httpx eth-account py-clob-client-v2 pytest
 
 # systemd units from the repo
 install -m 644 "$JROOT"/ops/box/systemd/*.service "$JROOT"/ops/box/systemd/*.timer /etc/systemd/system/
