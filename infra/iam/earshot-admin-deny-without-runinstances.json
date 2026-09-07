@@ -1,0 +1,11 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyDirectStartOrResizeOfEventBox",
+      "Effect": "Deny",
+      "Action": ["ec2:StartInstances", "ec2:ModifyInstanceAttribute"],
+      "Resource": "arn:aws:ec2:us-east-1:986420598115:instance/i-04c50d76572aa092e"
+    }
+  ]
+}
