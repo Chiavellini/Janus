@@ -32,7 +32,7 @@ def test_a_profitable_evaluation_is_sized_on_its_own_books(tmp_path: Path, capsy
     assert "PROFITABLE_UNEXECUTED" in out and "N_max=" in out, out
     assert "capacity failed" not in out
     assert sup.store.con.execute("SELECT COUNT(*) FROM frontiers").fetchone()[0] == 1
-    assert s.evaluations == 1 and s.written == 1
+    assert s.evaluations == 2 and s.written == 2, "the venues' smallest size (3) and the 100 rung, both written"
 
 
 def test_a_record_failure_is_counted_and_never_reaches_the_socket(tmp_path: Path, capsys, monkeypatch):
@@ -51,14 +51,15 @@ def test_a_record_failure_is_counted_and_never_reaches_the_socket(tmp_path: Path
     monkeypatch.setattr(sup, "_record", boom)
     cb("K_H", T + 1)          # must not raise
     cb("K_H", T + 2)
-    assert sup.record_errors == {("g1", "RuntimeError"): 2}
-    assert s.evaluations == 3, "the poller still evaluated; only the record failed"
+    # two quantities per event (the venues' smallest size and the 100 rung): two failed records per frame
+    assert sup.record_errors == {("g1", "RuntimeError"): 4}
+    assert s.evaluations == 6, "the poller still evaluated; only the record failed"
     out = capsys.readouterr().out
     assert out.count("[record] SF @ PIT RuntimeError") == 1, "said once per cause, not per frame"
-    assert sup.stats()["record_errors"] == 2
+    assert sup.stats()["record_errors"] == 4
     monkeypatch.undo()
     cb("K_H", T + 3)          # and it recovers without a reconnect
-    assert sup.record_errors == {("g1", "RuntimeError"): 2}
+    assert sup.record_errors == {("g1", "RuntimeError"): 4}
 
 
 def test_discovery_is_split_into_a_network_half_and_a_state_half(monkeypatch, tmp_path: Path):

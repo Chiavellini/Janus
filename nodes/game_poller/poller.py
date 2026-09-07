@@ -28,6 +28,7 @@ from enum import Enum
 
 from nodes.book_replica.replica import BookReplica, Fault
 from nodes.cover.cover import Cover, Leg, best_cover
+from nodes.cover.cover import PM_MIN_NOTIONAL_USD
 from nodes.rules_exhaustive.rules import NotExhaustive, prove
 from nodes.settle_wedge.equivalence import CoverProof, NotEquivalent, SettlementEquivalence, certify_cover
 from kernel.schema import liquidity_source_for
@@ -60,6 +61,19 @@ class Evaluation:
         if c is None or not c.ok or not c.cost_per_contract:
             return None
         return (1.0 - c.cost_per_contract) / c.cost_per_contract
+
+
+def smallest_executable(offers) -> float:
+    """The smallest size every leg on offer can be sent at: the venues' share minimums and, for a
+    Polymarket leg, one dollar of notional at its best ask (ceil). Never below 1."""
+    import math
+    q = 1.0
+    for legs in offers.values():
+        for l in legs:
+            q = max(q, float(l.min_order_contracts or 1.0))
+            if l.venue == "polymarket" and l.book.asks:
+                q = max(q, float(math.ceil(PM_MIN_NOTIONAL_USD / l.book.asks[0].price - 1e-9)))
+    return q
 
 
 @dataclass
@@ -266,7 +280,16 @@ class GamePoller:
         self.state = PollerState.WATCHING if ready else PollerState.WARMING
 
         out = []
-        for q in self.quantities:
+        # The SMALLEST quantity is the smallest size both venues will execute for these books, not
+        # a fixed rung (the operator's rule, 2026-09-07: "as long as there is a single contract we
+        # should take it"). Polymarket sets it: its share minimum (`orderMinSize`) and its $1 of
+        # notional for a marketable buy (9 shares at $0.12, 2 at $0.50); Kalshi takes one. The
+        # fixed rungs above it stay for the frontier and the record.
+        quantities = self.quantities
+        if ready and offers:
+            q_min = smallest_executable(offers)
+            quantities = tuple(sorted({q_min} | {q for q in self.quantities if q > q_min}))
+        for q in quantities:
             cov = None
             if ready:
                 cov = best_cover(offers, q, now_utc=t,

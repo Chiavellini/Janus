@@ -79,9 +79,12 @@ def test_a_real_gap_is_flagged_actionable():
     """0.44 + 0.44 = 0.88 gross; fees at the money are ~3c, so this clears 1% comfortably."""
     p = mlb()
     sync_all(p, kh=0.44, ka=0.99, ph=0.99, pa=0.44)
-    e = p.on_event("polymarket", "P_A", now=T)[0]
+    evs = p.on_event("polymarket", "P_A", now=T)
+    # the venues' smallest size (3 shares: a dollar at $0.44) is priced beside the 100 rung (2026-09-07)
+    assert [e.quantity for e in evs] == [3.0, 100.0]
+    e = evs[-1]
     assert e.actionable_return is not None and e.actionable_return > 0.01
-    assert p.opportunities == 1
+    assert p.opportunities == 2
 
 
 def test_one_desynced_replica_blocks_the_whole_cover():
@@ -115,9 +118,11 @@ def test_evaluation_happens_per_event_not_per_tick_of_a_clock():
     p = mlb()
     sync_all(p, kh=0.48, pa=0.48)
     before = p.evaluations
-    for _ in range(25):
+    per = len(p.on_event("kalshi", "K_H", now=T))       # the smallest executable size and the 100 rung
+    assert per == 2
+    for _ in range(24):
         p.on_event("kalshi", "K_H", now=T)
-    assert p.evaluations == before + 25
+    assert p.evaluations == before + 25 * per
     assert p.events >= 25
 
 
@@ -125,7 +130,7 @@ def test_the_coalescing_window_prices_once_per_interval_but_never_hides_a_state_
     """2026-09-04: ~3,400 evaluations a second saturated the loop. Inside the window an event is
     folded, not priced; the 15 s heartbeat and any replica state/fault change still price on
     the frame they happen, so replay stays faithful and no BLOCKED transition is lost."""
-    p = mlb(min_eval_interval_s=0.2)
+    p = mlb(min_eval_interval_s=0.2, quantities=(3.0,))    # 3 = the venues' smallest size at $0.48: one quantity per event
     sync_all(p, kh=0.48, pa=0.48)
     assert len(p.on_event("kalshi", "K_H", now=T)) == 1
     for i in range(25):
@@ -190,7 +195,8 @@ def test_a_leg_without_a_fee_schedule_is_blocked_not_defaulted():
 def test_the_fee_schedule_reaches_the_cover_verbatim():
     p = mlb()
     sync_all(p, kh=0.48, pa=0.48)
-    e = p.on_event("kalshi", "K_H", now=T)[0]
+    e = p.on_event("kalshi", "K_H", now=T)[-1]                # the 100-contract rung
+    assert e.quantity == 100.0
     assert {l.venue for l in e.cover.legs} == {"kalshi", "polymarket"}
     # Kalshi quadratic_with_maker_fees on a 0.48 fill: the venue charges the full 0.07 (production
     # fill 2026-09-04), kept to the hundredth of a cent: 0.07*100*0.48*0.52 = $1.7472 exactly.
@@ -274,14 +280,25 @@ def test_the_settlement_reserve_is_inside_the_cost():
     assert abs((b.cost_per_contract - a.cost_per_contract) - b.settlement_buffer_per_contract) < 1e-9
 
 
-def test_the_venues_order_limits_reach_the_legs():
+def test_the_venues_order_limits_reach_the_legs_and_set_the_smallest_quantity():
+    """The smallest priced quantity is the smallest size both venues execute (2026-09-07): the
+    Polymarket share minimum, or one dollar of notional at its ask, whichever is larger."""
+    from nodes.game_poller.poller import smallest_executable
     p = mlb(order_limits={"polymarket": {"min_order_contracts": 5.0, "tick": 0.01}}, quantities=(3.0, 100.0))
     sync_all(p, kh=0.44, pa=0.44)
     evs = p.on_event("kalshi", "K_H", now=T)
-    # 3 contracts: the Polymarket legs are below their minimum, so only the (dearer) Kalshi-only cover
-    # remains; at 100 the cross-venue cover is back.
-    assert evs[0].cover.ok and all(l.venue == "kalshi" for l in evs[0].cover.legs)
-    assert evs[1].cover.ok and {l.venue for l in evs[1].cover.legs} == {"kalshi", "polymarket"}
+    # 3 would be below the Polymarket minimum: the smallest quantity priced is 5, and it is a cross-venue cover
+    assert [e.quantity for e in evs] == [5.0, 100.0]
+    assert evs[0].cover.ok and {l.venue for l in evs[0].cover.legs} == {"kalshi", "polymarket"}
+    # a 12-cent token needs 9 shares for a dollar; a 50-cent one keeps the 5-share minimum
+    p2 = mlb(order_limits={"polymarket": {"min_order_contracts": 5.0, "tick": 0.01}}, quantities=(5.0, 10.0, 25.0, 100.0))
+    sync_all(p2, kh=0.85, ka=0.85, ph=0.12, pa=0.12)
+    evs2 = p2.on_event("kalshi", "K_H", now=T)
+    assert [e.quantity for e in evs2] == [9.0, 10.0, 25.0, 100.0]
+    assert smallest_executable(evs2[0].offers) == 9.0
+    p3 = mlb(order_limits={"polymarket": {"min_order_contracts": 5.0, "tick": 0.01}}, quantities=(5.0, 10.0))
+    sync_all(p3, kh=0.50, ka=0.50, ph=0.50, pa=0.50)
+    assert [e.quantity for e in p3.on_event("kalshi", "K_H", now=T)] == [5.0, 10.0]
 
 
 
