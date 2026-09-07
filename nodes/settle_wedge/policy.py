@@ -384,6 +384,22 @@ KALSHI_CFB_GAME_V1 = Template(
               retirement_policy=None, revision_policy="official final result", dispute_mechanism="kalshi",
               settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
 
+KALSHI_CFB_GAME_V2 = Template(
+    "kalshi_cfb_game_v2", "kalshi", frozenset({"cfb"}), "2026-09-07",
+    # KXNCAAFGAME-26SEP05CLEMLSU-CLEM, rules_primary + "\n" + rules_secondary, read from the lane's own
+    # harvested spec after CLEM @ LSU, LOU vs MISS and WIS vs ND (neutral-site games) blocked at
+    # TEMPLATE_UNKNOWN on 2026-09-05/06 (hash 044a91cd8fbb21b6). Diffed against V1 sentence by sentence:
+    # the same three rules in new words -- "postponed from its originally scheduled date but begins
+    # within 48 hours" -> open; "not started within 48 hours" -> fair market price (V1 said "cancelled
+    # or not started", and a cancelled game is one not started); a second NCAA/league disclaimer.
+    # Verdicts: _CFB_K_PM, unchanged.
+    "If Clemson wins the Clemson vs LSU college football game originally scheduled for Sep 5, 2026, then the market resolves to Yes.\nThe following market refers to the team who wins the Clemson vs LSU college football game originally scheduled for Sep 5, 2026. If the game is postponed from its originally scheduled date but begins within 48 hours, the market will remain open and resolve based on the official final result. If the game is not started within 48 hours, the market will resolve to the a fair market price.\n\nKalshi is not affiliated,  associated,  authorized, endorsed by, or in any way officially connected with the NCAA. All trademarks, logos, and brand names are the property of their respective owners.\n\nKalshi is not affiliated, associated, authorized, endorsed by, or in any way officially connected with the Governing League. All trademarks, logos, and brand names are the property of their respective owners.",
+    ["Clemson", "Clemson Tigers", "LSU", "LSU Tigers", "Tigers"],
+    SettleRef(source_agency="NCAA / ESPN", oracle="kalshi", void_policy=VoidPolicy.LAST_FAIR_MARKET_PRICE,
+              tie_policy=TiePolicy.UNKNOWN, ot_included=True, dnp_policy=VoidPolicy.UNKNOWN,
+              retirement_policy=None, revision_policy="official final result", dispute_mechanism="kalshi",
+              settle_lag_h_p50=None, terms_url=None, provenance="api_field"))
+
 POLYMARKET_CFB_GAME_V1 = Template(
     "polymarket_cfb_game_v1", "polymarket", frozenset({"cfb"}), "2026-09-03",
     # cfb-lcdbfc25-nwst-2026-08-27, market.description (the NFL shape: canceled or tie -> 50-50)
@@ -684,7 +700,7 @@ _SOCCER_KALSHI = {"epl": KALSHI_EPL_GAME_V1, "lal": KALSHI_LAL_GAME_V1, "bun": K
 TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1,
                                                               KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1,
                                                               *_SOCCER_PM, *_SOCCER_KALSHI.values(),
-                                                              KALSHI_CFB_GAME_V1, POLYMARKET_CFB_GAME_V1,
+                                                              KALSHI_CFB_GAME_V1, KALSHI_CFB_GAME_V2, POLYMARKET_CFB_GAME_V1,
                                                               KALSHI_TENNIS_MATCH_V1, POLYMARKET_TENNIS_MATCH_V1,
                                                               POLYMARKET_TENNIS_MATCH_V2)}
 
@@ -758,6 +774,7 @@ PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
     ("kalshi_mlb_game_v1", "polymarket_mlb_game_v1"): _MLB_K_PM,
     ("kalshi_nfl_game_v1", "polymarket_nfl_game_v1"): _NFL_K_PM,
     ("kalshi_cfb_game_v1", "polymarket_cfb_game_v1"): _CFB_K_PM,
+    ("kalshi_cfb_game_v2", "polymarket_cfb_game_v1"): _CFB_K_PM,
     ("kalshi_tennis_match_v1", "polymarket_tennis_match_v1"): _TENNIS_K_PM,
     ("kalshi_tennis_match_v1", "polymarket_tennis_match_v2"): _TENNIS_K_PM,
     **{(t.template_id, pm.template_id): _soccer_verdicts(code) for code, t in _SOCCER_KALSHI.items() for pm in _SOCCER_PM},
