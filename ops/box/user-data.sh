@@ -40,7 +40,8 @@ if [ -n "$URL" ]; then
   CLONE="$URL"; [ -n "$TOKEN" ] && CLONE="${URL/https:\/\//https://x-access-token:${TOKEN}@}"
   if [ ! -d "$JROOT/.git" ]; then git clone -q "$CLONE" "$JROOT" || { echo "FATAL: clone failed"; exit 1; }; fi
   git -C "$JROOT" remote set-url origin "$URL"          # the token never stays in .git/config
-  git -C "$JROOT" -c "http.extraheader=Authorization: Bearer ${TOKEN}" fetch -q origin || true
+  # fetch through the same token URL the clone used (a Bearer header made GitHub prompt for a username, 2026-09-07)
+  git -C "$JROOT" fetch -q "$CLONE" "+refs/heads/*:refs/remotes/origin/*" || echo "fetch failed (the clone stands)"
   [ -n "$SHA" ] && git -C "$JROOT" checkout -q "$SHA"
   chown -R janus:janus "$JROOT"
 fi
