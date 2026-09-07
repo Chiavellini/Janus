@@ -15,6 +15,9 @@ JROOT=/opt/janus
 
 apt-get update -q && apt-get install -y -q python3 python3-venv python3-pip git jq zsh    # zsh: every unit's ExecStart (2026-09-07)
 snap install amazon-ssm-agent --classic 2>/dev/null || true
+# The AWS CLI is not on the Ubuntu image; every SSM read below needs it (the first launch, 2026-09-07,
+# read empty parameters, cloned nothing and died creating the venv under a missing /opt/janus).
+command -v aws >/dev/null 2>&1 || snap install aws-cli --classic
 systemctl enable --now snap.amazon-ssm-agent.amazon-ssm-agent.service 2>/dev/null || true
 
 # the data volume: the second EBS disk, formatted once, mounted at /srv/janus (JANUS_DATA_ROOT)
@@ -29,11 +32,13 @@ id janus >/dev/null 2>&1 || useradd -r -m -d /home/janus -s /bin/bash janus
 mkdir -p "$DATA"/{tuples,kill,frames,proofs,runs,logs,catalog} && chown -R janus:janus "$DATA" && chmod 700 "$DATA"
 
 # the repo, at the pinned sha
-P() { aws ssm get-parameter --region $REGION --name "$1" --with-decryption --query Parameter.Value --output text 2>/dev/null || true; }
+P() { aws ssm get-parameter --region $REGION --name "$1" --with-decryption --query Parameter.Value --output text 2>>/var/log/janus-bootstrap.log || true; }
 URL=$(P /janus/repo/url); TOKEN=$(P /janus/repo/token); SHA=$(P /janus/repo/sha)
+echo "repo url=${URL:-<empty>} sha=${SHA:-<empty>} token=$([ -n "$TOKEN" ] && echo present || echo absent)"
+[ -n "$URL" ] || { echo "FATAL: /janus/repo/url is empty (is the AWS CLI installed and the instance profile attached?)"; exit 1; }
 if [ -n "$URL" ]; then
   CLONE="$URL"; [ -n "$TOKEN" ] && CLONE="${URL/https:\/\//https://x-access-token:${TOKEN}@}"
-  if [ ! -d "$JROOT/.git" ]; then git clone -q "$CLONE" "$JROOT"; fi
+  if [ ! -d "$JROOT/.git" ]; then git clone -q "$CLONE" "$JROOT" || { echo "FATAL: clone failed"; exit 1; }; fi
   git -C "$JROOT" remote set-url origin "$URL"          # the token never stays in .git/config
   git -C "$JROOT" -c "http.extraheader=Authorization: Bearer ${TOKEN}" fetch -q origin || true
   [ -n "$SHA" ] && git -C "$JROOT" checkout -q "$SHA"
