@@ -1,6 +1,6 @@
 # CHECKLIST — where Janus stands, what is not done, what is not proved
 
-*2026-09-07 ~05:00 UTC. A status list, deliberately blunt. Each line is one of: DONE (and how it
+*2026-09-07 ~08:20 UTC. A status list, deliberately blunt. Each line is one of: DONE (and how it
 is known), RUNNING (accruing), NOT DONE, or NOT PROVED (built, never demonstrated end to end).
 Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 
@@ -11,6 +11,8 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — watchdog alarms demonstrated firing in `--selftest`: SOCKET_FLAPPING, SOCKET_ERROR, LANE_SILENT, and since 2026-09-05 **SIGNAL_EXIT** (a daemon's signal death reported even after launchd restarts it) and **UNHEDGED_POSITION** (the paper row's STOP condition).
 - [x] DONE — spawn blocks are said once per game (`[spawn-blocked] <game> <reason>`) and written to `events.block_reason`; on 2026-09-04 two co-listed European games sat unspawned all evening with the reason in memory only.
 - [ ] NOT DONE — **the host.** The lane died of a SIGBUS (exit 138) at 03:35:05Z 2026-09-05 after 24 h: 63 MB RAM free, 5.5 of 7 GB swap, three unrelated Python processes bus-errored within 100 s. launchd restarted it in 1 s. L38: the lane's own loop is prompt (0.6% of ticks past 5 s, all in the first hours after a restart); the host is what fails. Until the box, heavy jobs beside the lane cost it seconds and paging can kill it (ops/README.md).
+- [x] DONE — **a late replica is seeded** (2026-09-07): a poller replica registered on a Kalshi ticker the socket already carried (every tennis match, on the watchlist since discovery) waited NOT_SYNCED for a reconnect; 25,563 tennis evaluations in F5. `KalshiStream.register` seeds it from the folded book at the subscription's seq (`stats()["seeded"]`).
+- [x] DONE — **quiet is not stale** (2026-09-07): the replica's age bound runs from the last proof the book is current (`as_of()`: last mutation, verification or frame on a live sequence-checked socket), not the last mutation. F5 refused 331,743 cfb and 4,836 tennis evaluations STALE on a socket carrying 250 frames a second. Era note on F5/F7.
 - [ ] NOT PROVED — the Polymarket socket drops on the tennis capture: ITF is out of the capture, drops are 2–3 a day; the venue-side cause is not understood.
 
 ## B. Pricing (what a cover costs)
@@ -25,6 +27,7 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 ## C. Coverage (which events)
 
 - [x] DONE — 20 leagues registered; **11 enabled and trading on paper**: mlb, nfl, epl, lal, bun, cfb, elc, el1, ita, **atp, wta** (tennis since 2026-09-05, F4).
+- [x] DONE — **Serie A joins** (2026-09-07): its `pm_tag_id` was Gamma's futures tag (100618; teamless events, skipped before the matcher counted them); now 101962 (`sea`), 20 Polymarket cross-references seeded, Como aliased by hand. The lane prints `[discovery] <league>: N games, 0 pairs; reasons=...` for any league with games and no pair. **NOT PROVED until a Serie A game spawns** (next fixtures 2026-09-07 evening).
 - [x] DONE — F4 registered: `tennis.delayed_gt7d_rate` is the forward row's one-sided 95% UPPER BOUND (0 of 42 → 0.0714, ~3.6¢ of reserve per Polymarket contract) until n reaches 300; the daily resolver refreshes it. The spec says plainly it was written after the first two resolver runs.
 - [x] DONE — `nodes/watch_fd`, the football-data.org snapshotter (F6, registered before any run): fl1, ere, por unblock from it; truer rates than the FLOOR proxy for epl, lal, bun, ita, elc at a season. **Awaits the operator's `FD_TOKEN`**; the job is written and not loaded.
 - [x] DONE — `ops/harvest_templates.py --league nba|wnba|nhl`: prints which template each venue's text hashes to, or the unknown text verbatim, the day the venues list the league.
@@ -56,14 +59,16 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — the settlement pass, every five minutes, paper and real alike; PARTIAL rows included.
 - [x] DONE — fees reconciled on Polymarket: charged exactly the pinned 0.0604 on the first real fill, read from the balance delta (the V2 trade record reports fee_rate_bps 0).
 - [x] DONE — operator decision 2026-09-04 (GATE amendment row): test trading only until L36 on clean data shows in-play actionable covers. L40 is the first honest cut of that (15 clean prints); the decision stands until the operator says otherwise.
-- [ ] NOT DONE — LIMITED_LIVE for the lane itself (needs both proofs, F5 complete, a new dated GATE row from the operator, the override, caps).
+- [x] DONE — **F8 registered** (`research/sports/2026-09-07_limited-live-f8-box/spec.yaml`, ledger PENDING): small real fills on the box, $12 / 25 contracts / $60 a day, breaker $25, STOP on one unhedged real leg, the first three covers reconciled by hand. `limits.toml` `min_net_profit_usd` 0.10 (from 0.50; at $12 stakes 0.50 refused every cover).
+- [ ] NOT DONE — **the GATE row and the override are the operator's**: the draft row is `research/sports/2026-09-07_limited-live-f8-box/GATE_ROW_DRAFT.md`; the two pastes are `bash ops/box/write_override.sh "<statement>"` and `bash ops/box/mode.sh LIMITED_LIVE`. Nothing runs LIMITED_LIVE until then; the lane refuses the mode without an override pinning the box's sha.
 - [ ] NOT DONE — PRODUCTION.
 
 ## F. The Ashburn box
 
 - [x] DONE — launch script, cloud-init, systemd units, credential materialiser, latency tool, tests, runbook; IAM policy files committed 2026-09-05 as written (the agent trust dropped its MFA-age condition — operator decision to commit as is).
 - [x] DONE — IAM: the admin's inline deny keeps its Earshot-instance protection and no longer denies RunInstances (2026-09-07); the janus-box role, profile and SSM core were already in place.
-- [ ] NOT DONE — main not pushed to GitHub since `1479bd6`; the SSM sha pointer is stale by many commits. OPERATOR.
+- [x] DONE — main is on GitHub; `ops/box/update.sh <sha>` re-points `/janus/repo/sha`, moves the box's checkout and restarts the lane; `ops/box/run.sh` runs any script on the box; `ops/box/status.sh` reads it. Both lanes run `c128211`+ since 2026-09-07 07:00Z.
+- [x] DONE — the box's Kalshi collateral: shard 0 $41.24 (mlb, nfl, cfb, soccer), shard 3 $22.43 (tennis); Polymarket ~$93 pUSD. Enough for the pilot's caps.
 - [x] DONE — the eight SSM parameters (two pointers, six SecureStrings) are in; the repo token is the GitHub login's and should be replaced by a read-only fine-grained token.
 - [x] DONE — L34 run 2026-09-07 (same hour): box Kalshi p50 51 ms vs Mac 184 (bar met), CLOB 184 vs 309 (bar of half NOT met), CLOB answers 200 from the box. **Verdict OBSERVATION_HOST**: the box is the paper pilot's host (F7); execution from it waits on a later row.
 
