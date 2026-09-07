@@ -215,3 +215,13 @@ def test_nfl_blocks_on_unmeasured_evidence_not_on_an_unknown_template():
     assert isinstance(eq, SettlementEquivalence)
     assert {v.dimension: v.outcome for v in eq.verdicts}["tie"] == "SAME", "both venues pay $0.50 a side: a full $1 cover"
     assert isinstance(certify_cover(prove("nfl", "moneyline", "game", ["a", "b"]), eq), CoverProof)
+
+
+def test_a_generic_one_word_tail_of_a_school_name_is_not_stripped_from_the_rules_text():
+    """"Boston College" stripped "college" out of "college football game" (2026-09-05, BC @ CIN
+    blocked at TEMPLATE_UNKNOWN); the two-word tail "golden flashes" of "Kent State Golden Flashes"
+    is still a name."""
+    text = "If Boston College wins the Boston College vs Cincinnati college football game, then Yes."
+    assert normalise_template(text, ("Boston College", "Cincinnati")) == "if wins the vs college football game then yes"
+    text2 = "If the Golden Flashes win the Kent State Golden Flashes vs Cincinnati college football game, then Yes."
+    assert normalise_template(text2, ("Kent State Golden Flashes", "Cincinnati")) == "if the win the vs college football game then yes"

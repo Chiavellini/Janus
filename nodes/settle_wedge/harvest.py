@@ -44,6 +44,11 @@ class RulesRecord:
     settlement_sources: tuple[str, ...] = ()
 
 
+#: Trailing words of a participant's name that are also ordinary words of a rules text.
+_GENERIC_TAILS = frozenset({"college", "state", "university", "city", "united", "town", "county", "football",
+                            "tennis", "fc", "athletic", "club", "team"})
+
+
 def normalise_template(text: str, participants: Sequence[str], scrub: Sequence[str] = ()) -> str:
     """Strip everything that varies per game. Longest participant names first, so
     'Los Angeles D' goes before 'Los Angeles'. `scrub` are a league's own regexes for what else
@@ -60,7 +65,10 @@ def normalise_template(text: str, participants: Sequence[str], scrub: Sequence[s
         # are left alone.
         for i in range(1, len(words)):
             tail = " ".join(words[i:])
-            if len(tail) >= 2:
+            # A one-word tail that is a generic word of the rules text itself is not a name:
+            # "Boston College" stripped "college" out of "college football game" and the text hashed
+            # to nothing the policy held (2026-09-05, BC @ CIN blocked at TEMPLATE_UNKNOWN).
+            if len(tail) >= 2 and not (i == len(words) - 1 and tail in _GENERIC_TAILS):
                 names.add(tail)
         # ... and by the name without its nickname (Polymarket college football: "Morehead State"
         # for "Morehead State Eagles"; "Kent State" for "Kent State Golden Flashes", a two-word
