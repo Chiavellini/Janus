@@ -17,7 +17,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-aws() { command aws "${PROFILE[@]}" "$@"; }
+aws() { command aws ${PROFILE[@]+"${PROFILE[@]}"} "$@"; }
 TYPE=${JANUS_BOX_TYPE:-c7g.medium}
 SG=${JANUS_BOX_SG:-sg-061f3bb3a68d29f81}
 SUBNET=${JANUS_BOX_SUBNET:-subnet-02c7c1eb60f3f8f73}    # us-east-1a
