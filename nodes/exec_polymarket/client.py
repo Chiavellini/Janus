@@ -218,7 +218,16 @@ class PolymarketExecution:
             self.last_error = brief_error(exc)
             return OrderState(self.venue, client_order_id, row["venue_order_id"], FillState.UNCONFIRMED, 0.0, None,
                               None, "TRANSPORT", t, detail=self.last_error)
-        st = self._state_from_order(o or {}, client_order_id, float(row["contracts"]), t)
+        if not o:
+            # The CLOB no longer has the order: a `delayed` FOK that did not match is dropped, and
+            # a poll then finds nothing (2026-09-07, RSO @ ELC, the first real order from Mexico:
+            # 13 polls to the deadline, UNKNOWN_PROVIDER_STATE, reservation held for nothing).
+            # Nothing filled; fills() would still show a trade if one had. Final.
+            st = OrderState(self.venue, client_order_id, row["venue_order_id"], FillState.UNFILLED, 0.0, None, None,
+                            "not_found", t, open=False, final=True, detail="order not at the venue: a delayed order that did not match")
+            self.journal.record(st, kind="status", raw={"not_found": True})
+            return st
+        st = self._state_from_order(o, client_order_id, float(row["contracts"]), t)
         self.journal.record(st, kind="status", raw=o)
         return st
 

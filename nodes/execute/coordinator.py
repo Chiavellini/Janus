@@ -43,6 +43,10 @@ class Coordinator:
     mode: Mode
     #: The hedge window in seconds (the risk limit max_hedge_latency_ms), and how often to poll.
     hedge_deadline_s: float = 3.0
+    #: How long leg A may stay UNCONFIRMED before UNKNOWN_PROVIDER_STATE. Its own window, not the
+    #: hedge's: a marketable CLOB order can sit `delayed` for seconds, and the hedge window is armed
+    #: only once leg A is known (2026-09-07).
+    leg_a_settle_s: float = 6.0
     poll_interval_s: float = 0.1
     clock: Callable[[], float] = time.time
     mono: Callable[[], float] = time.monotonic
@@ -101,7 +105,7 @@ class Coordinator:
         self._stamp(ex, "a_submit_ms")
         ack = self.venues[plan.first.venue].submit(req_a, clearance)
         self._stamp(ex, "a_ack_ms")
-        ack = self._settle_ack(plan.first.venue, ack, deadline_mono=self.mono() + self.hedge_deadline_s, ex=ex, key="a")
+        ack = self._settle_ack(plan.first.venue, ack, deadline_mono=self.mono() + self.leg_a_settle_s, ex=ex, key="a")
         self._stamp(ex, "a_settled_ms")
         if ack.state is FillState.UNCONFIRMED:
             return self._fail(ex, X.UNKNOWN_PROVIDER_STATE, f"leg A unconfirmed: {ack.raw_status} {ack.detail}", release=False)

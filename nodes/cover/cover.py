@@ -51,6 +51,10 @@ REJECT_NO_DEPTH = "insufficient_depth"
 REJECT_NOT_EXECUTABLE = "quote_not_accepted"
 REJECT_NO_PROOF = "cover_proof_missing"          # no CoverProof: neither proof reached the pricer
 REJECT_BELOW_MIN_ORDER = "below_min_order"        # a leg cannot be sent at this size
+#: The CLOB refuses a marketable BUY under one dollar of notional, whatever the share minimum says:
+#: "invalid amount for a marketable BUY order ($0.6), min size: 1" (2026-09-07, 5 contracts at $0.12,
+#: the first real order from Mexico). A Polymarket leg below it is not a cover at that size.
+PM_MIN_NOTIONAL_USD = 1.0
 
 
 @dataclass(frozen=True)
@@ -263,6 +267,8 @@ def price_combination(legs: Sequence[Leg], contracts: float, *, now_utc: float,
 
     # Below a leg's minimum order the venue will not take it: not a cover, and named as such.
     if any(contracts < l.min_order_contracts for l in legs):
+        return Cover(None, contracts, (), False, REJECT_BELOW_MIN_ORDER, max_age)
+    if any(l.venue == "polymarket" and l.book.asks and contracts * l.book.asks[0].price < PM_MIN_NOTIONAL_USD for l in legs):
         return Cover(None, contracts, (), False, REJECT_BELOW_MIN_ORDER, max_age)
 
     made = [_fills_for(l, contracts, i) for i, l in enumerate(legs)]

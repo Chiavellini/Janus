@@ -201,3 +201,18 @@ def test_a_size_below_a_legs_minimum_order_is_not_a_cover():
               "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.30, 1000)]), min_order_contracts=5.0)]}
     assert C.best_cover(offers, 3, now_utc=1000.0, proof=MLB2).reject_reason == C.REJECT_BELOW_MIN_ORDER
     assert C.best_cover(offers, 5, now_utc=1000.0, proof=MLB2).ok
+
+
+def test_a_polymarket_leg_under_one_dollar_of_notional_is_not_a_cover_at_that_size():
+    """The CLOB refuses a marketable BUY under $1 (5 x $0.12 = $0.60 on 2026-09-07)."""
+    from nodes.cover.cover import Leg, best_cover, PM_MIN_NOTIONAL_USD, REJECT_BELOW_MIN_ORDER
+    from kernel.schema import Book, Quote
+    from nodes.settle_wedge.fixtures import mlb_cover_proof
+    proof = mlb_cover_proof(["away", "home"])
+    offs = {"home": [Leg("polymarket", "pm_clob", "P_H", "P_H", Book(asks=(Quote(0.12, 5000),), fetched_utc=1000.0), {"fee_rate": 0.0})],
+            "away": [Leg("kalshi", "kalshi_clob", "K_A", "K_A", Book(asks=(Quote(0.80, 5000),), fetched_utc=1000.0), {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 0.5})]}
+    assert PM_MIN_NOTIONAL_USD == 1.0
+    c5 = best_cover(offs, 5.0, now_utc=1000.0, proof=proof)
+    assert not c5.ok and c5.reject_reason == REJECT_BELOW_MIN_ORDER
+    c10 = best_cover(offs, 10.0, now_utc=1000.0, proof=proof)
+    assert c10.ok or c10.reject_reason != REJECT_BELOW_MIN_ORDER

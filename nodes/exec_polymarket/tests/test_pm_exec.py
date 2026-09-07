@@ -149,3 +149,12 @@ def test_a_venue_http_refusal_is_rejected_and_a_geoblock_latches(tmp_path):
     assert ack2.state is FillState.REJECTED and ack2.raw_status == "HTTP_400" and v2.geoblocked is None
     v3, j3 = venue(tmp_path / "c", FakeTransport(posts=[PolyApiException(502, {"error": "bad gateway"})]))
     assert v3.submit(req(), cl(tmp_path / "c")).state is FillState.UNCONFIRMED, "a 5xx may still have taken the order"
+
+
+def test_an_order_the_venue_no_longer_has_is_a_final_no_fill(tmp_path):
+    """RSO @ ELC, 2026-09-07: a delayed FOK vanished from the CLOB; 13 polls read it as non-final."""
+    v, j = venue(tmp_path, FakeTransport(posts=[{"success": True, "orderID": "0xabc", "status": "delayed"}], orders=[None]))
+    ack = v.submit(req(), cl(tmp_path))
+    assert ack.state is FillState.UNCONFIRMED and ack.open
+    st = v.status("c1")
+    assert st.state is FillState.UNFILLED and st.final and not st.open and st.raw_status == "not_found"

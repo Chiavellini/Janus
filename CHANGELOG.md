@@ -855,3 +855,14 @@ leg, $250 a day (from $60, which was five covers a day); breaker $25; capital li
 `CAP_BINDS_SMALLEST`: a cap refusal at the smallest priced quantity is printed, written to the
 store's `lane_flags`, and alarmed by the watchdog with a selftest branch. `ops/box/release.sh`
 takes the caps from `JANUS_ARM_CAPS` (default the row's); the standing statement text updated.
+
+## 2026-09-07 — the first real orders from Mexico (nothing filled), and what they taught
+
+RSO @ ELC at 20:57Z, the Polymarket NO leg at $0.12: 5 contracts refused by the CLOB (HTTP 400,
+"invalid amount for a marketable BUY order ($0.6), min size: 1"), then 10 contracts placed with
+status `delayed`, polled 13 times to the 3 s deadline, UNKNOWN_PROVIDER_STATE; the venue later had
+no such order, no trade, the balance unchanged. So: the geoblock is behind us (the CLOB evaluated
+both orders from Mexico); a Polymarket leg under $1 of notional is now `below_min_order` in the
+cover (`PM_MIN_NOTIONAL_USD`), never sent; an order the venue no longer has is a final no-fill and
+releases; leg A has its own 6 s settle window (`Coordinator.leg_a_settle_s`) since a marketable CLOB
+order can sit `delayed` for seconds, and the hedge window arms only once leg A is known.
