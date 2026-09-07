@@ -1,0 +1,4032 @@
+{
+  "competitions": [
+    {
+      "capacity_usd": 5761.5,
+      "co_listed_48h": 23,
+      "examples": [
+        [
+          "KXMLBGAME-26SEP061310ATLPHI",
+          "mlb-atl-phi-2026-09-06"
+        ],
+        [
+          "KXMLBGAME-26SEP061335BOSBAL",
+          "mlb-bos-bal-2026-09-06"
+        ],
+        [
+          "KXMLBGAME-26SEP061335LAAPIT",
+          "mlb-laa-pit-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXMLBGAME",
+      "kalshi_touch_n": 23,
+      "kalshi_touch_usd_median": 250.5,
+      "life_h_median": 111.41386790626579,
+      "pm_sport": "mlb",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 980.7301999999999,
+      "score": 51.71259294980441,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 18005.489999999998,
+      "co_listed_48h": 6,
+      "examples": [
+        [
+          "KXNCAAFGAME-26SEP06LOUMISS",
+          "cfb-lou-miss-2026-09-06"
+        ],
+        [
+          "KXNCAAFGAME-26SEP06SCSTFAMU",
+          "cfb-flint-sfl-2026-09-05"
+        ],
+        [
+          "KXNCAAFGAME-26SEP06TXSOPV",
+          "cfb-txs-pvam-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXNCAAFGAME",
+      "kalshi_touch_n": 6,
+      "kalshi_touch_usd_median": 4539.4423,
+      "life_h_median": 385.424100503193,
+      "pm_sport": "cfb",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 3000.9149999999995,
+      "score": 46.71604597764595,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 1129.1937,
+      "co_listed_48h": 3,
+      "examples": [
+        [
+          "KXCFLGAME-26SEP06WPGSSK",
+          "cfl-wpg-ssk-2026-09-06"
+        ],
+        [
+          "KXCFLGAME-26SEP07EDMCGY",
+          "cfl-edm-cgy-2026-09-07"
+        ],
+        [
+          "KXCFLGAME-26SEP07TORHAM",
+          "cfl-tor-ham-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXCFLGAME",
+      "kalshi_touch_n": 3,
+      "kalshi_touch_usd_median": 451.35,
+      "life_h_median": 168.99153537389304,
+      "pm_sport": "cfl",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 376.3979,
+      "score": 6.681954202627154,
+      "two_sided_both": 2
+    },
+    {
+      "capacity_usd": 551.31,
+      "co_listed_48h": 17,
+      "examples": [
+        [
+          "KXLOLGAME-26SEP061600FLYSR",
+          "lol-sr-fly-2026-09-06"
+        ],
+        [
+          "KXLOLGAME-26SEP061900DSGLY",
+          "lol-ly-dsg-2026-09-06"
+        ],
+        [
+          "KXLOLGAME-26SEP070400DNSCDRXC",
+          "lol-drxc-dnsc-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXLOLGAME",
+      "kalshi_touch_n": 17,
+      "kalshi_touch_usd_median": 32.43,
+      "life_h_median": 90.08333333333334,
+      "pm_sport": "lol",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 379.2075,
+      "score": 6.119999999999998,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 165.48,
+      "co_listed_48h": 28,
+      "examples": [
+        [
+          "KXCS2GAME-26SEP061500BEYIOW",
+          "cs2-iowast-beyond-2026-09-06"
+        ],
+        [
+          "KXCS2GAME-26SEP061500DTNOT",
+          "cs2-ot2-dtn1-2026-09-06"
+        ],
+        [
+          "KXCS2GAME-26SEP061500FARVIL",
+          "cs2-vil1-farmvi-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXCS2GAME",
+      "kalshi_touch_n": 28,
+      "kalshi_touch_usd_median": 24.79,
+      "life_h_median": 39.0,
+      "pm_sport": "cs2",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 5.909999999999999,
+      "score": 4.243076923076923,
+      "two_sided_both": 2
+    },
+    {
+      "capacity_usd": 506.92,
+      "co_listed_48h": 4,
+      "examples": [
+        [
+          "KXARGPREMDIVGAME-26SEP06BARARG",
+          "arg-bar-aaj-2026-09-07"
+        ],
+        [
+          "KXARGPREMDIVGAME-26SEP06CCCAI",
+          "arg-cac-ind-2026-09-06"
+        ],
+        [
+          "KXARGPREMDIVGAME-26SEP06LANDYJ",
+          "arg-lan-def-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXARGPREMDIVGAME",
+      "kalshi_touch_n": 4,
+      "kalshi_touch_usd_median": 157.7689,
+      "life_h_median": 190.25833333333333,
+      "pm_sport": "arg",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 126.73,
+      "score": 2.66437738163024,
+      "two_sided_both": 2
+    },
+    {
+      "capacity_usd": 44.5544,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXVALORANTGAME-26SEP061300LOUD100T",
+          "val-100t1-loud-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXVALORANTGAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 162.94199999999998,
+      "life_h_median": 18.96483455946048,
+      "pm_sport": "val",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 44.5544,
+      "score": 2.3493165658950783,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 740.0717999999999,
+      "co_listed_48h": 3,
+      "examples": [
+        [
+          "KXLALIGAGAME-26SEP06ESPSEV",
+          "lal-esp-sev-2026-09-06"
+        ],
+        [
+          "KXLALIGAGAME-26SEP07ELCRSO",
+          "lal-elc-rso-2026-09-07"
+        ],
+        [
+          "KXLALIGAGAME-26SEP07GETRCC",
+          "lal-get-cel-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXLALIGAGAME",
+      "kalshi_touch_n": 3,
+      "kalshi_touch_usd_median": 246.6906,
+      "life_h_median": 340.41614867041505,
+      "pm_sport": "lal",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 679.61925,
+      "score": 2.174020835646444,
+      "two_sided_both": 2
+    },
+    {
+      "capacity_usd": 475.60800000000006,
+      "co_listed_48h": 6,
+      "examples": [
+        [
+          "KXEFLCHAMPIONSHIPGAME-26SEP08BLASHU",
+          "elc-bbr-she-2026-09-08"
+        ],
+        [
+          "KXEFLCHAMPIONSHIPGAME-26SEP08BOLWHU",
+          "elc-bol-whu-2026-09-08"
+        ],
+        [
+          "KXEFLCHAMPIONSHIPGAME-26SEP08CARSTK",
+          "elc-car-sto-2026-09-08"
+        ]
+      ],
+      "kalshi_series": "KXEFLCHAMPIONSHIPGAME",
+      "kalshi_touch_n": 6,
+      "kalshi_touch_usd_median": 120.91560000000001,
+      "life_h_median": 258.0735847659575,
+      "pm_sport": "elc",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 79.26800000000001,
+      "score": 1.8429162381392918,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 162.0,
+      "co_listed_48h": 3,
+      "examples": [
+        [
+          "KXURYPDGAME-26SEP06LIVBRI",
+          "uru1-liv-bri-2026-09-06"
+        ],
+        [
+          "KXURYPDGAME-26SEP06NACJUV",
+          "uru1-nac-juv-2026-09-06"
+        ],
+        [
+          "KXURYPDGAME-26SEP07ALBPRO",
+          "uru1-alb-pro-2026-09-05"
+        ]
+      ],
+      "kalshi_series": "KXURYPDGAME",
+      "kalshi_touch_n": 3,
+      "kalshi_touch_usd_median": 54.0,
+      "life_h_median": 152.6825488269329,
+      "pm_sport": "uru1",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 339.10650000000004,
+      "score": 1.061024991033052,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 81.18,
+      "co_listed_48h": 6,
+      "examples": [
+        [
+          "KXVENFUTVEGAME-26SEP06MSCMET",
+          "ven1-msc-met-2026-09-06"
+        ],
+        [
+          "KXVENFUTVEGAME-26SEP06TACDRZ",
+          "ven1-tac-drz-2026-09-06"
+        ],
+        [
+          "KXVENFUTVEGAME-26SEP06TRUCAR",
+          "ven1-tru-car-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXVENFUTVEGAME",
+      "kalshi_touch_n": 6,
+      "kalshi_touch_usd_median": 39.560750000000006,
+      "life_h_median": 131.49113640387853,
+      "pm_sport": "ven1",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 13.530000000000001,
+      "score": 0.6173800167841996,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 42.57,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXCS2GAME-26SEP061800REDABHE",
+          "lol-fur-red-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXCS2GAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 42.57,
+      "life_h_median": 88.70660699682102,
+      "pm_sport": "lol",
+      "pm_touch_n": 0,
+      "pm_touch_usd_median": null,
+      "score": 0.47989661019866964,
+      "two_sided_both": 0
+    },
+    {
+      "capacity_usd": 144.5685,
+      "co_listed_48h": 5,
+      "examples": [
+        [
+          "KXBRASILEIROGAME-26SEP06BOTPAL",
+          "bra-bot-pal-2026-09-06"
+        ],
+        [
+          "KXBRASILEIROGAME-26SEP06CORCHA",
+          "bra-cor1-cha-2026-09-06"
+        ],
+        [
+          "KXBRASILEIROGAME-26SEP06CRFLA",
+          "bra-cre-fla-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXBRASILEIROGAME",
+      "kalshi_touch_n": 5,
+      "kalshi_touch_usd_median": 60.75000000000001,
+      "life_h_median": 346.53230043126473,
+      "pm_sport": "bra",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 28.9137,
+      "score": 0.4171862184854985,
+      "two_sided_both": 2
+    },
+    {
+      "capacity_usd": 45.0,
+      "co_listed_48h": 6,
+      "examples": [
+        [
+          "KXNPBGAME-26SEP080500CHUYOM",
+          "npb-yom-chu-2026-09-08"
+        ],
+        [
+          "KXNPBGAME-26SEP080500HIRHAN",
+          "npb-han-hir-2026-09-08"
+        ],
+        [
+          "KXNPBGAME-26SEP080500HOKFUK",
+          "npb-fuk-nip-2026-09-08"
+        ]
+      ],
+      "kalshi_series": "KXNPBGAME",
+      "kalshi_touch_n": 6,
+      "kalshi_touch_usd_median": 7.5,
+      "life_h_median": 122.40712876611286,
+      "pm_sport": "npb",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 7.636000000000001,
+      "score": 0.3676256477348056,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 37.8,
+      "co_listed_48h": 3,
+      "examples": [
+        [
+          "KXALLSVENSKANGAME-26SEP07KALDJU",
+          "swe-kal-dju-2026-09-07"
+        ],
+        [
+          "KXALLSVENSKANGAME-26SEP07MALAIK",
+          "swe-mal-aik-2026-09-07"
+        ],
+        [
+          "KXALLSVENSKANGAME-26SEP07MJAIFK",
+          "swe-mja-ifk-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXALLSVENSKANGAME",
+      "kalshi_touch_n": 3,
+      "kalshi_touch_usd_median": 144.98,
+      "life_h_median": 171.9577249138885,
+      "pm_sport": "swe",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 12.6,
+      "score": 0.21982147076514968,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 25.816200000000002,
+      "co_listed_48h": 3,
+      "examples": [
+        [
+          "KXECULPGAME-26SEP06CUELIB",
+          "ecu1-cue-lib-2026-09-06"
+        ],
+        [
+          "KXECULPGAME-26SEP06DSCUNI",
+          "ecu1-dsc-uni-2026-09-06"
+        ],
+        [
+          "KXECULPGAME-26SEP06SDABSC",
+          "ecu1-sda-bsc-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXECULPGAME",
+      "kalshi_touch_n": 3,
+      "kalshi_touch_usd_median": 211.2,
+      "life_h_median": 120.69122395290267,
+      "pm_sport": "ecu1",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 8.605400000000001,
+      "score": 0.21390287673339245,
+      "two_sided_both": 2
+    },
+    {
+      "capacity_usd": 37.68,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXLIGAPORTUGALGAME-26SEP06GILACV",
+          "por-gil-acv-2026-09-06"
+        ],
+        [
+          "KXLIGAPORTUGALGAME-26SEP07ESTARO",
+          "por-est-aro-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXLIGAPORTUGALGAME",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 610.8713,
+      "life_h_median": 203.71352795415453,
+      "pm_sport": "por",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 18.84,
+      "score": 0.1849656249067555,
+      "two_sided_both": 2
+    },
+    {
+      "capacity_usd": 57.126999999999995,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXLIGAMXGAME-26SEP06CRASLA",
+          "mex-caz-san-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXLIGAMXGAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 244.7664,
+      "life_h_median": 329.2912294557028,
+      "pm_sport": "mex",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 57.126999999999995,
+      "score": 0.17348472989829472,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 21.599999999999998,
+      "co_listed_48h": 3,
+      "examples": [
+        [
+          "KXEKSTRAKLASAGAME-26SEP06JAGSLA",
+          "pol-jag-sla-2026-09-06"
+        ],
+        [
+          "KXEKSTRAKLASAGAME-26SEP07PSZPLO",
+          "pol-psz-plo-2026-09-07"
+        ],
+        [
+          "KXEKSTRAKLASAGAME-26SEP07WIEZAG",
+          "pol-wie-zag-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXEKSTRAKLASAGAME",
+      "kalshi_touch_n": 3,
+      "kalshi_touch_usd_median": 11.75,
+      "life_h_median": 152.49118470486667,
+      "pm_sport": "pol",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 7.199999999999999,
+      "score": 0.14164753222820653,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 33.786,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXSERIEBGAME-26SEP07PALSAM",
+          "itsb-pal-sam-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXSERIEBGAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 33.786,
+      "life_h_median": 255.65812506609493,
+      "pm_sport": "itsb",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 196.6194,
+      "score": 0.13215304614811424,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 23.31,
+      "co_listed_48h": 9,
+      "examples": [
+        [
+          "KXARGNACBGAME-26SEP05ALMGEJ",
+          "argpn-alm-ge-2026-09-05"
+        ],
+        [
+          "KXARGNACBGAME-26SEP05CACALB",
+          "argpn-ccn-alb-2026-09-06"
+        ],
+        [
+          "KXARGNACBGAME-26SEP05CASMGOD",
+          "argpn-casm-god-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXARGNACBGAME",
+      "kalshi_touch_n": 9,
+      "kalshi_touch_usd_median": 14.040000000000001,
+      "life_h_median": 190.0329345415367,
+      "pm_sport": "argpn",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 2.59,
+      "score": 0.12266294816862382,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 31.05,
+      "co_listed_48h": 5,
+      "examples": [
+        [
+          "KXNWSLGAME-26SEP06CHINCC",
+          "nwsl-chi-cou-2026-09-06"
+        ],
+        [
+          "KXNWSLGAME-26SEP06DENGOT",
+          "nwsl-den-got-2026-09-06"
+        ],
+        [
+          "KXNWSLGAME-26SEP06OPRHDA",
+          "nwsl-pri-das-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXNWSLGAME",
+      "kalshi_touch_n": 5,
+      "kalshi_touch_usd_median": 21.7671,
+      "life_h_median": 254.71653180973397,
+      "pm_sport": "nwsl",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 6.21,
+      "score": 0.1219002150327387,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 8.74,
+      "co_listed_48h": 19,
+      "examples": [
+        [
+          "KXR6GAME-26SEP061545LOSLOUD",
+          "r6siege-loud-los-2026-09-06"
+        ],
+        [
+          "KXR6GAME-26SEP061700FAZEFLU",
+          "r6siege-fluxow-faze-2026-09-06"
+        ],
+        [
+          "KXR6GAME-26SEP070400ANISHA",
+          "r6siege-shaiik-anios-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXR6GAME",
+      "kalshi_touch_n": 19,
+      "kalshi_touch_usd_median": 0.46,
+      "life_h_median": 75.375,
+      "pm_sport": "r6siege",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 7.1438,
+      "score": 0.11595356550580431,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 12.82245,
+      "co_listed_48h": 3,
+      "examples": [
+        [
+          "KXBRASILEIROCGAME-26SEP06FLOMRN",
+          "bra3-flo-mp-2026-09-06"
+        ],
+        [
+          "KXBRASILEIROCGAME-26SEP06STCBFC",
+          "bra3-stc-bot-2026-09-06"
+        ],
+        [
+          "KXBRASILEIROCGAME-26SEP07PSCBRU",
+          "bra3-psc-bru-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXBRASILEIROCGAME",
+      "kalshi_touch_n": 3,
+      "kalshi_touch_usd_median": 19.240000000000002,
+      "life_h_median": 118.96612721360391,
+      "pm_sport": "bra3",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 4.27415,
+      "score": 0.10778236041068451,
+      "two_sided_both": 2
+    },
+    {
+      "capacity_usd": 7.0928,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXLEAGUESCUPGAME-26SEP05LEOAME",
+          "lec-leo-ame-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXLEAGUESCUPGAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 215.6175,
+      "life_h_median": 73.07487195067935,
+      "pm_sport": "lec",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 7.0928,
+      "score": 0.09706209276407854,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 5.64,
+      "co_listed_48h": 3,
+      "examples": [
+        [
+          "KXKBOGAME-26SEP080530DOOHAN",
+          "kbo-doo-han-2026-09-08"
+        ],
+        [
+          "KXKBOGAME-26SEP080530KIWLG",
+          "kbo-kiw-lg-2026-09-08"
+        ],
+        [
+          "KXKBOGAME-26SEP080530LOTNCD",
+          "kbo-lot-nc-2026-09-08"
+        ]
+      ],
+      "kalshi_series": "KXKBOGAME",
+      "kalshi_touch_n": 3,
+      "kalshi_touch_usd_median": 1.88,
+      "life_h_median": 62.908035675552156,
+      "pm_sport": "kbo",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 6.512800000000001,
+      "score": 0.08965468305334263,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 10.649999999999999,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXCPLMATCH-26SEP061500SKNGAW",
+          "criccpl-guy-st-2026-09-06"
+        ],
+        [
+          "KXCPLMATCH-26SEP061900STLBAR",
+          "criccpl-bar-stl-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXCPLMATCH",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 27.7437,
+      "life_h_median": 126.40798755625883,
+      "pm_sport": "criccpl",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 5.324999999999999,
+      "score": 0.08425100506611685,
+      "two_sided_both": 2
+    },
+    {
+      "capacity_usd": 6.39,
+      "co_listed_48h": 9,
+      "examples": [
+        [
+          "KXWFIBAGAME-26SEP061445USAITA",
+          "bkfibaw-ita-usa-2026-09-06"
+        ],
+        [
+          "KXWFIBAGAME-26SEP070530AUSBE",
+          "bkfibaw-bel-aus-2026-09-07"
+        ],
+        [
+          "KXWFIBAGAME-26SEP070530TURPUR",
+          "bkfibaw-pue-tur-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXWFIBAGAME",
+      "kalshi_touch_n": 9,
+      "kalshi_touch_usd_median": 1.4000000000000001,
+      "life_h_median": 114.55274716804425,
+      "pm_sport": "bkfibaw",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 0.71,
+      "score": 0.05578216287232403,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 4.88,
+      "co_listed_48h": 4,
+      "examples": [
+        [
+          "KXT20MATCH-26SEP070330LUDMOH",
+          "cricsherepunjab-moh-lud-2026-09-07"
+        ],
+        [
+          "KXT20MATCH-26SEP070930AMRJAL",
+          "cricsherepunjab-jal-amr-2026-09-07"
+        ],
+        [
+          "KXT20MATCH-26SEP080330MOHAMR",
+          "cricsherepunjab-amr-moh-2026-09-08"
+        ]
+      ],
+      "kalshi_series": "KXT20MATCH",
+      "kalshi_touch_n": 4,
+      "kalshi_touch_usd_median": 1.22,
+      "life_h_median": 87.57610944499572,
+      "pm_sport": "cricsherepunjab",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 2.2532,
+      "score": 0.05572295950261413,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 15.489600000000001,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXLIGUE1GAME-26SEP06OLMPAR",
+          "fl1-olm-pfc-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXLIGUE1GAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 3095.4389,
+      "life_h_median": 341.76595440500313,
+      "pm_sport": "fl1",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 15.489600000000001,
+      "score": 0.04532224406894653,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 5.767399999999999,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXSRBSLGAME-26SEP06VOJZEM",
+          "srb-voj-zem-2026-09-06"
+        ],
+        [
+          "KXSRBSLGAME-26SEP07OBEIMT",
+          "srb-obe-imt-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXSRBSLGAME",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 2.8836999999999997,
+      "life_h_median": 137.57481637749407,
+      "pm_sport": "srb",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 11.4,
+      "score": 0.04192191675673202,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 5.6000000000000005,
+      "co_listed_48h": 4,
+      "examples": [
+        [
+          "KXTFF1LIGGAME-26SEP07ESEKAY",
+          "tur2-ese-kay-2026-09-07"
+        ],
+        [
+          "KXTFF1LIGGAME-26SEP07IASIGD",
+          "tur2-ias-igd-2026-09-07"
+        ],
+        [
+          "KXTFF1LIGGAME-26SEP07MANBUR",
+          "tur2-man-bur-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXTFF1LIGGAME",
+      "kalshi_touch_n": 4,
+      "kalshi_touch_usd_median": 44.4687,
+      "life_h_median": 134.7162586951256,
+      "pm_sport": "tur2",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 1.4000000000000001,
+      "score": 0.041568850369228846,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 6.999599999999999,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXWT20MATCH-26SEP071030PAKHON",
+          "crint-hon5-pak3-2026-09-07"
+        ],
+        [
+          "KXWT20MATCH-26SEP081030BANUAE",
+          "crint-are3-bgd3-2026-09-08"
+        ]
+      ],
+      "kalshi_series": "KXWT20MATCH",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 206.35,
+      "life_h_median": 204.27486236612003,
+      "pm_sport": "crint",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 3.4997999999999996,
+      "score": 0.03426559645628192,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 4.05,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXCANPLGAME-26SEP06VANSUP",
+          "canpl-van-sup-2026-09-06"
+        ],
+        [
+          "KXCANPLGAME-26SEP07HFXCAV",
+          "canpl-hfx-cav-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXCANPLGAME",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 36.11435,
+      "life_h_median": 138.60812547875776,
+      "pm_sport": "canpl",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 2.025,
+      "score": 0.029219066241687817,
+      "two_sided_both": 2
+    },
+    {
+      "capacity_usd": 7.499749999999999,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXLALIGA2GAME-26SEP06ALMCAD",
+          "es2-alm-cad-2026-09-06"
+        ],
+        [
+          "KXLALIGA2GAME-26SEP07SABCOR",
+          "es2-sab-cor-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXLALIGA2GAME",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 84.9114,
+      "life_h_median": 256.84979284067947,
+      "pm_sport": "es2",
+      "pm_touch_n": 2,
+      "pm_touch_usd_median": 3.7498749999999994,
+      "score": 0.029198972352887955,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 1.2,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXLIIGAGAME-26SEP081130TAMHPK",
+          "liiga-hpk-ilv-2026-09-08"
+        ]
+      ],
+      "kalshi_series": "KXLIIGAGAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 1.2,
+      "life_h_median": 60.97486111876037,
+      "pm_sport": "liiga",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 32.736,
+      "score": 0.019680241627164467,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 3.8178000000000005,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXSUPERLIGGAME-26SEP07GOZGAZ",
+          "tur-goz-gfk-2026-09-07"
+        ],
+        [
+          "KXSUPERLIGGAME-26SEP07RIZALA",
+          "tur-riz-ala-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXSUPERLIGGAME",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 77.84,
+      "life_h_median": 202.03038260251282,
+      "pm_sport": "tur",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 1.9089000000000003,
+      "score": 0.018897157698856505,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 1.7346000000000001,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXPLLGAME-26SEP07BOSPHI",
+          "pll-can-wat-2026-09-07"
+        ],
+        [
+          "KXPLLGAME-26SEP07DENUTA",
+          "pll-out-arc-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXPLLGAME",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 0.8673000000000001,
+      "life_h_median": 121.33301981876295,
+      "pm_sport": "pll",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 2.6,
+      "score": 0.014296190786242686,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 2.6519999999999997,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXKLEAGUEGAME-26SEP08INCBUC",
+          "kor-inc-bch-2026-09-08"
+        ],
+        [
+          "KXKLEAGUEGAME-26SEP08ULSSEO",
+          "kor-uls-seo-2026-09-08"
+        ]
+      ],
+      "kalshi_series": "KXKLEAGUEGAME",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 79.35415,
+      "life_h_median": 253.18278954373466,
+      "pm_sport": "kor",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 1.3259999999999998,
+      "score": 0.010474645629662337,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 1.05,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXHNLGAME-26SEP06SLALOK",
+          "hr1-sla-lok-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXHNLGAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 689.262,
+      "life_h_median": 181.48128664278323,
+      "pm_sport": "hr1",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 1.05,
+      "score": 0.005785720497269542,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 1.4000000000000001,
+      "co_listed_48h": 5,
+      "examples": [
+        [
+          "KXSAUDIPLGAME-26SEP07HILNEO",
+          "spl-hil-neo-2026-09-07"
+        ],
+        [
+          "KXSAUDIPLGAME-26SEP07KHARIY",
+          "spl-kha-riy-2026-09-07"
+        ],
+        [
+          "KXSAUDIPLGAME-26SEP08HAZALT",
+          "spl-haz-taa-2026-09-08"
+        ]
+      ],
+      "kalshi_series": "KXSAUDIPLGAME",
+      "kalshi_touch_n": 5,
+      "kalshi_touch_usd_median": 62.0,
+      "life_h_median": 260.1661994661225,
+      "pm_sport": "spl",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 0.28,
+      "score": 0.005381175582657888,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 0.4452,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXGRECUPGAME-26SEP08OLYVOL",
+          "grc-oly-vol-2026-09-08"
+        ]
+      ],
+      "kalshi_series": "KXGRECUPGAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 8.15,
+      "life_h_median": 88.69156393624014,
+      "pm_sport": "grc",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 0.4452,
+      "score": 0.005019643134493059,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 0.7425,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXEFLL1GAME-26SEP07BROWIM",
+          "el1-bro-wim-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXEFLL1GAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 22.62,
+      "life_h_median": 256.0746711747183,
+      "pm_sport": "el1",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 0.7425,
+      "score": 0.002899544873352182,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 0.36,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXSVNPLGAME-26SEP06CELKOP",
+          "slo-cel-kop-2026-09-06"
+        ]
+      ],
+      "kalshi_series": "KXSVNPLGAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 0.36,
+      "life_h_median": 141.366231215828,
+      "pm_sport": "slo",
+      "pm_touch_n": 0,
+      "pm_touch_usd_median": null,
+      "score": 0.0025465770495810796,
+      "two_sided_both": 0
+    },
+    {
+      "capacity_usd": 0.19,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXDOTA2GAME-26SEP061400LYNXLVLUP",
+          "dota2-lvlup1-lynx-2026-09-02"
+        ]
+      ],
+      "kalshi_series": "KXDOTA2GAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 0.19,
+      "life_h_median": 93.38016291277276,
+      "pm_sport": "dota2",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 7.4925,
+      "score": 0.0020346933874754607,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 0.12,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXCS2GAME-26SEP070400INFCTR",
+          "r6siege-ge-rbls-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXCS2GAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 0.12,
+      "life_h_median": 101.73943922956785,
+      "pm_sport": "r6siege",
+      "pm_touch_n": 0,
+      "pm_touch_usd_median": null,
+      "score": 0.0011794835995628842,
+      "two_sided_both": 0
+    },
+    {
+      "capacity_usd": 0.0675,
+      "co_listed_48h": 10,
+      "examples": [
+        [
+          "KXKHLGAME-26SEP070930SALHKA",
+          "khl-ava-sal-2026-09-07"
+        ],
+        [
+          "KXKHLGAME-26SEP071000SIBHCB",
+          "khl-bar-sib-2026-09-07"
+        ],
+        [
+          "KXKHLGAME-26SEP071000TRAAVT",
+          "khl-avt-tra-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXKHLGAME",
+      "kalshi_touch_n": 10,
+      "kalshi_touch_usd_median": 0.006750000000000001,
+      "life_h_median": 104.87421932333045,
+      "pm_sport": "khl",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 19.998,
+      "score": 0.0006436281522334428,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 0.0276,
+      "co_listed_48h": 4,
+      "examples": [
+        [
+          "KXISRPLGAME-26SEP07BNSBEI",
+          "isr-bns-bei-2026-09-07"
+        ],
+        [
+          "KXISRPLGAME-26SEP07HBSMTA",
+          "isr-hbs-mta-2026-09-07"
+        ],
+        [
+          "KXISRPLGAME-26SEP07HTARGG",
+          "isr-hta-rgg-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXISRPLGAME",
+      "kalshi_touch_n": 4,
+      "kalshi_touch_usd_median": 0.0069,
+      "life_h_median": 177.42469114750622,
+      "pm_sport": "isr",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 5.1000000000000005,
+      "score": 0.00015555895755824697,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 0.0172,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXEERSTEDIVGAME-26SEP07PSVDBO",
+          "ned2-psv-dbo-2026-09-07"
+        ],
+        [
+          "KXEERSTEDIVGAME-26SEP07UTREIN",
+          "ned2-utr-ein-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXEERSTEDIVGAME",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 0.0086,
+      "life_h_median": 153.16632160945073,
+      "pm_sport": "ned2",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 6.6,
+      "score": 0.00011229622686805269,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 0.009899999999999999,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXLVAVIRGAME-26SEP07RFCBFC",
+          "lva1-rfc-bfc-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXLVAVIRGAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 0.009899999999999999,
+      "life_h_median": 127.80806459360653,
+      "pm_sport": "lva1",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 100.5,
+      "score": 7.745990076196833e-05,
+      "two_sided_both": 1
+    },
+    {
+      "capacity_usd": 0.0098,
+      "co_listed_48h": 2,
+      "examples": [
+        [
+          "KXSLGREECEGAME-26SEP06PANPAOK",
+          "gre1-pan-paok-2026-09-06"
+        ],
+        [
+          "KXSLGREECEGAME-26SEP07ASTTRI",
+          "gre1-ast-tri-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXSLGREECEGAME",
+      "kalshi_touch_n": 2,
+      "kalshi_touch_usd_median": 0.0049,
+      "life_h_median": 139.74942411485645,
+      "pm_sport": "gre1",
+      "pm_touch_n": 0,
+      "pm_touch_usd_median": null,
+      "score": 7.012551258848575e-05,
+      "two_sided_both": 0
+    },
+    {
+      "capacity_usd": 0.0098,
+      "co_listed_48h": 1,
+      "examples": [
+        [
+          "KXLIGUE2GAME-26SEP07FCNASN",
+          "fr2-nan-asn-2026-09-07"
+        ]
+      ],
+      "kalshi_series": "KXLIGUE2GAME",
+      "kalshi_touch_n": 1,
+      "kalshi_touch_usd_median": 0.0098,
+      "life_h_median": 256.3997636291716,
+      "pm_sport": "fr2",
+      "pm_touch_n": 1,
+      "pm_touch_usd_median": 6.9,
+      "score": 3.822156409696867e-05,
+      "two_sided_both": 1
+    }
+  ],
+  "errors": {
+    "pm_book:lol-fur-red-2026-09-06": "HttpError: HTTP 404 for https://clob.polymarket.com/book?token_id=3635351165715563828833082648698562146191678749670476206907018779632137061238: {\"error\":\"No orderbook exists for the requested token id\"}"
+  },
+  "kalshi": {
+    "events_total": 1404,
+    "game_class_series": 324,
+    "series": {
+      "KXAFCCLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 48,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "AFC Champions League Game"
+      },
+      "KXAFLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 4,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "AFL Game"
+      },
+      "KXALLSVENSKANGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Allsvenskan Game"
+      },
+      "KXAPFDDHGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 12,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "APF Division de Honor Game"
+      },
+      "KXARGNACBGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 39,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Argentine Nacional B Game"
+      },
+      "KXARGPREMDIVGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 18,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Argentina Primera Division Game"
+      },
+      "KXATPCHALLENGERMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 32,
+        "settlement_sources": [
+          "ATP"
+        ],
+        "title": "Challenger ATP "
+      },
+      "KXATPEXACTMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 48,
+        "settlement_sources": [
+          "ATP"
+        ],
+        "title": "ATP Exact Match Score"
+      },
+      "KXATPMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 16,
+        "settlement_sources": [
+          "ATP"
+        ],
+        "title": "ATP Tennis Match"
+      },
+      "KXBOLPDIVGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Bolivia Premier Division Game"
+      },
+      "KXBRASILEIROBGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 60,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Brasileiro Serie B Game"
+      },
+      "KXBRASILEIROCGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 21,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Brasileiro Serie C Game"
+      },
+      "KXBRASILEIROGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 81,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Brasileiro Serie A Game"
+      },
+      "KXBUNDESLIGAGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 54,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Bundesliga Game"
+      },
+      "KXCANPLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Canadian Premier League"
+      },
+      "KXCFLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 14,
+        "settlement_sources": [
+          "CFL"
+        ],
+        "title": "CFL Game"
+      },
+      "KXCHLLDPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Chile Liga de Primera Game"
+      },
+      "KXCONMEBOLLIBGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 12,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "CONMEBOL Libertadores Game"
+      },
+      "KXCONMEBOLSUDGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 12,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "CONMEBOL Sudamericana Game"
+      },
+      "KXCOPPAITALIAGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 6,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Coppa Italia Game"
+      },
+      "KXCOUNTYCHAMPMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 18,
+        "settlement_sources": [
+          "ESPNcricinfo",
+          "BBC",
+          "England and Wales Cricket Board"
+        ],
+        "title": "County Championship Cricket Match"
+      },
+      "KXCPLMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 16,
+        "settlement_sources": [
+          "ESPNcricinfo",
+          "Cricbuzz",
+          "ESPN",
+          "ICC",
+          "CPL",
+          "BBC Sport"
+        ],
+        "title": "Caribbean Premier League Match"
+      },
+      "KXCS2GAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 108,
+        "settlement_sources": [
+          "B03",
+          "HLTV",
+          "Gamers World"
+        ],
+        "title": "Counter-Strike 2 Game"
+      },
+      "KXCZEFLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 6,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Czech First League Game"
+      },
+      "KXDENSUPERLIGAGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Danish Superliga Game"
+      },
+      "KXDIMAYORGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 15,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Liga DIMAYOR Game"
+      },
+      "KXDOTA2GAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 20,
+        "settlement_sources": [
+          "BO3",
+          "Dota 2 ",
+          "DLTV",
+          "Gamers World"
+        ],
+        "title": "Dota 2 Game"
+      },
+      "KXECULPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 18,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Ecuador Liga Pro Game"
+      },
+      "KXEERSTEDIVGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 6,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Eerste Divisie Game"
+      },
+      "KXEFLCHAMPIONSHIPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 63,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "EFL Championship Game"
+      },
+      "KXEFLCUPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 18,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "EFL Cup Game"
+      },
+      "KXEFLL1GAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 42,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "EFL League One Game"
+      },
+      "KXEGYPLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 30,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Egyptian Premier League Game"
+      },
+      "KXEKSTRAKLASAGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Polish Ekstraklasa Game"
+      },
+      "KXEPLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 60,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "English Premier League Game"
+      },
+      "KXEREDIVISIEGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 36,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Eredivisie Game"
+      },
+      "KXETTANGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Ettan Game"
+      },
+      "KXFINYLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Finnish Ykkosliiga Game"
+      },
+      "KXFLOYDTYSONFIGHT": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 1,
+        "settlement_sources": [
+          "The Wall Street Journal",
+          "ESPN"
+        ],
+        "title": "Floyd vs Tyson Fight"
+      },
+      "KXGRECUPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Greek Cup Game"
+      },
+      "KXHNLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Croatia HNL Game"
+      },
+      "KXISRNLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 27,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Liga Leumit Game"
+      },
+      "KXISRPLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 12,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Israeli Premier League Game"
+      },
+      "KXITFMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 146,
+        "settlement_sources": [
+          "ITF",
+          "Flashscore",
+          "Fox Sports",
+          "ESPN"
+        ],
+        "title": "ITF Men's Match"
+      },
+      "KXITFWMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 114,
+        "settlement_sources": [
+          "ITF",
+          "ESPN",
+          "Flashscore",
+          "Fox Sports"
+        ],
+        "title": "ITF Women's Match"
+      },
+      "KXJLEAGUEGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 30,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Japan J League Game"
+      },
+      "KXKBOGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 18,
+        "settlement_sources": [
+          "KBO"
+        ],
+        "title": "KBO Game"
+      },
+      "KXKHLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 22,
+        "settlement_sources": [
+          "KHL",
+          "Sofascore"
+        ],
+        "title": "KHL Game"
+      },
+      "KXKLEAGUEGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 36,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Korea K League Game"
+      },
+      "KXLALIGA2GAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 6,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "LaLiga 2 Game"
+      },
+      "KXLALIGAGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 96,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "La Liga Game"
+      },
+      "KXLEAGUESCUPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 6,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Leagues Cup Game"
+      },
+      "KXLIGAEXPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 27,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Liga Expansion Game"
+      },
+      "KXLIGAMXGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 51,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Liga MX Game"
+      },
+      "KXLIGAPORTUGALGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 30,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Liga Portugal Game"
+      },
+      "KXLIGUE1GAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 57,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Ligue 1 Game"
+      },
+      "KXLIGUE2GAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Ligue 2 Game"
+      },
+      "KXLIIGAGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 2,
+        "settlement_sources": [
+          "Flashscore",
+          "Sofascore"
+        ],
+        "title": "Liiga Game"
+      },
+      "KXLMBGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 4,
+        "settlement_sources": [
+          "Flashscore",
+          "LMB"
+        ],
+        "title": "Mexican Baseball League"
+      },
+      "KXLOLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 46,
+        "settlement_sources": [
+          "Sofascore",
+          "BO3",
+          "Gamers World"
+        ],
+        "title": "League of Legends Game"
+      },
+      "KXLVAVIRGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Latvian Virsliga Game"
+      },
+      "KXMLBGAME": {
+        "fee_multiplier": 0.5,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 86,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports",
+          "the Governing League"
+        ],
+        "title": "Professional Baseball Game"
+      },
+      "KXMLSGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 135,
+        "settlement_sources": [
+          "MLS"
+        ],
+        "title": "Major League Soccer Game"
+      },
+      "KXMYSLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Malaysia Super League Game"
+      },
+      "KXNBAGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 6,
+        "settlement_sources": [
+          "the Governing League"
+        ],
+        "title": "Pro Basketball Game"
+      },
+      "KXNCAAFBOWLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 120,
+        "settlement_sources": [
+          "Fox Sports",
+          "NCAA",
+          "ESPN"
+        ],
+        "title": "College Football Teams to Make a Bowl Game"
+      },
+      "KXNCAAFGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 490,
+        "settlement_sources": [
+          "Kalshi using information originating from the NCAA",
+          "ESPN"
+        ],
+        "title": "College Football Game"
+      },
+      "KXNFLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 64,
+        "settlement_sources": [
+          "the Governing League"
+        ],
+        "title": "Professional Football Game"
+      },
+      "KXNPBGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 26,
+        "settlement_sources": [
+          "ESPN",
+          "Flashscore"
+        ],
+        "title": "Japan NPB Game"
+      },
+      "KXNWSLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 15,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "NWSL Game"
+      },
+      "KXPERLIGA1GAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Peru Liga 1 Game"
+      },
+      "KXPLLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 4,
+        "settlement_sources": [
+          "ESPN",
+          "Premier Lacrosse League",
+          "Fox Sports"
+        ],
+        "title": "PLL Game"
+      },
+      "KXR6GAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 54,
+        "settlement_sources": [
+          "Ubisoft",
+          "Gamers World"
+        ],
+        "title": "R6 Game"
+      },
+      "KXRUGBYFRA14MATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 2,
+        "settlement_sources": [
+          "Sofascore",
+          "BBC",
+          "Flashscore"
+        ],
+        "title": "Rugby French 14 Match"
+      },
+      "KXRUGBYNRLMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 8,
+        "settlement_sources": [
+          "National Rugby League",
+          "Flashscore",
+          "Fox Sports"
+        ],
+        "title": "Rugby NRL Match"
+      },
+      "KXSAUDIPLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 54,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Saudi Pro League Game"
+      },
+      "KXSCOTTISHPREMGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 6,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Scottish Premiership Game"
+      },
+      "KXSERIEAGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 69,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Serie A Game"
+      },
+      "KXSERIEBGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Serie B Game"
+      },
+      "KXSERIECCUPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Coppa Italia Lega Pro Game"
+      },
+      "KXSERIECGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 36,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Serie C Game"
+      },
+      "KXSLGREECEGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Super League Greece Game"
+      },
+      "KXSRBSLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Serbian SuperLiga Game"
+      },
+      "KXSUPERLIGGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 6,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Turkish Super Lig Game"
+      },
+      "KXSVK2LGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Slovakian 2. Liga Game"
+      },
+      "KXSVKCUPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 18,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Slovakian Cup Game"
+      },
+      "KXSVNPLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Slovenian Prva Liga Game"
+      },
+      "KXT20MATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 24,
+        "settlement_sources": [
+          "Cricbuzz",
+          "ESPN cricinfo",
+          "ICC",
+          "ESPN"
+        ],
+        "title": "Men's T20 Cricket Match"
+      },
+      "KXTESTMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "Cricbuzz",
+          "ESPN",
+          "ESPNcricinfo",
+          "IPL",
+          "ICC",
+          "BBC Sport"
+        ],
+        "title": "Men's Test Cricket Match"
+      },
+      "KXTFF1LIGGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 12,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "TFF 1. Lig Game"
+      },
+      "KXTTELITEMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 128,
+        "settlement_sources": [
+          "TT Elite Series",
+          "Sofascore",
+          "ESPN",
+          "Flashscore"
+        ],
+        "title": "TT Elite Series Match"
+      },
+      "KXUAEPLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 9,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "UAE Pro League"
+      },
+      "KXUCLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 54,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "UEFA Champions League Game"
+      },
+      "KXUELGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 54,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "UEFA Europa League Game"
+      },
+      "KXUFCFIGHT": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 36,
+        "settlement_sources": [
+          "DAZN",
+          "ESPN",
+          "Fox Sports",
+          "the Governing League"
+        ],
+        "title": "UFC Fight"
+      },
+      "KXURYPDGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 12,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Uruguay Primera Division Game"
+      },
+      "KXUSLCUPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 6,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "USL Cup Game"
+      },
+      "KXUSLGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 36,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "USL Championship Game"
+      },
+      "KXUSOPENCUPGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 6,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "US Open Cup Game"
+      },
+      "KXVALORANTGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 18,
+        "settlement_sources": [
+          "VALORANT Esports ",
+          "Gamers World",
+          "BO3"
+        ],
+        "title": "Valorant game winner"
+      },
+      "KXVBAGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 2,
+        "settlement_sources": [
+          "24live",
+          "Sofascore",
+          "Flashscore",
+          "Basketball24"
+        ],
+        "title": "Vietnam VBA Game"
+      },
+      "KXVENFUTVEGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 39,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Venezuela Liga FUTVE game"
+      },
+      "KXVLEAGUE1GAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 3,
+        "settlement_sources": [
+          "ESPN",
+          "Fox Sports"
+        ],
+        "title": "Vietnam V-League 1 Game"
+      },
+      "KXWFIBAGAME": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 18,
+        "settlement_sources": [
+          "ESPN",
+          "FIBA Women's Basketball",
+          "Sofascore",
+          "Flashscore"
+        ],
+        "title": "Women's FIBA Game"
+      },
+      "KXWT20MATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 22,
+        "settlement_sources": [
+          "Cricbuzz",
+          "ESPNcricinfo",
+          "ICC",
+          "Fox Sports",
+          "ESPN"
+        ],
+        "title": "Women's T20 Match"
+      },
+      "KXWTACHALLENGERMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 44,
+        "settlement_sources": [
+          "WTA"
+        ],
+        "title": "Challenger WTA"
+      },
+      "KXWTAEXACTMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic",
+        "open_markets": 28,
+        "settlement_sources": [
+          "WTA",
+          "ESPN"
+        ],
+        "title": "WTA Exact Match Score"
+      },
+      "KXWTAMATCH": {
+        "fee_multiplier": 1,
+        "fee_type": "quadratic_with_maker_fees",
+        "open_markets": 14,
+        "settlement_sources": [
+          "WTA"
+        ],
+        "title": "WTA Tennis Match"
+      }
+    },
+    "sports_series": 3653
+  },
+  "kalshi_events_48h": {
+    "KXALLSVENSKANGAME": 3,
+    "KXAPFDDHGAME": 4,
+    "KXARGNACBGAME": 2,
+    "KXARGPREMDIVGAME": 6,
+    "KXATPCHALLENGERMATCH": 14,
+    "KXATPEXACTMATCH": 8,
+    "KXATPMATCH": 8,
+    "KXBOLPDIVGAME": 3,
+    "KXBRASILEIROBGAME": 1,
+    "KXBRASILEIROCGAME": 3,
+    "KXBRASILEIROGAME": 6,
+    "KXCANPLGAME": 2,
+    "KXCFLGAME": 3,
+    "KXCHLLDPGAME": 3,
+    "KXCPLMATCH": 2,
+    "KXCS2GAME": 53,
+    "KXDENSUPERLIGAGAME": 1,
+    "KXDIMAYORGAME": 4,
+    "KXDOTA2GAME": 6,
+    "KXECULPGAME": 6,
+    "KXEERSTEDIVGAME": 2,
+    "KXEFLL1GAME": 1,
+    "KXEGYPLGAME": 6,
+    "KXEKSTRAKLASAGAME": 3,
+    "KXEREDIVISIEGAME": 1,
+    "KXFINYLGAME": 1,
+    "KXHNLGAME": 1,
+    "KXISRNLGAME": 3,
+    "KXISRPLGAME": 4,
+    "KXITFMATCH": 73,
+    "KXITFWMATCH": 57,
+    "KXKBOGAME": 5,
+    "KXKHLGAME": 11,
+    "KXKLEAGUEGAME": 2,
+    "KXLALIGA2GAME": 2,
+    "KXLALIGAGAME": 3,
+    "KXLIGAEXPGAME": 1,
+    "KXLIGAMXGAME": 1,
+    "KXLIGAPORTUGALGAME": 2,
+    "KXLIGUE1GAME": 1,
+    "KXLIGUE2GAME": 1,
+    "KXLIIGAGAME": 1,
+    "KXLOLGAME": 18,
+    "KXLVAVIRGAME": 2,
+    "KXMLBGAME": 25,
+    "KXNCAAFGAME": 6,
+    "KXNPBGAME": 6,
+    "KXNWSLGAME": 5,
+    "KXPERLIGA1GAME": 3,
+    "KXPLLGAME": 2,
+    "KXR6GAME": 16,
+    "KXRUGBYFRA14MATCH": 1,
+    "KXSAUDIPLGAME": 4,
+    "KXSERIEAGAME": 3,
+    "KXSERIEBGAME": 1,
+    "KXSERIECGAME": 11,
+    "KXSLGREECEGAME": 2,
+    "KXSRBSLGAME": 2,
+    "KXSUPERLIGGAME": 2,
+    "KXSVK2LGAME": 1,
+    "KXSVKCUPGAME": 3,
+    "KXSVNPLGAME": 1,
+    "KXT20MATCH": 4,
+    "KXTFF1LIGGAME": 4,
+    "KXTTELITEMATCH": 64,
+    "KXUCLGAME": 2,
+    "KXURYPDGAME": 3,
+    "KXVALORANTGAME": 1,
+    "KXVENFUTVEGAME": 13,
+    "KXWFIBAGAME": 9,
+    "KXWT20MATCH": 2,
+    "KXWTACHALLENGERMATCH": 10,
+    "KXWTAEXACTMATCH": 7,
+    "KXWTAMATCH": 7
+  },
+  "mapping": [
+    [
+      "KXNCAAFGAME",
+      "cfb",
+      121
+    ],
+    [
+      "KXMLBGAME",
+      "mlb",
+      39
+    ],
+    [
+      "KXMLSGAME",
+      "mls",
+      36
+    ],
+    [
+      "KXCS2GAME",
+      "cs2",
+      28
+    ],
+    [
+      "KXNFLGAME",
+      "nfl",
+      27
+    ],
+    [
+      "KXR6GAME",
+      "r6siege",
+      24
+    ],
+    [
+      "KXBRASILEIROGAME",
+      "bra",
+      21
+    ],
+    [
+      "KXEFLCHAMPIONSHIPGAME",
+      "elc",
+      21
+    ],
+    [
+      "KXLOLGAME",
+      "lol",
+      20
+    ],
+    [
+      "KXLALIGAGAME",
+      "lal",
+      16
+    ],
+    [
+      "KXLIGAMXGAME",
+      "mex",
+      16
+    ],
+    [
+      "KXSAUDIPLGAME",
+      "spl",
+      16
+    ],
+    [
+      "KXEPLGAME",
+      "epl",
+      16
+    ],
+    [
+      "KXLIGUE1GAME",
+      "fl1",
+      14
+    ],
+    [
+      "KXNPBGAME",
+      "npb",
+      13
+    ],
+    [
+      "KXEFLL1GAME",
+      "el1",
+      13
+    ],
+    [
+      "KXUFCFIGHT",
+      "ufc",
+      13
+    ],
+    [
+      "KXBUNDESLIGAGAME",
+      "bun",
+      13
+    ],
+    [
+      "KXUELGAME",
+      "uel",
+      13
+    ],
+    [
+      "KXKLEAGUEGAME",
+      "kor",
+      12
+    ],
+    [
+      "KXKHLGAME",
+      "khl",
+      10
+    ],
+    [
+      "KXARGNACBGAME",
+      "argpn",
+      9
+    ],
+    [
+      "KXEREDIVISIEGAME",
+      "ere",
+      9
+    ],
+    [
+      "KXLIGAPORTUGALGAME",
+      "por",
+      9
+    ],
+    [
+      "KXVALORANTGAME",
+      "val",
+      9
+    ],
+    [
+      "KXWFIBAGAME",
+      "bkfibaw",
+      9
+    ],
+    [
+      "KXT20MATCH",
+      "cricetpl",
+      8
+    ],
+    [
+      "KXJLEAGUEGAME",
+      "jap",
+      7
+    ],
+    [
+      "KXVENFUTVEGAME",
+      "ven1",
+      6
+    ],
+    [
+      "KXNWSLGAME",
+      "nwsl",
+      5
+    ],
+    [
+      "KXKBOGAME",
+      "kbo",
+      5
+    ],
+    [
+      "KXARGPREMDIVGAME",
+      "arg",
+      4
+    ],
+    [
+      "KXISRPLGAME",
+      "isr",
+      4
+    ],
+    [
+      "KXT20MATCH",
+      "cricsherepunjab",
+      4
+    ],
+    [
+      "KXTFF1LIGGAME",
+      "tur2",
+      4
+    ],
+    [
+      "KXWT20MATCH",
+      "crint",
+      4
+    ],
+    [
+      "KXCONMEBOLLIBGAME",
+      "lib",
+      4
+    ],
+    [
+      "KXCONMEBOLSUDGAME",
+      "sud",
+      4
+    ],
+    [
+      "KXBRASILEIROCGAME",
+      "bra3",
+      3
+    ],
+    [
+      "KXCFLGAME",
+      "cfl",
+      3
+    ],
+    [
+      "KXCPLMATCH",
+      "criccpl",
+      3
+    ],
+    [
+      "KXECULPGAME",
+      "ecu1",
+      3
+    ],
+    [
+      "KXEKSTRAKLASAGAME",
+      "pol",
+      3
+    ],
+    [
+      "KXURYPDGAME",
+      "uru1",
+      3
+    ],
+    [
+      "KXALLSVENSKANGAME",
+      "swe",
+      3
+    ],
+    [
+      "KXCANPLGAME",
+      "canpl",
+      2
+    ],
+    [
+      "KXLALIGA2GAME",
+      "es2",
+      2
+    ],
+    [
+      "KXSLGREECEGAME",
+      "gre1",
+      2
+    ],
+    [
+      "KXSRBSLGAME",
+      "srb",
+      2
+    ],
+    [
+      "KXEERSTEDIVGAME",
+      "ned2",
+      2
+    ],
+    [
+      "KXPLLGAME",
+      "pll",
+      2
+    ],
+    [
+      "KXSUPERLIGGAME",
+      "tur",
+      2
+    ],
+    [
+      "KXLMBGAME",
+      "lmb",
+      2
+    ],
+    [
+      "KXSCOTTISHPREMGAME",
+      "scop",
+      2
+    ],
+    [
+      "KXAFLGAME",
+      "afl",
+      2
+    ],
+    [
+      "KXLEAGUESCUPGAME",
+      "lec",
+      1
+    ],
+    [
+      "KXCS2GAME",
+      "lol",
+      1
+    ],
+    [
+      "KXDOTA2GAME",
+      "dota2",
+      1
+    ],
+    [
+      "KXHNLGAME",
+      "hr1",
+      1
+    ],
+    [
+      "KXSVNPLGAME",
+      "slo",
+      1
+    ],
+    [
+      "KXCS2GAME",
+      "r6siege",
+      1
+    ],
+    [
+      "KXLIGUE2GAME",
+      "fr2",
+      1
+    ],
+    [
+      "KXLVAVIRGAME",
+      "lva1",
+      1
+    ],
+    [
+      "KXSERIEBGAME",
+      "itsb",
+      1
+    ],
+    [
+      "KXCOUNTYCHAMPMATCH",
+      "cricodcw",
+      1
+    ],
+    [
+      "KXGRECUPGAME",
+      "grc",
+      1
+    ],
+    [
+      "KXLIIGAGAME",
+      "liiga",
+      1
+    ],
+    [
+      "KXUAEPLGAME",
+      "uae1",
+      1
+    ],
+    [
+      "KXCOPPAITALIAGAME",
+      "itc",
+      1
+    ],
+    [
+      "KXNFLGAME",
+      "nhl",
+      1
+    ]
+  ],
+  "pairs_total": 662,
+  "partial": false,
+  "pm_events_48h": {
+    "arg": 7,
+    "argpn": 12,
+    "bel1": 1,
+    "bel2": 1,
+    "bkfibaw": 9,
+    "bra": 6,
+    "bra3": 3,
+    "bul": 2,
+    "canpl": 2,
+    "cfb": 5,
+    "cfl": 3,
+    "col2": 2,
+    "cpbl": 2,
+    "criccpl": 2,
+    "crickcct20": 3,
+    "cricnrwt10": 10,
+    "cricomand50": 2,
+    "cricsherepunjab": 4,
+    "crint": 6,
+    "cs2": 53,
+    "darts": 17,
+    "den": 1,
+    "dota2": 2,
+    "ecu1": 6,
+    "el1": 1,
+    "elc": 6,
+    "ere": 1,
+    "es2": 2,
+    "est1": 2,
+    "fin1": 5,
+    "fl1": 1,
+    "fpd": 2,
+    "fr2": 1,
+    "grc": 1,
+    "gre1": 2,
+    "gtm": 2,
+    "hbbundesliga": 1,
+    "hbhandbold": 2,
+    "hr1": 1,
+    "hun": 1,
+    "isr": 4,
+    "itsb": 2,
+    "kbo": 4,
+    "khl": 11,
+    "kor": 2,
+    "lal": 3,
+    "lec": 2,
+    "liiga": 1,
+    "lol": 17,
+    "ltu1": 1,
+    "lva1": 1,
+    "mex": 1,
+    "mlb": 25,
+    "modus": 15,
+    "ned2": 2,
+    "nor": 1,
+    "npb": 6,
+    "nwsl": 5,
+    "pdcdarts": 2,
+    "pll": 2,
+    "pol": 3,
+    "por": 2,
+    "r6siege": 22,
+    "rus": 2,
+    "rutopft": 1,
+    "setkamecz": 57,
+    "setkamemd": 41,
+    "setkameua": 272,
+    "setkawoua": 6,
+    "slo": 1,
+    "spl": 6,
+    "srb": 2,
+    "swe": 3,
+    "swe2": 1,
+    "tur": 2,
+    "tur2": 4,
+    "u20wwc": 8,
+    "uru1": 3,
+    "usl1": 1,
+    "ven1": 6
+  },
+  "polymarket": {
+    "books_sampled": 64,
+    "game_events_total": 3178,
+    "leagues": 465,
+    "sports": {
+      "afl": {
+        "game_events": 2,
+        "name": "AFL",
+        "open_events": 2,
+        "resolution": "https://www.afl.com.au/",
+        "tag_id": 103615
+      },
+      "arg": {
+        "game_events": 29,
+        "name": "Liga Profesional de F\u00fatbol",
+        "open_events": 208,
+        "resolution": "https://www.afa.com.ar/",
+        "tag_id": 102561
+      },
+      "argpn": {
+        "game_events": 12,
+        "name": "Primera Nacional",
+        "open_events": 106,
+        "resolution": "https://www.afa.com.ar/",
+        "tag_id": 105240
+      },
+      "atc": {
+        "game_events": 3,
+        "name": "\u00d6FB Cup",
+        "open_events": 39,
+        "resolution": "https://www.oefb.at/",
+        "tag_id": 104335
+      },
+      "auc": {
+        "game_events": 2,
+        "name": "Australia Cup",
+        "open_events": 17,
+        "resolution": "https://www.a-league.com.au/",
+        "tag_id": 104336
+      },
+      "aut": {
+        "game_events": 6,
+        "name": "Austria Bundesliga",
+        "open_events": 52,
+        "resolution": "https://www.bundesliga.at/",
+        "tag_id": 104929
+      },
+      "aze1": {
+        "game_events": 2,
+        "name": "Azerbaijan Premier League",
+        "open_events": 17,
+        "resolution": "https://www.pfl.az/",
+        "tag_id": 105913
+      },
+      "bel1": {
+        "game_events": 8,
+        "name": "Belgium Pro League",
+        "open_events": 65,
+        "resolution": "https://www.proleague.be/",
+        "tag_id": 105725
+      },
+      "bel2": {
+        "game_events": 1,
+        "name": "Challenger Pro League",
+        "open_events": 6,
+        "resolution": "https://www.proleague.be/",
+        "tag_id": 105726
+      },
+      "bkbsn": {
+        "game_events": 1,
+        "name": "BSN",
+        "open_events": 1,
+        "resolution": "https://bsnpr.com/",
+        "tag_id": 105272
+      },
+      "bkfibaqam": {
+        "game_events": 2,
+        "name": "Americas FIBA World Cup Qualifiers",
+        "open_events": 2,
+        "resolution": "https://www.fiba.basketball/basketballworldcup/2027/qualifiers",
+        "tag_id": 104351
+      },
+      "bkfibaw": {
+        "game_events": 12,
+        "name": "FIBA Women's World Cup",
+        "open_events": 12,
+        "resolution": "https://www.fiba.basketball/en/events/fiba-womens-basketball-world-cup-2026",
+        "tag_id": 104188
+      },
+      "bkgr1": {
+        "game_events": 1,
+        "name": "Greek Basket League",
+        "open_events": 1,
+        "resolution": "https://www.esake.gr/",
+        "tag_id": 104348
+      },
+      "bl2": {
+        "game_events": 15,
+        "name": "2. Bundesliga",
+        "open_events": 112,
+        "resolution": "https://www.bundesliga.com/en/2bundesliga",
+        "tag_id": 102864
+      },
+      "boxing": {
+        "game_events": 35,
+        "name": "Boxing",
+        "open_events": 37,
+        "resolution": "https://www.espn.com/boxing/",
+        "tag_id": 683
+      },
+      "bra": {
+        "game_events": 25,
+        "name": "Brasileir\u00e3o S\u00e9rie A",
+        "open_events": 180,
+        "resolution": "https://www.cbf.com.br/",
+        "tag_id": 102648
+      },
+      "bra3": {
+        "game_events": 3,
+        "name": "Brasileir\u00e3o S\u00e9rie C",
+        "open_events": 25,
+        "resolution": "https://www.cbf.com.br/",
+        "tag_id": 105248
+      },
+      "bul": {
+        "game_events": 5,
+        "name": "efbet Liga",
+        "open_events": 45,
+        "resolution": "https://bfunion.bg/",
+        "tag_id": 104936
+      },
+      "bun": {
+        "game_events": 15,
+        "name": "Bundesliga",
+        "open_events": 121,
+        "resolution": "https://www.bundesliga.com/en/bundesliga",
+        "tag_id": 1494
+      },
+      "cafcl": {
+        "game_events": 3,
+        "name": "CAF Champions League",
+        "open_events": 29,
+        "resolution": "https://www.cafonline.com/",
+        "tag_id": 105738
+      },
+      "canch": {
+        "game_events": 2,
+        "name": "Canadian Championship",
+        "open_events": 12,
+        "resolution": "https://canadasoccer.com/championship/canchamp/",
+        "tag_id": 106187
+      },
+      "canpl": {
+        "game_events": 2,
+        "name": "Canadian Premier League",
+        "open_events": 16,
+        "resolution": "https://www.cplsoccer.com/",
+        "tag_id": 105910
+      },
+      "ccup": {
+        "game_events": 1,
+        "name": "Campeones Cup",
+        "open_events": 7,
+        "resolution": "https://www.mlssoccer.com/",
+        "tag_id": 105802
+      },
+      "cfb": {
+        "game_events": 219,
+        "name": "College Football",
+        "open_events": 364,
+        "resolution": "https://www.ncaa.com/",
+        "tag_id": 100351
+      },
+      "cfl": {
+        "game_events": 4,
+        "name": "CFL",
+        "open_events": 4,
+        "resolution": "https://www.cfl.ca/",
+        "tag_id": 105200
+      },
+      "chi": {
+        "game_events": 3,
+        "name": "Chinese Super League",
+        "open_events": 44,
+        "resolution": "https://www.cfa.com.cn/",
+        "tag_id": 102764
+      },
+      "chi2": {
+        "game_events": 1,
+        "name": "China League One",
+        "open_events": 14,
+        "resolution": "https://www.thecfa.cn/",
+        "tag_id": 105259
+      },
+      "col2": {
+        "game_events": 8,
+        "name": "Categor\u00eda Primera B",
+        "open_events": 61,
+        "resolution": "https://dimayor.com.co/",
+        "tag_id": 105260
+      },
+      "cpbl": {
+        "game_events": 37,
+        "name": "CPBL",
+        "open_events": 37,
+        "resolution": "https://www.cpbl.com.tw/",
+        "tag_id": 105454
+      },
+      "criccoppat10": {
+        "game_events": 2,
+        "name": "Coppa il Mondo",
+        "open_events": 2,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 105508
+      },
+      "criccpl": {
+        "game_events": 3,
+        "name": "Caribbean Premier League",
+        "open_events": 12,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 103808
+      },
+      "cricetpl": {
+        "game_events": 8,
+        "name": "European T20 Premier League",
+        "open_events": 35,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 106136
+      },
+      "cricjcl": {
+        "game_events": 3,
+        "name": "JCL T20",
+        "open_events": 4,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 105514
+      },
+      "cricjclt10": {
+        "game_events": 4,
+        "name": "JCL T10",
+        "open_events": 4,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 105750
+      },
+      "crickcct20": {
+        "game_events": 4,
+        "name": "KCC T20 Summer League",
+        "open_events": 16,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 106140
+      },
+      "crickerala": {
+        "game_events": 1,
+        "name": "Kuwait Kerala PL",
+        "open_events": 4,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 105749
+      },
+      "criclcl": {
+        "game_events": 11,
+        "name": "Legends League Cricket",
+        "open_events": 14,
+        "resolution": "https://www.llct20.com/",
+        "tag_id": 104203
+      },
+      "cricmukono": {
+        "game_events": 6,
+        "name": "Mukono Super Smash",
+        "open_events": 24,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 105748
+      },
+      "cricnrwt10": {
+        "game_events": 10,
+        "name": "German Super League NRW T10",
+        "open_events": 40,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 106170
+      },
+      "cricodcw": {
+        "game_events": 9,
+        "name": "Metro Bank One Day Cup Women",
+        "open_events": 33,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 106146
+      },
+      "cricomand50": {
+        "game_events": 2,
+        "name": "Oman D50",
+        "open_events": 7,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 106173
+      },
+      "cricsherepunjab": {
+        "game_events": 10,
+        "name": "Sher-E-Punjab T20",
+        "open_events": 40,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 106168
+      },
+      "cricupt20": {
+        "game_events": 1,
+        "name": "Uttar Pradesh T20",
+        "open_events": 4,
+        "resolution": "https://www.espncricinfo.com/",
+        "tag_id": 106138
+      },
+      "crint": {
+        "game_events": 24,
+        "name": "International",
+        "open_events": 88,
+        "resolution": "https://www.icc-cricket.com/",
+        "tag_id": 102803
+      },
+      "cs2": {
+        "game_events": 448,
+        "name": "CS2",
+        "open_events": 480,
+        "resolution": "https://hltv.org",
+        "tag_id": 100780
+      },
+      "cycling": {
+        "game_events": 3,
+        "name": "Cycling",
+        "open_events": 3,
+        "resolution": "https://www.uci.org",
+        "tag_id": 102142
+      },
+      "darts": {
+        "game_events": 17,
+        "name": "Darts",
+        "open_events": 17,
+        "resolution": "https://www.pdc.tv/",
+        "tag_id": 101437
+      },
+      "den": {
+        "game_events": 11,
+        "name": "Danish Superliga",
+        "open_events": 88,
+        "resolution": "https://www.superliga.dk/",
+        "tag_id": 102652
+      },
+      "dota2": {
+        "game_events": 22,
+        "name": "Dota 2",
+        "open_events": 26,
+        "resolution": "https://www.liquipedia.net/dota2/Main_Page",
+        "tag_id": 102366
+      },
+      "ecu1": {
+        "game_events": 6,
+        "name": "LigaPro Serie A",
+        "open_events": 45,
+        "resolution": "https://www.ligapro.ec/",
+        "tag_id": 105242
+      },
+      "el1": {
+        "game_events": 26,
+        "name": "League One",
+        "open_events": 187,
+        "resolution": "https://www.efl.com/",
+        "tag_id": 104319
+      },
+      "el2": {
+        "game_events": 24,
+        "name": "League Two",
+        "open_events": 170,
+        "resolution": "https://www.efl.com/",
+        "tag_id": 104320
+      },
+      "elc": {
+        "game_events": 34,
+        "name": "EFL Championship",
+        "open_events": 248,
+        "resolution": "https://www.efl.com/",
+        "tag_id": 102643
+      },
+      "enl": {
+        "game_events": 36,
+        "name": "National League",
+        "open_events": 293,
+        "resolution": "https://www.thenationalleague.org.uk/",
+        "tag_id": 100737
+      },
+      "epl": {
+        "game_events": 16,
+        "name": "Premier League",
+        "open_events": 159,
+        "resolution": "https://www.premierleague.com/",
+        "tag_id": 306
+      },
+      "ere": {
+        "game_events": 21,
+        "name": "Eredivisie",
+        "open_events": 152,
+        "resolution": "https://eredivisie.eu/competition/",
+        "tag_id": 101735
+      },
+      "es2": {
+        "game_events": 20,
+        "name": "LaLiga2",
+        "open_events": 142,
+        "resolution": "https://www.laliga.com/",
+        "tag_id": 102866
+      },
+      "est1": {
+        "game_events": 2,
+        "name": "Premium Liiga",
+        "open_events": 22,
+        "resolution": "https://jalgpall.ee/",
+        "tag_id": 105252
+      },
+      "fin1": {
+        "game_events": 6,
+        "name": "Veikkausliiga",
+        "open_events": 60,
+        "resolution": "https://www.veikkausliiga.com/",
+        "tag_id": 105243
+      },
+      "fl1": {
+        "game_events": 16,
+        "name": "Ligue 1",
+        "open_events": 157,
+        "resolution": "https://ligue1.com/en",
+        "tag_id": 102070
+      },
+      "fpd": {
+        "game_events": 10,
+        "name": "Liga FPD",
+        "open_events": 82,
+        "resolution": "https://www.unafut.com/",
+        "tag_id": 104318
+      },
+      "fr2": {
+        "game_events": 19,
+        "name": "Ligue 2",
+        "open_events": 140,
+        "resolution": "https://www.ligue2.fr/",
+        "tag_id": 102871
+      },
+      "geo1": {
+        "game_events": 1,
+        "name": "Erovnuli Liga",
+        "open_events": 6,
+        "resolution": "https://gff.ge/",
+        "tag_id": 105256
+      },
+      "grc": {
+        "game_events": 3,
+        "name": "Greek Cup",
+        "open_events": 22,
+        "resolution": "https://www.epo.gr/",
+        "tag_id": 104337
+      },
+      "gre1": {
+        "game_events": 6,
+        "name": "Greece Super League",
+        "open_events": 42,
+        "resolution": "https://www.slgr.gr/",
+        "tag_id": 105730
+      },
+      "gtm": {
+        "game_events": 17,
+        "name": "Liga Nacional de Guatemala",
+        "open_events": 148,
+        "resolution": "https://www.ligagt.org/",
+        "tag_id": 104322
+      },
+      "hbbundesliga": {
+        "game_events": 1,
+        "name": "Handball Bundesliga",
+        "open_events": 1,
+        "resolution": "https://www.daikin-hbl.de/",
+        "tag_id": 105929
+      },
+      "hbeliteserien": {
+        "game_events": 4,
+        "name": "Eliteserien",
+        "open_events": 4,
+        "resolution": "https://www.handball.no/",
+        "tag_id": 105931
+      },
+      "hbhandbold": {
+        "game_events": 2,
+        "name": "H\u00e5ndboldligaen",
+        "open_events": 2,
+        "resolution": "https://tophaandbold.dk/",
+        "tag_id": 105927
+      },
+      "hbnbi": {
+        "game_events": 1,
+        "name": "NB I",
+        "open_events": 1,
+        "resolution": "https://www.mksz.hu/",
+        "tag_id": 105930
+      },
+      "hr1": {
+        "game_events": 10,
+        "name": "Prva Liga",
+        "open_events": 80,
+        "resolution": "https://hnl.hr/",
+        "tag_id": 104331
+      },
+      "hun": {
+        "game_events": 2,
+        "name": "NB I",
+        "open_events": 21,
+        "resolution": "https://www.mlsz.hu/",
+        "tag_id": 104933
+      },
+      "idn1": {
+        "game_events": 1,
+        "name": "Indonesia Liga 1",
+        "open_events": 16,
+        "resolution": "https://ileague.id/",
+        "tag_id": 105961
+      },
+      "irl1": {
+        "game_events": 6,
+        "name": "League of Ireland Premier Division",
+        "open_events": 54,
+        "resolution": "https://www.leagueofireland.ie/",
+        "tag_id": 105245
+      },
+      "isl1": {
+        "game_events": 1,
+        "name": "Besta deild karla",
+        "open_events": 14,
+        "resolution": "https://www.ksi.is/",
+        "tag_id": 105244
+      },
+      "isr": {
+        "game_events": 5,
+        "name": "Israeli Premier League",
+        "open_events": 30,
+        "resolution": "https://www.football.org.il/",
+        "tag_id": 104931
+      },
+      "itc": {
+        "game_events": 2,
+        "name": "Coppa Italia",
+        "open_events": 16,
+        "resolution": "https://www.legaseriea.it/en/coppa-italia",
+        "tag_id": 102008
+      },
+      "itsb": {
+        "game_events": 18,
+        "name": "Serie B",
+        "open_events": 125,
+        "resolution": "https://www.legaserieb.it/",
+        "tag_id": 102870
+      },
+      "j1100": {
+        "game_events": 20,
+        "name": "J1 League",
+        "open_events": 154,
+        "resolution": "https://www.jleague.jp/",
+        "tag_id": 102649
+      },
+      "j2100": {
+        "game_events": 20,
+        "name": "J2 League",
+        "open_events": 158,
+        "resolution": "https://www.jleague.jp/",
+        "tag_id": 102770
+      },
+      "ja2": {
+        "game_events": 20,
+        "name": "J2 League",
+        "open_events": 158,
+        "resolution": "https://www.jleague.jp/",
+        "tag_id": 102770
+      },
+      "jap": {
+        "game_events": 20,
+        "name": "J1 League",
+        "open_events": 154,
+        "resolution": "https://www.jleague.jp/",
+        "tag_id": 102649
+      },
+      "kaz1": {
+        "game_events": 2,
+        "name": "Kazakhstan Premier League",
+        "open_events": 50,
+        "resolution": "https://kff.kz/",
+        "tag_id": 105246
+      },
+      "kbo": {
+        "game_events": 79,
+        "name": "KBO",
+        "open_events": 80,
+        "resolution": "https://www.koreabaseball.com/",
+        "tag_id": 102668
+      },
+      "khl": {
+        "game_events": 29,
+        "name": "KHL",
+        "open_events": 29,
+        "resolution": "https://en.khl.ru/calendar/",
+        "tag_id": 102908
+      },
+      "kor": {
+        "game_events": 14,
+        "name": "K League 1",
+        "open_events": 122,
+        "resolution": "https://www.kleague.com/",
+        "tag_id": 102771
+      },
+      "lal": {
+        "game_events": 27,
+        "name": "LaLiga",
+        "open_events": 248,
+        "resolution": "https://www.laliga.com/en-GB",
+        "tag_id": 780
+      },
+      "lec": {
+        "game_events": 2,
+        "name": "Leagues Cup",
+        "open_events": 22,
+        "resolution": "https://www.leaguescup.com/",
+        "tag_id": 102449
+      },
+      "lib": {
+        "game_events": 8,
+        "name": "Copa Libertadores",
+        "open_events": 56,
+        "resolution": "https://conmebollibertadores.com/",
+        "tag_id": 102562
+      },
+      "liiga": {
+        "game_events": 1,
+        "name": "Liiga",
+        "open_events": 1,
+        "resolution": "https://liiga.fi/en",
+        "tag_id": 105937
+      },
+      "lmb": {
+        "game_events": 10,
+        "name": "Liga Mexicana de B\u00e9isbol",
+        "open_events": 10,
+        "resolution": "https://www.lmb.com.mx/",
+        "tag_id": 103217
+      },
+      "lol": {
+        "game_events": 93,
+        "name": "LoL",
+        "open_events": 123,
+        "resolution": "https://liquipedia.net/leagueoflegends/Main_Page",
+        "tag_id": 65
+      },
+      "ltu1": {
+        "game_events": 2,
+        "name": "A Lyga",
+        "open_events": 15,
+        "resolution": "https://alyga.lt/",
+        "tag_id": 105254
+      },
+      "lva1": {
+        "game_events": 2,
+        "name": "Virsl\u012bga",
+        "open_events": 20,
+        "resolution": "https://www.virsliga.lv/",
+        "tag_id": 105253
+      },
+      "mex": {
+        "game_events": 20,
+        "name": "Liga MX",
+        "open_events": 162,
+        "resolution": "https://www.ligamx.net/",
+        "tag_id": 102448
+      },
+      "mlb": {
+        "game_events": 93,
+        "name": "MLB",
+        "open_events": 289,
+        "resolution": "https://www.mlb.com/",
+        "tag_id": 100381
+      },
+      "mlbb": {
+        "game_events": 1,
+        "name": "Mobile Legends: Bang Bang",
+        "open_events": 1,
+        "resolution": "https://liquipedia.net/mobilelegends/Main_Page",
+        "tag_id": 102750
+      },
+      "mlp": {
+        "game_events": 5,
+        "name": "Pickleball",
+        "open_events": 5,
+        "resolution": "https://ppatour.com/",
+        "tag_id": 105057
+      },
+      "mls": {
+        "game_events": 47,
+        "name": "MLS",
+        "open_events": 343,
+        "resolution": "https://www.mls.com/",
+        "tag_id": 100100
+      },
+      "modus": {
+        "game_events": 15,
+        "name": "MODUS Super Series",
+        "open_events": 15,
+        "resolution": "https://modussuperseries.com/",
+        "tag_id": 106153
+      },
+      "ned2": {
+        "game_events": 5,
+        "name": "Eerste Divisie",
+        "open_events": 30,
+        "resolution": "https://www.keukenkampioendivisie.nl/",
+        "tag_id": 105727
+      },
+      "nfl": {
+        "game_events": 80,
+        "name": "NFL",
+        "open_events": 572,
+        "resolution": "https://www.nfl.com/",
+        "tag_id": 450
+      },
+      "nhl": {
+        "game_events": 93,
+        "name": "NHL",
+        "open_events": 101,
+        "resolution": "https://www.nhl.com/",
+        "tag_id": 899
+      },
+      "nor": {
+        "game_events": 17,
+        "name": "Eliteserien",
+        "open_events": 130,
+        "resolution": "https://www.eliteserien.no/",
+        "tag_id": 102651
+      },
+      "npb": {
+        "game_events": 51,
+        "name": "NPB",
+        "open_events": 52,
+        "resolution": "https://npb.jp/",
+        "tag_id": 105452
+      },
+      "nwsl": {
+        "game_events": 19,
+        "name": "NWSL",
+        "open_events": 145,
+        "resolution": "https://www.nwslsoccer.com/",
+        "tag_id": 104341
+      },
+      "ow": {
+        "game_events": 2,
+        "name": "Overwatch",
+        "open_events": 2,
+        "resolution": "https://liquipedia.net/overwatch/Main_Page",
+        "tag_id": 102753
+      },
+      "pdcdarts": {
+        "game_events": 2,
+        "name": "PDC",
+        "open_events": 2,
+        "resolution": "https://www.pdc.tv/",
+        "tag_id": 101544
+      },
+      "pll": {
+        "game_events": 8,
+        "name": "Premier Lacrosse League",
+        "open_events": 19,
+        "resolution": "https://premierlacrosseleague.com",
+        "tag_id": 102393
+      },
+      "pol": {
+        "game_events": 6,
+        "name": "Ekstraklasa",
+        "open_events": 59,
+        "resolution": "https://ekstraklasa.org/",
+        "tag_id": 105705
+      },
+      "por": {
+        "game_events": 23,
+        "name": "Primeira Liga",
+        "open_events": 170,
+        "resolution": "https://www.ligaportugal.pt/",
+        "tag_id": 101772
+      },
+      "powerslap": {
+        "game_events": 2,
+        "name": "Power Slap",
+        "open_events": 2,
+        "resolution": "https://www.powerslap.com/",
+        "tag_id": 104084
+      },
+      "ptc": {
+        "game_events": 8,
+        "name": "Ta\u00e7a de Portugal",
+        "open_events": 87,
+        "resolution": "https://www.ligaportugal.pt/",
+        "tag_id": 104334
+      },
+      "qat1": {
+        "game_events": 2,
+        "name": "Qatar Stars League",
+        "open_events": 12,
+        "resolution": "https://www.qsl.com.qa/",
+        "tag_id": 105729
+      },
+      "r6siege": {
+        "game_events": 42,
+        "name": "Rainbow Six Siege",
+        "open_events": 42,
+        "resolution": "https://liquipedia.net/rainbowsix/Main_Page",
+        "tag_id": 102755
+      },
+      "rl": {
+        "game_events": 4,
+        "name": "Rocket League",
+        "open_events": 4,
+        "resolution": "https://liquipedia.net/rocketleague/Main_Page",
+        "tag_id": 102756
+      },
+      "rlsuper": {
+        "game_events": 9,
+        "name": "Super League",
+        "open_events": 9,
+        "resolution": "https://www.superleague.co.uk/",
+        "tag_id": 105840
+      },
+      "rus": {
+        "game_events": 18,
+        "name": "Russian Premier League",
+        "open_events": 137,
+        "resolution": "https://premierliga.ru",
+        "tag_id": 102593
+      },
+      "rutopft": {
+        "game_events": 14,
+        "name": "Top 14",
+        "open_events": 14,
+        "resolution": "https://www.lnr.fr/top-14",
+        "tag_id": 103055
+      },
+      "sclc": {
+        "game_events": 2,
+        "name": "Scotland League Cup",
+        "open_events": 17,
+        "resolution": "https://spfl.co.uk/",
+        "tag_id": 105706
+      },
+      "scoc": {
+        "game_events": 10,
+        "name": "Scottish Cup",
+        "open_events": 125,
+        "resolution": "https://www.scottishfa.co.uk/",
+        "tag_id": 104338
+      },
+      "scop": {
+        "game_events": 10,
+        "name": "Scottish Premiership",
+        "open_events": 73,
+        "resolution": "https://spfl.co.uk/",
+        "tag_id": 102872
+      },
+      "setkamecz": {
+        "game_events": 60,
+        "name": "Setka Cup CZ (M)",
+        "open_events": 60,
+        "resolution": "https://setkacup.com",
+        "tag_id": 105718
+      },
+      "setkamemd": {
+        "game_events": 77,
+        "name": "Setka Cup MD (M)",
+        "open_events": 77,
+        "resolution": "https://setkacup.com",
+        "tag_id": 105717
+      },
+      "setkameua": {
+        "game_events": 441,
+        "name": "Setka Cup UA (M)",
+        "open_events": 441,
+        "resolution": "https://setkacup.com",
+        "tag_id": 105716
+      },
+      "setkawoua": {
+        "game_events": 14,
+        "name": "Setka Cup UA (W)",
+        "open_events": 14,
+        "resolution": "https://setkacup.com",
+        "tag_id": 105719
+      },
+      "slo": {
+        "game_events": 3,
+        "name": "Slovenia PrvaLiga",
+        "open_events": 32,
+        "resolution": "https://www.prvaliga.si/",
+        "tag_id": 104934
+      },
+      "spl": {
+        "game_events": 18,
+        "name": "Saudi Pro League",
+        "open_events": 136,
+        "resolution": "https://www.spl.com.sa/",
+        "tag_id": 102650
+      },
+      "srb": {
+        "game_events": 4,
+        "name": "Serbian SuperLiga",
+        "open_events": 42,
+        "resolution": "https://superliga.rs/",
+        "tag_id": 104932
+      },
+      "sud": {
+        "game_events": 8,
+        "name": "Copa Sudamericana",
+        "open_events": 60,
+        "resolution": "https://conmebolsudamericana.com/",
+        "tag_id": 102563
+      },
+      "sui": {
+        "game_events": 3,
+        "name": "Swiss Super League",
+        "open_events": 30,
+        "resolution": "https://www.football.ch/super-league/",
+        "tag_id": 105704
+      },
+      "svk1": {
+        "game_events": 13,
+        "name": "Nik\u00e9 liga",
+        "open_events": 109,
+        "resolution": "https://nikeliga.sk/",
+        "tag_id": 104332
+      },
+      "swe": {
+        "game_events": 6,
+        "name": "Allsvenskan",
+        "open_events": 58,
+        "resolution": "https://www.allsvenskan.se/",
+        "tag_id": 104930
+      },
+      "swe2": {
+        "game_events": 7,
+        "name": "Superettan",
+        "open_events": 77,
+        "resolution": "https://www.superettan.se/",
+        "tag_id": 105251
+      },
+      "trsk": {
+        "game_events": 1,
+        "name": "TFF S\u00fcper Kupa",
+        "open_events": 2,
+        "resolution": "https://tff.org/",
+        "tag_id": 104333
+      },
+      "tur": {
+        "game_events": 20,
+        "name": "S\u00fcper Lig",
+        "open_events": 147,
+        "resolution": "https://tff.org/",
+        "tag_id": 102564
+      },
+      "tur2": {
+        "game_events": 8,
+        "name": "Turkey 1. Lig",
+        "open_events": 48,
+        "resolution": "https://www.tff.org/",
+        "tag_id": 105736
+      },
+      "u20wwc": {
+        "game_events": 36,
+        "name": "FIFA U-20 Women's World Cup",
+        "open_events": 252,
+        "resolution": "https://www.fifa.com/",
+        "tag_id": 106189
+      },
+      "uae1": {
+        "game_events": 2,
+        "name": "UAE Pro League",
+        "open_events": 12,
+        "resolution": "https://uaeproleague.ae/",
+        "tag_id": 105728
+      },
+      "uel": {
+        "game_events": 18,
+        "name": "UEFA Europa League",
+        "open_events": 135,
+        "resolution": "https://www.uefa.com/uefaeuropaleague/",
+        "tag_id": 101787
+      },
+      "ufc": {
+        "game_events": 31,
+        "name": "UFC",
+        "open_events": 60,
+        "resolution": "https://www.ufc.com/",
+        "tag_id": 279
+      },
+      "ukr1": {
+        "game_events": 10,
+        "name": "Ukrainian Premier League",
+        "open_events": 93,
+        "resolution": "https://upl.ua",
+        "tag_id": 103886
+      },
+      "uru1": {
+        "game_events": 8,
+        "name": "Uruguayan Primera Divisi\u00f3n",
+        "open_events": 78,
+        "resolution": "https://www.auf.org.uy/",
+        "tag_id": 105241
+      },
+      "usl1": {
+        "game_events": 4,
+        "name": "USL League One",
+        "open_events": 32,
+        "resolution": "https://www.uslleagueone.com/",
+        "tag_id": 105737
+      },
+      "uslc": {
+        "game_events": 2,
+        "name": "USL Championship",
+        "open_events": 29,
+        "resolution": "https://www.uslchampionship.com/",
+        "tag_id": 105703
+      },
+      "val": {
+        "game_events": 13,
+        "name": "Valorant",
+        "open_events": 32,
+        "resolution": "https://liquipedia.net/valorant/Main_Page",
+        "tag_id": 101672
+      },
+      "vbeuro": {
+        "game_events": 10,
+        "name": "EuroVolley",
+        "open_events": 10,
+        "resolution": "https://www.cev.eu/",
+        "tag_id": 105345
+      },
+      "ven1": {
+        "game_events": 6,
+        "name": "Venezuelan Primera Divisi\u00f3n",
+        "open_events": 41,
+        "resolution": "https://fvf.org.ve/",
+        "tag_id": 105249
+      },
+      "wll": {
+        "game_events": 1,
+        "name": "WLL",
+        "open_events": 1,
+        "resolution": "https://thewll.com/",
+        "tag_id": 103911
+      },
+      "wnba": {
+        "game_events": 11,
+        "name": "WNBA",
+        "open_events": 23,
+        "resolution": "https://www.wnba.com/",
+        "tag_id": 100254
+      },
+      "zuffa": {
+        "game_events": 12,
+        "name": "Zuffa",
+        "open_events": 12,
+        "resolution": "https://www.ufc.com/",
+        "tag_id": 103213
+      }
+    }
+  },
+  "run": "20260906T200001Z",
+  "run_utc": "2026-09-06T20:00:01.138561+00:00",
+  "unmatched_kalshi_48h": {
+    "KXAPFDDHGAME": 4,
+    "KXARGPREMDIVGAME": 2,
+    "KXATPCHALLENGERMATCH": 14,
+    "KXATPEXACTMATCH": 8,
+    "KXATPMATCH": 8,
+    "KXBOLPDIVGAME": 3,
+    "KXBRASILEIROBGAME": 1,
+    "KXBRASILEIROGAME": 1,
+    "KXCHLLDPGAME": 3,
+    "KXCS2GAME": 24,
+    "KXDENSUPERLIGAGAME": 1,
+    "KXDIMAYORGAME": 4,
+    "KXDOTA2GAME": 5,
+    "KXECULPGAME": 3,
+    "KXEGYPLGAME": 6,
+    "KXEREDIVISIEGAME": 1,
+    "KXFINYLGAME": 1,
+    "KXISRNLGAME": 3,
+    "KXITFMATCH": 73,
+    "KXITFWMATCH": 57,
+    "KXKBOGAME": 2,
+    "KXKHLGAME": 1,
+    "KXLIGAEXPGAME": 1,
+    "KXLOLGAME": 3,
+    "KXLVAVIRGAME": 1,
+    "KXMLBGAME": 2,
+    "KXPERLIGA1GAME": 3,
+    "KXR6GAME": 1,
+    "KXRUGBYFRA14MATCH": 1,
+    "KXSAUDIPLGAME": 1,
+    "KXSERIEAGAME": 3,
+    "KXSERIECGAME": 11,
+    "KXSVK2LGAME": 1,
+    "KXSVKCUPGAME": 3,
+    "KXTTELITEMATCH": 64,
+    "KXUCLGAME": 2,
+    "KXVENFUTVEGAME": 7,
+    "KXWTACHALLENGERMATCH": 10,
+    "KXWTAEXACTMATCH": 7,
+    "KXWTAMATCH": 7
+  },
+  "unmatched_pm_48h": {
+    "arg": 3,
+    "argpn": 3,
+    "bel1": 1,
+    "bel2": 1,
+    "bra": 1,
+    "bul": 2,
+    "cfb": 1,
+    "col2": 2,
+    "cpbl": 2,
+    "crickcct20": 3,
+    "cricnrwt10": 10,
+    "cricomand50": 2,
+    "crint": 4,
+    "cs2": 25,
+    "darts": 17,
+    "den": 1,
+    "dota2": 1,
+    "ecu1": 3,
+    "ere": 1,
+    "est1": 2,
+    "fin1": 5,
+    "fpd": 2,
+    "gtm": 2,
+    "hbbundesliga": 1,
+    "hbhandbold": 2,
+    "hun": 1,
+    "itsb": 1,
+    "kbo": 1,
+    "khl": 1,
+    "lec": 1,
+    "ltu1": 1,
+    "mlb": 2,
+    "modus": 15,
+    "nor": 1,
+    "pdcdarts": 2,
+    "r6siege": 2,
+    "rus": 2,
+    "rutopft": 1,
+    "setkamecz": 57,
+    "setkamemd": 41,
+    "setkameua": 272,
+    "setkawoua": 6,
+    "spl": 1,
+    "swe2": 1,
+    "u20wwc": 8,
+    "usl1": 1
+  },
+  "window_h": [
+    3.0,
+    48.0
+  ]
+}

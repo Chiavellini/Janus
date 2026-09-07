@@ -290,3 +290,161 @@ Kalshi series with events in the window but no co-listing: {"KXAPFDDHGAME": 2, "
 Polymarket sports with game events in the window but no co-listing: {"aflw": 8, "atc": 12, "aze1": 2, "bel2": 7, "boxing": 11, "bul": 5, "chl2": 6, "col2": 5, "cricjcl": 4, "crickcct20": 3, "cricnrwt10": 5, "cricodcl2w": 4, "cricodcw": 4, "cricomand50": 1, "crict20max": 1, "darts": 25, "el2": 12, "est1": 5, "fpd": 3, "gtm": 5, "hbbundesliga": 3, "hbhandbold": 4, "hblnh": 7, "hbnbi": 1, "hockeychl": 6, "hun": 5, "isl1": 6, "j1100": 10, "j2100": 10, "kaz1": 7, "ltu1": 3, "mlp": 12, "modus": 10, "nirl1": 6, "nor2": 8, "pdcdarts": 15, "qat1": 2, "rurgr": 1, "rus": 7, "saf1": 4, "setkamecz": 58, "setkamemd": 42, "setkameua": 260, "setkawoua": 19, "svk1": 6, "swe2": 5, "u20wwc": 8, "ukr1": 6}
 
 Errors: 0
+
+## Run 20260905T200004Z
+
+Kalshi: 3653 sports series, 324 game-class, 123 with open markets, 1521 events. Polymarket: 465 leagues in /sports, 165 with game events, 3243 game events, 62 books sampled. Joined: 843 co-listed events (all dates).
+
+| rank | Kalshi series | PM sport | co-listed 48h | two-sided both | Kalshi touch $ (n) | PM touch $ (n) | life h | capacity $ | score | join |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | KXUFCFIGHT | ufc | 5 | 0 | 25782 (5) | — (0) | 178 | 128908 | 725.32 | ok (K 0 / PM 0 unmatched) |
+| 2 | KXMLBGAME | mlb | 35 | 1 | 360 (35) | 42153 (1) | 111 | 12617 | 113.67 | ok (K 2 / PM 2 unmatched) |
+| 3 | KXT20MATCH | crint | 1 | 0 | 647 (1) | — (0) | 40 | 647 | 16.26 | JOIN_WEAK (K 3 / PM 6 unmatched) |
+| 4 | KXVALORANTGAME | val | 4 | 0 | 50 (4) | — (0) | 22 | 200 | 9.09 | ok (K 0 / PM 1 unmatched) |
+| 5 | KXKBOGAME | kbo | 4 | 1 | 144 (4) | 165 (1) | 109 | 577 | 5.27 | ok (K 1 / PM 0 unmatched) |
+| 6 | KXECULPGAME | ecu1 | 4 | 1 | 173 (4) | 149 (1) | 130 | 597 | 4.60 | ok (K 3 / PM 0 unmatched) |
+| 7 | KXLOLGAME | lol | 20 | 1 | 15 (20) | 82 (1) | 85 | 305 | 3.59 | ok (K 0 / PM 0 unmatched) |
+| 8 | KXCS2GAME | cs2 | 35 | 1 | 2 (35) | 73 (1) | 26 | 52 | 1.99 | ok (K 11 / PM 15 unmatched) |
+| 9 | KXLALIGAGAME | lal | 6 | 1 | 106 (6) | 131 (1) | 339 | 636 | 1.88 | ok (K 1 / PM 1 unmatched) |
+| 10 | KXEREDIVISIEGAME | ere | 6 | 0 | 72 (6) | — (0) | 251 | 432 | 1.72 | ok (K 1 / PM 1 unmatched) |
+| 11 | KXLALIGA2GAME | es2 | 6 | 1 | 76 (6) | 60 (1) | 254 | 360 | 1.42 | ok (K 0 / PM 0 unmatched) |
+| 12 | KXUAEPLGAME | uae1 | 2 | 0 | 76 (2) | — (0) | 137 | 153 | 1.12 | ok (K 0 / PM 0 unmatched) |
+| 13 | KXLIGUE1GAME | fl1 | 5 | 0 | 70 (5) | — (0) | 339 | 352 | 1.04 | ok (K 0 / PM 0 unmatched) |
+| 14 | KXSWISSLEAGUEGAME | sui | 4 | 1 | 72 (4) | 37 (1) | 162 | 148 | 0.91 | ok (K 1 / PM 0 unmatched) |
+| 15 | KXSRBSLGAME | srb | 3 | 0 | 36 (3) | — (0) | 137 | 108 | 0.79 | ok (K 0 / PM 2 unmatched) |
+| 16 | KXCFLGAME | cfl | 2 | 1 | 215 (2) | 61 (1) | 169 | 123 | 0.73 | ok (K 0 / PM 0 unmatched) |
+| 17 | KXNPBGAME | npb | 5 | 1 | 184 (5) | 17 (1) | 120 | 85 | 0.71 | ok (K 0 / PM 1 unmatched) |
+| 18 | KXBUNDESLIGA2GAME | bl2 | 3 | 1 | 97 (3) | 56 (1) | 254 | 168 | 0.66 | ok (K 1 / PM 1 unmatched) |
+| 19 | KXCHNSLGAME | chi | 4 | 1 | 45 (4) | 35 (1) | 243 | 140 | 0.58 | ok (K 0 / PM 0 unmatched) |
+| 20 | KXBELGIANPLGAME | bel1 | 6 | 1 | 14 (6) | 226 (1) | 155 | 83 | 0.53 | ok (K 0 / PM 0 unmatched) |
+| 21 | KXJLEAGUEGAME | jap | 6 | 1 | 40 (6) | 21 (1) | 253 | 128 | 0.51 | ok (K 3 / PM 3 unmatched) |
+| 22 | KXBRASILEIROGAME | bra | 9 | 1 | 270 (9) | 14 (1) | 337 | 126 | 0.37 | ok (K 0 / PM 0 unmatched) |
+| 23 | KXARGPREMDIVGAME | arg | 8 | 1 | 246 (8) | 8 (1) | 189 | 64 | 0.34 | ok (K 2 / PM 1 unmatched) |
+| 24 | KXDOTA2GAME | dota2 | 5 | 1 | 4 (5) | 59 (1) | 61 | 20 | 0.32 | JOIN_WEAK (K 6 / PM 0 unmatched) |
+| 25 | KXEFLL1GAME | el1 | 1 | 0 | 81 (1) | — (0) | 256 | 81 | 0.32 | ok (K 0 / PM 0 unmatched) |
+| 26 | KXMLSGAME | mls | 11 | 1 | 1614 (11) | 8 (1) | 331 | 88 | 0.27 | ok (K 3 / PM 3 unmatched) |
+| 27 | KXURYPDGAME | uru1 | 6 | 1 | 55 (6) | 5 (1) | 153 | 29 | 0.19 | ok (K 0 / PM 1 unmatched) |
+| 28 | KXALLSVENSKANGAME | swe | 5 | 1 | 5 (5) | 6 (1) | 169 | 27 | 0.16 | ok (K 0 / PM 0 unmatched) |
+| 29 | KXSUPERLIGGAME | tur | 5 | 0 | 5 (5) | — (0) | 189 | 26 | 0.14 | ok (K 1 / PM 1 unmatched) |
+| 30 | KXKHLGAME | khl | 9 | 1 | 1 (9) | 31 (1) | 105 | 13 | 0.12 | ok (K 1 / PM 1 unmatched) |
+| 31 | KXSCOTTISHPREMGAME | scop | 3 | 1 | 10 (3) | 70 (1) | 253 | 30 | 0.12 | ok (K 0 / PM 0 unmatched) |
+| 32 | KXKLEAGUEGAME | kor | 2 | 1 | 153 (2) | 14 (1) | 253 | 28 | 0.11 | ok (K 0 / PM 0 unmatched) |
+| 33 | KXWFIBAGAME | bkfibaw | 13 | 0 | 1 (13) | — (0) | 103 | 10 | 0.10 | ok (K 0 / PM 0 unmatched) |
+| 34 | KXEPLGAME | epl | 2 | 1 | 1554 (2) | 17 (1) | 337 | 33 | 0.10 | ok (K 0 / PM 0 unmatched) |
+| 35 | KXUSLGAME | uslc | 10 | 1 | 216 (10) | 1 (1) | 142 | 14 | 0.10 | ok (K 0 / PM 0 unmatched) |
+| 36 | KXK2LEAGUEGAME | kor2 | 2 | 1 | 92 (2) | 8 (1) | 161 | 16 | 0.10 | ok (K 0 / PM 0 unmatched) |
+| 37 | KXNCAAFGAME | cfb | 91 | 0 | 25 (91) | 0 (1) | 266 | 24 | 0.09 | ok (K 1 / PM 1 unmatched) |
+| 38 | KXSERIEBGAME | itsb | 7 | 1 | 3 (7) | 23 (1) | 253 | 21 | 0.08 | ok (K 0 / PM 1 unmatched) |
+| 39 | KXEFLCHAMPIONSHIPGAME | elc | 2 | 1 | 292 (2) | 10 (1) | 254 | 20 | 0.08 | ok (K 0 / PM 0 unmatched) |
+| 40 | KXTFF1LIGGAME | tur2 | 7 | 0 | 2 (7) | — (0) | 139 | 11 | 0.08 | ok (K 0 / PM 0 unmatched) |
+| 41 | KXHNLGAME | hr1 | 3 | 0 | 4 (3) | — (0) | 180 | 13 | 0.07 | ok (K 0 / PM 0 unmatched) |
+| 42 | KXELITESERIENGAME | nor | 2 | 1 | 216 (2) | 9 (1) | 246 | 18 | 0.07 | ok (K 1 / PM 1 unmatched) |
+| 43 | KXCANPLGAME | canpl | 4 | 1 | 3 (4) | 2 (1) | 139 | 10 | 0.07 | ok (K 0 / PM 0 unmatched) |
+| 44 | KXRUGBYNRLMATCH | rlnrl | 2 | 1 | 8 (2) | 11 (1) | 255 | 17 | 0.07 | ok (K 0 / PM 0 unmatched) |
+| 45 | KXLIGUE2GAME | fr2 | 2 | 0 | 8 (2) | — (0) | 256 | 16 | 0.06 | ok (K 0 / PM 0 unmatched) |
+| 46 | KXT20MATCH | cricetpl | 2 | 0 | 5 (2) | — (0) | 173 | 10 | 0.06 | JOIN_WEAK (K 3 / PM 0 unmatched) |
+| 47 | KXARGNACBGAME | argpn | 14 | 1 | 4 (14) | 1 (1) | 190 | 9 | 0.05 | ok (K 3 / PM 2 unmatched) |
+| 48 | KXBRASILEIROCGAME | bra3 | 3 | 1 | 26 (3) | 2 (1) | 96 | 4 | 0.05 | ok (K 0 / PM 0 unmatched) |
+| 49 | KXLIGAMXGAME | mex | 4 | 1 | 814 (4) | 4 (1) | 331 | 15 | 0.05 | ok (K 2 / PM 0 unmatched) |
+| 50 | KXEERSTEDIVGAME | ned2 | 3 | 1 | 117 (3) | 2 (1) | 151 | 7 | 0.04 | ok (K 0 / PM 0 unmatched) |
+| 51 | KXR6GAME | r6siege | 10 | 1 | 1 (10) | 0 (1) | 86 | 4 | 0.04 | ok (K 5 / PM 3 unmatched) |
+| 52 | KXBUNDESLIGAGAME | bun | 2 | 1 | 287 (2) | 7 (1) | 338 | 13 | 0.04 | ok (K 0 / PM 0 unmatched) |
+| 53 | KXJ2LEAGUEGAME | ja2 | 4 | 1 | 2 (4) | 8 (1) | 249 | 8 | 0.03 | ok (K 1 / PM 1 unmatched) |
+| 54 | KXT20MATCH | cricsherepunjab | 5 | 0 | 1 (5) | — (0) | 86 | 3 | 0.03 | ok (K 3 / PM 0 unmatched) |
+| 55 | KXEWSLGAME | wsl | 5 | 1 | 3 (5) | 1 (1) | 99 | 3 | 0.03 | ok (K 0 / PM 0 unmatched) |
+| 56 | KXISRPLGAME | isr | 4 | 0 | 1 (4) | — (0) | 177 | 5 | 0.03 | ok (K 0 / PM 1 unmatched) |
+| 57 | KXPLLGAME | pll | 1 | 0 | 3 (1) | — (0) | 120 | 3 | 0.03 | ok (K 0 / PM 0 unmatched) |
+| 58 | KXSLGREECEGAME | gre1 | 5 | 0 | 1 (5) | — (0) | 140 | 3 | 0.02 | ok (K 0 / PM 1 unmatched) |
+| 59 | KXVENFUTVEGAME | ven1 | 5 | 1 | 1 (5) | 8 (1) | 131 | 3 | 0.02 | JOIN_WEAK (K 7 / PM 0 unmatched) |
+| 60 | KXTACAPORTGAME | ptc | 1 | 0 | 8 (1) | — (0) | 335 | 8 | 0.02 | ok (K 0 / PM 1 unmatched) |
+| 61 | KXLVAVIRGAME | lva1 | 1 | 0 | 3 (1) | — (0) | 128 | 3 | 0.02 | ok (K 1 / PM 1 unmatched) |
+| 62 | KXT20MATCH | cricupt20 | 1 | 0 | 1 (1) | — (0) | 31 | 1 | 0.02 | JOIN_WEAK (K 3 / PM 0 unmatched) |
+| 63 | KXLEAGUESCUPGAME | lec | 1 | 1 | 2 (1) | 12 (1) | 73 | 2 | 0.02 | ok (K 1 / PM 1 unmatched) |
+| 64 | KXIDNSLGAME | idn1 | 3 | 1 | 5 (3) | 1 (1) | 161 | 3 | 0.02 | ok (K 0 / PM 0 unmatched) |
+| 65 | KXNWSLGAME | nwsl | 6 | 1 | 1 (6) | 7 (1) | 255 | 5 | 0.02 | ok (K 0 / PM 0 unmatched) |
+| 66 | KXCHNL1GAME | chi2 | 3 | 1 | 1 (3) | 1 (1) | 113 | 2 | 0.02 | ok (K 0 / PM 0 unmatched) |
+| 67 | KXNPBGAME | cpbl | 1 | 1 | 2 (1) | 105 (1) | 119 | 2 | 0.02 | JOIN_WEAK (K 0 / PM 2 unmatched) |
+| 68 | KXDENSUPERLIGAGAME | den | 1 | 1 | 4 (1) | 5 (1) | 259 | 4 | 0.02 | JOIN_WEAK (K 3 / PM 3 unmatched) |
+| 69 | KXSAUDIPLGAME | spl | 2 | 0 | 2 (2) | — (0) | 260 | 4 | 0.01 | ok (K 0 / PM 1 unmatched) |
+| 70 | KXISRNLGAME | isr | 1 | 0 | 2 (1) | — (0) | 177 | 2 | 0.01 | JOIN_WEAK (K 7 / PM 1 unmatched) |
+| 71 | KXVALORANTGAME | hok | 1 | 0 | 1 (1) | — (0) | 92 | 1 | 0.01 | JOIN_WEAK (K 0 / PM 3 unmatched) |
+| 72 | KXEKSTRAKLASAGAME | pol | 6 | 1 | 4 (6) | 0 (1) | 151 | 2 | 0.01 | ok (K 0 / PM 0 unmatched) |
+| 73 | KXR6GAME | mlbb | 1 | 0 | 1 (1) | — (0) | 121 | 1 | 0.01 | JOIN_WEAK (K 5 / PM 6 unmatched) |
+| 74 | KXWODIMATCH | crint | 1 | 0 | 2 (1) | — (0) | 250 | 2 | 0.01 | JOIN_WEAK (K 0 / PM 6 unmatched) |
+| 75 | KXWT20MATCH | crint | 2 | 0 | 1 (2) | — (0) | 219 | 2 | 0.01 | JOIN_WEAK (K 2 / PM 6 unmatched) |
+| 76 | KXSVNPLGAME | slo | 3 | 0 | 0 (3) | — (0) | 140 | 1 | 0.01 | ok (K 0 / PM 0 unmatched) |
+| 77 | KXCPLMATCH | criccpl | 3 | 1 | 0 (3) | 20 (1) | 122 | 0 | 0.00 | ok (K 0 / PM 0 unmatched) |
+| 78 | KXRUGBYFRA14MATCH | rutopft | 1 | 0 | 0 (1) | — (0) | 197 | 0 | 0.00 | ok (K 1 / PM 1 unmatched) |
+| 79 | KXLIGAPORTUGALGAME | por | 3 | 1 | 48 (3) | 0 (1) | 192 | 0 | 0.00 | ok (K 2 / PM 2 unmatched) |
+| 80 | KXRUGBYESLMATCH | rlsuper | 1 | 0 | 0 (1) | 0 (1) | 197 | 0 | 0.00 | ok (K 0 / PM 0 unmatched) |
+
+Kalshi series with events in the window but no co-listing: {"KXAPFDDHGAME": 4, "KXATPCHALLENGERMATCH": 21, "KXATPEXACTMATCH": 10, "KXATPMATCH": 11, "KXBOLPDIVGAME": 6, "KXBRASILEIROBGAME": 6, "KXCHLLDPGAME": 6, "KXCZEFLGAME": 4, "KXCZEFNLGAME": 2, "KXDIMAYORGAME": 6, "KXEGYPLGAME": 4, "KXEREDIVISIEWGAME": 5, "KXETTANGAME": 5, "KXFINYLGAME": 3, "KXGER3LGAME": 3, "KXITFMATCH": 54, "KXITFWMATCH": 55, "KXLIGAEXPGAME": 5, "KXMYSLGAME": 1, "KXPERLIGA1GAME": 7, "KXSERIEAGAME": 6, "KXSERIECGAME": 20, "KXSVK2LGAME": 1, "KXTHAIL1GAME": 3, "KXTTELITEMATCH": 54, "KXTTSTARMATCH": 1, "KXVBAGAME": 1, "KXVLEAGUE1GAME": 3, "KXWTAEXACTMATCH": 8, "KXWTAMATCH": 8}
+
+Polymarket sports with game events in the window but no co-listing: {"aflw": 5, "atc": 5, "aze1": 2, "bel2": 3, "boxing": 7, "bul": 4, "cafcl": 4, "chl2": 2, "col2": 4, "cricjcl": 2, "crickcct20": 2, "cricodcl2w": 4, "cricodcw": 4, "darts": 6, "est1": 2, "fpd": 4, "gtm": 5, "hbbundesliga": 7, "hbhandbold": 3, "hblnh": 2, "hbnbi": 1, "hockeychl": 7, "hun": 4, "isl1": 5, "j1100": 9, "j2100": 5, "kaz1": 2, "ltu1": 4, "mlp": 6, "modus": 6, "nor2": 2, "rus": 5, "saf1": 2, "setkamecz": 57, "setkamemd": 46, "setkameua": 253, "setkawoua": 29, "svk1": 3, "swe2": 1, "u20wwc": 8, "ukr1": 3, "usl1": 6}
+
+Errors: 0
+
+## Run 20260906T200001Z
+
+Kalshi: 3653 sports series, 324 game-class, 108 with open markets, 1404 events. Polymarket: 465 leagues in /sports, 151 with game events, 3178 game events, 64 books sampled. Joined: 662 co-listed events (all dates).
+
+| rank | Kalshi series | PM sport | co-listed 48h | two-sided both | Kalshi touch $ (n) | PM touch $ (n) | life h | capacity $ | score | join |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | KXMLBGAME | mlb | 23 | 1 | 250 (23) | 981 (1) | 111 | 5762 | 51.71 | ok (K 2 / PM 2 unmatched) |
+| 2 | KXNCAAFGAME | cfb | 6 | 1 | 4539 (6) | 3001 (1) | 385 | 18005 | 46.72 | ok (K 0 / PM 1 unmatched) |
+| 3 | KXCFLGAME | cfl | 3 | 2 | 451 (3) | 376 (2) | 169 | 1129 | 6.68 | ok (K 0 / PM 0 unmatched) |
+| 4 | KXLOLGAME | lol | 17 | 1 | 32 (17) | 379 (1) | 90 | 551 | 6.12 | ok (K 3 / PM 0 unmatched) |
+| 5 | KXCS2GAME | cs2 | 28 | 2 | 25 (28) | 6 (2) | 39 | 165 | 4.24 | ok (K 24 / PM 25 unmatched) |
+| 6 | KXARGPREMDIVGAME | arg | 4 | 2 | 158 (4) | 127 (2) | 190 | 507 | 2.66 | ok (K 2 / PM 3 unmatched) |
+| 7 | KXVALORANTGAME | val | 1 | 1 | 163 (1) | 45 (1) | 19 | 45 | 2.35 | ok (K 0 / PM 0 unmatched) |
+| 8 | KXLALIGAGAME | lal | 3 | 2 | 247 (3) | 680 (2) | 340 | 740 | 2.17 | ok (K 0 / PM 0 unmatched) |
+| 9 | KXEFLCHAMPIONSHIPGAME | elc | 6 | 1 | 121 (6) | 79 (1) | 258 | 476 | 1.84 | ok (K 0 / PM 0 unmatched) |
+| 10 | KXURYPDGAME | uru1 | 3 | 1 | 54 (3) | 339 (1) | 153 | 162 | 1.06 | ok (K 0 / PM 0 unmatched) |
+| 11 | KXVENFUTVEGAME | ven1 | 6 | 1 | 40 (6) | 14 (1) | 131 | 81 | 0.62 | JOIN_WEAK (K 7 / PM 0 unmatched) |
+| 12 | KXCS2GAME | lol | 1 | 0 | 43 (1) | — (0) | 89 | 43 | 0.48 | JOIN_WEAK (K 24 / PM 0 unmatched) |
+| 13 | KXBRASILEIROGAME | bra | 5 | 2 | 61 (5) | 29 (2) | 347 | 145 | 0.42 | ok (K 1 / PM 1 unmatched) |
+| 14 | KXNPBGAME | npb | 6 | 1 | 8 (6) | 8 (1) | 122 | 45 | 0.37 | ok (K 0 / PM 0 unmatched) |
+| 15 | KXALLSVENSKANGAME | swe | 3 | 1 | 145 (3) | 13 (1) | 172 | 38 | 0.22 | ok (K 0 / PM 0 unmatched) |
+| 16 | KXECULPGAME | ecu1 | 3 | 2 | 211 (3) | 9 (2) | 121 | 26 | 0.21 | ok (K 3 / PM 3 unmatched) |
+| 17 | KXLIGAPORTUGALGAME | por | 2 | 2 | 611 (2) | 19 (2) | 204 | 38 | 0.18 | ok (K 0 / PM 0 unmatched) |
+| 18 | KXLIGAMXGAME | mex | 1 | 1 | 245 (1) | 57 (1) | 329 | 57 | 0.17 | ok (K 0 / PM 0 unmatched) |
+| 19 | KXEKSTRAKLASAGAME | pol | 3 | 1 | 12 (3) | 7 (1) | 152 | 22 | 0.14 | ok (K 0 / PM 0 unmatched) |
+| 20 | KXSERIEBGAME | itsb | 1 | 1 | 34 (1) | 197 (1) | 256 | 34 | 0.13 | ok (K 0 / PM 1 unmatched) |
+| 21 | KXARGNACBGAME | argpn | 9 | 1 | 14 (9) | 3 (1) | 190 | 23 | 0.12 | ok (K 0 / PM 3 unmatched) |
+| 22 | KXNWSLGAME | nwsl | 5 | 1 | 22 (5) | 6 (1) | 255 | 31 | 0.12 | ok (K 0 / PM 0 unmatched) |
+| 23 | KXR6GAME | r6siege | 19 | 1 | 0 (19) | 7 (1) | 75 | 9 | 0.12 | ok (K 1 / PM 2 unmatched) |
+| 24 | KXBRASILEIROCGAME | bra3 | 3 | 2 | 19 (3) | 4 (2) | 119 | 13 | 0.11 | ok (K 0 / PM 0 unmatched) |
+| 25 | KXLEAGUESCUPGAME | lec | 1 | 1 | 216 (1) | 7 (1) | 73 | 7 | 0.10 | ok (K 0 / PM 1 unmatched) |
+| 26 | KXKBOGAME | kbo | 3 | 1 | 2 (3) | 7 (1) | 63 | 6 | 0.09 | ok (K 2 / PM 1 unmatched) |
+| 27 | KXCPLMATCH | criccpl | 2 | 2 | 28 (2) | 5 (2) | 126 | 11 | 0.08 | ok (K 0 / PM 0 unmatched) |
+| 28 | KXWFIBAGAME | bkfibaw | 9 | 1 | 1 (9) | 1 (1) | 115 | 6 | 0.06 | ok (K 0 / PM 0 unmatched) |
+| 29 | KXT20MATCH | cricsherepunjab | 4 | 1 | 1 (4) | 2 (1) | 88 | 5 | 0.06 | ok (K 0 / PM 0 unmatched) |
+| 30 | KXLIGUE1GAME | fl1 | 1 | 1 | 3095 (1) | 15 (1) | 342 | 15 | 0.05 | ok (K 0 / PM 0 unmatched) |
+| 31 | KXSRBSLGAME | srb | 2 | 1 | 3 (2) | 11 (1) | 138 | 6 | 0.04 | ok (K 0 / PM 0 unmatched) |
+| 32 | KXTFF1LIGGAME | tur2 | 4 | 1 | 44 (4) | 1 (1) | 135 | 6 | 0.04 | ok (K 0 / PM 0 unmatched) |
+| 33 | KXWT20MATCH | crint | 2 | 1 | 206 (2) | 3 (1) | 204 | 7 | 0.03 | JOIN_WEAK (K 0 / PM 4 unmatched) |
+| 34 | KXCANPLGAME | canpl | 2 | 2 | 36 (2) | 2 (2) | 139 | 4 | 0.03 | ok (K 0 / PM 0 unmatched) |
+| 35 | KXLALIGA2GAME | es2 | 2 | 1 | 85 (2) | 4 (2) | 257 | 7 | 0.03 | ok (K 0 / PM 0 unmatched) |
+| 36 | KXLIIGAGAME | liiga | 1 | 1 | 1 (1) | 33 (1) | 61 | 1 | 0.02 | ok (K 0 / PM 0 unmatched) |
+| 37 | KXSUPERLIGGAME | tur | 2 | 1 | 78 (2) | 2 (1) | 202 | 4 | 0.02 | ok (K 0 / PM 0 unmatched) |
+| 38 | KXPLLGAME | pll | 2 | 1 | 1 (2) | 3 (1) | 121 | 2 | 0.01 | ok (K 0 / PM 0 unmatched) |
+| 39 | KXKLEAGUEGAME | kor | 2 | 1 | 79 (2) | 1 (1) | 253 | 3 | 0.01 | ok (K 0 / PM 0 unmatched) |
+| 40 | KXHNLGAME | hr1 | 1 | 1 | 689 (1) | 1 (1) | 181 | 1 | 0.01 | ok (K 0 / PM 0 unmatched) |
+| 41 | KXSAUDIPLGAME | spl | 5 | 1 | 62 (5) | 0 (1) | 260 | 1 | 0.01 | ok (K 1 / PM 1 unmatched) |
+| 42 | KXGRECUPGAME | grc | 1 | 1 | 8 (1) | 0 (1) | 89 | 0 | 0.01 | ok (K 0 / PM 0 unmatched) |
+| 43 | KXEFLL1GAME | el1 | 1 | 1 | 23 (1) | 1 (1) | 256 | 1 | 0.00 | ok (K 0 / PM 0 unmatched) |
+| 44 | KXSVNPLGAME | slo | 1 | 0 | 0 (1) | — (0) | 141 | 0 | 0.00 | ok (K 0 / PM 0 unmatched) |
+| 45 | KXDOTA2GAME | dota2 | 1 | 1 | 0 (1) | 7 (1) | 93 | 0 | 0.00 | JOIN_WEAK (K 5 / PM 1 unmatched) |
+| 46 | KXCS2GAME | r6siege | 1 | 0 | 0 (1) | — (0) | 102 | 0 | 0.00 | JOIN_WEAK (K 24 / PM 2 unmatched) |
+| 47 | KXKHLGAME | khl | 10 | 1 | 0 (10) | 20 (1) | 105 | 0 | 0.00 | ok (K 1 / PM 1 unmatched) |
+| 48 | KXISRPLGAME | isr | 4 | 1 | 0 (4) | 5 (1) | 177 | 0 | 0.00 | ok (K 0 / PM 0 unmatched) |
+| 49 | KXEERSTEDIVGAME | ned2 | 2 | 1 | 0 (2) | 7 (1) | 153 | 0 | 0.00 | ok (K 0 / PM 0 unmatched) |
+| 50 | KXLVAVIRGAME | lva1 | 1 | 1 | 0 (1) | 100 (1) | 128 | 0 | 0.00 | ok (K 1 / PM 0 unmatched) |
+| 51 | KXSLGREECEGAME | gre1 | 2 | 0 | 0 (2) | — (0) | 140 | 0 | 0.00 | ok (K 0 / PM 0 unmatched) |
+| 52 | KXLIGUE2GAME | fr2 | 1 | 1 | 0 (1) | 7 (1) | 256 | 0 | 0.00 | ok (K 0 / PM 0 unmatched) |
+
+Kalshi series with events in the window but no co-listing: {"KXAPFDDHGAME": 4, "KXATPCHALLENGERMATCH": 14, "KXATPEXACTMATCH": 8, "KXATPMATCH": 8, "KXBOLPDIVGAME": 3, "KXBRASILEIROBGAME": 1, "KXCHLLDPGAME": 3, "KXDENSUPERLIGAGAME": 1, "KXDIMAYORGAME": 4, "KXEGYPLGAME": 6, "KXEREDIVISIEGAME": 1, "KXFINYLGAME": 1, "KXISRNLGAME": 3, "KXITFMATCH": 73, "KXITFWMATCH": 57, "KXLIGAEXPGAME": 1, "KXPERLIGA1GAME": 3, "KXRUGBYFRA14MATCH": 1, "KXSERIEAGAME": 3, "KXSERIECGAME": 11, "KXSVK2LGAME": 1, "KXSVKCUPGAME": 3, "KXTTELITEMATCH": 64, "KXUCLGAME": 2, "KXWTACHALLENGERMATCH": 10, "KXWTAEXACTMATCH": 7, "KXWTAMATCH": 7}
+
+Polymarket sports with game events in the window but no co-listing: {"bel1": 1, "bel2": 1, "bul": 2, "col2": 2, "cpbl": 2, "crickcct20": 3, "cricnrwt10": 10, "cricomand50": 2, "darts": 17, "den": 1, "ere": 1, "est1": 2, "fin1": 5, "fpd": 2, "gtm": 2, "hbbundesliga": 1, "hbhandbold": 2, "hun": 1, "ltu1": 1, "modus": 15, "nor": 1, "pdcdarts": 2, "rus": 2, "rutopft": 1, "setkamecz": 57, "setkamemd": 41, "setkameua": 272, "setkawoua": 6, "swe2": 1, "u20wwc": 8, "usl1": 1}
+
+Errors: 1 — {"pm_book:lol-fur-red-2026-09-06": "HttpError: HTTP 404 for https://clob.polymarket.com/book?token_id=3635351165715563828833082648698562146191678749670476206907018779632137061238: {\"error\":\"No orderbook exists for the requested token id\"}"}

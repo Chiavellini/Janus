@@ -17,3 +17,15 @@ Caveats: the delay clock runs from the FIRST-SEEN gameStartTime; resolution time
 Resolver: {'checked': 146, 'resolved': 115, 'half': 0, 'open': 31, 'errors': 0}. Resolved tennis rows so far: 42; completed more than 7 days after the first-seen start: 0 (rate 0.0); closed at 0.5/0.5: 0 (rate 0.0); start moved by more than an hour after first sight: 4.
 
 Caveats: the delay clock runs from the FIRST-SEEN gameStartTime; resolution time is the poll time (a ±24 h box). Reads no price, claims no edge.
+
+## Run 20260905T193006Z
+
+Resolver: {'checked': 78, 'resolved': 47, 'half': 0, 'open': 31, 'errors': 0}. Resolved tennis rows so far: 89; completed more than 7 days after the first-seen start: 0 (rate 0.0; registered upper bound 0.033708); closed at 0.5/0.5: 0 (rate 0.0); start moved by more than an hour after first sight: 13.
+
+Caveats: the delay clock runs from the FIRST-SEEN gameStartTime; resolution time is the poll time (a ±24 h box). Reads no price, claims no edge.
+
+## Run 20260906T193005Z
+
+Resolver: {'checked': 163, 'resolved': 123, 'half': 1, 'open': 39, 'errors': 0}. Resolved tennis rows so far: 213; completed more than 7 days after the first-seen start: 0 (rate 0.0; registered upper bound 0.014085); closed at 0.5/0.5: 1 (rate 0.004695); start moved by more than an hour after first sight: 21.
+
+Caveats: the delay clock runs from the FIRST-SEEN gameStartTime; resolution time is the poll time (a ±24 h box). Reads no price, claims no edge.

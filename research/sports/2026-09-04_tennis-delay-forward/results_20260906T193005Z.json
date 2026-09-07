@@ -1,0 +1,21 @@
+{
+  "run": "20260906T193005Z",
+  "resolve": {
+    "checked": 163,
+    "resolved": 123,
+    "half": 1,
+    "open": 39,
+    "errors": 0
+  },
+  "resolved_tennis_rows": 213,
+  "delayed_gt7d": 0,
+  "half": 1,
+  "start_moved_gt1h": 21,
+  "delayed_gt7d_rate": 0.0,
+  "half_rate": 0.004695,
+  "registered_upper_bound_95": 0.014085,
+  "late_rows": [],
+  "half_rows": [
+    "atp-doubles-ferypar-etchcar-2026-09-04"
+  ]
+}
