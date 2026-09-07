@@ -1,6 +1,6 @@
 # CHECKLIST — where Janus stands, what is not done, what is not proved
 
-*2026-09-05 ~08:30 UTC. A status list, deliberately blunt. Each line is one of: DONE (and how it
+*2026-09-07 ~05:00 UTC. A status list, deliberately blunt. Each line is one of: DONE (and how it
 is known), RUNNING (accruing), NOT DONE, or NOT PROVED (built, never demonstrated end to end).
 Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 
@@ -44,9 +44,9 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — execution-owned statuses (EXECUTION_PENDING, HEDGED, SETTLED, RECONCILED) reach `opportunity_transitions` (`OpportunityStore.move`); F3's own predicate had counted zero.
 - [x] DONE — three-way soccer executes as two legs (Kalshi YES + Polymarket NO). All ten co-listed soccer games spawned pollers on the 2026-09-05 restart. **NOT PROVED live until a soccer cover clears** (the weekend's European kickoffs).
 - [x] DONE — `nodes/risk/limits.toml`: paper caps for cfb, the six soccer leagues and both tennis tours; six simultaneous events (operator decision 2026-09-05). **The arming override's `limits_sha` pin moved: regenerate before any armed run.**
-- [ ] NOT PROVED — a Kalshi proof file passing all seven checks (the first fails `resting_cancelled` and `fee_ok` on record; both causes fixed). Needs one clean armed re-run. OPERATOR.
-- [ ] NOT DONE — the Polymarket proof: no real Polymarket order has ever been sent. OPERATOR.
-- [ ] NOT DONE — the arming override rewritten at main's current sha and the new limits sha. OPERATOR (`python3 ops/arming_override.py --mode LIMITED_LIVE … --force`).
+- [x] DONE — Kalshi proof, second run 2026-09-07 02:56Z: 2 @ 0.78, fee at the pin to the hundredth of a cent, balance to the cent, cancel confirmed on the venue; 6 of 6 before settlement, `--settle` runs after the game.
+- [x] DONE — **the first real Polymarket order** 2026-09-07 04:42Z: FOK 5 @ 0.39 matched as 5.131577 @ 0.38 (V2 fills by notional); the balance moved by fills + exactly the pinned fee; 6 of 6 before settlement, `--settle` after the game. On the way: the adapter moved to CLOB V2 / pUSD / signature type 3 (CHANGELOG 2026-09-07).
+- [x] DONE — the arming override rewritten by the operator 2026-09-07 (three times, as the runner sha moved under it; it expires 2026-09-08).
 
 ## E. The gate to real capital (GATE_TO_LIVE.md)
 
@@ -54,7 +54,7 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — **F3 STOPPED by its own criterion 2** (one unhedged paper leg) on 2026-09-05; its window is also void from the 24 h SIGBUS gap. Verdict: `research/sports/2026-09-04_paper-execution-f3/verdict.md`. 4 executions, 3 hedged, 3 settled.
 - [x] RUNNING — **F5, PAPER_EXECUTION, n = 37**: from the 2026-09-05 07:53Z restart, on 11 leagues, with the walked-level hedge, pinned paper fees, and the STOP detected by UNHEDGED_POSITION. 0 of 37.
 - [x] DONE — the settlement pass, every five minutes, paper and real alike; PARTIAL rows included.
-- [ ] NOT PROVED — fees reconciled on Polymarket (needs its proof).
+- [x] DONE — fees reconciled on Polymarket: charged exactly the pinned 0.0604 on the first real fill, read from the balance delta (the V2 trade record reports fee_rate_bps 0).
 - [x] DONE — operator decision 2026-09-04 (GATE amendment row): test trading only until L36 on clean data shows in-play actionable covers. L40 is the first honest cut of that (15 clean prints); the decision stands until the operator says otherwise.
 - [ ] NOT DONE — LIMITED_LIVE for the lane itself (needs both proofs, F5 complete, a new dated GATE row from the operator, the override, caps).
 - [ ] NOT DONE — PRODUCTION.

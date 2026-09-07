@@ -25,8 +25,9 @@ is not nothing and is not edge. F5 (execution) and L27 (the gap to a fill) are w
 
 ## Now — what is left, and whose it is
 
-**Yours, because I cannot send an order or write the override:**
-1. **Regenerate the override** — `nodes/risk/limits.toml` changed (paper caps, six events), so its
+**Done by the operator 2026-09-07:** the override (three times), the Kalshi proof (clean), the first
+Polymarket proof (clean), main pushed, the football-data token. What remains yours:
+1. **(done)** Regenerate the override — `nodes/risk/limits.toml` changed (paper caps, six events), so its
    `limits_sha` pin moved along with the runner sha:
    `python3 ops/arming_override.py --mode LIMITED_LIVE --signed-by "…" --statement "…Kalshi and Polymarket…" --stake-usd 5 --max-contracts 10 --day-notional-usd 20 --expires-hours 24 --force`.
    Then **one clean Kalshi proof** and **the first Polymarket proof**, dry then `--arm`, `--settle`

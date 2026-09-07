@@ -577,3 +577,38 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
 - `grids/live_sports` and `nodes/slate` read the league registry instead of a six-league list;
   the slate has a duration for every registered league.
 - **L27 re-run, registered 0.0400.** The first attempt died on the 03:00Z hour the SIGBUS cut mid-member (the capture reader now stops at a cut instead of raising). The full run: 32.1M delta instants over 326 tickers, p95 adverse move at 3 s = 4 ticks, four times the 8-ticker MLB pin. The row's rule is mechanical and the pin follows it; the consequence -- a 4¢ reserve prices out nearly every cover printed so far -- is stated in the ledger, and a stratified row is the next registration.
+
+## 2026-09-07 — both execution proofs sent; Polymarket had changed underneath us
+
+- **Kalshi proof, second run** (`proofs/kalshi_20260907T025629Z.json`, WSH @ LAD, 2 @ 0.78):
+  fee charged 0.0241 = pinned to the hundredth of a cent, balance to the cent, resting bid
+  cancelled (the venue processes a cancel asynchronously; the file first recorded the pre-cancel
+  status, so both proof scripts now poll a cancel to finality and re-read it at settle). 6 of 6
+  before settlement; settles after the game.
+- **Polymarket proof, the venue's first real order** (`proofs/polymarket_20260907T044255Z.json`,
+  FOK 5 @ 0.39): matched as **5.131577 @ 0.38** -- CLOB V2 fills a BUY by notional, more shares at
+  a better price -- and the balance moved by 2.0104 = fills 1.95 + **exactly the pinned taker fee
+  0.0604**, which the trade record reports as fee_rate_bps 0. 6 of 6 before settlement.
+- **What was actually wrong with Polymarket, in order of discovery.** (1) `balance_usd()` called
+  the client's balance endpoint without its params and swallowed the AttributeError into "balance
+  could not be confirmed". (2) The venue replaced its exchange on 2026-04-28 (CLOB V2: new
+  contracts, EIP-712 domain v2, no fee/nonce/taker order fields) and its collateral (**pUSD**
+  `0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB`, not USDC.e); the V1 client still answered reads and
+  reported the operator's collateral as 0.00 while the account held 95.60 pUSD; V1-signed orders
+  are refused. `PyClobTransport` now wraps `py_clob_client_v2`. (3) The operator's account is a
+  post-May **Deposit Wallet** (the app shows its address as "for API use only"); the exchange
+  reports its balance only under **signature type 3** (EIP-1271), zero under 0/1/2. The
+  credentials env now says 3. (4) A matched ack is UNCONFIRMED until status() gives the venue's
+  size (the coordinator would otherwise under-hedge by the price improvement); a taker fill the
+  venue reports without a fee carries the pinned fee, labelled.
+- **The key file was overwritten** by a `pbpaste > pm_wallet.key` the agent asked the operator to
+  run; the clipboard held other text. The key was re-exported from Polymarket (reveal.magic.link)
+  and stored through `ops/set_pm_key.py` (hidden prompt or `--from-clipboard`, validated, mode
+  600, prints only the address). It controls the same signer as before; nothing was lost. A key
+  was also pasted into the chat once and should be rotated after the pilot.
+- `ops/proof_target.py` prints the two proof commands with real tickers and slugs filled in, so a
+  placeholder never reaches the shell again (two armed runs died on `<ticker>`).
+- The lane: F5 at 32 of 37 hedged covers (all settled positive on paper, +$41.73), the first live
+  three-way soccer covers among them; a second SIGBUS at 02:19Z (host paging), restarted by launchd
+  and reported by SIGNAL_EXIT; Kalshi cfb template V2 (neutral-site wording) registered.
+
