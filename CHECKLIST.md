@@ -1,6 +1,6 @@
 # CHECKLIST — where Janus stands, what is not done, what is not proved
 
-*2026-09-07 ~08:20 UTC. A status list, deliberately blunt. Each line is one of: DONE (and how it
+*2026-09-07 ~07:10 UTC. A status list, deliberately blunt. Each line is one of: DONE (and how it
 is known), RUNNING (accruing), NOT DONE, or NOT PROVED (built, never demonstrated end to end).
 Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 

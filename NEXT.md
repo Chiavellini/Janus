@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-07 ~08:20 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-07 ~07:10 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
