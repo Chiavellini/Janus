@@ -23,6 +23,14 @@ if [ -f "$LOG" ]; then
   if [ "$size" -gt 8388608 ]; then mv -f "$LOG" "$LOG.1"; fi
 fi
 
+# The cross-host kill (ops/box/kill_sync.py): on the box only, mirror /janus/kill/{all,live} from
+# SSM into the local kill files BEFORE the check, so a switch set on the Mac shows up here as
+# KILL_FILE_PRESENT in the same run. The script refuses to run anywhere JANUS_HOST != box.
+if [ "${JANUS_HOST:-}" = "box" ]; then
+  KS=$("$PY" ops/box/kill_sync.py 2>&1) || true
+  print -r -- "$(date -u '+%Y-%m-%dT%H:%M:%SZ') $KS" >> "$LOG"
+fi
+
 OUT=$("$PY" ops/watchdog.py 2>&1)
 CODE=$?
 print -r -- "$(date -u '+%Y-%m-%dT%H:%M:%SZ') exit=$CODE" >> "$LOG"
