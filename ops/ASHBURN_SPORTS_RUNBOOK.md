@@ -67,10 +67,42 @@ decrypt, CloudWatch); Ubuntu 24.04 arm64 AMI from the public SSM parameter. No J
 
 ## Arming from the box
 Only after: both Mac proofs reconciled, L34 = EXECUTION_HOST, and an override written ON THE BOX
-(`ops/arming_override.py` pins the runner sha of that checkout; the file lives under
-`/srv/janus/kill/`). The box's kill files are its own: `kill/all` on the Mac does not stop the
-box. Until a shared kill exists in SSM, stopping the box is `systemctl stop janus-live-stream`
-or `aws ec2 stop-instances`.
+(`ops/arming_override.py` pins the code tree of that checkout -- `kernel/code_sha`: nodes, grids,
+kernel, the runner, the box units -- and its `limits.toml`; the file lives under
+`/srv/janus/kill/`). The box's kill FILES are its own: `kill/all` on the Mac does not stop the
+box. The shared kill is in SSM (below); the fast stop is `systemctl stop janus-live-stream`
+(`ops/box/run.sh`) or `aws ec2 stop-instances`.
+
+## The daily release under the arm (2026-09-07)
+The override pins the executable tree, so a docs or research commit does not invalidate it and a
+code commit does; the lane re-reads the override every report tick and refuses real orders
+(`ARM_STALE`) the moment it stops matching. The operator's rule is one paste a day, whether or not
+the tree moved, from the Mac, when no co-listed game is in play (the script checks; `--now` skips):
+
+```bash
+cd /Users/bernardodelrio/Code/Janus && git push origin main && bash ops/box/release.sh "$(git rev-parse main)"
+```
+
+That is (a) `ops/box/update.sh <sha> --no-restart`, (b) `ops/box/write_override.sh` with the
+standing statement in `ops/box/arm_statement.txt` at the F8 caps ($12 / 25 / $60, 168 h), and
+(c) `ops/box/mode.sh LIMITED_LIVE`. Between (b) and (c) the running lane refuses real orders (its
+tree is not the one just pinned); (c) restarts it under the new tree. The last line of the paste
+is `lane=active mode=LIMITED_LIVE` and a `[mode] LIMITED_LIVE` line; `[arm] STALE` or
+`mode refused: OVERRIDE_CODE_SHA` means (b) and (c) did not happen in that order -- run them again.
+`ops/box/update.sh <sha>` alone (with its restart) is refused under the LIMITED_LIVE drop-in.
+
+The box's watchdog says `OVERRIDE_EXPIRING` under 24 h and `OVERRIDE_STALE` once the arm no
+longer authorises the checkout; both read the drop-in, so the Mac's watchdog never says either.
+
+## The cross-host kill
+```bash
+bash ops/box/kill.sh live            # LIMITED_LIVE and PRODUCTION; the box latches kill/live within 5 min
+bash ops/box/kill.sh all             # everything that sends or simulates an order
+bash ops/box/kill.sh live --clear    # lifts only what SSM latched; a breaker's file stays until a human removes it on the box
+```
+The parameters are `/janus/kill/all` and `/janus/kill/live`; `ops/box/kill_sync.py` runs from the
+box's watchdog job (`ops/run_watchdog.sh`, `JANUS_HOST=box`). For an immediate stop pair it with
+`bash ops/box/run.sh 'systemctl stop janus-live-stream'`.
 
 ## The data root
 Everything the tree writes lives under `JANUS_DATA_ROOT` (`kernel/paths.py`), `/srv/janus` here
