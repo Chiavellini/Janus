@@ -22,20 +22,39 @@ STATEMENT=${JANUS_ARM_STATEMENT:-$(cat "$HERE/arm_statement.txt")}
 if [ -z "${STATEMENT// }" ]; then echo "empty statement"; exit 2; fi
 
 if [ $NOW = 0 ]; then
-  # Co-listed games in play, seen by the lane in the last 15 min. A restart mid-game loses the
-  # pollers' state (update.sh's own rule); the operator passes --now to override.
+  # Refuse only on MONEY in motion: an execution in flight (a pre-hedge state touched in the last
+  # two minutes) or an unhedged position the lane still holds. Games in play are a warning: a
+  # restart drops their pollers' state, not money (2026-09-07: with ITF enabled the slate is
+  # rarely empty, and "no game in play" would have meant "never"). --now skips both.
   read -r -d '' PROBE <<'EOS' || true
-sudo -u janus /opt/janus/.venv/bin/python3 -c "import sqlite3, time; c = sqlite3.connect('file:/srv/janus/tuples/tuples.sqlite?mode=ro', uri=True); print(c.execute(\"SELECT COUNT(*) FROM events WHERE phase='in:co_listed' AND last_seen_ts > ?\", (time.time() - 900,)).fetchone()[0])"
+sudo -u janus /opt/janus/.venv/bin/python3 - <<'PY'
+import sqlite3, time
+c = sqlite3.connect('file:/srv/janus/tuples/tuples.sqlite?mode=ro', uri=True)
+now = time.time()
+games = c.execute("SELECT COUNT(*) FROM events WHERE phase='in:co_listed' AND last_seen_ts > ?", (now - 900,)).fetchone()[0]
+try:
+    flight = c.execute("SELECT COUNT(*) FROM executions WHERE last_utc > ? AND state IN ('DETECTED','VALIDATED','CAPITAL_RESERVED',"
+                       "'LEG_A_SUBMITTED','LEG_A_FILLED','LEG_A_PARTIAL','LEG_B_SUBMITTED','LEG_B_PARTIAL')", (now - 120,)).fetchone()[0]
+    unhedged = c.execute("SELECT COUNT(*) FROM executions WHERE unhedged > 0 AND released = 0").fetchone()[0]
+except sqlite3.OperationalError:
+    flight, unhedged = 0, 0
+print(f"games={games} flight={flight} unhedged={unhedged}")
+PY
 EOS
-  IN_PLAY=$(bash "$HERE/run.sh" "$PROBE" | tail -1 | tr -d '[:space:]')
-  case $IN_PLAY in
-    ''|*[!0-9]*) echo "could not read the box's slate (got: ${IN_PLAY:-nothing}); not releasing"; exit 2;;
+  LINE=$(bash "$HERE/run.sh" "$PROBE" | grep -a "^games=" | tail -1)
+  case $LINE in
+    games=*) ;;
+    *) echo "could not read the box's state (got: ${LINE:-nothing}); not releasing"; exit 2;;
   esac
-  if [ "$IN_PLAY" -gt 0 ]; then
-    echo "refused: $IN_PLAY co-listed game(s) in play on the box; a restart now drops their pollers. Wait, or pass --now."
+  GAMES=${LINE#games=}; GAMES=${GAMES%% *}
+  FLIGHT=${LINE#*flight=}; FLIGHT=${FLIGHT%% *}
+  UNHEDGED=${LINE#*unhedged=}
+  if [ "$FLIGHT" -gt 0 ] || [ "$UNHEDGED" -gt 0 ]; then
+    echo "refused: $FLIGHT execution(s) in flight, $UNHEDGED unhedged position(s) on the box. Wait for them to settle, or pass --now knowingly."
     exit 3
   fi
-  echo "slate quiet (0 co-listed games in play); releasing $SHA"
+  [ "$GAMES" -gt 0 ] && echo "note: $GAMES co-listed game(s) in play; nothing in flight, so the restart costs their pollers' state only"
+  echo "money quiet (flight=0, unhedged=0); releasing $SHA"
 fi
 
 echo "== (a) checkout $SHA, no restart"

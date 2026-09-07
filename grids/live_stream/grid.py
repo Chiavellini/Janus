@@ -80,7 +80,7 @@ from nodes.venue_polymarket.books import PM_CLOB, pm_book  # noqa: E402
 from ops import run_index  # noqa: E402
 
 from kernel.paths import DB  # noqa: E402,F401
-QUANTITIES = (5.0, 25.0, 100.0)
+QUANTITIES = (5.0, 10.0, 25.0, 100.0)   # 10 added 2026-09-07: under a $12 per-order cap only 5 fit, and 5 nets under the floor
 MIN_RETURN = 0.01
 #: A game is priced at most this often on quiet books (nodes/game_poller coalescing); a replica
 #: state change or the 15 s heartbeat still prices immediately. 2026-09-04: from ~3,400 to a few

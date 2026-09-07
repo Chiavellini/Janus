@@ -782,3 +782,17 @@ series, and windows, not the join.
   from `ops/box/arm_statement.txt`, restart under `LIMITED_LIVE`; refuses while a co-listed game
   is in play unless `--now`. `ops/box/update.sh` refuses to check out under a `LIMITED_LIVE`
   drop-in without `--no-restart`. `GATE_TO_LIVE.md` carries the dated amendment row.
+
+## 2026-09-07 — a 10-contract rung, and a release that refuses only on money in motion
+
+- The operator's rule for size: "as little as possible per event (which still makes them
+  executable)". Under the $12 per-order cap only the 5-contract rung fits, and 5 contracts net
+  under the $0.10 floor once the pooled 4c reserve is charged. `QUANTITIES` gains 10 (about $9.30
+  per order at tonight's books; twice the net for the same reserve), in the lane and the replay
+  harness together; F5 and F8 carry the era note. The floor stays: it is the fixed cost of two
+  orders, two fees and two settlements. L41's per-league reserve is the other lever.
+- `ops/box/release.sh` refused while any co-listed game was in play; with ITF enabled that is
+  most of the day. It now refuses only with an execution in flight or an unhedged position on
+  the box, and warns about games in play (their pollers' state is what a restart costs).
+- Funding, the operator's: Kalshi shard 0 $247.86 (shard 3, the tennis shard, still $22.43);
+  Polymarket read from the box at the time of the entry.

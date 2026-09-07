@@ -52,7 +52,7 @@ from nodes.store_tuples.store import TupleStore
 from nodes.stream_kalshi.stream import KalshiStream
 from nodes.stream_polymarket.stream import PolymarketStream
 
-QUANTITIES = (5.0, 25.0, 100.0)
+QUANTITIES = (5.0, 10.0, 25.0, 100.0)   # mirrors grids/live_stream/grid.py (parity, GATE step 4)
 MIN_RETURN = 0.01
 
 
