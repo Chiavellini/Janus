@@ -145,3 +145,15 @@ def test_the_registered_slippage_is_the_default_and_is_labelled_modelled():
     got = frontier(two([(0.45, 1000)], [(0.45, 1000)]), now_utc=T, proof=PROOF)
     assert got.slippage_modelled and got.slippage_per_contract == pytest.approx(0.04)
     assert got.best.cost_per_contract == pytest.approx(0.94), "0.90 gross + the registered 0.04 reserve (fees are zero in this fixture)"
+
+
+def test_the_per_league_slippage_table_falls_back_to_the_pooled_pin():
+    from nodes.cover import capacity
+    assert capacity.slippage_for("mlb") == pytest.approx(capacity.SLIPPAGE_PER_CONTRACT)
+    assert capacity.slippage_for(None) == pytest.approx(capacity.SLIPPAGE_PER_CONTRACT)
+    capacity.SLIPPAGE_BY_LEAGUE["mlb"] = 0.01
+    try:
+        assert capacity.slippage_for("mlb") == pytest.approx(0.01)
+        assert capacity.slippage_for("cfb") == pytest.approx(capacity.SLIPPAGE_PER_CONTRACT)
+    finally:
+        capacity.SLIPPAGE_BY_LEAGUE.pop("mlb", None)

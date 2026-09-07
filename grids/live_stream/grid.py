@@ -43,7 +43,7 @@ if str(ROOT) not in sys.path:
 from kernel.fetch import Client  # noqa: E402
 from kernel.redact import brief_error  # noqa: E402
 from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
-from nodes.cover.capacity import frontier  # noqa: E402
+from nodes.cover.capacity import frontier  # noqa: E402, slippage_for
 from nodes.discovery.watchlist import Watchlist, kalshi_watch, pm_watch_events  # noqa: E402
 from nodes.watch_settle.settle import record_watch  # noqa: E402
 from nodes.entities.leagues import LEAGUES, default_leagues  # noqa: E402
@@ -322,7 +322,8 @@ class Supervisor:
                 if ev.offers and sup.poller.proof is not None:
                     fr = frontier({o: list(v) for o, v in ev.offers.items()},
                                   now_utc=ev.evaluated_utc, proof=sup.poller.proof,
-                                  max_leg_age_s=self.max_book_age_s, hurdle=MIN_RETURN)
+                                  max_leg_age_s=self.max_book_age_s, hurdle=MIN_RETURN,
+                                  slippage_per_contract=slippage_for(sup.poller.league))
                     if fr.actionable:
                         cap = (f"  N_max={fr.n_max:.0f} N*={fr.n_star:.0f} "
                                f"profit=${fr.best.profit:.2f} on ${fr.best.capital:.0f}")

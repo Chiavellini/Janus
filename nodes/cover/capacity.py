@@ -48,6 +48,16 @@ from nodes.settle_wedge.equivalence import CoverProof
 SLIPPAGE_PER_CONTRACT = 0.0400
 SLIPPAGE_MODELLED = True
 SLIPPAGE_RESEARCH_REF = "research/sports/2026-09-03_kalshi-hedge-window-slippage/spec.yaml"
+#: Per league, from ledger L41 (the stratified row: clean windows only, time-weighted, p95 at 3 s
+#: and q = 25), registered only for a league with >= 2,000 instants over >= 4 tickers. Empty until
+#: the row's values are entered from its results file; every other league keeps the pooled pin.
+SLIPPAGE_BY_LEAGUE: dict[str, float] = {}
+SLIPPAGE_BY_LEAGUE_RESEARCH_REF = "research/sports/2026-09-07_kalshi-slippage-by-league/spec.yaml"
+
+
+def slippage_for(league: str | None) -> float:
+    """The registered slippage reserve for a league: L41's value where it exists, L27's pool otherwise."""
+    return SLIPPAGE_BY_LEAGUE.get(league or "", SLIPPAGE_PER_CONTRACT)
 
 
 @dataclass(frozen=True)
