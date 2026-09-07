@@ -90,7 +90,18 @@ def check_proof(proof: dict, *, reservation_row: Callable[[str], dict | None] | 
         if state not in FINAL_STATES or not final:
             out.append(Finding("ioc_final", False, f"IOC is {state or '?'} final={final}; the venue's word is not final"))
         elif requested is not None and filled > _f(requested) + 1e-9:
-            out.append(Finding("ioc_final", False, f"IOC filled {filled:.0f} > requested {_f(requested):.0f}"))
+            # CLOB V2 fills a BUY by NOTIONAL: 5 @ 0.39 came back as 5.131577 @ 0.38 (2026-09-07). More
+            # shares for the same dollars at a better price is a fill within the request; more dollars is not.
+            ioc = s2.get("ioc") or {}
+            limit = _f(ioc.get("limit_price")) or _f(ioc.get("avg_price")) or _f(st.get("avg_price"))
+            notional = sum(_f(f.get("contracts")) * _f(f.get("price")) for f in fills) or filled * _f(st.get("avg_price"))
+            if limit > 0 and notional <= _f(requested) * limit + CENT:
+                out.append(Finding("ioc_final", True, f"IOC {state} final, filled {filled:.6g} for ${notional:.4f} "
+                                                      f"(requested {_f(requested):.0f} @ {limit:.2f} = ${_f(requested) * limit:.4f}; "
+                                                      "the venue fills by notional at a better price)"))
+            else:
+                out.append(Finding("ioc_final", False, f"IOC filled {filled:.6g} > requested {_f(requested):.0f} and the notional "
+                                                       f"${notional:.4f} exceeds the request's ${_f(requested) * limit:.4f}"))
         else:
             out.append(Finding("ioc_final", True, f"IOC {state} final, filled {filled:.0f}"
                                                   + (f" of {_f(requested):.0f}" if requested is not None else "")))
@@ -125,7 +136,20 @@ def check_proof(proof: dict, *, reservation_row: Callable[[str], dict | None] | 
         spent = sum(_f(f.get("contracts")) * _f(f.get("price")) + _f(f.get("charged")) for f in fills)
         delta = _f(b1) - _f(b0)
         ok = abs(delta + spent) <= CENT
-        out.append(Finding("balance_delta", ok, f"{_f(b0):.4f} -> {_f(b1):.4f} (delta {delta:+.4f}; fills+fees {spent:.4f})"))
+        if ok:
+            out.append(Finding("balance_delta", True, f"{_f(b0):.4f} -> {_f(b1):.4f} (delta {delta:+.4f}; fills+fees {spent:.4f})"))
+        else:
+            # A venue that charges the fee against collateral but reports none on the trade (CLOB V2,
+            # 2026-09-07): the delta must then equal fills + the PINNED fee to the cent -- which is the
+            # fee reconciliation the proof exists for, only read from the balance instead of the trade.
+            pinned_only = sum(_f(f.get("contracts")) * _f(f.get("price")) + _f(f.get("pinned")) for f in fills)
+            charged = sum(_f(f.get("charged")) for f in fills)
+            if charged <= 1e-9 and abs(delta + pinned_only) <= CENT:
+                out.append(Finding("balance_delta", True, f"{_f(b0):.4f} -> {_f(b1):.4f} (delta {delta:+.4f} = fills {spent:.4f} + the "
+                                                          f"PINNED fee {pinned_only - spent:.4f}; the venue charged it against collateral "
+                                                          "and reported none on the trade)"))
+            else:
+                out.append(Finding("balance_delta", False, f"{_f(b0):.4f} -> {_f(b1):.4f} (delta {delta:+.4f}; fills+fees {spent:.4f})"))
 
     # 5. Settlement: realized PnL is the arithmetic of the result, and the reservation is released
     event_id = f"proof:{proof.get('ticker') or proof.get('token') or proof.get('slug')}"

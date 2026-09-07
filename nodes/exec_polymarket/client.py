@@ -128,8 +128,14 @@ class PolymarketExecution:
     clock: Callable[[], float] = time.time
     mono: Callable[[], float] = time.monotonic
     venue: str = "polymarket"
+    #: The market's fee params (Gamma feeSchedule) for the pinned fee. CLOB V2 charges the taker
+    #: fee against collateral but reports fee_rate_bps 0 on the trade record (2026-09-07: balance
+    #: moved by fills + exactly the pinned 0.0604 while the trade said 0). When the venue reports
+    #: no fee and params are known, the fill carries the pinned fee, labelled so in the journal.
+    fee_params: Any = None
     submits: int = 0
     unconfirmed: int = 0
+    last_fee_source: str = ""
     last_error: str = ""
     _requests: dict[str, OrderRequest] = field(default_factory=dict)
 
@@ -168,11 +174,10 @@ class PolymarketExecution:
             return Ack(self.venue, req.client_order_id, oid, FillState.REJECTED, 0.0, None, None,
                        status or "rejected", t, detail=str(d.get("errorMsg") or d.get("error") or "")[:300])
         if status == "matched":
-            # The CLOB matched it. For FOK that is the whole size; for FAK the venue's order record
-            # says how much, so a FAK match is confirmed through status() before it is trusted.
-            if req.time_in_force == "fok":
-                return Ack(self.venue, req.client_order_id, oid, FillState.FILLED, req.contracts, req.price, None,
-                           status, t, settlement_pending=True)
+            # The CLOB matched it. The venue's order record says HOW MUCH: CLOB V2 fills a BUY by
+            # notional, so a FOK for 5 @ 0.39 came back as 5.131577 @ 0.38 (the first real fill,
+            # 2026-09-07). Trusting the request size here would under-hedge by the improvement.
+            # Every match is confirmed through status() before it is believed.
             return Ack(self.venue, req.client_order_id, oid, FillState.UNCONFIRMED, 0.0, None, None, status, t,
                        settlement_pending=True, detail="matched; size via status()")
         if status == "live":
@@ -230,14 +235,28 @@ class PolymarketExecution:
             status = str(tr.get("status", "")).upper()
             if status in DEAD_TRADE:
                 continue                     # a reversal: reconcile handles it, never a fill here
+            size, price = _f(tr.get("size")), _f(tr.get("price"))
+            taker = str(tr.get("trader_side", "TAKER")).upper() == "TAKER"
+            fee = size * price * _f(tr.get("fee_rate_bps")) / 10_000.0
+            fee_source = "venue"
+            if fee <= 0 and taker and self.fee_params and size > 0:
+                fee, fee_source = self._pinned_fee(tr, size, price), "pinned (venue reported none)"
             rec = FillRecord(self.venue, str(tr.get("taker_order_id") or tr.get("order_id") or ""),
-                             str(tr.get("id")), _f(tr.get("size")), _f(tr.get("price")),
-                             _f(tr.get("size")) * _f(tr.get("price")) * _f(tr.get("fee_rate_bps")) / 10_000.0,
-                             str(tr.get("trader_side", "TAKER")).upper() == "TAKER",
-                             _f(tr.get("match_time"), since_utc), status in FINAL_TRADE)
+                             str(tr.get("id")), size, price, fee, taker, _f(tr.get("match_time"), since_utc), status in FINAL_TRADE)
             self.journal.record_fill(rec)
+            self.last_fee_source = fee_source
             out.append(rec)
         return out
+
+    def _pinned_fee(self, tr: dict, size: float, price: float) -> float:
+        from nodes.fees.models import Fill
+        from nodes.fees.registry import model_for, params_for
+        try:
+            f = Fill(venue=self.venue, market_id=str(tr.get("asset_id") or ""), outcome_id=str(tr.get("asset_id") or ""),
+                     side="yes", price=price, contracts=size, liquidity="taker", order_seq=0)
+            return float(model_for(self.venue).entry_cost([f], params_for(self.venue, self.fee_params)))
+        except Exception:  # noqa: BLE001
+            return 0.0
 
     def balance(self) -> Balance | None:
         try:

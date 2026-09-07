@@ -162,7 +162,7 @@ def run_proof(a, transport_factory=None) -> int:
     except TransportUnavailable as exc:
         print(f"[transport] {exc}", file=sys.stderr)
         return 2
-    venue = PolymarketExecution(transport, journal, resolved.mode)
+    venue = PolymarketExecution(transport, journal, resolved.mode, fee_params=fees)
     bal0 = venue.balance()
     if bal0 is None:
         print(f"balance could not be confirmed; refusing ({getattr(transport, 'last_error', None) or 'no error recorded'})", file=sys.stderr)
@@ -236,7 +236,7 @@ def execute_steps(venue, *, slug: str, outcome: str, token: str, fees: dict, ask
         if mine and all(f.final for f in mine):
             break
         sleep(5.0)
-    if ack2.state is FillState.FILLED and not mine:
+    if (ack2.state is FillState.FILLED or st2.state is FillState.FILLED) and not mine:
         # the adapter drops FAILED trades from fills(); a matched order with no surviving trade is a reversal
         failed = True
     findings = []
@@ -252,7 +252,7 @@ def execute_steps(venue, *, slug: str, outcome: str, token: str, fees: dict, ask
     status = st2.__dict__
     if failed:
         status = {**status, "state": "UNCONFIRMED", "final": False, "raw_status": "trade_failed"}
-    proof["steps"].append({"ioc": ack2.__dict__, "status": status, "fills": findings,
+    proof["steps"].append({"ioc": {**ack2.__dict__, "limit_price": ask}, "status": status, "fills": findings,
                            "balance_after": bal1.available_usd if bal1 else None})
     if bal1 is not None:
         spent = sum(f["contracts"] * f["price"] + f["charged"] for f in findings)

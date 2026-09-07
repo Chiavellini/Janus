@@ -56,13 +56,32 @@ def test_buy_no_is_refused_with_the_explanation(tmp_path):
     assert ack.state is FillState.REJECTED and "separate tokens" in ack.detail and j.get("c1") is None
 
 
-def test_a_fok_match_is_filled_for_hedging_but_settlement_pending(tmp_path):
-    tr = FakeTransport(posts=[{"success": True, "orderID": "0xabc", "status": "matched", "tradeIDs": ["t1"]}])
+def test_a_fok_match_is_confirmed_through_status_at_the_venues_size(tmp_path):
+    """CLOB V2 fills a BUY by notional: the first real fill (2026-09-07) asked 5 @ 0.39 and got
+    5.131577 @ 0.38. A match is therefore UNCONFIRMED until status() reports the venue's size;
+    hedging the request size would have left the improvement unhedged."""
+    tr = FakeTransport(posts=[{"success": True, "orderID": "0xabc", "status": "matched", "tradeIDs": ["t1"]}],
+                       orders=[{"id": "0xabc", "status": "MATCHED", "size_matched": "10.263157", "price": "0.43"}])
     v, j = venue(tmp_path, tr)
     ack = v.submit(req(), cl(tmp_path))
-    assert ack.state is FillState.FILLED and ack.settlement_pending and ack.filled_contracts == 10.0
+    assert ack.state is FillState.UNCONFIRMED and ack.settlement_pending and "size via status" in ack.detail
     assert tr.calls[0] == ("post", "tok-1", 0.44, 10.0, "FOK")
-    assert j.get("c1")["state"] == "FILLED" and j.get("c1")["settlement_pending"] == 1
+    st = v.status("c1")
+    assert st.state is FillState.FILLED and st.final and st.filled_contracts == 10.263157 and st.avg_price == 0.43
+    assert j.get("c1")["state"] == "FILLED"
+
+
+def test_a_taker_fill_the_venue_reports_without_a_fee_carries_the_pinned_fee(tmp_path):
+    """The venue charged the taker fee against collateral and reported fee_rate_bps 0 on the trade
+    (2026-09-07: balance moved by fills + exactly the pinned 0.0604). With fee params known, the fill
+    carries the pinned fee, labelled; without them it stays 0."""
+    tr = FakeTransport(trades=[{"id": "t1", "taker_order_id": "0xabc", "size": "5.131577", "price": "0.38",
+                                "fee_rate_bps": "0", "trader_side": "TAKER", "match_time": T, "status": "CONFIRMED"}])
+    v, j = venue(tmp_path, tr)
+    assert v.fills(since_utc=0)[0].fee_usd == 0.0 and v.last_fee_source == "venue"
+    v.fee_params = {"fee_rate": 0.05, "fee_exponent": 1.0, "taker_only": True, "rebate_rate": 0.15}
+    f = v.fills(since_utc=0)[0]
+    assert f.fee_usd > 0 and v.last_fee_source.startswith("pinned")
 
 
 def test_a_fak_match_is_unconfirmed_until_status_reports_the_size(tmp_path):
