@@ -145,6 +145,18 @@ def test_the_token_cannot_be_forged_and_is_single_use_and_short_lived(kill, brea
     assert c2.consume(100.1) and not c2.consume(100.0 + LIMITS.max_hedge_latency_ms / 1000 + 0.1, hedge=True)
 
 
+def test_the_hedge_window_is_armed_when_the_position_exists_not_at_the_mint(kill, breaker):
+    """max_hedge_latency_ms bounds UNHEDGED DURATION; the machine arms it when leg A is known."""
+    w = LIMITS.max_hedge_latency_ms / 1000
+    c = clear(cand(), ledger=ExposureLedger(), **ok_env(kill=kill, breaker=breaker))
+    with pytest.raises(ValueError):
+        c.arm_hedge(100.1)                                     # no position yet
+    assert c.consume(100.1)
+    assert c.arm_hedge(102.0) == pytest.approx(102.0 + w)
+    assert c.consume(102.0 + w - 0.1, hedge=True), "inside the window from the fill"
+    assert not c.consume(102.0 + w + 0.1, hedge=True), "past it"
+
+
 def test_refusals_come_in_the_fail_closed_order(kill, breaker):
     L = ExposureLedger()
     env = ok_env(kill=kill, breaker=breaker)

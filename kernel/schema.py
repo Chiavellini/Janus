@@ -135,6 +135,10 @@ class ExecutionState(str, Enum):
 
 _HOLDING_FAILURES = frozenset({
     ExecutionState.PARTIAL_FILL, ExecutionState.HEDGE_SLIPPAGE_EXCEEDED, ExecutionState.UNKNOWN_PROVIDER_STATE,
+    # The machine reaches HEDGE_UNAVAILABLE only after leg A filled (a hedge the venue refused), so it
+    # holds a position like the others. Until 2026-09-07 it was terminal: leg A filled, never settled,
+    # the reservation held for good and no alarm.
+    ExecutionState.HEDGE_UNAVAILABLE,
 })
 _EXECUTION_FAILURES = frozenset({
     ExecutionState.ORDER_REJECTED, ExecutionState.ORDER_TIMEOUT,

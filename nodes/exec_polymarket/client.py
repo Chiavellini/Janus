@@ -86,7 +86,10 @@ class PyClobTransport:
     def post_order(self, *, token_id: str, price: float, size: float, order_type: str) -> dict:
         args = self._T.OrderArgsV2(token_id=token_id, price=price, size=size, side="BUY")
         signed = self._c.create_order(args)
-        return self._c.post_order(signed, getattr(self._T.OrderType, order_type))
+        # defer_exec: the library otherwise polls the fill's settlement hashes INSIDE the post
+        # (best effort, seconds); the hedge needs the match, not the hash. fills() reads
+        # CONFIRMED trades later (2026-09-07).
+        return self._c.post_order(signed, getattr(self._T.OrderType, order_type), defer_exec=True)
 
     def get_order(self, order_id: str) -> dict:
         return self._c.get_order(order_id)

@@ -2,6 +2,7 @@
 """The machine, one rule per test. Paper venues on both sides; a fake venue for ambiguity."""
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -317,3 +318,85 @@ def test_paper_fills_carry_the_pinned_fee_when_the_venue_knows_its_params(tmp_pa
     fees = {r[0]: r[1] for r in store.con.execute("SELECT venue, fee_usd FROM orders WHERE state='FILLED'").fetchall()}
     assert fees["kalshi"] > 0 and fees["polymarket"] > 0, fees
     assert fees["kalshi"] + fees["polymarket"] == pytest.approx(cov.fee_per_contract * 100, rel=0.05), "the cover priced these fees"
+
+
+# ── 2026-09-07: the settle-ack rule, one hedge window, stage stamps ──────────
+class ScriptedVenue(AmbiguousVenue):
+    """Like AmbiguousVenue, but each scripted status carries its own `final` flag."""
+    def __init__(self, venue, journal, mode, script):
+        super().__init__(venue, journal, mode, statuses=[])
+        self.script = list(script)          # [(FillState, final)]
+        self.polls = 0
+    def status(self, cid):
+        self.polls += 1
+        st, final = self.script.pop(0) if self.script else (FillState.UNFILLED, False)
+        filled = 100.0 if st is FillState.FILLED else 0.0
+        return OrderState(self.venue, cid, "v1", st, filled, 0.44 if filled else None, None, st.value.lower(), T, final=final)
+
+
+def _scripted(tmp_path, script, *, deadline=1.0):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    journal = Journal(store)
+    clk = Clock()
+    pm = ScriptedVenue("polymarket", journal, Mode.PAPER_EXECUTION, script)
+    from nodes.execution.paper import PaperVenue
+    offs = offers()
+    k = PaperVenue("kalshi", journal, clock=clk.now, mono=clk.mono, books={"K_A": offs["away"][0].book})
+    co = Coordinator({"polymarket": pm, "kalshi": k}, ExecutionRecords(store), Mode.PAPER_EXECUTION,
+                     hedge_deadline_s=deadline, poll_interval_s=0.1, clock=clk.now, mono=clk.mono, sleep=clk.sleep)
+    p, _ = plan_for(offs)
+    return co, pm, store, clk, p
+
+
+def test_a_non_final_unfilled_status_is_not_an_answer_the_venue_may_still_fill(tmp_path):
+    """Polymarket DELAYED reads as UNFILLED, final=False. Releasing on it double-spent the reservation."""
+    co, pm, store, clk, p = _scripted(tmp_path, [(FillState.UNFILLED, False), (FillState.UNFILLED, False), (FillState.FILLED, True)])
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.HEDGED and ex.first_filled == 100.0 and pm.polls == 3
+    assert ex.stages["a_polls"] == 3
+
+
+def test_a_status_that_never_turns_final_is_unknown_provider_state_and_keeps_the_reservation(tmp_path):
+    co, pm, store, clk, p = _scripted(tmp_path, [(FillState.UNFILLED, False)] * 50, deadline=1.0)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.UNKNOWN_PROVIDER_STATE and not ex.released
+    assert store.con.execute("SELECT COUNT(*) FROM orders").fetchone()[0] == 1, "never resubmitted"
+
+
+def test_the_first_status_poll_is_immediate_and_the_interval_is_slept_between_polls(tmp_path):
+    co, pm, store, clk, p = _scripted(tmp_path, [(FillState.FILLED, True)])
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.HEDGED and pm.polls == 1
+    assert clk.m == 100.0, "one poll, zero sleeps: the blind 100 ms is gone"
+    co, pm, store, clk, p = _scripted(tmp_path / "b", [(FillState.UNFILLED, False), (FillState.FILLED, True)])
+    ex = co.execute(p, clearance_for(tmp_path / "b", now_mono=100.0))
+    assert ex.state is X.HEDGED and pm.polls == 2 and clk.m == pytest.approx(100.1)
+
+
+def test_the_hedge_window_is_the_clearance_s_and_starts_when_leg_a_is_known(tmp_path):
+    """A slow leg A settle must not spend the hedge's window (CLEARANCE_SPENT with leg A filled)."""
+    script = [(FillState.UNFILLED, False)] * 25 + [(FillState.FILLED, True)]      # 2.5 s of polling
+    co, pm, store, clk, p = _scripted(tmp_path, script, deadline=3.0)
+    c = clearance_for(tmp_path, now_mono=100.0)
+    ex = co.execute(p, c)
+    assert ex.state is X.HEDGED, ex.detail
+    assert c.hedge_deadline_mono == pytest.approx(clk.m - 0.0, abs=3.0) and c.hedge_deadline_mono > 102.5 + 2.9
+
+
+def test_hedge_unavailable_holds_a_position_and_is_not_terminal():
+    assert X.HEDGE_UNAVAILABLE.holds_position and not X.HEDGE_UNAVAILABLE.is_terminal
+
+
+def test_stage_stamps_are_recorded_monotone_and_persisted(tmp_path):
+    co, vs, store, clk, _ = harness(tmp_path)
+    offs = offers()
+    p, _ = plan_for(offs)
+    for v in vs.values():
+        v.books = {"P_H": offs["home"][0].book, "K_A": offs["away"][0].book}
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0), pre_stages={"frame_to_eval_ms": 3.5, "clear_ms": 1.0})
+    assert ex.state is X.HEDGED, ex.detail
+    keys = ["a_submit_ms", "a_ack_ms", "a_settled_ms", "b_submit_ms", "b_ack_ms", "b_settled_ms", "done_ms"]
+    vals = [ex.stages[k] for k in keys]
+    assert vals == sorted(vals) and ex.stages["frame_to_eval_ms"] == 3.5 and "db_ms" in ex.stages
+    row = json.loads(store.con.execute("SELECT stages_json FROM executions WHERE execution_id=?", (ex.execution_id,)).fetchone()[0])
+    assert row == ex.stages

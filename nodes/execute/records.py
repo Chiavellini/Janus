@@ -44,6 +44,9 @@ class Execution:
     released: bool = False
     detail: str = ""
     history: list[tuple[float, ExecutionState, ExecutionState, str]] = field(default_factory=list)
+    #: Per-stage timing, ms from the machine's entry (frame->eval and the grid's pre-machine stages
+    #: arrive from the caller), plus counters. Written as stages_json; read by ops/latency_report.py.
+    stages: dict[str, float] = field(default_factory=dict)
 
     @property
     def unhedged(self) -> float:
@@ -54,6 +57,8 @@ class ExecutionRecords:
     def __init__(self, store):
         self.store = store
         store.ensure_ddl(EXECUTION_DDL)
+        if hasattr(store, "_add_column_if_missing"):
+            store._add_column_if_missing("executions", "stages_json", "TEXT")     # 2026-09-07
 
     def start(self, ex: Execution, *, plan: dict, books: dict) -> None:
         self.store.con.execute(
@@ -77,11 +82,11 @@ class ExecutionRecords:
     def sync(self, ex: Execution, *, now: float | None = None) -> None:
         self.store.con.execute(
             "UPDATE executions SET state=?, last_utc=?, first_client_id=?, hedge_client_ids=?, first_filled=?, "
-            "first_avg_price=?, hedge_filled=?, hedge_avg_price=?, unhedged=?, reservation_id=?, released=?, detail=? "
-            "WHERE execution_id=?",
+            "first_avg_price=?, hedge_filled=?, hedge_avg_price=?, unhedged=?, reservation_id=?, released=?, detail=?, "
+            "stages_json=? WHERE execution_id=?",
             (ex.state.value, now or time.time(), ex.first_client_id, json.dumps(ex.hedge_client_ids), ex.first_filled,
              ex.first_avg_price, ex.hedge_filled, ex.hedge_avg_price, ex.unhedged, ex.reservation_id, int(ex.released),
-             ex.detail, ex.execution_id))
+             ex.detail, json.dumps(ex.stages, sort_keys=True), ex.execution_id))
         self.store.con.commit()
 
     def open_unhedged(self) -> list[tuple[str, float]]:

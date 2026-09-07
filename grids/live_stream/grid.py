@@ -388,6 +388,11 @@ class Supervisor:
         """PAPER and above: plan from the priced cover, clear it through nodes/risk, run the machine.
         Every refusal is recorded on the opportunity; nothing here raises into the socket loop."""
         cov = ev.cover
+        m_entry = time.monotonic()
+        # The path's first two stages, for ops/latency_report.py: the poller's own event->decision
+        # time and the gap from the decision to here (records, the frontier).
+        pre = {"frame_to_eval_ms": round(float(getattr(ev, "latency_ms", 0.0) or 0.0), 2),
+               "eval_to_exec_ms": round(max(0.0, time.time() - ev.evaluated_utc) * 1000.0, 2)}
         offers = {o: list(v) for o, v in ev.offers.items()}
         plan = plan_from_cover(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
                                league=sup.poller.league, cov=cov, offers=offers, hurdle=MIN_RETURN)
@@ -409,20 +414,33 @@ class Supervisor:
                          rec.net_profit_usd or 0.0, rec.locked_return or 0.0, STRATEGY_VERSION, max_age)
         balances = None
         if self.mode.sends_real_orders:
-            got = {v: (venue.balance().available_usd if venue.balance() else None) for v, venue in self.venues.items()}
+            m = time.monotonic()
+            got = {}
+            for v, venue in self.venues.items():        # ONE round trip per venue (it was two, 2026-09-07)
+                b = venue.balance()
+                got[v] = b.available_usd if b else None
             balances = None if any(b is None for b in got.values()) else got
+            pre["balances_ms"] = round((time.monotonic() - m) * 1000.0, 2)
         connected = {"kalshi": bool(self.ks and self.ks.connected), "polymarket": bool(self.ps and self.ps.connected)}
+        m = time.monotonic()
         clearance = clear(cand, mode=self.mode, limits=self.limits, ledger=self.ledger, kill=self.kill,
                           breaker=self.breaker, fills_today=(), clock_healthy=self.clock_ok(),
                           fee_schedules_ok=bool(sup.fee_params.get("kalshi") and sup.fee_params.get("polymarket")),
                           balances=balances, venues_connected=connected, caps=self.caps or None)
+        pre["clear_ms"] = round((time.monotonic() - m) * 1000.0, 2)
         if hasattr(clearance, "code"):
             print(f"  [risk] refused {sup.short_name}: {clearance.code} {clearance.detail}", flush=True)
             return
-        ex = self.coordinator.execute(plan, clearance, offers_books=books_snapshot(offers), venues_connected=connected)
+        pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
+        ex = self.coordinator.execute(plan, clearance, offers_books=books_snapshot(offers), venues_connected=connected,
+                                      pre_stages=pre)
         self.executions += 1
         print(f"  [exec] {sup.short_name} {ex.state.value} first={ex.first_filled}@{ex.first_avg_price} "
               f"hedge={ex.hedge_filled}@{ex.hedge_avg_price} unhedged={ex.unhedged} {ex.detail}", flush=True)
+        try:
+            print(f"  [latency] {sup.short_name} " + " ".join(f"{k}={v}" for k, v in sorted(ex.stages.items())), flush=True)
+        except Exception:  # noqa: BLE001 -- reporting must never break the loop
+            pass
         if ex.released and self.ledger is not None:
             self.ledger.release(ex.reservation_id, reason=f"nothing filled: {ex.state.value}")
 

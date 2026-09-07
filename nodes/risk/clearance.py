@@ -45,7 +45,7 @@ class Candidate:
 class RiskClearance:
     """Single-use, short-lived, minted only by clear()."""
     __slots__ = ("opportunity_id", "event_id", "mode", "reservation", "limits_sha", "issued_mono",
-                 "expires_mono", "hedge_deadline_mono", "max_hedge_submits", "_first_used",
+                 "expires_mono", "hedge_deadline_mono", "hedge_window_s", "max_hedge_submits", "_first_used",
                  "_hedge_used", "_mint")
 
     def __init__(self, *, opportunity_id: str, event_id: str, mode: Mode, reservation: Reservation,
@@ -57,7 +57,20 @@ class RiskClearance:
         self.reservation, self.limits_sha = reservation, limits_sha
         self.issued_mono, self.expires_mono = issued_mono, expires_mono
         self.hedge_deadline_mono, self.max_hedge_submits = hedge_deadline_mono, max_hedge_submits
+        self.hedge_window_s = max(0.0, hedge_deadline_mono - issued_mono)
         self._first_used, self._hedge_used = False, 0
+
+    def arm_hedge(self, now_mono: float | None = None) -> float:
+        """The machine calls this the instant leg A's fill is known: the hedge window (the risk
+        limit on UNHEDGED DURATION) runs from here. Until 2026-09-07 it ran from the mint, while the
+        coordinator's own window ran from leg A's settle, so a slow settle spent the token's window
+        before the first hedge was sent and every attempt came back CLEARANCE_SPENT with leg A
+        filled. Returns the deadline, which is the coordinator's too."""
+        t = now_mono if now_mono is not None else time.monotonic()
+        if not self._first_used:
+            raise ValueError("arm_hedge before the first leg was consumed")
+        self.hedge_deadline_mono = t + self.hedge_window_s
+        return self.hedge_deadline_mono
 
     def valid(self, now_mono: float | None = None) -> bool:
         """The FIRST leg may still be sent."""

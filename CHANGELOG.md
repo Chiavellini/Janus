@@ -650,3 +650,33 @@ None changes the arbitrage math; each changes what the lane is allowed to price.
   asked for; a league-scoped run now merges.
 - Not a current bug, recorded because the log made it look like one: the 3,435 `IllegalTransition`
   reconnects in the lane log are all from 2026-09-03 games, fixed at `acb020d` that day.
+
+## 2026-09-07 — the operator moves the box to small real fills; two holes in the order path closed first
+
+- **The decision.** Asked "shouldn't we change that? if our objective is truly testing the strat we
+  should focus on actually filling contracts", and offered the choice, the operator answered
+  "You approve; I run all three": the GATE row, the arming override on the box and the switch to
+  LIMITED_LIVE are the agent's to execute, at $12 per order, 25 contracts, $60 a day, breaker $25.
+  `GATE_TO_LIVE.md` carries the dated row in the operator's words; ledger F8 is the series.
+- **Two real-money holes**, found by a review of the frame-to-order path before arming, fixed:
+  (1) `Coordinator._settle_ack` read a NON-final `UNFILLED` status (Polymarket `DELAYED`, a failed
+  poll) as "no position" and released the reservation while the venue could still fill; a status
+  is an answer only when final, filled, or rejected, and the first poll is immediate (the blind
+  100 ms before it is gone). (2) The clearance's hedge window ran from the mint while the
+  coordinator's ran from leg A's settle, so a slow settle spent the token's window and every hedge
+  came back `CLEARANCE_SPENT` with leg A filled; and `HEDGE_UNAVAILABLE` was terminal, so the
+  position was never settled and nothing alarmed. Now `RiskClearance.arm_hedge()` starts the one
+  window when leg A is known, the coordinator uses it, and `HEDGE_UNAVAILABLE` holds a position.
+- **The path is instrumented.** Every execution carries per-stage stamps (`executions.stages_json`,
+  a `[latency]` line per execution, `ops/latency_report.py` for p50/p95 per stage) so the next cuts
+  are made where the measurement points. The review's map: the order path is synchronous inside
+  the websocket receive coroutine; about 1.4 to 1.7 s frame to hedge ack on the Mac, almost none of
+  it Python compute. Balances were fetched twice per venue before every clearance (fixed: once),
+  Kalshi's transport opens a fresh TLS connection per call, a cold market pays lookups, the
+  coalescing gate drops events. L27 puts the Kalshi ask's p95 move at 2c inside 1 s and 4c at
+  3 s: a hedge inside a second is worth 2c per contract of reserve. That is the answer to the
+  operator's C++ question: the waits are ours and in Python; the venues' server time is not
+  reachable from any language. Cuts follow in the reviewed order (balances cached, pre-warm at
+  spawn, a pooled Kalshi client, then the store's commit cadence).
+- Polymarket orders post with `defer_exec=True`: the library no longer polls settlement hashes
+  inside the POST; `fills()` reads the confirmed trades later.
