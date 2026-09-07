@@ -105,3 +105,50 @@ def test_a_tennis_ticker_dated_the_day_before_its_lone_candidate_is_the_same_mat
     sep6 = game("pm:wta:0", "2026-09-06T15:30:00")
     assert venue_structured_game([sep6, sep7], (2026, 9, 8)) == (None, False), "two candidates: never a guess"
     assert venue_structured_game([sep7], None) == (None, False)
+
+
+def test_pull_kalshi_follows_the_cursor_and_every_series_of_the_league():
+    """One page of 200 cut college football's tail with no signal until 2026-09-07."""
+    from nodes.match_sports.stage1_checkpoint import pull_kalshi
+
+    class Fake:
+        def __init__(self): self.calls = []
+        def get_json(self, url, params=None, use_cache=False):
+            self.calls.append(dict(params))
+            if params["status"] == "unopened":
+                return {"events": []}
+            if params["series_ticker"] == "KXATPMATCH":
+                if params.get("cursor") is None:
+                    return {"events": [{"event_ticker": "A1"}], "cursor": "c2"}
+                return {"events": [{"event_ticker": "A2"}], "cursor": ""}
+            return {"events": [{"event_ticker": "CH1"}]}
+    f = Fake()
+    got = [e["event_ticker"] for e in pull_kalshi("atp", f)]
+    assert got == ["A1", "A2", "CH1"]
+    assert {c["series_ticker"] for c in f.calls} == {"KXATPMATCH", "KXATPCHALLENGERMATCH"}
+
+
+def test_live_players_seed_the_resolver_and_the_counters_name_every_drop():
+    from collections import Counter
+    from nodes.entities.resolve import Resolver
+    from nodes.match_sports.sports_match import pm_markets, seed_live_players
+    r = Resolver(teams={}, alias_index={}, xrefs={})
+    events = [
+        {"slug": "wta-swiatek-zheng-2026-09-07", "teams": [{"id": 1, "name": "Iga Swiatek", "abbreviation": "swi"},
+                                                            {"id": 2, "name": "Qinwen Zheng", "abbreviation": "zhe"}], "markets": []},
+        {"slug": "wta-doubles-a-b-2026-09-07", "teams": [{"id": 3, "name": "A / B", "abbreviation": "ab"}, {"id": 4, "name": "C / D", "abbreviation": "cd"}]},
+        {"slug": "atp-x-y-2026-09-07", "teams": [{"id": 5, "name": "X", "abbreviation": "x"}, {"id": 6, "name": "Y", "abbreviation": "y"}]},
+        {"slug": "wta-swiatek-zheng-2026-09-07-exact-score", "teams": [{"id": 1, "name": "Iga Swiatek"}, {"id": 2, "name": "Qinwen Zheng"}]},
+        {"slug": "wta-verylongname-zheng-2026-09-07", "teams": [{"id": 7, "name": "Very Longname"}, {"id": 2, "name": "Qinwen Zheng"}]},
+        {"slug": "wta-lonely-2026-09-07", "teams": [{"id": 8, "name": "Lonely"}]},
+    ]
+    assert seed_live_players("wta", r, events) == 4, "two singles players, twice each; no doubles pair, no ATP"
+    assert r.resolve("wta", text="Iga Swiatek").ok and not r.resolve("wta", text="A / B").ok
+    stats = Counter(); stats["k_reason"] = Counter(); stats["p_reason"] = Counter()
+    near = []
+    out = pm_markets("wta", r, {}, (0, 4_000_000_000), stats, near, events=events)
+    assert out == []          # the one full-game event carries no market start: no_start_time
+    assert stats["p_reason"] == {"doubles": 1, "other_league_under_shared_tag": 1,
+                                 "derivative_event_not_full_game_moneyline": 1, "slug_piece_too_long": 1,
+                                 "teams_not_two": 1, "no_start_time": 1}
+    assert [n["reason"] for n in near] == ["slug_piece_too_long"]

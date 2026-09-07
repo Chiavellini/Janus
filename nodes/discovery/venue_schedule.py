@@ -19,7 +19,9 @@ from nodes.schedule_espn.espn import ScheduledGame
 from nodes.venue_polymarket.books import PM_GAMMA
 
 
-def pm_game_events(tag: str | int, cl: Client, *, pages: int = 6) -> list[dict]:
+def pm_game_events(tag: str | int, cl: Client, *, pages: int = 60) -> list[dict]:
+    """Every open event under the tag, page by page until a short page. The old cap of six pages
+    (600 events) sat 38 events above the tennis tag on 2026-09-07."""
     out = []
     key = "tag_id" if isinstance(tag, int) else "tag_slug"
     for i in range(pages):
@@ -74,7 +76,8 @@ def pm_players(league: str, prefix: str, events: list[dict]) -> list[dict]:
     """PURE. Distinct players seen in the league's events: {id, name, abbreviation}, for the entity seed."""
     seen: dict[str, dict] = {}
     for ev in events:
-        if not str(ev.get("slug", "")).startswith(prefix + "-"):
+        slug = str(ev.get("slug", ""))
+        if not slug.startswith(prefix + "-") or "doubles" in slug:      # a pair is not a player
             continue
         for t in ev.get("teams") or []:
             if t.get("id") is not None and t.get("name"):

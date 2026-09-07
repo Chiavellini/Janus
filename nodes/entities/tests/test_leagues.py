@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """One league table, read everywhere; a row buys nothing until the rule and the templates exist."""
 from __future__ import annotations
+from nodes.entities.leagues import LEAGUES, league_for_series, default_leagues, enablement
 
 from nodes.entities import seed
 from nodes.entities.leagues import (LEAGUES, default_leagues, enablement, espn_paths, kalshi_series, league_for_prefix,
@@ -22,13 +23,13 @@ BATCH2 = {"elc", "el1", "ita", "fl1", "ere", "por", "scop", "bel1"}
 
 def test_the_eighteen_of_2026_09_03_and_their_shapes():
     from nodes.entities.leagues import SOCCER, espn_groups
-    assert set(LEAGUES) == {"mlb", "nfl", "nba", "wnba", "nhl", "epl", "lal", "bun", "mls", "cfb", "atp", "wta"} | BATCH2
+    assert set(LEAGUES) == {"mlb", "nfl", "nba", "wnba", "nhl", "epl", "lal", "bun", "mls", "cfb", "atp", "wta", "itf"} | BATCH2
     assert espn_groups() == {"cfb": ("80", "81")}, "FBS and FCS; ESPN's default feed is FBS alone"
     assert set(SOCCER) == {"epl", "lal", "bun", "mls"} | BATCH2
     assert all(LEAGUES[c].pm_tag_id for c in BATCH2), "batch 2 pulls Gamma events by tag id"
     assert pm_tags()["elc"] == 102643 and pm_tags()["mlb"] == "mlb"
     assert all(LEAGUES[c].outcomes == 3 for c in SOCCER) and all(LEAGUES[c].outcomes == 2 for c in LEAGUES if c not in SOCCER)
-    assert all(lg.anchor == "espn" and lg.espn is not None for c, lg in LEAGUES.items() if c not in ("atp", "wta"))
+    assert all(lg.anchor == "espn" and lg.espn is not None for c, lg in LEAGUES.items() if c not in ("atp", "wta", "itf"))
     assert all(LEAGUES[c].anchor == "venue_structured" and LEAGUES[c].espn is None and LEAGUES[c].template_scrub for c in ("atp", "wta"))
     assert "atp" not in espn_paths()
     assert "ucl" not in LEAGUES, "a club is one entity across competitions before UCL can be registered"
@@ -59,3 +60,12 @@ def test_enablement_names_what_each_league_lacks():
         # one rate pair for both tours: the walkover rate (L39) and, since 2026-09-05, the forward delay rate (F4, an upper bound)
         assert enablement(c) == [], c
     assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "cfb", "elc", "el1", "ita", "atp", "wta"]
+
+
+def test_a_league_may_own_more_than_one_kalshi_series_and_itf_is_registered_but_not_enabled():
+    assert league_for_series("KXATPCHALLENGERMATCH") == "atp" and league_for_series("KXWTACHALLENGERMATCH") == "wta"
+    assert league_for_series("KXATPMATCH") == "atp"
+    assert LEAGUES["atp"].kalshi_series_all == ("KXATPMATCH", "KXATPCHALLENGERMATCH")
+    assert league_for_series("KXITFWMATCH") == "itf" and LEAGUES["itf"].pm_prefix == "itf"
+    # registered is not enabled: the ITF rules texts must hash to a reviewed template first
+    assert "itf" not in default_leagues() and enablement("itf")

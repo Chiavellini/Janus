@@ -39,7 +39,7 @@ from nodes.entities.resolve import Resolver, normalize
 from nodes.discovery.venue_schedule import fetch_schedule
 from nodes.entities.leagues import LEAGUES, venue_structured
 from nodes.entities.seed import KALSHI_GAME_SERIES, NON_TEAM_OUTCOMES
-from nodes.match_sports.sports_match import DRAW_ENTITY, kalshi_markets, pair, pm_markets
+from nodes.match_sports.sports_match import DRAW_ENTITY, kalshi_markets, pair, pm_markets, seed_live_players, pull_pm, _client
 from nodes.schedule_espn import espn
 from nodes.settle_wedge.pair import certify_from_spec, records_from_spec, summary
 from nodes.settle_wedge.records import record_equivalence, record_rules
@@ -102,8 +102,9 @@ def universe(schedule: list, now_ts: float, *, hours: float = UNIVERSE_HOURS) ->
 def live_games(leagues: list[str], now: datetime, include_near: bool,
                pre_hours: float = DEFAULT_PRE_HOURS) -> tuple[list, dict]:
     """The schedule side. One league's ESPN failure is recorded, never fatal for the others."""
-    games, failures = [], {}
-    horizon = max(1.0, pre_hours / 24.0 + 1.0)
+    games, universe, failures = [], [], {}
+    horizon = max(UNIVERSE_HOURS / 24.0, pre_hours / 24.0 + 1.0)
+    t = now.timestamp()
     for league in leagues:
         try:
             if league in venue_structured():
@@ -115,19 +116,31 @@ def live_games(leagues: list[str], now: datetime, include_near: bool,
         except Exception as exc:  # noqa: BLE001 -- one league must not take the others down
             failures[league] = brief_error(exc)
             continue
-        games.extend(select_live(schedule, now.timestamp(), include_near, pre_hours))
-    return games, {"by_id": {g.game_id: g for g in games}, "schedule_failures": failures}
+        games.extend(select_live(schedule, t, include_near, pre_hours))
+        # The rolling universe (UNIVERSE_HOURS): what the matchers pair against, so a venue's
+        # ticker for a game 6-48 h out is a pair waiting, not "outside_window" (2026-09-07).
+        universe.extend(g for g in schedule if -86400 <= g.start_utc - t <= UNIVERSE_HOURS * 3600)
+    return games, {"by_id": {g.game_id: g for g in games}, "schedule_failures": failures, "universe": universe}
 
 
-def match_live(league: str, games: list, now: datetime):
-    """Both venues resolved onto the schedule independently, then an exact join."""
-    by_pair = espn.index_by_participants(games)
+def match_live(league: str, games: list, now: datetime, universe: list | None = None):
+    """Both venues resolved onto the schedule independently, then an exact join. `games` is the
+    live set (what may spawn); `universe` (default: `games`) is what the venues' markets pair
+    against, up to UNIVERSE_HOURS out."""
+    by_pair = espn.index_by_participants(universe if universe else games)
     resolver = Resolver.load()
     stats = Counter(); stats["k_reason"] = Counter(); stats["p_reason"] = Counter()
     near_miss: list[dict] = []
-    window = (int((now - timedelta(days=1)).timestamp()), int((now + timedelta(days=1)).timestamp()))
+    window = (int((now - timedelta(days=1)).timestamp()), int((now + timedelta(hours=UNIVERSE_HOURS)).timestamp()))
+    pm_events = None
+    if league in venue_structured():
+        # Tennis: the players are whoever Polymarket lists today. Seeded into the resolver
+        # BEFORE the Kalshi pass, so a Kalshi market's full-name label resolves to the same
+        # entity (2026-09-07: Swiatek v Zheng, in play on both venues, had no entity row).
+        pm_events = pull_pm(league, _client("polymarket"))
+        stats["players_seeded"] = seed_live_players(league, resolver, pm_events)
     kms = kalshi_markets(league, resolver, by_pair, window, stats, near_miss)
-    pms = pm_markets(league, resolver, by_pair, window, stats, near_miss)
+    pms = pm_markets(league, resolver, by_pair, window, stats, near_miss, events=pm_events)
     live_ids = {g.game_id for g in games}
     return [p for p in pair(kms, pms) if p["game_id"] in live_ids], {
         "kalshi_markets": len(kms), "polymarket_markets": len(pms),
@@ -197,8 +210,9 @@ def discover(leagues: list[str], now: datetime, include_near: bool, pre_hours: f
         lg_games = [g for g in games if g.league == league]
         if not lg_games:
             continue
+        lg_universe = [g for g in meta.get("universe") or () if g.league == league]
         try:
-            matches, stats, resolver = match_live(league, lg_games, now)
+            matches, stats, resolver = match_live(league, lg_games, now, universe=lg_universe)
         except Exception as exc:  # noqa: BLE001 -- one league must not take the slate down
             meta["schedule_failures"][league] = f"match: {brief_error(exc)}"
             continue

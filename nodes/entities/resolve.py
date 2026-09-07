@@ -218,6 +218,40 @@ class Resolver:
             return self.by_text(league, text)
         return Resolution(None, "unresolved", text or f"{venue}:{venue_team_id}")
 
+    # ── live players (2026-09-07) ─────────────────────────────────────────
+    def add_player(self, league: str, *, name: str, venue: str, venue_id: str | None,
+                   abbreviation: str | None = None) -> str | None:
+        """A participant a venue lists RIGHT NOW becomes an entity, in memory, for this pass.
+
+        Tennis has no ESPN roster: the checked-in tables are whoever Polymarket listed at seed
+        time (2026-09-07: 147 of 180 ATP and 110 of 126 WTA players on the day's slate were
+        absent; Swiatek had no row). The entity is keyed by the player's name, its aliases are
+        the name, the abbreviation and "I. Surname", and the venue id becomes an xref -- so the
+        other venue's full-name label resolves by text and its id is learned on first sight.
+        Returns the entity id, or None for an empty name."""
+        n = normalize(name or "")
+        if not n:
+            return None
+        hit = self.by_text(league, name)
+        if hit.ok:
+            eid = hit.entity_id
+        else:
+            eid = f"{league}:{re.sub(r'-+', '-', re.sub(r'[^a-z0-9]+', '-', n)).strip('-')}"
+            if eid not in self.teams:
+                parts = name.split()
+                self.teams[eid] = Team(entity_id=eid, league=league, espn_id=str(venue_id or ""),
+                                       abbrev=(abbreviation or "").upper(), location=" ".join(parts[:-1]),
+                                       nickname=parts[-1], display_name=name)
+            for a in {name, abbreviation or "", f"{name[0]}. {name.split()[-1]}" if " " in name else ""}:
+                key = (league, normalize(a))
+                if key[1]:
+                    bucket = self.alias_index.setdefault(key, [])
+                    if eid not in bucket:
+                        bucket.append(eid)
+        if venue and venue_id:
+            self.xrefs.setdefault((venue, str(venue_id)), eid)
+        return eid
+
     # ── miss log ─────────────────────────────────────────────────────────
     def _miss(self, query: str, league: str, reason: str, source: str) -> None:
         self.misses.append({"query": query, "league": league, "reason": reason, "source": source})

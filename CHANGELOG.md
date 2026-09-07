@@ -708,3 +708,39 @@ bucket; zero silent drops"; in the lane they were counted and discarded.
 - Reason hygiene on the way: the Polymarket side now splits `no_schedule_match` from
   `outside_window` like the Kalshi side (every tennis "schedule miss" today was a match past the
   window).
+
+## 2026-09-07 — tennis pairs by the venues' own rosters; the series and the window the lane was missing
+
+The per-league inventory (2026-09-07 ~17:05Z) found no pairing gap outside tennis and a whole one
+inside it: 53 tennis matches in the window, 21 on Kalshi, 4 paired. The causes were identity,
+series, and windows, not the join.
+
+- **Identity.** No tennis alias table existed (`seed.py` kept only ESPN-sourced aliases), the
+  xref tables were a roster snapshot (147 of 180 ATP and 110 of 126 WTA players on the day's slate
+  absent; Swiatek had no row), and a Kalshi tennis xref needed the ticker suffix AND the full name
+  to agree, which a 3-letter suffix never does. Now: `Resolver.add_player` mints an entity from a
+  venue's live listing (name, abbreviation, "I. Surname", the venue id as an xref); `match_live`
+  seeds every player Polymarket lists today BEFORE the Kalshi pass, so a Kalshi market's full-name
+  label resolves to the same entity and its UUID is learned on first sight; the seeder writes
+  venue-sourced aliases; doubles pairs are not players.
+- **Series.** `League.kalshi_series_extra`: atp and wta own their Challenger series
+  (`KXATPCHALLENGERMATCH`, `KXWTACHALLENGERMATCH`: 35 of 41 co-listed with Polymarket today);
+  a new `itf` league row (`KXITFMATCH` + `KXITFWMATCH`, prefix `itf-`, 69 co-listed today) is
+  registered and NOT enabled: its rules texts hash to templates the policy does not hold yet
+  (`ops/harvest_templates.py --league itf`: Kalshi's ITF text differs from the tour text on the
+  retirement clause; Polymarket's names the ITF as the source). Their review is the next commit.
+- **Windows and paging.** The matchers pair against the 48 h universe (`UNIVERSE_HOURS`, defined
+  and unused until now) while `select_live` still gates spawning; `pull_kalshi` follows the
+  cursor and every series of the league (college football was cut at 200 events with no signal);
+  Polymarket pulls page to the end (the tennis tag sat 38 events under the old cap).
+- **Reason hygiene.** `teams_not_two`, `no_participant_market`, `other_league_under_shared_tag`,
+  `doubles`, `slug_piece_too_long` are counted; Polymarket's `no_schedule_match` is split from
+  `outside_window` like the Kalshi side.
+- **The box's first actionable covers**, LAA @ BOS in play at 17:47Z: 25 and 100 contracts at a
+  4.6 % locked return, refused `CAP_STAKE` by the override ($23.25 and $94 against $12), and the
+  same books at 5 contracts held at DISCOVERED by the $0.10 floor once the pooled 4c slippage
+  reserve is charged ($0.22 − $0.20). Each refusal had first fetched both venues' balances on the
+  event loop; dozens a minute stalled it 5.6 s with 17 pollers live. The override caps and the
+  profit floor are now checked before any round trip and said once per game and size. What
+  unlocks the 5-contract size is L41's per-league reserve (running); what unlocks 25 is a cap the
+  operator has not given.

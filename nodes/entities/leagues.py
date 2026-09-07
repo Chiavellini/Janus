@@ -40,6 +40,13 @@ class League:
     #: Regexes removed from a venue's rules text before it is hashed into a template: the tournament
     #: and round a tennis text names change every match while the rules do not.
     template_scrub: tuple[str, ...] = ()
+    #: Further Kalshi game-level series that belong to this league (tennis: the Challenger tour
+    #: shares the tour's Polymarket prefix). Pulled beside `kalshi_series`.
+    kalshi_series_extra: tuple[str, ...] = ()
+
+    @property
+    def kalshi_series_all(self) -> tuple[str, ...]:
+        return (self.kalshi_series, *self.kalshi_series_extra)
 
 
 LEAGUES: dict[str, League] = {
@@ -77,10 +84,21 @@ LEAGUES: dict[str, League] = {
     # ticker date -- a `venue_structured` anchor with the weaker provenance grade. Both tours share
     # Polymarket's `tennis` tag; the slug prefix says which. Kalshi settles tennis on exchange shard 3.
     "atp":  League("atp", "ATP Tour", "KXATPMATCH", "tennis", "atp", None, anchor="venue_structured",
+                   kalshi_series_extra=("KXATPCHALLENGERMATCH",),
                    template_scrub=(r"in the \d{4} .*? (?:Men|Women)(?:'s)? Singles [A-Za-z0-9 ]+? (?=after a ball)",
                                    r"in the [A-Z][A-Za-z0-9 .'-]*?(?: (?:ATP|WTA))?,",
                                    r"official information from (?:the )?[A-Z][A-Za-z0-9 .'-]*?\.")),
     "wta":  League("wta", "WTA Tour", "KXWTAMATCH", "tennis", "wta", None, anchor="venue_structured",
+                   kalshi_series_extra=("KXWTACHALLENGERMATCH",),
+                   template_scrub=(r"in the \d{4} .*? (?:Men|Women)(?:'s)? Singles [A-Za-z0-9 ]+? (?=after a ball)",
+                                   r"in the [A-Z][A-Za-z0-9 .'-]*?(?: (?:ATP|WTA))?,",
+                                   r"official information from (?:the )?[A-Z][A-Za-z0-9 .'-]*?\.")),
+    # ITF (men's and women's), 2026-09-07 from the L28 census and the day's slate: Kalshi's two ITF
+    # series carry 117 open events of which Polymarket lists 69 under the same `tennis` tag with
+    # the `itf-` prefix. The same tennis rule and templates; certified only when the ITF rules
+    # texts hash to the tennis templates (ops/harvest_templates.py --league itf).
+    "itf":  League("itf", "ITF", "KXITFMATCH", "tennis", "itf", None, anchor="venue_structured",
+                   kalshi_series_extra=("KXITFWMATCH",),
                    template_scrub=(r"in the \d{4} .*? (?:Men|Women)(?:'s)? Singles [A-Za-z0-9 ]+? (?=after a ball)",
                                    r"in the [A-Z][A-Za-z0-9 .'-]*?(?: (?:ATP|WTA))?,",
                                    r"official information from (?:the )?[A-Z][A-Za-z0-9 .'-]*?\.")),
@@ -93,7 +111,7 @@ SOCCER = tuple(c for c, l in LEAGUES.items() if l.outcomes == 3)
 
 
 def league_for_series(series_ticker: str) -> str | None:
-    return next((c for c, l in LEAGUES.items() if l.kalshi_series == series_ticker), None)
+    return next((c for c, l in LEAGUES.items() if series_ticker in l.kalshi_series_all), None)
 
 
 def league_for_prefix(prefix: str) -> str | None:

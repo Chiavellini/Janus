@@ -103,7 +103,7 @@ _TENNIS_2WAY = (
     "disqualification; no draw exists and no tiebreak ends undecided. Kalshi settles the match 'after a ball has been "
     "played' on the official result and Polymarket resolves to the player who advances (both harvested 2026-09-03 and "
     "pinned in nodes/settle_wedge/policy.py). A walkover is no match and is ruled by settle_wedge, not assumed here.")
-for _lg in ("atp", "wta"):
+for _lg in ("atp", "wta", "itf"):
     RULES[(_lg, "moneyline", "game")] = _TENNIS_2WAY
 
 #: Three-way soccer. IFAB Laws of the Game 2025/26, Law 10.1 (Determining the outcome of a match):

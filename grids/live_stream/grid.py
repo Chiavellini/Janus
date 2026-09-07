@@ -431,6 +431,26 @@ class Supervisor:
                          ((plan.first.venue, plan.first.contracts, plan.first.limit_price),
                           (plan.hedge.venue, plan.hedge.contracts, plan.hedge.limit_price)),
                          rec.net_profit_usd or 0.0, rec.locked_return or 0.0, STRATEGY_VERSION, max_age)
+        # The cheap refusals BEFORE any round trip (2026-09-07, LAA @ BOS in play on the box): every
+        # profitable print at q=25 and q=100 fetched both venues' balances -- two round trips on
+        # the event loop -- only to be refused CAP_STAKE by the override. Dozens a minute stalled
+        # the loop 5.6 s with 17 pollers live. The caps and the profit floor are known here.
+        if self.caps and self.mode.risks_capital:
+            stake = sum(c * p for _v, c, p in cand.legs)
+            most = max(c for _v, c, _p in cand.legs)
+            early = None
+            if stake > float(self.caps.get("stake_usd", 0.0)):
+                early = ("CAP_STAKE", f"{stake:.2f} > override stake cap {float(self.caps.get('stake_usd', 0.0)):.2f}")
+            elif most > float(self.caps.get("max_contracts", 0.0)):
+                early = ("CAP_CONTRACTS", f"{most:.0f} > override contract cap {float(self.caps.get('max_contracts', 0.0)):.0f}")
+            elif cand.net_profit_usd < float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0):
+                early = ("MIN_PROFIT", f"{cand.net_profit_usd:.2f} < {float(getattr(self.limits, 'min_net_profit_usd', 0.0) or 0.0):.2f}")
+            if early:
+                key = f"{sup.short_name}:{early[0]}:{ev.quantity:g}"
+                if self.said.get(key) != early[1][:12]:          # once per game, code and size, not per print
+                    self.said[key] = early[1][:12]
+                    print(f"  [risk] refused {sup.short_name}: {early[0]} {early[1]} (q={ev.quantity:g}, before any round trip)", flush=True)
+                return
         balances = None
         if self.mode.sends_real_orders:
             m = time.monotonic()
@@ -607,7 +627,7 @@ def main() -> int:
     ap.add_argument("--mode", default="SHADOW_LIVE",
                     help="OFFLINE_REPLAY | SHADOW_LIVE | PAPER_EXECUTION | DEMO_EXECUTION | LIMITED_LIVE | PRODUCTION; "
                          "resolved once by nodes/risk.gate and never escalated")
-    ap.add_argument("--capture-series", default="KXATPMATCH,KXWTAMATCH,KXATPCHALLENGERMATCH",
+    ap.add_argument("--capture-series", default="KXATPMATCH,KXWTAMATCH,KXATPCHALLENGERMATCH,KXWTACHALLENGERMATCH",
                     help="Kalshi series to subscribe for CAPTURE ONLY (no pricing): what the slate cannot co-list yet; '' to disable")
     ap.add_argument("--capture-pm-tags", default="tennis",
                     help="Polymarket tag slugs or ids whose game markets are subscribed for capture only; '' to disable")

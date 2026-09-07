@@ -298,7 +298,9 @@ def main(leagues=SEED_LEAGUES) -> dict:
     seen_alias = set()
     dedup = []
     for a in aliases:
-        if a.get("source") != "espn":
+        # Generated aliases from EITHER schedule source. Until 2026-09-07 only ESPN's were kept, so
+        # the tennis names built above were never written and aliases.csv had no atp/wta row.
+        if a.get("source") not in ("espn", "polymarket"):
             continue
         k = (a["league"], normalize(a["alias"]), a["entity_id"])
         if k not in seen_alias:

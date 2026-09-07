@@ -139,24 +139,32 @@ def kalshi_date_from_ticker(ticker: str) -> tuple[int, int, int, int | None] | N
 # ── venue pulls ──────────────────────────────────────────────────────────────
 
 def pull_kalshi(league: str, client: Client) -> list[dict]:
-    series = KALSHI_GAME_SERIES[league]
+    """Every open and unopened event of every Kalshi series the league owns, following the
+    cursor: one page of 200 silently cut college football's tail until 2026-09-07."""
+    from nodes.entities.leagues import LEAGUES
+    series_all = LEAGUES[league].kalshi_series_all if league in LEAGUES else (KALSHI_GAME_SERIES[league],)
     out = []
-    for status in ("open", "unopened"):
-        try:
-            d = client.get_json(f"{KALSHI_BASE}/events",
-                                params={"series_ticker": series, "status": status,
-                                        "limit": 200, "with_nested_markets": "true"},
-                                use_cache=False)
-        except Exception:  # noqa: BLE001
-            continue
-        for e in d.get("events") or []:
-            out.append(e)
+    for series in series_all:
+        for status in ("open", "unopened"):
+            cursor = None
+            for _page in range(50):
+                params = {"series_ticker": series, "status": status, "limit": 200, "with_nested_markets": "true"}
+                if cursor:
+                    params["cursor"] = cursor
+                try:
+                    d = client.get_json(f"{KALSHI_BASE}/events", params=params, use_cache=False)
+                except Exception:  # noqa: BLE001
+                    break
+                out.extend(d.get("events") or [])
+                cursor = d.get("cursor")
+                if not cursor:
+                    break
     return out
 
 
 def pull_pm(league: str, client: Client) -> list[dict]:
     out = []
-    for off in range(0, 1500, 100):
+    for off in range(0, 6000, 100):
         try:
             d = client.get_json(f"{PM_GAMMA}/events",
                                 params={("tag_id" if isinstance(PM_TAG[league], int) else "tag_slug"): PM_TAG[league],

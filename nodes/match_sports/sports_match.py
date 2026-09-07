@@ -139,6 +139,7 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
         draws = [m for m in (ev.get("markets") or [])
                  if normalize(m.get("yes_sub_title") or "") in NON_TEAM_OUTCOMES]
         if not mkts:
+            _reason(stats["k_reason"], "no_participant_market")
             continue
         stats["kalshi_events"] += 1
         sides = []
@@ -148,6 +149,10 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
             res = r.resolve(league, text=m.get("yes_sub_title"), venue="kalshi", venue_team_id=uuid)
             if res.ok:
                 sides.append((m, res.entity_id))
+                if uuid and res.method != "xref":
+                    # The full name resolved (a player Polymarket lists today, `add_player`); the
+                    # venue's id is learned on first sight so the next pass is exact.
+                    r.xrefs.setdefault(("kalshi", uuid), res.entity_id)
         if len({e for _, e in sides}) != 2:
             _reason(stats["k_reason"], "entity_resolution")
             near_miss.append({"venue": "kalshi", "id": tick, "reason": "entity_resolution",
@@ -202,19 +207,56 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
     return out
 
 
-def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> list[VenueMarket]:
+def seed_live_players(league: str, r: Resolver, events: list[dict]) -> int:
+    """A venue-structured league's participants are whoever Polymarket lists today: each becomes
+    an entity for this pass (`Resolver.add_player`), so the Kalshi side resolves by the same full
+    name and both venues' ids are learned. Doubles pairs are not players. Returns players added."""
+    prefix = LEAGUES[league].pm_prefix if league in LEAGUES else league
+    seeded: set[str] = set()
+    for ev in events:
+        slug = str(ev.get("slug", ""))
+        if not slug.startswith(prefix + "-") or "doubles" in slug:
+            continue
+        for t in ev.get("teams") or []:
+            if t.get("name"):
+                eid = r.add_player(league, name=str(t["name"]), venue="polymarket",
+                                   venue_id=str(t.get("id") or "") or None,
+                                   abbreviation=str(t.get("abbreviation") or ""))
+                if eid:
+                    seeded.add(eid)
+    return len(seeded)
+
+
+_LOOSE_SLUG: dict[str, re.Pattern] = {}
+
+
+def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss, *, events=None) -> list[VenueMarket]:
     lo, hi = window
     out: list[VenueMarket] = []
-    for ev in pull_pm(league, _client("polymarket")):
+    prefix = LEAGUES[league].pm_prefix if league in LEAGUES else league
+    loose = _LOOSE_SLUG.setdefault(league, re.compile(rf"^{re.escape(prefix)}-[a-z0-9]+-[a-z0-9]+-\d{{4}}-\d{{2}}-\d{{2}}$"))
+    for ev in (events if events is not None else pull_pm(league, _client("polymarket"))):
         slug = ev.get("slug", "")
         teams = ev.get("teams") or []
         if len(teams) != 2:
+            _reason(stats["p_reason"], "teams_not_two")          # counted since 2026-09-07; was silent
             continue
         stats["pm_events"] += 1
         # DISCRIMINATION 1: derivative events share teams and start time but are not the same
         # contract. Rejecting them here is what the 15 hard negatives in the gold file test.
+        # Named apart (2026-09-07): another league under a shared tag, a doubles slug, a slug piece
+        # longer than the pattern allows, and the genuine derivative.
         if not _fullgame_slug(league).match(slug):
-            _reason(stats["p_reason"], "derivative_event_not_full_game_moneyline")
+            if not slug.startswith(prefix + "-"):
+                _reason(stats["p_reason"], "other_league_under_shared_tag")
+            elif "doubles" in slug:
+                _reason(stats["p_reason"], "doubles")
+            elif loose.match(slug):
+                _reason(stats["p_reason"], "slug_piece_too_long")
+                near_miss.append({"venue": "polymarket", "id": slug, "reason": "slug_piece_too_long",
+                                  "labels": [t.get("name") or "" for t in teams]})
+            else:
+                _reason(stats["p_reason"], "derivative_event_not_full_game_moneyline")
             continue
         # College football on Polymarket names `teams` by nickname alone ("Wildcats", "Demons") while
         # the moneyline's `outcomes` carry the schools; the outcome label is the fallback, in order.

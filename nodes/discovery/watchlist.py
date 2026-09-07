@@ -50,7 +50,7 @@ def pm_watch_events(tags: list[str | int], cl: Client, *, now: float, ahead_h: f
     out = []
     for tag in tags:
         evs = []
-        for off in range(0, 600, 100):
+        for off in range(0, 6000, 100):
             key = "tag_id" if isinstance(tag, int) or str(tag).isdigit() else "tag_slug"
             d = cl.get_json(f"{PM_GAMMA}/events", params={key: tag, "closed": "false", "limit": 100, "offset": off}, use_cache=False)
             if not d:
