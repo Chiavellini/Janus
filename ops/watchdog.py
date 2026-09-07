@@ -279,6 +279,11 @@ def check(index: Path = INDEX, *, now: float | None = None,
                     st = TupleStore(path, enforce_volume=not db)
                     alerts.extend(registry_health(st, now=now, in_season=(risk or {}).get("in_season", True)))
                     st.close()
+                    try:
+                        from ops.coverage_report import coverage_alerts, newest_census
+                        alerts.extend(coverage_alerts(path, newest_census(), now=now))
+                    except Exception as exc:  # noqa: BLE001 -- coverage must report, never crash the watchdog
+                        alerts.append(f"coverage: UNREADABLE — {type(exc).__name__}")
                     lane_up = any(r.get("job") == "live_stream" and r.get("status") == "started" and _pid_alive(r.get("pid"))
                                   for r in rows)
                     alerts.extend(socket_alerts(path, now=now, max_silence_s=900.0 if lane_up else None))
@@ -330,6 +335,30 @@ def selftest() -> None:
         p = fresh("f")
         _append(p, {"ts": NOW - 9999, "job": "j", "status": "started", "pid": os.getpid()})
         assert any("HUNG" in a for a in check(p, now=NOW, slas=S1, risk={})), "HUNG"
+
+        # COVERAGE_GAP — the census says both venues list it inside the lane's window, the lane did not pair it
+        from ops.coverage_report import coverage_alerts
+        from nodes.store_tuples.store import TupleStore as _TS
+        cdb = Path(d) / "cov.sqlite"
+        cst = _TS(cdb, enforce_volume=False)
+        from nodes.discovery.discovery import EVENTS_DDL
+        cst.ensure_ddl(EVENTS_DDL)
+        cst.con.execute("INSERT INTO events(event_id, league, start_utc, participants, short_name, phase, kalshi_event, first_seen_ts, last_seen_ts, block_reason) "
+                        "VALUES('espn:mlb:1','mlb',?,'[]','NYY @ BOS','pre',NULL,?,?,'UNPAIRED:kalshi=missing,polymarket=found')", (NOW + 600, NOW, NOW))
+        cst.con.execute("INSERT INTO events(event_id, league, start_utc, participants, short_name, phase, kalshi_event, first_seen_ts, last_seen_ts) "
+                        "VALUES('espn:mlb:2','mlb',?,'[]','SEA @ LAD','pre:co_listed','KXMLBGAME-SEALAD',?,?)", (NOW + 600, NOW, NOW))
+        cst.con.commit(); cst.close()
+        census = Path(d) / "results_x.json"
+        census.write_text(json.dumps({"run": "x", "co_listed_pairs_48h": [
+            {"kalshi_event": "KXMLBGAME-NYYBOS", "pm_event": "mlb-nyy-bos", "kalshi_series": "KXMLBGAME", "pm_sport": "mlb",
+             "date": "2027-01-15", "start_utc": NOW + 600, "participants": ["New York Yankees", "Boston Red Sox"]},
+            {"kalshi_event": "KXMLBGAME-SEALAD", "pm_event": "mlb-sea-lad", "kalshi_series": "KXMLBGAME", "pm_sport": "mlb",
+             "date": "2027-01-15", "start_utc": NOW + 600, "participants": ["Seattle Mariners", "Los Angeles Dodgers"]},
+            {"kalshi_event": "KXMLBGAME-FAR", "pm_event": "mlb-far", "kalshi_series": "KXMLBGAME", "pm_sport": "mlb",
+             "date": "2027-01-20", "start_utc": NOW + 5 * 86400, "participants": ["A", "B"]}]}))
+        cov = coverage_alerts(cdb, census, now=NOW)
+        assert len(cov) == 1 and "COVERAGE_GAP" in cov[0] and "KXMLBGAME-NYYBOS" in cov[0] and "polymarket=found" in cov[0], cov
+        assert coverage_alerts(cdb, None, now=NOW) == [], "no census: silent"
 
         # the box's SLA set drops the Mac-only daily jobs (JANUS_HOST=box); the Mac keeps them
         assert set(slas_for_host("box")) == {"live_stream", "census"} and "watch_settle" in slas_for_host("")

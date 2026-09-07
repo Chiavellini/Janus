@@ -150,7 +150,9 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
                 sides.append((m, res.entity_id))
         if len({e for _, e in sides}) != 2:
             _reason(stats["k_reason"], "entity_resolution")
-            near_miss.append({"venue": "kalshi", "id": tick, "reason": "entity_resolution"})
+            near_miss.append({"venue": "kalshi", "id": tick, "reason": "entity_resolution",
+                              "labels": [m.get("yes_sub_title") or "" for m in mkts],
+                              "resolved": [e for _, e in sides]})
             continue
         rules = (mkts[0].get("rules_primary") or "") + " " + (mkts[0].get("rules_secondary") or "")
         espn_ids = tuple(sorted(r.teams[e].espn_id for _, e in sides if e in r.teams))
@@ -169,7 +171,9 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
         if g is None:
             if cands:
                 _reason(stats["k_reason"], "no_schedule_match")
-                near_miss.append({"venue": "kalshi", "id": tick, "reason": "no_schedule_match"})
+                near_miss.append({"venue": "kalshi", "id": tick, "reason": "no_schedule_match",
+                                  "labels": [m.get("yes_sub_title") or "" for m in mkts],
+                                  "candidates": [c.game_id for c in cands]})
             else:
                 _reason(stats["k_reason"], "outside_window")
             continue
@@ -182,9 +186,10 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
         if three_way:
             if len(draws) != 1:
                 _reason(stats["k_reason"], "no_draw_market")
-                near_miss.append({"venue": "kalshi", "id": tick, "reason": "no_draw_market"})
+                near_miss.append({"venue": "kalshi", "id": tick, "reason": "no_draw_market", "game_id": g.game_id})
                 continue
             sides.append((draws[0], DRAW_ENTITY))
+        stats.setdefault("k_games", set()).add(g.game_id)
         for m, eid in sides:
             out.append(VenueMarket("kalshi", tick, m["ticker"], g.game_id, eid,
                                    "moneyline", "game", g.start_utc,
@@ -226,20 +231,31 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> l
                 ents.append((t, res.entity_id))
         if len({e for _, e in ents}) != 2:
             _reason(stats["p_reason"], "entity_resolution")
-            near_miss.append({"venue": "polymarket", "id": slug, "reason": "entity_resolution"})
+            near_miss.append({"venue": "polymarket", "id": slug, "reason": "entity_resolution",
+                              "labels": [t.get("name") or "" for t in teams], "resolved": [e for _, e in ents]})
             continue
         st = _pm_start(ev)
         if st is None:
             _reason(stats["p_reason"], "no_start_time")
             continue
         espn_ids = tuple(sorted(r.teams[e].espn_id for _, e in ents if e in r.teams))
-        g = espn.nearest_game(by_pair.get(espn_ids, []), st)
+        cands = by_pair.get(espn_ids, [])
+        g = espn.nearest_game(cands, st)
         if g is None:
-            _reason(stats["p_reason"], "no_schedule_match")
+            # The same split as the Kalshi side: a pair with no game in the universe at all is
+            # outside the window, not a schedule miss (2026-09-07: every tennis "no_schedule_match"
+            # was a match already past the 5 h post rule or beyond --pre-hours).
+            if cands:
+                _reason(stats["p_reason"], "no_schedule_match")
+                near_miss.append({"venue": "polymarket", "id": slug, "reason": "no_schedule_match",
+                                  "labels": [t.get("name") or "" for t in teams], "candidates": [c.game_id for c in cands]})
+            else:
+                _reason(stats["p_reason"], "outside_window")
             continue
         if not (lo <= g.start_utc < hi):
             _reason(stats["p_reason"], "outside_window")
             continue
+        stats.setdefault("p_games", set()).add(g.game_id)
         mk = pm_primary_market(ev, slug) or {}
         pm_rules = {"slug": mk.get("slug") or slug, "description": mk.get("description") or "",
                     "resolutionSource": mk.get("resolutionSource") or ev.get("resolutionSource") or ""}
@@ -251,8 +267,9 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> l
         if league in LEAGUES and LEAGUES[league].outcomes == 3:
             if not any(str(x.get("slug", "")) == f"{slug}-draw" for x in ev.get("markets") or []):
                 _reason(stats["p_reason"], "no_draw_market")
-                near_miss.append({"venue": "polymarket", "id": slug, "reason": "no_draw_market"})
+                near_miss.append({"venue": "polymarket", "id": slug, "reason": "no_draw_market", "game_id": g.game_id})
                 out = [m for m in out if m.venue_id != slug]
+                stats["p_games"].discard(g.game_id)
                 continue
             out.append(VenueMarket("polymarket", slug, f"{slug}:draw", g.game_id, DRAW_ENTITY, "moneyline", "game",
                                    g.start_utc, "Draw", rules=pm_rules, key=canonical_key(g, league),

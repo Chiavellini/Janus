@@ -144,6 +144,8 @@ class Supervisor:
     #: Capture-only subscriptions for what the slate cannot co-list yet (tennis has no ESPN anchor):
     #: frames from both venues, no pricing. nodes/discovery/watchlist.
     watch: Watchlist | None = None
+    #: What has been said once: game_id -> UNPAIRED reason, "venue:id" -> near-miss reason.
+    said: dict[str, str] = field(default_factory=dict)
     capture_series: tuple[str, ...] = ()
     capture_pm_tags: tuple = ()
     watch_rows: int = 0
@@ -191,13 +193,30 @@ class Supervisor:
                 self.blocked[f"fees:{venue}:{key}"] = f"FEE_SCHEDULE: {err}"
         if self.store is not None:
             record_events(self.store, d, slate, {**dict(blocked), **kept})
-        # A league with games in the window and not one matched pair says why, once per pass.
-        # The matcher has always computed these reasons; nothing read them, so Serie A produced
-        # zero Polymarket events for four days and looked like a league with no games on.
+        # Every game in the window that did not pair is said ONCE per reason, by name, with the
+        # venue side that was missing; every venue market that failed to pair is said once with
+        # the venue's own labels and the matcher's reason. A league with games and no pair keeps
+        # its summary line. Until 2026-09-07 the per-event reasons were computed and discarded,
+        # and the operator learned about Swiatek v Zheng from the venues.
         games_by_league: dict[str, int] = {}
         for g in getattr(d, "games", ()) or ():
             games_by_league[g.league] = games_by_league.get(g.league, 0) + 1
+            reason = self.blocked.get(g.game_id)
+            if reason and str(reason).startswith("UNPAIRED:") and self.said.get(g.game_id) != reason:
+                self.said[g.game_id] = reason
+                when = datetime.fromtimestamp(g.start_utc, timezone.utc).strftime("%H:%M")
+                print(f"[unpaired] {g.short_name} ({g.league}) {when}Z {reason[len('UNPAIRED:'):]}", flush=True)
+        shown = 0
         for league, (matches, stats, _r) in sorted((getattr(d, "per_league", None) or {}).items()):
+            for nm in stats.get("near_miss") or ():
+                key = f"{nm.get('venue')}:{nm.get('id')}"
+                if self.said.get(key) == nm.get("reason") or shown >= 40:
+                    continue
+                self.said[key] = nm.get("reason")
+                shown += 1
+                labels = " | ".join(str(x) for x in nm.get("labels") or ())
+                extra = (f" candidates={nm['candidates']}" if nm.get("candidates") else "") + (f" game={nm['game_id']}" if nm.get("game_id") else "")
+                print(f"[near-miss] {league} {nm.get('venue')} {nm.get('id')}: {nm.get('reason')} ({labels}){extra}", flush=True)
             if matches or not games_by_league.get(league):
                 continue
             reasons = stats.get("matcher_reasons") or {}

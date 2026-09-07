@@ -132,6 +132,12 @@ def match_live(league: str, games: list, now: datetime):
     return [p for p in pair(kms, pms) if p["game_id"] in live_ids], {
         "kalshi_markets": len(kms), "polymarket_markets": len(pms),
         "near_misses": len(near_miss),
+        # The named reason for every venue market that did not pair, and the games each venue
+        # DID match. Both were computed and thrown away until 2026-09-07 (GATE step 1 promised
+        # "every unmatched game in a named reason bucket; zero silent drops").
+        "near_miss": near_miss,
+        "kalshi_games": sorted(stats.get("k_games") or ()),
+        "polymarket_games": sorted(stats.get("p_games") or ()),
         "matcher_reasons": {"kalshi": dict(stats["k_reason"]), "polymarket": dict(stats["p_reason"])},
     }, resolver
 
@@ -310,6 +316,17 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
                               "retrieved_at": d.made_utc}}
             spec["settlement"] = summary(certify_from_spec(spec, league))
             slate[gid] = spec
+    # Every game in the window that is on neither the slate nor an explicit block says which venue
+    # side was missing. The events table carries it (record_events), the supervisor prints it
+    # once, and ops/coverage_report.py reads it beside the census.
+    for league, (_matches, stats, _r) in d.per_league.items():
+        k_games = set(stats.get("kalshi_games") or ())
+        p_games = set(stats.get("polymarket_games") or ())
+        for g in d.games:
+            if g.league != league or g.game_id in slate or g.game_id in blocked:
+                continue
+            blocked[g.game_id] = (f"UNPAIRED:kalshi={'found' if g.game_id in k_games else 'missing'},"
+                                  f"polymarket={'found' if g.game_id in p_games else 'missing'}")
     return slate, blocked
 
 

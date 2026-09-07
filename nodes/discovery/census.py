@@ -343,9 +343,23 @@ def summarize(kalshi: list[GameEvent], pm: list[GameEvent], pairs: list[tuple[Ga
     matched_p = {p.event_id for _, p in pairs}
     unmatched_k = Counter(e.competition for e in kw if e.event_id not in matched_k)
     unmatched_p = Counter(e.competition for e in pw if e.event_id not in matched_p)
+
+    def brief(e: GameEvent) -> dict:
+        return {"event_id": e.event_id, "competition": e.competition, "date": e.date,
+                "start_utc": e.start_utc, "participants": list(e.participants)}
+    # The events behind the counts (2026-09-07): ops/coverage_report.py joins the co-listed pairs
+    # against the lane's events table, which is how "both venues list it, the lane did not pair
+    # it" becomes a row and an alarm instead of a number.
+    co_listed_pairs = [{"kalshi_event": k.event_id, "pm_event": p.event_id, "kalshi_series": k.competition,
+                        "pm_sport": p.competition, "date": k.date, "start_utc": k.start_utc if k.start_utc is not None else p.start_utc,
+                        "participants": list(k.participants)}
+                       for k, p in pairs if k.event_id in kw_ids or p.event_id in pw_ids]
     return {"competitions": rows, "mapping": [[k, p, n] for (k, p), n in mapping.most_common()],
             "kalshi_events_48h": dict(k_by_series), "pm_events_48h": dict(p_by_sport),
-            "unmatched_kalshi_48h": dict(unmatched_k), "unmatched_pm_48h": dict(unmatched_p)}
+            "unmatched_kalshi_48h": dict(unmatched_k), "unmatched_pm_48h": dict(unmatched_p),
+            "co_listed_pairs_48h": co_listed_pairs,
+            "unmatched_kalshi_events_48h": [brief(e) for e in kw if e.event_id not in matched_k],
+            "unmatched_pm_events_48h": [brief(e) for e in pw if e.event_id not in matched_p]}
 
 
 # ── the run ──────────────────────────────────────────────────────────────────

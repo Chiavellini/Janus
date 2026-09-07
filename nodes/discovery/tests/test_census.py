@@ -101,6 +101,11 @@ def test_join_matches_on_date_and_participants_and_reports_the_rest():
     assert row["two_sided_both"] == 1 and row["pm_touch_usd_median"] == 60.0 and row["kalshi_touch_usd_median"] == 60.0
     assert row["capacity_usd"] == 60.0 and row["score"] > 0
     assert s["unmatched_kalshi_48h"] == {"KXEPLGAME": 1} and s["unmatched_pm_48h"] == {"epl": 1}
+    # the events behind the counts, for ops/coverage_report.py (2026-09-07)
+    assert [p["kalshi_event"] for p in s["co_listed_pairs_48h"]] == ["KXEPLGAME-26SEP14LEENEW"]
+    assert s["co_listed_pairs_48h"][0]["pm_event"] == "epl-lee-new-2026-09-14" and s["co_listed_pairs_48h"][0]["participants"]
+    assert [e["event_id"] for e in s["unmatched_kalshi_events_48h"]] == ["KXEPLGAME-26SEP14ARSCHE"]
+    assert [e["event_id"] for e in s["unmatched_pm_events_48h"]] == ["epl-liv-mci-2026-09-14"]
 
 
 def test_a_competition_with_no_book_sample_still_ranks_from_the_kalshi_touch():

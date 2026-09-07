@@ -680,3 +680,31 @@ None changes the arbitrage math; each changes what the lane is allowed to price.
   spawn, a pooled Kalshi client, then the store's commit cadence).
 - Polymarket orders post with `defer_exec=True`: the library no longer polls settlement hashes
   inside the POST; `fills()` reads the confirmed trades later.
+
+## 2026-09-07 — the coverage audit: every unpaired event says why, by name
+
+The operator: "these should be discoverable; I don't want to need to tell you about these"
+(Cagliari v Lecce in play, Getafe v Celta at kickoff, Swiatek v Zheng unpaired for hours). The
+matcher had always computed a named reason for every venue market it could not pair
+(`near_miss`); the live lane returned only its length and nothing read it; the `[discovery]`
+line fired only for a league with zero pairs; the census's "unmatched" was a per-competition
+count from a separate join. GATE step 1 promised "every unmatched game in a named reason
+bucket; zero silent drops"; in the lane they were counted and discarded.
+
+- **Every in-window game that did not pair carries `UNPAIRED:kalshi=<found|missing>,
+  polymarket=<found|missing>`** in `events.block_reason` (a transition like any other), from the
+  games each venue's matcher did match (`kalshi_games` / `polymarket_games` in the per-league
+  stats). The near-miss list itself now reaches the supervisor with the venue's own labels and
+  the candidate games.
+- **The lane says it once, by name**: `[unpaired] SWIATEK V ZHEN (wta) 15:30Z kalshi=missing,
+  polymarket=missing` and `[near-miss] wta kalshi KXWTAMATCH-26SEP06SWIZHE: entity_resolution
+  (Iga Swiatek | Qinwen Zheng)`, each once per reason change; the league summary stays.
+- **`ops/coverage_report.py`**: the census's independent join (its results now carry the event
+  lists beside the counts: `co_listed_pairs_48h`, `unmatched_*_events_48h`) against the lane's
+  events table — every event both venues list in an enabled league, covered or gap, with the
+  lane's reason. The watchdog's **`COVERAGE_GAP`** fires for a gap inside the lane's window (3 h
+  back, 6 h ahead), demonstrated in the selftest; `ops/box/status.sh` prints the games in play,
+  the unpaired ones with reasons, and the counts.
+- Reason hygiene on the way: the Polymarket side now splits `no_schedule_match` from
+  `outside_window` like the Kalshi side (every tennis "schedule miss" today was a match past the
+  window).

@@ -242,3 +242,20 @@ def test_a_three_way_spec_carries_the_no_token_of_each_team_market():
     assert spec["outcomes"][ars] == {"kalshi": "KXEPLGAME-26SEP14CHEARS-ARS", "polymarket": "tok-ars", "polymarket_no": "tok-ars-no"}
     assert spec["outcomes"][che]["polymarket_no"] == "tok-che-no"
     assert "polymarket_no" not in spec["outcomes"][DRAW_ENTITY]
+
+
+def test_a_game_neither_venue_paired_is_named_unpaired_with_the_missing_side(tmp_path: Path):
+    """Until 2026-09-07 an in-window game that did not pair left no trace: not on the slate, not in
+    `blocked`, `events.block_reason` NULL. Now the reason says which venue side was missing."""
+    d = _discovery()
+    extra = game(8, NOW + 1800, "pre")                    # in the window, matched by nobody
+    d.games.append(extra)
+    d.per_league["mlb"][1]["kalshi_games"] = ["espn:mlb:8"]  # Kalshi found it, Polymarket did not
+    slate, blocked = co_listed(d)
+    assert "espn:mlb:7" in slate
+    assert blocked == {"espn:mlb:8": "UNPAIRED:kalshi=found,polymarket=missing"}
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    record_events(store, d, slate, blocked, now=NOW)
+    row = store.con.execute("SELECT phase, block_reason FROM events WHERE event_id='espn:mlb:8'").fetchone()
+    assert row == ("pre", "UNPAIRED:kalshi=found,polymarket=missing")
+    store.close()
