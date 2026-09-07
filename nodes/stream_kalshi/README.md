@@ -92,3 +92,11 @@ check) and the added market's snapshot arrives on the same sid. The old loop re-
 `subscribe` on every change, opening a second sid per change — duplicate frames, and a sequence
 the socket-wide gap check could not see. Only a sequence gap tears the subscription down
 (`unsubscribe` the sid, `subscribe` afresh: fresh snapshots, fresh seq).
+
+A ticker the socket **already carries** gets no second snapshot, so a replica registered on it
+later (a poller spawning on a market the capture watchlist subscribed hours earlier — every
+tennis match, 2026-09-05) would wait `NOT_SYNCED` for a reconnect. `register()` seeds such a
+replica from the stream's folded `TickerBook` — the venue's snapshot plus every sequence-checked
+delta since — at the subscription's current seq, only while the folded book descends from a
+snapshot on the live sid (`snapshotted`), never after a gap or on a fresh socket.
+`stats()["seeded"]` counts it.

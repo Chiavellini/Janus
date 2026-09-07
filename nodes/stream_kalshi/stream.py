@@ -100,10 +100,15 @@ class KalshiStream:
     #: The live subscription id from the venue's `subscribed` reply; None until acked or after
     #: a full resubscribe. Slate changes go through update_subscription on this sid.
     sid: int | None = None
+    #: ticker -> the sid whose snapshot the stream's folded book for that ticker descends from.
+    #: Cleared with every new socket, resubscribe and gap: after any of those the folded book
+    #: is not a seed until the venue snapshots it again.
+    snapshotted: dict[str, int | None] = field(default_factory=dict)
     _msg_id: int = 1
 
     frames: int = 0
     snapshots: int = 0
+    seeded: int = 0
     deltas: int = 0
     gaps: int = 0
     errors: int = 0
@@ -112,14 +117,33 @@ class KalshiStream:
 
     # ── subscription set ────────────────────────────────────────────────
     def register(self, ticker: str, replica: BookReplica, outcome: str = "yes",
-                 on_update: Callable[[str, float], None] | None = None) -> None:
+                 on_update: Callable[[str, float], None] | None = None,
+                 now: float | None = None) -> None:
         self.regs.setdefault(ticker, []).append(Registration(replica, outcome, on_update))
         # A slate change is a DIFF the run loop sends as update_subscription. Only a sequence
         # gap sets `resubscribe_needed`, which tears the subscription down instead.
+        #
+        # A ticker the socket ALREADY carries gets no second snapshot: the venue snapshots a
+        # market once per subscription, and the diff above only adds what is new. Tennis lives
+        # on the capture watchlist from discovery, hours before its match goes live, so the
+        # poller's replica registered at first serve waited NOT_SYNCED for a reconnect that
+        # never came -- 25,563 tennis evaluations across every match that went live after the
+        # lane started (2026-09-05/06, ledger F5). The stream's own folded book IS that snapshot
+        # plus every sequence-checked delta since, so the late replica is seeded from it at the
+        # subscription's current seq. Not after a gap or on a fresh socket: then nothing is a
+        # seed until the venue snapshots the ticker again.
+        book = self.books.get(ticker)
+        if (book is not None and self.connected and self.sid is not None
+                and not self.resubscribe_needed and ticker in self.snapshotted
+                and self.snapshotted[ticker] == self.sid):
+            bids, asks = book.project(outcome)
+            replica.snapshot_in(bids, asks, seq=self.last_seq.get(self.sid), now=now or time.time())
+            self.seeded += 1
 
     def unregister(self, ticker: str) -> None:
         self.regs.pop(ticker, None)
         self.books.pop(ticker, None)
+        self.snapshotted.pop(ticker, None)
 
     @property
     def tickers(self) -> list[str]:
@@ -170,6 +194,7 @@ class KalshiStream:
                 # and a resubscribe is tripped; the next frames re-establish the sequence, and
                 # holding a stale baseline would report a second gap for the same loss.
                 self.last_seq.pop(p.sid, None)
+                self.snapshotted.clear()
                 return "gap"
             if last is None or p.seq > last:
                 self.last_seq[p.sid] = p.seq
@@ -179,6 +204,8 @@ class KalshiStream:
         book = self.books.get(p.ticker)
         if book is None:
             return "ignored"
+        if p.kind == "snapshot":
+            self.snapshotted[p.ticker] = p.sid
         projected: dict[str, tuple] = {}
         for reg in self.regs.get(p.ticker, ()):
             if reg.outcome not in projected:                  # two registrations per ticker: sort once
@@ -202,7 +229,7 @@ class KalshiStream:
 
     def stats(self) -> dict:
         return {"connected": self.connected, "tickers": len(self.regs), "frames": self.frames,
-                "snapshots": self.snapshots, "deltas": self.deltas, "seq_gaps": self.gaps,
+                "snapshots": self.snapshots, "seeded": self.seeded, "deltas": self.deltas, "seq_gaps": self.gaps,
                 "sid": self.sid, "sids": sorted(k for k in self.last_seq if k is not None),
                 "errors": self.errors, "last_error": self.last_error, "clock": self.clock.stats(),
                 "age_s": round(time.time() - self.last_frame_utc, 2) if self.last_frame_utc else None}
@@ -229,6 +256,7 @@ class KalshiStream:
                 async with connect(self.url, headers) as ws:
                     self.connected = True
                     self.last_seq.clear()         # a new socket restarts every sequence
+                    self.snapshotted.clear()      # and nothing folded before it is a seed
                     backoff = 1.0
                     if on_state:
                         on_state("connected", f"{len(self.regs)} tickers")
@@ -243,6 +271,7 @@ class KalshiStream:
                             if self.sid is not None:
                                 await ws.send(json.dumps(unsubscribe_frame([self.sid], self._next_id())))
                             self.sid = None
+                            self.snapshotted.clear()
                             subscribed = set()
                         if not subscribed and want:
                             self.resubscribe_needed = False

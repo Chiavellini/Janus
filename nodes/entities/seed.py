@@ -247,8 +247,14 @@ def seed_pm_xrefs(resolver: Resolver, leagues=SEED_LEAGUES, *,
 
 # ── writing ──────────────────────────────────────────────────────────────────
 
-def _write(path: Path, fields: list[str], rows: list[dict]) -> int:
+def _write(path: Path, fields: list[str], rows: list[dict], *, leagues=None) -> int:
     path.parent.mkdir(parents=True, exist_ok=True)
+    # A run scoped to some leagues rewrites THOSE leagues' rows and keeps every other league's
+    # as they are. Until 2026-09-07 `seed ita` replaced all 20 leagues' files with Serie A alone.
+    if leagues is not None and path.exists():
+        with path.open(newline="", encoding="utf-8") as fh:
+            kept = [r for r in csv.DictReader(fh) if r.get("league") not in set(leagues)]
+        rows = list(rows) + kept
     # Sorted output so a re-run is byte-identical — the phase-1 determinism gate.
     rows = sorted(rows, key=lambda r: tuple(str(r.get(f, "")) for f in fields))
     with path.open("w", newline="", encoding="utf-8") as fh:
@@ -286,7 +292,7 @@ def main(leagues=SEED_LEAGUES) -> dict:
         print(f"     AMBIGUOUS {k[0]}/{k[1]!r} -> {v}")
 
     n_t = _write(TEAMS_CSV, ["entity_id", "league", "espn_id", "abbrev", "location",
-                             "nickname", "display_name"], [t.__dict__ for t in teams])
+                             "nickname", "display_name"], [t.__dict__ for t in teams], leagues=leagues)
     # Only the GENERATED rows go back to aliases.csv. Writing the manual overlay in here too
     # would duplicate it on every run and, worse, make the hand-curated file look redundant.
     seen_alias = set()
@@ -298,7 +304,7 @@ def main(leagues=SEED_LEAGUES) -> dict:
         if k not in seen_alias:
             seen_alias.add(k)
             dedup.append(a)
-    n_a = _write(ALIASES_CSV, ["league", "alias", "entity_id", "source"], dedup)
+    n_a = _write(ALIASES_CSV, ["league", "alias", "entity_id", "source"], dedup, leagues=leagues)
 
     resolver = Resolver({t.entity_id: t for t in teams}, idx, {})
     k_rows, k_conf = seed_kalshi_xrefs(resolver, leagues)
@@ -306,11 +312,11 @@ def main(leagues=SEED_LEAGUES) -> dict:
     print(f"  kalshi xrefs: {len(k_rows)} ({len(k_conf)} conflicts)")
     print(f"  pm xrefs:     {len(p_rows)} ({len(p_conf)} conflicts)")
     n_x = _write(XREFS_CSV, ["venue", "league", "venue_team_id", "entity_id", "source", "label"],
-                 k_rows + p_rows)
+                 k_rows + p_rows, leagues=leagues)
     n_u = _write(UNRESOLVED_CSV.with_name("xref_conflicts.csv"),
                  ["venue", "league", "uuid", "abbrev", "sub_title", "abbrev_hit", "loc_hit",
-                  "reason"], k_conf + p_conf)
-    resolver.write_unresolved()
+                  "reason"], k_conf + p_conf, leagues=leagues)
+    resolver.write_unresolved(leagues=leagues)
 
     summary = {"generated_utc": stamp, "leagues": leagues, "teams": n_t, "alias_rows": n_a,
                "alias_keys": len(idx), "ambiguous_alias_keys": len(ambiguous),

@@ -222,15 +222,22 @@ class Resolver:
     def _miss(self, query: str, league: str, reason: str, source: str) -> None:
         self.misses.append({"query": query, "league": league, "reason": reason, "source": source})
 
-    def write_unresolved(self, path: Path = UNRESOLVED_CSV) -> int:
+    def write_unresolved(self, path: Path = UNRESOLVED_CSV, *, leagues=None) -> int:
         """Persist misses with counts. This file is a WORK QUEUE, not a log to ignore.
 
         Every row is either a real alias to add or a market we must consciously decline to match.
+        A run scoped to `leagues` keeps every other league's rows as they are.
         """
         agg: dict[tuple, int] = {}
         for m in self.misses:
             agg[(m["league"], m["source"], m["reason"], m["query"])] = \
                 agg.get((m["league"], m["source"], m["reason"], m["query"]), 0) + 1
+        if leagues is not None and path.exists():
+            with path.open(newline="", encoding="utf-8") as fh:
+                for r in csv.DictReader(fh):
+                    if r.get("league") not in set(leagues):
+                        k = (r["league"], r["source"], r["reason"], r["query"])
+                        agg[k] = agg.get(k, 0) + int(r.get("count") or 0)
         rows = sorted(agg.items(), key=lambda kv: (-kv[1], kv[0]))
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", newline="", encoding="utf-8") as fh:

@@ -26,7 +26,10 @@ DISCONNECTED → CONNECTING → SNAPSHOT_PENDING → SYNCED
 ```
 
 `snapshot()` returns a `Book` only from `SYNCED`, inside the freshness bound, on a book that is not
-crossed. Everything else returns `None`, which callers treat as a BLOCK — the same rule
+crossed. The bound is measured from `as_of()` — the last proof the book is current (last mutation,
+last verification, or last frame on a live sequence-checked socket, whichever is latest; a
+REST-sourced ladder counts only its fetch) — not from the last mutation. A quiet in-play book on a
+live socket is the venue's book; until 2026-09-07 it was refused `STALE` after 5 s. Everything else returns `None`, which callers treat as a BLOCK — the same rule
 `nodes/cover` already applies to a stale leg.
 
 ## Why this node exists

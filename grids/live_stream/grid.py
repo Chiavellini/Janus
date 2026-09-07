@@ -191,6 +191,20 @@ class Supervisor:
                 self.blocked[f"fees:{venue}:{key}"] = f"FEE_SCHEDULE: {err}"
         if self.store is not None:
             record_events(self.store, d, slate, {**dict(blocked), **kept})
+        # A league with games in the window and not one matched pair says why, once per pass.
+        # The matcher has always computed these reasons; nothing read them, so Serie A produced
+        # zero Polymarket events for four days and looked like a league with no games on.
+        games_by_league: dict[str, int] = {}
+        for g in d.games:
+            games_by_league[g.league] = games_by_league.get(g.league, 0) + 1
+        for league, (matches, stats, _r) in sorted(d.per_league.items()):
+            if matches or not games_by_league.get(league):
+                continue
+            reasons = stats.get("matcher_reasons") or {}
+            print(f"[discovery] {league}: {games_by_league[league]} games, 0 pairs; "
+                  f"kalshi markets={stats.get('kalshi_markets', 0)} reasons={reasons.get('kalshi') or {}}; "
+                  f"polymarket markets={stats.get('polymarket_markets', 0)} reasons={reasons.get('polymarket') or {}}",
+                  flush=True)
         return slate
 
     def sync_watch(self) -> tuple[int, int]:

@@ -1,4 +1,8 @@
 league,source,reason,query,count
+ita,text,unknown,Cagliari Calcio,28
+ita,text,unknown,SS Lazio,28
+ita,text,unknown,US Lecce,28
+ita,text,unknown,Udinese Calcio,28
 scop,text,unknown,hib,23
 elc,text,unknown,wre,22
 ere,text,unknown,Willem II Tilburg,22
@@ -34,6 +38,18 @@ fl1,text,unknown,ogc,18
 fl1,text,unknown,pfc,18
 fl1,text,unknown,sbr,18
 fl1,text,unknown,tro,18
+ita,text,unknown,AC Monza,17
+ita,text,unknown,ACF Fiorentina,17
+ita,text,unknown,Atalanta BC,17
+ita,text,unknown,Bologna FC 1909,17
+ita,text,unknown,FC Internazionale Milano,17
+ita,text,unknown,Frosinone Calcio,17
+ita,text,unknown,Genoa CFC,17
+ita,text,unknown,Parma Calcio 1913,17
+ita,text,unknown,SSC Napoli,17
+ita,text,unknown,US Sassuolo Calcio,17
+ita,text,unknown,com,17
+ita,text,unknown,rom,17
 el1,text,unknown,wig,15
 ere,text,unknown,her1,15
 por,text,unknown,CF Estrela da Amadora,15

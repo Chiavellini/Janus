@@ -61,7 +61,7 @@ class Fault(str, Enum):
     HASH_MISMATCH = "HASH_MISMATCH"        # polymarket: reconciliation disagreed with the stream
     HEARTBEAT_LOST = "HEARTBEAT_LOST"      # the connection is dead, not the market quiet
     UNVERIFIED_TOO_LONG = "UNVERIFIED_TOO_LONG"   # polymarket: no outside check within the bound
-    STALE = "STALE"                        # SYNCED but older than the caller's freshness bound
+    STALE = "STALE"                        # SYNCED but known current longer ago than the caller's bound (see as_of)
     NOT_SYNCED = "NOT_SYNCED"              # never reached SYNCED
     CROSSED_BOOK = "CROSSED_BOOK"          # best bid >= best ask: the replica is incoherent
 
@@ -129,6 +129,28 @@ class BookReplica:
         self.bids.clear()
         self.asks.clear()
         self.updated_utc = self.verified_utc = 0.0
+
+    # ── currency ────────────────────────────────────────────────────────
+    def as_of(self) -> float:
+        """The instant this book is known to be the venue's book.
+
+        Under streaming the age of the last MUTATION is not the age of the KNOWLEDGE. A book that
+        has not moved in a minute on a live, sequence-checked socket is the venue's book as of the
+        last frame on that socket: every change would have arrived as a delta, and a lost one
+        shows as a gap (Kalshi) or a top-of-book hash miss and a REST check (Polymarket). So
+        currency is the latest of the last mutation, the last verification and the last sign of
+        life from the connection, and `check()` measures its age bound from here.
+
+        Measured 2026-09-05/06 (ledger F5): 331,743 college-football and 4,836 tennis evaluations
+        were refused STALE on Kalshi books whose socket carried 250 frames a second -- quiet
+        markets between plays and points, priced as if the feed had died. The hard bounds stay: a
+        dead connection is HEARTBEAT_LOST at `heartbeat_timeout_s`, an externally verified replica
+        decays to UNVERIFIED_TOO_LONG at `max_unverified_s`, and a REST-sourced ladder is as old as
+        the fetch that produced it (the socket had just been shown wrong for that market).
+        """
+        if self.source == "rest":
+            return max(self.updated_utc, self.verified_utc)
+        return max(self.updated_utc, self.verified_utc, self.heartbeat_utc)
 
     # ── data ────────────────────────────────────────────────────────────
     def _stamp(self, source: str, server_utc: float | None, mono: float | None) -> None:
@@ -295,7 +317,7 @@ class BookReplica:
             return self.last_fault or Fault.NOT_SYNCED
         if self.verification == "external" and (t - self.verified_utc) > self.max_unverified_s:
             return Fault.UNVERIFIED_TOO_LONG
-        if t - self.updated_utc > max_age_s:
+        if t - self.as_of() > max_age_s:
             return Fault.STALE
         if self.bids and self.asks and max(self.bids) >= min(self.asks):
             return Fault.CROSSED_BOOK
@@ -308,5 +330,5 @@ class BookReplica:
         return Book(
             bids=tuple(Quote(p, self.bids[p]) for p in sorted(self.bids, reverse=True)),
             asks=tuple(Quote(p, self.asks[p]) for p in sorted(self.asks)),
-            fetched_utc=self.updated_utc, source=self.source, server_utc=self.server_utc,
+            fetched_utc=self.as_of(), source=self.source, server_utc=self.server_utc,
             received_mono=self.received_mono)

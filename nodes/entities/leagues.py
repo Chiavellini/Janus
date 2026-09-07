@@ -61,7 +61,12 @@ LEAGUES: dict[str, League] = {
     # Batch 2, 2026-09-03: the census's next soccer competitions both venues list (Gamma tag ids from /sports).
     "elc":  League("elc", "EFL Championship", "KXEFLCHAMPIONSHIPGAME", "elc", "elc", ("soccer", "eng.2"), outcomes=3, pm_tag_id=102643),
     "el1":  League("el1", "EFL League One", "KXEFLL1GAME", "el1", "el1", ("soccer", "eng.3"), outcomes=3, pm_tag_id=104319),
-    "ita":  League("ita", "Serie A", "KXSERIEAGAME", "sea", "sea", ("soccer", "ita.1"), outcomes=3, pm_tag_id=100618),
+    # Serie A is the one league whose Gamma /sports `primaryTagId` (100618, "Serie A") is the
+    # FUTURES tag -- champion, top scorer, relegation; every event under it has no teams. The game
+    # events live under tag 101962 (slug `sea`, the same set `tag_slug=sea` returns). With 100618
+    # the league produced zero Polymarket events for four days and no reason, because a futures
+    # event is skipped before the matcher counts it (2026-09-07). Do not "correct" it back.
+    "ita":  League("ita", "Serie A", "KXSERIEAGAME", "sea", "sea", ("soccer", "ita.1"), outcomes=3, pm_tag_id=101962),
     "fl1":  League("fl1", "Ligue 1", "KXLIGUE1GAME", "fl1", "fl1", ("soccer", "fra.1"), outcomes=3, pm_tag_id=102070),
     "ere":  League("ere", "Eredivisie", "KXEREDIVISIEGAME", "ere", "ere", ("soccer", "ned.1"), outcomes=3, pm_tag_id=101735),
     "por":  League("por", "Primeira Liga", "KXLIGAPORTUGALGAME", "por", "por", ("soccer", "por.1"), outcomes=3, pm_tag_id=101772),

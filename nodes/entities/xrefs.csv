@@ -1080,6 +1080,26 @@ polymarket,fl1,114317,fl1:fra.rennes,teams[].id,Stade Rennais FC 1901
 polymarket,fl1,114318,fl1:fra.strasbourg,teams[].id,RC Strasbourg Alsace
 polymarket,fl1,114319,fl1:fra.toulouse,teams[].id,Toulouse FC
 polymarket,fl1,3284804,fl1:fra.le_mans,teams[].id,Le Mans FC
+polymarket,ita,101109,ita:ita.juventus,teams[].id,Juventus FC
+polymarket,ita,101110,ita:ita.fiorentina,teams[].id,ACF Fiorentina
+polymarket,ita,101111,ita:ita.inter_milan,teams[].id,FC Internazionale Milano
+polymarket,ita,101112,ita:ita.monza,teams[].id,AC Monza
+polymarket,ita,101113,ita:ita.ac_milan,teams[].id,AC Milan
+polymarket,ita,101114,ita:ita.napoli,teams[].id,SSC Napoli
+polymarket,ita,101115,ita:ita.udinese,teams[].id,Udinese Calcio
+polymarket,ita,101116,ita:ita.atalanta,teams[].id,Atalanta BC
+polymarket,ita,101118,ita:ita.lecce,teams[].id,US Lecce
+polymarket,ita,101119,ita:ita.como,teams[].id,Como 1907
+polymarket,ita,101120,ita:ita.genoa,teams[].id,Genoa CFC
+polymarket,ita,101121,ita:ita.bologna,teams[].id,Bologna FC 1909
+polymarket,ita,101122,ita:ita.torino,teams[].id,Torino FC
+polymarket,ita,101123,ita:f.b.c_unione_venezia,teams[].id,Venezia FC
+polymarket,ita,101124,ita:ita.parma,teams[].id,Parma Calcio 1913
+polymarket,ita,101125,ita:ita.lazio_rome,teams[].id,SS Lazio
+polymarket,ita,101126,ita:ita.cagliari,teams[].id,Cagliari Calcio
+polymarket,ita,101127,ita:ita.as_roma,teams[].id,AS Roma
+polymarket,ita,114301,ita:ita.sassuolo,teams[].id,US Sassuolo Calcio
+polymarket,ita,3284864,ita:ita.frosinone,teams[].id,Frosinone Calcio
 polymarket,lal,101029,lal:esp.alaves,teams[].id,Deportivo Alavés
 polymarket,lal,101030,lal:esp.betis_sevilla,teams[].id,Real Betis Balompié
 polymarket,lal,101031,lal:esp.getafe,teams[].id,Getafe CF

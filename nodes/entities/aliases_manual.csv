@@ -147,3 +147,4 @@ bun,PAD,bun:ger.sc_paderborn_07,manual_2026-09-03,"Kalshi yes_sub_title / ticker
 bun,SCH,bun:ger.schalke_04,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
 bun,SVE,bun:ger.sv_07_elversberg,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
 bun,UNI,bun:ger.fc_union_berlin,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
+ita,Como 1907,ita:ita.como,manual_2026-09-07,Polymarket Serie A teams[].name; ESPN says "Como" only so the intersection rule cannot seed it

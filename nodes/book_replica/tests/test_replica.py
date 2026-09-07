@@ -117,7 +117,8 @@ def test_a_quiet_market_and_a_dead_socket_are_different_things():
     quiet = kalshi()
     for ts in range(1, 60):
         quiet.heartbeat(T + ts)                      # socket alive, no book events
-    assert quiet.check(T + 59, max_age_s=1e9) is None, "a quiet market is still tradeable"
+    assert quiet.check(T + 59, max_age_s=5.0) is None, "a quiet market is still tradeable"
+    assert quiet.snapshot(T + 59).fetched_utc == T + 59, "current as of the last frame on the socket"
 
     dead = kalshi()
     assert dead.check(T + 60) is Fault.HEARTBEAT_LOST
@@ -130,10 +131,34 @@ def test_heartbeat_loss_invalidates_a_previously_synced_replica():
     assert r.state is ReplicaState.RESYNCING
 
 
-def test_staleness_still_applies_within_a_live_connection():
+def test_staleness_is_measured_from_the_last_proof_of_currency_not_the_last_mutation():
+    """A live, sequence-checked socket proves the book at every frame; the bound runs from there.
+    Before 2026-09-07 it ran from the last mutation, and every quiet in-play book was STALE."""
     r = kalshi()
     r.heartbeat(T + 10)
-    assert r.check(T + 10, max_age_s=5.0) is Fault.STALE
+    assert r.check(T + 10, max_age_s=5.0) is None
+    assert r.snapshot(T + 10).fetched_utc == T + 10
+    # The last frame is 6 s old (inside the 15 s heartbeat timeout): the knowledge is 6 s old.
+    assert r.check(T + 16, max_age_s=5.0) is Fault.STALE
+    assert r.check(T + 16, max_age_s=10.0) is None
+
+
+def test_a_quiet_polymarket_book_is_current_until_its_verification_bound_not_its_last_change():
+    """Liveness counts for the external replica too, but never past `max_unverified_s`."""
+    r = polymarket()
+    r.heartbeat(T + 20)
+    assert r.check(T + 20, max_age_s=5.0) is None
+    r.heartbeat(T + 31)
+    assert r.check(T + 31, max_age_s=5.0) is Fault.UNVERIFIED_TOO_LONG
+
+
+def test_a_rest_sourced_ladder_is_as_old_as_its_fetch():
+    r = polymarket()
+    r.heartbeat(T + 10)
+    assert r.reconcile([(0.55, 100)], [(0.61, 100)], now=T + 10) is Fault.HASH_MISMATCH   # adopted REST
+    r.heartbeat(T + 20)
+    assert r.check(T + 20, max_age_s=5.0) is Fault.STALE, "the socket was just shown wrong; only the fetch counts"
+    assert r.snapshot(T + 12, max_age_s=5.0).fetched_utc == T + 10
 
 
 # ── incoherence ─────────────────────────────────────────────────────────

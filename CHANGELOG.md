@@ -616,3 +616,37 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
 - **Box bring-up**: the first boot had no AWS CLI on the image and cloned nothing (fixed: snap aws-cli, fatal on an empty pointer); the re-bootstrap through SSM cloned `24611d1`, materialised the secrets into `/run/janus`, and the suite is green on the box once `numpy`/`pandas` are in the venv (pinned now; the meta test no longer scans the venv inside the tree).
 - **L34 executed**, same hour on both hosts: Kalshi 184 → 51 ms p50, CLOB 309 → 184 ms, CLOB 200 from the box. Bar (half) met on Kalshi, not on the CLOB. **OBSERVATION_HOST**; the box runs the paper series F7.
 - **The box's paper lane started** at 06:04Z (`[mode] PAPER_EXECUTION`, both sockets connected, loop 0.1 s): ledger F7's clock runs. The Mac's F5 continues until the 48 h cutover decision.
+
+## 2026-09-07 — why tennis never priced, why Serie A never joined, and why quiet books were "stale"
+
+Three refusals of good books, found by reading the F5 window per league instead of in aggregate.
+None changes the arbitrage math; each changes what the lane is allowed to price.
+
+- **A late replica never synced.** Kalshi snapshots a market once per subscription and the run
+  loop adds only what is new. Tennis tickers sit on the capture watchlist from discovery, hours
+  before the match, so the poller's replica registered at first serve waited `NOT_SYNCED` for a
+  reconnect that never came: every tennis match that went live after a lane start (25,563
+  evaluations across F5), while the matches present at a start priced. `KalshiStream.register`
+  now seeds a replica from the stream's own folded book (that snapshot plus every sequence-checked
+  delta since) at the subscription's current seq; never after a gap, a resubscribe or on a fresh
+  socket. `stats()["seeded"]` counts it. The Polymarket stream never had the bug: it resubscribes
+  on every register.
+- **Quiet is not stale.** `BookReplica.check` measured its age bound from the last mutation. A
+  Kalshi book that has not moved for 5 s on a socket carrying 250 frames a second is the venue's
+  book as of the last frame, and the replica's own README said so ("liveness is not freshness")
+  while the gate did the opposite. In F5 that was 331,743 college-football and 4,836 tennis
+  evaluations refused `STALE`. `as_of()` is the latest of the last mutation, the last verification
+  and the last sign of life; the bound runs from there, `Book.fetched_utc` carries it, and the hard
+  bounds stay (`HEARTBEAT_LOST` at 15 s, `UNVERIFIED_TOO_LONG` at 30 s on Polymarket, a REST-sourced
+  ladder as old as its fetch). Ledger F5 and F7 carry the era note.
+- **Serie A pointed at the futures tag.** Gamma's `/sports` gives Serie A `primaryTagId` 100618,
+  whose events are champion / top scorer / relegation with no teams; the games live under 101962
+  (`sea`). Four days of zero Polymarket events with no reason: a teamless event is skipped before
+  the matcher counts it, and the matcher's reasons were computed every pass and read by nothing.
+  Registry fixed, Serie A's 20 Polymarket cross-references seeded, Como aliased by hand
+  (`Como 1907` on Polymarket, `Como` on ESPN), and the lane now prints `[discovery] <league>: N
+  games, 0 pairs; ... reasons=...` for any league with games and no pair.
+- **`seed <league>` keeps the other leagues.** It rewrote every generated CSV with the one league
+  asked for; a league-scoped run now merges.
+- Not a current bug, recorded because the log made it look like one: the 3,435 `IllegalTransition`
+  reconnects in the lane log are all from 2026-09-03 games, fixed at `acb020d` that day.

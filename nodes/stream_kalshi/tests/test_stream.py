@@ -121,6 +121,48 @@ def test_a_heartbeat_frame_keeps_replicas_alive_without_touching_the_book():
     assert r.updated_utc == T, "a heartbeat is not a book event"
 
 
+def test_a_replica_registered_on_an_already_subscribed_ticker_is_seeded_from_the_stream_book():
+    """The venue snapshots a market once per subscription. A poller that spawns hours after the
+    watchlist subscribed its ticker (tennis, 2026-09-05) must not wait for a reconnect."""
+    s, r, seen = wired()
+    s.connected, s.sid = True, 7
+    s.handle({**SNAP, "sid": 7}, now=T)
+    s.handle({**delta(2), "sid": 7}, now=T + 1)
+    late = BookReplica("kalshi", "K1", verification="stream")
+    s.register("K1", late, "yes", now=T + 2)
+    assert late.state is ReplicaState.SYNCED and s.seeded == 1
+    assert late.snapshot(T + 2).best_bid.size == 70.0, "the seed carries every delta folded so far"
+    assert late.seq == 2, "seeded at the subscription's current seq"
+    s.handle({**delta(3, d=-10.0), "sid": 7}, now=T + 3)
+    assert late.snapshot(T + 3).best_bid.size == 60.0, "and follows the stream from there"
+    # The NO side of the same ticker seeds from the folded complement.
+    late_no = BookReplica("kalshi", "K1", verification="stream")
+    s.register("K1", late_no, "no", now=T + 3)
+    assert late_no.snapshot(T + 3).best_ask.price == pytest.approx(0.60)
+
+
+def test_no_seed_after_a_gap_a_resubscribe_or_on_a_fresh_socket():
+    s, r, seen = wired()
+    s.connected, s.sid = True, 7
+    s.handle({**SNAP, "sid": 7}, now=T)
+    s.handle({**delta(5), "sid": 7}, now=T + 1)            # 1 -> 5: a gap; every book is suspect
+    late = BookReplica("kalshi", "K1", verification="stream")
+    s.register("K1", late, "yes", now=T + 2)
+    assert late.state is not ReplicaState.SYNCED and s.seeded == 0
+    # The run loop tears the subscription down and opens a fresh sid; the venue's snapshot on
+    # THAT sid makes the folded book a seed again.
+    s.resubscribe_needed, s.sid = False, 8
+    s.handle({**SNAP, "sid": 8, "seq": 1}, now=T + 3)
+    later = BookReplica("kalshi", "K1", verification="stream")
+    s.register("K1", later, "yes", now=T + 4)
+    assert later.state is ReplicaState.SYNCED and s.seeded == 1
+    # A snapshot from an older sid than the live one is not a seed.
+    s.sid = 9
+    other = BookReplica("kalshi", "K1", verification="stream")
+    s.register("K1", other, "yes", now=T + 5)
+    assert other.state is not ReplicaState.SYNCED and s.seeded == 1
+
+
 def test_unregister_drops_the_ticker_and_its_book_state():
     s, _r, _ = wired()
     s.handle(SNAP, now=T)

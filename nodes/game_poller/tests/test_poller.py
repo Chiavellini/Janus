@@ -97,13 +97,17 @@ def test_one_desynced_replica_blocks_the_whole_cover():
     assert p.opportunities == 0
 
 
-def test_a_stale_replica_blocks_even_with_a_live_socket():
+def test_a_quiet_book_on_a_live_socket_prices_and_one_whose_last_frame_is_old_blocks():
+    """Currency runs from the last proof (the last frame on a sequence-checked socket), not from
+    the last mutation (2026-09-07). The bound still bites when the socket itself has gone quiet."""
     p = mlb(max_book_age_s=2.0)
     sync_all(p, kh=0.44, pa=0.44)
     for r in p.replicas.values():
         r.heartbeat(T + 10)
     e = p.on_event("kalshi", "K_H", now=T + 10)[0]
-    assert e.cover is None and "STALE" in e.blocked_by
+    assert e.cover is not None, "unchanged for 10 s on a socket alive at T+10: the venue's book"
+    e = p.on_event("kalshi", "K_H", now=T + 13)[0]
+    assert e.cover is None and "STALE" in e.blocked_by, "the last frame is 3 s old; the bound is 2 s"
 
 
 def test_evaluation_happens_per_event_not_per_tick_of_a_clock():
