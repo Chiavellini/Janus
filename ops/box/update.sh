@@ -4,7 +4,11 @@
 # Re-points /janus/repo/sha (what a relaunch checks out), fetches on the box through the same
 # token URL cloud-init used (the token never leaves SSM or the box), checks the sha out and
 # restarts janus-live-stream unless told not to. Restart only when no game is in play: a poller's
-# state does not survive it. The arming override, if any, pins the runner sha and stops matching.
+# state does not survive it. The arming override pins the CODE TREE (kernel/code_sha), so a sha
+# that changes nodes/, grids/, kernel/, the runner or the box units stops matching it and a
+# restart would crash-loop; under a LIMITED_LIVE drop-in this script therefore refuses to check
+# out unless --no-restart is given. The daily paste that does all three steps in order is
+# ops/box/release.sh (checkout without restart, re-sign, restart).
 set -euo pipefail
 ID=${JANUS_BOX_ID:-i-0c86891ee306de0b8}
 REGION=us-east-1
@@ -13,6 +17,11 @@ RESTART=1; [ "${2:-}" = "--no-restart" ] && RESTART=0
 aws ssm put-parameter --region $REGION --overwrite --name /janus/repo/sha --type String --value "$SHA" >/dev/null
 read -r -d '' SCRIPT <<EOSS || true
 set -e
+if [ $RESTART = 1 ] && grep -qs -- '--mode LIMITED_LIVE' /etc/systemd/system/janus-live-stream.service.d/mode.conf; then
+  echo "refused: the lane's drop-in says LIMITED_LIVE and the override pins the code tree; a restart under a new tree crash-loops until it is re-signed."
+  echo "         use ops/box/release.sh $SHA (checkout, re-sign, restart) or pass --no-restart to move the checkout only."
+  exit 3
+fi
 P() { aws ssm get-parameter --region $REGION --name "\$1" --with-decryption --query Parameter.Value --output text; }
 URL=\$(P /janus/repo/url); TOKEN=\$(P /janus/repo/token)
 CLONE="\${URL/https:\/\//https://x-access-token:\${TOKEN}@}"

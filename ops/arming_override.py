@@ -5,9 +5,11 @@
         --max-contracts 10 --day-notional-usd 20 --expires-hours 24 \\
         --statement "I approve one tiny Kalshi fill on the production account to reconcile fees."
 
-The file pins the runner (git HEAD of the checkout this runs from) and the limits file, so a
-change to either invalidates it. It refuses to overwrite an existing override without --force.
-The statement is yours; nothing here writes one for you.
+The file pins the CODE TREE (kernel/code_sha: nodes, grids, kernel, the runner, the box units --
+not the whole checkout, since 2026-09-07) and the limits file, so a change to either invalidates
+it and a docs or research commit does not. The whole-checkout HEAD is written too, for the record.
+It refuses to write from a dirty or unreadable tree, and refuses to overwrite an existing override
+without --force. The statement is yours; nothing here writes one for you.
 """
 
 from __future__ import annotations
@@ -15,13 +17,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from kernel.code_sha import code_tree_sha, runner_head_sha  # noqa: E402
 from nodes.risk.gate import OVERRIDE_PATH  # noqa: E402
 from nodes.risk.limits import load_limits  # noqa: E402
 
@@ -36,6 +38,7 @@ def main() -> int:
     ap.add_argument("--day-notional-usd", type=float, required=True)
     ap.add_argument("--expires-hours", type=float, default=24.0)
     ap.add_argument("--path", type=Path, default=OVERRIDE_PATH)
+    ap.add_argument("--root", type=Path, default=ROOT, help="the checkout whose code tree is pinned (default: this one)")
     ap.add_argument("--force", action="store_true")
     a = ap.parse_args()
     if not a.statement.strip() or not a.signed_by.strip():
@@ -44,17 +47,23 @@ def main() -> int:
     if a.path.exists() and not a.force:
         print(f"{a.path} exists; pass --force to replace it", file=sys.stderr)
         return 2
-    sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
+    code_sha = code_tree_sha(a.root)
+    if code_sha in ("dirty", "unknown"):
+        print(f"refusing to pin a {code_sha} code tree at {a.root}: commit (or discard) every change under "
+              "nodes/, grids/, kernel/, ops/run_node.sh and ops/box/systemd first", file=sys.stderr)
+        return 2
+    sha = runner_head_sha(a.root)
     limits = load_limits()
     d = {"operator_statement": a.statement, "signed_by": a.signed_by, "mode": a.mode, "runner_sha": sha,
-         "limits_sha": limits.sha,
+         "code_sha": code_sha, "limits_sha": limits.sha,
          "caps": {"stake_usd": a.stake_usd, "max_contracts": a.max_contracts, "day_notional_usd": a.day_notional_usd},
          "expires_utc": (datetime.now(timezone.utc) + timedelta(hours=a.expires_hours)).strftime("%Y-%m-%dT%H:%M:%SZ"),
          "written_utc": datetime.now(timezone.utc).isoformat()}
     a.path.parent.mkdir(parents=True, exist_ok=True)
     a.path.write_text(json.dumps(d, indent=2) + "\n")
     a.path.chmod(0o600)
-    print(f"wrote {a.path}\n  mode {a.mode}, runner {sha[:12]}, limits {limits.sha}, caps {d['caps']}, expires {d['expires_utc']}")
+    print(f"wrote {a.path}\n  mode {a.mode}, code {code_sha} (runner {sha[:12]}, for the record), limits {limits.sha}, "
+          f"caps {d['caps']}, expires {d['expires_utc']}")
     print(f"  sha256 {hashlib.sha256(a.path.read_bytes()).hexdigest()[:16]}")
     return 0
 

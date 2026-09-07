@@ -744,3 +744,41 @@ series, and windows, not the join.
   profit floor are now checked before any round trip and said once per game and size. What
   unlocks the 5-contract size is L41's per-league reserve (running); what unlocks 25 is a cap the
   operator has not given.
+## 2026-09-07 — the arm pins the code tree, is re-read while running, and has a kill that crosses hosts
+
+- **Why.** The override pinned `git rev-parse HEAD` of the whole checkout and the gate compared it
+  by string, so the first docs-only commit deployed to the box invalidated the arm and cost the
+  operator two pastes (`write_override.sh`, `mode.sh LIMITED_LIVE`); `update.sh` restarted the
+  lane by default, so a deploy under the LIMITED_LIVE drop-in left the unit crash-looping until
+  it was re-signed. Worse, the mode was resolved once at start and the override never read again:
+  an arm that expired under a running lane stopped nothing, and only the kill files were checked
+  per clearance. No alarm existed for either. The box's kill files were local; `kill/all` on the
+  Mac stopped nothing there. Offered the options, the operator chose: "Pin the code tree, one
+  daily paste".
+- **The pin is the executable tree.** `kernel/code_sha.code_tree_sha` hashes the git tree ids of
+  `nodes`, `grids`, `kernel`, `ops/run_node.sh` and `ops/box/systemd` (a dirty tree is `"dirty"`,
+  no git is `"unknown"`; the writer refuses both). The override carries `code_sha`; `runner_sha`
+  (the whole HEAD) is still written and logged, for the record, and is no longer compared.
+  `resolve_mode` refuses `OVERRIDE_CODE_SHA` on a mismatch and `OVERRIDE_INCOMPLETE` on an old
+  file without the key. A commit to `README.md` no longer moves the pin; a commit under `nodes/`
+  still does (`kernel/tests/test_code_sha.py` proves both against a throwaway repo).
+- **The override is re-read every report tick.** `nodes/risk/gate.override_state` is the pure
+  read; `Supervisor.check_arm()` calls it after `on_report_tick()`, and in a capital-risking mode
+  an override that has expired, gone missing, or pins another tree or other limits sets
+  `arm_stale`, prints `[arm] STALE <why>` once, and `_execute` refuses at the door (`ARM_STALE`,
+  before any plan, balance call or clearance). Pricing continues; a matching override lifts it
+  without a restart. The tree compared is the one the PROCESS runs (fixed at start), so between a
+  release's re-sign and its restart the old lane refuses rather than trades under a pin for code
+  it is not running.
+- **Two alarms, both demonstrated firing.** `OVERRIDE_EXPIRING` (under 24 h left) and
+  `OVERRIDE_STALE`, from `nodes/risk/health.override_alerts`, only where the box's systemd drop-in
+  says `LIMITED_LIVE` (the Mac has no drop-in and stays quiet); `watchdog.selftest` drives both
+  and the quiet cases (no drop-in, a paper drop-in, 48 h left and matching).
+- **The cross-host kill.** `/janus/kill/all` and `/janus/kill/live` in SSM; `ops/box/kill.sh`
+  sets or clears them from the Mac, `ops/box/kill_sync.py` (the box's watchdog job, guarded by
+  `JANUS_HOST=box`) mirrors them into `/srv/janus/kill` with reason `ssm: ...` and removes only a
+  file it latched. A breaker's or a human's file is never lifted from SSM.
+- **The daily paste.** `ops/box/release.sh <sha>`: checkout without restart, re-sign at the F8 caps
+  from `ops/box/arm_statement.txt`, restart under `LIMITED_LIVE`; refuses while a co-listed game
+  is in play unless `--now`. `ops/box/update.sh` refuses to check out under a `LIMITED_LIVE`
+  drop-in without `--no-restart`. `GATE_TO_LIVE.md` carries the dated amendment row.

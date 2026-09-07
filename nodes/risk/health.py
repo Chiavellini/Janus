@@ -11,18 +11,73 @@ from pathlib import Path
 
 from kernel.schema import ExecutionState
 from nodes.risk.breaker import BREAKER_PATH
+from nodes.risk.gate import override_state, stale_reason
 from nodes.risk.kill import KILL_ROOT
 
 from kernel.paths import DB as DEFAULT_DB  # noqa: E402,F401
 MAX_UNRECONCILED_S = 15 * 60
+#: The box's systemd drop-in (ops/box/mode.sh). Its `--mode` is what the lane will start in; the
+#: override checks below run only while it says a capital-risking mode. Absent on the Mac.
+MODE_CONF = Path("/etc/systemd/system/janus-live-stream.service.d/mode.conf")
+OVERRIDE_EXPIRING_S = 24 * 3600
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def armed_mode(mode_conf: Path | str) -> str | None:
+    """The `--mode` the drop-in names, or None when there is no drop-in (or it names none)."""
+    p = Path(mode_conf)
+    if not p.exists():
+        return None
+    try:
+        words = p.read_text().split()
+    except OSError:
+        return None
+    for i, w in enumerate(words):
+        if w == "--mode" and i + 1 < len(words):
+            return words[i + 1]
+    return None
+
+
+def override_alerts(*, override_path: Path | str, mode_conf: Path | str = MODE_CONF,
+                    code_sha: str | None = None, limits_sha: str | None = None,
+                    expiring_s: float = OVERRIDE_EXPIRING_S, now: float | None = None) -> list[str]:
+    """OVERRIDE_STALE: the drop-in says LIMITED_LIVE (or PRODUCTION) and the override has expired,
+    is missing, or pins another code tree or other limits: the lane refuses real orders
+    (ARM_STALE) and a restart would not arm. OVERRIDE_EXPIRING: under `expiring_s` left, so the
+    day's release paste (ops/box/release.sh) happens before it lapses. Silent without a drop-in
+    (the Mac) or under a paper drop-in. `code_sha`/`limits_sha` None means read the checkout
+    and limits.toml here; the selftest passes them."""
+    mode = armed_mode(mode_conf)
+    if mode not in ("LIMITED_LIVE", "PRODUCTION"):
+        return []
+    if code_sha is None:
+        from kernel.code_sha import code_tree_sha
+        code_sha = code_tree_sha(ROOT)
+    if limits_sha is None:
+        from nodes.risk.limits import load_limits
+        limits_sha = load_limits().sha
+    st = override_state(override_path, code_sha=code_sha, limits_sha=limits_sha, now=now)
+    why = stale_reason(st, code_sha=code_sha, limits_sha=limits_sha)
+    if why:
+        return [f"risk: OVERRIDE_STALE — the drop-in says {mode} but the {why}; real orders are refused "
+                "(ARM_STALE) and a restart would not arm: ops/box/release.sh <sha>"]
+    left = float(st["seconds_left"] or 0.0)
+    if left < expiring_s:
+        return [f"risk: OVERRIDE_EXPIRING — {left / 3600:.1f} h left (expires {st['expires_utc']}); "
+                "ops/box/release.sh <sha> before it lapses"]
+    return []
 
 
 def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str = BREAKER_PATH,
                 db_path: Path | str = DEFAULT_DB, max_unreconciled_s: float = MAX_UNRECONCILED_S,
+                override_path: Path | str | None = None, mode_conf: Path | str = MODE_CONF,
+                code_sha: str | None = None, limits_sha: str | None = None,
                 now: float | None = None) -> list[str]:
     t = time.time() if now is None else now
     out: list[str] = []
     root = Path(kill_root)
+    out.extend(override_alerts(override_path=Path(override_path) if override_path else root / "arming_override.json",
+                               mode_conf=mode_conf, code_sha=code_sha, limits_sha=limits_sha, now=t))
     if root.exists():
         present = sorted(p.name for p in root.iterdir() if p.is_file() and p.name != Path(breaker_path).name
                          and p.name != "arming_override.json")

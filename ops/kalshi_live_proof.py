@@ -61,6 +61,7 @@ from nodes.venue_kalshi.books import KALSHI_BASE, fetch_kalshi_series, kalshi_bo
 from ops.proof_check import run_check  # noqa: E402
 
 from kernel.paths import PROOFS, PROOF_DB  # noqa: E402,F401
+from kernel.code_sha import code_tree_sha  # noqa: E402
 
 
 def _runner_sha() -> str:
@@ -107,7 +108,7 @@ def run_proof(a, venue_factory=None) -> int:
     print(f"[plan] 1. RESTING bid 1 @ {resting_px:.2f} then cancel   2. IOC buy {a.contracts:.0f} @ {ask:.2f} = ${stake:.2f} stake")
     limits, kill = load_limits(), KillSwitches()
     resolved = resolve_mode("LIMITED_LIVE", env=os.environ, kill=kill, limits=limits, runner_sha=_runner_sha(),
-                            credentials_present={"kalshi": True})
+                            code_sha=code_tree_sha(ROOT), credentials_present={"kalshi": True})
     if hasattr(resolved, "code"):
         print(f"[gate] LIMITED_LIVE refused: {resolved.code}: {resolved.detail}")
         print("       write the override first: python3 ops/arming_override.py --mode LIMITED_LIVE ...")

@@ -64,6 +64,7 @@ from nodes.venue_polymarket.books import (PM_CLOB, PM_GAMMA, pm_book, pm_fee_par
 from ops.proof_check import run_check  # noqa: E402
 
 from kernel.paths import PROOFS, PROOF_DB  # noqa: E402,F401
+from kernel.code_sha import code_tree_sha  # noqa: E402
 CONFIRM_WAIT_S = 120.0
 
 
@@ -146,7 +147,7 @@ def run_proof(a, transport_factory=None) -> int:
     ok, why = _key_file_ok()
     limits, kill = load_limits(), KillSwitches()
     resolved = resolve_mode("LIMITED_LIVE", env=os.environ, kill=kill, limits=limits, runner_sha=_runner_sha(),
-                            credentials_present={"polymarket": ok})
+                            code_sha=code_tree_sha(ROOT), credentials_present={"polymarket": ok})
     if hasattr(resolved, "code"):
         print(f"[gate] LIMITED_LIVE refused: {resolved.code}: {resolved.detail}")
         if resolved.code == "CREDENTIALS":
