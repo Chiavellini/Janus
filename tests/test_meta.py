@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 #: Every test file in the tree -- the repo-root suite AND each node/kernel/ops `tests/` dir.
 #: Scoping this to `tests/` alone left the 16 node-level files outside the collect-check.
-TEST_FILES = sorted(p for p in ROOT.glob("**/tests/test_*.py")
+TEST_FILES = sorted(p for p in ROOT.glob("**/tests/test_*.py") if ".venv" not in p.parts and "site-packages" not in p.parts
                     if "data" not in p.parts and ".git" not in p.parts and ".claude" not in p.parts)
 #: This file names the forbidden patterns in order to search for them, so it matches itself.
 SCANNED = [p for p in TEST_FILES if p.name != "test_meta.py"]

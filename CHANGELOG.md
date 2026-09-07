@@ -613,4 +613,6 @@ filled and reconciled to the balance. Its checklist failed twice, and both failu
   and reported by SIGNAL_EXIT; Kalshi cfb template V2 (neutral-site wording) registered.
 - **Both proofs settled, 7 of 7 each** (05:55Z): Kalshi +$0.4159 on the Dodgers' win (2 × 0.22 − 0.0241), Polymarket +$3.1816 (5.131577 × 0.62 − 0.0604), reservations released. GATE_TO_LIVE step 8 is complete on both venues.
 - **The Ashburn box launched** (05:45Z, `i-0c86891ee306de0b8`) as the pilot's host after the read-only survey's fixes; cloud-init, L34 and the box's paper lane (F7) follow in this entry's successor.
+- **Box bring-up**: the first boot had no AWS CLI on the image and cloned nothing (fixed: snap aws-cli, fatal on an empty pointer); the re-bootstrap through SSM cloned `24611d1`, materialised the secrets into `/run/janus`, and the suite is green on the box once `numpy`/`pandas` are in the venv (pinned now; the meta test no longer scans the venv inside the tree).
+- **L34 executed**, same hour on both hosts: Kalshi 184 → 51 ms p50, CLOB 309 → 184 ms, CLOB 200 from the box. Bar (half) met on Kalshi, not on the CLOB. **OBSERVATION_HOST**; the box runs the paper series F7.
 

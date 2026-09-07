@@ -65,7 +65,7 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — IAM: the admin's inline deny keeps its Earshot-instance protection and no longer denies RunInstances (2026-09-07); the janus-box role, profile and SSM core were already in place.
 - [ ] NOT DONE — main not pushed to GitHub since `1479bd6`; the SSM sha pointer is stale by many commits. OPERATOR.
 - [x] DONE — the eight SSM parameters (two pointers, six SecureStrings) are in; the repo token is the GitHub login's and should be replaced by a read-only fine-grained token.
-- [ ] NOT PROVED — L34 latency bar (box p50 under half the Mac's to both venues AND Polymarket answering 200). L38 now says the Mac is an observation host that pages to death under load; the box decision has its other half.
+- [x] DONE — L34 run 2026-09-07 (same hour): box Kalshi p50 51 ms vs Mac 184 (bar met), CLOB 184 vs 309 (bar of half NOT met), CLOB answers 200 from the box. **Verdict OBSERVATION_HOST**: the box is the paper pilot's host (F7); execution from it waits on a later row.
 
 ## G. Housekeeping
 
