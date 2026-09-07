@@ -12,7 +12,7 @@ must be sent -- and carries `settlement_pending=True` until `fills()` sees CONFI
 trade is a reversal the reconcile node has to handle; it is never silently a no-fill.
 
 The wire work (EIP-712 order signing against the CTF or neg-risk exchange, tick-size rounding,
-L1/L2 auth) is delegated to a transport. `PyClobTransport` wraps `py_clob_client` and imports it
+L1/L2 auth) is delegated to a transport. `PyClobTransport` wraps `py_clob_client_v2` and imports it
 lazily; when the library is absent the adapter cannot be built for a real-order mode, and says
 so. Tests inject a fake transport. There is no demo host: DEMO_EXECUTION uses the paper venue
 for this leg (spec pushback recorded in GATE_TO_LIVE).
@@ -54,15 +54,20 @@ class ClobTransport(Protocol):
 
 
 class PyClobTransport:
-    """The real thing, through py_clob_client. Built only for real-order modes."""
+    """The real thing, through py_clob_client_v2. Built only for real-order modes.
+
+    CLOB V2 (2026-04-28): Polymarket replaced the exchange contracts, the order format (EIP-712
+    domain version 2; no fee/nonce/taker fields) and the collateral -- pUSD, not USDC.e. The V1
+    client this wrapped kept working for reads and reported the account's collateral as 0.00
+    while the account held 95.60 pUSD (2026-09-07); V1-signed orders are refused outright."""
     last_error: str | None = None
 
     def __init__(self, host: str = "https://clob.polymarket.com", chain_id: int = 137):
         try:
-            from py_clob_client.client import ClobClient  # type: ignore
-            from py_clob_client.clob_types import OrderArgs, OrderType  # type: ignore
+            from py_clob_client_v2.client import ClobClient  # type: ignore
+            from py_clob_client_v2 import clob_types as T  # type: ignore
         except ImportError as exc:
-            raise TransportUnavailable("py_clob_client is not installed; `pip install py-clob-client` before "
+            raise TransportUnavailable("py_clob_client_v2 is not installed; `pip install py-clob-client-v2` before "
                                        "a real-order Polymarket mode. PAPER and SHADOW do not need it.") from exc
         key_path = os.environ.get("JANUS_PM_WALLET_KEY_PATH")
         if not key_path or not os.path.exists(key_path):
@@ -72,35 +77,31 @@ class PyClobTransport:
         key = open(key_path).read().strip()
         funder = os.environ.get("JANUS_PM_FUNDER")
         sig_type = int(os.environ.get("JANUS_PM_SIGNATURE_TYPE", "0"))
-        self._c = ClobClient(host, key=key, chain_id=chain_id, signature_type=sig_type, funder=funder)
-        self._c.set_api_creds(self._c.create_or_derive_api_creds())
-        self._OrderArgs, self._OrderType = OrderArgs, OrderType
+        self._c = ClobClient(host, chain_id, key=key, signature_type=sig_type, funder=funder)
+        self._c.set_api_creds(self._c.create_or_derive_api_key())
+        self._T = T
         self._sig_type = sig_type
         self.last_error: str | None = None
 
     def post_order(self, *, token_id: str, price: float, size: float, order_type: str) -> dict:
-        args = self._OrderArgs(token_id=token_id, price=price, size=size, side="BUY")
+        args = self._T.OrderArgsV2(token_id=token_id, price=price, size=size, side="BUY")
         signed = self._c.create_order(args)
-        return self._c.post_order(signed, getattr(self._OrderType, order_type))
+        return self._c.post_order(signed, getattr(self._T.OrderType, order_type))
 
     def get_order(self, order_id: str) -> dict:
         return self._c.get_order(order_id)
 
     def cancel(self, order_id: str) -> dict:
-        return self._c.cancel(order_id)
+        return self._c.cancel_order(self._T.OrderPayload(orderID=order_id))
 
     def trades(self, *, after_ts: float) -> list[dict]:
-        from py_clob_client.clob_types import TradeParams  # type: ignore
-        return list(self._c.get_trades(TradeParams(after=int(after_ts))))
+        return list(self._c.get_trades(self._T.TradeParams(after=int(after_ts))))
 
     def balance_usd(self) -> float | None:
-        """The wallet's USDC collateral, in dollars. py_clob_client's get_balance_allowance() needs a
-        BalanceAllowanceParams (asset type and the signature type the wallet trades with); called
-        bare it dereferences None and raises, which this swallowed into 'balance could not be
-        confirmed' on the first armed Polymarket proof (2026-09-07). Now the error is kept."""
+        """The account's collateral (pUSD since 2026-04-28), in dollars. The error is kept, never
+        swallowed into 'balance could not be confirmed'."""
         try:
-            from py_clob_client.clob_types import AssetType, BalanceAllowanceParams  # type: ignore
-            params = BalanceAllowanceParams(asset_type=AssetType.COLLATERAL, signature_type=self._sig_type)
+            params = self._T.BalanceAllowanceParams(asset_type=self._T.AssetType.COLLATERAL, signature_type=self._sig_type)
             d = self._c.get_balance_allowance(params)
             return float(d.get("balance", 0)) / 1e6
         except Exception as exc:  # noqa: BLE001
