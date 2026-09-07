@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Put the Polymarket signing key into its 600-mode file, safely.
 
-    python3 ops/set_pm_key.py
+    python3 ops/set_pm_key.py                  # hidden prompt
+    python3 ops/set_pm_key.py --from-clipboard # reads the key from the clipboard, then clears it
 
 Prompts for the key without echoing it, accepts only a 64-hex private key (with or without 0x),
 writes /Volumes/Kilos/janus/credentials/pm_wallet.key (mode 600, replacing the old file only
@@ -23,7 +24,14 @@ DEST = CREDENTIALS / "pm_wallet.key"
 
 
 def main() -> int:
-    raw = getpass.getpass("Polymarket private key (hidden; 64 hex chars, 0x optional): ").strip()
+    if "--from-clipboard" in sys.argv:
+        # The key is read straight from the macOS clipboard, validated, and the clipboard is then
+        # cleared. Nothing is typed, echoed or printed.
+        import subprocess
+        raw = subprocess.run(["pbpaste"], capture_output=True, text=True).stdout.strip()
+        subprocess.run(["pbcopy"], input="", text=True)
+    else:
+        raw = getpass.getpass("Polymarket private key (hidden; 64 hex chars, 0x optional): ").strip()
     if not re.fullmatch(r"(0x)?[0-9a-fA-F]{64}", raw):
         print(f"refused: that is {len(raw)} characters and not a 64-hex private key; nothing written", file=sys.stderr)
         return 2
