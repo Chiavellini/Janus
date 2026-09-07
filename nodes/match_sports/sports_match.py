@@ -43,7 +43,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from nodes.match_sports.stage1_checkpoint import (
-    KALSHI_BASE, PM_GAMMA, games_on_local_date, kalshi_date_from_rules, kalshi_date_from_ticker,
+    KALSHI_BASE, PM_GAMMA, VENUE_TZ, games_on_local_date, kalshi_date_from_rules, kalshi_date_from_ticker,
     kalshi_start_from_rules, pull_kalshi, pull_pm, _pm_start,
 )
 from kernel.schema import CanonicalKey, KeyProvenance
@@ -109,6 +109,25 @@ def canonical_key(g, league: str) -> CanonicalKey:
 
 # ── venue normalization (no prices) ──────────────────────────────────────────
 
+def venue_structured_game(cands, ymd) -> tuple:
+    """The schedule game a venue-structured (tennis) ticker names: the unique candidate on the
+    ticker's date, else the unique candidate ONE day away. A ticker keeps the day the match was
+    first scheduled; a match moved by a day (rain, order of play) keeps its ticker, and two
+    players meet once per tournament, so a lone candidate a day away is the same match. Swiatek v
+    Zheng, 2026-09-07: ticker `26SEP06`, played Sep 7, in play on both venues, unpaired for hours.
+    Returns (game or None, shifted)."""
+    if not ymd:
+        return None, False
+    d = date(ymd[0], ymd[1], ymd[2])
+    g = games_on_local_date(cands, d)
+    if g is not None:
+        return g, False
+    near = [c for c in cands if abs((datetime.fromtimestamp(c.start_utc, VENUE_TZ).date() - d).days) == 1]
+    if len(cands) == 1 and len(near) == 1:
+        return near[0], True
+    return None, False
+
+
 def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> list[VenueMarket]:
     lo, hi = window
     out: list[VenueMarket] = []
@@ -141,7 +160,9 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
             # No date in the rules text (tennis names the tournament and round instead): the
             # ticker date is the venue's own statement of the day.
             ymd = kalshi_date_from_ticker(tick)
-            g = games_on_local_date(cands, date(ymd[0], ymd[1], ymd[2])) if ymd else None
+            g, shifted = venue_structured_game(cands, ymd)
+            if shifted:
+                _reason(stats["k_reason"], "date_shifted_1d")
         else:
             g = (espn.nearest_game(cands, st) if st is not None
                  else games_on_local_date(cands, kalshi_date_from_rules(rules) or datetime.now().date()))

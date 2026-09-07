@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from kernel.schema import CanonicalKey, KeyProvenance
-from nodes.match_sports.sports_match import VenueMarket, _fullgame_slug, pair
+from nodes.match_sports.sports_match import VenueMarket, _fullgame_slug, pair, venue_structured_game
 
 
 def vm(venue, gid, ent, *, vid="e", oid="o", period="game", mtype="moneyline", start=1_800_000_000,
@@ -88,3 +88,20 @@ def test_the_full_match_slug_admits_player_pieces_up_to_eight_characters():
     assert _fullgame_slug("wta").match("wta-siegemu-samsono-2026-01-18")
     assert _fullgame_slug("atp").match("atp-blockx-trungel-2026-09-02")
     assert not _fullgame_slug("atp").match("atp-doubles-marclop-kolapol-2026-09-04")
+
+
+def test_a_tennis_ticker_dated_the_day_before_its_lone_candidate_is_the_same_match():
+    """Swiatek v Zheng, 2026-09-07: Kalshi ticker 26SEP06, played Sep 7 (moved a day); unpaired."""
+    from datetime import datetime, timezone
+    from nodes.schedule_espn.espn import ScheduledGame
+
+    def game(gid, when_utc):
+        return ScheduledGame(gid, "wta", int(datetime.fromisoformat(when_utc).replace(tzinfo=timezone.utc).timestamp()),
+                             "1", "2", "Swiatek", "Zheng", "in", False, True, False, "us-open", "SWIATEK V ZHEN", "Swiatek v Zheng")
+    sep7 = game("pm:wta:1", "2026-09-07T15:30:00")
+    assert venue_structured_game([sep7], (2026, 9, 7)) == (sep7, False)
+    assert venue_structured_game([sep7], (2026, 9, 6)) == (sep7, True), "one day off, lone candidate: the same match"
+    assert venue_structured_game([sep7], (2026, 9, 5)) == (None, False), "two days off is not this match"
+    sep6 = game("pm:wta:0", "2026-09-06T15:30:00")
+    assert venue_structured_game([sep6, sep7], (2026, 9, 8)) == (None, False), "two candidates: never a guess"
+    assert venue_structured_game([sep7], None) == (None, False)
