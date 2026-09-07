@@ -8,8 +8,15 @@
 # Defaults are the F8 pilot caps ($12 / 25 / $60 / 168 h). The lane reads the override only in
 # LIMITED_LIVE (ops/box/mode.sh); a runner or limits change on the box invalidates it (rewrite).
 set -euo pipefail
-STATEMENT=${1:?the operator's verbatim statement}
+STATEMENT=${1:?the operator statement, verbatim}      # no apostrophe here: bash 3.2 reads it as a quote
 STAKE=${2:-12}; CONTRACTS=${3:-25}; DAY=${4:-60}; HOURS=${5:-168}
 SIGNED_BY=${JANUS_SIGNED_BY:-Bernardo}
-Q=$(printf %q "$STATEMENT")
-bash "$(dirname "$0")/run.sh" "sudo -u janus bash -c 'set -a; . /run/janus/janus.env; set +a; cd /opt/janus; JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/arming_override.py --mode LIMITED_LIVE --signed-by \"$SIGNED_BY\" --stake-usd $STAKE --max-contracts $CONTRACTS --day-notional-usd $DAY --expires-hours $HOURS --force --statement $Q'"
+# The statement travels base64-encoded so its own quotes need no escaping (and macOS bash 3.2
+# cannot parse a heredoc nested in a heredoc).
+B64=$(printf %s "$STATEMENT" | base64 | tr -d '\n')
+read -r -d '' SCRIPT <<EOS || true
+echo "$B64" | base64 -d > /tmp/janus-statement.txt
+sudo -u janus bash -c 'set -a; . /run/janus/janus.env; set +a; cd /opt/janus; JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/arming_override.py --mode LIMITED_LIVE --signed-by "$SIGNED_BY" --stake-usd $STAKE --max-contracts $CONTRACTS --day-notional-usd $DAY --expires-hours $HOURS --force --statement "\$(cat /tmp/janus-statement.txt)"'
+rm -f /tmp/janus-statement.txt
+EOS
+bash "$(dirname "$0")/run.sh" "$SCRIPT"
