@@ -114,6 +114,22 @@ def plan_from_cover(*, opportunity_id: str, event_id: str, league: str, cov: Cov
             return None
         market_id, side = _leg_side(leg)
         plans[venue] = LegPlan(venue, market_id, lc.outcome_id, side, limit, cov.contracts,
-                               "fok" if venue == FIRST_VENUE else "ioc", vwap=float(lc.vwap), tick=float(leg.tick or 0.01))
-    return Plan(opportunity_id, event_id, league, cov.contracts, plans[FIRST_VENUE], plans[HEDGE_VENUE],
-                max_cost_per_contract=1.0 / (1.0 + hurdle), fee_per_contract=float(cov.fee_per_contract or 0.0))
+                               "ioc", vwap=float(lc.vwap), tick=float(leg.tick or 0.01))
+    max_cost = 1.0 / (1.0 + hurdle)
+    fee = float(cov.fee_per_contract or 0.0)
+    first, hedge = plans[FIRST_VENUE], plans[HEDGE_VENUE]
+    # The first leg is FILL-AND-KILL at one tick above the walked level, when the cover still
+    # clears the hurdle at that price. 2026-09-07, the first ten real orders from Mexico: every
+    # fill-or-kill at the walked level came back "couldn't be fully filled" -- the CLOB's book was
+    # a step past ours by the time the order landed (replica drift, 200 ms of balances and
+    # transit) -- and the lane re-priced and sent again. FAK takes what is there at the limit
+    # (a partial first leg is hedged for exactly what filled, LEG_A_PARTIAL); the pad buys the
+    # step. The hedge limit tightens by whatever the first leg pays above its VWAP, so the pad
+    # never buys a cover below the hurdle.
+    room = max_cost - hedge.vwap - fee - first.limit_price
+    if room >= first.tick - 1e-9:
+        first = LegPlan(first.venue, first.market_id, first.outcome_id, first.side,
+                        round(first.limit_price + first.tick, 4), first.contracts, first.time_in_force,
+                        vwap=first.vwap, tick=first.tick)
+    return Plan(opportunity_id, event_id, league, cov.contracts, first, hedge,
+                max_cost_per_contract=max_cost, fee_per_contract=fee)

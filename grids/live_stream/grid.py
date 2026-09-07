@@ -155,6 +155,11 @@ class Supervisor:
     watch: Watchlist | None = None
     #: What has been said once: game_id -> UNPAIRED reason, "venue:id" -> near-miss reason.
     said: dict[str, str] = field(default_factory=dict)
+    #: game_id -> monotonic instant before which no new cover is sent on it: after a first leg
+    #: the venue rejected or killed (2026-09-07: ten kills on one game in two minutes, each a
+    #: round trip on the event loop; the books had moved and the lane kept re-sending).
+    backoff: dict[str, float] = field(default_factory=dict)
+    backoff_s: float = 20.0
     capture_series: tuple[str, ...] = ()
     capture_pm_tags: tuple = ()
     watch_rows: int = 0
@@ -465,6 +470,9 @@ class Supervisor:
         # profitable print at q=25 and q=100 fetched both venues' balances -- two round trips on
         # the event loop -- only to be refused CAP_STAKE by the override. Dozens a minute stalled
         # the loop 5.6 s with 17 pollers live. The caps and the profit floor are known here.
+        until = self.backoff.get(ev.game_id)
+        if until is not None and time.monotonic() < until:
+            return                                       # said when it was set; one line per backoff
         blocked_venue = getattr(self.venues.get("polymarket"), "geoblocked", None)
         if blocked_venue:
             if self.said.get("polymarket:geoblocked") != "said":
@@ -528,6 +536,9 @@ class Supervisor:
             pass
         if ex.released and self.ledger is not None:
             self.ledger.release(ex.reservation_id, reason=f"nothing filled: {ex.state.value}")
+        if ex.first_filled <= 0 and ex.state.value in ("ORDER_REJECTED", "UNKNOWN_PROVIDER_STATE"):
+            self.backoff[ev.game_id] = time.monotonic() + self.backoff_s
+            print(f"  [risk] backoff {sup.short_name} {self.backoff_s:g}s after {ex.state.value} on leg A", flush=True)
 
     def stats(self) -> dict:
         return {"live": len(self.live), "mode": self.mode.value, "executions": self.executions, "spawned": self.spawned, "reaped": self.reaped,

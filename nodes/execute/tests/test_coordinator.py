@@ -65,9 +65,9 @@ def plan_for(offs, q=100.0, oid="o1"):
 
 def test_the_plan_leads_with_polymarket_and_hedges_on_kalshi_at_the_walked_limit():
     p, cov = plan_for(offers())
-    assert p.first.venue == "polymarket" and p.first.time_in_force == "fok" and p.first.side == "buy_yes"
+    assert p.first.venue == "polymarket" and p.first.time_in_force == "ioc" and p.first.side == "buy_yes"   # FAK since 2026-09-07
     assert p.hedge.venue == "kalshi" and p.hedge.time_in_force == "ioc"
-    assert p.first.limit_price == 0.44 and p.hedge.limit_price == 0.44
+    assert p.first.limit_price == 0.45 and p.hedge.limit_price == 0.44   # the first leg one tick above the walked 0.44 (2026-09-07)
     assert p.max_cost_per_contract == pytest.approx(1 / 1.01)
     # the BUDGET is what the hedge may average if leg A paid 0.44: the cost ceiling minus fees minus 0.44
     assert p.hedge_budget(0.44) == pytest.approx(round(1 / 1.01 - cov.fee_per_contract - 0.44, 4))
@@ -110,10 +110,16 @@ def test_an_unfilled_first_leg_leaves_no_position_and_releases(tmp_path):
     co, vs, store, clk, _ = harness(tmp_path)
     offs = offers()
     p, _ = plan_for(offs)
-    vs["polymarket"].books = {"P_H": bk([(0.44, 10)])}      # only 10 of 100: FOK fills nothing
+    vs["polymarket"].books = {"P_H": bk([(0.60, 5000)])}    # the book moved past the limit: FAK fills nothing
     vs["kalshi"].books = {"K_A": offs["away"][0].book}
     ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
     assert ex.state is X.ORDER_REJECTED and ex.released and ex.first_filled == 0.0
+    # and a book with only part of the size at the limit fills that part, hedged for exactly it (FAK, 2026-09-07)
+    co2, vs2, store2, clk2, _ = harness(tmp_path / "p")
+    vs2["polymarket"].books = {"P_H": bk([(0.44, 10)])}
+    vs2["kalshi"].books = {"K_A": offs["away"][0].book}
+    ex2 = co2.execute(p, clearance_for(tmp_path / "p", now_mono=100.0))
+    assert ex2.state is X.HEDGED and ex2.first_filled == 10.0 and ex2.hedge_filled == 10.0 and ex2.unhedged == 0.0
     assert not any(v.fills(since_utc=0) for v in vs.values())
 
 
@@ -400,3 +406,19 @@ def test_stage_stamps_are_recorded_monotone_and_persisted(tmp_path):
     assert vals == sorted(vals) and ex.stages["frame_to_eval_ms"] == 3.5 and "db_ms" in ex.stages
     row = json.loads(store.con.execute("SELECT stages_json FROM executions WHERE execution_id=?", (ex.execution_id,)).fetchone()[0])
     assert row == ex.stages
+
+
+def test_the_first_leg_is_fill_and_kill_one_tick_above_the_walked_level_when_the_hurdle_allows():
+    """Ten fill-or-kill orders at the walked level were killed on 2026-09-07; the pad buys the step
+    the CLOB's book has moved by, never a cover below the hurdle."""
+    from nodes.execute.plan import plan_from_cover
+    offs = offers(pm_home=0.40, k_away=0.40)             # cost 0.80 + fees: plenty of room under 1/(1.01)
+    cov = best_cover(offs, 25.0, now_utc=T, proof=PROOF)
+    p = plan_from_cover(opportunity_id="o", event_id="espn:mlb:1", league="mlb", cov=cov, offers=offs)
+    assert p.first.time_in_force == "ioc" and p.hedge.time_in_force == "ioc"
+    assert p.first.limit_price == pytest.approx(0.41), "one tick above the walked level"
+    offs2 = offers(pm_home=0.50, k_away=0.485)           # 0.985 + fees: no room for a pad under the hurdle
+    cov2 = best_cover(offs2, 25.0, now_utc=T, proof=PROOF)
+    if cov2.ok:
+        p2 = plan_from_cover(opportunity_id="o2", event_id="espn:mlb:1", league="mlb", cov=cov2, offers=offs2)
+        assert p2 is None or p2.first.limit_price == pytest.approx(0.50), "no pad when it would breach the hurdle"
