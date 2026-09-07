@@ -94,7 +94,7 @@ is `lane=active mode=LIMITED_LIVE` and a `[mode] LIMITED_LIVE` line; `[arm] STAL
 The box's watchdog says `OVERRIDE_EXPIRING` under 24 h and `OVERRIDE_STALE` once the arm no
 longer authorises the checkout; both read the drop-in, so the Mac's watchdog never says either.
 
-## Mexico: moving the box (2026-09-07)
+## Mexico: moving the box (2026-09-07) — done 20:22Z: `i-0a8c073c72dcdae11` in `mx-central-1a`; Virginia `i-0c86891ee306de0b8` stopped
 
 The Virginia box's first real order was refused by the Polymarket CLOB with HTTP 403 "Trading
 restricted in your region": order entry is geoblocked from a US address (reads were always fine).

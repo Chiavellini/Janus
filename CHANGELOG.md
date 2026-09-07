@@ -832,3 +832,15 @@ the proofs had worked from the Mac's Mexican egress. The operator chose AWS `mx-
   KMS via SSM, the region Deny, every resource ARN); applying them is the admin's step.
 - The runbook carries the ordered move: IAM, parameters, launch, bootstrap, L34 from Mexico, paper,
   then the arm; Virginia stopped after.
+
+## 2026-09-07 — live from Mexico
+
+20:22Z: the lane runs LIMITED_LIVE on `i-0a8c073c72dcdae11` in `mx-central-1a` (runner `f71f66d`,
+the override pinning code tree `22e091c7…` and limits `222330ad…` to 2026-09-14). The move took
+25 minutes from the geoblock finding: IAM for both regions, the eight parameters copied, launch,
+bootstrap (tests green on the box), L34 from Mexico (Kalshi 92 ms, CLOB 214 ms; the laptop 170 /
+273), a one-minute bring-up in paper (58 co-listed games, 45 pollers), Virginia to paper and
+stopped, the override, the switch. Two template defects showed up in the bring-up and were fixed
+first: the ITF Polymarket template shared the tour V2 text's hash and had displaced it (every
+tour match blocked LEAGUE_MISMATCH), and the tennis scrub missed Challenger tournament phrases
+(one Kalshi text hashed per tournament). The registry now asserts every template hash is unique.

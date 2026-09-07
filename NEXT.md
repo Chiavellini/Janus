@@ -4,40 +4,22 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-07 ~20:00 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-07 ~20:30 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
 
-**The box cannot place Polymarket orders.** Its first real order (18:45Z, ATL @ PHI, 5 contracts,
-every check passed) was refused by the CLOB with HTTP 403 "Trading restricted in your region": AWS
-Virginia is a US address, and Polymarket geoblocks order entry from it (reads were always fine,
-which is what L34 saw). No order was placed and no money moved. The proofs succeeded from the
-Mac, whose egress is Mexico City. Until the Polymarket leg runs from a permitted jurisdiction the
-box is a paper host in fact, whatever its mode says. Main now rejects such answers outright and
-latches the venue (`VENUE_GEOBLOCKED`); the box still runs `5a07e4e` and will hold a reservation
-per attempt until the release.
-
-**Earlier tonight** the box priced its first actionable covers (LAA @ BOS, CEL @ GET, NYM @ MIA,
-ATL @ PHI at 25 and 100 contracts, 4–5 % locked) and refused them at the $12 cap; the operator's
-rule is the smallest executable size, so a 10-contract rung was added and L41's per-league reserve
-(still running, 4.5 h) is what frees the 5-contract rung. Funded: Kalshi shard 0 $247.86, shard 3
-(tennis, Challenger, ITF) $22.43, Polymarket $304 pUSD.
-
-**Main (`f019321`+)** carries the day's work: the coverage audit, tennis by the venues' rosters
-with Challenger and ITF (70 co-listed ITF matches today), the 48 h universe, the Kalshi cursor, the
-code-tree pin, the live override check, the cross-host kill, `release.sh` refusing only on money in
-motion, the 10-contract rung, L31 scored (every rejection stratum at precision 1.0; zero
-equivalents among the 18 survivors), and the geoblock handling.
+**The lane is LIMITED_LIVE on the Mexico box** (`i-0a8c073c72dcdae11`, `mx-central-1a`) since
+20:22Z on `f71f66d`; every box command needs `JANUS_BOX_REGION=mx-central-1
+JANUS_BOX_ID=i-0a8c073c72dcdae11`. Virginia is stopped (its first real order was geoblocked by the
+CLOB; its data volume keeps the record). L34 from Mexico: Kalshi 92 ms, CLOB 214 ms (the Mac 170 /
+273). 55 co-listed games at the switch, 17 in play; ITF and Challenger included. Funded: Kalshi
+shard 0 $248, shard 3 $22, Polymarket $304. The first real order from Mexico is the proof the
+geoblock is behind us; the first three covers are reconciled by hand before the fourth.
 
 ## Now — what is left, and whose it is
 
-**Yours (the Mexico move, in the runbook's order, `ops/ASHBURN_SPORTS_RUNBOOK.md` "Mexico"):**
-1. IAM: `aws iam put-role-policy --role-name janus-box --policy-name janus-box --policy-document file://infra/iam/janus-box-policy.json`, and the agent policy (`janus-scope`) from `infra/iam/janus-agent-policy.json`.
-2. Parameters: `bash ops/box/copy_params.sh mx-central-1 --go`, then `/janus/repo/sha` in that region to main's sha.
-3. Launch: `JANUS_BOX_REGION=mx-central-1 bash ops/box/launch.sh --go`; then `export JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=<id>` in every shell.
-4. After bootstrap: L34 from Mexico (I append the verdict), the lane in paper, then the two arming pastes.
-5. Stop Virginia when Mexico runs. Kalshi shard 3 (tennis) still $22.43: `python3 ops/kalshi_shards.py --move --to 3 --usd 80 --confirm` if wanted.
+**Yours:** Kalshi shard 3 (tennis) still $22.43: `python3 ops/kalshi_shards.py --move --to 3 --usd 80 --confirm`. Later: a read-only repo token in SSM (both regions); rotate the Polymarket signer key after the pilot.
 
 **Mine, in order:**
 1. Today's games on both hosts: `[discovery]` for ita, `[spawn]` for tennis, MLB and Monday-night
