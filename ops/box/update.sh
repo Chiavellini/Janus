@@ -11,7 +11,7 @@
 # ops/box/release.sh (checkout without restart, re-sign, restart).
 set -euo pipefail
 ID=${JANUS_BOX_ID:-i-0c86891ee306de0b8}
-REGION=us-east-1
+REGION=${JANUS_BOX_REGION:-us-east-1}      # the Mexico box: export JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-…
 SHA=${1:-$(git rev-parse main)}
 RESTART=1; [ "${2:-}" = "--no-restart" ] && RESTART=0
 aws ssm put-parameter --region $REGION --overwrite --name /janus/repo/sha --type String --value "$SHA" >/dev/null

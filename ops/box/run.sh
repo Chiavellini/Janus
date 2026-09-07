@@ -6,7 +6,7 @@
 # lane does. SSM's document runs sh, so the script is written to a file and run with bash.
 set -euo pipefail
 ID=${JANUS_BOX_ID:-i-0c86891ee306de0b8}
-REGION=us-east-1
+REGION=${JANUS_BOX_REGION:-us-east-1}      # the Mexico box: export JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-…
 if [ $# -ge 1 ]; then SCRIPT=$1; else SCRIPT=$(cat); fi
 WRAPPED=$(printf "cat > /tmp/janus-run.sh <<'JANUS_EOF'\n%s\nJANUS_EOF\nbash /tmp/janus-run.sh; rc=\$?; rm -f /tmp/janus-run.sh; exit \$rc" "$SCRIPT")
 PARAMS=$(python3 -c 'import json,sys; print(json.dumps({"commands": [sys.stdin.read()]}))' <<<"$WRAPPED")

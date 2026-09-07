@@ -5,7 +5,7 @@
 #   ops/box/status.sh --since 3600   # the last hour
 set -euo pipefail
 ID=${JANUS_BOX_ID:-i-0c86891ee306de0b8}
-REGION=us-east-1
+REGION=${JANUS_BOX_REGION:-us-east-1}      # the Mexico box: export JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-…
 MARK=${TMPDIR:-/tmp}/janus-box-status.mark
 SINCE=$(( $(date +%s) - 7200 ))
 [ -f "$MARK" ] && SINCE=$(cat "$MARK")

@@ -94,6 +94,44 @@ is `lane=active mode=LIMITED_LIVE` and a `[mode] LIMITED_LIVE` line; `[arm] STAL
 The box's watchdog says `OVERRIDE_EXPIRING` under 24 h and `OVERRIDE_STALE` once the arm no
 longer authorises the checkout; both read the drop-in, so the Mac's watchdog never says either.
 
+## Mexico: moving the box (2026-09-07)
+
+The Virginia box's first real order was refused by the Polymarket CLOB with HTTP 403 "Trading
+restricted in your region": order entry is geoblocked from a US address (reads were always fine).
+The proofs succeeded from the operator's Mac, whose egress is Mexico City, so the box moves to
+AWS `mx-central-1` (Querétaro; c7g.medium, SSM and the Ubuntu arm64 image are all offered there,
+checked 2026-09-07). Everything below is the operator's, in order; every script now takes the
+region from `JANUS_BOX_REGION` and the instance from `JANUS_BOX_ID`.
+
+1. **IAM names the region** (admin credentials; the committed files already carry both regions):
+   ```bash
+   cd /Users/bernardodelrio/Code/Janus && aws iam put-role-policy --role-name janus-box --policy-name janus-box --policy-document file://infra/iam/janus-box-policy.json
+   ```
+   and the same for the policy that carries `infra/iam/janus-agent-policy.json` (`janus-scope` on
+   the agent's role/user, see the one-time list above): its `TwoRegionsOnly` Deny now allows
+   `mx-central-1` beside `us-east-1`, and every resource ARN exists for both.
+2. **The parameters travel** (your secrets; nothing is printed):
+   ```bash
+   bash ops/box/copy_params.sh mx-central-1 && bash ops/box/copy_params.sh mx-central-1 --go
+   ```
+   then re-point the sha there: `aws ssm put-parameter --region mx-central-1 --overwrite --name /janus/repo/sha --type String --value "$(git rev-parse main)"`.
+3. **Launch** (billable):
+   ```bash
+   JANUS_BOX_REGION=mx-central-1 bash ops/box/launch.sh && JANUS_BOX_REGION=mx-central-1 bash ops/box/launch.sh --go
+   ```
+   If the region has no default VPC the script says so (`aws ec2 create-default-vpc --region mx-central-1`).
+   Note the instance id it prints; from here on in every shell:
+   ```bash
+   export JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=<the new id>
+   ```
+4. **Bootstrap** takes ~4 min (cloud-init: apt, venv, clone at the pinned sha, the units). Then
+   `bash ops/box/status.sh` shows `creds=active`; the lane is not enabled yet.
+5. **L34 again from Mexico** (the latency row; read-only against the venues):
+   `bash ops/box/run.sh 'sudo -u janus /opt/janus/.venv/bin/python3 /opt/janus/ops/box/latency.py --rounds 100'` and the same on the Mac in the same hour; the verdict is appended to L34's row by the agent.
+6. **Paper first**: `bash ops/box/run.sh 'systemctl enable --now janus-live-stream'` (the unit ships PAPER_EXECUTION); watch one discovery pass with `status.sh`.
+7. **Then the arm**, as before: `bash ops/box/write_override.sh "$(cat ops/box/arm_statement.txt)" 12 25 60 168` and `bash ops/box/mode.sh LIMITED_LIVE`. The first real order's `[exec]` line is the proof the geoblock is behind us.
+8. **Virginia**: `aws ec2 stop-instances --region us-east-1 --instance-ids i-0c86891ee306de0b8` once Mexico runs (its 50 GB data volume keeps F7's records; terminate only after they are copied off if wanted).
+
 ## The cross-host kill
 ```bash
 bash ops/box/kill.sh live            # LIMITED_LIVE and PRODUCTION; the box latches kill/live within 5 min

@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-07 ~19:20 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-07 ~20:00 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
@@ -32,18 +32,12 @@ equivalents among the 18 survivors), and the geoblock handling.
 
 ## Now — what is left, and whose it is
 
-**Yours:**
-1. **Where the Polymarket leg runs.** The choice is a jurisdiction the CLOB accepts orders from:
-   the Mac's (Mexico City) is proven. Options: relaunch the box in AWS `mx-central-1` (Querétaro;
-   the same jurisdiction; L34 re-run for its latencies), or another permitted region (Canada has
-   its own restrictions; check the CLOB's list). Kalshi accepted orders from the Mexican IP in the
-   proof. Tell me the region and I prepare `ops/box/launch.sh` for it; the launch and the SSM
-   parameters are yours as before.
-2. **The release** in a quiet window (`git pull && bash ops/box/release.sh <sha>`; it now refuses
-   only with money in motion). Until the region moves, LIMITED_LIVE on this box only records
-   refusals; PAPER_EXECUTION would be honest: `bash ops/box/mode.sh PAPER_EXECUTION`.
-3. **Kalshi shard 3** (tennis) still holds $22.43: `python3 ops/kalshi_shards.py --move --to 3
-   --usd 80 --confirm` if tennis covers are to clear at more than one at a time.
+**Yours (the Mexico move, in the runbook's order, `ops/ASHBURN_SPORTS_RUNBOOK.md` "Mexico"):**
+1. IAM: `aws iam put-role-policy --role-name janus-box --policy-name janus-box --policy-document file://infra/iam/janus-box-policy.json`, and the agent policy (`janus-scope`) from `infra/iam/janus-agent-policy.json`.
+2. Parameters: `bash ops/box/copy_params.sh mx-central-1 --go`, then `/janus/repo/sha` in that region to main's sha.
+3. Launch: `JANUS_BOX_REGION=mx-central-1 bash ops/box/launch.sh --go`; then `export JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=<id>` in every shell.
+4. After bootstrap: L34 from Mexico (I append the verdict), the lane in paper, then the two arming pastes.
+5. Stop Virginia when Mexico runs. Kalshi shard 3 (tennis) still $22.43: `python3 ops/kalshi_shards.py --move --to 3 --usd 80 --confirm` if wanted.
 
 **Mine, in order:**
 1. Today's games on both hosts: `[discovery]` for ita, `[spawn]` for tennis, MLB and Monday-night

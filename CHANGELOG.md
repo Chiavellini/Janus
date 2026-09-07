@@ -817,3 +817,18 @@ accepts orders.
 - What it means: real two-leg execution cannot run from a US-hosted box. The Polymarket leg needs a
   host in a permitted jurisdiction; the Mac's (Mexico) is the one that has worked. The region of
   the next box is the operator's decision (CHANGELOG records the fact; NEXT.md the choice).
+
+## 2026-09-07 — the box moves to Mexico
+
+Polymarket refused the Virginia box's first real order (403, "Trading restricted in your region");
+the proofs had worked from the Mac's Mexican egress. The operator chose AWS `mx-central-1`.
+- Every box script takes its region and instance from `JANUS_BOX_REGION` / `JANUS_BOX_ID`;
+  `user-data.sh` reads the region from the instance's own metadata and records it in
+  `/etc/janus.env` for `creds.py` and `kill_sync.py`; `launch.sh` resolves the default VPC's subnet
+  and a `janus-box` security group in any region and takes the AMI from that region's public
+  parameter; `ops/box/copy_params.sh` moves the eight `/janus/*` parameters between regions
+  without printing a value (the operator's).
+- `infra/iam/janus-box-policy.json` and `janus-agent-policy.json` name both regions (parameters,
+  KMS via SSM, the region Deny, every resource ARN); applying them is the admin's step.
+- The runbook carries the ordered move: IAM, parameters, launch, bootstrap, L34 from Mexico, paper,
+  then the arm; Virginia stopped after.

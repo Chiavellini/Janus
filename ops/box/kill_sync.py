@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from nodes.risk.kill import KillSwitches  # noqa: E402
 
 PARAMETERS: dict[str, str] = {"all": "/janus/kill/all", "live": "/janus/kill/live"}
-REGION = "us-east-1"
+REGION = os.environ.get("JANUS_BOX_REGION", "us-east-1")   # written into /etc/janus.env by user-data.sh
 
 
 def read_parameters(ssm, names: Mapping[str, str] = PARAMETERS) -> dict[str, str | None]:

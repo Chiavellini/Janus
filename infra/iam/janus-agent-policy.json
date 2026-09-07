@@ -13,34 +13,63 @@
     {
       "Sid": "NoPrivilegeEscalationAndNoAuditTampering",
       "Effect": "Deny",
-      "Action": ["iam:*", "organizations:*", "account:*",
-                 "cloudtrail:StopLogging", "cloudtrail:DeleteTrail",
-                 "budgets:DeleteBudget", "ce:*"],
+      "Action": [
+        "iam:*",
+        "organizations:*",
+        "account:*",
+        "cloudtrail:StopLogging",
+        "cloudtrail:DeleteTrail",
+        "budgets:DeleteBudget",
+        "ce:*"
+      ],
       "Resource": "*"
     },
     {
-      "Sid": "OneRegionOnly",
+      "Sid": "TwoRegionsOnly",
       "Effect": "Deny",
       "Action": "*",
       "Resource": "*",
-      "Condition": {"StringNotEquals": {"aws:RequestedRegion": ["us-east-1"]}}
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": [
+            "us-east-1",
+            "mx-central-1"
+          ]
+        }
+      }
     },
     {
       "Sid": "ReadEverythingInEC2SoWeCanSeeWhatWeMade",
       "Effect": "Allow",
-      "Action": ["ec2:Describe*", "ssm:DescribeParameters", "cloudwatch:GetMetric*",
-                 "cloudwatch:ListMetrics", "logs:Describe*", "logs:GetLogEvents"],
+      "Action": [
+        "ec2:Describe*",
+        "ssm:DescribeParameters",
+        "cloudwatch:GetMetric*",
+        "cloudwatch:ListMetrics",
+        "logs:Describe*",
+        "logs:GetLogEvents"
+      ],
       "Resource": "*"
     },
     {
       "Sid": "LaunchOnlyTaggedJanusAndOnlySmallInstances",
       "Effect": "Allow",
       "Action": "ec2:RunInstances",
-      "Resource": "arn:aws:ec2:us-east-1:986420598115:instance/*",
+      "Resource": [
+        "arn:aws:ec2:us-east-1:986420598115:instance/*",
+        "arn:aws:ec2:mx-central-1:986420598115:instance/*"
+      ],
       "Condition": {
-        "StringEquals": {"aws:RequestTag/Project": "janus"},
+        "StringEquals": {
+          "aws:RequestTag/Project": "janus"
+        },
         "ForAnyValue:StringEquals": {
-          "ec2:InstanceType": ["t4g.small", "c7g.medium", "c7g.large", "c6in.large"]
+          "ec2:InstanceType": [
+            "t4g.small",
+            "c7g.medium",
+            "c7g.large",
+            "c6in.large"
+          ]
         }
       }
     },
@@ -48,26 +77,53 @@
       "Sid": "RunInstancesNeedsTheseSupportingResources",
       "Effect": "Allow",
       "Action": "ec2:RunInstances",
-      "Resource": ["arn:aws:ec2:us-east-1::image/*",
-                   "arn:aws:ec2:us-east-1:986420598115:subnet/*",
-                   "arn:aws:ec2:us-east-1:986420598115:security-group/*",
-                   "arn:aws:ec2:us-east-1:986420598115:network-interface/*",
-                   "arn:aws:ec2:us-east-1:986420598115:volume/*",
-                   "arn:aws:ec2:us-east-1:986420598115:key-pair/*"]
+      "Resource": [
+        "arn:aws:ec2:us-east-1::image/*",
+        "arn:aws:ec2:mx-central-1::image/*",
+        "arn:aws:ec2:us-east-1:986420598115:subnet/*",
+        "arn:aws:ec2:mx-central-1:986420598115:subnet/*",
+        "arn:aws:ec2:us-east-1:986420598115:security-group/*",
+        "arn:aws:ec2:mx-central-1:986420598115:security-group/*",
+        "arn:aws:ec2:us-east-1:986420598115:network-interface/*",
+        "arn:aws:ec2:mx-central-1:986420598115:network-interface/*",
+        "arn:aws:ec2:us-east-1:986420598115:volume/*",
+        "arn:aws:ec2:mx-central-1:986420598115:volume/*",
+        "arn:aws:ec2:us-east-1:986420598115:key-pair/*",
+        "arn:aws:ec2:mx-central-1:986420598115:key-pair/*"
+      ]
     },
     {
       "Sid": "LifecycleOnJanusTaggedInstancesOnly",
       "Effect": "Allow",
-      "Action": ["ec2:StartInstances", "ec2:StopInstances", "ec2:TerminateInstances",
-                 "ec2:ModifyInstanceAttribute", "ec2:CreateTags"],
-      "Resource": "arn:aws:ec2:us-east-1:986420598115:*",
-      "Condition": {"StringEquals": {"ec2:ResourceTag/Project": "janus"}}
+      "Action": [
+        "ec2:StartInstances",
+        "ec2:StopInstances",
+        "ec2:TerminateInstances",
+        "ec2:ModifyInstanceAttribute",
+        "ec2:CreateTags"
+      ],
+      "Resource": [
+        "arn:aws:ec2:us-east-1:986420598115:*",
+        "arn:aws:ec2:mx-central-1:986420598115:*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "ec2:ResourceTag/Project": "janus"
+        }
+      }
     },
     {
       "Sid": "JanusSecretsOnly",
       "Effect": "Allow",
-      "Action": ["ssm:GetParameter", "ssm:GetParameters", "ssm:PutParameter"],
-      "Resource": "arn:aws:ssm:us-east-1:986420598115:parameter/janus/*"
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:PutParameter"
+      ],
+      "Resource": [
+        "arn:aws:ssm:us-east-1:986420598115:parameter/janus/*",
+        "arn:aws:ssm:mx-central-1:986420598115:parameter/janus/*"
+      ]
     }
   ]
 }

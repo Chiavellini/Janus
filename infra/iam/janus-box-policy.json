@@ -1,17 +1,52 @@
 {
   "Version": "2012-10-17",
   "Statement": [
-    {"Sid": "ReadOwnSecretsOnly", "Effect": "Allow",
-     "Action": ["ssm:GetParameter", "ssm:GetParameters"],
-     "Resource": "arn:aws:ssm:us-east-1:*:parameter/janus/*"},
-    {"Sid": "DecryptThem", "Effect": "Allow",
-     "Action": "kms:Decrypt", "Resource": "*",
-     "Condition": {"StringEquals": {"kms:ViaService": "ssm.us-east-1.amazonaws.com"}}},
-    {"Sid": "EmitMetricsAndLogs", "Effect": "Allow",
-     "Action": ["cloudwatch:PutMetricData", "logs:CreateLogStream", "logs:PutLogEvents",
-                "logs:CreateLogGroup", "logs:DescribeLogStreams"],
-     "Resource": "*"},
-    {"Sid": "NeverReachIntoEarshot", "Effect": "Deny",
-     "Action": "*", "Resource": "arn:aws:ssm:us-east-1:*:parameter/earshot/*"}
+    {
+      "Sid": "ReadOwnSecretsOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters"
+      ],
+      "Resource": [
+        "arn:aws:ssm:us-east-1:*:parameter/janus/*",
+        "arn:aws:ssm:mx-central-1:*:parameter/janus/*"
+      ]
+    },
+    {
+      "Sid": "DecryptThem",
+      "Effect": "Allow",
+      "Action": "kms:Decrypt",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": [
+            "ssm.us-east-1.amazonaws.com",
+            "ssm.mx-central-1.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "EmitMetricsAndLogs",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:PutMetricData",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:CreateLogGroup",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "NeverReachIntoEarshot",
+      "Effect": "Deny",
+      "Action": "*",
+      "Resource": [
+        "arn:aws:ssm:us-east-1:*:parameter/earshot/*",
+        "arn:aws:ssm:mx-central-1:*:parameter/earshot/*"
+      ]
+    }
   ]
 }

@@ -9,7 +9,11 @@ set -euo pipefail
 exec >>/var/log/janus-bootstrap.log 2>&1
 echo "== janus bootstrap $(date -u +%FT%TZ)"
 export DEBIAN_FRONTEND=noninteractive
-REGION=us-east-1
+# The region from the instance's own metadata (IMDSv2), so one script serves Virginia and Mexico.
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300" || true)
+REGION=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/region || true)
+REGION=${REGION:-us-east-1}
+echo "region=$REGION"
 DATA=/srv/janus
 JROOT=/opt/janus
 
@@ -55,6 +59,7 @@ sudo -u janus "$JROOT/.venv/bin/pip" install -q cryptography websockets numpy pa
 # systemd units from the repo
 install -m 644 "$JROOT"/ops/box/systemd/*.service "$JROOT"/ops/box/systemd/*.timer /etc/systemd/system/
 install -m 644 "$JROOT"/ops/box/systemd/janus.env /etc/janus.env
+echo "JANUS_BOX_REGION=$REGION" >> /etc/janus.env          # creds.py and kill_sync.py read the box's own region
 systemctl daemon-reload
 systemctl enable --now janus-creds.service janus-watchdog.timer janus-census.timer
 # the lane itself is enabled by the operator once the latency row has run: systemctl enable --now janus-live-stream

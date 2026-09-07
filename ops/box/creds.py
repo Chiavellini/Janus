@@ -71,7 +71,7 @@ def materialise(values: dict[str, str], into: Path, *, layout=LAYOUT, optional=O
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--into", type=Path, default=Path("/run/janus"))
-    ap.add_argument("--region", default="us-east-1")
+    ap.add_argument("--region", default=os.environ.get("JANUS_BOX_REGION", "us-east-1"))
     ap.add_argument("--dry-run", action="store_true", help="print the parameter names and destinations; fetch nothing")
     a = ap.parse_args()
     if a.dry_run:
