@@ -2,7 +2,7 @@
 
 The previous text launched the retired REST lane with flags the current grid does not have and
 named a directory nothing uses. This is the deployment contract for the box the operator approved
-on 2026-09-03: **one `c7g.medium` in us-east-1, SSM access only, first an observation host, an
+on 2026-09-03: **one `c7g.medium` in us-east-1, SSM access only, the paper pilot's host (PAPER_EXECUTION, ledger F7), an
 execution host only if ledger L34 says so.** Starting it is billable (~$0.036/h + 70 GB gp3);
 `aws ec2 stop-instances` stops the bill and keeps the data volume.
 
@@ -11,37 +11,59 @@ Default VPC `vpc-0de2c8819be9c7353`; security group `janus-box` (`sg-061f3bb3a68
 ingress); IAM role + instance profile `janus-box` (SSM core, `/janus/*` parameters with KMS
 decrypt, CloudWatch); Ubuntu 24.04 arm64 AMI from the public SSM parameter. No Janus instance yet.
 
-## One-time, operator
-1. Push main to GitHub (the box clones the pinned sha) and create a read-only fine-grained token
-   for the repo. Put the non-secret and secret parameters in SSM (values never pass through an
-   agent):
+## One-time, operator (2026-09-07: the exact list; nothing is retyped, nothing is echoed)
+
+0. **IAM, once.** For this week's pilot the simplest path is to launch as the admin user: delete the
+   admin's inline policy `EarshotDenyDirectBoxLaunch` (`aws iam delete-user-policy --user-name <admin>
+   --policy-name EarshotDenyDirectBoxLaunch`). The alternative is to carve `iam:PassRole` for
+   `arn:aws:iam::986420598115:role/janus-box` out of the `janus-scope` policy's `iam:*` Deny AND add an
+   Allow for it (the committed `infra/iam/janus-agent-policy.json` has the Deny and no Allow). The
+   instance profile must exist (each step tolerates "already exists"):
    ```bash
-   aws ssm put-parameter --region us-east-1 --name /janus/repo/url --type String --value https://github.com/Chiavellini/Janus.git
+   cd /Users/bernardodelrio/Code/Janus && aws iam create-role --role-name janus-box --assume-role-policy-document file://infra/iam/janus-box-trust.json; aws iam put-role-policy --role-name janus-box --policy-name janus-box --policy-document file://infra/iam/janus-box-policy.json && aws iam create-instance-profile --instance-profile-name janus-box; aws iam add-role-to-instance-profile --instance-profile-name janus-box --role-name janus-box; aws iam attach-role-policy --role-name janus-box --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+   ```
+1. **Push main** and create a read-only fine-grained GitHub token for the repo (Contents: read).
+2. **SSM parameters.** The two pointers, then the six SecureStrings read from the local files so
+   no value passes through a chat or a shell history:
+   ```bash
+   cd /Users/bernardodelrio/Code/Janus && aws ssm put-parameter --region us-east-1 --overwrite --name /janus/repo/url --type String --value https://github.com/Chiavellini/Janus.git && aws ssm put-parameter --region us-east-1 --overwrite --name /janus/repo/sha --type String --value "$(git rev-parse main)"
    ```
    ```bash
-   aws ssm put-parameter --region us-east-1 --name /janus/repo/sha --type String --value <sha of main>
+   set -a; source /Volumes/Kilos/janus/credentials/track_b.env; set +a; read -rs "T?GitHub read-only token: "; echo; aws ssm put-parameter --region us-east-1 --overwrite --type SecureString --name /janus/repo/token --value "$T" && aws ssm put-parameter --region us-east-1 --overwrite --type SecureString --name /janus/kalshi/api_key --value "$JANUS_KALSHI_API_KEY" && aws ssm put-parameter --region us-east-1 --overwrite --type SecureString --name /janus/kalshi/private_key --value "$(cat "$JANUS_KALSHI_PRIVATE_KEY_PATH")" && aws ssm put-parameter --region us-east-1 --overwrite --type SecureString --name /janus/polymarket/wallet_key --value "$(cat "$JANUS_PM_WALLET_KEY_PATH")" && aws ssm put-parameter --region us-east-1 --overwrite --type SecureString --name /janus/polymarket/funder --value "$JANUS_PM_FUNDER" && aws ssm put-parameter --region us-east-1 --overwrite --type SecureString --name /janus/polymarket/signature_type --value "$JANUS_PM_SIGNATURE_TYPE" && unset T && echo "six SecureStrings written"
    ```
-   Then, each as `--type SecureString` (KMS-encrypted with the account's SSM key):
-   `/janus/repo/token`, `/janus/kalshi/api_key`, `/janus/kalshi/private_key` (the PEM file's
-   contents), `/janus/polymarket/wallet_key`, `/janus/polymarket/funder`,
-   `/janus/polymarket/signature_type`. `python3 ops/box/creds.py --dry-run` lists the names.
-2. Launch: `ops/box/launch.sh` prints the plan; `ops/box/launch.sh --go` launches. cloud-init runs
-   `ops/box/user-data.sh`: packages, the data volume at `/srv/janus`, the repo at `/opt/janus`
-   at the pinned sha, a venv, the systemd units, and `janus-creds.service`, which materialises
-   the secrets into `/run/janus` (tmpfs, 700/600) at every boot. `/var/log/janus-bootstrap.log`
-   says what happened.
-3. Session: `aws ssm start-session --target <instance id>` (needs the session-manager-plugin on
-   the Mac: `brew install --cask session-manager-plugin`).
+   (`read -rs "T?…"` is zsh's silent prompt; in bash use `read -rs -p "…" T`.)
+   `python3 ops/box/creds.py --dry-run` lists the names the box will read. Every time main moves,
+   re-run the `/janus/repo/sha` line before a (re)launch: cloud-init checks out that sha.
+3. **Launch** (billable; the operator says "launch"): `ops/box/launch.sh [--profile <name>]` prints
+   the plan and the AMI it resolved and refuses to go without one; `--go` launches. When the
+   launching principal cannot read public SSM parameters, pre-resolve
+   `JANUS_BOX_AMI=$(aws ssm get-parameters --region us-east-1 --names /aws/service/canonical/ubuntu/server/24.04/stable/current/arm64/hvm/ebs-gp3/ami-id --query 'Parameters[0].Value' --output text)`.
+   cloud-init (`ops/box/user-data.sh`) installs packages (zsh included: every unit runs through it),
+   the data volume at `/srv/janus`, the repo at `/opt/janus` at the pinned sha, a venv with the V2
+   Polymarket client, the systemd units, and `janus-creds.service` (secrets into `/run/janus`,
+   tmpfs, 700/600, at every boot). `/var/log/janus-bootstrap.log` says what happened.
+4. **Session:** `aws ssm start-session --target <instance id>` (Mac side:
+   `brew install --cask session-manager-plugin`).
 
 ## On the box, in order
 1. `cd /opt/janus && sudo -u janus JANUS_DATA_ROOT=/srv/janus .venv/bin/python3 -m pytest -q` — green.
-2. The latency row (L34): `sudo -u janus .venv/bin/python3 ops/box/latency.py --host box --samples 100 --out /srv/janus/research/results_box_<ts>.json`
-   in the same hour as the Mac's run; copy the file into the research directory and write the
-   verdict against the bar in `research/infra/2026-09-03_ashburn-latency/spec.yaml`.
-3. `systemctl enable --now janus-live-stream` (SHADOW_LIVE with capture; `--leagues enabled`).
-   `janus-watchdog.timer` and `janus-census.timer` are already enabled by cloud-init.
+   `systemctl status janus-creds` — active (exit 2 names a missing SSM parameter).
+2. **L34, the same hour on both hosts:** on the box
+   `sudo -u janus .venv/bin/python3 ops/box/latency.py --host box --samples 100 --out /srv/janus/research/results_box_<ts>.json`,
+   on the Mac `python3 ops/box/latency.py --host mac --samples 100 --out research/infra/2026-09-03_ashburn-latency/results_mac_<ts>.json`
+   within the same hour; copy the box file into the research directory; write `verdict.md` against
+   the bar in the spec (box p50 to Kalshi AND the CLOB under half the Mac's, the CLOB answering 200;
+   a 403 from the CLOB is a finding and fails the bar). The 2026-09-03 Mac file is a reference, not
+   the comparator.
+3. `systemctl enable --now janus-live-stream` — **PAPER_EXECUTION** on the enabled leagues: the
+   box's own paper series, ledger row F7 (registered before this line runs). `janus-watchdog.timer`
+   and `janus-census.timer` are already enabled by cloud-init. The daily resolver and the
+   football-data job stay on the Mac; the box's watchdog knows (`JANUS_HOST=box` selects its SLA set).
 4. `journalctl -u janus-live-stream -f`, `/srv/janus/logs/*.log`, and
-   `sudo -u janus .venv/bin/python3 ops/watchdog.py` must be quiet.
+   `sudo -u janus .venv/bin/python3 ops/watchdog.py` quiet; `loop` on the report line under 0.1 s.
+5. After 48 h without a `SIGNAL_EXIT` on the box: stop the Mac's lane
+   (`launchctl bootout gui/$(id -u)/com.janus.live-stream`), close F5 with its count, keep the Mac's
+   three daily jobs.
 
 ## Arming from the box
 Only after: both Mac proofs reconciled, L34 = EXECUTION_HOST, and an override written ON THE BOX

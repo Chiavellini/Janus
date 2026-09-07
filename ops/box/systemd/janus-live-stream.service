@@ -1,12 +1,12 @@
 [Unit]
-Description=Janus live lane (SHADOW_LIVE with capture until armed by an override)
+Description=Janus live lane (PAPER_EXECUTION, the box's paper series F7; real orders only after an override written on the box)
 After=janus-creds.service network-online.target
 Requires=janus-creds.service
 [Service]
 User=janus
 EnvironmentFile=/etc/janus.env
 WorkingDirectory=/opt/janus
-ExecStart=/usr/bin/zsh /opt/janus/ops/run_node.sh live_stream -m grids.live_stream.grid --leagues enabled --pre-hours 6 --discovery-period 300 --report-period 60
+ExecStart=/usr/bin/zsh /opt/janus/ops/run_node.sh live_stream -m grids.live_stream.grid --leagues enabled --pre-hours 6 --discovery-period 300 --report-period 60 --mode PAPER_EXECUTION
 Restart=on-failure
 RestartSec=60
 KillSignal=SIGTERM

@@ -38,3 +38,23 @@ def test_latency_summary_quantiles_and_statuses():
     s = latency.summarize({"kalshi": rows})["kalshi"]
     assert s["total_ms"]["n"] == 100 and 290 <= s["total_ms"]["p50"] <= 310 and s["total_ms"]["p95"] >= 560
     assert s["statuses"] == {"200": 80, "403": 20} and s["errors"] == 1
+
+
+def test_cloud_init_installs_every_interpreter_the_units_need_and_the_v2_venue_client():
+    """2026-09-07: every unit ran /usr/bin/zsh and cloud-init installed no zsh (203/EXEC on first
+    boot); the venv pinned the V1 Polymarket client the venue no longer accepts."""
+    from pathlib import Path
+    box = Path(__file__).resolve().parents[1]
+    ud = (box / "user-data.sh").read_text()
+    apt = next(l for l in ud.splitlines() if "apt-get install" in l)
+    pip = next(l for l in ud.splitlines() if "pip\" install" in l and "--upgrade pip" not in l)
+    for unit in (box / "systemd").glob("*.service"):
+        for line in unit.read_text().splitlines():
+            if line.startswith("ExecStart="):
+                interp = line.split("=", 1)[1].split()[0]
+                name = interp.rsplit("/", 1)[-1]
+                if name not in ("python3", "mkdir", "chown") and not interp.startswith("/opt/janus/.venv"):
+                    assert f" {name}" in apt, f"{unit.name} runs {interp} but cloud-init does not install it"
+    assert "py-clob-client-v2" in pip and "py-clob-client=" not in pip and " py-clob-client " not in pip + " "
+    lane = (box / "systemd" / "janus-live-stream.service").read_text()
+    assert "--mode PAPER_EXECUTION" in lane and "--leagues enabled" in lane

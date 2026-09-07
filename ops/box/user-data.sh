@@ -13,7 +13,7 @@ REGION=us-east-1
 DATA=/srv/janus
 JROOT=/opt/janus
 
-apt-get update -q && apt-get install -y -q python3 python3-venv python3-pip git jq
+apt-get update -q && apt-get install -y -q python3 python3-venv python3-pip git jq zsh    # zsh: every unit's ExecStart (2026-09-07)
 snap install amazon-ssm-agent --classic 2>/dev/null || true
 systemctl enable --now snap.amazon-ssm-agent.amazon-ssm-agent.service 2>/dev/null || true
 
@@ -42,7 +42,9 @@ fi
 # python: a venv with the runtime deps (the tree pins none; these are what the Mac has)
 sudo -u janus python3 -m venv "$JROOT/.venv"
 sudo -u janus "$JROOT/.venv/bin/pip" install -q --upgrade pip
-sudo -u janus "$JROOT/.venv/bin/pip" install -q cryptography websockets pyyaml boto3 py-clob-client==0.34.6 pytest
+# py-clob-client-v2, not py-clob-client: Polymarket replaced its exchange on 2026-04-28 (CLOB V2, pUSD);
+# the V1 client reads a balance of 0.00 and its orders are refused (CHANGELOG 2026-09-07).
+sudo -u janus "$JROOT/.venv/bin/pip" install -q cryptography websockets pyyaml boto3 httpx eth-account py-clob-client-v2 pytest
 
 # systemd units from the repo
 install -m 644 "$JROOT"/ops/box/systemd/*.service "$JROOT"/ops/box/systemd/*.timer /etc/systemd/system/

@@ -114,6 +114,19 @@ DISABLED: dict[str, str] = {
 }
 
 
+#: The box runs the lane, the watchdog and the census; the daily resolver and the football-data job
+#: are Mac launchd plists. A job registered here with no rows on this host alarms NEVER_RAN forever,
+#: so each host gets its own set (JANUS_HOST from /etc/janus.env on the box; unset = the Mac).
+SLAS_BY_HOST: dict[str, dict[str, Sla]] = {
+    "box": {k: v for k, v in SLAS.items() if k in ("live_stream", "census")},
+}
+
+
+def slas_for_host(host: str | None = None) -> dict[str, Sla]:
+    h = host if host is not None else os.environ.get("JANUS_HOST", "")
+    return SLAS_BY_HOST.get(h, SLAS)
+
+
 def _pid_alive(pid: int | None) -> bool:
     if not pid:
         return False
@@ -197,7 +210,7 @@ def check(index: Path = INDEX, *, now: float | None = None,
     """`risk` is the keyword set for nodes/risk/health.risk_alerts (paths); None uses the
     real ones, {} disables the risk checks (tests of the job branches alone)."""
     now = time.time() if now is None else now
-    slas = SLAS if slas is None else slas
+    slas = slas_for_host() if slas is None else slas
     rows = _rows(index)
 
     by_job: dict[str, list[dict]] = {}
@@ -317,6 +330,13 @@ def selftest() -> None:
         p = fresh("f")
         _append(p, {"ts": NOW - 9999, "job": "j", "status": "started", "pid": os.getpid()})
         assert any("HUNG" in a for a in check(p, now=NOW, slas=S1, risk={})), "HUNG"
+
+        # the box's SLA set drops the Mac-only daily jobs (JANUS_HOST=box); the Mac keeps them
+        assert set(slas_for_host("box")) == {"live_stream", "census"} and "watch_settle" in slas_for_host("")
+        _append(fresh("bx"), {"ts": NOW - 120, "job": "live_stream", "status": "started", "pid": os.getpid()})
+        _append(fresh("bx"), {"ts": NOW - 3600, "job": "census", "run_id": "c", "status": "OK", "exit": 0})
+        assert check(fresh("bx"), now=NOW, slas=slas_for_host("box"), risk={}) == [], "a fresh box with its two jobs is quiet"
+        assert any("watch_settle: NEVER_RAN" in a for a in check(fresh("bx"), now=NOW, slas=slas_for_host(""), risk={})), "the Mac set would alarm"
 
         # UNREGISTERED
         p = fresh("g")

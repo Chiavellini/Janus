@@ -1,0 +1,45 @@
+experiment_id: "janus-sports-paper-execution-f7-box-2026-09-07"
+date_registered: "2026-09-07"
+track: "sports/execution"
+row_kind: "F (forward evaluation; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F7"
+test_looks_spent: 0
+parallel_to: "F5 (the Mac's paper series). F7 is the SAME lane on the Ashburn box, its own data root and its own clock; the two series are reported apart and never summed. F5 closes when the Mac lane is retired (48 h of the box without SIGNAL_EXIT), by count, not by STOP."
+
+# IMMUTABLE ONCE THE LANE RUNS IN PAPER_EXECUTION AFTER THIS ROW.
+purpose: >
+  GATE_TO_LIVE step 7, the sports arm, on the Ashburn box (the operator's 2026-09-07 instruction: the box is pilot testing like the rest of the system): PAPER_EXECUTION against live replicas with the
+  same coordinator that would trade, on the enabled leagues, until n actionable covers have been
+  cleared and paper-hedged. n is pre-computed on the recorded distribution (ledger L36, run
+  20260905T074457Z: 127 in-play clean actionable rows, sigma 0.01535, median 0.02888 -> n = 37).
+
+arm: "janus-live-stream.service on the box (ops/box/systemd) with --mode PAPER_EXECUTION on --leagues enabled (nodes/entities/leagues.default_leagues(): mlb, nfl, epl, lal, bun, cfb, elc, el1, ita, atp, wta as of this row); paper venues fill against the books the cover was priced from, at the same instant, carrying the pinned taker fee (grids/live_stream/grid.py _execute; nodes/execution/paper.py); no order leaves the machine. The hedge is an IOC at the walked level (nodes/execute/plan.py hedge_limit, 30c8511); the VWAP budget is recorded beside every attempt."
+
+window:
+  start: "the first [mode] PAPER_EXECUTION line in /srv/janus/logs/live_stream.stdout.log on the box after this row is appended (systemctl enable --now janus-live-stream, after L34 has run)"
+  end: "when n cleared covers exist, or the operator closes the row"
+
+definitions:
+  n: "37 -- L36's n_for_paper on 2026-09-05 07:44Z, the same n as F5 (the distribution is the venues', not the host's). Recomputed on L36's later runs ONLY to extend, never to shorten."
+  cleared_cover: "an execution row (executions table) whose reservation was minted by nodes/risk.clear(), AND the matching opportunity_transitions row to_status = EXECUTION_PENDING (both are written now: OpportunityStore.move). The two counts must agree; a disagreement is a record defect to be reported, not a choice of denominator."
+  paper_hedged: "the same execution reaching HEDGED with hedge_filled == first_filled and unhedged == 0"
+  paper_locked_return: "the coordinator's realised paper return per cleared cover, NET of the pinned fees recorded on the paper fills, from execution_settlements (kind COVER)"
+  above_budget: "a HEDGED execution whose hedge averaged above the recorded VWAP budget (detail contains ABOVE_BUDGET): a cover below the 1% hurdle, still hedged. Counted and reported beside n; not a STOP."
+  refusals: "every clear() refusal by code, counted from the lane's [risk] lines and the ledger"
+
+criteria:
+  - "Forward. No outcome is read before the window closes; no threshold is moved after."
+  - "Every cleared cover is paper-hedged: unhedged == 0 for all n. One unhedged paper leg (PARTIAL_FILL or HEDGE_SLIPPAGE_EXCEEDED with first_filled > 0) is a STOP and a design finding, not a statistic. The watchdog's UNHEDGED_POSITION alarm is the detector."
+  - "The mean paper locked return over the n covers is reported with a 95% interval; the row claims nothing about it. It is the input to step 8's sizing, not a gate on edge."
+  - "Refusals are reported by code beside the n."
+  - "Data-arrival SLA: ops/watchdog.py LANE_SILENT (900 s), SIGNAL_EXIT (a signal death inside 24 h, even after launchd's restart), CRASH_LOOP, CRASHED, NEVER_RAN, UNHEDGED_POSITION. A SIGNAL_EXIT inside the window is reported with the gap; a gap longer than an hour voids the window from that point (F3 lost 24 h of continuity to one unseen SIGBUS)."
+
+outputs:
+  registration: "snooping_ledger.md row F5, result appended when the window closes"
+  records: "executions, execution_transitions, execution_settlements, opportunities, opportunity_transitions, orders, venue_fills, capital_reservations; the lane's [exec], [risk], [settle] lines"
+
+what_this_does_not_establish:
+  - "Fills. A paper fill is the priced book, not a venue's answer; L27's slippage is the only measured gap between them."
+  - "Edge. n covers with positive paper return are a sizing input; steps 5 and 6 still gate."
+  - "That the profitable prints are real: L36's SUSPECT label fires on nearly every row by construction; L40 is the row that asks."
