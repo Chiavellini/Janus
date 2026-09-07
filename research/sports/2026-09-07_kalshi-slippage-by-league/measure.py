@@ -9,7 +9,7 @@ import json
 import sqlite3
 import sys
 from bisect import bisect_right
-from collections import defaultdict
+from collections import defaultdict, deque
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -59,13 +59,39 @@ def wq(pairs: list[tuple[float, float]], p: float) -> float | None:
 
 
 def main() -> int:
+    """Streaming: one pass over the frames in receive order, a 3 s look-ahead per ticker, weighted
+    histograms per cell. The first version held every instant of every ticker (32 M of them) and
+    was killed at 50 min on the paging Mac (exit 137, 2026-09-07); the statistic is unchanged."""
     con = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
     flaps = load_flap_windows(con)
     con.close()
     starts, ends = [a for a, _ in flaps], [b for _, b in flaps]
     files = sorted(glob.glob("/Volumes/Kilos/janus/frames/kalshi/**/*.jsonl.gz", recursive=True))
-    series: dict[str, list[tuple[float, dict]]] = defaultdict(list)
+    W_MAX = max(WINDOWS)
+    # per ticker: pending instants [t, asks, {(q, w): worst}] not yet 3 s old, plus the last instant's t
+    pending: dict[str, deque] = defaultdict(deque)
+    # (league, q, w) -> {move: weight}: prices are ticks, so the moves take few distinct values
+    hist: dict[tuple[str, float, float], dict[float, float]] = defaultdict(lambda: defaultdict(float))
+    counts: dict[str, set] = defaultdict(set)
+    n_inst: dict[str, int] = defaultdict(int)
+    league_of: dict[str, str] = {}
     frames = dropped = 0
+
+    def league(tk: str) -> str:
+        lg = league_of.get(tk)
+        if lg is None:
+            lg = league_of[tk] = league_for_series(tk.split("-")[0]) or "other"
+        return lg
+
+    def finalise(tk: str, item: list, weight: float) -> None:
+        if weight <= 0:
+            return
+        lg = league(tk)
+        counts[lg].add(tk)
+        n_inst[lg] += 1
+        for (q, w), worst in item[2].items():
+            hist[(lg, q, w)][round(worst, 4)] += weight
+
     for f in files:
         books: dict[str, TickerBook] = {}
         for fr in read_frames(f, "kalshi"):
@@ -77,36 +103,39 @@ def main() -> int:
             p = parse(msg, books)
             if p.kind not in ("snapshot", "delta"):
                 continue
-            if in_windows(fr.received_utc, starts, ends):
+            t = fr.received_utc
+            if in_windows(t, starts, ends):
                 dropped += 1
                 continue
-            series[p.ticker].append((fr.received_utc, asks_at_depth(books[p.ticker])))
-    # per ticker: the move over each window at each depth, weighted by the instant's dwell
-    moves: dict[tuple[str, float, float], list[tuple[float, float]]] = defaultdict(list)   # (league, q, w) -> [(move, weight)]
-    counts: dict[str, set] = defaultdict(set)
-    n_inst: dict[str, int] = defaultdict(int)
-    for tk, pts in series.items():
-        pts.sort()
-        league = league_for_series(tk.split("-")[0]) or "other"
-        counts[league].add(tk)
-        n = len(pts)
-        for i, (t, a) in enumerate(pts):
-            weight = min(CAP_S, pts[i + 1][0] - t) if i + 1 < n else 0.0
-            if weight <= 0:
-                continue
-            n_inst[league] += 1
-            for q in QS:
-                a0 = a.get(q)
-                if a0 is None:
+            asks = asks_at_depth(books[p.ticker])
+            dq = pending[p.ticker]
+            # fold this instant into every pending one still inside its window
+            for item in dq:
+                dt = t - item[0]
+                if dt <= 0:
                     continue
-                for w in WINDOWS:
-                    worst, k = 0.0, i + 1
-                    while k < n and pts[k][0] - t <= w:
-                        ak = pts[k][1].get(q)
-                        if ak is not None:
-                            worst = max(worst, ak - a0)
-                        k += 1
-                    moves[(league, q, w)].append((worst, weight))
+                for q in QS:
+                    a0, ak = item[1].get(q), asks.get(q)
+                    if a0 is None or ak is None:
+                        continue
+                    for w in WINDOWS:
+                        if dt <= w:
+                            key = (q, w)
+                            if ak - a0 > item[2][key]:
+                                item[2][key] = ak - a0
+            # instants older than the longest window are final; their weight is the dwell to the NEXT
+            # instant, which is the one after them in the deque (or this one)
+            while dq and t - dq[0][0] > W_MAX:
+                item = dq.popleft()
+                nxt = dq[0][0] if dq else t
+                finalise(p.ticker, item, min(CAP_S, nxt - item[0]))
+            dq.append([t, asks, {(q, w): 0.0 for q in QS for w in WINDOWS if asks.get(q) is not None}])
+    # the tail: everything still pending has a successor except the last instant per ticker (weight 0)
+    for tk, dq in pending.items():
+        while dq:
+            item = dq.popleft()
+            finalise(tk, item, min(CAP_S, dq[0][0] - item[0]) if dq else 0.0)
+    moves = {k: [(v, wt) for v, wt in h.items()] for k, h in hist.items()}
     stats: dict[str, dict] = {}
     for (league, q, w), pairs in moves.items():
         s = stats.setdefault(league, {"tickers": len(counts[league]), "instants": n_inst[league], "cells": {}})
