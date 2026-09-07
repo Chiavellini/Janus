@@ -4,15 +4,19 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-07 ~07:10 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-07 ~16:20 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
 
-**The operator's decision of 2026-09-07 is small real fills on every live event, from the box.**
-Everything the machine can do for that without a signature is done: F8 is registered (spec and
-ledger row, PENDING), `limits.toml` carries the pilot's $0.10 profit floor, the box has the code,
-the credentials and the collateral, and the two pastes that arm it are written and unrun.
+**The box is LIMITED_LIVE since 16:18Z (F8's clock).** The operator's 2026-09-07 GATE row (small
+real fills on every live event, $12 / 25 / $60, breaker $25) is in the file; the override pins
+runner `5a07e4e` and limits `222330ad…`, expires 2026-09-14. Two order-path holes were closed the
+same afternoon before arming (CHANGELOG, third 2026-09-07 entry) and the path is instrumented:
+one `[latency]` line per execution, `ops/latency_report.py` for the table. **Any deploy to the box
+invalidates the override**: `ops/box/update.sh`, then the operator re-runs
+`ops/box/write_override.sh` and `ops/box/mode.sh LIMITED_LIVE` (the classifier blocks the agent
+from running those two).
 
 **Three refusals of good books were found and fixed today** (CHANGELOG 2026-09-07, second
 entry). Every tennis match that went live after a lane start never synced its Kalshi replica;
@@ -27,16 +31,10 @@ Not a current bug: the 3,435 `IllegalTransition` reconnects in the Mac's log are
 
 ## Now — what is left, and whose it is
 
-**Yours (three pastes, in this order, after reading the draft):**
-1. **The GATE row**: `research/sports/2026-09-07_limited-live-f8-box/GATE_ROW_DRAFT.md`. Approve
-   or amend the caps ($12 per order, 25 contracts, $60 a day, breaker $25); it goes into
-   `GATE_TO_LIVE.md`'s amendment log with the date, in your words.
-2. **The override on the box** (your signature; it pins the box's sha and `limits.toml`):
-   `bash ops/box/write_override.sh "I approve live trading at small size on all live events the lane covers, from the box, at \$12 per order, 25 contracts and \$60 a day, with the realized-loss breaker at \$25."`
-3. **The mode switch**: `bash ops/box/mode.sh LIMITED_LIVE`. The lane refuses the mode until the
-   override matches; `bash ops/box/mode.sh PAPER_EXECUTION` is the way back at any time.
-Later: replace `/janus/repo/token` with a read-only token; rotate the Polymarket signer key after
-the pilot (it is in this chat's transcript and the Mac's zsh history).
+**Yours:** after each deploy to the box, the two pastes again (`bash ops/box/write_override.sh
+"<the same statement>" 12 25 60 168` then `bash ops/box/mode.sh LIMITED_LIVE`); the way back at
+any time is `bash ops/box/mode.sh PAPER_EXECUTION`. Later: replace `/janus/repo/token` with a
+read-only token; rotate the Polymarket signer key after the pilot.
 
 **Mine, in order:**
 1. Today's games on both hosts: `[discovery]` for ita, `[spawn]` for tennis, MLB and Monday-night

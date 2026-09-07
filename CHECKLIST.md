@@ -60,7 +60,7 @@ Update in place; this file has no memory. `git log` and `CHANGELOG.md` do.*
 - [x] DONE — fees reconciled on Polymarket: charged exactly the pinned 0.0604 on the first real fill, read from the balance delta (the V2 trade record reports fee_rate_bps 0).
 - [x] DONE — operator decision 2026-09-04 (GATE amendment row): test trading only until L36 on clean data shows in-play actionable covers. L40 is the first honest cut of that (15 clean prints); the decision stands until the operator says otherwise.
 - [x] DONE — **F8 registered** (`research/sports/2026-09-07_limited-live-f8-box/spec.yaml`, ledger PENDING): small real fills on the box, $12 / 25 contracts / $60 a day, breaker $25, STOP on one unhedged real leg, the first three covers reconciled by hand. `limits.toml` `min_net_profit_usd` 0.10 (from 0.50; at $12 stakes 0.50 refused every cover).
-- [ ] NOT DONE — **the GATE row and the override are the operator's**: the draft row is `research/sports/2026-09-07_limited-live-f8-box/GATE_ROW_DRAFT.md`; the two pastes are `bash ops/box/write_override.sh "<statement>"` and `bash ops/box/mode.sh LIMITED_LIVE`. Nothing runs LIMITED_LIVE until then; the lane refuses the mode without an override pinning the box's sha.
+- [x] RUNNING — **F8, LIMITED_LIVE on the box since 2026-09-07 16:18Z** under the operator's dated GATE row; override pins `5a07e4e` / `222330ad…`, expires 2026-09-14. 0 of 37. The first three real covers reconciled by hand before the fourth. Every deploy to the box needs the operator's two pastes again.
 - [ ] NOT DONE — PRODUCTION.
 
 ## F. The Ashburn box
