@@ -189,37 +189,44 @@ def test_a_latched_breaker_refuses_everything(kill, breaker):
 
 # ── the mode gate ────────────────────────────────────────────────────────────
 def test_live_in_the_environment_of_a_non_live_mode_refuses_to_start(kill, tmp_path):
-    r = resolve_mode("SHADOW_LIVE", env={"LIVE": "1"}, kill=kill, limits=LIMITS, runner_sha="abc",
+    r = resolve_mode("SHADOW_LIVE", env={"LIVE": "1"}, kill=kill, limits=LIMITS, runner_sha="abc", code_sha="abc",
                      credentials_present={}, override_path=tmp_path / "none.json")
     assert isinstance(r, GateRefused) and r.code == "LIVE_IN_NON_LIVE_MODE"
-    r = resolve_mode("SHADOW_LIVE", env={}, kill=kill, limits=LIMITS, runner_sha="abc",
+    r = resolve_mode("SHADOW_LIVE", env={}, kill=kill, limits=LIMITS, runner_sha="abc", code_sha="abc",
                      credentials_present={}, override_path=tmp_path / "none.json")
     assert r.mode is Mode.SHADOW_LIVE and r.caps == {}
 
 
 def test_kill_switches_and_credentials_gate_the_start(kill, tmp_path):
     kill.latch("all", "t")
-    assert resolve_mode("PAPER_EXECUTION", env={}, kill=kill, limits=LIMITS, runner_sha="a",
+    assert resolve_mode("PAPER_EXECUTION", env={}, kill=kill, limits=LIMITS, runner_sha="a", code_sha="a",
                         credentials_present={}, override_path=tmp_path / "x").code == "KILL_ALL"
-    assert resolve_mode("SHADOW_LIVE", env={}, kill=kill, limits=LIMITS, runner_sha="a",
+    assert resolve_mode("SHADOW_LIVE", env={}, kill=kill, limits=LIMITS, runner_sha="a", code_sha="a",
                         credentials_present={}, override_path=tmp_path / "x").mode is Mode.SHADOW_LIVE
     (kill.root / "all").unlink()
-    assert resolve_mode("DEMO_EXECUTION", env={}, kill=kill, limits=LIMITS, runner_sha="a",
+    assert resolve_mode("DEMO_EXECUTION", env={}, kill=kill, limits=LIMITS, runner_sha="a", code_sha="a",
                         credentials_present={"kalshi": False}, override_path=tmp_path / "x").code == "CREDENTIALS"
-    assert resolve_mode("nonsense", env={}, kill=kill, limits=LIMITS, runner_sha="a",
+    assert resolve_mode("nonsense", env={}, kill=kill, limits=LIMITS, runner_sha="a", code_sha="a",
                         credentials_present={}, override_path=tmp_path / "x").code == "UNKNOWN_MODE"
 
 
 def test_a_live_mode_needs_a_complete_matching_unexpired_override(kill, tmp_path):
     ov = tmp_path / "arming_override.json"
     creds = {"kalshi": True, "polymarket": True}
-    args = dict(env={}, kill=kill, limits=LIMITS, runner_sha="deadbeef", credentials_present=creds, override_path=ov)
+    args = dict(env={}, kill=kill, limits=LIMITS, runner_sha="deadbeef", code_sha="c0detree0000abcd",
+                credentials_present=creds, override_path=ov)
     assert resolve_mode("LIMITED_LIVE", **args).code == "NO_OVERRIDE"
     good = {"operator_statement": "I approve LIMITED_LIVE at $5 per fill.", "signed_by": "operator",
-            "mode": "LIMITED_LIVE", "runner_sha": "deadbeef", "limits_sha": LIMITS.sha,
+            "mode": "LIMITED_LIVE", "runner_sha": "deadbeef", "code_sha": "c0detree0000abcd", "limits_sha": LIMITS.sha,
             "caps": {"stake_usd": 5.0, "day_notional_usd": 20.0}, "expires_utc": "2099-01-01T00:00:00Z"}
-    ov.write_text(json.dumps({**good, "runner_sha": "other"}))
-    assert resolve_mode("LIMITED_LIVE", **args).code == "OVERRIDE_RUNNER_SHA"
+    ov.write_text(json.dumps({**good, "code_sha": "other"}))
+    assert resolve_mode("LIMITED_LIVE", **args).code == "OVERRIDE_CODE_SHA"
+    # since 2026-09-07 the whole-checkout sha is for the record only: a docs commit moves it, the arm holds
+    ov.write_text(json.dumps({**good, "runner_sha": "a-docs-commit-later"}))
+    assert resolve_mode("LIMITED_LIVE", **args).mode is Mode.LIMITED_LIVE
+    old = {k: v for k, v in good.items() if k != "code_sha"}              # an override written before the pin moved
+    ov.write_text(json.dumps(old))
+    assert resolve_mode("LIMITED_LIVE", **args).code == "OVERRIDE_INCOMPLETE"
     ov.write_text(json.dumps({**good, "limits_sha": "0000"}))
     assert resolve_mode("LIMITED_LIVE", **args).code == "OVERRIDE_LIMITS_SHA"
     ov.write_text(json.dumps({**good, "expires_utc": "2020-01-01T00:00:00Z"}))
@@ -298,3 +305,29 @@ def test_a_hedged_executions_reservation_is_committed_capital_not_an_unreconcile
     con.execute("INSERT INTO executions VALUES('y','stuck','LEG_A_SUBMITTED')")
     con.commit()
     assert any("UNRECONCILED_TOO_LONG" in a for a in risk_alerts(now=10_000.0, **kw)), "an unhedged one is late"
+
+
+def test_override_state_is_what_the_report_tick_and_the_watchdog_read(tmp_path):
+    """Until 2026-09-07 the override was read once at start; an arm that expired under a running
+    lane stopped nothing. override_state() is the per-tick read, stale_reason() its verdict."""
+    from nodes.risk.gate import override_state, stale_reason
+    ov = tmp_path / "arming_override.json"
+    kw = dict(code_sha="c0de", limits_sha="11m1")
+    st = override_state(ov, now=1000.0, **kw)
+    assert st == {"present": False, "expires_utc": None, "seconds_left": None, "code_matches": False,
+                  "limits_matches": False, "mode": None}
+    assert stale_reason(st, **kw) == "override missing or incomplete"
+    good = {"operator_statement": "I approve.", "signed_by": "operator", "mode": "LIMITED_LIVE", "runner_sha": "head",
+            "code_sha": "c0de", "limits_sha": "11m1", "caps": {"stake_usd": 12.0}, "expires_utc": "1970-01-01T01:00:00Z"}
+    ov.write_text(json.dumps(good))
+    st = override_state(ov, now=1000.0, **kw)
+    assert st["present"] and st["code_matches"] and st["limits_matches"] and st["mode"] == "LIMITED_LIVE"
+    assert st["seconds_left"] == 2600.0 and st["expires_utc"] == "1970-01-01T01:00:00Z"
+    assert stale_reason(st, **kw) is None
+    assert "expired" in stale_reason(override_state(ov, now=3600.0, **kw), **kw)
+    assert "code tree" in stale_reason(override_state(ov, now=1000.0, code_sha="other", limits_sha="11m1"), code_sha="other", limits_sha="11m1")
+    assert "limits" in stale_reason(override_state(ov, now=1000.0, code_sha="c0de", limits_sha="other"), code_sha="c0de", limits_sha="other")
+    ov.write_text(json.dumps({k: v for k, v in good.items() if k != "code_sha"}))
+    assert not override_state(ov, now=1000.0, **kw)["present"], "an old file without code_sha is not present"
+    ov.write_text("{not json")
+    assert not override_state(ov, now=1000.0, **kw)["present"]

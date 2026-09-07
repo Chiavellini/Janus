@@ -61,7 +61,8 @@ from nodes.opportunity.thresholds import STRATEGY_VERSION  # noqa: E402
 from nodes.reconcile.settle_executions import apply_settlements, fetch_results, pending  # noqa: E402
 from nodes.risk.breaker import LossBreaker  # noqa: E402
 from nodes.risk.clearance import Candidate, clear  # noqa: E402
-from nodes.risk.gate import resolve_mode  # noqa: E402
+from nodes.risk.gate import OVERRIDE_PATH, override_state, resolve_mode, stale_reason  # noqa: E402
+from kernel.code_sha import code_tree_sha, runner_head_sha  # noqa: E402
 from nodes.risk.kill import KillSwitches  # noqa: E402
 from nodes.risk.ledger import ExposureLedger  # noqa: E402
 from nodes.risk.limits import load_limits  # noqa: E402
@@ -121,6 +122,13 @@ class Supervisor:
     #: The arming override's caps (stake_usd, max_contracts, day_notional_usd), as the risk gate
     #: resolved them. Empty below LIMITED_LIVE. clear() refuses a capital-risking order without them.
     caps: dict = field(default_factory=dict)
+    #: The code tree this process runs (kernel/code_sha), fixed at start; what the override must pin.
+    code_sha: str = "unknown"
+    override_path: Path = OVERRIDE_PATH
+    #: Set by check_arm() on the report tick when a capital-risking mode's override has expired
+    #: or stopped matching: _execute refuses every real order (ARM_STALE) until it clears.
+    #: Pricing continues. Until 2026-09-07 an expired override stopped nothing already running.
+    arm_stale: str | None = None
     ledger: ExposureLedger | None = None
     kill: KillSwitches | None = None
     breaker: LossBreaker | None = None
@@ -351,6 +359,22 @@ class Supervisor:
         """What the risk gate is told: both venues' stamps inside the bound AND the loop prompt."""
         return all(st_.clock.healthy for st_ in (self.ks, self.ps) if st_ is not None) and not self.loop_stalled()
 
+    def check_arm(self, now: float | None = None) -> str | None:
+        """Re-read the arming override on the report tick. In a capital-risking mode, an override
+        that has expired or no longer pins THIS process's code tree and limits sets `arm_stale`,
+        and _execute refuses real orders until a matching one is written (or the lane restarts
+        under it). Said once per change. Below LIMITED_LIVE there is nothing to check."""
+        if not self.mode.risks_capital:
+            self.arm_stale = None
+            return None
+        limits_sha = str(getattr(self.limits, "sha", "") or "")
+        st = override_state(self.override_path, code_sha=self.code_sha, limits_sha=limits_sha, now=now)
+        reason = stale_reason(st, code_sha=self.code_sha, limits_sha=limits_sha)
+        if reason != self.arm_stale:
+            print(f"[arm] STALE {reason}" if reason else "[arm] override matches again; real orders resume", flush=True)
+        self.arm_stale = reason
+        return reason
+
     def on_report_tick(self, now: float | None = None) -> None:
         """Persist socket health, and fail closed on an unhealthy clock: every freshness bound
         in the system is `now - updated_utc`, so a stepped clock makes every book fiction.
@@ -387,6 +411,11 @@ class Supervisor:
     def _execute(self, sup: Supervised, ev, rec) -> None:
         """PAPER and above: plan from the priced cover, clear it through nodes/risk, run the machine.
         Every refusal is recorded on the opportunity; nothing here raises into the socket loop."""
+        if self.arm_stale:
+            # The override stopped authorising this process between ticks (check_arm). Refused
+            # before any plan, balance call or clearance: nothing is minted for a stale arm.
+            print(f"  [risk] refused {sup.short_name}: ARM_STALE {self.arm_stale}", flush=True)
+            return
         cov = ev.cover
         m_entry = time.monotonic()
         # The path's first two stages, for ops/latency_report.py: the poller's own event->decision
@@ -525,6 +554,7 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
             if time.time() - last_report > report_period:
                 lag_for_print = sup.loop_lag_max_s        # the tick resets it
                 sup.on_report_tick()
+                sup.check_arm()                           # the override, re-read every tick
                 sup.store.commit()
                 for st_ in (sup.ks, sup.ps):
                     if st_.capture is not None:
@@ -552,14 +582,10 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
         sup.store.commit()
 
 
-def _runner_sha() -> str:
-    """The tree this process runs from, for the arming override's pin."""
-    import subprocess
-    try:
-        return subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True,
-                              cwd=ROOT, timeout=5).stdout.strip() or "unknown"
-    except Exception:  # noqa: BLE001
-        return "unknown"
+def _runner_sha() -> tuple[str, str]:
+    """(code tree sha, whole-checkout HEAD) of the tree this process runs from. The first is the
+    arming override's pin (kernel/code_sha); the second is logged, for the record."""
+    return code_tree_sha(ROOT), runner_head_sha(ROOT)
 
 
 def _leagues_arg(text: str) -> list[str]:
@@ -624,13 +650,16 @@ def main() -> int:
     # The mode is decided ONCE, here, by the risk gate. Nothing below may escalate it.
     limits = load_limits()
     kill = KillSwitches()
-    resolved = resolve_mode(a.mode, env=os.environ, kill=kill, limits=limits,
-                            runner_sha=_runner_sha(), credentials_present={"kalshi": bool(api_key)})
+    code_sha, head_sha = _runner_sha()
+    resolved = resolve_mode(a.mode, env=os.environ, kill=kill, limits=limits, runner_sha=head_sha,
+                            code_sha=code_sha, credentials_present={"kalshi": bool(api_key)})
     if hasattr(resolved, "code"):
         print(f"mode refused: {resolved.code}: {resolved.detail}", file=sys.stderr)
         return 2
     sup.mode = resolved.mode
     sup.caps = dict(getattr(resolved, "caps", None) or {})
+    sup.code_sha = code_sha
+    print(f"[code] tree {code_sha} runner {head_sha[:12]} limits {limits.sha}", flush=True)
     if sup.mode.rank >= Mode.PAPER_EXECUTION.rank:
         journal = Journal(sup.store)
         # Real venues, built only for the modes that need them, from credentials that are named

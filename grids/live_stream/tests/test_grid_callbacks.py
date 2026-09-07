@@ -168,3 +168,40 @@ def test_a_spawn_block_is_said_once_and_written_to_the_event_row(tmp_path: Path,
     reason = sup.store.con.execute("SELECT block_reason FROM events WHERE event_id='g9'").fetchone()[0]
     assert reason and "TEMPLATE_UNKNOWN" in reason
     assert sup.store.con.execute("SELECT COUNT(*) FROM event_transitions WHERE event_id='g9'").fetchone()[0] == 1
+
+
+def test_a_stale_arm_refuses_real_orders_before_anything_is_minted(tmp_path: Path, capsys):
+    """Until 2026-09-07 the override was read once at start: one that expired, or was rewritten for
+    another code tree, stopped nothing already running. check_arm() re-reads it on the report
+    tick; while it is stale, _execute refuses at the door (no plan, no balance call, no
+    clearance), pricing goes on, and a matching override lifts it without a restart."""
+    import json
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    sup, s = _supervisor(tmp_path)
+    sup.mode, sup.code_sha, sup.override_path = Mode.LIMITED_LIVE, "c0de", tmp_path / "arming_override.json"
+    sup.limits = SimpleNamespace(sha="11m1")
+    calls = []
+    sup.coordinator = SimpleNamespace(execute=lambda *a, **k: calls.append(a))
+    good = {"operator_statement": "I approve.", "signed_by": "operator", "mode": "LIMITED_LIVE", "runner_sha": "head",
+            "code_sha": "c0de", "limits_sha": "11m1", "caps": {"stake_usd": 12.0}, "expires_utc": "2099-01-01T00:00:00Z"}
+    sup.override_path.write_text(json.dumps(good))
+    assert sup.check_arm() is None and sup.arm_stale is None
+    assert "[arm]" not in capsys.readouterr().out, "a matching arm says nothing"
+    sup.override_path.write_text(json.dumps({**good, "code_sha": "another-tree"}))
+    assert sup.check_arm() and sup.arm_stale and "code tree" in sup.arm_stale
+    sup.check_arm()
+    assert capsys.readouterr().out.count("[arm] STALE") == 1, "said once per change"
+    ev = SimpleNamespace(cover=None, game_id="g1", quantity=100.0, offers={}, evaluated_utc=T, latency_ms=0.0)
+    sup._execute(s, ev, SimpleNamespace(net_profit_usd=1.0, locked_return=0.02))     # a plan would raise on cover=None
+    out = capsys.readouterr().out
+    assert "[risk] refused SF @ PIT: ARM_STALE" in out and "code tree" in out
+    assert calls == [] and sup.executions == 0
+    sup.override_path.write_text(json.dumps({**good, "expires_utc": "2020-01-01T00:00:00Z"}))
+    assert "expired" in sup.check_arm()
+    sup.override_path.write_text(json.dumps(good))
+    assert sup.check_arm() is None and sup.arm_stale is None
+    assert "real orders resume" in capsys.readouterr().out
+    sup.mode = Mode.PAPER_EXECUTION
+    sup.override_path.unlink()
+    assert sup.check_arm() is None, "paper has no arm to go stale"

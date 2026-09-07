@@ -3,9 +3,14 @@
 
 Inputs are the operator's `--mode`, the environment, the kill switches, which credentials are
 present, and -- for any mode that risks capital -- the signed arming override (GATE_TO_LIVE step
-9: verbatim operator statement, sha pins of the runner and the limits, hard caps, an expiry).
+9: verbatim operator statement, sha pins of the code tree and the limits, hard caps, an expiry).
 Any inconsistency refuses to start. A `LIVE=1` in the environment of a non-live mode refuses to
 start too (GATE step 7): the shadow arm must be STRUCTURALLY unable to post.
+
+Since 2026-09-07 the override pins `code_sha` (kernel/code_sha: nodes, grids, kernel, the runner,
+the box units) rather than the whole checkout's HEAD; `runner_sha` is still written and logged,
+for the record, and is no longer compared. The lane re-reads the override on every report tick
+through `override_state()` and refuses real orders when it has expired or stopped matching.
 """
 
 from __future__ import annotations
@@ -43,15 +48,56 @@ def _read_override(path: Path) -> dict | Refused:
         d = json.loads(path.read_text())
     except ValueError as exc:
         return Refused("OVERRIDE_UNREADABLE", f"{type(exc).__name__}")
-    for key in ("operator_statement", "mode", "runner_sha", "limits_sha", "caps", "expires_utc", "signed_by"):
+    for key in ("operator_statement", "mode", "runner_sha", "code_sha", "limits_sha", "caps", "expires_utc", "signed_by"):
         if key not in d:
+            # An override written before 2026-09-07 has no code_sha: an old file, never a match.
             return Refused("OVERRIDE_INCOMPLETE", f"missing {key!r}")
     return d
 
 
+def _expiry_ts(d: Mapping) -> float:
+    return datetime.fromisoformat(str(d["expires_utc"]).replace("Z", "+00:00")).astimezone(timezone.utc).timestamp()
+
+
+def override_state(path: Path | str, *, code_sha: str, limits_sha: str, now: float | None = None) -> dict:
+    """What the override says right now, for the lane's report tick and the watchdog. Pure: reads
+    one file, never raises. `present` is False for a missing, unreadable or incomplete file;
+    `mode` is the override's own claim, or None."""
+    t = now if now is not None else datetime.now(timezone.utc).timestamp()
+    out = {"present": False, "expires_utc": None, "seconds_left": None,
+           "code_matches": False, "limits_matches": False, "mode": None}
+    d = _read_override(Path(path))
+    if isinstance(d, Refused):
+        return out
+    try:
+        exp = _expiry_ts(d)
+    except (ValueError, TypeError):
+        return out
+    out.update(present=True, expires_utc=str(d["expires_utc"]), seconds_left=exp - t,
+               code_matches=(str(d["code_sha"]) == code_sha), limits_matches=(str(d["limits_sha"]) == limits_sha),
+               mode=str(d["mode"]))
+    return out
+
+
+def stale_reason(state: Mapping, *, code_sha: str, limits_sha: str) -> str | None:
+    """None while an `override_state()` still authorises real orders; otherwise why it does not,
+    in the words the lane prints and the watchdog reports."""
+    if not state.get("present"):
+        return "override missing or incomplete"
+    if (state.get("seconds_left") or 0.0) <= 0.0:
+        return f"override expired at {state.get('expires_utc')}"
+    if not state.get("code_matches"):
+        return f"override pins a different code tree (running {code_sha})"
+    if not state.get("limits_matches"):
+        return f"override pins different limits (loaded {limits_sha})"
+    return None
+
+
 def resolve_mode(requested: str, *, env: Mapping[str, str], kill: KillSwitches, limits: RiskLimits,
-                 runner_sha: str, credentials_present: Mapping[str, bool],
+                 runner_sha: str, code_sha: str, credentials_present: Mapping[str, bool],
                  override_path: Path | str = OVERRIDE_PATH, now: float | None = None) -> Resolved | Refused:
+    """`runner_sha` is for the record (the caller logs it) and is no longer compared; `code_sha`
+    (kernel/code_sha.code_tree_sha) is the pin."""
     try:
         mode = Mode(requested)
     except ValueError:
@@ -76,11 +122,12 @@ def resolve_mode(requested: str, *, env: Mapping[str, str], kill: KillSwitches, 
         return d
     if d["mode"] != mode.value:
         return Refused("OVERRIDE_MODE", f"override authorises {d['mode']!r}, requested {mode.value!r}")
-    if d["runner_sha"] != runner_sha:
-        return Refused("OVERRIDE_RUNNER_SHA", f"override pins runner {d['runner_sha']!r}, running {runner_sha!r}")
+    if d["code_sha"] != code_sha:
+        return Refused("OVERRIDE_CODE_SHA", f"override pins code tree {d['code_sha']!r}, running {code_sha!r} "
+                                           f"(runner {str(runner_sha)[:12]!r}, for the record)")
     if d["limits_sha"] != limits.sha:
         return Refused("OVERRIDE_LIMITS_SHA", f"override pins limits {d['limits_sha']!r}, loaded {limits.sha!r}")
-    exp = datetime.fromisoformat(str(d["expires_utc"]).replace("Z", "+00:00")).astimezone(timezone.utc).timestamp()
+    exp = _expiry_ts(d)
     t = now if now is not None else datetime.now(timezone.utc).timestamp()
     if t >= exp:
         return Refused("OVERRIDE_EXPIRED", f"override expired at {d['expires_utc']}")

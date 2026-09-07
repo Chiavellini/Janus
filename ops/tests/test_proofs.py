@@ -242,28 +242,48 @@ def test_check_never_echoes_a_raw_ack(tmp_path, capsys):
 
 # ── the override writer ──────────────────────────────────────────────────
 
-def write_override(tmp_path, *extra):
+def write_override(tmp_path, *extra, root=None):
     path = tmp_path / "kill" / "arming_override.json"
     r = subprocess.run([sys.executable, str(ROOT / "ops" / "arming_override.py"), "--mode", "LIMITED_LIVE",
                         "--signed-by", "Test", "--stake-usd", "5", "--day-notional-usd", "20",
-                        "--statement", "I approve a test.", "--path", str(path), *extra],
+                        "--statement", "I approve a test.", "--path", str(path),
+                        *(["--root", str(root)] if root else []), *extra],
                        capture_output=True, text=True, cwd=ROOT)
     return r, path
 
 
-def test_arming_override_pins_the_runner_and_the_limits_and_refuses_to_overwrite(tmp_path):
-    r, path = write_override(tmp_path)
+def test_arming_override_pins_the_code_tree_and_the_limits_and_refuses_to_overwrite(tmp_path):
+    """Since 2026-09-07 the pin is the executable tree (kernel/code_sha), with the whole-checkout
+    HEAD beside it for the record. A clean throwaway repo stands in for the box's checkout so the
+    test does not depend on this working tree being clean."""
+    from kernel.code_sha import code_tree_sha, runner_head_sha
+    from kernel.tests.test_code_sha import _repo
+    repo = _repo(tmp_path)
+    r, path = write_override(tmp_path, root=repo)
     assert r.returncode == 0, r.stderr
     d = json.loads(path.read_text())
-    head = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
-    assert d["runner_sha"] == head and d["limits_sha"] == load_limits().sha
+    assert d["code_sha"] == code_tree_sha(repo) and len(d["code_sha"]) == 16
+    assert d["runner_sha"] == runner_head_sha(repo) and d["limits_sha"] == load_limits().sha
     assert d["mode"] == "LIMITED_LIVE" and d["caps"] == {"stake_usd": 5.0, "max_contracts": 10.0, "day_notional_usd": 20.0}
     assert d["operator_statement"] == "I approve a test." and d["signed_by"] == "Test"
     assert (path.stat().st_mode & 0o777) == 0o600
-    r2, _ = write_override(tmp_path)
+    assert f"code {d['code_sha']}" in r.stdout
+    r2, _ = write_override(tmp_path, root=repo)
     assert r2.returncode == 2 and "--force" in r2.stderr
-    r3, _ = write_override(tmp_path, "--force")
+    r3, _ = write_override(tmp_path, "--force", root=repo)
     assert r3.returncode == 0
+
+
+def test_arming_override_refuses_a_dirty_or_unknown_code_tree(tmp_path):
+    from kernel.tests.test_code_sha import _repo
+    repo = _repo(tmp_path)
+    (repo / "nodes" / "a.py").write_text("x = 99\n")                      # uncommitted code
+    r, path = write_override(tmp_path, root=repo)
+    assert r.returncode == 2 and "dirty" in r.stderr and not path.exists()
+    plain = tmp_path / "plain"
+    plain.mkdir()
+    r, path = write_override(tmp_path, root=plain)
+    assert r.returncode == 2 and "unknown" in r.stderr and not path.exists()
 
 
 def test_settle_takes_the_venues_fills_on_the_proofs_orders_not_the_files_memory():
