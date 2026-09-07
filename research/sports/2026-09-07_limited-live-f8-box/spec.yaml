@@ -1,0 +1,50 @@
+experiment_id: "janus-sports-limited-live-f8-box-2026-09-07"
+date_registered: "2026-09-07"
+track: "sports/execution"
+row_kind: "F (forward evaluation; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F8"
+test_looks_spent: 0
+parallel_to: "F7 (the box's paper series) is superseded on the box the moment the lane starts in LIMITED_LIVE: one lane, one mode. F5 (the Mac, paper) continues apart. Nothing is summed across F5, F7, F8."
+
+# IMMUTABLE ONCE THE LANE RUNS IN LIMITED_LIVE AFTER THIS ROW.
+purpose: >
+  The first real two-leg covers, small, on every league the lane covers, from the Ashburn box:
+  the operator's 2026-09-07 decision ("we should start testing actual fills on actual live events
+  (eventhough small)"), recorded as a dated GATE_TO_LIVE amendment in the operator's words before
+  the lane runs. Both execution proofs settled 7 of 7 (Kalshi proofs/kalshi_20260907T025629Z,
+  Polymarket proofs/polymarket_20260907T044255Z); this row asks whether the machine hedges REAL
+  fills at the sizes the venues actually give (Polymarket V2 fills a BUY by notional; Kalshi
+  cancels asynchronously), and reports the realised locked return net of the fees the venues
+  charged, against the paper return of F5/F7.
+
+arm: "janus-live-stream.service on the box with --mode LIMITED_LIVE on --leagues enabled, under an arming override written ON THE BOX by the operator (ops/arming_override.py, pinning the box's runner sha and limits.toml sha 222330ad… or later): stake <= $12 per order, <= 25 contracts, <= $60 notional a day, expiry <= 7 days, renewed by the operator; nodes/risk/limits.toml min_net_profit_usd 0.10 (from 0.50, pilot note in the file), min_locked_return 0.01, max_daily_realized_usd 25 (the latching breaker), per-league caps unchanged. The coordinator, plan, execution venues and reconcile are the ones the proofs ran through; no code path is pilot-only."
+
+window:
+  start: "the first [mode] LIMITED_LIVE line in /srv/janus/logs/live_stream.stdout.log on the box after the GATE row and the override exist"
+  end: "when n cleared covers exist, the STOP fires, the breaker latches, or the operator closes the row"
+
+definitions:
+  n: "37 -- the same n as F5/F7 (L36's n_for_paper); recomputed only to extend"
+  cleared_cover: "as F7: an executions row whose reservation nodes/risk.clear() minted AND the matching opportunity_transitions row to EXECUTION_PENDING; the counts must agree"
+  hedged: "the execution reaching HEDGED with both legs filled at the venues (venue_fills rows on both), unhedged == 0 at the venue's own reported size (Polymarket: the status() size, not the ack)"
+  realised_locked_return: "from execution_settlements kind COVER after both venues settle the game: (payout - cost - fees charged) / cost, with fees as the venues charged them (Kalshi fill records; Polymarket collateral delta at the pinned fee when the trade record says 0)"
+  unhedged_leg: "PARTIAL_FILL or FAILED_HEDGE with first_filled > 0 and hedge_filled < first_filled, at the venue's size"
+  refusals: "every clear() refusal by code from the [risk] lines and the ledger"
+
+criteria:
+  - "Forward. No outcome is read before the window closes; no threshold is moved after."
+  - "STOP on the first unhedged real leg: the lane is stopped (systemctl stop janus-live-stream) and the position is closed or held by the operator's decision; the row records it as a design finding. UNHEDGED_POSITION is the detector."
+  - "STOP on the breaker: max_daily_realized_usd 25 latches the kill switch; a human resets it."
+  - "The first three real covers are reconciled by hand (ops/proof_check.py's checks: fills at the venue's size, fees at the pin, balances to the cent, reservations released) before the fourth is allowed; a discrepancy is a STOP."
+  - "The mean realised locked return over the n covers is reported with a 95% interval beside F5's paper mean; the row claims nothing about edge (steps 5 and 6 still gate a raise of the caps)."
+  - "Refusals by code, fills by venue and league, and every cancel's finality are reported beside the n."
+  - "Data-arrival SLA as F7 (LANE_SILENT, SIGNAL_EXIT, CRASH_LOOP, CRASHED, NEVER_RAN, UNHEDGED_POSITION) with the box's SLA set."
+
+outputs:
+  registration: "snooping_ledger.md row F8, result appended when the window closes"
+  records: "executions, execution_transitions, execution_settlements, opportunities, opportunity_transitions, orders, venue_fills, capital_reservations on /srv/janus; the lane's [exec], [risk], [settle] lines; the two venues' own fill and settlement records"
+
+what_this_does_not_establish:
+  - "Edge at size. Every cover is capped at the override; nothing here licenses a raise."
+  - "Coverage. Leagues the lane does not co-list (see the census) produce no rows; the row reports per league and says which produced none."

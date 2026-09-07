@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# THE OPERATOR'S SIGNATURE. Writes the arming override on the box (GATE_TO_LIVE step 9) from the
+# operator's own statement, pinning the box's runner sha and its limits.toml sha. The agent
+# prepares this file and never runs it.
+#
+#   bash ops/box/write_override.sh "I approve ..." [stake_usd] [max_contracts] [day_notional_usd] [expires_hours]
+#
+# Defaults are the F8 pilot caps ($12 / 25 / $60 / 168 h). The lane reads the override only in
+# LIMITED_LIVE (ops/box/mode.sh); a runner or limits change on the box invalidates it (rewrite).
+set -euo pipefail
+STATEMENT=${1:?the operator's verbatim statement}
+STAKE=${2:-12}; CONTRACTS=${3:-25}; DAY=${4:-60}; HOURS=${5:-168}
+SIGNED_BY=${JANUS_SIGNED_BY:-Bernardo}
+Q=$(printf %q "$STATEMENT")
+bash "$(dirname "$0")/run.sh" "sudo -u janus bash -c 'set -a; . /run/janus/janus.env; set +a; cd /opt/janus; JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/arming_override.py --mode LIMITED_LIVE --signed-by \"$SIGNED_BY\" --stake-usd $STAKE --max-contracts $CONTRACTS --day-notional-usd $DAY --expires-hours $HOURS --force --statement $Q'"

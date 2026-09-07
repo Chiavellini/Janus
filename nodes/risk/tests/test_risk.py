@@ -159,7 +159,7 @@ def test_refusals_come_in_the_fail_closed_order(kill, breaker):
     assert clear(cand(), ledger=L, **{**env, "fee_schedules_ok": False}).code == "FEE_SCHEDULE"
     assert clear(cand(), ledger=L, **{**env, "venues_connected": {"kalshi": True}}).code == "VENUE_DISCONNECTED"
     assert clear(cand(max_book_age_s=9.0), ledger=L, **env).code == "STALE_BOOK"
-    assert clear(cand(net_profit_usd=0.10), ledger=L, **env).code == "MIN_PROFIT"
+    assert clear(cand(net_profit_usd=0.05), ledger=L, **env).code == "MIN_PROFIT"     # floor 0.10 since 2026-09-07
     assert clear(cand(locked_return=0.005), ledger=L, **env).code == "MIN_RETURN"
     # paper mode never asks for balances; demo and above must have them
     assert isinstance(clear(cand(), ledger=ExposureLedger(), **{**env, "balances": None}), RiskClearance)

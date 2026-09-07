@@ -42,6 +42,9 @@ max_hedge_latency_ms = 3000
 max_unhedged_contracts = 100
 max_unhedged_duration_ms = 5000
 max_stale_book_age_s = 5.0
-min_net_profit_usd = 0.50
+# 0.50 -> 0.10 on 2026-09-07 for the small real-fills pilot (ledger F8): at the pilot's $12 stake a 1%
+# locked return is $0.12, and 0.50 refused every cover the caps allow. The 1% return floor below
+# is the hurdle; this is the fixed-cost floor and returns to 0.50 when stakes do.
+min_net_profit_usd = 0.10
 min_locked_return = 0.01
 clearance_ttl_ms = 500           # a clearance is good for one submit, within this window
