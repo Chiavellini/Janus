@@ -638,7 +638,10 @@ POLYMARKET_TENNIS_MATCH_V1 = Template(
     scrub=TENNIS_SCRUB)
 
 POLYMARKET_TENNIS_MATCH_V2 = Template(
-    "polymarket_tennis_match_v2", "polymarket", frozenset({"atp", "wta"}), "2026-09-03",
+    # itf added 2026-09-07: the ITF texts are this wording with the ITF as the source, which the
+    # league's scrub removes; a separate ITF template shared this hash and displaced this one in
+    # TEMPLATES for an evening (every tour match blocked LEAGUE_MISMATCH on the Mexico box).
+    "polymarket_tennis_match_v2", "polymarket", frozenset({"atp", "wta", "itf"}), "2026-09-03",
     # wta-bucsa-sakatsu-2026-09-02, market.description -- the text on the 2026 US Open events ("originally
     # scheduled", full names as outcomes, "a winner has not been determined by 7 days after the
     # originally scheduled start"); the same rules as V1 (the January text) in different words.
@@ -664,7 +667,9 @@ POLYMARKET_TENNIS_MATCH_V2 = Template(
 ITF_SCRUB = LEAGUES["itf"].template_scrub
 
 KALSHI_ITF_MATCH_V1 = Template(
-    "kalshi_itf_match_v1", "kalshi", frozenset({"itf"}), "2026-09-07",
+    # reviewed for every tour: the wording is Kalshi's, not the tournament's (a Challenger event
+    # may carry either text), and its verdicts against the Polymarket text hold for any match.
+    "kalshi_itf_match_v1", "kalshi", frozenset({"itf", "atp", "wta"}), "2026-09-07",
     # KXITFWMATCH-26SEP08POPDUM-POP, rules_primary + "\n" + rules_secondary. Not the tour text: a
     # match that never starts resolves every market to $0.50 (the tour text says "a fair price in
     # accordance with the rules"), and a player who withdraws after the first ball resolves to No.
@@ -684,28 +689,6 @@ KALSHI_ITF_MATCH_V1 = Template(
               revision_policy="in accordance with the rules", dispute_mechanism="kalshi", settle_lag_h_p50=None,
               terms_url=None, provenance="api_field"),
     scrub=ITF_SCRUB)
-
-POLYMARKET_ITF_MATCH_V1 = Template(
-    "polymarket_itf_match_v1", "polymarket", frozenset({"itf"}), "2026-09-07",
-    # itf-calin-mcdona-2026-09-07, market.description: the tour's V2 wording with the ITF as the source.
-    "This market refers to the tennis match between Albert Calin and Brendan McDonald in the M25 Rabat, Qualifying, "
-    "originally scheduled for September 7, 2026 at 9:00AM ET.\n\nThis market will resolve to 'Albert Calin' if Albert "
-    "Calin advances against Brendan McDonald.\n\nThis market will resolve to 'Brendan McDonald' if Brendan McDonald "
-    "advances against Albert Calin.\n\nIf the match is canceled (not played at all), ends in a tie, or a winner has not "
-    "been determined by September 21, 2026, 11:59 PM ET (14 days after the scheduled start), this market will resolve "
-    "to 50-50.\n\nIf the match begins but is not completed, and one player advances due to the opponent's retirement, "
-    "default, or disqualification, this market will resolve to the player who advances.\n\nIf the match ends in a "
-    "walkover (player withdraws before the start and the other advances automatically), this market will resolve to "
-    "50-50.\n\nThe primary resolution source will be official information from the International Tennis Federation "
-    "(ITF). A consensus of credible reporting may also be used.",
-    ("Albert Calin", "Brendan McDonald"),
-    SettleRef(source_agency="the ITF's official information", oracle="uma", void_policy=VoidPolicy.RESOLVE_FIFTY,
-              tie_policy=TiePolicy.RESOLVE_FIFTY, ot_included=True, dnp_policy=VoidPolicy.RESOLVE_FIFTY,
-              retirement_policy="the player who advances after a retirement, default or disqualification; a walkover is 50-50",
-              revision_policy="consensus of credible reporting", dispute_mechanism="uma", settle_lag_h_p50=None,
-              terms_url=None, provenance="api_field"),
-    scrub=ITF_SCRUB)
-
 
 def _itf_verdicts() -> tuple[Verdict, ...]:
     """Kalshi ITF match vs Polymarket ITF match (2026-09-07). Closer than the tour pair: BOTH venues
@@ -779,7 +762,7 @@ TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V
                                                               KALSHI_CFB_GAME_V1, KALSHI_CFB_GAME_V2, POLYMARKET_CFB_GAME_V1,
                                                               KALSHI_TENNIS_MATCH_V1, POLYMARKET_TENNIS_MATCH_V1,
                                                               POLYMARKET_TENNIS_MATCH_V2,
-                                                              KALSHI_ITF_MATCH_V1, POLYMARKET_ITF_MATCH_V1)}
+                                                              KALSHI_ITF_MATCH_V1)}
 
 
 def template_for(template_hash: str) -> Template | None:
@@ -854,7 +837,7 @@ PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
     ("kalshi_cfb_game_v2", "polymarket_cfb_game_v1"): _CFB_K_PM,
     ("kalshi_tennis_match_v1", "polymarket_tennis_match_v1"): _TENNIS_K_PM,
     ("kalshi_tennis_match_v1", "polymarket_tennis_match_v2"): _TENNIS_K_PM,
-    ("kalshi_itf_match_v1", "polymarket_itf_match_v1"): _ITF_K_PM,
+    ("kalshi_itf_match_v1", "polymarket_tennis_match_v2"): _ITF_K_PM,
     **{(t.template_id, pm.template_id): _soccer_verdicts(code) for code, t in _SOCCER_KALSHI.items() for pm in _SOCCER_PM},
 }
 

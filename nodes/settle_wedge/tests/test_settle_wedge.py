@@ -225,3 +225,23 @@ def test_a_generic_one_word_tail_of_a_school_name_is_not_stripped_from_the_rules
     assert normalise_template(text, ("Boston College", "Cincinnati")) == "if wins the vs college football game then yes"
     text2 = "If the Golden Flashes win the Kent State Golden Flashes vs Cincinnati college football game, then Yes."
     assert normalise_template(text2, ("Kent State Golden Flashes", "Cincinnati")) == "if the win the vs college football game then yes"
+
+
+def test_every_template_hash_is_unique_and_the_tennis_texts_land_where_reviewed():
+    """2026-09-07: an ITF Polymarket template normalised to the tour's V2 string; the later entry
+    displaced the earlier in TEMPLATES and every ATP/WTA match blocked LEAGUE_MISMATCH."""
+    from nodes.settle_wedge import policy as P
+    objs = [v for v in vars(P).values() if isinstance(v, P.Template)]
+    assert len({t.template_hash for t in objs}) == len(objs) == len(P.TEMPLATES)
+    assert {"atp", "wta", "itf"} <= P.POLYMARKET_TENNIS_MATCH_V2.leagues
+    assert {"atp", "wta", "itf"} <= P.KALSHI_ITF_MATCH_V1.leagues
+    text = ("If Denisa Zoldakova wins the Zoldakova vs Noha Akugue professional tennis match in the 2026 WTA 125K Montreux "
+            "Round Of 32 after a ball has been played, then the market resolves to Yes.\nThe following market refers to the "
+            "Zoldakova vs Noha Akugue professional tennis match in the 2026 WTA 125K Montreux Round Of 32 after a ball has been "
+            "played. If the match does not occur (signaled by a ball being played) due to a player injury, walkover, forfeiture, "
+            "or any other cancellation (all before the match starts), the market will resolve to a fair price in accordance with "
+            "the rules. If this match is postponed or delayed, the market will remain open and close after the rescheduled match "
+            "has finished (within two weeks).\n\nKalshi is not affiliated, associated, authorized, endorsed by, or in any way "
+            "officially connected with the Governing League. All trademarks, logos, and brand names are the property of their "
+            "respective owners.")
+    assert normalise_template(text, ("Denisa Zoldakova", "Noha Akugue"), P.TENNIS_SCRUB) == P.KALSHI_TENNIS_MATCH_V1.template_text

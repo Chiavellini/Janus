@@ -85,12 +85,12 @@ LEAGUES: dict[str, League] = {
     # Polymarket's `tennis` tag; the slug prefix says which. Kalshi settles tennis on exchange shard 3.
     "atp":  League("atp", "ATP Tour", "KXATPMATCH", "tennis", "atp", None, anchor="venue_structured",
                    kalshi_series_extra=("KXATPCHALLENGERMATCH",),
-                   template_scrub=(r"in the \d{4} .*? (?:Men|Women)(?:'s)? Singles [A-Za-z0-9 ]+? (?=after a ball)",
+                   template_scrub=(r"in the \d{4} .*? (?=after a ball has been played)",
                                    r"in the [A-Z][A-Za-z0-9 .'-]*?(?: (?:ATP|WTA))?,",
                                    r"official information from (?:the )?[A-Z][A-Za-z0-9 .'-]*?\.")),
     "wta":  League("wta", "WTA Tour", "KXWTAMATCH", "tennis", "wta", None, anchor="venue_structured",
                    kalshi_series_extra=("KXWTACHALLENGERMATCH",),
-                   template_scrub=(r"in the \d{4} .*? (?:Men|Women)(?:'s)? Singles [A-Za-z0-9 ]+? (?=after a ball)",
+                   template_scrub=(r"in the \d{4} .*? (?=after a ball has been played)",
                                    r"in the [A-Z][A-Za-z0-9 .'-]*?(?: (?:ATP|WTA))?,",
                                    r"official information from (?:the )?[A-Z][A-Za-z0-9 .'-]*?\.")),
     # ITF (men's and women's), 2026-09-07 from the L28 census and the day's slate: Kalshi's two ITF
@@ -102,7 +102,7 @@ LEAGUES: dict[str, League] = {
                    # ITF texts name the tournament by code ("M25 Rabat", "W15 Campulung", a
                    # "(moved from ...)" note) and the round by word ("Qualifying", "Round of 32");
                    # Kalshi's has no "Men's Singles" and Polymarket's names the ITF as the source.
-                   template_scrub=(r"in the \d{4} [MW]\d{2} [^,]*? (?:Round of \d+|Main Draw|Qualifying|Quarterfinals?|Semifinals?|Finals?) (?=after a ball)",
+                   template_scrub=(r"in the \d{4} .*? (?=after a ball has been played)",
                                    r"in the [MW]\d{2} [^,]*?, (?:Qualifying|Main Draw|Round of \d+|Quarterfinals?|Semifinals?|Finals?)[^,]*?,",
                                    r"official information from (?:the )?International Tennis Federation \(ITF\)\.")),
     # Not yet: UCL. Entities are keyed per league (lal:esp.real_madrid) and a club plays in its domestic
