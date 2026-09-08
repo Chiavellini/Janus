@@ -63,6 +63,10 @@ released the reservation. Retaining an unknown reservation was correct but did n
 retry after the 20-second event backoff. F11 makes every real UNKNOWN_PROVIDER_STATE immediately
 latch the box-local live kill; reconciliation stays with the guard and the latch remains human-clear.
 
+The coverage watchdog now treats an event as covered when its append-only transition history shows
+it was co-listed. Previously, Kalshi removing a settled market changed the event's current phase to
+UNPAIRED and falsely relabelled hours of recorded polling (and real entry attempts) as a coverage gap.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and

@@ -46,7 +46,17 @@ def report(db: Path, census: Path | None, *, now: float | None = None, enabled_o
     if not cols:
         con.close()
         return {"census": str(census), "rows": [], "note": "no events table"}
-    covered = {r[0] for r in con.execute("SELECT kalshi_event FROM events WHERE phase LIKE '%:co_listed' AND kalshi_event IS NOT NULL")}
+    covered = {r[0] for r in con.execute(
+        "SELECT kalshi_event FROM events WHERE phase LIKE '%:co_listed' AND kalshi_event IS NOT NULL"
+    )}
+    # Discovery keeps following a game through its final state. Once Kalshi removes settled
+    # markets, the current row becomes `post`/UNPAIRED even though the lane did pair and poll the
+    # game for hours. Coverage is historical evidence (did the lane ever pair it), so retain any
+    # event whose append-only transition history contains a co-listed phase.
+    covered.update(r[0] for r in con.execute(
+        "SELECT DISTINCT e.kalshi_event FROM events e JOIN event_transitions t ON t.event_id=e.event_id "
+        "WHERE t.phase LIKE '%:co_listed' AND e.kalshi_event IS NOT NULL"
+    ))
     rows = []
     for pr in pairs:
         league = league_for_series(pr.get("kalshi_series") or "")
