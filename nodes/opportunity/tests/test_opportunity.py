@@ -33,8 +33,10 @@ def test_transitions_follow_the_machine_and_terminals_are_terminal():
 def test_a_discovered_cover_below_the_dollar_floor_is_not_profitable_unexecuted(tmp_path: Path):
     store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
     opps = OpportunityStore(store)
-    p = mlb(quantities=(5.0,))                     # 5 contracts: a 12% edge is only ~$0.60... at 0.44+0.44
-    sync_all(p, kh=0.47, ka=0.99, ph=0.99, pa=0.47)   # gross 0.94, ~4% locked: $0.20 on 5 contracts
+    # 5 contracts on a 2c edge: over the 1% locked-return hurdle, under the $0.10 dollar floor.
+    # (The floor was $0.50 until 2026-09-08; at that floor this fixture used a 6c edge.)
+    p = mlb(quantities=(5.0,))
+    sync_all(p, kh=0.48, ka=0.99, ph=0.99, pa=0.48)   # gross 0.96 + 2.5c fees = 0.985: ~1.5% locked, $0.075 on 5
     ev = p.on_event("kalshi", "K_H", now=T)[0]
     rec = record_evaluation(store, ev, league="mlb", fee_params=FEES, hurdle=EXECUTION_MIN_LOCKED_RETURN, opportunities=opps)
     assert rec.locked_return > EXECUTION_MIN_LOCKED_RETURN and rec.net_profit_usd < EXECUTION_MIN_NET_PROFIT_USD
@@ -56,7 +58,8 @@ def test_a_profitable_cover_records_its_books_transitions_and_frontier(tmp_path:
     assert fr.actionable
     opps.record_frontier(opp, fr, now=T)
     assert opp.n_max == fr.n_max and opp.n_star == fr.n_star
-    assert opp.slippage_modelled and opp.slippage_buffer == pytest.approx(0.04), "L27's registered value (2026-09-05 run) rides on the record"
+    assert not opp.slippage_modelled and opp.slippage_buffer == pytest.approx(0.0), \
+        "L27's pooled reserve was withdrawn 2026-09-08; the row carries the withdrawal, not a measured zero"
     assert store.con.execute("SELECT COUNT(*) FROM frontiers").fetchone()[0] == 1
     # the market goes away: a transition to NO_EDGE is recorded, the books from the edge are kept
     sync_all(p, kh=0.60, ka=0.99, ph=0.99, pa=0.60, now=T + 1)

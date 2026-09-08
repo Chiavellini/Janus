@@ -58,7 +58,12 @@ max_protect_loss_per_contract_usd = 0.10   # the same cap per contract; the tigh
 max_protect_submits = 12         # hedge + unwind IOCs per execution under the protect window
 protect_resubmit_ms = 400        # between IOCs: enough for a fresh book, short enough for 12 tries
 unwind_enabled = false           # true from release R5: sell the naked side back inside the cap
-protect_auto = false             # true from R5: the position guard re-protects on its own
+protect_auto = true              # R5 (2026-09-08): the guard re-protects a naked row on its own.
+                                 # This is exactly what was missing when 789ad9b2 filled leg A and
+                                 # rode naked to settlement. `unwind_enabled` stays false: the
+                                 # unwind is the one path never exercised against a real venue (the
+                                 # R4 proofs have not run), so the chase phases plus
+                                 # protect_kill_on_failure carry the protection until they do.
 protect_kill_on_failure = true   # the operator's decision (2026-09-08): an unprotectable position latches kill/live
 protect_dust_contracts = 1.0     # a naked remainder below the venue minimum is recorded, not chased or killed
 guard_period_s = 30.0            # nodes/execute/guard.py cadence, real modes only

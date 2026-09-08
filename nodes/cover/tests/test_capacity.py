@@ -139,12 +139,16 @@ def test_rungs_below_a_legs_minimum_are_skipped_not_fatal():
     assert got.rungs and all(r.contracts >= 5.0 for r in got.rungs)
 
 
-def test_the_registered_slippage_is_the_default_and_is_labelled_modelled():
+def test_the_withdrawn_pooled_slippage_is_zero_and_is_labelled_unmodelled():
+    """The operator withdrew L27's pooled 0.04 on 2026-09-08: it was the p95 at a 3 s horizon, and
+    the box hedges in tens of milliseconds. A withdrawn reserve is not a measured zero, so the
+    label goes with it -- otherwise every recorded row would claim we measured no slippage."""
     from nodes.cover.capacity import SLIPPAGE_MODELLED, SLIPPAGE_PER_CONTRACT, SLIPPAGE_RESEARCH_REF
-    assert SLIPPAGE_MODELLED and SLIPPAGE_PER_CONTRACT == pytest.approx(0.04) and SLIPPAGE_RESEARCH_REF.startswith("research/")
+    assert SLIPPAGE_PER_CONTRACT == pytest.approx(0.0) and SLIPPAGE_RESEARCH_REF.startswith("research/")
+    assert not SLIPPAGE_MODELLED, "unmeasured is labelled, never assumed zero"
     got = frontier(two([(0.45, 1000)], [(0.45, 1000)]), now_utc=T, proof=PROOF)
-    assert got.slippage_modelled and got.slippage_per_contract == pytest.approx(0.04)
-    assert got.best.cost_per_contract == pytest.approx(0.94), "0.90 gross + the registered 0.04 reserve (fees are zero in this fixture)"
+    assert not got.slippage_modelled and got.slippage_per_contract == pytest.approx(0.0)
+    assert got.best.cost_per_contract == pytest.approx(0.90), "0.90 gross, no reserve (fees are zero in this fixture)"
 
 
 def test_the_per_league_slippage_table_falls_back_to_the_pooled_pin():

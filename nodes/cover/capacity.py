@@ -36,17 +36,27 @@ from nodes.cover.cover import Cover, Leg, REJECT_BELOW_MIN_ORDER, best_cover
 from nodes.settle_wedge.equivalence import CoverProof
 
 
-#: The slippage buffer, from ledger L27 (research/sports/2026-09-03_kalshi-hedge-window-slippage):
-#: the p95 adverse move of the Kalshi YES ask at 100 contracts inside the 3 s hedge window. Run
-#: 20260905T104523Z: 32,149,854 delta instants over 326 tickers (MLB, cfb, ATP/WTA/Challenger
-#: capture, 2026-09-03 to 2026-09-05) -> FOUR ticks, where the 2026-09-03 run (2,152 samples, 8 MLB
-#: tickers) gave one. The row's rule is mechanical (p95 at 3 s once n >= 2,000 over >= 4 tickers)
-#: and the pin follows it. Consequence, stated: at 0.04 per contract the frontier clears almost no
-#: cover the lane has printed (median locked return ~0.03), so F5 accrues little until a sharper,
-#: stratified slippage row (per league, clean windows only, weighted by time not by delta count,
-#: at the walked depth) is registered and run -- a NEW row, never an edit to this one.
-SLIPPAGE_PER_CONTRACT = 0.0400
-SLIPPAGE_MODELLED = True
+#: The pooled slippage buffer, REMOVED by operator decision 2026-09-08 (0.0400 -> 0.0).
+#: What it was: ledger L27 (research/sports/2026-09-03_kalshi-hedge-window-slippage), run
+#: 20260905T104523Z -- the p95 adverse move of the Kalshi YES ask at 100 contracts measured inside
+#: a 3 s hedge window, over 32,149,854 delta instants and 326 tickers, giving four ticks.
+#: Why it is gone: 3 s is `max_hedge_latency_ms`, the window's ceiling, not the horizon the box
+#: actually runs (L34: box->Kalshi p50 51 ms, box->CLOB 184 ms), and the pooled figure mixes thin
+#: tennis books with MLB. A reserve measured at a horizon we do not run priced out nearly every
+#: cover the lane printed while insuring a window that never opened. Nothing yet measures the real
+#: horizon, so this goes to zero rather than to a smaller invented number: L41 (the stratified
+#: per-league row below) is what re-registers a measured value, and MLB already has one.
+#: Note this constant has never gated an order -- `slippage_for` is read only by `frontier()`, for
+#: the reported N_max/N*, and never by `best_cover` / `plan_from_cover` / `clear`.
+SLIPPAGE_PER_CONTRACT = 0.0
+#: False since 2026-09-08, with the pooled reserve. "Unmeasured is labelled, never assumed zero" is
+#: this module's rule, and a zero reserve carrying `modelled = True` would assert on every recorded
+#: row that we measured no slippage. We did not: we withdrew a number measured at the wrong horizon
+#: and have nothing yet at the right one. Every frontier and opportunity row for a league without an
+#: entry in SLIPPAGE_BY_LEAGUE is therefore labelled unmodelled until L41 lands. This flag is global
+#: while the table below is per-league, so MLB's measured 0.01 is under-claimed as unmodelled too --
+#: the cautious direction, and L41's row is where the label turns per-league.
+SLIPPAGE_MODELLED = False
 SLIPPAGE_RESEARCH_REF = "research/sports/2026-09-03_kalshi-hedge-window-slippage/spec.yaml"
 #: Per league, from ledger L41 (the stratified row: clean windows only, time-weighted, p95 at 3 s
 #: and q = 25), registered only for a league with >= 2,000 instants over >= 4 tickers. Empty until

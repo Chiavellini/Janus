@@ -121,7 +121,9 @@ def test_offline_replay_runs_the_paper_coordinator_over_the_captured_books(tmp_p
     st = replay(h, frames())
     assert st["executions"] >= 1, st
     rows = store.con.execute("SELECT state, first_filled, hedge_filled FROM executions").fetchall()
-    assert rows and rows[0][0] == "HEDGED" and rows[0][1] == 100.0 and rows[0][2] == 100.0
+    # 3, not the harness's 100: the venues' smallest size is priced first (2026-09-07) and since the
+    # dollar floor moved to $0.10 (2026-09-08) that rung clears it, so it is the one that executes.
+    assert rows and rows[0][0] == "HEDGED" and rows[0][1] == 3.0 and rows[0][2] == 3.0
     assert store.con.execute("SELECT COUNT(*) FROM orders WHERE mode='OFFLINE_REPLAY'").fetchone()[0] == 2
     # a second replay is identical row for row
     store2 = TupleStore(tmp_path / "y.sqlite", enforce_volume=False)

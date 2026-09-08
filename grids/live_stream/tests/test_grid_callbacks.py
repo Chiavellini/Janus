@@ -31,7 +31,9 @@ def test_a_profitable_evaluation_is_sized_on_its_own_books(tmp_path: Path, capsy
     out = capsys.readouterr().out
     assert "PROFITABLE_UNEXECUTED" in out and "N_max=" in out, out
     assert "capacity failed" not in out
-    assert sup.store.con.execute("SELECT COUNT(*) FROM frontiers").fetchone()[0] == 1
+    # Two rungs, not one: since the dollar floor moved to $0.10 (2026-09-08) both the venues'
+    # smallest size and the 100 rung clear it, and each profitable rung records its frontier.
+    assert sup.store.con.execute("SELECT COUNT(*) FROM frontiers").fetchone()[0] == 2
     assert s.evaluations == 2 and s.written == 2, "the venues' smallest size (3) and the 100 rung, both written"
 
 
@@ -237,7 +239,11 @@ def test_a_real_execution_leaves_the_socket_loop_one_at_a_time_and_writes_the_st
     from nodes.opportunity.opportunity import Opportunity
     opps = OnLoop(sup.opportunities, nowait={"move"})
     sup.on_loop.append(opps)
-    oid = Opportunity.id_for("g1", 100.0)                       # the 100 rung is the profitable one here (3 stays DISCOVERED)
+    # Since the dollar floor moved to $0.10 (2026-09-08) the smallest rung clears it too -- 3
+    # contracts at ~10.5% on ~0.90 is ~$0.29 -- and the smallest size is priced first, so the 3
+    # rung is the one dispatched and the 100 rung is refused IN_FLIGHT behind it. At the old $0.50
+    # floor this was the other way round.
+    oid = Opportunity.id_for("g1", 3.0)
 
     from nodes.store_tuples.store import TupleStore as _TS
     sup.worker_store = _TS(tmp_path / "t.sqlite", enforce_volume=False, check_same_thread=False)

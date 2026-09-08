@@ -13,7 +13,9 @@ def test_the_checked_in_limits_carry_the_protect_section_and_the_moved_submit_bo
     p = lim.protect
     assert (p.hedge_protect_window_s, p.unwind_reserve_s, p.max_protect_loss_usd, p.max_protect_loss_per_contract_usd) == (30.0, 10.0, 1.0, 0.10)
     assert p.max_protect_submits == 12 and p.protect_resubmit_ms == 400 and p.guard_period_s == 30.0
-    assert p.unwind_enabled is False and p.protect_auto is False and p.protect_kill_on_failure is True
+    # R5, partially released 2026-09-08: the guard re-protects on its own, the unwind stays off
+    # until the R4 proofs run against a real venue.
+    assert p.unwind_enabled is False and p.protect_auto is True and p.protect_kill_on_failure is True
     assert not hasattr(lim, "max_unhedged_duration_ms"), "the protect window is the bound on unhedged duration now"
 
 

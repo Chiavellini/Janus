@@ -13,5 +13,10 @@ limits file, so neither side can drift alone.
 
 DISCOVERY_MIN_GROSS_EDGE = 0.0
 EXECUTION_MIN_LOCKED_RETURN = 0.01
-EXECUTION_MIN_NET_PROFIT_USD = 0.50
+#: Lowered 0.50 -> 0.10 on 2026-09-08 to match `nodes/risk/limits.toml min_net_profit_usd`, which
+#: the operator lowered for the $12 pilot on 2026-09-07. While the two disagreed THIS constant was
+#: the binding one -- it decides whether an opportunity is labelled PROFITABLE_UNEXECUTED at all,
+#: and only that status reaches `_execute` -- so the risk file's 0.10 was unreachable and every
+#: cover between $0.10 and $0.50 was dropped to DISCOVERED before the risk node ever saw it.
+EXECUTION_MIN_NET_PROFIT_USD = 0.10
 STRATEGY_VERSION = "v1-taker-taker-moneyline"
