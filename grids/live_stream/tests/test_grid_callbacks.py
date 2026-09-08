@@ -280,3 +280,52 @@ def test_a_real_execution_leaves_the_socket_loop_one_at_a_time_and_writes_the_st
         asyncio.run(main())
     finally:
         G.clear = old
+
+
+def test_the_guard_pass_feeds_the_breaker_and_holds_the_flight_slot(tmp_path: Path, capsys):
+    """2026-09-08: `clear()` was fed fills_today=() so the daily-loss breaker could never latch
+    from trading; the guard's report is what it sees now, and a pass never overlaps an execution."""
+    import asyncio
+    from types import SimpleNamespace
+    from kernel.schema import FillState
+    from nodes.risk.breaker import RealizedFill
+    sup, s = _supervisor(tmp_path)
+    fills = (RealizedFill("x", FillState.FILLED, -3.0, "2026-09-08"),)
+    rep = SimpleNamespace(findings=["CORRECTED abc12345 ev venue fills: first_filled 0->10"], to_protect=["abc12345"],
+                          fills_today=fills, corrected=["abc12345"], orphans=[], mismatches=[])
+    seen = {}
+
+    class Guard:
+        def fetch(self):
+            seen["fetch_in_flight"] = sup.in_flight
+            return "snap"
+
+        def apply(self, snap):
+            seen["apply_got"] = snap
+            return rep
+    sup.guard = Guard()
+    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_auto=False))
+
+    async def main():
+        await sup.guard_pass()
+        assert sup.in_flight is None and sup.fills_today == fills and sup.guard_passes == 1
+        assert seen == {"fetch_in_flight": "guard", "apply_got": "snap"}
+        sup.in_flight = "g9"                                   # an execution is flying: the guard waits
+        await sup.guard_pass()
+        assert sup.guard_passes == 1
+    asyncio.run(main())
+    out = capsys.readouterr().out
+    assert "[guard] CORRECTED abc12345" in out and "naked and idle: abc12345 (protect_auto off" in out
+    # the breaker feed reaches the gate
+    import grids.live_stream.grid as G
+    got = {}
+    old = G.clear
+    G.clear = lambda cand, **k: got.update(k) or SimpleNamespace(code="TEST", detail="stop here")
+    try:
+        sup.mode = G.Mode.LIMITED_LIVE
+        sup.ks = sup.ps = SimpleNamespace(connected=True, clock=SimpleNamespace(healthy=True))
+        pre = {}
+        sup._clear(s, SimpleNamespace(opportunity_id="o", legs=()), None, pre)
+        assert got["fills_today"] == fills
+    finally:
+        G.clear = old

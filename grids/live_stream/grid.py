@@ -51,6 +51,7 @@ from nodes.entities.leagues import LEAGUES, default_leagues  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, first_seen, record_events, record_spawn_block  # noqa: E402
 from nodes.slate.slate import next_transition, windows_for  # noqa: E402
 from nodes.execute.coordinator import Coordinator  # noqa: E402
+from nodes.execute.guard import PositionGuard  # noqa: E402
 from nodes.execute.on_loop import OnLoop  # noqa: E402
 from nodes.execute.plan import plan_from_cover  # noqa: E402
 from nodes.execute.records import ExecutionRecords  # noqa: E402
@@ -167,6 +168,12 @@ class Supervisor:
     #: The game whose real cover is executing in the worker thread, or None. One at a time: a
     #: second cover during a flight is refused IN_FLIGHT before any round trip (2026-09-07).
     in_flight: str | None = None
+    #: The position guard (nodes/execute/guard.py, 2026-09-08): real-order modes only; runs every
+    #: `[protect] guard_period_s` when nothing is in flight, and its `fills_today` is what the loss
+    #: breaker is fed (it was `()` until 2026-09-08, so the breaker could never latch from trading).
+    guard: PositionGuard | None = None
+    fills_today: tuple = ()
+    guard_passes: int = 0
     #: The store-touching collaborators of the machine and the venues (records, opportunities,
     #: the order journal), wrapped so a call from the worker runs on the loop thread.
     on_loop: list = field(default_factory=list)
@@ -596,7 +603,7 @@ class Supervisor:
         """The risk gate, on the loop (it mints the reservation in the ledger). None when refused."""
         m = time.monotonic()
         clearance = clear(cand, mode=self.mode, limits=self.limits, ledger=self.ledger, kill=self.kill,
-                          breaker=self.breaker, fills_today=(), clock_healthy=self.clock_ok(),
+                          breaker=self.breaker, fills_today=self.fills_today, clock_healthy=self.clock_ok(),
                           fee_schedules_ok=bool(sup.fee_params.get("kalshi") and sup.fee_params.get("polymarket")),
                           balances=balances, venues_connected=self._connected(), caps=self.caps or None)
         pre["clear_ms"] = round((time.monotonic() - m) * 1000.0, 2)
@@ -634,6 +641,33 @@ class Supervisor:
                     raise_flag(self.store, "EXEC_CRASHED", f"{sup.short_name} q={ev.quantity:g} {brief_error(exc)}")
                 except Exception as exc2:  # noqa: BLE001
                     print(f"  [risk] flag write failed: {type(exc2).__name__}", flush=True)
+        finally:
+            self.in_flight = None
+
+    async def guard_pass(self) -> None:
+        """One pass of the position guard: the network half in a worker, the state half here.
+        Serialised with executions through `in_flight` (one connection, one thread at a time).
+        Alarm-only until [protect] protect_auto: a naked execution is said and flagged; the
+        re-protection is R5's."""
+        if self.guard is None or self.in_flight is not None:
+            return
+        self.in_flight = "guard"
+        try:
+            snap = await asyncio.to_thread(self.guard.fetch)
+            rep = self.guard.apply(snap)
+            self.fills_today = rep.fills_today
+            self.guard_passes += 1
+            for line in rep.findings:
+                print(f"  [guard] {line}", flush=True)
+            if rep.to_protect:
+                auto = bool(getattr(getattr(self.limits, "protect", None), "protect_auto", False))
+                key = "guard:naked:" + ",".join(rep.to_protect)
+                if self.said.get(key) != "said":
+                    self.said[key] = "said"
+                    print(f"  [guard] naked and idle: {', '.join(x[:8] for x in rep.to_protect)}"
+                          + (" (protect_auto on: re-protection follows)" if auto else " (protect_auto off: by hand, ops/reconcile_stuck_execution.py)"), flush=True)
+        except Exception as exc:  # noqa: BLE001 -- the guard must never kill the loop
+            print(f"  [guard FAILED] {brief_error(exc)}", flush=True)
         finally:
             self.in_flight = None
 
@@ -689,8 +723,13 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
     last_disc = 0.0
     last_report = time.time()
     last_settle = time.time()
+    last_guard = 0.0
+    guard_period = float(getattr(getattr(sup.limits, "protect", None), "guard_period_s", 30.0) or 30.0)
     try:
         while not _STOP:
+            if sup.guard is not None and time.time() - last_guard > guard_period:
+                last_guard = time.time()
+                await sup.guard_pass()
             if sup.ledger is not None and time.time() - last_settle > SETTLE_PERIOD_S:
                 # Finished games: settle every execution still holding capital against each venue's
                 # own result (nodes/reconcile/settle_executions). Network in a worker, state here.
@@ -869,9 +908,13 @@ def main() -> int:
         # Records and the journal write through the worker's own connection (2026-09-08).
         opps = OnLoop(sup.opportunities, nowait={"move"})
         sup.on_loop.append(opps)
-        sup.coordinator = Coordinator(sup.venues, ExecutionRecords(sup.worker_store), sup.mode,
+        records = ExecutionRecords(sup.worker_store)
+        sup.coordinator = Coordinator(sup.venues, records, sup.mode,
                                       hedge_deadline_s=limits.max_hedge_latency_ms / 1000.0,
                                       opportunities=opps, kill=kill)
+        if sup.mode.sends_real_orders:
+            sup.guard = PositionGuard(venues=sup.venues, journal=journal, records=records, store=sup.store,
+                                      limits=limits.protect, started_utc=time.time(), kill=kill)
     print(f"[mode] {sup.mode.value}", flush=True)
     sup.ks = KalshiStream(api_key=api_key, private_key=load_private_key(key_path))
     sup.ps = PolymarketStream()

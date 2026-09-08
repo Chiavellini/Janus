@@ -363,6 +363,15 @@ def selftest() -> None:
             "CAP_BINDS_SMALLEST" in a and "LAA @ BOS" in a for a in _ra(kill_root=Path(d) / "k0", breaker_path=Path(d) / "k0" / "b.json", db_path=fdb, now=NOW)), "CAP_BINDS_SMALLEST"
         assert not any("CAP_BINDS_SMALLEST" in a for a in _ra(kill_root=Path(d) / "k0", breaker_path=Path(d) / "k0" / "b.json", db_path=fdb, now=NOW + 2 * 86400)), "a day later it is history"
 
+        # ORPHAN_FILL / POSITION_MISMATCH / PROTECT_FAILED / EXEC_CRASHED — the guard's and the protection layer's flags (2026-09-08)
+        fst = _TS2(fdb, enforce_volume=False)
+        raise_flag(fst, "ORPHAN_FILL", "kalshi KXMLBGAME-X buy_yes 5 @ 0.4 order k-777", now=NOW - 30)
+        raise_flag(fst, "PROTECT_FAILED", "789ad9b2 pm:atp:974082 unhedged 10.175 after 12 attempts", now=NOW - 20)
+        fst.close()
+        got = _ra(kill_root=Path(d) / "k0", breaker_path=Path(d) / "k0" / "b.json", db_path=fdb, now=NOW)
+        assert any("ORPHAN_FILL" in a and "k-777" in a for a in got) and any("PROTECT_FAILED" in a and "789ad9b2" in a for a in got), got
+        assert not any("POSITION_MISMATCH" in a for a in got), "a flag never raised stays quiet"
+
         # COVERAGE_GAP — the census says both venues list it inside the lane's window, the lane did not pair it
         from ops.coverage_report import coverage_alerts
         from nodes.store_tuples.store import TupleStore as _TS

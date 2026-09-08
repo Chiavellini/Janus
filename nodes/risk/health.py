@@ -102,6 +102,15 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
             if rows:
                 out.append(f"risk: CAP_BINDS_SMALLEST — {len(rows)} in 24 h, last: {rows[0][1]}; the override's cap refuses the "
                            "smallest size the lane prices (raise the cap or lower QUANTITIES; a GATE row)")
+            # The position guard's and the protection layer's flags (2026-09-08): each repeats for a
+            # day; the row-based UNHEDGED_POSITION below says the same from the executions table.
+            for flag, what in (("ORPHAN_FILL", "a venue fill no order row explains; the live kill was latched"),
+                               ("POSITION_MISMATCH", "a venue position the fills since start do not explain"),
+                               ("PROTECT_FAILED", "the protection layer could neither hedge nor unwind inside the cap; the live kill was latched"),
+                               ("EXEC_CRASHED", "the execution machine raised outside its own failure recording")):
+                rows = recent_flags(dbp, flag, now=t)
+                if rows:
+                    out.append(f"risk: {flag} — {len(rows)} in 24 h, last: {rows[0][1]}; {what}")
         except Exception as exc:  # noqa: BLE001
             out.append(f"risk: FLAGS_UNREADABLE — {type(exc).__name__}")
         try:
