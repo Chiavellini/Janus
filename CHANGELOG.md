@@ -959,3 +959,23 @@ compares positions with the fills seen (POSITION_MISMATCH), hands naked idle exe
 process for the proof under the kill. The lane refuses to start LIMITED_LIVE while `kill/live`
 exists, so R1+R2 are staged on the box (checkout + override) and the running process stays on
 its tree until the operator lifts the kill.
+
+## 2026-09-08 — hedge protection, R3 (the bounded chase; the unwind built but off)
+
+`nodes/execute/protect.py` replaces the coordinator's hedge loop. Inside one protect window
+armed the instant leg A is known: phase 1 the walked limit as before (three IOCs inside 3 s);
+phase 2 the chase to the budget (still a cover at the hurdle); phase 3 on to the loss cap (the
+pair locks in at most the allowance: $1.00 per execution, $0.10 per contract, the tighter binds,
+profit already locked never funds more loss); phase 4 the unwind, when `unwind_enabled`: the naked
+side sold back at a floor that keeps the loss inside the same allowance, bids below the floor
+waited for, never chased down; an over-hedge sells the surplus on the hedge venue. An IOC limit is
+a cap, not a price paid, so without a fresh book each phase is one order at its ceiling (a
+tick-by-tick crawl spent the submit budget and starved the unwind in the first draft); three
+submits are always kept for the unwind. Never: a resubmit over an UNCONFIRMED answer (UNKNOWN_
+PROVIDER_STATE and the page), a chase after a REJECTED (straight to the unwind), more than
+`max_protect_submits`. A position still naked at the end is a held failure AND `on_unprotected`:
+the lane latches kill/live, writes PROTECT_FAILED, says `[PROTECT FAILED]`. Every attempt lands
+in `protect_json`. `Coordinator.protect_existing` runs the layer from a row for the guard. The
+tests that pinned "not a chase" now pin the chase's bounds; the MIL @ CIN moved-book case that
+used to end HEDGE_SLIPPAGE_EXCEEDED with a naked leg now ends HEDGED at 0.86, labelled. Staged
+under the kill like R1/R2; R4 is the two unwind proofs the operator runs.
