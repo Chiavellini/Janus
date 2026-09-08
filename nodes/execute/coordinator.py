@@ -78,7 +78,8 @@ class Coordinator:
         self._t0[ex.execution_id] = self.mono()
         self.executions[ex.execution_id] = ex
         self._timed(ex, self.records.start, ex, plan={"first": plan.first.__dict__, "hedge": plan.hedge.__dict__,
-                                                      "max_cost": plan.max_cost_per_contract, "fee": plan.fee_per_contract},
+                                                      "max_cost": plan.max_cost_per_contract, "fee": plan.fee_per_contract,
+                                                      "settlement_buffer": plan.settlement_buffer_per_contract},
                     books=offers_books or {})
         self._opp(ex, S.EXECUTION_PENDING, t)
         try:
@@ -125,7 +126,8 @@ class Coordinator:
                 return self._fail(ex, X.BALANCE_CHANGED, f"balances {bal} below {need}", release=True)
         self._move(ex, X.CAPITAL_RESERVED)
 
-        # LEG A: Polymarket, FOK. Ambiguity here costs nothing; that is why it goes first.
+        # LEG A: Polymarket, FAK (`ioc` in the internal protocol). Ambiguity here costs nothing;
+        # that is why it goes first.
         req_a = self._request(plan, plan.first, plan.first.contracts, plan.first.limit_price, hedge=False)
         ex.first_client_id = req_a.client_order_id
         self._move(ex, X.LEG_A_SUBMITTED)
@@ -139,7 +141,8 @@ class Coordinator:
         if ack.state is FillState.REJECTED:
             return self._fail(ex, X.ORDER_REJECTED, f"leg A rejected: {ack.raw_status} {ack.detail}", release=True)
         if ack.state is FillState.UNFILLED:
-            return self._fail(ex, X.ORDER_REJECTED, "leg A unfilled (FOK): no position", release=True)
+            tif = "FAK" if plan.first.time_in_force == "ioc" else plan.first.time_in_force.upper()
+            return self._fail(ex, X.ORDER_REJECTED, f"leg A unfilled ({tif}): no position", release=True)
         ex.first_filled, ex.first_avg_price = ack.filled_contracts, ack.avg_price
         self._move(ex, X.LEG_A_FILLED if ack.state is FillState.FILLED else X.LEG_A_PARTIAL,
                    detail=f"filled {ack.filled_contracts} @ {ack.avg_price}")

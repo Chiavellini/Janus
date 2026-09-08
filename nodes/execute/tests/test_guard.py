@@ -9,7 +9,7 @@ from nodes.execute.guard import PositionGuard
 from nodes.execute.plan import LegPlan, Plan
 from nodes.execute.records import Execution, ExecutionRecords
 from nodes.execution.journal import Journal
-from nodes.risk.flags import recent_flags
+from nodes.risk.flags import raise_flag, recent_flags
 from nodes.risk.kill import KillSwitches
 from nodes.risk.limits import ProtectLimits
 from nodes.store_tuples.store import TupleStore
@@ -177,3 +177,24 @@ def test_a_position_the_venue_no_longer_holds_is_not_handed_back_for_protection(
     main2, journal2, records2, g2 = _world(tmp_path / "b", venues={"polymarket": pm2})
     _gea_row(journal2, records2)
     assert g2.apply(g2.fetch()).to_protect == ["789ad9b2"]
+
+
+def test_a_released_historical_fill_is_not_compared_with_the_current_position(tmp_path):
+    """The real 01:39 fill was settled and released before the 18:03 restart. A venue API that
+    returns that old trade must not compare it with today's zero position and alarm forever."""
+    trade = FillRecord("polymarket", "0xorder", "old-fill", 10.175, 0.57, 0.0, True,
+                       T0 + 101, True, market_id=TOK, side="buy_yes")
+    pm = Venue("polymarket", fills=[trade], positions=[])
+    main, journal, records, g = _world(tmp_path, venues={"polymarket": pm})
+    ex = _gea_row(journal, records)
+    records.correct_fills(ex, first_filled=10.175, first_avg=0.57, note="historical", now=T0 + 200)
+    ex.released = True
+    ex.state = X.RECONCILED
+    records.sync(ex, now=T0 + 250)
+    raise_flag(main, "POSITION_MISMATCH", "old rolling-window comparison", now=T0 + 250)
+    assert recent_flags(tmp_path / "t.sqlite", "POSITION_MISMATCH", now=T0 + 260)
+    rep = g.apply(g.fetch())
+    assert rep.mismatches == []
+    assert not recent_flags(tmp_path / "t.sqlite", "POSITION_MISMATCH", now=T0 + 301)
+    flags = [r[0] for r in main.con.execute("SELECT flag FROM lane_flags ORDER BY id")]
+    assert flags[-1] == "POSITION_MISMATCH_RESOLVED", "history is appended, not deleted"

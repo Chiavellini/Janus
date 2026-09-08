@@ -337,6 +337,34 @@ def test_the_guard_pass_feeds_the_breaker_and_holds_the_flight_slot(tmp_path: Pa
         G.clear = old
 
 
+def test_a_recent_guard_balance_snapshot_removes_the_entry_round_trips(tmp_path: Path):
+    """Paper filled at the decision instant; live used to spend 300-400 ms asking both balances
+    after the decision. The guard already confirms them every 30 s, so the hot path reuses that
+    fresh snapshot and falls back to the venues only when it is stale."""
+    import time
+    from types import SimpleNamespace
+    sup, _ = _supervisor(tmp_path)
+    calls = []
+
+    class Venue:
+        def __init__(self, name): self.name = name
+        def balance(self):
+            calls.append(self.name)
+            return SimpleNamespace(available_usd=100.0)
+
+    sup.venues = {v: Venue(v) for v in ("kalshi", "polymarket")}
+    sup.balance_snapshot = {"kalshi": 90.0, "polymarket": 80.0}
+    sup.balance_snapshot_mono = time.monotonic()
+    pre = {}
+    assert sup._balances(pre) == sup.balance_snapshot and calls == []
+    assert pre["balances_ms"] < 10 and pre["balance_cache_age_ms"] < 100
+
+    sup.balance_snapshot_mono = time.monotonic() - sup.balance_snapshot_ttl_s - 1
+    pre = {}
+    assert sup._balances(pre) == {"kalshi": 100.0, "polymarket": 100.0}
+    assert calls == ["kalshi", "polymarket"] and pre["balance_cache_age_ms"] == 0.0
+
+
 def test_an_unprotected_position_latches_the_live_kill_and_flags(tmp_path: Path, capsys):
     from types import SimpleNamespace
     from kernel.schema import Mode

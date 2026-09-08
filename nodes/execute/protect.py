@@ -65,13 +65,13 @@ def loss_allowance(limits: ProtectLimits, remaining_usd: float, qty: float) -> f
 class Ceilings:
     walked: float        # the level the pricer walked, less leg A's overpay (plan.hedge_limit)
     budget: float        # the average the hedge may pay for the cover to clear the hurdle
-    break_even: float    # 1 - paid - fee: the pair returns exactly nothing
+    break_even: float    # 1 - paid - fees - settlement reserve: zero reserved profit
     loss_cap: float      # break_even + L: the pair locks in exactly the allowance
 
 
 def hedge_ceilings(plan, paid: float, L: float) -> Ceilings:
     tick = plan.hedge.tick or 0.01
-    be = round(1.0 - paid - plan.fee_per_contract, 4)
+    be = plan.hedge_break_even(paid)
     return Ceilings(walked=plan.hedge_limit(paid), budget=plan.hedge_budget(paid), break_even=be,
                     loss_cap=clamp(tick_floor(be + L, tick)))
 
@@ -107,8 +107,9 @@ def projected_pnl_usd(ex, plan) -> float:
     paid = ex.first_avg_price or plan.first.limit_price
     hedge_avg = ex.hedge_avg_price or 0.0
     fee = plan.fee_per_contract
+    settlement = plan.settlement_buffer_per_contract
     pairs = min(ex.net_first, ex.net_hedge)
-    pnl = pairs * (1.0 - paid - hedge_avg - fee)
+    pnl = pairs * (1.0 - paid - hedge_avg - fee - settlement)
     if ex.first_unwound > 1e-9 and ex.first_unwind_avg is not None:
         pnl += ex.first_unwound * (ex.first_unwind_avg - paid - fee / 2.0)
     if ex.hedge_unwound > 1e-9 and ex.hedge_unwind_avg is not None:
@@ -285,7 +286,7 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
 
 
 def _hedged(co, ex, plan, paid: float, budget: float, *, protected: bool = False):
-    be = round(1.0 - paid - plan.fee_per_contract, 4)
+    be = plan.hedge_break_even(paid)
     avg = ex.hedge_avg_price or 0.0
     label = ""
     if avg > be + 1e-9:

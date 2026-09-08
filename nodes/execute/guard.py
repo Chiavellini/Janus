@@ -38,7 +38,7 @@ from kernel.execution_protocol import Ack, FillRecord, Position
 from kernel.schema import ExecutionState as X, FillState, Mode
 from nodes.reconcile.reconcile import ingest_fills, resolve_unconfirmed
 from nodes.risk.breaker import RealizedFill, day_of
-from nodes.risk.flags import raise_flag
+from nodes.risk.flags import raise_flag, resolve_flag
 
 #: A trade this close in time to an UNCONFIRMED order on the same asset, with no other claimant,
 #: is that order's fill (a FAK/IOC never rests; its fill is within seconds of its submit).
@@ -60,6 +60,7 @@ class GuardSnapshot:
     unconfirmed: dict[str, str] = field(default_factory=dict)         # client_order_id -> state after the poll
     fills: list[FillRecord] = field(default_factory=list)
     positions: dict[str, Sequence[Position] | None] = field(default_factory=dict)
+    balances: dict[str, float] = field(default_factory=dict)
     adopted: list[tuple[str, str]] = field(default_factory=list)      # (client_order_id, venue_order_id)
     errors: dict[str, str] = field(default_factory=dict)
 
@@ -100,6 +101,15 @@ class PositionGuard:
             except Exception as exc:  # noqa: BLE001
                 snap.positions[v] = None
                 snap.errors[f"positions:{v}"] = f"{type(exc).__name__}: {exc}"
+            if hasattr(venue, "balance"):
+                try:
+                    bal = venue.balance()
+                    if bal is not None:
+                        snap.balances[v] = float(bal.available_usd)
+                    else:
+                        snap.errors[f"balance:{v}"] = "venue did not return a balance"
+                except Exception as exc:  # noqa: BLE001
+                    snap.errors[f"balance:{v}"] = f"{type(exc).__name__}: {exc}"
         # A Polymarket order without a venue id: status() cannot look it up; its trade can.
         for cid, state in list(snap.unconfirmed.items()):
             if state != FillState.UNCONFIRMED.value:
@@ -143,12 +153,7 @@ class PositionGuard:
         for cid, vid in snap.adopted:
             rep.findings.append(f"adopted {cid[:8]} <- venue order {vid[:12]}")
         by_exec: dict[str, list[tuple[dict, FillRecord]]] = {}
-        seen_net: dict[tuple[str, str], float] = {}
         for f in snap.fills:
-            key = (f.venue, f.market_id)
-            if f.market_id:
-                sign = -1.0 if f.side.startswith("sell") else 1.0
-                seen_net[key] = seen_net.get(key, 0.0) + sign * f.contracts
             row = self._row_for(f)
             if row is None:
                 rep.orphans.append(f)
@@ -174,7 +179,9 @@ class PositionGuard:
         for exid, pairs in by_exec.items():
             self._reconcile_execution(exid, pairs, snap, rep)
         self._scan_naked(snap, rep, skip=set(by_exec))
-        self._compare_positions(snap, seen_net, rep)
+        self._compare_positions(snap, rep)
+        if not rep.mismatches:
+            resolve_flag(self.store, "POSITION_MISMATCH", "the venue positions match every unreleased execution", now=snap.now)
         rep.fills_today = self.fills_today(snap.now)
         self.cursor_utc = snap.now - ADOPT_WINDOW_S
         return rep
@@ -327,17 +334,42 @@ class PositionGuard:
         r = self.records.store.con.execute("SELECT last_utc FROM executions WHERE execution_id=?", (exid,)).fetchone()
         return r[0] if r else None
 
-    def _compare_positions(self, snap: GuardSnapshot, seen_net: dict[tuple[str, str], float], rep: GuardReport) -> None:
+    def _expected_positions(self) -> dict[tuple[str, str], float]:
+        """Net holdings implied by every unreleased execution, over its full lifetime.
+
+        Venue positions are cumulative. Comparing them with only the guard's rolling 120-second
+        fill cursor made a settled fill look mismatched on every restart. The execution journal
+        is the durable lifetime-sized claim and is therefore the like-for-like comparator.
+        """
+        out: dict[tuple[str, str], float] = {}
+        rows = self.records.store.con.execute(
+            "SELECT execution_id FROM executions WHERE released=0"
+        ).fetchall()
+        for (exid,) in rows:
+            ex = self.records.load(exid)
+            plan = self.records.plan_of(exid)
+            if ex is None or plan is None:
+                continue
+            for leg, qty in ((plan.first, ex.net_first), (plan.hedge, ex.net_hedge)):
+                if qty <= 1e-9:
+                    continue
+                sign = -1.0 if leg.side.endswith("_no") else 1.0
+                key = (leg.venue, leg.market_id)
+                out[key] = out.get(key, 0.0) + sign * qty
+        return out
+
+    def _compare_positions(self, snap: GuardSnapshot, rep: GuardReport) -> None:
+        expected = self._expected_positions()
         for v, pos in snap.positions.items():
             if pos is None:
                 continue
             held = {(p.venue, p.market_id): (p.contracts if p.side == "yes" else -p.contracts) for p in pos}
-            for key, net in seen_net.items():
-                if key[0] != v:
-                    continue
+            keys = {k for k in expected if k[0] == v} | set(held)
+            for key in keys:
+                net = expected.get(key, 0.0)
                 have = held.get(key, 0.0)
                 if abs(have - net) > max(self.limits.protect_dust_contracts, 1e-6):
-                    msg = f"{key[0]} {key[1][:16]}: venue holds {have:g}, fills since start net {net:g}"
+                    msg = f"{key[0]} {key[1][:16]}: venue holds {have:g}, unreleased executions imply {net:g}"
                     sk = f"mismatch:{key}:{have:g}:{net:g}"
                     if sk not in self.said:
                         self.said.add(sk)

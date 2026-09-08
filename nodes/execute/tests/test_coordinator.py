@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pytest
@@ -70,11 +70,27 @@ def test_the_plan_leads_with_polymarket_and_hedges_on_kalshi_at_the_walked_limit
     assert p.first.limit_price == 0.45 and p.hedge.limit_price == 0.44   # the first leg one tick above the walked 0.44 (2026-09-07)
     assert p.max_cost_per_contract == pytest.approx(1 / 1.01)
     # the BUDGET is what the hedge may average if leg A paid 0.44: the cost ceiling minus fees minus 0.44
-    assert p.hedge_budget(0.44) == pytest.approx(round(1 / 1.01 - cov.fee_per_contract - 0.44, 4))
+    assert p.hedge_budget(0.44) == pytest.approx(round(1 / 1.01 - cov.fee_per_contract
+                                                      - (cov.settlement_buffer_per_contract or 0.0) - 0.44, 4))
     # the LIMIT is the level the pricer walked to (one level here), tightened only by leg-A overpay
     assert p.hedge_limit(0.44) == pytest.approx(0.44) and p.first.vwap == pytest.approx(0.44)
     assert p.hedge_limit(0.46) == pytest.approx(0.42), "two cents overpaid on leg A come off the hedge limit"
     assert marginal_price(bk([(0.40, 10), (0.45, 10)]), 15) == 0.45 and marginal_price(bk([(0.40, 10)]), 15) is None
+
+
+def test_settlement_reserve_is_in_every_execution_budget_and_can_remove_the_entry_pad():
+    """The opportunity cost already includes the bounded settlement wedge. The execution plan
+    must not spend that reserve again as price room on leg A or the hedge chase."""
+    offs = offers(pm_home=0.45, k_away=0.50)
+    cov = best_cover(offs, 100.0, now_utc=T, proof=PROOF)
+    assert cov.ok and cov.settlement_buffer_per_contract == 0.0
+    reserved = replace(cov, cost_per_contract=cov.cost_per_contract + 0.01,
+                       settlement_buffer_per_contract=0.01)
+    p = plan_from_cover(opportunity_id="o", event_id="e", league="mlb", cov=reserved, offers=offs)
+    assert p is not None and p.settlement_buffer_per_contract == 0.01
+    assert p.first.limit_price == 0.45, "the one-tick pad would spend the settlement reserve"
+    assert p.hedge_budget(0.45) == pytest.approx(round(1 / 1.01 - cov.fee_per_contract - 0.01 - 0.45, 4))
+    assert p.hedge_break_even(0.45) == pytest.approx(round(1 - cov.fee_per_contract - 0.01 - 0.45, 4))
 
 
 def test_a_no_ladder_leg_becomes_buy_no_on_the_other_ticker():
@@ -212,7 +228,7 @@ def test_a_hedge_book_entirely_above_the_cap_is_chased_to_the_cap_then_held_and_
     assert phases[:3] == ["walked"] * 3 and "budget" in phases and "loss_cap" in phases
     last = ex.protect["attempts"][-1]
     paid = ex.first_avg_price
-    assert last["limit"] == pytest.approx(round(1 - paid - p.fee_per_contract + 0.01, 2), abs=0.011), "the cap: break-even plus $0.01 a contract"
+    assert last["limit"] == pytest.approx(round(p.hedge_break_even(paid) + 0.01, 2), abs=0.011), "the cap: break-even plus $0.01 a contract"
     assert paged and paged[0].startswith("UNPROTECTED: 100 unhedged") and "unwind disabled" in paged[0]
     assert "UNPROTECTED" in ex.detail
 

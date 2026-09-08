@@ -1,0 +1,60 @@
+experiment_id: "janus-sports-limited-live-f9-repair-2026-09-08"
+date_registered: "2026-09-08"
+track: "sports/execution"
+row_kind: "F (forward operational evaluation; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F9"
+test_looks_spent: 0
+supersedes: "F8, which stopped at its first unhedged real leg on 2026-09-08"
+
+# IMMUTABLE ONCE THE FIRST LIMITED_LIVE LINE AFTER THIS REGISTRATION IS WRITTEN.
+purpose: >
+  Validate the repaired real-order path under the same small-money arm. F8 produced no hedged
+  cover: nineteen failed executions and one Polymarket fill whose Kalshi hedge was never sent
+  after a SQLite lock hid the acknowledgement. The latter fired F8's registered STOP. This is a
+  fresh clock, not a continuation or reinterpretation of F8. It tests whether the repaired lane
+  reaches terminal venue-authoritative entry outcomes quickly, protects every actual first-leg
+  fill, and keeps its position/accounting guard aligned with durable open exposure.
+
+known_before_start:
+  - "F8: zero real hedged covers; one unhedged Polymarket fill, later redeemed for +$4.3754. That directional win is not arbitrage profit."
+  - "Nineteen failures: ten legacy Polymarket FOK no-fills, five current FAK delayed-then-not-found no-fills, two manually reconciled no-fill unknown/stuck rows, one Polymarket $1-minimum rejection, and one expired-clearance rejection."
+  - "The five current FAK misses spent 305-419 ms on synchronous balance reads before order construction; paper venues do not incur this round trip and fill immediately against the cached decision book."
+  - "The position guard compared current venue positions with a 120-second slice of historical fills, so a settled/redeemed position could raise POSITION_MISMATCH."
+  - "The first-leg pad and hedge budget omitted the already-modelled settlement reserve, so the sent limit could cross the registered 1% hurdle even when the opportunity did not."
+
+arm: >
+  janus-live-stream.service on the Mexico box in LIMITED_LIVE, under the existing signed statement
+  and unchanged caps: at most $12 combined stake per cover, 10 contracts per leg, $250 daily
+  notional, $25 realized-loss breaker; limits.toml min_net_profit_usd 0.10 and min_locked_return
+  0.01 unchanged. protect_auto=true, unwind_enabled=false. Every settlement dimension remains
+  proved/modelled; unknown is a BLOCK. No cap, hurdle, or league is widened by this repair.
+
+window:
+  start: "the first [mode] LIMITED_LIVE line after this row, its GATE amendment, and the repaired executable-tree pin are all present"
+  end: "at 37 cleared covers, the first STOP, the breaker, or the operator closes the row"
+
+definitions:
+  cleared_cover: "an execution admitted by nodes/risk.clear(), with its matching opportunity transition to EXECUTION_PENDING"
+  hedged: "both venue-authoritative fills recorded, hedge_filled equals first_filled within venue precision, unhedged is zero, and the reservation is released"
+  legitimate_no_fill: "the first venue authoritatively reports zero filled and terminal unfilled/not-found after the registered settle window; no second leg is sent and the reservation is released"
+  healthy: "service active with a matching non-expired arm, no kill file, no in-flight/open-unhedged exposure, no unresolved POSITION_MISMATCH/ORPHAN_FILL/EXECUTION_STUCK/CRASHED/SIGNAL_EXIT alert, and current pollers/evaluations"
+
+criteria:
+  - "Forward: no threshold, cap, or definition moves after the window starts."
+  - "STOP on any first-leg fill that is not fully hedged or safely reduced inside the configured protection window; latch kill/live and reconcile from venue records before any restart."
+  - "STOP on UNKNOWN_PROVIDER_STATE after a wire submission, any store error in the execution path, ORPHAN_FILL, the $25 breaker, or a charged fee above its pin."
+  - "The first three hedged covers are hand-reconciled before the fourth: venue fills/sizes, fees, balances, settlement reserve, locked return, and reservation release."
+  - "Every first-leg limit and hedge ceiling includes fee plus the opportunity's settlement reserve and therefore cannot spend through the 1% locked-return hurdle."
+  - "A final zero-fill FAK is reported as a legitimate no-fill, not a system failure; entry miss rate and quote-to-submit timing are reported beside covers."
+  - "The position guard compares current positions with all durable unreleased executions, and clears a historical mismatch only with an append-only resolution marker."
+  - "Data-arrival SLA: LANE_SILENT, CRASH_LOOP, CRASHED, SIGNAL_EXIT, EXECUTION_STUCK, UNHEDGED_POSITION, ORPHAN_FILL, POSITION_MISMATCH and override health on the box watchdog."
+
+outputs:
+  registration: "snooping_ledger.md row F9; append-only result notes"
+  records: "executions, execution_transitions, execution_settlements, opportunities, opportunity_transitions, orders, venue_fills, capital_reservations, lane logs and watchdog flags on /srv/janus"
+
+what_this_does_not_establish:
+  - "That paper fill rate transfers to live: paper fills the cached book synchronously and remains a simulator."
+  - "Edge at larger size or permission to raise any cap."
+  - "That every live FAK should fill; an authoritative zero fill after the market moves is expected and safe."

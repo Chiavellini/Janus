@@ -175,6 +175,12 @@ class Supervisor:
     fills_today: tuple = ()
     guard_passes: int = 0
     reprotect_queue: list = field(default_factory=list)
+    #: The guard confirms both venue balances every 30 s. Reuse that authoritative snapshot on
+    #: the entry path instead of spending 300-400 ms on two balance round trips after an edge is
+    #: seen. A missing/stale snapshot falls back to synchronous reads and remains fail-closed.
+    balance_snapshot: dict[str, float] = field(default_factory=dict)
+    balance_snapshot_mono: float = 0.0
+    balance_snapshot_ttl_s: float = 35.0
     #: The store-touching collaborators of the machine and the venues (records, opportunities,
     #: the order journal), wrapped so a call from the worker runs on the loop thread.
     on_loop: list = field(default_factory=list)
@@ -595,12 +601,22 @@ class Supervisor:
 
     def _balances(self, pre: dict) -> dict | None:
         m = time.monotonic()
+        age = m - self.balance_snapshot_mono if self.balance_snapshot_mono else float("inf")
+        if self.balance_snapshot and age <= self.balance_snapshot_ttl_s:
+            pre["balances_ms"] = round((time.monotonic() - m) * 1000.0, 2)
+            pre["balance_cache_age_ms"] = round(age * 1000.0, 2)
+            return dict(self.balance_snapshot)
         got = {}
         for v, venue in self.venues.items():        # ONE round trip per venue (it was two, 2026-09-07)
             b = venue.balance()
             got[v] = b.available_usd if b else None
         pre["balances_ms"] = round((time.monotonic() - m) * 1000.0, 2)
-        return None if any(b is None for b in got.values()) else got
+        if any(b is None for b in got.values()):
+            return None
+        self.balance_snapshot = {v: float(b) for v, b in got.items()}
+        self.balance_snapshot_mono = time.monotonic()
+        pre["balance_cache_age_ms"] = 0.0
+        return dict(self.balance_snapshot)
 
     def _connected(self) -> dict[str, bool]:
         return {"kalshi": bool(self.ks and self.ks.connected), "polymarket": bool(self.ps and self.ps.connected)}
@@ -690,6 +706,9 @@ class Supervisor:
         try:
             snap = await asyncio.to_thread(self.guard.fetch)
             rep = self.guard.apply(snap)
+            if getattr(snap, "balances", None) and set(snap.balances) >= set(self.venues):
+                self.balance_snapshot = dict(snap.balances)
+                self.balance_snapshot_mono = time.monotonic()
             self.fills_today = rep.fills_today
             self.guard_passes += 1
             for line in rep.findings:
@@ -752,6 +771,10 @@ class Supervisor:
 
     def _after_execution(self, sup: Supervised, ev, ex) -> None:
         self.executions += 1
+        if ex.first_filled > 0 or ex.hedge_filled > 0:
+            # A real fill moved collateral. Force the next flight to confirm balances unless a
+            # newer guard pass has already replaced this snapshot.
+            self.balance_snapshot_mono = 0.0
         print(f"  [exec] {sup.short_name} {ex.state.value} first={ex.first_filled}@{ex.first_avg_price} "
               f"hedge={ex.hedge_filled}@{ex.hedge_avg_price} unhedged={ex.unhedged} {ex.detail}", flush=True)
         try:

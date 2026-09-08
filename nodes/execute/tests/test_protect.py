@@ -23,7 +23,7 @@ def test_the_arithmetic():
     p, _ = plan_for(offs)
     c = hedge_ceilings(p, 0.45, 0.01)
     assert c.walked == p.hedge_limit(0.45) and c.budget == p.hedge_budget(0.45)
-    assert c.break_even == pytest.approx(round(1 - 0.45 - p.fee_per_contract, 4)) and c.loss_cap == pytest.approx(round(c.break_even + 0.01, 2), abs=0.0101)
+    assert c.break_even == pytest.approx(p.hedge_break_even(0.45)) and c.loss_cap == pytest.approx(round(c.break_even + 0.01, 2), abs=0.0101)
     assert c.walked < c.budget < c.break_even < c.loss_cap
     # the next limit: one tick up, or the fresh book's marginal price, never past the ceiling
     assert next_hedge_limit(0.44, 0.01, None, 10, 0.50) == 0.50, "no fresh book: the ceiling at once (an IOC limit is a cap)"

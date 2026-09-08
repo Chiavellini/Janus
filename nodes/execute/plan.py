@@ -59,6 +59,11 @@ class Plan:
     hedge: LegPlan
     max_cost_per_contract: float     # 1 / (1 + execution hurdle)
     fee_per_contract: float          # from the cover, at this size
+    #: The bounded settlement-reference reserve from CoverProof. It is part of the cost of
+    #: keeping a two-leg cover to settlement, but not a venue fee (and not paid on an unwind).
+    #: Before 2026-09-08 the execution budget omitted it even though the opportunity pricer
+    #: included it, so a padded first leg or chased hedge could cross the registered hurdle.
+    settlement_buffer_per_contract: float = 0.0
     strategy_version: str = STRATEGY_VERSION
 
     @classmethod
@@ -73,12 +78,22 @@ class Plan:
                            tick=float(x.get("tick") or 0.01))
         return cls(opportunity_id, event_id, league, float(quantity), leg(d["first"]), leg(d["hedge"]),
                    max_cost_per_contract=float(d["max_cost"]), fee_per_contract=float(d["fee"]),
+                   settlement_buffer_per_contract=float(d.get("settlement_buffer") or 0.0),
                    strategy_version=strategy_version)
+
+    @property
+    def holding_reserve_per_contract(self) -> float:
+        """Every non-gross cost of holding the completed cover."""
+        return self.fee_per_contract + self.settlement_buffer_per_contract
 
     def hedge_budget(self, first_paid: float) -> float:
         """The most the hedge may AVERAGE per contract for the cover to clear the hurdle, given
         what leg A actually paid. A VWAP, never an order limit; recorded beside every attempt."""
-        return round(self.max_cost_per_contract - self.fee_per_contract - first_paid, 4)
+        return round(self.max_cost_per_contract - self.holding_reserve_per_contract - first_paid, 4)
+
+    def hedge_break_even(self, first_paid: float) -> float:
+        """The hedge VWAP at which the held pair has zero reserved profit."""
+        return round(1.0 - self.holding_reserve_per_contract - first_paid, 4)
 
     def hedge_limit(self, first_paid: float) -> float:
         """The IOC limit for leg B: the worst level the pricer walked for this size, less what leg
@@ -131,6 +146,7 @@ def plan_from_cover(*, opportunity_id: str, event_id: str, league: str, cov: Cov
                                "ioc", vwap=float(lc.vwap), tick=float(leg.tick or 0.01))
     max_cost = 1.0 / (1.0 + hurdle)
     fee = float(cov.fee_per_contract or 0.0)
+    settlement = float(cov.settlement_buffer_per_contract or 0.0)
     first, hedge = plans[FIRST_VENUE], plans[HEDGE_VENUE]
     # The first leg is FILL-AND-KILL at one tick above the walked level, when the cover still
     # clears the hurdle at that price. 2026-09-07, the first ten real orders from Mexico: every
@@ -140,10 +156,11 @@ def plan_from_cover(*, opportunity_id: str, event_id: str, league: str, cov: Cov
     # (a partial first leg is hedged for exactly what filled, LEG_A_PARTIAL); the pad buys the
     # step. The hedge limit tightens by whatever the first leg pays above its VWAP, so the pad
     # never buys a cover below the hurdle.
-    room = max_cost - hedge.vwap - fee - first.limit_price
+    room = max_cost - hedge.vwap - fee - settlement - first.limit_price
     if room >= first.tick - 1e-9:
         first = LegPlan(first.venue, first.market_id, first.outcome_id, first.side,
                         round(first.limit_price + first.tick, 4), first.contracts, first.time_in_force,
                         vwap=first.vwap, tick=first.tick)
     return Plan(opportunity_id, event_id, league, cov.contracts, first, hedge,
-                max_cost_per_contract=max_cost, fee_per_contract=fee)
+                max_cost_per_contract=max_cost, fee_per_contract=fee,
+                settlement_buffer_per_contract=settlement)

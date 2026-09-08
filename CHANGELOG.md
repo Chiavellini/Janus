@@ -6,6 +6,33 @@ never edited afterward. **This is history, not status** — for current state re
 
 ---
 
+## 2026-09-08 — F8 execution audit and F9 live-entry repair
+
+F8 closed at its registered STOP with zero hedged covers, nineteen failed executions and one
+unhedged Polymarket fill. Ten failures were legacy FOK zero-fills; five were current FAK orders
+that answered `delayed` and then venue-authoritative `not_found`; two were no-fill rows reconciled
+after unknown/stuck state; one violated Polymarket's $1 marketable-buy minimum; one clearance
+expired before an order. The lone fill was the 01:39Z GEA V ZANDSCH leg whose acknowledgement was
+hidden by SQLite contention, so no Kalshi hedge went out. It later redeemed at a $4.3754 gain;
+that was directional luck, not an arbitrage cover. The closeout found no open venue position,
+reservation, in-flight execution or unconfirmed order.
+
+Three defects remained after the earlier acknowledgement/locking fixes. First, every real entry
+made synchronous venue balance calls after the opportunity appeared (305–419 ms on the five current
+FAK misses), while paper filled immediately against the decision book. The serialized position
+guard now supplies a 35-second complete balance snapshot to `clear()`; missing/stale snapshots
+fall back to the direct reads, and any fill invalidates the cache. Second, the position guard
+compared current holdings with only 120 seconds of fills, making an old redeemed fill look like a
+live mismatch. It now derives expected positions from all durable, unreleased executions and
+closes a historical alert with an append-only `POSITION_MISMATCH_RESOLVED` marker. Third, first-leg
+padding and hedge/protection ceilings charged the fee but omitted the opportunity's modelled
+settlement reserve. `Plan` now persists that reserve and every held-cover ceiling subtracts it,
+so execution cannot spend through the registered 1% locked-return hurdle.
+
+F9 registers these repairs as a fresh forward operational window under unchanged caps and
+thresholds. Full suite green before release; the cross-host live kill remains latched until the
+new tree, arm and watchdog are clean.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and
