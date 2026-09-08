@@ -20,7 +20,9 @@ reservation, in-flight execution or unconfirmed order.
 Three defects remained after the earlier acknowledgement/locking fixes. First, every real entry
 made synchronous venue balance calls after the opportunity appeared (305–419 ms on the five current
 FAK misses), while paper filled immediately against the decision book. The serialized position
-guard now supplies a 35-second complete balance snapshot to `clear()`; missing/stale snapshots
+guard now supplies a 35-second complete balance snapshot to `clear()`; the entry path consumes a
+fresh copy on the loop without a worker-pool yield (the first F9 attempt showed that even a
+zero-work worker future could wait about 760 ms behind socket traffic), missing/stale snapshots
 fall back to the direct reads, and any fill invalidates the cache. Second, the position guard
 compared current holdings with only 120 seconds of fills, making an old redeemed fill look like a
 live mismatch. It now derives expected positions from all durable, unreleased executions and

@@ -365,6 +365,31 @@ def test_a_recent_guard_balance_snapshot_removes_the_entry_round_trips(tmp_path:
     assert calls == ["kalshi", "polymarket"] and pre["balance_cache_age_ms"] == 0.0
 
 
+def test_off_loop_entry_does_not_queue_a_fresh_balance_snapshot_in_the_worker(tmp_path: Path, monkeypatch):
+    """The first F9 flight had balances_ms=0 but waited ~760 ms for the zero-work to_thread
+    future to re-enter a busy socket loop. A fresh snapshot must be consumed before any yield."""
+    import asyncio
+    import time
+    from types import SimpleNamespace
+    sup, s = _supervisor(tmp_path)
+    sup.balance_snapshot = {"kalshi": 90.0, "polymarket": 80.0}
+    sup.balance_snapshot_mono = time.monotonic()
+    seen = {}
+    sup._clear = lambda _s, _c, balances, pre: seen.update(balances=balances, pre=dict(pre)) or None
+
+    async def forbidden(*_a, **_k):
+        raise AssertionError("a fresh balance snapshot must not enter asyncio.to_thread")
+
+    monkeypatch.setattr(asyncio, "to_thread", forbidden)
+
+    async def main():
+        await sup._execute_off_loop(s, SimpleNamespace(game_id="g1"), None, object(), {}, {}, time.monotonic())
+
+    asyncio.run(main())
+    assert seen["balances"] == sup.balance_snapshot
+    assert seen["pre"]["balances_ms"] < 10
+
+
 def test_an_unprotected_position_latches_the_live_kill_and_flags(tmp_path: Path, capsys):
     from types import SimpleNamespace
     from kernel.schema import Mode

@@ -599,13 +599,27 @@ class Supervisor:
                 self.said[key] = "said"
                 print(f"  [exec] opportunity record not owned before dispatch: {brief_error(exc)}", flush=True)
 
-    def _balances(self, pre: dict) -> dict | None:
+    def _cached_balances(self, pre: dict) -> dict | None:
+        """Return a fresh guard snapshot without yielding to the worker pool.
+
+        Even a zero-work `_balances` call queued with `asyncio.to_thread` can wait behind a burst
+        of socket callbacks before its completion is delivered to the loop. The first F9 flight
+        measured that queue hop at about 760 ms despite `balances_ms=0`. Read the immutable copy
+        on the loop; only a real venue refresh belongs in the worker.
+        """
         m = time.monotonic()
         age = m - self.balance_snapshot_mono if self.balance_snapshot_mono else float("inf")
         if self.balance_snapshot and age <= self.balance_snapshot_ttl_s:
             pre["balances_ms"] = round((time.monotonic() - m) * 1000.0, 2)
             pre["balance_cache_age_ms"] = round(age * 1000.0, 2)
             return dict(self.balance_snapshot)
+        return None
+
+    def _balances(self, pre: dict) -> dict | None:
+        cached = self._cached_balances(pre)
+        if cached is not None:
+            return cached
+        m = time.monotonic()
         got = {}
         for v, venue in self.venues.items():        # ONE round trip per venue (it was two, 2026-09-07)
             b = venue.balance()
@@ -639,7 +653,11 @@ class Supervisor:
         opportunity moves and journal rows come back to the loop through OnLoop), the
         bookkeeping on the loop. Nothing here raises into the loop; the flight always clears."""
         try:
-            balances = await asyncio.to_thread(self._balances, pre)
+            # A guard snapshot is already authoritative and copying it cannot block. Do that on
+            # the loop so a completed zero-work worker future does not sit behind socket traffic.
+            balances = self._cached_balances(pre)
+            if balances is None:
+                balances = await asyncio.to_thread(self._balances, pre)
             clearance = self._clear(sup, cand, balances, pre)
             if clearance is None:
                 return
