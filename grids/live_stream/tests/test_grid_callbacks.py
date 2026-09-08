@@ -351,3 +351,49 @@ def test_an_unprotected_position_latches_the_live_kill_and_flags(tmp_path: Path,
     sup.mode = Mode.PAPER_EXECUTION
     sup.on_unprotected(ex, "UNPROTECTED (paper)")
     assert sup.kill.active(live=True) == []
+
+
+def test_the_guard_s_hand_over_re_runs_the_layer_from_the_row_when_protect_auto_is_on(tmp_path: Path, capsys):
+    """R5 (2026-09-08): a naked execution the guard hands over is loaded from its row with its plan,
+    cleared through clear_protect on the loop and protected in the worker; a released end state
+    releases its reservation."""
+    import asyncio
+    from types import SimpleNamespace
+    from kernel.schema import ExecutionState as X, Mode
+    from nodes.execute.plan import LegPlan, Plan
+    from nodes.execute.records import Execution, ExecutionRecords
+    from nodes.risk.kill import KillSwitches
+    from nodes.risk.limits import load_limits
+    sup, s = _supervisor(tmp_path)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    lim = load_limits()
+    from dataclasses import replace
+    sup.limits = replace(lim, protect=replace(lim.protect, protect_auto=True, unwind_enabled=True))
+    records = ExecutionRecords(sup.store)
+    first = LegPlan("polymarket", "tok", "tok", "buy_yes", 0.58, 10.0, "ioc", vwap=0.57)
+    hedge = LegPlan("kalshi", "K-GEA", "K-GEA", "buy_yes", 0.31, 10.0, "ioc", vwap=0.31)
+    plan = Plan("g1:moneyline:v1:10", "g1", "mlb", 10.0, first, hedge, 0.9901, 0.0272)
+    ex = Execution("naked001", plan.opportunity_id, "g1", "mlb", "LIMITED_LIVE", 10.0, T, first_filled=10.175, first_avg_price=0.57,
+                   state=X.UNKNOWN_PROVIDER_STATE, reservation_id="r-1")
+    records.start(ex, plan={"first": first.__dict__, "hedge": hedge.__dict__, "max_cost": plan.max_cost_per_contract, "fee": plan.fee_per_contract}, books={})
+    records.sync(ex, now=T)
+    ran = {}
+
+    def protect_existing(ex2, plan2, c):
+        ran["ex"], ran["plan"], ran["c"] = ex2, plan2, c
+        ex2.state, ex2.released, ex2.first_unwound, ex2.detail = X.UNWOUND, True, 10.175, "UNWOUND (test)"
+        return ex2
+    released = []
+    sup.coordinator = SimpleNamespace(records=records, protect_existing=protect_existing)
+    sup.ledger = SimpleNamespace(release=lambda rid, **k: released.append(rid) or True)
+    sup.guard = SimpleNamespace(fetch=lambda: "snap", apply=lambda snap: SimpleNamespace(
+        findings=[], to_protect=["naked001"], fills_today=(), corrected=[], orphans=[], mismatches=[]))
+
+    async def main():
+        await sup.guard_pass()
+    asyncio.run(main())
+    assert ran["ex"].execution_id == "naked001" and ran["plan"] == plan and ran["c"].used and not ran["c"].valid()
+    assert released == ["r-1"] and sup.in_flight is None and sup.executions == 1 and sup.reprotect_queue == []
+    out = capsys.readouterr().out
+    assert "[protect] re-run naked001" in out and "UNWOUND" in out

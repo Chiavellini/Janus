@@ -63,7 +63,7 @@ from nodes.opportunity.opportunity import books_snapshot  # noqa: E402
 from nodes.opportunity.thresholds import STRATEGY_VERSION  # noqa: E402
 from nodes.reconcile.settle_executions import apply_settlements, fetch_results, pending  # noqa: E402
 from nodes.risk.breaker import LossBreaker  # noqa: E402
-from nodes.risk.clearance import Candidate, clear  # noqa: E402
+from nodes.risk.clearance import Candidate, clear, clear_protect  # noqa: E402
 from nodes.risk.gate import OVERRIDE_PATH, override_state, resolve_mode, stale_reason  # noqa: E402
 from kernel.code_sha import code_tree_sha, runner_head_sha  # noqa: E402
 from nodes.risk.kill import KillSwitches  # noqa: E402
@@ -174,6 +174,7 @@ class Supervisor:
     guard: PositionGuard | None = None
     fills_today: tuple = ()
     guard_passes: int = 0
+    reprotect_queue: list = field(default_factory=list)
     #: The store-touching collaborators of the machine and the venues (records, opportunities,
     #: the order journal), wrapped so a call from the worker runs on the loop thread.
     on_loop: list = field(default_factory=list)
@@ -695,8 +696,52 @@ class Supervisor:
                     self.said[key] = "said"
                     print(f"  [guard] naked and idle: {', '.join(x[:8] for x in rep.to_protect)}"
                           + (" (protect_auto on: re-protection follows)" if auto else " (protect_auto off: by hand, ops/reconcile_stuck_execution.py)"), flush=True)
+                if auto:
+                    self.reprotect_queue = list(rep.to_protect)
         except Exception as exc:  # noqa: BLE001 -- the guard must never kill the loop
             print(f"  [guard FAILED] {brief_error(exc)}", flush=True)
+        finally:
+            self.in_flight = None
+        # One re-protection per pass, after the guard's slot is released: the layer runs in the
+        # worker under its own flight, exactly like a fresh execution.
+        if self.reprotect_queue:
+            await self._protect_off_loop(self.reprotect_queue.pop(0))
+
+    async def _protect_off_loop(self, execution_id: str) -> None:
+        """The guard's hand-over (R5, 2026-09-08): the execution the venue says is naked, loaded from
+        its row with its plan, given a `clear_protect` clearance on the loop, and run through the
+        protection layer in the worker thread. The row's own reservation is what it holds; a
+        released end state (UNWOUND) releases it here like any other."""
+        if self.in_flight is not None or self.coordinator is None:
+            return
+        records = getattr(self.coordinator, "records", None)
+        ex = records.load(execution_id) if records is not None else None
+        plan = records.plan_of(execution_id) if records is not None else None
+        if ex is None or plan is None:
+            print(f"  [protect] {execution_id[:8]}: no row or no plan to re-run from", flush=True)
+            return
+        if ex.state.is_terminal or ex.released:
+            return
+        c = clear_protect(opportunity_id=ex.opportunity_id, event_id=ex.event_id, venues=(plan.first.venue, plan.hedge.venue),
+                          mode=self.mode, limits=self.limits, kill=self.kill, now_mono=time.monotonic())
+        if hasattr(c, "code"):
+            print(f"  [protect] {execution_id[:8]} refused: {c.code} {c.detail}", flush=True)
+            return
+        self.in_flight = ex.event_id
+        for px in self.on_loop:
+            px.loop = asyncio.get_running_loop()
+        sup = next((s for s in self.live.values() if s.poller.game_id == ex.event_id), None)
+        short = sup.short_name if sup is not None else ex.event_id
+        try:
+            print(f"  [protect] re-run {execution_id[:8]} {short}: unhedged {ex.unhedged:g} overhedged {ex.overhedged:g}", flush=True)
+            out = await asyncio.to_thread(self.coordinator.protect_existing, ex, plan, c)
+            self.executions += 1
+            print(f"  [exec] {short} {out.state.value} first={out.first_filled}@{out.first_avg_price} "
+                  f"hedge={out.hedge_filled}@{out.hedge_avg_price} unhedged={out.unhedged} unwound={out.first_unwound} {out.detail}", flush=True)
+            if out.released and self.ledger is not None and out.reservation_id:
+                self.ledger.release(out.reservation_id, reason=f"protection re-run: {out.state.value}")
+        except Exception as exc:  # noqa: BLE001
+            print(f"  [protect FAILED] {short} {brief_error(exc)}", flush=True)
         finally:
             self.in_flight = None
 
