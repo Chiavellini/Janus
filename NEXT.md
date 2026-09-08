@@ -10,7 +10,7 @@ CHANGELOG.md and the F rows in `snooping_ledger.md` are the append-only history.
 ## Where it stands
 
 **The lane is LIMITED_LIVE and healthy on the Mexico box** (`i-0a8c073c72dcdae11`,
-`mx-central-1a`) on executable commit `f96ec69`. The service, credentials, census and watchdog
+`mx-central-1a`) on executable commit `ca398be`. The service, credentials, census and watchdog
 timer are enabled and active; the lane has zero systemd restarts. It has 82 co-listed pollers and
 all required feeds are connected: Kalshi public, Polymarket public, and Polymarket's authenticated
 account order/trade stream. The latest persisted account-stream row had 12 frames, zero errors and
@@ -45,7 +45,9 @@ clearance expiry. The repairs now on the box remove entry-time balance round tri
 fills, reopen reservations on late fills, account committed notional correctly, persist each
 venue's settlement separately, and latch locally on a remaining unknown. F12 closes the last
 several-minute blind spot by consuming authenticated account events: MATCHED drives the exact-size
-hedge immediately and a terminal immediate-order cancellation closes as zero-fill.
+hedge immediately and a terminal immediate-order cancellation closes as zero-fill. Settlement now
+also refreshes average price and fees from the durable venue-fill FIFO even when the acknowledged
+quantity already agreed.
 
 ## What remains
 
