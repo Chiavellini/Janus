@@ -35,6 +35,11 @@ CREATE TABLE IF NOT EXISTS execution_settlements(
   realized_usd REAL NOT NULL, released INTEGER NOT NULL, legs_json TEXT NOT NULL,
   kind TEXT, hedged_contracts REAL, unhedged_contracts REAL, cover_usd REAL, directional_usd REAL);
 """
+VENUE_RESULTS_DDL = """
+CREATE TABLE IF NOT EXISTS execution_venue_results(
+  execution_id TEXT NOT NULL, venue TEXT NOT NULL, winner TEXT NOT NULL, observed_ts REAL NOT NULL,
+  PRIMARY KEY(execution_id, venue));
+"""
 #: Columns added after the table first existed (one production row on 2026-09-05); added in place.
 _SETTLEMENT_COLUMNS = {"kind": "TEXT", "hedged_contracts": "REAL", "unhedged_contracts": "REAL",
                        "cover_usd": "REAL", "directional_usd": "REAL"}
@@ -133,6 +138,7 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
     """The state half. Settles every execution both venues have resolved; the rest wait."""
     t = now or time.time()
     store.ensure_ddl(SETTLEMENTS_DDL)
+    store.ensure_ddl(VENUE_RESULTS_DDL)
     _ensure_columns(store)
     out = {"settled": 0, "waiting": 0, "unreleasable": 0}
     for it in items:
@@ -165,6 +171,16 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
         if not venues_needed:
             out["waiting"] += 1
             continue
+        # Venues do not necessarily finalize at the same time. Persist each authoritative result
+        # immediately so the position guard knows why that venue no longer reports a position;
+        # the reservation remains open until every venue is final and the cover is settled below.
+        for venue in venues_needed:
+            if w.get(venue) is not None:
+                store.con.execute(
+                    "INSERT OR REPLACE INTO execution_venue_results(execution_id,venue,winner,observed_ts) VALUES(?,?,?,?)",
+                    (it["execution_id"], venue, str(w[venue]), t),
+                )
+        store.con.commit()
         if any(w.get(v) is None for v in venues_needed):
             out["waiting"] += 1
             continue

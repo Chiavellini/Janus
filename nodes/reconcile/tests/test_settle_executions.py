@@ -114,6 +114,7 @@ def test_the_other_result_and_an_open_venue(tmp_path):
     assert winners["x1"] == {"kalshi": "K-LAD", "polymarket": None}
     assert apply_settlements(st, ledger, None, opps, items, winners, now=T, log=lambda s: None) == {"settled": 0, "waiting": 1, "unreleasable": 0}
     assert st.con.execute("SELECT state FROM executions").fetchone() == ("HEDGED",)
+    assert st.con.execute("SELECT venue,winner FROM execution_venue_results").fetchall() == [("kalshi", "K-LAD")]
     fk, fe = _fetchers({"K-LAD": "yes", "K-STL": "no"}, "LAD")           # the Dodgers won
     winners = fetch_results(items, None, fetch_kalshi=fk, fetch_event=fe)
     apply_settlements(st, ledger, None, opps, items, winners, now=T + 1, log=lambda s: None)

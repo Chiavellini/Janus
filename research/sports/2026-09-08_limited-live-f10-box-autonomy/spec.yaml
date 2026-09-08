@@ -20,6 +20,7 @@ known_before_start:
   - "The guard joined orders to the latest execution sharing an opportunity id, then recomputed lifetime quantities from only a rolling fill slice; it later zeroed both first legs."
   - "The reopened executions did not reopen their released capital reservations."
   - "The $250 daily cap counted every released zero-fill reservation; it reported $247.86 used despite almost all attempts filling nothing."
+  - "Kalshi finalized BUR @ WXM before Polymarket; a paid venue disappears from open positions and must not be called missing while the other venue is still resolving."
 
 arm: >
   janus-live-stream.service on the Mexico box in LIMITED_LIVE under the unchanged signed arm:
@@ -40,6 +41,7 @@ criteria:
   - "Execution fill totals rebuild from every durable owned order, never the guard's rolling response slice."
   - "A late fill reopens both the execution and its durable/in-memory reservation before protection; a missing reservation is a STOP."
   - "Daily notional counts filled/reconciled capital plus open reservations, but not a released row whose execution and release reason both prove nothing filled. Unknown records count conservatively."
+  - "Each venue's authoritative result is persisted as soon as it finalizes; a paid leg is no longer expected in open positions, while the cover reservation remains open until every venue reconciles."
   - "The first three valid covers are hand-reconciled before the fourth. Paper and live fill rates remain separate."
   - "The box must remain active and watchdog-clean with its local systemd services/timers enabled; loss of the laptop or operator internet does not stop it."
 

@@ -473,6 +473,17 @@ class PositionGuard:
             for leg, qty in ((plan.first, ex.net_first), (plan.hedge, ex.net_hedge)):
                 if qty <= 1e-9:
                     continue
+                # A venue can pay and remove its position hours before the other venue finalizes.
+                # The settlement pass records that venue-authoritative result while retaining the
+                # cover's capital reservation. It is no longer an expected open position there.
+                has_results = self.records.store.con.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_venue_results'"
+                ).fetchone()
+                if has_results and self.records.store.con.execute(
+                    "SELECT 1 FROM execution_venue_results WHERE execution_id=? AND venue=?",
+                    (exid, leg.venue),
+                ).fetchone():
+                    continue
                 sign = -1.0 if leg.side.endswith("_no") else 1.0
                 key = (leg.venue, leg.market_id)
                 out[key] = out.get(key, 0.0) + sign * qty
