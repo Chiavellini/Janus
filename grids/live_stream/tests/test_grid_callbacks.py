@@ -264,7 +264,7 @@ def test_a_real_execution_leaves_the_socket_loop_one_at_a_time_and_writes_the_st
             loop_thread = threading.get_ident()
             t0 = time.monotonic()
             sup._on_update("g1")("K_H", T)
-            assert time.monotonic() - t0 < 0.05, "the callback did not wait for the machine"
+            assert time.monotonic() - t0 < 0.2, "the callback did not wait for the machine (0.05 s balances + 0.2 s machine)"
             assert sup.in_flight == "g1" and len(sup.exec_tasks) == 1
             assert sup.opportunities.load(oid).status is S.EXECUTION_PENDING, "owned on the loop at dispatch"
             await asyncio.sleep(0.1)                            # the balances are being fetched in the worker

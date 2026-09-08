@@ -74,7 +74,27 @@ class Coordinator:
                                                       "max_cost": plan.max_cost_per_contract, "fee": plan.fee_per_contract},
                     books=offers_books or {})
         self._opp(ex, S.EXECUTION_PENDING, t)
+        try:
+            return self._run(ex, plan, clearance, venues_connected=venues_connected)
+        except Exception as exc:  # noqa: BLE001 -- a machine error after leg A is out is a position of unknown state
+            # 2026-09-08 01:17Z: the worker's journal write raised after the leg A POST and the
+            # execution stayed LEG_A_SUBMITTED with nothing alarming on it. Recorded here as the
+            # failure it is: UNKNOWN_PROVIDER_STATE (holds the reservation, alarms) once leg A was
+            # submitted, ORDER_REJECTED (released) before. If even that write fails, the caller
+            # gets the original exception.
+            sent = ex.state not in (X.DETECTED, X.VALIDATED, X.CAPITAL_RESERVED)
+            detail = f"machine error after {ex.state.value}: {type(exc).__name__}: {str(exc)[:160]}"
+            try:
+                if sent:
+                    self._fail(ex, X.UNKNOWN_PROVIDER_STATE, detail, release=False)
+                else:
+                    self._fail(ex, X.ORDER_REJECTED, detail, release=True)
+            except Exception:  # noqa: BLE001
+                raise exc
+            ex.machine_error = exc
+            return ex
 
+    def _run(self, ex: Execution, plan: Plan, clearance: RiskClearance, *, venues_connected) -> Execution:
         # VALIDATED: the clearance is for this plan and still live; both venues present and connected.
         if clearance.opportunity_id != plan.opportunity_id or not clearance.valid(self.mono()):
             return self._fail(ex, X.ORDER_REJECTED, "clearance does not cover this plan or has expired", release=True)

@@ -47,6 +47,9 @@ class Execution:
     #: Per-stage timing, ms from the machine's entry (frame->eval and the grid's pre-machine stages
     #: arrive from the caller), plus counters. Written as stages_json; read by ops/latency_report.py.
     stages: dict[str, float] = field(default_factory=dict)
+    #: The exception a machine error ended this execution with (not persisted; the state and
+    #: detail are). Set by Coordinator.execute when the run raised (2026-09-08).
+    machine_error: Exception | None = None
 
     @property
     def unhedged(self) -> float:

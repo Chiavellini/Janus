@@ -606,9 +606,20 @@ class Supervisor:
             ex = await asyncio.to_thread(self.coordinator.execute, plan, clearance, offers_books=books,
                                          venues_connected=connected, pre_stages=pre)
             self._after_execution(sup, ev, ex)
-        except Exception as exc:  # noqa: BLE001 -- an execution bug must never kill the loop; it is said and counted
-            self.record_errors[(ev.game_id, "exec:" + type(exc).__name__)] = self.record_errors.get((ev.game_id, "exec:" + type(exc).__name__), 0) + 1
-            print(f"  [exec FAILED] {sup.short_name} {brief_error(exc)}", flush=True)
+        except Exception as exc:  # noqa: BLE001 -- an execution bug must never kill the loop; it is said, counted, flagged
+            # The machine itself records a machine error as an execution failure (UNKNOWN_PROVIDER_STATE
+            # once leg A is out); reaching here means even that failed. Traceback to the log, a
+            # lane flag for the watchdog, and no new cover on this game for the backoff.
+            key = (ev.game_id, "exec:" + type(exc).__name__)
+            self.record_errors[key] = self.record_errors.get(key, 0) + 1
+            tb = traceback.format_exc().strip().splitlines()
+            print(f"  [exec FAILED] {sup.short_name} {brief_error(exc)}\n    " + "\n    ".join(tb[-4:]), flush=True)
+            self.backoff[ev.game_id] = time.monotonic() + self.backoff_s
+            if self.store is not None:
+                try:
+                    raise_flag(self.store, "EXEC_CRASHED", f"{sup.short_name} q={ev.quantity:g} {brief_error(exc)}")
+                except Exception as exc2:  # noqa: BLE001
+                    print(f"  [risk] flag write failed: {type(exc2).__name__}", flush=True)
         finally:
             self.in_flight = None
 
@@ -814,7 +825,7 @@ def main() -> int:
     sup.code_sha = code_sha
     print(f"[code] tree {code_sha} runner {head_sha[:12]} limits {limits.sha}", flush=True)
     if sup.mode.rank >= Mode.PAPER_EXECUTION.rank:
-        sup.worker_store = TupleStore(sup.db, check_same_thread=False)
+        sup.worker_store = TupleStore(sup.db, check_same_thread=False, isolation_level="IMMEDIATE")
         journal = Journal(sup.worker_store)       # the worker thread's own connection (_execute_off_loop)
         # Real venues, built only for the modes that need them, from credentials that are named
         # by environment variable and never appear on the command line or in a log.

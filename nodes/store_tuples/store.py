@@ -82,7 +82,8 @@ def _rel_change(new: float | None, old: float | None) -> float:
 
 
 class TupleStore:
-    def __init__(self, path: Path | str = DEFAULT_DB, *, enforce_volume: bool = True, check_same_thread: bool = True):
+    def __init__(self, path: Path | str = DEFAULT_DB, *, enforce_volume: bool = True, check_same_thread: bool = True,
+                 isolation_level: str | None = ""):
         p = Path(path).resolve()
         if enforce_volume:
             guard(p, "tuple data")
@@ -94,8 +95,11 @@ class TupleStore:
         # uses alone (the execution worker's journal and records, grids/live_stream/grid.py,
         # 2026-09-08): a connection is never used by two threads at once (Python's sqlite3 raises
         # "API misuse" when it is), WAL lets the two connections write in turn, and the 30 s busy
-        # timeout covers the wait.
-        self.con = sqlite3.connect(str(p), timeout=30.0, check_same_thread=check_same_thread)
+        # timeout covers the wait. That second store opens with isolation_level="IMMEDIATE": its
+        # writes begin with BEGIN IMMEDIATE, so a wait for the loop's lock goes through the busy
+        # handler instead of failing at once as a read-snapshot upgrade ("database is locked",
+        # the first flight through it, 01:17Z).
+        self.con = sqlite3.connect(str(p), timeout=30.0, check_same_thread=check_same_thread, isolation_level=isolation_level)
         self.con.execute("PRAGMA journal_mode=WAL")
         self.con.execute("PRAGMA synchronous=NORMAL")
         self.con.executescript(DDL)

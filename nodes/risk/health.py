@@ -133,6 +133,17 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
                                 f"WHERE released = 0 AND first_filled > 0 AND state IN ('{holding}') ORDER BY last_utc").fetchall():
                             out.append(f"risk: UNHEDGED_POSITION — {row[0][:8]} {row[1]} {row[2]} {row[3]:g}/{row[4]:g} "
                                        f"unhedged for {int(t - (row[5] or t))}s (the paper row's STOP condition)")
+                        # EXECUTION_STUCK: a machine that stopped moving before a terminal state (2026-09-08
+                        # 01:17Z: LEG_A_SUBMITTED for good after the worker raised; nothing filled, so the
+                        # UNHEDGED alarm was quiet while a reservation and an order of unknown state sat).
+                        # Reconcile by hand: ops/reconcile_stuck_execution.py.
+                        terminal = "', '".join(sorted(x.value for x in ExecutionState if x.is_terminal))
+                        for row in con.execute(
+                                "SELECT execution_id, event_id, state, last_utc FROM executions "
+                                f"WHERE released = 0 AND state NOT IN ('{terminal}') AND last_utc < ? ORDER BY last_utc",
+                                (t - 120.0,)).fetchall():
+                            out.append(f"risk: EXECUTION_STUCK — {row[0][:8]} {row[1]} {row[2]} for {int(t - (row[3] or t))}s "
+                                       f"(no terminal state; ops/reconcile_stuck_execution.py)")
             con.close()
         except sqlite3.Error as exc:
             out.append(f"risk: LEDGER_UNREADABLE — {type(exc).__name__}")
