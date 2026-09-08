@@ -46,6 +46,14 @@ rest at the pooled 4c. The census (L42) has not run: the watchdog says so.
    then `bash ops/box/kill.sh live --clear` was already done (SSM). Pricing continues meanwhile.
 
 **Mine, in order:**
+0. **The box's CPU ceiling** (02:10Z: 126 pollers for the ITF Asian session, the lane at 100 % of
+   the single vCPU, loop lag 1.3-2.8 s, one transient HALT CLOCK). Every co-listed game in the
+   6 h window gets a poller with the same 0.2 s evaluation window, in play or hours away
+   (`reconcile()`; tiers newborn 36, starting_soon 31, live 18 at 01:33Z). Measure the split
+   first (evaluations per tier per minute), then a per-tier window: live 0.2 s, starting_soon
+   1 s, newborn 5 s, set on each discovery pass, mirrored in the replay harness (the rows carry
+   the tier through `events.phase`). A bigger Graviton does not help a single loop thread; an x86
+   core (c7i.large) is about 1.5x if the window is not enough.
 1. Release the off-loop execution, then watch the box through Monday Night Football (~00:15Z)
    and the ITF/Challenger evening: `[exec]` lines with `first=` above zero, no `HALT STALL`, no
    `IN_FLIGHT` refusals piling up. The first three real covers reconciled by hand before the
