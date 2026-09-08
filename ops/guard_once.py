@@ -26,14 +26,15 @@ from nodes.execute.guard import PositionGuard  # noqa: E402
 from nodes.execute.records import ExecutionRecords  # noqa: E402
 from nodes.execution.journal import Journal  # noqa: E402
 from nodes.risk.kill import KillSwitches  # noqa: E402
+from nodes.risk.ledger import ExposureLedger  # noqa: E402
 from nodes.risk.limits import load_limits  # noqa: E402
 from nodes.store_tuples.store import DEFAULT_DB, TupleStore  # noqa: E402
 from nodes.stream_kalshi.stream import load_private_key  # noqa: E402
 
 
-def run_once(*, venues, store, journal, records, limits, kill, started_utc: float, log=print) -> dict:
+def run_once(*, venues, store, journal, records, limits, kill, started_utc: float, ledger=None, log=print) -> dict:
     g = PositionGuard(venues=venues, journal=journal, records=records, store=store, limits=limits.protect,
-                      started_utc=started_utc, kill=kill, log=log)
+                      started_utc=started_utc, ledger=ledger, kill=kill, log=log)
     snap = g.fetch()
     rep = g.apply(snap)
     for k, e in snap.errors.items():
@@ -63,6 +64,7 @@ def main() -> int:
     store = TupleStore(a.db, isolation_level="IMMEDIATE", timeout_s=120.0)   # a lane from before 1b4bf04 holds its lock 30 s at a time
     journal = Journal(store)
     records = ExecutionRecords(store)
+    ledger = ExposureLedger(store)
     limits = load_limits()
     kill = KillSwitches()
     api_key, key_path = os.environ.get("JANUS_KALSHI_API_KEY"), os.environ.get("JANUS_KALSHI_PRIVATE_KEY_PATH")
@@ -70,7 +72,7 @@ def main() -> int:
         print("JANUS_KALSHI_API_KEY / JANUS_KALSHI_PRIVATE_KEY_PATH are unset"); return 2
     venues = {"kalshi": KalshiExecution(api_key, load_private_key(key_path), journal, Mode.LIMITED_LIVE, base_url=PROD_BASE),
               "polymarket": PolymarketExecution(PyClobTransport(), journal, Mode.LIMITED_LIVE)}
-    out = run_once(venues=venues, store=store, journal=journal, records=records, limits=limits, kill=kill,
+    out = run_once(venues=venues, store=store, journal=journal, records=records, limits=limits, kill=kill, ledger=ledger,
                    started_utc=time.time() - a.since_hours * 3600.0)
     return 0 if not out["errors"] else 1
 

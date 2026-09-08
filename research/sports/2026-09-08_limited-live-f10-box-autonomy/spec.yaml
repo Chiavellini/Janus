@@ -1,0 +1,53 @@
+experiment_id: "janus-sports-limited-live-f10-box-autonomy-2026-09-08"
+date_registered: "2026-09-08"
+track: "sports/execution"
+row_kind: "F (forward operational evaluation; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F10"
+test_looks_spent: 0
+supersedes: "F9, stopped by two real first legs left unprotected beyond 30 seconds"
+
+# IMMUTABLE ONCE THE FIRST LIMITED_LIVE LINE AFTER THIS REGISTRATION IS WRITTEN.
+purpose: >
+  Prove that the Mexico box can run the small-money live lane autonomously, without the operator's
+  laptop or internet connection, and that an eventually-consistent Polymarket FAK result can never
+  be mistaken for a terminal zero-fill or attributed to another retry.
+
+known_before_start:
+  - "F9 ran 25 executions: 23 genuine zero-fill/rejected entries and two real paired BUR @ WXM executions."
+  - "The two Polymarket fills were 10.15625 @ 0.63 and 10 @ 0.78; their Kalshi hedges were 10.16 @ 0.19 after about 97 seconds and 10 @ 0.01 after about 335 seconds. Both violate F9's 30-second protection criterion."
+  - "The CLOB order lookup returned not_found while the trade feed later proved both fills."
+  - "The guard joined orders to the latest execution sharing an opportunity id, then recomputed lifetime quantities from only a rolling fill slice; it later zeroed both first legs."
+  - "The reopened executions did not reopen their released capital reservations."
+  - "The $250 daily cap counted every released zero-fill reservation; it reported $247.86 used despite almost all attempts filling nothing."
+
+arm: >
+  janus-live-stream.service on the Mexico box in LIMITED_LIVE under the unchanged signed arm:
+  $12 combined stake per cover, 10 contracts per leg, $250 committed daily notional, $25 realized-
+  loss breaker, $0.10 minimum net profit and 1% minimum locked return. protect_auto=true and
+  unwind_enabled=false. Runtime, credentials, data, kill sync, watchdog and restart policy live on
+  the box; the laptop is not in the data or execution path.
+
+window:
+  start: "the first [mode] LIMITED_LIVE after this spec, ledger row, GATE note, full green suite, manual 24-hour venue reconciliation, zero open imbalance, and the F10 tree/arm match"
+  end: "at 37 cleared covers, the first STOP, the breaker, or operator closure"
+
+criteria:
+  - "No threshold, cap, league or definition moves after start."
+  - "STOP and latch kill/live on any venue fill not fully hedged or safely reduced within 30 seconds, UNKNOWN_PROVIDER_STATE after a wire submission, store error, orphan, missing reservation, unresolved position mismatch, fee above pin, or breaker."
+  - "Polymarket not_found stays UNCONFIRMED for 120 seconds and the trade feed is queried before zero-fill finality; a proved trade immediately drives the hedge."
+  - "Every order maps only to the execution carrying its exact persisted client id; opportunity id is never an execution join key."
+  - "Execution fill totals rebuild from every durable owned order, never the guard's rolling response slice."
+  - "A late fill reopens both the execution and its durable/in-memory reservation before protection; a missing reservation is a STOP."
+  - "Daily notional counts filled/reconciled capital plus open reservations, but not a released row whose execution and release reason both prove nothing filled. Unknown records count conservatively."
+  - "The first three valid covers are hand-reconciled before the fourth. Paper and live fill rates remain separate."
+  - "The box must remain active and watchdog-clean with its local systemd services/timers enabled; loss of the laptop or operator internet does not stop it."
+
+outputs:
+  registration: "snooping_ledger.md F10 with append-only results"
+  records: "box executions, transitions, orders, order events, venue fills, reservations/events, settlements, flags, systemd state and watchdog output"
+
+what_this_does_not_establish:
+  - "Permission to raise any cap or weaken the profit/settlement hurdle."
+  - "That paper's synchronous fill rate predicts live fills."
+  - "A cover until both exact venue fills and its reservation are reconciled."

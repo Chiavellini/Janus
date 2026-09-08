@@ -164,13 +164,29 @@ def test_a_venue_http_refusal_is_rejected_and_a_geoblock_latches(tmp_path):
     assert v3.submit(req(), cl(tmp_path / "c")).state is FillState.UNCONFIRMED, "a 5xx may still have taken the order"
 
 
-def test_an_order_the_venue_no_longer_has_is_a_final_no_fill(tmp_path):
-    """RSO @ ELC, 2026-09-07: a delayed FOK vanished from the CLOB; 13 polls read it as non-final."""
-    v, j = venue(tmp_path, FakeTransport(posts=[{"success": True, "orderID": "0xabc", "status": "delayed"}], orders=[None]))
+def test_an_order_missing_from_both_endpoints_waits_for_finality_grace(tmp_path):
+    """`not_found` alone is ambiguous: two FAKs later appeared in the trade feed."""
+    v, j = venue(tmp_path, FakeTransport(posts=[{"success": True, "orderID": "0xabc", "status": "delayed"}],
+                                         orders=[None, None]))
     ack = v.submit(req(), cl(tmp_path))
     assert ack.state is FillState.UNCONFIRMED and ack.open
     st = v.status("c1")
+    assert st.state is FillState.UNCONFIRMED and not st.final and st.raw_status == "not_found_pending"
+    v.clock = lambda: T + 121
+    st = v.status("c1")
     assert st.state is FillState.UNFILLED and st.final and not st.open and st.raw_status == "not_found"
+
+
+def test_a_not_found_order_is_filled_when_the_trade_feed_proves_it(tmp_path):
+    tr = FakeTransport(posts=[{"success": True, "orderID": "0xabc", "status": "delayed"}], orders=[None],
+                       trades=[{"id": "t1", "taker_order_id": "0xabc", "size": "10.15625", "price": "0.63",
+                                "fee_rate_bps": "0", "trader_side": "TAKER", "match_time": T,
+                                "status": "CONFIRMED", "asset_id": "tok-1", "side": "BUY"}])
+    v, j = venue(tmp_path, tr)
+    assert v.submit(req(time_in_force="ioc"), cl(tmp_path)).state is FillState.UNCONFIRMED
+    st = v.status("c1")
+    assert st.state is FillState.FILLED and st.filled_contracts == 10.15625 and st.avg_price == 0.63 and st.final
+    assert j.get("c1")["state"] == "FILLED" and j.get("c1")["filled_contracts"] == 10.15625
 
 
 def test_a_sell_is_a_sell_of_the_token_after_the_allowance_and_other_sides_stay_refused(tmp_path):

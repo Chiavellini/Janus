@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS capital_reservations(
   per_venue_json TEXT NOT NULL, opportunity_id TEXT, created_utc REAL NOT NULL,
   released_utc REAL, release_reason TEXT);
 CREATE INDEX IF NOT EXISTS capital_reservations_open ON capital_reservations(released_utc);
+CREATE TABLE IF NOT EXISTS capital_reservation_events(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, reservation_id TEXT NOT NULL,
+  kind TEXT NOT NULL, detail TEXT);
+CREATE INDEX IF NOT EXISTS capital_reservation_events_res ON capital_reservation_events(reservation_id, seen_ts);
 """
 
 
@@ -131,18 +135,70 @@ class ExposureLedger:
             self.store.con.commit()
         return True
 
+    def reopen(self, reservation_id: str, *, reason: str, now: float | None = None) -> bool:
+        """Restore a reservation when a venue later contradicts a released zero-fill.
+
+        Polymarket's order endpoint returned `not_found` for two FAKs that its trade feed later
+        proved filled. The execution guard must restore capital accounting before it protects the
+        position. The prior release remains in the append-only event detail.
+        """
+        if reservation_id in self.open:
+            return True
+        if self.store is None:
+            return False
+        row = self.store.con.execute(
+            "SELECT event_id,league,per_venue_json,opportunity_id,created_utc,released_utc,release_reason "
+            "FROM capital_reservations WHERE reservation_id=?", (reservation_id,)
+        ).fetchone()
+        if row is None:
+            return False
+        r = Reservation(reservation_id, row[0], row[1], json.loads(row[2]), row[3], float(row[4]))
+        self.open[reservation_id] = r
+        if row[5] is None:
+            return True
+        t = now or time.time()
+        prior = f"prior release at {row[5]}: {row[6] or ''}" if row[5] is not None else "row was not released"
+        self.store.con.execute(
+            "UPDATE capital_reservations SET released_utc=NULL, release_reason=? WHERE reservation_id=?",
+            (f"REOPENED: {reason}; {prior}"[:500], reservation_id),
+        )
+        self.store.con.execute(
+            "INSERT INTO capital_reservation_events(seen_ts,reservation_id,kind,detail) VALUES(?,?,?,?)",
+            (t, reservation_id, "REOPEN", f"{reason}; {prior}"[:500]),
+        )
+        self.store.con.commit()
+        return True
+
     def day_notional_usd(self, now: float | None = None) -> float:
-        """Everything reserved since 00:00 UTC today, released or not. A reservation that was
-        filled and released still spent the day's notional; only the arming override's
-        `day_notional_usd` cap reads this, and it must count what was sent, not what is open."""
+        """Capital actually committed today, plus every reservation still open.
+
+        A filled-and-released cover still spent the day's notional. A released execution that
+        both the machine and its release reason say filled nothing did not. Before 2026-09-08 the
+        latter counted anyway, so repeated FAK zero-fills exhausted the $250 live cap without a
+        trade. Unknown/missing execution records count conservatively.
+        """
         t = now or time.time()
         midnight = t - (t % 86400.0)
         total = sum(r.total_usd for r in self.open.values() if r.created_utc >= midnight)
         if self.store is not None:
-            row = self.store.con.execute(
-                "SELECT per_venue_json FROM capital_reservations WHERE created_utc >= ? AND released_utc IS NOT NULL",
-                (midnight,)).fetchall()
-            total += sum(sum(float(v) for v in json.loads(r[0]).values()) for r in row)
+            rows = self.store.con.execute(
+                "SELECT reservation_id,per_venue_json,release_reason FROM capital_reservations "
+                "WHERE created_utc >= ? AND released_utc IS NOT NULL", (midnight,)
+            ).fetchall()
+            for rid, payload, reason in rows:
+                committed = True
+                try:
+                    ex = self.store.con.execute(
+                        "SELECT first_filled,hedge_filled FROM executions WHERE reservation_id=? "
+                        "ORDER BY started_utc DESC LIMIT 1", (rid,)
+                    ).fetchone()
+                    if ex is not None and float(ex[0] or 0.0) <= 1e-9 and float(ex[1] or 0.0) <= 1e-9 \
+                            and "nothing filled" in str(reason or "").lower():
+                        committed = False
+                except Exception:  # old/minimal schemas: uncertainty counts, never frees capacity
+                    committed = True
+                if committed:
+                    total += sum(float(v) for v in json.loads(payload).values())
         return float(total)
 
     def oldest_open_age_s(self, now: float | None = None) -> float | None:

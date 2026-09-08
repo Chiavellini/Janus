@@ -38,6 +38,11 @@ from nodes.execution.journal import Journal
 ORDER_TYPE = {"fok": "FOK", "ioc": "FAK", "gtc": "GTC"}
 FINAL_TRADE = {"CONFIRMED"}
 DEAD_TRADE = {"FAILED"}
+# The CLOB order lookup is eventually consistent with its trade feed. On 2026-09-08 two FAKs
+# returned `not_found` immediately and then appeared as confirmed trades. Absence is ambiguous
+# until both endpoints have disagreed for this long; the reservation stays held meanwhile.
+NOT_FOUND_GRACE_S = 120.0
+TRADE_CHECK_INTERVAL_S = 1.0
 
 
 class TransportUnavailable(RuntimeError):
@@ -188,6 +193,7 @@ class PolymarketExecution:
     _requests: dict[str, OrderRequest] = field(default_factory=dict)
     #: Tokens whose sell allowance was set this process (once per token; the approval is on-chain).
     _sell_ok: set = field(default_factory=set)
+    _last_trade_check: dict[str, float] = field(default_factory=dict)
 
     def submit(self, req: OrderRequest, clearance) -> Ack:
         t = self.clock()
@@ -272,12 +278,49 @@ class PolymarketExecution:
             return OrderState(self.venue, client_order_id, row["venue_order_id"], FillState.UNCONFIRMED, 0.0, None,
                               None, "TRANSPORT", t, detail=self.last_error)
         if not o:
-            # The CLOB no longer has the order: a `delayed` FOK that did not match is dropped, and
-            # a poll then finds nothing (2026-09-07, RSO @ ELC, the first real order from Mexico:
-            # 13 polls to the deadline, UNKNOWN_PROVIDER_STATE, reservation held for nothing).
-            # Nothing filled; fills() would still show a trade if one had. Final.
+            # `not_found` is not a terminal no-fill: two FAKs on 2026-09-08 returned it and then
+            # appeared as confirmed trades. Ask the trade feed (throttled), whose records are the
+            # durable truth, before interpreting absence.
+            last = self._last_trade_check.get(client_order_id, float("-inf"))
+            if self.mono() - last >= TRADE_CHECK_INTERVAL_S:
+                self._last_trade_check[client_order_id] = self.mono()
+                try:
+                    self.fills(since_utc=max(0.0, float(row["submitted_utc"]) - 1.0))
+                except Exception as exc:  # noqa: BLE001 -- ambiguity stays UNCONFIRMED
+                    self.last_error = brief_error(exc)
+            known = self.journal.store.con.execute(
+                "SELECT COALESCE(SUM(contracts),0),COALESCE(SUM(contracts*price),0),"
+                "COALESCE(SUM(fee_usd),0),MIN(final) FROM venue_fills WHERE venue_order_id=?",
+                (row["venue_order_id"],),
+            ).fetchone()
+            qty = float(known[0] or 0.0)
+            if qty > 1e-9:
+                state = FillState.FILLED if qty >= float(row["contracts"]) - 1e-6 else FillState.PARTIAL
+                st = OrderState(self.venue, client_order_id, row["venue_order_id"], state, qty,
+                                float(known[1]) / qty, float(known[2] or 0.0), "trade_feed", t,
+                                open=False, settlement_pending=not bool(known[3]), final=bool(known[3]),
+                                detail="order lookup absent; venue trade feed proves the fill")
+                try:
+                    self.journal.record(st, kind="status_trade")
+                except Exception as exc:  # noqa: BLE001
+                    self.journal_failures = getattr(self, "journal_failures", 0) + 1
+                    print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
+                return st
+            age = max(0.0, t - float(row["submitted_utc"]))
+            if age < NOT_FOUND_GRACE_S:
+                st = OrderState(self.venue, client_order_id, row["venue_order_id"], FillState.UNCONFIRMED,
+                                0.0, None, None, "not_found_pending", t, open=False, final=False,
+                                detail=f"order lookup absent and no trade yet; {age:.1f}s < {NOT_FOUND_GRACE_S:g}s finality grace")
+                try:
+                    self.journal.record(st, kind="status")
+                except Exception as exc:  # noqa: BLE001
+                    self.journal_failures = getattr(self, "journal_failures", 0) + 1
+                    print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
+                return st
+            # Absent from both order and trade endpoints beyond the grace: terminal zero-fill.
             st = OrderState(self.venue, client_order_id, row["venue_order_id"], FillState.UNFILLED, 0.0, None, None,
-                            "not_found", t, open=False, final=True, detail="order not at the venue: a delayed order that did not match")
+                            "not_found", t, open=False, final=True,
+                            detail=f"absent from order and trade endpoints for {age:.1f}s")
             try:
                 self.journal.record(st, kind="status", raw={"not_found": True})
             except Exception as exc:  # noqa: BLE001 -- the order is OUT; a store failure here must not hide the ack from the machine (2026-09-08)

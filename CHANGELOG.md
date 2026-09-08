@@ -35,6 +35,26 @@ F9 registers these repairs as a fresh forward operational window under unchanged
 thresholds. Full suite green before release; the cross-host live kill remains latched until the
 new tree, arm and watchdog are clean.
 
+### F9 STOP: `not_found` was not final, and the guard crossed retries
+
+While the operator connection was down, F9 sent 25 entries. Twenty-three filled nothing. Two
+Polymarket FAKs whose order lookup returned `not_found` were nevertheless confirmed in the trade
+feed. The guard found them later, but mapped by the reused opportunity id to the latest execution,
+not by the order's exact client id. It bought the Kalshi legs after about 97 and 335 seconds. On a
+later pass its rolling fill window no longer contained the older Polymarket trade, so it rewrote
+both first quantities to zero and left rows labelled HEDGED with only a hedge quantity. The
+reopened executions' capital reservations remained released. This is an F9 STOP, notwithstanding
+that venue records show two eventual pairs on BUR @ WXM.
+
+F10 makes `not_found` ambiguous for 120 seconds and asks the trade feed before final zero-fill;
+the confirmed trade drives the coordinator's hedge immediately. The guard joins only the exact
+client ids persisted on an execution, rebuilds quantities from all of its durable order rows, and
+reopens durable plus in-memory exposure before protection. A missing reservation latches live.
+Existing positions on the user's shared Polymarket account are outside Janus's claim; unmatched
+Janus fills remain ORPHANs. The daily arm now counts filled capital and open reservations, not a
+released execution whose quantities and release reason both prove zero fill; unknown records
+still count. This fixes $247.86 of fictional daily usage created mostly by zero-fill attempts.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and

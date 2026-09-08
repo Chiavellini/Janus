@@ -30,6 +30,7 @@ event loop and touches the stores. The lane serialises the guard with executions
 """
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import dataclass, field
 from typing import Callable, Mapping, Sequence
@@ -77,9 +78,9 @@ class GuardReport:
 
 class PositionGuard:
     def __init__(self, *, venues: Mapping[str, object], journal, records, store, limits, started_utc: float,
-                 kill=None, log: Callable[[str], None] = print, clock: Callable[[], float] = time.time):
+                 ledger=None, kill=None, log: Callable[[str], None] = print, clock: Callable[[], float] = time.time):
         self.venues, self.journal, self.records, self.store = venues, journal, records, store
-        self.limits, self.kill, self.log, self.clock = limits, kill, log, clock
+        self.limits, self.ledger, self.kill, self.log, self.clock = limits, ledger, kill, log, clock
         self.cursor_utc = started_utc - ADOPT_WINDOW_S
         self.said: set[str] = set()
         self.passes = 0
@@ -175,6 +176,8 @@ class PositionGuard:
                         self.kill.latch("live", f"guard: orphan fill {detail}")
                     except Exception as exc:  # noqa: BLE001
                         rep.findings.append(f"kill latch failed: {type(exc).__name__}")
+        self._close_final_zero_fills(snap, rep)
+        self._repair_reservations(snap, rep)
         self._held = self._holdings(snap)
         for exid, pairs in by_exec.items():
             self._reconcile_execution(exid, pairs, snap, rep)
@@ -186,11 +189,68 @@ class PositionGuard:
         self.cursor_utc = snap.now - ADOPT_WINDOW_S
         return rep
 
+    def _close_final_zero_fills(self, snap: GuardSnapshot, rep: GuardReport) -> None:
+        """Release an ambiguous execution once the venue finally proves zero fill.
+
+        The coordinator gives `not_found` time to reconcile with the trade feed and therefore
+        exits UNKNOWN_PROVIDER_STATE after its six-second synchronous window. When the later
+        guard poll reaches terminal UNFILLED/REJECTED, no position exists and the reservation can
+        be closed. Without this handoff every genuine zero-fill would block its event forever.
+        """
+        for cid, state in snap.unconfirmed.items():
+            if state not in (FillState.UNFILLED.value, FillState.REJECTED.value):
+                continue
+            row = self.journal.get(cid)
+            exid = self._execution_for(row) if row is not None else None
+            ex = self.records.load(exid) if exid else None
+            if ex is None or ex.released or ex.holds_anything:
+                continue
+            if ex.state not in (X.UNKNOWN_PROVIDER_STATE, X.LEG_A_SUBMITTED):
+                continue
+            ex.released = True
+            self.records.move(ex, X.ORDER_REJECTED, now=snap.now,
+                              detail=f"guard: leg A final {state.lower()}, no position")
+            if self.ledger is not None and ex.reservation_id:
+                self.ledger.release(ex.reservation_id, reason=f"nothing filled: guard final {state}", now=snap.now)
+            rep.findings.append(f"ZERO_FILL_FINAL {exid[:8]} {state}; reservation released")
+
+    def _repair_reservations(self, snap: GuardSnapshot, rep: GuardReport) -> None:
+        """A late fill reopens both the execution and its capital reservation.
+
+        The old guard reopened only `executions.released`, leaving the durable reservation
+        released and absent from the in-memory exposure picture while protection bought another
+        leg. Also repair rows produced by that old path on startup.
+        """
+        if self.ledger is None:
+            return
+        rows = self.records.store.con.execute(
+            "SELECT execution_id,reservation_id FROM executions WHERE released=0 AND reservation_id IS NOT NULL "
+            "AND (first_filled>0 OR hedge_filled>0)"
+        ).fetchall()
+        for exid, rid in rows:
+            if rid in self.ledger.open:
+                continue
+            if self.ledger.reopen(rid, reason=f"guard restored exposure for {exid[:8]}", now=snap.now):
+                rep.findings.append(f"RESERVATION_REOPENED {rid[:8]} for {exid[:8]}")
+            else:
+                detail = f"{exid[:8]} holds venue quantity but reservation {str(rid)[:8]} is missing"
+                rep.findings.append(f"RESERVATION_MISSING {detail}")
+                self._flag("RESERVATION_MISSING", detail, snap.now)
+                if self.kill is not None:
+                    try:
+                        self.kill.latch("live", f"guard: {detail}")
+                    except Exception as exc:  # noqa: BLE001
+                        rep.findings.append(f"kill latch failed: {type(exc).__name__}")
+
     def _row_for(self, f: FillRecord) -> dict | None:
         con = self.journal.store.con
         r = con.execute("SELECT client_order_id FROM orders WHERE venue_order_id=?", (f.venue_order_id,)).fetchone()
         if r is not None:
-            return self.journal.get(r[0])
+            row = self.journal.get(r[0])
+            if row is not None:
+                self._sync_order_from_fills(row)
+                row = self.journal.get(r[0])
+            return row
         if not f.market_id:
             return None
         # an order the venue answered late (no venue id yet) on the same asset, near in time
@@ -207,25 +267,83 @@ class PositionGuard:
                                 raw={"fill_id": f.fill_id})
         return row
 
+    def _sync_order_from_fills(self, row: dict) -> None:
+        """Make the order row carry every durable fill for its venue order id.
+
+        A later `get_order -> not_found` used to overwrite a real Polymarket fill with zero. The
+        trade FIFO is the durable venue fact; aggregate it because one order may have many fills.
+        """
+        vid = row.get("venue_order_id")
+        if not vid:
+            return
+        agg = self.journal.store.con.execute(
+            "SELECT COALESCE(SUM(contracts),0),COALESCE(SUM(contracts*price),0),"
+            "COALESCE(SUM(fee_usd),0) FROM venue_fills WHERE venue_order_id=?", (vid,)
+        ).fetchone()
+        qty = float(agg[0] or 0.0)
+        if qty <= 1e-9:
+            return
+        avg = float(agg[1]) / qty
+        state = FillState.FILLED if qty >= float(row["contracts"]) - 1e-6 else FillState.PARTIAL
+        if row["state"] == state.value and abs(float(row.get("filled_contracts") or 0.0) - qty) <= 1e-6:
+            return
+        self.journal.record(
+            Ack(row["venue"], row["client_order_id"], vid, state, qty, avg, float(agg[2] or 0.0),
+                "guard_fills", self.clock(), detail="venue fill FIFO overrides order lookup"),
+            kind="guard_fill",
+        )
+
     def _execution_for(self, row: dict) -> str | None:
-        r = self.records.store.con.execute(
-            "SELECT execution_id FROM executions WHERE opportunity_id=? AND started_utc <= ? ORDER BY started_utc DESC LIMIT 1",
-            (row["opportunity_id"], float(row["submitted_utc"]) + 1.0)).fetchone()
-        return r[0] if r else None
+        """Map an order to the execution that names its exact client id.
+
+        Opportunity ids are intentionally reused on retries. Choosing the latest execution for
+        an opportunity attributed a real fill to a later zero-fill and made the guard buy a lone
+        Kalshi leg. Exact persisted client ids are the only valid join.
+        """
+        cid = row["client_order_id"]
+        rows = self.records.store.con.execute(
+            "SELECT execution_id,first_client_id,hedge_client_ids,unwind_client_ids FROM executions "
+            "WHERE opportunity_id=?", (row["opportunity_id"],)
+        ).fetchall()
+        for exid, first, hedges, unwinds in rows:
+            try:
+                other = list(json.loads(hedges or "[]")) + list(json.loads(unwinds or "[]"))
+            except (TypeError, ValueError):
+                other = []
+            if cid == first or cid in other:
+                return exid
+        return None
 
     def _reconcile_execution(self, exid: str, pairs: list[tuple[dict, FillRecord]], snap: GuardSnapshot, rep: GuardReport) -> None:
         ex = self.records.load(exid)
         plan = self.records.plan_of(exid)
         if ex is None:
             return
-        first_venue = plan.first.venue if plan else "polymarket"
+        if plan is None:
+            return
         sums = {"first_buy": 0.0, "first_sell": 0.0, "hedge_buy": 0.0, "hedge_sell": 0.0}
         cost = {"first_buy": 0.0, "first_sell": 0.0, "hedge_buy": 0.0, "hedge_sell": 0.0}
-        for row, f in pairs:
-            leg = "first" if row["venue"] == first_venue else "hedge"
-            kind = "sell" if str(row.get("side") or "").startswith("sell") else "buy"
-            sums[f"{leg}_{kind}"] += f.contracts
-            cost[f"{leg}_{kind}"] += f.contracts * f.price
+        first_ids = {ex.first_client_id} if ex.first_client_id else set()
+        hedge_ids = set(ex.hedge_client_ids)
+        unwind_ids = set(ex.unwind_client_ids)
+        # Rebuild from every order this execution owns, not only this guard pass's rolling fill
+        # slice. Otherwise the next pass zeros a fill as soon as it leaves the cursor.
+        for cid in first_ids | hedge_ids | unwind_ids:
+            row = self.journal.get(cid)
+            if row is None:
+                continue
+            qty = float(row.get("filled_contracts") or 0.0)
+            if qty <= 1e-9:
+                continue
+            if cid in first_ids:
+                leg, kind = "first", "buy"
+            elif cid in hedge_ids:
+                leg, kind = "hedge", "buy"
+            else:
+                leg = "first" if row["market_id"] == plan.first.market_id else "hedge"
+                kind = "sell"
+            sums[f"{leg}_{kind}"] += qty
+            cost[f"{leg}_{kind}"] += qty * float(row.get("avg_price") or 0.0)
 
         def avg(k):
             return (cost[k] / sums[k]) if sums[k] > 1e-9 else None
@@ -241,6 +359,8 @@ class PositionGuard:
         if changed:
             note = "venue fills: " + ", ".join(changed)
             if ex.state.is_terminal and ex.released and (sums["first_buy"] > 1e-9 or sums["hedge_buy"] > 1e-9):
+                if self.ledger is not None and ex.reservation_id:
+                    self.ledger.reopen(ex.reservation_id, reason=f"guard found a fill on {exid[:8]}", now=snap.now)
                 self.records.reopen(ex, note=note, now=snap.now)
             ex.first_unwound, ex.first_unwind_avg = sums["first_sell"], avg("first_sell")
             ex.hedge_unwound, ex.hedge_unwind_avg = sums["hedge_sell"], avg("hedge_sell")
@@ -364,7 +484,9 @@ class PositionGuard:
             if pos is None:
                 continue
             held = {(p.venue, p.market_id): (p.contracts if p.side == "yes" else -p.contracts) for p in pos}
-            keys = {k for k in expected if k[0] == v} | set(held)
+            # This may be a shared account. Existing positions outside Janus are not orphans;
+            # fills no Janus order claims are detected above. Compare only Janus's open claims.
+            keys = {k for k in expected if k[0] == v}
             for key in keys:
                 net = expected.get(key, 0.0)
                 have = held.get(key, 0.0)

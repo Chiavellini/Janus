@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 from kernel.execution_protocol import FillRecord, OrderState, Position
 from kernel.schema import ExecutionState as X, FillState
-from nodes.execute.guard import PositionGuard
+from nodes.execute.guard import GuardSnapshot, PositionGuard
 from nodes.execute.plan import LegPlan, Plan
 from nodes.execute.records import Execution, ExecutionRecords
 from nodes.execution.journal import Journal
@@ -106,6 +106,7 @@ def test_a_hedged_execution_whose_fills_match_is_quiet(tmp_path):
         "polymarket": Venue("polymarket", [fa], [Position("polymarket", TOK, "yes", 10.0, 0.57, T0 + 300)]),
         "kalshi": Venue("kalshi", [fb], [Position("kalshi", p.hedge.market_id, "yes", 10.0, None, T0 + 300)])})
     ex = Execution("hedged01", p.opportunity_id, p.event_id, "atp", "LIMITED_LIVE", 10.0, T0 + 100, first_client_id="a2",
+                   hedge_client_ids=["b2"],
                    first_filled=10.0, first_avg_price=0.57, hedge_filled=10.0, hedge_avg_price=0.31)
     records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__, "max_cost": 0.99, "fee": 0.02}, books={})
     for st in (X.LEG_A_SUBMITTED, X.LEG_A_FILLED, X.LEG_B_SUBMITTED, X.LEG_B_FILLED, X.HEDGED):
@@ -152,12 +153,111 @@ def test_fills_today_carries_settlements_and_young_unconfirmed_orders(tmp_path):
     assert b.evaluate(fills, max_daily_loss_usd=25.0, day=fills[0].day) is not None
 
 
-def test_a_position_the_fills_do_not_explain_is_a_mismatch(tmp_path):
+def test_a_janus_position_that_exceeds_its_execution_is_a_mismatch(tmp_path):
     fa = FillRecord("polymarket", "pa", "f-a", 10.0, 0.57, 0.0, True, T0 + 101, True, market_id=TOK, side="buy_yes")
     pm = Venue("polymarket", [fa], [Position("polymarket", TOK, "yes", 25.0, 0.5, T0 + 300)])
     main, journal, records, g = _world(tmp_path, venues={"polymarket": pm})
+    _gea_row(journal, records)
     rep = g.apply(g.fetch())
-    assert rep.mismatches and "venue holds 25" in rep.mismatches[0] and rep.orphans == [fa]
+    assert rep.mismatches and "venue holds 25" in rep.mismatches[0] and rep.orphans == []
+
+
+def test_positions_outside_the_janus_journal_are_not_claimed_on_a_shared_account(tmp_path):
+    pm = Venue("polymarket", [], [Position("polymarket", "user-owned-token", "yes", 250.0, .02, T0 + 300)])
+    main, journal, records, g = _world(tmp_path, venues={"polymarket": pm})
+    rep = g.apply(g.fetch())
+    assert rep.mismatches == [] and rep.orphans == [], "the guard owns Janus orders, not the user's whole account"
+
+
+def test_an_open_execution_restores_a_reservation_the_old_guard_released(tmp_path):
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+    main, journal, records, g = _world(tmp_path, venues={})
+    ledger = ExposureLedger(main)
+    r = ledger.reserve(event_id="e1", league="mlb", per_venue_usd={"kalshi": 2.0, "polymarket": 6.0},
+                       limits=load_limits(), opportunity_id="o1", now=T0)
+    ledger.release(r.reservation_id, reason="nothing filled: ORDER_REJECTED", now=T0 + 1)
+    ex = Execution("old-guard", "o1", "e1", "mlb", "LIMITED_LIVE", 10, T0,
+                   state=X.HEDGED, hedge_filled=10, hedge_avg_price=.2, reservation_id=r.reservation_id)
+    p = _plan()
+    records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__, "max_cost": p.max_cost_per_contract,
+                            "fee": p.fee_per_contract}, books={})
+    records.sync(ex, now=T0 + 2)
+    g.ledger = ledger
+    rep = g.apply(GuardSnapshot(T0 + 3))
+    assert r.reservation_id in ledger.open
+    assert any(x.startswith("RESERVATION_REOPENED") for x in rep.findings)
+
+
+def test_a_later_authoritative_zero_fill_closes_the_unknown_execution(tmp_path):
+    from kernel.execution_protocol import OrderRequest
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+    main, journal, records, g = _world(tmp_path, venues={})
+    ledger = ExposureLedger(main)
+    r = ledger.reserve(event_id="e1", league="mlb", per_venue_usd={"polymarket": 6.0, "kalshi": 2.0},
+                       limits=load_limits(), opportunity_id="o1", now=T0)
+    p = _plan()
+    ex = Execution("unknown0", "o1", "e1", "mlb", "LIMITED_LIVE", 10, T0,
+                   state=X.UNKNOWN_PROVIDER_STATE, first_client_id="cid0", reservation_id=r.reservation_id)
+    records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__, "max_cost": p.max_cost_per_contract,
+                            "fee": p.fee_per_contract}, books={})
+    records.sync(ex, now=T0 + 6)
+    journal.pending(OrderRequest("polymarket", TOK, TOK, "buy_yes", .58, 10, "ioc", "cid0", "o1"),
+                    mode="LIMITED_LIVE", now=T0)
+    g.ledger = ledger
+    rep = g.apply(GuardSnapshot(T0 + 121, unconfirmed={"cid0": FillState.UNFILLED.value}))
+    got = records.load("unknown0")
+    assert got.state is X.ORDER_REJECTED and got.released and r.reservation_id not in ledger.open
+    assert any(x.startswith("ZERO_FILL_FINAL unknown0") for x in rep.findings)
+
+
+def test_retried_opportunities_join_fills_by_exact_client_id(tmp_path):
+    """Opportunity ids repeat. The 20:26Z fill was assigned to the latest retry rather than the
+    execution that owned its exact order id, causing the guard to buy a lone hedge."""
+    from kernel.execution_protocol import OrderRequest
+    main, journal, records, g = _world(tmp_path, venues={})
+    p = _plan()
+    ex1 = Execution("first-ex", p.opportunity_id, p.event_id, p.league, "LIMITED_LIVE", 10, T0, first_client_id="cid-old")
+    ex2 = Execution("later-ex", p.opportunity_id, p.event_id, p.league, "LIMITED_LIVE", 10, T0 + 100, first_client_id="cid-new")
+    for ex in (ex1, ex2):
+        records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__, "max_cost": p.max_cost_per_contract,
+                                "fee": p.fee_per_contract}, books={})
+        records.sync(ex, now=ex.started_utc)
+    for cid, t in (("cid-old", T0), ("cid-new", T0 + 100)):
+        journal.pending(OrderRequest("polymarket", TOK, TOK, "buy_yes", .58, 10, "ioc", cid, p.opportunity_id),
+                        mode="LIMITED_LIVE", now=t)
+    assert g._execution_for(journal.get("cid-old")) == "first-ex"
+    assert g._execution_for(journal.get("cid-new")) == "later-ex"
+
+
+def test_a_rolling_guard_pass_never_zeros_older_fills(tmp_path):
+    """The live bug: the next rolling pass saw only the recent Kalshi fill and rewrote the older
+    Polymarket fill from 10.156 to zero. Reconciliation must rebuild from all owned order rows."""
+    from kernel.execution_protocol import Ack, OrderRequest
+    p = _plan()
+    venues = {
+        "polymarket": Venue("polymarket", [], [Position("polymarket", TOK, "yes", 10.0, .57, T0 + 300)]),
+        "kalshi": Venue("kalshi", [], [Position("kalshi", p.hedge.market_id, "yes", 10.0, None, T0 + 300)]),
+    }
+    main, journal, records, g = _world(tmp_path, venues=venues)
+    ex = Execution("paired01", p.opportunity_id, p.event_id, p.league, "LIMITED_LIVE", 10, T0,
+                   state=X.HEDGED, first_client_id="pa", hedge_client_ids=["kb"], first_filled=10,
+                   first_avg_price=.57, hedge_filled=10, hedge_avg_price=.31)
+    records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__, "max_cost": p.max_cost_per_contract,
+                            "fee": p.fee_per_contract}, books={})
+    records.sync(ex, now=T0 + 2)
+    journal.pending(OrderRequest("polymarket", TOK, TOK, "buy_yes", .58, 10, "ioc", "pa", p.opportunity_id), mode="LIMITED_LIVE", now=T0)
+    journal.record(Ack("polymarket", "pa", "p-order", FillState.FILLED, 10, .57, 0, "trade", T0 + 1), kind="ack")
+    journal.pending(OrderRequest("kalshi", p.hedge.market_id, p.hedge.market_id, "buy_yes", .31, 10, "ioc", "kb", p.opportunity_id,
+                                 hedge=True), mode="LIMITED_LIVE", now=T0 + 1)
+    journal.record(Ack("kalshi", "kb", "k-order", FillState.FILLED, 10, .31, .02, "trade", T0 + 2), kind="ack")
+    recent_hedge = FillRecord("kalshi", "k-order", "kf", 10, .31, .02, True, T0 + 2, True,
+                              market_id=p.hedge.market_id, side="buy_yes")
+    journal.record_fill(recent_hedge)
+    rep = g.apply(GuardSnapshot(T0 + 300, fills=[recent_hedge], positions={v: x.positions() for v, x in venues.items()}))
+    got = records.load("paired01")
+    assert got.first_filled == 10 and got.hedge_filled == 10 and rep.corrected == [] and not rep.mismatches
 
 
 def test_a_position_the_venue_no_longer_holds_is_not_handed_back_for_protection(tmp_path):

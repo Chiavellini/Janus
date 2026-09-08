@@ -1035,7 +1035,7 @@ def main() -> int:
                                       fresh_book=sup.fresh_book, on_unprotected=sup.on_unprotected)
         if sup.mode.sends_real_orders:
             sup.guard = PositionGuard(venues=sup.venues, journal=journal, records=records, store=sup.store,
-                                      limits=limits.protect, started_utc=time.time(), kill=kill)
+                                      limits=limits.protect, started_utc=time.time(), ledger=sup.ledger, kill=kill)
     print(f"[mode] {sup.mode.value}", flush=True)
     sup.ks = KalshiStream(api_key=api_key, private_key=load_private_key(key_path))
     sup.ps = PolymarketStream()

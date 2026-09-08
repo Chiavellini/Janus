@@ -296,6 +296,30 @@ def test_the_day_notional_survives_a_release_when_the_ledger_is_durable(tmp_path
     assert L.day_notional_usd(86400.0 + 1.0) == 0.0, "yesterday's rows do not count"
 
 
+def test_a_durable_zero_fill_does_not_spend_the_day_notional(tmp_path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    L = ExposureLedger(store)
+    store.con.execute("CREATE TABLE executions(execution_id TEXT, reservation_id TEXT, started_utc REAL, first_filled REAL, hedge_filled REAL)")
+    r = L.reserve(event_id="e1", league="mlb", per_venue_usd={"kalshi": 4.0, "polymarket": 4.0}, limits=LIMITS, now=1000.0)
+    store.con.execute("INSERT INTO executions VALUES('x',?,?,0,0)", (r.reservation_id, 1000.0))
+    store.con.commit()
+    L.release(r.reservation_id, reason="nothing filled: ORDER_REJECTED", now=1001.0)
+    assert L.day_notional_usd(1002.0) == 0.0
+
+
+def test_a_late_fill_reopens_its_durable_reservation_with_an_audit_event(tmp_path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    L = ExposureLedger(store)
+    r = L.reserve(event_id="e1", league="mlb", per_venue_usd={"polymarket": 4.0}, limits=LIMITS, now=1000.0)
+    L.release(r.reservation_id, reason="nothing filled: ORDER_REJECTED", now=1001.0)
+    assert not L.open
+    assert L.reopen(r.reservation_id, reason="guard found venue fill", now=1002.0)
+    assert r.reservation_id in L.open
+    row = store.con.execute("SELECT released_utc,release_reason FROM capital_reservations WHERE reservation_id=?", (r.reservation_id,)).fetchone()
+    assert row[0] is None and row[1].startswith("REOPENED:")
+    assert store.con.execute("SELECT kind FROM capital_reservation_events WHERE reservation_id=?", (r.reservation_id,)).fetchone()[0] == "REOPEN"
+
+
 def test_a_hedged_executions_reservation_is_committed_capital_not_an_unreconciled_fill(tmp_path):
     import sqlite3
     from nodes.risk.health import risk_alerts
