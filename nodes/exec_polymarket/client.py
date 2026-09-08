@@ -183,7 +183,11 @@ class PolymarketExecution:
             self.journal.record(ack, kind="unconfirmed", raw={"error": self.last_error})
             return ack
         ack = self._ack_from_post(req, d if isinstance(d, dict) else {})
-        self.journal.record(ack, kind="ack", raw=d if isinstance(d, dict) else None)
+        try:
+            self.journal.record(ack, kind="ack", raw=d if isinstance(d, dict) else None)
+        except Exception as exc:  # noqa: BLE001 -- the order is OUT; a store failure here must not hide the ack from the machine (2026-09-08)
+            self.journal_failures = getattr(self, "journal_failures", 0) + 1
+            print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
         return ack
 
     def _ack_from_post(self, req: OrderRequest, d: dict) -> Ack:
@@ -225,10 +229,18 @@ class PolymarketExecution:
             # Nothing filled; fills() would still show a trade if one had. Final.
             st = OrderState(self.venue, client_order_id, row["venue_order_id"], FillState.UNFILLED, 0.0, None, None,
                             "not_found", t, open=False, final=True, detail="order not at the venue: a delayed order that did not match")
-            self.journal.record(st, kind="status", raw={"not_found": True})
+            try:
+                self.journal.record(st, kind="status", raw={"not_found": True})
+            except Exception as exc:  # noqa: BLE001 -- the order is OUT; a store failure here must not hide the ack from the machine (2026-09-08)
+                self.journal_failures = getattr(self, "journal_failures", 0) + 1
+                print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
             return st
         st = self._state_from_order(o, client_order_id, float(row["contracts"]), t)
-        self.journal.record(st, kind="status", raw=o)
+        try:
+            self.journal.record(st, kind="status", raw=o)
+        except Exception as exc:  # noqa: BLE001 -- the order is OUT; a store failure here must not hide the ack from the machine (2026-09-08)
+            self.journal_failures = getattr(self, "journal_failures", 0) + 1
+            print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
         return st
 
     def _state_from_order(self, o: dict, cid: str, requested: float, t: float) -> OrderState:
@@ -255,7 +267,11 @@ class PolymarketExecution:
         except Exception as exc:  # noqa: BLE001
             self.last_error = brief_error(exc)
         st = self.status(client_order_id)
-        self.journal.record(st, kind="cancel")
+        try:
+            self.journal.record(st, kind="cancel")
+        except Exception as exc:  # noqa: BLE001 -- the order is OUT; a store failure here must not hide the ack from the machine (2026-09-08)
+            self.journal_failures = getattr(self, "journal_failures", 0) + 1
+            print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
         return st
 
     def fills(self, *, since_utc: float) -> Sequence[FillRecord]:

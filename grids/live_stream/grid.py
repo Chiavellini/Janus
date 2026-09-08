@@ -336,6 +336,7 @@ class Supervisor:
             sup = self.live.get(gid)
             if sup is None:
                 return
+            before = sup.written
             for ev in sup.poller.on_event("stream", _market_id, now=now):
                 sup.evaluations += 1
                 try:
@@ -350,6 +351,19 @@ class Supervisor:
                     self.record_errors[key] = self.record_errors.get(key, 0) + 1
                     if self.record_errors[key] == 1:
                         print(f"  [record] {sup.short_name} {brief_error(exc)}", flush=True)
+            if sup.written != before and self.store is not None:
+                # Commit per frame, not per report tick (30 s): the loop's implicit transaction held
+                # the file's write lock for up to 30 s, and the execution worker's journal write
+                # behind it hit the 30 s busy timeout with leg A already out (GEA V ZANDSCH,
+                # 2026-09-08 01:40Z: filled on Polymarket, hedge never sent). A WAL commit here is
+                # an append, not an fsync (synchronous=NORMAL).
+                try:
+                    self.store.commit()
+                except Exception as exc:  # noqa: BLE001
+                    key = (gid, "commit:" + type(exc).__name__)
+                    self.record_errors[key] = self.record_errors.get(key, 0) + 1
+                    if self.record_errors[key] == 1:
+                        print(f"  [record] {sup.short_name} commit {brief_error(exc)}", flush=True)
         return cb
 
     # ── persistence ─────────────────────────────────────────────────────
