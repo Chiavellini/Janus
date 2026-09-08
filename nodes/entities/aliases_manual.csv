@@ -148,3 +148,15 @@ bun,SCH,bun:ger.schalke_04,manual_2026-09-03,"Kalshi yes_sub_title / ticker suff
 bun,SVE,bun:ger.sv_07_elversberg,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
 bun,UNI,bun:ger.fc_union_berlin,manual_2026-09-03,"Kalshi yes_sub_title / ticker suffix, or Polymarket slug abbreviation"
 ita,Como 1907,ita:ita.como,manual_2026-09-07,Polymarket Serie A teams[].name; ESPN says "Como" only so the intersection rule cannot seed it
+cfb,University at Albany,cfb:ualbany-great-danes,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,Albany,cfb:ualbany-great-danes,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,North Carolina St.,cfb:nc-state-wolfpack,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,North Carolina State,cfb:nc-state-wolfpack,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,NC St.,cfb:nc-state-wolfpack,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,Appalachian St.,cfb:app-state-mountaineers,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,Appalachian State,cfb:app-state-mountaineers,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,Southeastern Louisiana,cfb:se-louisiana-lions,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,Louisiana-Monroe,cfb:ul-monroe-warhawks,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,Louisiana Monroe,cfb:ul-monroe-warhawks,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,Mississippi,cfb:ole-miss-rebels,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,Texas Christian,cfb:tcu-horned-frogs,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines

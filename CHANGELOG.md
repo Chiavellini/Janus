@@ -993,3 +993,19 @@ records the tier on every `event_transitions` row (a tier change is a transition
 replay harness applies the same timeline as its clock passes each change, so a replay coalesces
 exactly as the lane did. Staged with the protection releases; the first night on the box will say
 how much of the ceiling it buys.
+
+## 2026-09-08 — the college football names the matcher missed
+
+The lane's `[near-miss] cfb` lines named 39 events (15 Kalshi, 24 Polymarket) for the 11th, 12th
+and 19th that resolved onto no entity. Three causes, each fixed at its root: Kalshi writes "St."
+for State ("Ohio St.", "Alabama St.", "Kent St."): the resolver retries a trailing "st" as
+"state" (a leading one, "St. Louis", is untouched); a school alone is ambiguous among 760 college
+programmes ("Troy": the Trojans and a junior college's Vikings; "Charlotte", "Maine",
+"Monroe"): the resolver narrows an ambiguous text to the one candidate whose ESPN id the day's
+schedule carries (`Resolver.narrow`), and the Polymarket side tries school plus nickname ("Troy
+Trojans") before the school alone; Polymarket's collision-broken slug pieces carry a hash
+("mhud34ce7", nine characters) and fell out of the eight-character pattern: nine is admitted, the
+outcome labels then resolve them. Twelve manual alias rows for the labels the rules do not reach
+(University at Albany, North Carolina St., Appalachian St., Southeastern Louisiana, Texas
+Christian, Mississippi...). Two programmes have no ESPN row in the roster the entities were built
+from (Chicago State, UT Rio Grande Valley) and stay unmatched until they do.

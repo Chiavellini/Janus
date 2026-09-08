@@ -85,6 +85,8 @@ def test_polymarket_outcome_labels_are_the_fallback_for_nickname_only_team_names
 
 
 def test_the_full_match_slug_admits_player_pieces_up_to_eight_characters():
+    assert _fullgame_slug("cfb").match("cfb-mhud34ce7-nmxst-2026-09-05"), "a hash-broken college piece (nine characters) is admitted (2026-09-08)"
+    assert not _fullgame_slug("cfb").match("cfb-tenletters-nmxst-2026-09-05")
     assert _fullgame_slug("wta").match("wta-siegemu-samsono-2026-01-18")
     assert _fullgame_slug("atp").match("atp-blockx-trungel-2026-09-02")
     assert not _fullgame_slug("atp").match("atp-doubles-marclop-kolapol-2026-09-04")

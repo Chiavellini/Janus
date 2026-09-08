@@ -199,6 +199,10 @@ class Resolver:
         if not n:
             return Resolution(None, "unresolved", text)
         hits = self.alias_index.get((league, n), [])
+        if not hits and n.endswith(" st"):
+            # Kalshi's college labels: "Ohio St.", "Jacksonville St.", "Alabama St." (2026-09-08).
+            # A trailing "St." is "State"; a leading one ("St. Louis") is left alone.
+            hits = self.alias_index.get((league, n[:-3] + " state"), [])
         if len(hits) == 1:
             return Resolution(hits[0], "alias", text)
         if len(hits) > 1:
@@ -206,6 +210,17 @@ class Resolver:
             return Resolution(None, "unresolved", text, tuple(hits))
         self._miss(text, league, "unknown", "text")
         return Resolution(None, "unresolved", text)
+
+    def narrow(self, res: "Resolution", *, espn_ids) -> "Resolution":
+        """An ambiguous text ("Troy": the Trojans and a junior college's Vikings, 2026-09-08)
+        narrowed to the one candidate the schedule knows: `espn_ids` is the set of ESPN team ids
+        in the games the matcher can pair at all. Anything else stays unresolved."""
+        if res.ok or not res.ambiguous_among:
+            return res
+        keep = [e for e in res.ambiguous_among if e in self.teams and self.teams[e].espn_id in espn_ids]
+        if len(keep) == 1:
+            return Resolution(keep[0], "alias", res.query)
+        return res
 
     def resolve(self, league: str, *, text: str | None = None, venue: str | None = None,
                 venue_team_id: str | None = None) -> Resolution:

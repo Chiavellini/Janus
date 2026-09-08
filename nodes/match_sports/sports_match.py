@@ -71,7 +71,8 @@ DRAW_ENTITY = "draw"
 def _fullgame_slug(league: str) -> re.Pattern[str]:
     prefix = LEAGUES[league].pm_prefix if league in LEAGUES else league
     # team abbreviations run 2-4 characters; a player's slug piece runs up to 8 ("siegemu", "samsono")
-    return re.compile(rf"^{re.escape(prefix)}-[a-z0-9]{{2,8}}-[a-z0-9]{{2,8}}-\d{{4}}-\d{{2}}-\d{{2}}$")
+    # up to 9: college football's collision-broken pieces carry a hash ("mhud34ce7", "csuece6b3", 2026-09-08)
+    return re.compile(rf"^{re.escape(prefix)}-[a-z0-9]{{2,9}}-[a-z0-9]{{2,9}}-\d{{4}}-\d{{2}}-\d{{2}}$")
 
 
 @dataclass(frozen=True)
@@ -147,6 +148,8 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
             cs = m.get("custom_strike") or {}
             uuid = next((v for v in cs.values() if isinstance(v, str) and len(v) >= 32), None)
             res = r.resolve(league, text=m.get("yes_sub_title"), venue="kalshi", venue_team_id=uuid)
+            if not res.ok:
+                res = r.narrow(res, espn_ids=_schedule_ids(by_pair))
             if res.ok:
                 sides.append((m, res.entity_id))
                 if uuid and res.method != "xref":
@@ -266,9 +269,16 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss, *, e
             res = r.resolve(league, text=t.get("name"), venue="polymarket",
                             venue_team_id=str(t.get("id") or ""))
             if not res.ok and i < len(labels):
-                res = r.resolve(league, text=labels[i], venue="polymarket")
-                if res.ok:
-                    t = {**t, "name": labels[i]}
+                # School plus nickname first ("Troy Trojans": the display name, unique where the school
+                # alone is not -- Troy also has a junior college), then the school alone, then the
+                # school narrowed to the schedule (2026-09-08).
+                for text in (f"{labels[i]} {t.get('name') or ''}".strip(), labels[i]):
+                    res = r.resolve(league, text=text, venue="polymarket")
+                    if not res.ok:
+                        res = r.narrow(res, espn_ids=_schedule_ids(by_pair))
+                    if res.ok:
+                        t = {**t, "name": labels[i]}
+                        break
             if res.ok:
                 ents.append((t, res.entity_id))
         if len({e for _, e in ents}) != 2:
@@ -317,6 +327,20 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss, *, e
                                    g.start_utc, "Draw", rules=pm_rules, key=canonical_key(g, league),
                                    key_provenance=KeyProvenance.API_STRUCTURED))
     return out
+
+
+_SCHED_IDS_CACHE: dict[int, frozenset] = {}
+
+
+def _schedule_ids(by_pair) -> frozenset:
+    """Every ESPN team id in the games the matcher can pair (the keys of the pair index)."""
+    key = id(by_pair)
+    got = _SCHED_IDS_CACHE.get(key)
+    if got is None:
+        got = frozenset(i for pair in by_pair for i in pair)
+        _SCHED_IDS_CACHE.clear()
+        _SCHED_IDS_CACHE[key] = got
+    return got
 
 
 def _pm_outcome_labels(ev: dict, slug: str) -> list[str]:
