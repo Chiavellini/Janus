@@ -36,10 +36,10 @@ in this project: the unwind proofs, each buying a venue's minimum and selling it
 (cents of spread). The dry runs passed the gate and the clearance on the box at 05:45Z against
 the live O'Connell v Ellis Challenger match; the paste lifts the kill for the minute they take
 and re-latches it whatever happens:
-`JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-0a8c073c72dcdae11 bash ops/box/unwind_proofs.sh KXATPCHALLENGERMATCH-26SEP08OCELL-OC atp-oconne-ellis-2026-09-08 94745875669789995271735868540118716247968166591286849302563414322047753327404`
-(from `/Users/bernardodelrio/Code/Janus` after `git pull`; if that match has ended, any live
-co-listed match from `bash ops/box/status.sh` works: its Kalshi ticker, Polymarket slug and the
-outcome's token id). The verdict prints; the two proof files land in `/srv/janus/proofs/`.
+`JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-0a8c073c72dcdae11 bash ops/box/unwind_proofs.sh`
+(from `/Users/bernardodelrio/Code/Janus` after `git pull`). With no arguments the box picks a
+co-listed match in play right now with a two-sided touch on both venues and dry-runs it first;
+the verdicts print; the two proof files land in `/srv/janus/proofs/`.
 After that I release R5 (unwind on, guard auto-protect on) and lift the kill myself. The GATE row
 to paste into GATE_TO_LIVE.md's amendment log then, dated, in your words or these:
 "2026-09-0X: the hedge protection layer is authorised on the live lane: after a filled first leg
