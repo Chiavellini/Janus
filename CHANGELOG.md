@@ -893,3 +893,25 @@ worker is queued to the loop's thread and awaited; the store keeps its one conne
 thread), the bookkeeping on the loop. One flight at a time: a second cover during a flight is
 refused IN_FLIGHT before any round trip. Paper modes and the harnesses, which never leave the
 loop, run the machine exactly as before.
+
+## 2026-09-08 — the first flights off the loop, and what each one broke
+
+Three releases between 00:45Z and 01:30Z, each from a real cover the previous one could not carry.
+**01:04Z, STL @ SF at 10 contracts** (`a0d6e11` running): the machine started in the worker and
+its first store write went to the loop through the proxy; the loop was 300 ms into a frame burst,
+the 500 ms clearance expired, ORDER_REJECTED before any order; the loop had meanwhile recorded
+NO_EDGE on the opportunity so every move of the execution was refused. `a3e888d`: the journal and
+records write through a second store connection of the worker's own; the opportunity record is
+owned (EXECUTION_PENDING) on the loop before dispatch and its later moves are queued without
+waiting. **01:17Z, KHACHAN V TIEN at 10 contracts** (`a3e888d`): the leg A POST went out (FAK 10 @
+$0.36) and the journal write after it raised `database is locked` on the new connection (a read
+snapshot upgraded to a write behind the loop's lock fails at once, outside the busy handler); the
+execution stayed LEG_A_SUBMITTED with nothing alarming on it. The venue: no trade, balance
+unchanged; the live kill file was latched by hand at 01:20Z. `4b888eb`: the worker's connection
+opens with `BEGIN IMMEDIATE` (the wait goes through the 30 s busy handler); a machine error is
+recorded by the machine itself as UNKNOWN_PROVIDER_STATE once leg A is out and ORDER_REJECTED
+before, never a bare exception; `[exec FAILED]` prints the traceback, raises the `EXEC_CRASHED`
+lane flag and backs the game off; the watchdog gains `EXECUTION_STUCK` (a non-terminal execution
+older than two minutes); `ops/reconcile_stuck_execution.py` writes the terminal state by hand
+after asking the venue. The lane refuses to start LIMITED_LIVE while a kill file is present, so
+the kill was lifted (01:33Z) only once the box ran `4b888eb`. Still no real fill.

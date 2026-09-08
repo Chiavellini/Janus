@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-07 ~22:40 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-08 ~01:40 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
@@ -22,7 +22,7 @@ minimum in the cover, a 20 s backoff per game, the not-found status as final, le
 window. The remaining self-inflicted miss was the loop itself: four stalls of 6-11 s were the
 executions running on the socket loop, refusing the next cover CLOCK_UNHEALTHY (one across a 13 %
 print). The fix (the machine in a worker thread, one flight at a time, store writes on the loop)
-is the commit after `991afe7`; it releases as soon as the suite is green.
+went out as `a0d6e11` (22:33Z); its first two real flights each broke something else and were fixed in `a3e888d` and `4b888eb` (CHANGELOG 2026-09-08). The box runs `4b888eb` since 01:33Z.
 
 Balances: Kalshi shard 0 $167.86, shard 3 $102.43, Polymarket $304.07. L41 (per-league slippage)
 is still streaming the frames (~4 h in, prints only at the end); MLB is at 1c meanwhile, the
@@ -30,8 +30,11 @@ rest at the pooled 4c. The census (L42) has not run: the watchdog says so.
 
 ## Now — what is left, and whose it is
 
-**Yours:** nothing blocking. Later: a read-only repo token in SSM; rotate the Polymarket signer key
-after the pilot.
+**Yours:** one stuck execution row from the 01:17Z flight (leg A POSTed, the machine crashed on
+the write after it; the venue shows no trade). Write its terminal state on the box, after the
+script re-asks the venue:
+`JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-0a8c073c72dcdae11 bash ops/box/run.sh 'cd /opt/janus && sudo -u janus JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/reconcile_stuck_execution.py c4a9e645 --confirm'`.
+Later: a read-only repo token in SSM; rotate the Polymarket signer key after the pilot.
 
 **Mine, in order:**
 1. Release the off-loop execution, then watch the box through Monday Night Football (~00:15Z)
