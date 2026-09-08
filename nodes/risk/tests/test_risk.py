@@ -331,3 +331,25 @@ def test_override_state_is_what_the_report_tick_and_the_watchdog_read(tmp_path):
     assert not override_state(ov, now=1000.0, **kw)["present"], "an old file without code_sha is not present"
     ov.write_text("{not json")
     assert not override_state(ov, now=1000.0, **kw)["present"]
+
+
+def test_execution_stuck_is_quiet_on_hedged_and_settled_and_fires_on_a_submitted_leg(tmp_path):
+    """HEDGED and SETTLED are not terminal (they end at RECONCILED after the game) and `released`
+    stays 0 until then; until 2026-09-07 every healthy cover older than 120 s alarmed EXECUTION_STUCK."""
+    import sqlite3
+    from nodes.risk.health import risk_alerts
+    T = 10_000.0
+    db = tmp_path / "t.sqlite"
+    con = sqlite3.connect(db)
+    con.execute("CREATE TABLE capital_reservations(reservation_id TEXT, event_id TEXT, league TEXT, per_venue_json TEXT, opportunity_id TEXT, created_utc REAL, released_utc REAL, release_reason TEXT)")
+    con.execute("CREATE TABLE executions(execution_id TEXT, event_id TEXT, state TEXT, last_utc REAL, first_filled REAL, unhedged REAL, reservation_id TEXT, released INTEGER)")
+    con.execute("INSERT INTO executions VALUES('hedgedold','e1','HEDGED',?,10,0,'r1',0)", (T - 600,))
+    con.execute("INSERT INTO executions VALUES('settledold','e2','SETTLED',?,10,0,'r2',0)", (T - 600,))
+    con.commit()
+    kw = dict(kill_root=tmp_path / "kill", breaker_path=tmp_path / "kill" / "breaker.json", db_path=db)
+    assert not any("EXECUTION_STUCK" in a for a in risk_alerts(now=T, **kw)), "a cover held to settlement is not stuck"
+    con.execute("INSERT INTO executions VALUES('stucklega','e3','LEG_A_SUBMITTED',?,0,0,'r3',0)", (T - 600,))
+    con.commit()
+    got = risk_alerts(now=T, **kw)
+    assert any("EXECUTION_STUCK" in a and "stuckleg" in a and "600s" in a for a in got), got
+    assert not any("hedgedol" in a or "settledo" in a for a in got), got

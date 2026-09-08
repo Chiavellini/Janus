@@ -10,8 +10,8 @@
 # out unless --no-restart is given. The daily paste that does all three steps in order is
 # ops/box/release.sh (checkout without restart, re-sign, restart).
 set -euo pipefail
-ID=${JANUS_BOX_ID:-i-0c86891ee306de0b8}
-REGION=${JANUS_BOX_REGION:-us-east-1}      # the Mexico box: export JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-…
+ID=${JANUS_BOX_ID:-i-0a8c073c72dcdae11}          # the Mexico box (mx-central-1), live since 2026-09-07
+REGION=${JANUS_BOX_REGION:-mx-central-1}   # the Virginia box, stopped: export JANUS_BOX_REGION=us-east-1 JANUS_BOX_ID=i-0c86891ee306de0b8
 SHA=${1:-$(git rev-parse main)}
 RESTART=1; [ "${2:-}" = "--no-restart" ] && RESTART=0
 aws ssm put-parameter --region $REGION --overwrite --name /janus/repo/sha --type String --value "$SHA" >/dev/null

@@ -136,11 +136,14 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
                         # EXECUTION_STUCK: a machine that stopped moving before a terminal state (2026-09-08
                         # 01:17Z: LEG_A_SUBMITTED for good after the worker raised; nothing filled, so the
                         # UNHEDGED alarm was quiet while a reservation and an order of unknown state sat).
+                        # HEDGED and SETTLED are not terminal (they end at RECONCILED after the game) and
+                        # `released` stays 0 until then: a cover held to settlement is not stuck, so both
+                        # are quiet here (2026-09-07: every healthy cover older than 120 s alarmed).
                         # Reconcile by hand: ops/reconcile_stuck_execution.py.
-                        terminal = "', '".join(sorted(x.value for x in ExecutionState if x.is_terminal))
+                        quiet = "', '".join(sorted({x.value for x in ExecutionState if x.is_terminal} | {"HEDGED", "SETTLED"}))
                         for row in con.execute(
                                 "SELECT execution_id, event_id, state, last_utc FROM executions "
-                                f"WHERE released = 0 AND state NOT IN ('{terminal}') AND last_utc < ? ORDER BY last_utc",
+                                f"WHERE released = 0 AND state NOT IN ('{quiet}') AND last_utc < ? ORDER BY last_utc",
                                 (t - 120.0,)).fetchall():
                             out.append(f"risk: EXECUTION_STUCK — {row[0][:8]} {row[1]} {row[2]} for {int(t - (row[3] or t))}s "
                                        f"(no terminal state; ops/reconcile_stuck_execution.py)")

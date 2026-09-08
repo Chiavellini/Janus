@@ -15,6 +15,7 @@ owns the store (the box: `sudo -u janus JANUS_DATA_ROOT=/srv/janus JANUS_HOST=bo
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
@@ -81,8 +82,10 @@ def main() -> int:
     for o in orders:
         if o[2] in ("UNCONFIRMED",):
             c.execute("UPDATE orders SET state='UNFILLED', last_utc=? WHERE client_order_id=?", (now, o[0]))
-            c.execute("INSERT INTO order_events(client_order_id, kind, state, seen_ts, detail) VALUES(?,?,?,?,?)",
-                      (o[0], "manual", "UNFILLED", now, detail))
+            # the journal's columns (nodes/execution/journal.py JOURNAL_DDL): no `detail`; the note rides in raw_json.
+            # Until 2026-09-07 this named a column the table lacks, so --confirm failed here and wrote nothing.
+            c.execute("INSERT INTO order_events(seen_ts, client_order_id, kind, state, raw_json) VALUES(?,?,?,?,?)",
+                      (now, o[0], "manual", "UNFILLED", json.dumps({"note": detail})))
     c.commit()
     if ex.get("reservation_id"):
         print("reservation released:", ExposureLedger(st).release(ex["reservation_id"], reason=detail, now=now))

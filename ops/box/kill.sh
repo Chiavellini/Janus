@@ -9,7 +9,7 @@
 set -euo pipefail
 NAME=${1:?all or live}
 case $NAME in all|live) ;; *) echo "unknown switch $NAME (all|live)"; exit 2;; esac
-REGION=${JANUS_BOX_REGION:-us-east-1}      # the Mexico box: export JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-…
+REGION=${JANUS_BOX_REGION:-mx-central-1}   # the Mexico box, live since 2026-09-07; the Virginia box, stopped: export JANUS_BOX_REGION=us-east-1 JANUS_BOX_ID=i-0c86891ee306de0b8
 PARAM=/janus/kill/$NAME
 if [ "${2:-}" = "--clear" ]; then
   if aws ssm delete-parameter --region $REGION --name "$PARAM" 2>/dev/null; then

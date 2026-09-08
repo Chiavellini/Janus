@@ -4,8 +4,8 @@
 #   ops/box/status.sh                # since the last call (a marker under $TMPDIR)
 #   ops/box/status.sh --since 3600   # the last hour
 set -euo pipefail
-ID=${JANUS_BOX_ID:-i-0c86891ee306de0b8}
-REGION=${JANUS_BOX_REGION:-us-east-1}      # the Mexico box: export JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-…
+ID=${JANUS_BOX_ID:-i-0a8c073c72dcdae11}          # the Mexico box (mx-central-1), live since 2026-09-07
+REGION=${JANUS_BOX_REGION:-mx-central-1}   # the Virginia box, stopped: export JANUS_BOX_REGION=us-east-1 JANUS_BOX_ID=i-0c86891ee306de0b8
 MARK=${TMPDIR:-/tmp}/janus-box-status.mark
 SINCE=$(( $(date +%s) - 7200 ))
 [ -f "$MARK" ] && SINCE=$(cat "$MARK")

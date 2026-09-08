@@ -1,5 +1,7 @@
 # ops/box — the Ashburn box
 
+The box is in Mexico since 2026-09-07 (`mx-central-1`, `i-0a8c073c72dcdae11`; Polymarket geoblocks US addresses) and every script here defaults to it; `JANUS_BOX_REGION` / `JANUS_BOX_ID` point elsewhere (the Virginia box `i-0c86891ee306de0b8`, `us-east-1`, is stopped). `write_override.sh` defaults to the 2026-09-07 evening GATE caps: $12 / 10 contracts / $250 a day.
+
 | File | What |
 |---|---|
 | `launch.sh` | Prints the launch plan; `--go` runs `aws ec2 run-instances` (operator; billable). |

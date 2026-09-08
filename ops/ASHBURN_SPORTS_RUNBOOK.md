@@ -124,12 +124,13 @@ region from `JANUS_BOX_REGION` and the instance from `JANUS_BOX_ID`.
    ```bash
    export JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=<the new id>
    ```
+   (Done: the ops/box scripts default to `mx-central-1` / `i-0a8c073c72dcdae11` since 2026-09-07; the export is only for another box.)
 4. **Bootstrap** takes ~4 min (cloud-init: apt, venv, clone at the pinned sha, the units). Then
    `bash ops/box/status.sh` shows `creds=active`; the lane is not enabled yet.
 5. **L34 again from Mexico** (the latency row; read-only against the venues):
    `bash ops/box/run.sh 'sudo -u janus /opt/janus/.venv/bin/python3 /opt/janus/ops/box/latency.py --rounds 100'` and the same on the Mac in the same hour; the verdict is appended to L34's row by the agent.
 6. **Paper first**: `bash ops/box/run.sh 'systemctl enable --now janus-live-stream'` (the unit ships PAPER_EXECUTION); watch one discovery pass with `status.sh`.
-7. **Then the arm**, as before: `bash ops/box/write_override.sh "$(cat ops/box/arm_statement.txt)" 12 25 60 168` and `bash ops/box/mode.sh LIMITED_LIVE`. The first real order's `[exec]` line is the proof the geoblock is behind us.
+7. **Then the arm**, as before: `bash ops/box/write_override.sh "$(cat ops/box/arm_statement.txt)" 12 10 250 168` (the 2026-09-07 evening GATE caps, the script's defaults) and `bash ops/box/mode.sh LIMITED_LIVE`. The first real order's `[exec]` line is the proof the geoblock is behind us.
 8. **Virginia**: `aws ec2 stop-instances --region us-east-1 --instance-ids i-0c86891ee306de0b8` once Mexico runs (its 50 GB data volume keeps F7's records; terminate only after they are copied off if wanted).
 
 ## The cross-host kill

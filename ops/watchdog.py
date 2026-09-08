@@ -44,6 +44,14 @@ WHAT IT DETECTS, and why each check is here rather than an obvious alternative:
                 drop-in exists (the Mac has none, so the Mac's watchdog never says this).
   OVERRIDE_EXPIRING  under 24 h left on the override while the drop-in says LIMITED_LIVE: the
                 day's release paste (ops/box/release.sh) is due.
+  CAP_BINDS_SMALLEST  (nodes/risk/health) the override's cap refused the smallest quantity the
+                lane prices: nothing the lane can send would clear it. A GATE row (raise the cap
+                or lower QUANTITIES), not a restart.
+  COVERAGE_GAP  the census says both venues list an event in the window and the lane did not pair
+                it: a market the lane should be covering and is not.
+  EXECUTION_STUCK  (nodes/risk/health) a non-terminal execution that stopped moving for 120 s,
+                excluding HEDGED and SETTLED (a cover held to the game's settlement is not stuck).
+                Reconcile by hand: ops/reconcile_stuck_execution.py.
 
 PER GATE_TO_LIVE.md:29-32 -- "every alarm demonstrated firing against a fake target; a monitor
 that has never emitted is untested (Kilos found three silent monitor bugs this way)" -- selftest()
@@ -452,6 +460,19 @@ def selftest() -> None:
         got = check(fresh("q"), now=NOW, slas={}, risk=R)
         assert any("UNHEDGED_POSITION" in a and "69852b86" in a and "35.82/100" in a for a in got), got
         assert not any("UNRECONCILED_TOO_LONG" in a for a in got), "a holding failure is the UNHEDGED alarm's business, not a late reconcile"
+        # EXECUTION_STUCK: a machine that stopped moving before a terminal state. HEDGED and SETTLED
+        # are not terminal (RECONCILED comes after the game) and released stays 0 until then, so a
+        # ten-minute-old cover is quiet; a ten-minute-old LEG_A_SUBMITTED is the alarm.
+        con.execute("INSERT INTO executions VALUES('hedgedold','o','e','mlb','LIMITED_LIVE','HEDGED',?,?,10,10,10,0,'r4',0)", (NOW - 600, NOW - 600))
+        con.execute("INSERT INTO executions VALUES('settledold','o','e','mlb','LIMITED_LIVE','SETTLED',?,?,10,10,10,0,'r5',0)", (NOW - 600, NOW - 600))
+        con.commit()
+        got = check(fresh("q"), now=NOW, slas={}, risk=R)
+        assert not any("EXECUTION_STUCK" in a and ("hedgedol" in a or "settledo" in a) for a in got), got
+        con.execute("INSERT INTO executions VALUES('stucklega','o','e','mlb','LIMITED_LIVE','LEG_A_SUBMITTED',?,?,10,0,0,0,'r6',0)", (NOW - 600, NOW - 600))
+        con.commit()
+        got = check(fresh("q"), now=NOW, slas={}, risk=R)
+        assert any("EXECUTION_STUCK" in a and "stuckleg" in a and "600s" in a for a in got), got
+        assert not any("EXECUTION_STUCK" in a and ("hedgedol" in a or "settledo" in a) for a in got), got
         con.execute("DROP TABLE executions"); con.commit(); con.close()
         # OVERRIDE_STALE / OVERRIDE_EXPIRING: judged only where a drop-in says LIMITED_LIVE (the box).
         # The Mac has no drop-in and must never say either; a paper drop-in is quiet too.
@@ -533,7 +554,7 @@ def selftest() -> None:
         con.execute("UPDATE socket_health SET seen_ts = seen_ts - 7200 WHERE venue='polymarket'"); con.commit()
         assert not any("socket" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "stale health rows are silent"
         con.close()
-    print("watchdog selftest OK — 8 job branches, 6 risk branches (the two override alarms among them), the registry branch "
+    print("watchdog selftest OK — 8 job branches, 7 risk branches (the two override alarms and EXECUTION_STUCK among them), the registry branch "
           "and 3 socket branches fired; healthy cases stayed quiet")
 
 
