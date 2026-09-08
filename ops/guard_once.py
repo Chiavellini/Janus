@@ -60,7 +60,7 @@ def main() -> int:
     a = ap.parse_args()
     # The lane may be running: our writes wait behind its lock through the busy handler (BEGIN
     # IMMEDIATE), never fail at once as a read-snapshot upgrade (the worker store's rule).
-    store = TupleStore(a.db, isolation_level="IMMEDIATE")
+    store = TupleStore(a.db, isolation_level="IMMEDIATE", timeout_s=120.0)   # a lane from before 1b4bf04 holds its lock 30 s at a time
     journal = Journal(store)
     records = ExecutionRecords(store)
     limits = load_limits()

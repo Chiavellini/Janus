@@ -83,7 +83,7 @@ def _rel_change(new: float | None, old: float | None) -> float:
 
 class TupleStore:
     def __init__(self, path: Path | str = DEFAULT_DB, *, enforce_volume: bool = True, check_same_thread: bool = True,
-                 isolation_level: str | None = ""):
+                 isolation_level: str | None = "", timeout_s: float = 30.0):
         p = Path(path).resolve()
         if enforce_volume:
             guard(p, "tuple data")
@@ -99,7 +99,7 @@ class TupleStore:
         # writes begin with BEGIN IMMEDIATE, so a wait for the loop's lock goes through the busy
         # handler instead of failing at once as a read-snapshot upgrade ("database is locked",
         # the first flight through it, 01:17Z).
-        self.con = sqlite3.connect(str(p), timeout=30.0, check_same_thread=check_same_thread, isolation_level=isolation_level)
+        self.con = sqlite3.connect(str(p), timeout=float(timeout_s), check_same_thread=check_same_thread, isolation_level=isolation_level)
         self.con.execute("PRAGMA journal_mode=WAL")
         self.con.execute("PRAGMA synchronous=NORMAL")
         self.con.executescript(DDL)
