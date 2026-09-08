@@ -337,6 +337,33 @@ def test_the_guard_pass_feeds_the_breaker_and_holds_the_flight_slot(tmp_path: Pa
         G.clear = old
 
 
+def test_real_entry_requires_the_authenticated_polymarket_account_stream(tmp_path: Path):
+    """Market data alone is insufficient: without account events a delayed fill can go naked."""
+    from types import SimpleNamespace
+    sup, _ = _supervisor(tmp_path)
+    sup.ks = sup.ps = SimpleNamespace(connected=True)
+    user_stream = SimpleNamespace(connected=False)
+    sup.venues = {"polymarket": SimpleNamespace(transport=SimpleNamespace(user_stream=user_stream))}
+    assert sup._connected() == {"kalshi": True, "polymarket": False}
+    user_stream.connected = True
+    assert sup._connected() == {"kalshi": True, "polymarket": True}
+
+
+def test_report_tick_persists_authenticated_account_stream_health(tmp_path: Path):
+    from types import SimpleNamespace
+    from nodes.stream_kalshi.stream import KalshiStream
+    from nodes.stream_polymarket.stream import PolymarketStream
+    sup, _ = _supervisor(tmp_path)
+    sup.ks, sup.ps = KalshiStream(api_key="k", private_key=None), PolymarketStream()
+    user_stream = SimpleNamespace(stats=lambda: {"connected": True, "frames": 7, "errors": 0,
+                                                  "last_error": "", "age_s": 1.0})
+    sup.venues = {"polymarket": SimpleNamespace(transport=SimpleNamespace(user_stream=user_stream))}
+    sup.on_report_tick(now=T)
+    row = sup.store.con.execute(
+        "SELECT connected, frames, errors FROM socket_health WHERE venue='polymarket_user'").fetchone()
+    assert row == (1, 7, 0)
+
+
 def test_a_recent_guard_balance_snapshot_removes_the_entry_round_trips(tmp_path: Path):
     """Paper filled at the decision instant; live used to spend 300-400 ms asking both balances
     after the decision. The guard already confirms them every 30 s, so the hot path reuses that

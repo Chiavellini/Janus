@@ -458,6 +458,11 @@ class Supervisor:
         for venue, st_ in (("kalshi", self.ks), ("polymarket", self.ps)):
             if st_ is not None:
                 self.store.socket_health(venue=venue, stats={**st_.stats(), "loop_lag_s": round(lag, 3)}, seen_ts=t)
+        pm_exec = self.venues.get("polymarket")
+        user_stream = getattr(getattr(pm_exec, "transport", None), "user_stream", None)
+        if user_stream is not None:
+            self.store.socket_health(venue="polymarket_user", stats={**user_stream.stats(),
+                                     "loop_lag_s": round(lag, 3)}, seen_ts=t)
         bad = [v for v, st_ in (("kalshi", self.ks), ("polymarket", self.ps))
                if st_ is not None and not st_.clock.healthy]
         if self.loop_stalled():
@@ -633,7 +638,11 @@ class Supervisor:
         return dict(self.balance_snapshot)
 
     def _connected(self) -> dict[str, bool]:
-        return {"kalshi": bool(self.ks and self.ks.connected), "polymarket": bool(self.ps and self.ps.connected)}
+        pm_exec = self.venues.get("polymarket")
+        user_stream = getattr(getattr(pm_exec, "transport", None), "user_stream", None)
+        user_ok = user_stream is None or bool(user_stream.connected)
+        return {"kalshi": bool(self.ks and self.ks.connected),
+                "polymarket": bool(self.ps and self.ps.connected and user_ok)}
 
     def _clear(self, sup: Supervised, cand: Candidate, balances: dict | None, pre: dict):
         """The risk gate, on the loop (it mints the reservation in the ledger). None when refused."""
@@ -839,6 +848,11 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
              asyncio.create_task(sup.ps.run(stop, on_state=lambda k, d: print(f"  [pm {k}] {d}", flush=True)))]
     if sup.ps.reconciler is not None:
         tasks.append(asyncio.create_task(sup.ps.reconciler.run(stop)))
+    pm_exec = sup.venues.get("polymarket")
+    user_stream = getattr(getattr(pm_exec, "transport", None), "user_stream", None)
+    if user_stream is not None:
+        tasks.append(asyncio.create_task(user_stream.run(
+            stop, on_state=lambda k, d: print(f"  [pm-user {k}] {d}", flush=True))))
 
     async def loop_probe(period: float = 0.25) -> None:
         # The one honest measure of the loop: how late a sleep wakes. Everything the sockets

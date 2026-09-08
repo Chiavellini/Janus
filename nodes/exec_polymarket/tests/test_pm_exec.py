@@ -8,7 +8,7 @@ import pytest
 
 from kernel.execution_protocol import OrderRequest
 from kernel.schema import FillState, Mode
-from nodes.exec_polymarket.client import PolymarketExecution, PyClobTransport, TransportUnavailable
+from nodes.exec_polymarket.client import PolymarketExecution, PolymarketUserStream, PyClobTransport, TransportUnavailable
 from nodes.execution.journal import Journal
 from nodes.execution.testing import clearance_for
 from nodes.store_tuples.store import TupleStore
@@ -17,8 +17,9 @@ T = 1000.0
 
 
 class FakeTransport:
-    def __init__(self, posts=(), orders=(), trades=()):
+    def __init__(self, posts=(), orders=(), trades=(), user_orders=()):
         self.posts, self.orders, self.tr = list(posts), list(orders), list(trades)
+        self.user_orders = list(user_orders)
         self.calls = []
     def post_order(self, *, token_id, price, size, order_type, side="BUY"):
         self.calls.append(("post", token_id, price, size, order_type, side))
@@ -27,6 +28,8 @@ class FakeTransport:
         return out
     def get_order(self, order_id):
         self.calls.append(("get", order_id)); return self.orders.pop(0)
+    def user_order(self, order_id):
+        return self.user_orders.pop(0) if self.user_orders else None
     def cancel(self, order_id):
         self.calls.append(("cancel", order_id)); return {}
     def trades(self, *, after_ts): return list(self.tr)
@@ -187,6 +190,40 @@ def test_a_not_found_order_is_filled_when_the_trade_feed_proves_it(tmp_path):
     st = v.status("c1")
     assert st.state is FillState.FILLED and st.filled_contracts == 10.15625 and st.avg_price == 0.63 and st.final
     assert j.get("c1")["state"] == "FILLED" and j.get("c1")["filled_contracts"] == 10.15625
+
+
+def test_the_authenticated_user_stream_proves_a_match_before_rest(tmp_path):
+    feed = PolymarketUserStream(type("Creds", (), {"api_key": "k", "api_secret": "s", "api_passphrase": "p"})())
+    assert feed.handle({"event_type": "trade", "id": "t1", "taker_order_id": "0xabc", "size": "10.15625",
+                        "price": "0.63", "status": "MATCHED", "asset_id": "tok-1", "side": "BUY"}) == ["trade"]
+    seen = feed.order("0xabc")
+    assert seen["status"] == "MATCHED" and seen["size_matched"] == 10.15625 and seen["price"] == 0.63
+
+    tr = FakeTransport(posts=[{"success": True, "orderID": "0xabc", "status": "delayed"}],
+                       orders=[None], user_orders=[seen])
+    v, j = venue(tmp_path, tr)
+    assert v.submit(req(time_in_force="ioc"), cl(tmp_path)).state is FillState.UNCONFIRMED
+    st = v.status("c1")
+    assert st.state is FillState.FILLED and st.filled_contracts == 10.15625 and st.settlement_pending
+    assert not any(c[0] == "get" for c in tr.calls), "the real-time match removes the REST blind spot"
+
+
+def test_the_authenticated_user_stream_proves_a_fak_zero_fill_before_rest(tmp_path):
+    feed = PolymarketUserStream(type("Creds", (), {"api_key": "k", "api_secret": "s", "api_passphrase": "p"})())
+    assert feed.handle({"topic": "user", "type": "order", "payload": {
+        "id": "0xzero", "sizeMatched": "0", "price": "0.63", "orderType": "FAK",
+        "orderEventType": "CANCELLATION", "status": "CANCELED"}}) == ["order"]
+    seen = feed.order("0xzero")
+    assert seen == {"id": "0xzero", "status": "CANCELED", "size_matched": 0.0,
+                    "price": "0.63", "user_stream": True}
+
+    tr = FakeTransport(posts=[{"success": True, "orderID": "0xzero", "status": "delayed"}],
+                       orders=[None], user_orders=[seen])
+    v, _ = venue(tmp_path, tr)
+    assert v.submit(req(time_in_force="ioc"), cl(tmp_path)).state is FillState.UNCONFIRMED
+    st = v.status("c1")
+    assert st.state is FillState.UNFILLED and st.final and not st.settlement_pending
+    assert not any(c[0] == "get" for c in tr.calls), "the cancellation removes the REST blind spot"
 
 
 def test_a_sell_is_a_sell_of_the_token_after_the_allowance_and_other_sides_stay_refused(tmp_path):

@@ -234,6 +234,9 @@ def socket_alerts(db_path: Path | str, *, now: float | None = None, window_rows:
                            f"flips over the last {len(rows)} health rows ({span}s); last: {rows[-1][3] or '?'}")
             last = rows[-1][3] or ""
             seen_down = any(not (r[1] or 0) for r in rows)
+            if venue == "polymarket_user" and not (rows[-1][1] or 0):
+                out.append(f"socket {venue}: SOCKET_DOWN — authenticated account stream is disconnected; "
+                           f"real entry is fail-closed; last: {last or '?'}")
             if (rose > 0 or seen_down) and last.split(":")[0].strip() in _OUR_EXCEPTIONS:
                 out.append(f"socket {venue}: SOCKET_ERROR — our own exception reached the transport and "
                            f"tore the socket down: {last}")
@@ -565,6 +568,12 @@ def selftest() -> None:
             health("kalshi", i, 1, 0, None)
         con.commit()
         assert not any("socket" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "quiet socket must be silent"
+        for i in range(15):
+            health("polymarket_user", i, 0, 1, "ConnectionClosedError: venue unavailable")
+        con.commit()
+        assert any("polymarket_user: SOCKET_DOWN" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), \
+            "the authenticated account feed is a live-entry dependency"
+        con.execute("DELETE FROM socket_health WHERE venue='polymarket_user'")
         # the 2026-09-03 signature: connected flips every row, errors climb, last_error is ours
         for i in range(15):
             health("polymarket", i, i % 2, i, "IllegalTransition: espn:cfb:1:moneyline:v1:5: BLOCKED_MATCH -> BLOCKED_STALE")
@@ -592,7 +601,7 @@ def selftest() -> None:
         assert not any("socket" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "stale health rows are silent"
         con.close()
     print("watchdog selftest OK — 8 job branches, 7 risk branches (the two override alarms and EXECUTION_STUCK among them), the registry branch "
-          "and 3 socket branches fired; healthy cases stayed quiet")
+          "and 4 socket branches fired; healthy cases stayed quiet")
 
 
 def main() -> int:

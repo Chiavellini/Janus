@@ -67,6 +67,21 @@ The coverage watchdog now treats an event as covered when its append-only transi
 it was co-listed. Previously, Kalshi removing a settled market changed the event's current phase to
 UNPAIRED and falsely relabelled hours of recorded polling (and real entry attempts) as a coverage gap.
 
+### F11 STOP and F12 authenticated account stream
+
+F11 proved the autonomous breaker: its first ambiguous Polymarket submission caused the running
+machine itself to write the box-local `kill/live` before any retry, without the laptop or task
+connection. The guard later proved the order filled zero and released its reservation. This closes
+F11 at the inherited unknown-provider STOP while preserving its fail-closed result.
+
+F12 consumes Polymarket's authenticated user channel on the same box. New entries require the
+account stream as well as both public market streams. A trade/order `MATCHED` event is joined by
+the exact venue order id and immediately returns its actual filled size to the hedge coordinator;
+a cancellation, or an immediate-order `UNMATCHED`, establishes terminal zero-fill. Stream loss
+blocks entry, reconnects locally, and existing REST/order/trade reconciliation remains the durable
+backfill. Unknown state still latches locally. No cap, hurdle, league, protection or unwind setting
+changes.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and

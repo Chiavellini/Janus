@@ -1,0 +1,52 @@
+experiment_id: "janus-sports-limited-live-f12-user-stream-2026-09-08"
+date_registered: "2026-09-08"
+track: "sports/execution"
+row_kind: "F (forward operational evaluation; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F12"
+test_looks_spent: 0
+supersedes: "F11, stopped when its automatic local latch proved an ambiguous CLOB acknowledgement"
+
+# IMMUTABLE ONCE THE FIRST LIMITED_LIVE LINE AFTER THIS REGISTRATION IS WRITTEN.
+purpose: >
+  Prove that the Mexico box observes its own Polymarket order and trade events through the venue's
+  authenticated account stream, so a matched first leg drives its hedge without waiting for
+  eventually-consistent REST and a terminal FAK zero-fill is not misclassified as unknown.
+
+known_before_start:
+  - "F11 automatically wrote the box-local kill/live on its first delayed acknowledgement; no laptop or operator connection was needed."
+  - "The F11 order was later proven zero-fill by the existing REST/order/trade reconciliation and its reservation released."
+  - "F9 proved that REST order lookup can say not_found for 97-335 seconds after a real Polymarket fill."
+  - "Polymarket documents its authenticated user stream as the real-time source for account order changes and matched trades, with REST backfill after reconnect."
+
+arm: >
+  janus-live-stream.service on the Mexico box in LIMITED_LIVE under unchanged limits: $12 combined
+  stake per cover, 10 contracts per leg, $250 committed daily notional, $25 realized-loss breaker,
+  $0.10 minimum net profit and 1% minimum locked return. protect_auto=true and
+  unwind_enabled=false. Runtime, credentials, store, both public market streams, the authenticated
+  account stream, guard, kill sync, watchdog and restart policy are box-local.
+
+window:
+  start: "the first [mode] LIMITED_LIVE after this spec, full green suite, clean 24-hour guard, authenticated account-stream probe, zero imbalance, and matching F12 arm"
+  end: "37 cleared covers, the first STOP, breaker, or operator closure"
+
+criteria:
+  - "No threshold, cap, league or definition moves after start."
+  - "Real entry is refused unless Kalshi market data, Polymarket market data and the authenticated Polymarket account stream are all connected."
+  - "A MATCHED account trade/order event for the exact venue order id is enough to hedge immediately; full or partial filled size and price come from that event."
+  - "A CANCELED order event, or UNMATCHED for FAK/FOK/IOC, with zero matched size is a terminal zero-fill and releases without a hedge."
+  - "A disconnect fails closed for new entries; reconnect resumes only after connection and the existing REST recent-trade/order guard supplies authoritative backfill."
+  - "Any submitted order still lacking a matched or terminal-zero outcome ends UNKNOWN_PROVIDER_STATE and latches box-local kill/live before a retry."
+  - "STOP on any venue fill not protected within 30 seconds, store error after submission, orphan, missing reservation, unresolved position mismatch, fee above pin, or breaker."
+  - "F10's exact-client-id, lifetime-fill, reservation-reopen, committed-notional and asynchronous-settlement criteria remain in force."
+  - "The first three valid covers are hand-reconciled before the fourth; paper and live fill rates remain separate."
+  - "Systemd restarts the lane and timers on box reboot; operator laptop or internet loss is not a runtime dependency."
+
+outputs:
+  registration: "snooping_ledger.md F12 with append-only results"
+  records: "box logs, executions, exact order events/fills, reservations, per-venue settlements, flags, systemd and watchdog"
+
+what_this_does_not_establish:
+  - "Permission to raise a cap or weaken an economic or settlement hurdle."
+  - "That a paper fill predicts a live fill."
+  - "That venue or AWS connectivity cannot fail; those failures must instead fail closed and recover locally."

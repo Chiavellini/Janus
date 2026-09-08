@@ -24,7 +24,10 @@ an EC2 instance without a KMS, and it is read by the transport only.
 
 from __future__ import annotations
 
+import asyncio
+import json
 import os
+import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Protocol, Sequence
@@ -50,6 +53,147 @@ class TransportUnavailable(RuntimeError):
 
 
 PM_DATA_API = "https://data-api.polymarket.com"
+PM_USER_WS = "wss://ws-subscriptions-clob.polymarket.com/ws/user"
+
+
+class PolymarketUserStream:
+    """Authenticated order/trade FIFO used to hedge on MATCHED, before REST finality.
+
+    Polymarket documents the user channel as the real-time source for account order changes and
+    trade matches. REST remains the reconnect/backfill authority; this cache only closes the
+    several-minute blind spot between a `delayed` POST and the trade appearing in REST.
+    """
+
+    def __init__(self, creds, *, url: str = PM_USER_WS):
+        self.url = url
+        self.auth = {"apiKey": creds.api_key, "secret": creds.api_secret,
+                     "passphrase": creds.api_passphrase}
+        self.connected = False
+        self.frames = 0
+        self.errors = 0
+        self.last_error = ""
+        self.last_frame_utc = 0.0
+        self._orders: dict[str, dict] = {}
+        self._trades: dict[str, dict[str, dict]] = {}
+        self._lock = threading.Lock()
+
+    @staticmethod
+    def _get(d: dict, snake: str, camel: str | None = None, default=None):
+        return d.get(snake, d.get(camel or snake, default))
+
+    def handle(self, raw, *, now: float | None = None) -> list[str]:
+        self.frames += 1
+        if isinstance(raw, str):
+            if raw.strip().upper() in ("PING", "PONG"):
+                self.last_frame_utc = now or time.time()
+                return ["pong"]
+            try:
+                raw = json.loads(raw)
+            except ValueError:
+                self.errors += 1
+                self.last_error = "non-JSON user frame"
+                return ["error"]
+        events = raw if isinstance(raw, list) else [raw]
+        kinds = []
+        with self._lock:
+            for ev in events:
+                if not isinstance(ev, dict):
+                    continue
+                payload = ev.get("payload") if isinstance(ev.get("payload"), dict) else ev
+                kind = str(ev.get("event_type") or ev.get("type") or "").lower()
+                if kind == "order":
+                    oid = str(payload.get("id") or "")
+                    if oid:
+                        self._orders[oid] = dict(payload)
+                        kinds.append("order")
+                elif kind == "trade":
+                    tid = str(payload.get("id") or "")
+                    taker = str(self._get(payload, "taker_order_id", "takerOrderId", "") or "")
+                    if taker and tid:
+                        self._trades.setdefault(taker, {})[tid] = dict(payload)
+                    for maker in self._get(payload, "maker_orders", "makerOrders", ()) or ():
+                        oid = str(self._get(maker, "order_id", "orderId", "") or "")
+                        if oid and tid:
+                            row = dict(maker)
+                            row["id"] = tid
+                            row["status"] = payload.get("status")
+                            row["size"] = self._get(maker, "matched_amount", "matchedAmount", 0)
+                            self._trades.setdefault(oid, {})[tid] = row
+                    if taker or self._get(payload, "maker_orders", "makerOrders"):
+                        kinds.append("trade")
+            self.last_frame_utc = now or time.time()
+        return kinds
+
+    def stats(self) -> dict:
+        return {"connected": self.connected, "frames": self.frames, "errors": self.errors,
+                "last_error": self.last_error,
+                "age_s": round(time.time() - self.last_frame_utc, 2) if self.last_frame_utc else None}
+
+    def order(self, order_id: str) -> dict | None:
+        """Return a REST-order shaped match or terminal zero-fill seen by the socket."""
+        with self._lock:
+            trades = list(self._trades.get(order_id, {}).values())
+            order = dict(self._orders.get(order_id, {}))
+        good = [t for t in trades if str(t.get("status", "")).upper().replace("TRADE_STATUS_", "") not in DEAD_TRADE]
+        if good:
+            qty = sum(_f(self._get(t, "size", "matchedAmount")) for t in good)
+            cost = sum(_f(self._get(t, "size", "matchedAmount")) * _f(t.get("price")) for t in good)
+            return {"id": order_id, "status": "MATCHED", "size_matched": qty,
+                    "price": (cost / qty if qty else None), "user_stream": True}
+        matched = _f(self._get(order, "size_matched", "sizeMatched"))
+        if matched > 0:
+            return {"id": order_id, "status": str(order.get("status") or "MATCHED"),
+                    "size_matched": matched, "price": order.get("price"), "user_stream": True}
+        status = str(order.get("status") or "").upper()
+        event_type = str(self._get(order, "order_event_type", "orderEventType", order.get("type") or "")).upper()
+        order_type = str(self._get(order, "order_type", "orderType", "")).upper()
+        # A cancellation is Polymarket's authoritative statement that the remaining amount is
+        # gone.  UNMATCHED is terminal only for the immediate-or-cancel family: a resting GTC can
+        # be unmatched and still live, whereas a FAK/FOK/IOC cannot survive the matching pass.
+        zero_final = status in ("CANCELED", "CANCELLED") or event_type == "CANCELLATION"
+        zero_final = zero_final or (status == "UNMATCHED" and order_type in ("FAK", "FOK", "IOC"))
+        if zero_final:
+            return {"id": order_id, "status": "CANCELED", "size_matched": 0.0,
+                    "price": order.get("price"), "user_stream": True}
+        return None
+
+    async def run(self, stop: asyncio.Event, *, connect=None, on_state=None) -> None:
+        import websockets
+        connect = connect or (lambda url: websockets.connect(url, ping_interval=None, max_size=2 ** 20))
+        backoff = 1.0
+        while not stop.is_set():
+            ping_task = None
+            try:
+                async with connect(self.url) as ws:
+                    await ws.send(json.dumps({"auth": self.auth, "type": "user"}))
+                    self.connected = True
+                    backoff = 1.0
+                    if on_state:
+                        on_state("connected", "authenticated account feed")
+
+                    async def pinger():
+                        while True:
+                            await asyncio.sleep(10.0)
+                            await ws.send("PING")
+
+                    ping_task = asyncio.create_task(pinger())
+                    while not stop.is_set():
+                        raw = await asyncio.wait_for(ws.recv(), timeout=30.0)
+                        self.handle(raw)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:  # noqa: BLE001 -- reconnect plus REST backfill is the contract
+                self.connected = False
+                self.errors += 1
+                self.last_error = brief_error(exc)
+                if on_state:
+                    on_state("reconnect", self.last_error)
+                await asyncio.sleep(backoff)
+                backoff = min(30.0, backoff * 2)
+            finally:
+                if ping_task:
+                    ping_task.cancel()
+        self.connected = False
 
 
 class ClobTransport(Protocol):
@@ -63,6 +207,7 @@ class ClobTransport(Protocol):
     def book(self, token_id: str) -> dict: ...
     def positions(self) -> list[dict] | None: ...
     def ensure_sell_allowance(self, token_id: str) -> bool: ...
+    def user_order(self, order_id: str) -> dict | None: ...
 
 
 class PyClobTransport:
@@ -91,6 +236,7 @@ class PyClobTransport:
         sig_type = int(os.environ.get("JANUS_PM_SIGNATURE_TYPE", "0"))
         self._c = ClobClient(host, chain_id, key=key, signature_type=sig_type, funder=funder)
         self._c.set_api_creds(self._c.create_or_derive_api_key())
+        self.user_stream = PolymarketUserStream(self._c.creds)
         self._T = T
         self._sig_type = sig_type
         self.last_error: str | None = None
@@ -107,6 +253,9 @@ class PyClobTransport:
 
     def get_order(self, order_id: str) -> dict:
         return self._c.get_order(order_id)
+
+    def user_order(self, order_id: str) -> dict | None:
+        return self.user_stream.order(order_id)
 
     def cancel(self, order_id: str) -> dict:
         return self._c.cancel_order(self._T.OrderPayload(orderID=order_id))
@@ -271,6 +420,17 @@ class PolymarketExecution:
         if row is None or not row.get("venue_order_id"):
             return OrderState(self.venue, client_order_id, None, FillState.UNCONFIRMED, 0.0, None, None, "NOT_FOUND", t,
                               detail="no venue order id; reconcile through trades() before any retry")
+        # The authenticated user channel reports MATCHED immediately; REST can omit a consumed
+        # FAK for minutes. A match is enough to hedge (settlement finality is tracked separately).
+        streamed = getattr(self.transport, "user_order", lambda _oid: None)(row["venue_order_id"])
+        if streamed:
+            st = self._state_from_order(streamed, client_order_id, float(row["contracts"]), t)
+            try:
+                self.journal.record(st, kind="status_user_stream", raw=streamed)
+            except Exception as exc:  # noqa: BLE001
+                self.journal_failures = getattr(self, "journal_failures", 0) + 1
+                print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
+            return st
         try:
             o = self.transport.get_order(row["venue_order_id"])
         except Exception as exc:  # noqa: BLE001
@@ -347,7 +507,8 @@ class PolymarketExecution:
             state = FillState.UNFILLED
         live = status == "LIVE"
         return OrderState(self.venue, cid, o.get("id"), state, matched, price, None, status.lower(), t,
-                          open=live, settlement_pending=matched > 0, final=status in ("MATCHED", "CANCELED", "CANCELLED"))
+                          open=live, settlement_pending=matched > 0,
+                          final=status in ("MATCHED", "CANCELED", "CANCELLED", "UNMATCHED"))
 
     def cancel(self, client_order_id: str) -> Ack:
         row = self.journal.get(client_order_id)
@@ -441,5 +602,10 @@ class PolymarketExecution:
             return 0
 
     def stats(self) -> dict:
+        user_stream = getattr(self.transport, "user_stream", None)
         return {"venue": self.venue, "mode": self.mode.value, "submits": self.submits,
-                "unconfirmed": self.unconfirmed, "last_error": self.last_error}
+                "unconfirmed": self.unconfirmed, "last_error": self.last_error,
+                "user_stream": None if user_stream is None else {
+                    "connected": bool(user_stream.connected), "errors": user_stream.errors,
+                    "last_frame_utc": user_stream.last_frame_utc,
+                    "last_error": user_stream.last_error}}
