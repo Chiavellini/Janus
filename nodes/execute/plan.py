@@ -3,10 +3,11 @@
 
 LEG ORDER IS FIXED: Polymarket first, Kalshi hedge. Kalshi leads Polymarket by 5-10 s and 36% of
 Polymarket reprices never happen within 60 s (AGENTS.md), so the opportunity IS a stale
-Polymarket price and Polymarket is the less reliable executor. Leg A is therefore the leg that
-vanishes and the one whose ambiguity costs nothing: a FOK that rejects, times out or comes back
-UNCONFIRMED leaves no position. Leg B is the hedge, on the venue whose REST ack reports the fill
-count synchronously and whose fee is deterministic. The order is never reversed at runtime, and
+Polymarket price and Polymarket is the less reliable executor. Leg A is therefore the leg most
+likely to zero-fill: a FAK that rejects or authoritatively cancels leaves no position, while an
+ambiguous acknowledgement is exposure until the authenticated account stream or REST proves its
+outcome. Leg B is the hedge, on the venue whose REST ack reports the fill count synchronously and
+whose fee is deterministic. The order is never reversed at runtime, and
 the partial-fill policy is pre-declared here rather than improvised (GATE cross-venue #2).
 
 THE HEDGE LIMIT IS A PER-LEVEL PRICE, THE BUDGET IS A VWAP (2026-09-05). Until F3's first

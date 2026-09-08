@@ -101,7 +101,7 @@ def test_a_hedged_execution_whose_fills_match_is_quiet(tmp_path):
     from kernel.execution_protocol import OrderRequest
     p = _plan()
     fa = FillRecord("polymarket", "pa", "f-a", 10.0, 0.57, 0.0, True, T0 + 101, True, market_id=TOK, side="buy_yes")
-    fb = FillRecord("kalshi", "kb", "f-b", 10.0, 0.31, 0.02, True, T0 + 102, True, market_id=p.hedge.market_id, side="buy_yes")
+    fb = FillRecord("kalshi", "kb", "f-b", 10.0, 0.31, 0.021, True, T0 + 102, True, market_id=p.hedge.market_id, side="buy_yes")
     main, journal, records, g = _world(tmp_path, venues={
         "polymarket": Venue("polymarket", [fa], [Position("polymarket", TOK, "yes", 10.0, 0.57, T0 + 300)]),
         "kalshi": Venue("kalshi", [fb], [Position("kalshi", p.hedge.market_id, "yes", 10.0, None, T0 + 300)])})
@@ -116,7 +116,9 @@ def test_a_hedged_execution_whose_fills_match_is_quiet(tmp_path):
     from kernel.execution_protocol import Ack
     journal.record(Ack("polymarket", "a2", "pa", FillState.FILLED, 10.0, 0.57, 0.0, "matched", T0 + 101), kind="ack")
     journal.record(Ack("kalshi", "b2", "kb", FillState.FILLED, 10.0, 0.31, 0.02, "executed", T0 + 102), kind="ack")
+    journal.record_fill(fa); journal.record_fill(fb)  # real venue adapters persist before returning fills()
     rep = g.apply(g.fetch())
+    assert journal.get("b2")["fee_usd"] == 0.021, "the venue fill FIFO corrects an estimated ack fee even when quantity already agrees"
     assert rep.corrected == [] and rep.to_protect == [] and rep.orphans == [] and rep.findings == []
 
 

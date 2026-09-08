@@ -82,6 +82,13 @@ blocks entry, reconnects locally, and existing REST/order/trade reconciliation r
 backfill. Unknown state still latches locally. No cap, hurdle, league, protection or unwind setting
 changes.
 
+The first post-F12 accounting audit found a sub-cent difference between one Kalshi order
+acknowledgement's estimated fee and the durable venue fill fee. The position guard previously
+skipped its order-row refresh whenever state and quantity already agreed, so settlement would have
+used the stale fee. It now also requires average price and fee to agree before skipping; the venue
+fill FIFO corrects all four fields. This changes reported realized PnL only, not an order, cap,
+hurdle or forward predicate.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and

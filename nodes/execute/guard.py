@@ -284,11 +284,15 @@ class PositionGuard:
         if qty <= 1e-9:
             return
         avg = float(agg[1]) / qty
+        fee = float(agg[2] or 0.0)
         state = FillState.FILLED if qty >= float(row["contracts"]) - 1e-6 else FillState.PARTIAL
-        if row["state"] == state.value and abs(float(row.get("filled_contracts") or 0.0) - qty) <= 1e-6:
+        if (row["state"] == state.value
+                and abs(float(row.get("filled_contracts") or 0.0) - qty) <= 1e-6
+                and abs(float(row.get("avg_price") or 0.0) - avg) <= 1e-9
+                and abs(float(row.get("fee_usd") or 0.0) - fee) <= 1e-9):
             return
         self.journal.record(
-            Ack(row["venue"], row["client_order_id"], vid, state, qty, avg, float(agg[2] or 0.0),
+            Ack(row["venue"], row["client_order_id"], vid, state, qty, avg, fee,
                 "guard_fills", self.clock(), detail="venue fill FIFO overrides order lookup"),
             kind="guard_fill",
         )
