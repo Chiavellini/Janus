@@ -40,8 +40,13 @@ and re-latches it whatever happens:
 (from `/Users/bernardodelrio/Code/Janus` after `git pull`; if that match has ended, any live
 co-listed match from `bash ops/box/status.sh` works: its Kalshi ticker, Polymarket slug and the
 outcome's token id). The verdict prints; the two proof files land in `/srv/janus/proofs/`.
-After that I release R5 (unwind on, guard auto-protect on), write the GATE row text for you to
-paste into GATE_TO_LIVE.md, and lift the kill myself.
+After that I release R5 (unwind on, guard auto-protect on) and lift the kill myself. The GATE row
+to paste into GATE_TO_LIVE.md's amendment log then, dated, in your words or these:
+"2026-09-0X: the hedge protection layer is authorised on the live lane: after a filled first leg
+the machine may raise its hedge limit to the budget and on to a locked loss of at most $1.00 per
+execution ($0.10 per contract), may sell the naked side back inside the same cap, and latches the
+live kill when neither protects the position. Caps unchanged ($12 per order, 10 contracts per
+leg, $250 a day, breaker $25)."
 
 **Mine, in order:**
 1. R5 once the proofs pass: `unwind_enabled = true`, `protect_auto = true`, the guard's

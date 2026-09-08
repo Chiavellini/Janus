@@ -979,3 +979,17 @@ in `protect_json`. `Coordinator.protect_existing` runs the layer from a row for 
 tests that pinned "not a chase" now pin the chase's bounds; the MIL @ CIN moved-book case that
 used to end HEDGE_SLIPPAGE_EXCEEDED with a naked leg now ends HEDGED at 0.86, labelled. Staged
 under the kill like R1/R2; R4 is the two unwind proofs the operator runs.
+
+## 2026-09-08 — the evaluation window follows the slate tier
+
+Measured on the box at 02:20Z: 126 to 218 pollers on one vCPU, the lane at 100 % of it, loop lag
+1 to 3 s, frames stamped late enough to HALT CLOCK on both venues through the ITF night session;
+92 pre-match pollers wrote a third of the rows. Every co-listed game inside the 6 h window priced
+on every frame at the in-play window. Now the window per tier is
+`nodes/game_poller/poller.EVAL_INTERVAL_BY_TIER`: a game in play prices on every frame (0.2 s as
+before), one starting within two hours every second, one hours away every five seconds; the lane
+sets it at spawn and moves it on every discovery pass. For GATE step 4 parity the discovery pass
+records the tier on every `event_transitions` row (a tier change is a transition now) and the
+replay harness applies the same timeline as its clock passes each change, so a replay coalesces
+exactly as the lane did. Staged with the protection releases; the first night on the box will say
+how much of the ceiling it buys.
