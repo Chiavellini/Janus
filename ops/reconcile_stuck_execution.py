@@ -34,7 +34,7 @@ def main() -> int:
     ap.add_argument("--db", default=os.environ.get("JANUS_TUPLES_DB", str(DEFAULT_DB)))
     ap.add_argument("--confirm", action="store_true")
     a = ap.parse_args()
-    st = TupleStore(a.db)
+    st = TupleStore(a.db, isolation_level="IMMEDIATE", timeout_s=120.0)   # beside a running lane: wait for its lock, never fail on a snapshot upgrade
     c = st.con
     rows = c.execute("SELECT * FROM executions WHERE execution_id LIKE ?", (a.execution_id + "%",)).fetchall()
     if len(rows) != 1:
