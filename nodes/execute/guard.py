@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Mapping, Sequence
 
 from kernel.execution_protocol import Ack, FillRecord, Position
-from kernel.schema import ExecutionState as X, FillState
+from kernel.schema import ExecutionState as X, FillState, Mode
 from nodes.reconcile.reconcile import ingest_fills, resolve_unconfirmed
 from nodes.risk.breaker import RealizedFill, day_of
 from nodes.risk.flags import raise_flag
@@ -50,6 +50,8 @@ UNCONFIRMED_PNL_UNKNOWN_S = 30 * 60.0
 IN_FLIGHT_GRACE_S = 60.0
 #: The states in which nothing more is owed on the position.
 _QUIET = {X.HEDGED, X.SETTLED, X.RECONCILED, X.UNWOUND}
+#: Settlement rows that are money: the breaker never counts paper.
+_REAL_MODES = {m.value for m in Mode if m.sends_real_orders}
 
 
 @dataclass
@@ -308,9 +310,11 @@ class PositionGuard:
         try:
             has = con.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='execution_settlements'").fetchone()
             if has:
-                for exid, usd, ts in con.execute("SELECT execution_id, realized_usd, settled_ts FROM execution_settlements WHERE settled_ts >= ?",
-                                                 (t - 36 * 3600,)):
-                    if day_of(ts) == day:
+                # Real money only: the box's paper bring-up rows settle in the same table (2026-09-08).
+                for exid, usd, ts, mode in con.execute(
+                        "SELECT execution_id, realized_usd, settled_ts, mode FROM execution_settlements WHERE settled_ts >= ?",
+                        (t - 36 * 3600,)):
+                    if day_of(ts) == day and str(mode) in _REAL_MODES:
                         out.append(RealizedFill(exid, FillState.FILLED, float(usd or 0.0), day))
         except Exception:  # noqa: BLE001 -- an unreadable table is PNL_UNKNOWN below, not a crash
             out.append(RealizedFill("settlements-unreadable", FillState.UNCONFIRMED, 0.0, day))

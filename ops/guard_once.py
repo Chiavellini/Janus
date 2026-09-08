@@ -41,8 +41,12 @@ def run_once(*, venues, store, journal, records, limits, kill, started_utc: floa
     for line in rep.findings:
         log(f"finding: {line}")
     log(f"unconfirmed after the poll: {snap.unconfirmed}")
-    log(f"positions: " + "; ".join(f"{v}: " + (", ".join(f"{p.market_id[:14]} {p.side} {p.contracts:g}" for p in ps) if ps else "none/unreadable")
+    log(f"positions: " + "; ".join(f"{v}: " + (", ".join(f"{p.market_id[:14]} {p.side} {p.contracts:g}" for p in ps) if ps else
+                                                 ("none" if ps == [] else f"unreadable ({getattr(venues.get(v), 'last_error', '')[:120]})"))
                                    for v, ps in snap.positions.items()))
+    for v, venue in venues.items():
+        bal = venue.balance() if hasattr(venue, "balance") else None
+        log(f"balance {v}: {bal.available_usd if bal else 'unreadable'}")
     log(f"corrected={rep.corrected} to_protect={rep.to_protect} orphans={len(rep.orphans)} mismatches={len(rep.mismatches)} "
         f"fills_today={[(f.fill_id[:8], f.state.value, round(f.realized_usd, 4)) for f in rep.fills_today]}")
     return {"corrected": rep.corrected, "to_protect": rep.to_protect, "orphans": len(rep.orphans), "mismatches": rep.mismatches,
@@ -54,7 +58,9 @@ def main() -> int:
     ap.add_argument("--db", default=os.environ.get("JANUS_TUPLES_DB", str(DEFAULT_DB)))
     ap.add_argument("--since-hours", type=float, default=24.0, help="how far back the fills are read")
     a = ap.parse_args()
-    store = TupleStore(a.db)
+    # The lane may be running: our writes wait behind its lock through the busy handler (BEGIN
+    # IMMEDIATE), never fail at once as a read-snapshot upgrade (the worker store's rule).
+    store = TupleStore(a.db, isolation_level="IMMEDIATE")
     journal = Journal(store)
     records = ExecutionRecords(store)
     limits = load_limits()

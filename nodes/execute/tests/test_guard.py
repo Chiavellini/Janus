@@ -137,11 +137,14 @@ def test_fills_today_carries_settlements_and_young_unconfirmed_orders(tmp_path):
     ex = Execution("s1", "o", "e", "mlb", "LIMITED_LIVE", 5.0, T0 + 100)
     records.start(ex, plan={}, books={})
     records.write_unwind_settlement(ex, realized_usd=-0.42, legs=[], now=T0 + 290)
+    paper = Execution("p1", "o", "e", "mlb", "PAPER_EXECUTION", 5.0, T0 + 100)
+    records.start(paper, plan={}, books={})
+    records.write_unwind_settlement(paper, realized_usd=+9.0, legs=[], now=T0 + 291)   # paper: never the breaker's
     journal.pending(OrderRequest("kalshi", "K", "K", "buy_yes", 0.4, 1.0, "ioc", "young", "o"), mode="LIMITED_LIVE", now=T0 + 280)
     journal.pending(OrderRequest("kalshi", "K", "K", "buy_yes", 0.4, 1.0, "ioc", "old", "o"), mode="LIMITED_LIVE", now=T0 - 5000)
     fills = g.fills_today(T0 + 300)
     states = {f.fill_id: f.state for f in fills}
-    assert states["s1"] is FillState.FILLED and states["young"] is FillState.UNCONFIRMED and "old" not in states
+    assert states["s1"] is FillState.FILLED and states["young"] is FillState.UNCONFIRMED and "old" not in states and "p1" not in states
     assert sum(f.realized_usd for f in fills) == -0.42
     from nodes.risk.breaker import LossBreaker
     b = LossBreaker(path=tmp_path / "breaker.json", enforce_volume=False)
