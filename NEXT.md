@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-08 ~05:30 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-08 ~05:55 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
@@ -38,17 +38,25 @@ rest at the pooled 4c. The census (L42) has not run: the watchdog says so.
    and on the box (re-asks the venue first, refuses on any trade):
    `bash ops/box/run.sh 'cd /opt/janus && sudo -u janus JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/reconcile_stuck_execution.py c4a9e645 --confirm'`
    and the same with `88eba02e`.
-3. **Do not lift the kill yet.** The plan's condition (`~/.claude/plans/snazzy-wiggling-badger.md`,
-   A8): R3 (the bounded chase) on the box, the guard clean for a night, the two unwind proofs, and
-   a dated GATE row naming the layer. I will say when it is met; the restart command is then
+3. **The two unwind proofs (R4), when you are at the keyboard.** Each buys the venue's minimum
+   and sells it straight back through the adapter and clearance the protection layer uses, then
+   checks the venue's record (cents of spread). Dry run first, then `--arm`. Pick a live game
+   market with a two-sided touch:
+   `python3 ops/unwind_proof.py --venue kalshi --ticker KXMLBGAME-26SEP08...-XXX` then `--arm`
+   `python3 ops/unwind_proof.py --venue polymarket --slug mlb-xxx-yyy-2026-09-08 --outcome "<team>"` then `--arm`
+   (from `/Users/bernardodelrio/Code/Janus`, the box's credentials env sourced as for the earlier
+   proofs; the override must name LIMITED_LIVE; `--check <proof file>` prints the verdict.)
+4. **Do not lift the kill yet.** The plan's condition (`~/.claude/plans/snazzy-wiggling-badger.md`,
+   A8): R1-R3 are staged on the box (`c43940d`, override re-signed); still owed: the guard clean for
+   a night, both unwind proofs OK, R5 (unwind on) released, and a dated GATE row naming the layer
+   ("a chase to $1.00 locked loss per execution and an automatic unwind are authorised"). I will
+   say when it is met; the restart is then
    `bash ops/box/run.sh 'sudo -u janus rm -f /srv/janus/kill/live; systemctl restart janus-live-stream'`.
 
 **Mine, in order:**
-1. **Hedge protection R3**: `nodes/execute/protect.py` (chase to the budget, then to the loss cap;
-   unwind off), the coordinator on it, the paper lane as the proof; then R4 (the two unwind proof
-   scripts for you to run) and R5 (unwind on, guard auto-protect on).
-2. The box's CPU ceiling (per-tier evaluation window; measured 02:20Z: pre-match pollers are a
-   third of the rows, the in-play ITF session the rest).
+1. R5 once the proofs pass: `unwind_enabled = true`, `protect_auto = true`, the guard's
+   `_protect_off_loop` re-run wired in the lane, the GATE row text for you, the arm statement.
+2. The box's CPU ceiling (per-tier evaluation window; 210 pollers at 05:34Z).
 3. L41's result into `SLIPPAGE_BY_LEAGUE`; the first three real covers reconciled by hand; the
    coverage queue (NBA/WNBA/NHL on 2026-09-10, the CFB alias rows, UFC/KBO/NPB); L42; the Mac
    lane's retirement; the key rotation and the read-only token after the pilot.
