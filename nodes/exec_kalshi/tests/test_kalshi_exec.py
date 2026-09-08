@@ -34,7 +34,7 @@ class FakeClient:
     market: dict | Exception | None = {"market": {"exchange_index": 3}}
     def get_json(self, url, *, params=None, use_cache=True, headers=None):
         self.calls.append(("GET", url, params, headers))
-        if "/markets/" in url:
+        if "/markets/" in url and "/orderbook" not in url:
             if isinstance(self.market, Exception): raise self.market
             return self.market or {}
         out = self.gets.pop(0)
@@ -214,3 +214,37 @@ def test_balances_by_shard_reads_the_breakdown_as_dollar_strings(tmp_path):
     v, _ = venue(tmp_path, fc)
     assert v.balances_by_shard() == {0: 41.24, 3: 20.0}
     assert v.balances_by_shard() == {0: 61.24}, "no breakdown: everything is on shard 0"
+
+
+def test_the_four_sides_on_the_single_yes_book():
+    """Create Order V2: `bid` buys YES, `ask` sells YES. A sell of a held position (2026-09-08) is the
+    same wire shape as the complementary buy; the venue nets it against the position."""
+    def body(side, price):
+        return order_body(req(side=side, price=price, client_order_id=f"c-{side}"), 3)
+    assert (body("buy_yes", 0.40)["side"], body("buy_yes", 0.40)["price"]) == ("bid", "0.4000")
+    assert (body("buy_no", 0.40)["side"], body("buy_no", 0.40)["price"]) == ("ask", "0.6000")
+    assert (body("sell_yes", 0.40)["side"], body("sell_yes", 0.40)["price"]) == ("ask", "0.4000")
+    assert (body("sell_no", 0.40)["side"], body("sell_no", 0.40)["price"]) == ("bid", "0.6000")
+
+
+def test_positions_orderbook_and_fill_directions(tmp_path):
+    fc = FakeClient(gets=[
+        {"market_positions": [{"ticker": "K-A", "position_fp": "10.00"}, {"ticker": "K-B", "position_fp": "-3.5"},
+                              {"ticker": "K-C", "position_fp": "0"}]},
+        {"orderbook_fp": {"yes_dollars": [["0.30", "50"], ["0.31", "20"]], "no_dollars": [["0.65", "10"]]}},
+        {"fills": [{"order_id": "o1", "fill_id": "f1", "ticker": "K-A", "outcome_side": "yes", "book_side": "bid",
+                    "yes_price_dollars": "0.31", "count_fp": "10", "fee_cost": "0.02", "is_taker": True, "ts": 1500},
+                   {"order_id": "o2", "fill_id": "f2", "ticker": "K-A", "action": "sell", "side": "yes",
+                    "yes_price_dollars": "0.29", "count_fp": "10", "fee_cost": "0.02", "is_taker": True, "ts": 1600},
+                   {"order_id": "o3", "fill_id": "f3", "ticker": "K-B", "outcome_side": "no", "book_side": "ask",
+                    "no_price_dollars": "0.65", "count_fp": "3.5", "fee_cost": "0.01", "is_taker": True, "ts": 1700}]},
+    ])
+    v, _ = venue(tmp_path, fc)
+    pos = v.positions()
+    assert [(p.market_id, p.side, p.contracts) for p in pos] == [("K-A", "yes", 10.0), ("K-B", "no", 3.5)]
+    b = v.orderbook("K-A", "sell_yes")
+    assert [q.price for q in b.bids] == [0.31, 0.30] and b.asks and b.asks[0].price == 0.35, "yes bids to sell into; the folded ask"
+    fs = v.fills(since_utc=1000.0)
+    assert [(f.market_id, f.side) for f in fs] == [("K-A", "buy_yes"), ("K-A", "sell_yes"), ("K-B", "buy_no")]
+    fc.gets = [RuntimeError("down")]
+    assert v.positions() is None

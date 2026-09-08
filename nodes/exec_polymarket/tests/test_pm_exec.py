@@ -20,8 +20,8 @@ class FakeTransport:
     def __init__(self, posts=(), orders=(), trades=()):
         self.posts, self.orders, self.tr = list(posts), list(orders), list(trades)
         self.calls = []
-    def post_order(self, *, token_id, price, size, order_type):
-        self.calls.append(("post", token_id, price, size, order_type))
+    def post_order(self, *, token_id, price, size, order_type, side="BUY"):
+        self.calls.append(("post", token_id, price, size, order_type, side))
         out = self.posts.pop(0)
         if isinstance(out, Exception): raise out
         return out
@@ -32,6 +32,19 @@ class FakeTransport:
     def trades(self, *, after_ts): return list(self.tr)
     def balance_usd(self): return 123.0
     def cancel_all(self): return 0
+    book_payload = {"bids": [{"price": "0.50", "size": "40"}, {"price": "0.55", "size": "10"}],
+                    "asks": [{"price": "0.60", "size": "5"}, {"price": "0.58", "size": "20"}]}
+    positions_payload = [{"asset": "tok-1", "size": "10.175", "avgPrice": "0.57"}, {"asset": "tok-9", "size": "0"}]
+    allowance_calls = 0
+    def book(self, token_id):
+        self.calls.append(("book", token_id))
+        if isinstance(self.book_payload, Exception): raise self.book_payload
+        return self.book_payload
+    def positions(self):
+        if isinstance(self.positions_payload, Exception): raise self.positions_payload
+        return self.positions_payload
+    def ensure_sell_allowance(self, token_id):
+        self.allowance_calls += 1; return True
 
 
 def venue(tmp_path, tr, mode=Mode.LIMITED_LIVE):
@@ -65,7 +78,7 @@ def test_a_fok_match_is_confirmed_through_status_at_the_venues_size(tmp_path):
     v, j = venue(tmp_path, tr)
     ack = v.submit(req(), cl(tmp_path))
     assert ack.state is FillState.UNCONFIRMED and ack.settlement_pending and "size via status" in ack.detail
-    assert tr.calls[0] == ("post", "tok-1", 0.44, 10.0, "FOK")
+    assert tr.calls[0] == ("post", "tok-1", 0.44, 10.0, "FOK", "BUY")
     st = v.status("c1")
     assert st.state is FillState.FILLED and st.final and st.filled_contracts == 10.263157 and st.avg_price == 0.43
     assert j.get("c1")["state"] == "FILLED"
@@ -158,3 +171,40 @@ def test_an_order_the_venue_no_longer_has_is_a_final_no_fill(tmp_path):
     assert ack.state is FillState.UNCONFIRMED and ack.open
     st = v.status("c1")
     assert st.state is FillState.UNFILLED and st.final and not st.open and st.raw_status == "not_found"
+
+
+def test_a_sell_is_a_sell_of_the_token_after_the_allowance_and_other_sides_stay_refused(tmp_path):
+    """2026-09-08: the protection layer sells a held token back (sell_yes). buy_no/sell_no are not
+    Polymarket orders (each outcome is its own token) and are refused as before."""
+    tr = FakeTransport(posts=[{"orderID": "o-s1", "status": "matched", "takingAmount": "5.5", "makingAmount": "10"}])
+    v, j = venue(tmp_path, tr)
+    ack = v.submit(req(side="sell_yes", price=0.55, time_in_force="ioc", client_order_id="s1", contracts=10.0), cl(tmp_path))
+    assert tr.calls[0][:2] == ("post", "tok-1") and tr.calls[0][5] == "SELL"
+    assert tr.allowance_calls == 1 and ack.state is not FillState.REJECTED
+    assert j.get("s1")["side"] == "sell_yes"
+    v.submit(req(side="sell_yes", price=0.55, time_in_force="ioc", client_order_id="s2"), cl(tmp_path)) if tr.posts else None
+    assert tr.allowance_calls == 1, "the approval is set once per token"
+    for side in ("buy_no", "sell_no"):
+        a2 = v.submit(req(side=side, client_order_id=f"x-{side}"), cl(tmp_path))
+        assert a2.state is FillState.REJECTED and a2.raw_status == "SIDE"
+
+
+def test_orderbook_and_positions_come_from_the_transport_and_fail_to_none(tmp_path):
+    tr = FakeTransport()
+    v, _ = venue(tmp_path, tr)
+    b = v.orderbook("tok-1", "sell_yes")
+    assert [q.price for q in b.bids] == [0.55, 0.50] and [q.price for q in b.asks] == [0.58, 0.60], "best first on both sides"
+    pos = v.positions()
+    assert len(pos) == 1 and pos[0].market_id == "tok-1" and pos[0].contracts == 10.175 and pos[0].avg_price == 0.57
+    tr.book_payload = RuntimeError("clob down"); tr.positions_payload = RuntimeError("data api down")
+    assert v.orderbook("tok-1") is None and v.positions() is None
+
+
+def test_fills_carry_the_asset_and_the_direction(tmp_path):
+    trades = [{"id": "t1", "status": "CONFIRMED", "size": "10.175", "price": "0.57", "asset_id": "tok-1", "side": "BUY",
+               "taker_order_id": "o1", "match_time": "1500", "fee_rate_bps": "0"},
+              {"id": "t2", "status": "CONFIRMED", "size": "10", "price": "0.55", "asset_id": "tok-1", "side": "SELL",
+               "taker_order_id": "o2", "match_time": "1600", "fee_rate_bps": "0"}]
+    v, _ = venue(tmp_path, FakeTransport(trades=trades))
+    fs = v.fills(since_utc=1000.0)
+    assert [(f.market_id, f.side, f.contracts) for f in fs] == [("tok-1", "buy_yes", 10.175), ("tok-1", "sell_yes", 10.0)]

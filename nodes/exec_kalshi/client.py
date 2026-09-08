@@ -28,10 +28,10 @@ from typing import Any, Callable, Sequence
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from kernel.execution_protocol import Ack, Balance, FillRecord, OrderRequest, OrderState
+from kernel.execution_protocol import Ack, Balance, FillRecord, OrderRequest, OrderState, Position
 from kernel.fetch import Client
 from kernel.redact import brief_error
-from kernel.schema import FillState, Mode
+from kernel.schema import Book, FillState, Mode
 from nodes.execution.gate import admit
 from nodes.execution.journal import Journal
 
@@ -56,12 +56,16 @@ AUTO_ROUTE = -1
 
 
 def order_body(req: OrderRequest, exchange_index: int = AUTO_ROUTE) -> dict:
-    """The v2 body. YES terms only: buy_no is an ask at 1 - price. `exchange_index` is the market's
-    shard as its own record states it, or AUTO_ROUTE when that could not be read."""
-    if req.side == "buy_yes":
-        side, price = "bid", req.price
+    """The v2 body. YES terms only, one book: `bid` buys YES, `ask` sells YES (the venue's words,
+    Create Order V2). buy_no is an ask at 1 - price; sell_yes (the protection layer selling a held
+    position back, 2026-09-08) is an ask at price; sell_no a bid at 1 - price. The venue nets an
+    order against the position it holds. `exchange_index` is the market's shard as its own record
+    states it, or AUTO_ROUTE when that could not be read."""
+    if req.side in ("buy_yes", "sell_no"):
+        side = "bid"
     else:
-        side, price = "ask", 1.0 - req.price
+        side = "ask"
+    price = req.price if req.side.endswith("_yes") else 1.0 - req.price
     return {"ticker": req.market_id, "side": side, "count": f"{req.contracts:.2f}",
             "price": f"{price:.4f}", "time_in_force": TIF[req.time_in_force],
             "self_trade_prevention_type": "taker_at_cross", "client_order_id": req.client_order_id,
@@ -187,7 +191,7 @@ class KalshiExecution:
         avg = o.get("average_fill_price")
         avg_fee = o.get("average_fee_paid")
         fee = None if avg_fee is None else _f(avg_fee) * filled
-        if req.side == "buy_no" and avg is not None:
+        if req.side in ("buy_no", "sell_no") and avg is not None:
             avg = 1.0 - _f(avg)
         resting = req.time_in_force == "gtc" and remaining > 1e-9
         st = state_of(filled, req.contracts, resting=resting)
@@ -230,7 +234,7 @@ class KalshiExecution:
         fee = _f(o.get("taker_fees_dollars")) + _f(o.get("maker_fees_dollars"))
         cost = _f(o.get("taker_fill_cost_dollars")) + _f(o.get("maker_fill_cost_dollars"))
         avg = (cost / filled) if filled else None
-        if avg is not None and side == "buy_no":
+        if avg is not None and side in ("buy_no", "sell_no"):
             avg = 1.0 - avg if _f(o.get("yes_price_dollars")) else avg
         resting = status == "resting"
         state = state_of(filled, requested, resting=resting)
@@ -284,11 +288,50 @@ class KalshiExecution:
         for f in d.get("fills") or []:
             side = f.get("outcome_side") or f.get("side") or "yes"
             price = _f(f.get("yes_price_dollars")) if side == "yes" else _f(f.get("no_price_dollars"))
+            # The member's direction: the legacy `action` when present, else from the book side
+            # (bid buys YES / sells NO; ask sells YES / buys NO).
+            action = f.get("action")
+            if not action:
+                bs = f.get("book_side") or "bid"
+                action = ("buy" if bs == "bid" else "sell") if side == "yes" else ("buy" if bs == "ask" else "sell")
             rec = FillRecord(self.venue, str(f.get("order_id")), str(f.get("fill_id") or f.get("trade_id")),
                              _f(f.get("count_fp", f.get("count"))), price, _f(f.get("fee_cost")),
-                             bool(f.get("is_taker")), _f(f.get("ts"), since_utc), True)
+                             bool(f.get("is_taker")), _f(f.get("ts"), since_utc), True,
+                             market_id=str(f.get("ticker") or ""), side=f"{action}_{side}")
             self.journal.record_fill(rec)
             out.append(rec)
+        return out
+
+    # ── the protection layer's reads (2026-09-08) ────────────────────────
+    def orderbook(self, market_id: str, side: str = "buy_yes") -> Book | None:
+        """The market's live book for the outcome the side names: bids are what a sell hits, asks
+        (the folded complement) what a buy hits. None when the venue cannot be read."""
+        path = f"{API}/markets/{market_id}/orderbook"
+        try:
+            from nodes.venue_kalshi.books import kalshi_book
+            d = self.client.get_json(self.base_url + path, params={"depth": 20}, use_cache=False,
+                                     headers=self._headers("GET", path))
+            return kalshi_book(d, "yes" if side.endswith("_yes") else "no", self.clock(), depth_requested=20)
+        except Exception as exc:  # noqa: BLE001
+            self.last_error = brief_error(exc)
+            return None
+
+    def positions(self) -> Sequence[Position] | None:
+        """Unsettled market positions across every shard: `position_fp` is signed (+ YES, - NO)."""
+        path = f"{API}/portfolio/positions"
+        try:
+            d = self.client.get_json(self.base_url + path, params={"settlement_status": "unsettled", "limit": 200},
+                                     use_cache=False, headers=self._headers("GET", path))
+        except Exception as exc:  # noqa: BLE001
+            self.last_error = brief_error(exc)
+            return None
+        t = self.clock()
+        out = []
+        for p in d.get("market_positions") or []:
+            n = _f(p.get("position_fp", p.get("position")))
+            if abs(n) <= 1e-9:
+                continue
+            out.append(Position(self.venue, str(p.get("ticker") or ""), "yes" if n > 0 else "no", abs(n), None, t))
         return out
 
     def balance(self) -> Balance | None:

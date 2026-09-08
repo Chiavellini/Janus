@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable, Sequence
 
-from kernel.execution_protocol import Ack, Balance, FillRecord, OrderRequest, OrderState
+from kernel.execution_protocol import Ack, Balance, FillRecord, OrderRequest, OrderState, Position
 from kernel.schema import Book, FillState, Mode, Quote
 from nodes.execution.gate import admit
 from nodes.execution.journal import Journal
@@ -44,9 +44,18 @@ class PaperVenue:
     mono: Callable[[], float] = time.monotonic
     _orders: dict[str, Ack] = field(default_factory=dict)
     _fills: list[FillRecord] = field(default_factory=list)
+    #: (market_id, "yes"|"no") -> contracts held, from the paper fills (a sell reduces it).
+    _positions: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self._rng = random.Random(self.seed)
+
+    def orderbook(self, market_id: str, side: str = "buy_yes"):
+        return self.books.get((market_id, side)) or self.books.get(market_id)
+
+    def positions(self) -> Sequence[Position]:
+        t = self.clock()
+        return [Position(self.venue, m, s, n, None, t) for (m, s), n in self._positions.items() if abs(n) > 1e-9]
 
     def submit(self, req: OrderRequest, clearance) -> Ack:
         t = self.clock()
@@ -65,9 +74,12 @@ class PaperVenue:
             self.journal.record(ack, kind="ack", now=t)
             return ack
         need, gross, filled, taken = req.contracts, 0.0, 0.0, []
-        for q in book.asks:
-            px = min(0.99, q.price + self.adverse_move)
-            if px > req.price + 1e-9:
+        # A sell (the protection layer's unwind, 2026-09-08) hits the BIDS from the best down, at or
+        # above its limit; a buy hits the asks from the best up, at or below it.
+        levels = book.bids if req.is_sell else book.asks
+        for q in levels:
+            px = max(0.01, q.price - self.adverse_move) if req.is_sell else min(0.99, q.price + self.adverse_move)
+            if (px < req.price - 1e-9) if req.is_sell else (px > req.price + 1e-9):
                 break
             take = min(need, q.size)
             gross += take * px
@@ -81,11 +93,11 @@ class PaperVenue:
         if taken:
             # Liquidity is consumed: the next order sees what is left, as on a real book.
             used = dict(taken)
-            left = tuple(Quote(q.price, q.size - used.get(q.price, 0.0), q.is_synthetic) for q in book.asks
+            left = tuple(Quote(q.price, q.size - used.get(q.price, 0.0), q.is_synthetic) for q in levels
                          if q.size - used.get(q.price, 0.0) > 1e-9)
-            self.books[key] = Book(bids=book.bids, asks=left, fetched_utc=book.fetched_utc,
-                                             source=book.source, server_utc=book.server_utc,
-                                             received_mono=book.received_mono)
+            self.books[key] = Book(bids=left if req.is_sell else book.bids, asks=book.asks if req.is_sell else left,
+                                   fetched_utc=book.fetched_utc, source=book.source, server_utc=book.server_utc,
+                                   received_mono=book.received_mono)
         state = (FillState.FILLED if filled >= req.contracts - 1e-9 else
                  FillState.PARTIAL if filled > 0 else FillState.UNFILLED)
         avg = gross / filled if filled else None
@@ -93,11 +105,14 @@ class PaperVenue:
         oid = f"paper-{req.client_order_id}"
         ack = Ack(self.venue, req.client_order_id, oid, state, filled, avg, fee, state.value.lower(),
                   t + self.latency_s, open=(req.time_in_force == "gtc" and need > 1e-9))
-        self.balance_usd -= gross + fee
+        self.balance_usd += (gross - fee) if req.is_sell else -(gross + fee)
         self._orders[req.client_order_id] = ack
         if filled:
-            self._fills.append(FillRecord(self.venue, oid, f"{oid}-f1", filled, avg, fee, True, t, True))
+            self._fills.append(FillRecord(self.venue, oid, f"{oid}-f1", filled, avg, fee, True, t, True,
+                                          market_id=req.market_id, side=req.side))
             self.journal.record_fill(self._fills[-1])
+            pkey = (req.market_id, "yes" if req.side.endswith("_yes") else "no")
+            self._positions[pkey] = self._positions.get(pkey, 0.0) + (-filled if req.is_sell else filled)
         self.journal.record(ack, kind="ack", now=t)
         return ack
 
@@ -184,3 +199,9 @@ class RefusingVenue:
 
     def cancel_all(self) -> int:
         return 0
+
+    def orderbook(self, market_id: str, side: str = "buy_yes"):
+        return None
+
+    def positions(self) -> Sequence[Position]:
+        return []

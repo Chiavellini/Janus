@@ -29,9 +29,9 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Protocol, Sequence
 
-from kernel.execution_protocol import Ack, Balance, FillRecord, OrderRequest, OrderState
+from kernel.execution_protocol import Ack, Balance, FillRecord, OrderRequest, OrderState, Position
 from kernel.redact import brief_error
-from kernel.schema import FillState, Mode
+from kernel.schema import Book, FillState, Mode
 from nodes.execution.gate import admit
 from nodes.execution.journal import Journal
 
@@ -44,13 +44,20 @@ class TransportUnavailable(RuntimeError):
     pass
 
 
+PM_DATA_API = "https://data-api.polymarket.com"
+
+
 class ClobTransport(Protocol):
-    def post_order(self, *, token_id: str, price: float, size: float, order_type: str) -> dict: ...
+    def post_order(self, *, token_id: str, price: float, size: float, order_type: str, side: str = "BUY") -> dict: ...
     def get_order(self, order_id: str) -> dict: ...
     def cancel(self, order_id: str) -> dict: ...
     def trades(self, *, after_ts: float) -> list[dict]: ...
     def balance_usd(self) -> float | None: ...
     def cancel_all(self) -> int: ...
+    #: The protection layer's reads (2026-09-08); a transport may raise, the client turns it into None.
+    def book(self, token_id: str) -> dict: ...
+    def positions(self) -> list[dict] | None: ...
+    def ensure_sell_allowance(self, token_id: str) -> bool: ...
 
 
 class PyClobTransport:
@@ -83,8 +90,10 @@ class PyClobTransport:
         self._sig_type = sig_type
         self.last_error: str | None = None
 
-    def post_order(self, *, token_id: str, price: float, size: float, order_type: str) -> dict:
-        args = self._T.OrderArgsV2(token_id=token_id, price=price, size=size, side="BUY")
+    def post_order(self, *, token_id: str, price: float, size: float, order_type: str, side: str = "BUY") -> dict:
+        # side "SELL" (2026-09-08): the protection layer selling a held token back. `size` is shares
+        # either way; the library builds the maker/taker amounts from the side.
+        args = self._T.OrderArgsV2(token_id=token_id, price=price, size=size, side=side)
         signed = self._c.create_order(args)
         # defer_exec: the library otherwise polls the fill's settlement hashes INSIDE the post
         # (best effort, seconds); the hedge needs the match, not the hash. fills() reads
@@ -114,6 +123,37 @@ class PyClobTransport:
     def cancel_all(self) -> int:
         d = self._c.cancel_all()
         return len(d.get("canceled", [])) if isinstance(d, dict) else 0
+
+    def book(self, token_id: str) -> dict:
+        ob = self._c.get_order_book(token_id)
+        return dict(ob.__dict__) if hasattr(ob, "__dict__") and not isinstance(ob, dict) else dict(ob)
+
+    def positions(self) -> list[dict] | None:
+        """What the data API says the funder holds (asset, size, avgPrice, ...). No signature: a
+        public read of a public address. None when unreachable."""
+        funder = os.environ.get("JANUS_PM_FUNDER")
+        if not funder:
+            return None
+        try:
+            from kernel.fetch import Client
+            cl = Client("polymarket-data", rate=2, burst=4, cache_dir=None, timeout=10.0)
+            d = cl.get_json(f"{PM_DATA_API}/positions", params={"user": funder, "sizeThreshold": 0}, use_cache=False)
+            return list(d) if isinstance(d, list) else None
+        except Exception as exc:  # noqa: BLE001
+            self.last_error = f"{type(exc).__name__}: {exc}"
+            return None
+
+    def ensure_sell_allowance(self, token_id: str) -> bool:
+        """A SELL needs the exchange approved on the conditional token; the library sets it (an
+        on-chain approval, once per token). True when the venue accepts the call."""
+        try:
+            params = self._T.BalanceAllowanceParams(asset_type=self._T.AssetType.CONDITIONAL, token_id=token_id,
+                                                    signature_type=self._sig_type)
+            self._c.update_balance_allowance(params)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            self.last_error = f"{type(exc).__name__}: {exc}"
+            return False
 
 
 def _f(v, default=0.0) -> float:
@@ -146,6 +186,8 @@ class PolymarketExecution:
     #: every cover cheaply from then on; only a restart from a permitted host clears it.
     geoblocked: str | None = None
     _requests: dict[str, OrderRequest] = field(default_factory=dict)
+    #: Tokens whose sell allowance was set this process (once per token; the approval is on-chain).
+    _sell_ok: set = field(default_factory=set)
 
     def submit(self, req: OrderRequest, clearance) -> Ack:
         t = self.clock()
@@ -153,16 +195,23 @@ class PolymarketExecution:
                          now_mono=self.mono(), hedge=req.hedge)
         if refused is not None:
             return refused
-        if req.side != "buy_yes":
+        if req.side not in ("buy_yes", "sell_yes"):
             return Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None, "SIDE", t,
                        detail="Polymarket outcomes are separate tokens: pass the outcome's token id as "
-                              "market_id with side buy_yes")
+                              "market_id with side buy_yes (or sell_yes to reduce a held position)")
+        if req.is_sell and req.market_id not in self._sell_ok:
+            # The exchange must be approved on the conditional token before a SELL (2026-09-08).
+            # Best effort and remembered: a refused approval shows up as the venue's own rejection.
+            ok = getattr(self.transport, "ensure_sell_allowance", lambda _t: True)(req.market_id)
+            if ok:
+                self._sell_ok.add(req.market_id)
         self.journal.pending(req, mode=self.mode.value, now=t)       # BEFORE the POST
         self._requests[req.client_order_id] = req
         self.submits += 1
         try:
             d = self.transport.post_order(token_id=req.market_id, price=req.price, size=req.contracts,
-                                          order_type=ORDER_TYPE[req.time_in_force])
+                                          order_type=ORDER_TYPE[req.time_in_force],
+                                          side="SELL" if req.is_sell else "BUY")
         except Exception as exc:  # noqa: BLE001 -- ambiguous unless the venue itself answered
             self.last_error = brief_error(exc)
             code = getattr(exc, "status_code", None)
@@ -287,7 +336,9 @@ class PolymarketExecution:
             if fee <= 0 and taker and self.fee_params and size > 0:
                 fee, fee_source = self._pinned_fee(tr, size, price), "pinned (venue reported none)"
             rec = FillRecord(self.venue, str(tr.get("taker_order_id") or tr.get("order_id") or ""),
-                             str(tr.get("id")), size, price, fee, taker, _f(tr.get("match_time"), since_utc), status in FINAL_TRADE)
+                             str(tr.get("id")), size, price, fee, taker, _f(tr.get("match_time"), since_utc), status in FINAL_TRADE,
+                             market_id=str(tr.get("asset_id") or ""),
+                             side="sell_yes" if str(tr.get("side", "")).upper() == "SELL" else "buy_yes")
             self.journal.record_fill(rec)
             self.last_fee_source = fee_source
             out.append(rec)
@@ -302,6 +353,34 @@ class PolymarketExecution:
             return float(model_for(self.venue).entry_cost([f], params_for(self.venue, self.fee_params)))
         except Exception:  # noqa: BLE001
             return 0.0
+
+    # ── the protection layer's reads (2026-09-08) ────────────────────────
+    def orderbook(self, market_id: str, side: str = "buy_yes") -> Book | None:
+        """The token's live CLOB book (asks for a buy, bids for a sell), or None."""
+        try:
+            from nodes.venue_polymarket.books import pm_book
+            return pm_book(self.transport.book(market_id), self.clock())
+        except Exception as exc:  # noqa: BLE001
+            self.last_error = brief_error(exc)
+            return None
+
+    def positions(self) -> Sequence[Position] | None:
+        try:
+            rows = self.transport.positions()
+        except Exception as exc:  # noqa: BLE001
+            self.last_error = brief_error(exc)
+            return None
+        if rows is None:
+            return None
+        t = self.clock()
+        out = []
+        for r in rows:
+            size = _f(r.get("size"))
+            if size <= 0:
+                continue
+            out.append(Position(self.venue, str(r.get("asset") or r.get("asset_id") or ""), "yes", size,
+                                _f(r.get("avgPrice"), None) if r.get("avgPrice") is not None else None, t))
+        return out
 
     def balance(self) -> Balance | None:
         try:
