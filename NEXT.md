@@ -30,28 +30,18 @@ rest at the pooled 4c. The census (L42) has not run: the watchdog says so.
 
 ## Now — what is left, and whose it is
 
-**Yours (in order):**
-1. **The position resolved itself.** Polymarket redeemed the Zandschulp shares: +$10.18 on $5.80
-   paid (pUSD $308.32). Nothing to hedge. The row `789ad9b2` closes through the settlement pass
-   once the lane runs again (its Polymarket order is now adopted and correct).
-2. **Two no-trade rows** still block new covers on their (finished) matches; the script is fixed
-   and on the box (re-asks the venue first, refuses on any trade):
-   `bash ops/box/run.sh 'cd /opt/janus && sudo -u janus JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/reconcile_stuck_execution.py c4a9e645 --confirm'`
-   and the same with `88eba02e`.
-3. **The two unwind proofs (R4), when you are at the keyboard.** Each buys the venue's minimum
-   and sells it straight back through the adapter and clearance the protection layer uses, then
-   checks the venue's record (cents of spread). Dry run first, then `--arm`. Pick a live game
-   market with a two-sided touch:
-   `python3 ops/unwind_proof.py --venue kalshi --ticker KXMLBGAME-26SEP08...-XXX` then `--arm`
-   `python3 ops/unwind_proof.py --venue polymarket --slug mlb-xxx-yyy-2026-09-08 --outcome "<team>"` then `--arm`
-   (from `/Users/bernardodelrio/Code/Janus`, the box's credentials env sourced as for the earlier
-   proofs; the override must name LIMITED_LIVE; `--check <proof file>` prints the verdict.)
-4. **Do not lift the kill yet.** The plan's condition (`~/.claude/plans/snazzy-wiggling-badger.md`,
-   A8): R1-R3 are staged on the box (`c43940d`, override re-signed); still owed: the guard clean for
-   a night, both unwind proofs OK, R5 (unwind on) released, and a dated GATE row naming the layer
-   ("a chase to $1.00 locked loss per execution and an automatic unwind are authorised"). I will
-   say when it is met; the restart is then
-   `bash ops/box/run.sh 'sudo -u janus rm -f /srv/janus/kill/live; systemctl restart janus-live-stream'`.
+**Yours: one paste.** Everything else on the list I did myself (the two stuck rows are closed,
+the position redeemed itself). What remains is the pair of real orders no one but a human arms
+in this project: the unwind proofs, each buying a venue's minimum and selling it straight back
+(cents of spread). The dry runs passed the gate and the clearance on the box at 05:45Z against
+the live O'Connell v Ellis Challenger match; the paste lifts the kill for the minute they take
+and re-latches it whatever happens:
+`JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-0a8c073c72dcdae11 bash ops/box/unwind_proofs.sh KXATPCHALLENGERMATCH-26SEP08OCELL-OC atp-oconne-ellis-2026-09-08 94745875669789995271735868540118716247968166591286849302563414322047753327404`
+(from `/Users/bernardodelrio/Code/Janus` after `git pull`; if that match has ended, any live
+co-listed match from `bash ops/box/status.sh` works: its Kalshi ticker, Polymarket slug and the
+outcome's token id). The verdict prints; the two proof files land in `/srv/janus/proofs/`.
+After that I release R5 (unwind on, guard auto-protect on), write the GATE row text for you to
+paste into GATE_TO_LIVE.md, and lift the kill myself.
 
 **Mine, in order:**
 1. R5 once the proofs pass: `unwind_enabled = true`, `protect_auto = true`, the guard's
