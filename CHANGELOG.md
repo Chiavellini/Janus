@@ -915,3 +915,15 @@ lane flag and backs the game off; the watchdog gains `EXECUTION_STUCK` (a non-te
 older than two minutes); `ops/reconcile_stuck_execution.py` writes the terminal state by hand
 after asking the venue. The lane refuses to start LIMITED_LIVE while a kill file is present, so
 the kill was lifted (01:33Z) only once the box ran `4b888eb`. Still no real fill.
+
+## 2026-09-08 — the first real fill, and the hedge that never went out
+
+01:39:40Z, GEA V ZANDSCH at 10 contracts: leg A filled on Polymarket (10.175 shares @ $0.57), and
+the journal write after the POST waited the worker's whole 30 s busy timeout behind the loop's
+transaction, which the lane committed once per 30 s report tick. The exception hid the ack from
+the machine: UNKNOWN_PROVIDER_STATE with first_filled 0, no hedge sent, a position of $5.80 held
+with nothing but EXECUTION_STUCK saying so. `1b4bf04`: the loop commits after every frame that
+wrote (a WAL append, synchronous=NORMAL), and a journal write after the wire is best-effort in
+both venue clients: the ack always reaches the machine, the journal failure is printed and
+counted. Staged on the box with the override re-signed; the restart and the position are the
+operator's (kill/live is latched). The reconcile of the three non-terminal rows is by hand.

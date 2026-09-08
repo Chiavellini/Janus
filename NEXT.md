@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-08 ~01:40 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-08 ~02:00 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
@@ -30,11 +30,20 @@ rest at the pooled 4c. The census (L42) has not run: the watchdog says so.
 
 ## Now — what is left, and whose it is
 
-**Yours:** one stuck execution row from the 01:17Z flight (leg A POSTed, the machine crashed on
-the write after it; the venue shows no trade). Write its terminal state on the box, after the
-script re-asks the venue:
-`JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-0a8c073c72dcdae11 bash ops/box/run.sh 'cd /opt/janus && sudo -u janus JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/reconcile_stuck_execution.py c4a9e645 --confirm'`.
-Later: a read-only repo token in SSM; rotate the Polymarket signer key after the pilot.
+**Yours (in order):**
+1. **The position.** GEA V ZANDSCH: 10.175 Polymarket shares of the Zandschulp token bought @ $0.57
+   at 01:39Z; the Kalshi hedge (KXATPMATCH-26SEP07GEAVAN-GEA, yes, planned <= $0.31, break-even
+   about $0.40) was never sent. Hedge it by hand, sell the shares back, or let $5.80 ride: your call.
+2. **Three non-terminal execution rows** (each blocks new covers on its match; the watchdog says
+   EXECUTION_STUCK): `88eba02e` and `c4a9e645` had no trade at the venue, `789ad9b2` is the position
+   above. For the first two, on the box (re-asks the venue first, refuses on any trade):
+   `JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-0a8c073c72dcdae11 bash ops/box/run.sh 'cd /opt/janus && sudo -u janus JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/reconcile_stuck_execution.py c4a9e645 --confirm'`
+   (and `88eba02e`). The third stays until the position is closed or hedged, then the same script
+   refuses (it sees the trade) and the row is settled by hand with the fill.
+3. **Restart the lane on the fixed tree** (`1b4bf04` is checked out and the override re-signed; the
+   running process refuses real orders as ARM_STALE and the kill file blocks a restart):
+   `JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-0a8c073c72dcdae11 bash ops/box/run.sh 'sudo -u janus rm -f /srv/janus/kill/live; systemctl restart janus-live-stream'`
+   then `bash ops/box/kill.sh live --clear` was already done (SSM). Pricing continues meanwhile.
 
 **Mine, in order:**
 1. Release the off-loop execution, then watch the box through Monday Night Football (~00:15Z)
