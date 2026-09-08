@@ -230,6 +230,15 @@ class Coordinator:
         t = self.clock()
         self._stamp(ex, "done_ms")
         self._timed(ex, self.records.move, ex, state, now=t, detail=detail)
+        # An order submitted over the wire but not authoritatively resolved is exposure, even
+        # when the last known filled quantity is zero. Fail closed on the execution host before
+        # the opportunity can be retried; the guard will either recover the trade or prove a
+        # terminal zero-fill and an operator can then clear the latched switch.
+        if state is X.UNKNOWN_PROVIDER_STATE and self.mode.risks_capital and self.kill is not None:
+            try:
+                self.kill.latch("live", f"unknown provider state: {ex.execution_id[:8]} {ex.event_id} {detail[:120]}")
+            except Exception:
+                pass
         if release:
             ex.released = True                     # nothing filled anywhere: reconcile may release at once
             self._timed(ex, self.records.sync, ex, now=t)

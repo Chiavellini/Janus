@@ -1,0 +1,45 @@
+experiment_id: "janus-sports-limited-live-f11-unknown-latch-2026-09-08"
+date_registered: "2026-09-08"
+track: "sports/execution"
+row_kind: "F (forward operational evaluation; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F11"
+test_looks_spent: 0
+supersedes: "F10, stopped on a submitted order left UNKNOWN without an automatic lane kill"
+
+# IMMUTABLE ONCE THE FIRST LIMITED_LIVE LINE AFTER THIS REGISTRATION IS WRITTEN.
+purpose: >
+  Prove the Mexico box stops every new real entry locally when a submitted order is ambiguous,
+  without depending on the operator laptop, while preserving F10's durable fill reconciliation.
+
+known_before_start:
+  - "F10's first entry, TIAFOE V MICHELS q=10, stayed UNKNOWN_PROVIDER_STATE after a delayed CLOB acknowledgement."
+  - "The operator task latched and stopped the lane 58 seconds later; after 120 seconds the trade feed and order lookup proved zero fill."
+  - "The reservation remained open until that proof and the guard then released it."
+  - "Without a kill, the 20-second event backoff expired before the 120-second ambiguity window and permitted another retry."
+
+arm: >
+  LIMITED_LIVE on the Mexico box with unchanged $12 combined stake, 10 contracts per leg,
+  $250 committed daily notional, $25 loss breaker, $0.10 minimum net profit, 1% minimum locked
+  return, protect_auto=true and unwind_enabled=false.
+
+window:
+  start: "first [mode] LIMITED_LIVE after this spec, green suite, clean 24-hour guard and matching F11 arm"
+  end: "37 cleared covers, the first STOP, breaker, or operator closure"
+
+criteria:
+  - "No threshold, cap, league or definition moves after start."
+  - "Any real UNKNOWN_PROVIDER_STATE latches the box-local kill/live before the execution returns to the lane; the reservation stays open until authoritative reconciliation."
+  - "No second real order is submitted after that latch."
+  - "F10's exact-client-id, durable-fill, reservation-reopen, committed-notional and asynchronous-settlement criteria remain in force."
+  - "STOP on any venue fill not protected within 30 seconds, store error after submission, orphan, missing reservation, unresolved position mismatch, fee above pin, or breaker."
+  - "The first three valid covers are hand-reconciled before the fourth; paper and live fill rates remain separate."
+  - "Systemd runtime, credentials, guard, settlement, kill sync and watchdog are box-local; operator connectivity is not a runtime dependency."
+
+outputs:
+  registration: "snooping_ledger.md F11 with append-only results"
+  records: "box executions, transitions, orders/events, fills, reservations/events, per-venue results, settlements, flags, systemd and watchdog"
+
+what_this_does_not_establish:
+  - "Permission to raise a cap or weaken an economic or settlement hurdle."
+  - "That a paper fill predicts a live fill."

@@ -801,6 +801,14 @@ class Supervisor:
             pass
         if ex.released and self.ledger is not None:
             self.ledger.release(ex.reservation_id, reason=f"nothing filled: {ex.state.value}")
+        if ex.state.value == "UNKNOWN_PROVIDER_STATE" and self.mode.risks_capital:
+            if self.store is not None:
+                try:
+                    raise_flag(self.store, "UNKNOWN_PROVIDER_STATE",
+                               f"{ex.execution_id[:8]} {ex.event_id} {ex.detail[:180]}")
+                except Exception as exc:  # noqa: BLE001
+                    print(f"  [risk] flag write failed: {type(exc).__name__}", flush=True)
+            print("  [risk] kill/live latched: a submitted order has no authoritative outcome", flush=True)
         if ex.first_filled <= 0 and ex.state.value in ("ORDER_REJECTED", "UNKNOWN_PROVIDER_STATE"):
             self.backoff[ev.game_id] = time.monotonic() + self.backoff_s
             print(f"  [risk] backoff {sup.short_name} {self.backoff_s:g}s after {ex.state.value} on leg A", flush=True)

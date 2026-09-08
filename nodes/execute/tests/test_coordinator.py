@@ -177,6 +177,23 @@ def test_an_unconfirmed_first_leg_is_polled_never_resubmitted_and_keeps_the_rese
     assert journal.get(ex.first_client_id)["state"] == "UNCONFIRMED"
 
 
+def test_a_real_unconfirmed_first_leg_latches_live_before_any_retry(tmp_path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    journal = Journal(store)
+    clk = Clock()
+    pm = AmbiguousVenue("polymarket", journal, Mode.LIMITED_LIVE, statuses=[])
+    from nodes.execution.paper import PaperVenue
+    k = PaperVenue("kalshi", journal, clock=clk.now, mono=clk.mono)
+    kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    co = Coordinator({"polymarket": pm, "kalshi": k}, ExecutionRecords(store), Mode.LIMITED_LIVE,
+                     hedge_deadline_s=1.0, poll_interval_s=0.25, clock=clk.now, mono=clk.mono,
+                     sleep=clk.sleep, kill=kill)
+    p, _ = plan_for(offers())
+    ex = co.execute(p, clearance_for(tmp_path, mode=Mode.LIMITED_LIVE, now_mono=100.0))
+    assert ex.state is X.UNKNOWN_PROVIDER_STATE and not ex.released
+    assert kill.active(live=True) == ["live"]
+
+
 def test_an_unconfirmed_first_leg_that_turns_out_filled_is_hedged(tmp_path):
     store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
     journal = Journal(store)

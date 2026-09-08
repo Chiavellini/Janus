@@ -55,6 +55,14 @@ Janus fills remain ORPHANs. The daily arm now counts filled capital and open res
 released execution whose quantities and release reason both prove zero fill; unknown records
 still count. This fixes $247.86 of fictional daily usage created mostly by zero-fill attempts.
 
+### F10 STOP: unknown retained capital but did not stop retries
+
+F10's first TIAFOE V MICHELS entry ended UNKNOWN_PROVIDER_STATE after a delayed CLOB acknowledgement.
+The operator task latched and stopped the box; after 120 seconds the guard proved zero fill and
+released the reservation. Retaining an unknown reservation was correct but did not itself stop a
+retry after the 20-second event backoff. F11 makes every real UNKNOWN_PROVIDER_STATE immediately
+latch the box-local live kill; reconciliation stays with the guard and the latch remains human-clear.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and
