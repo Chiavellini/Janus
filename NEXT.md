@@ -53,7 +53,11 @@ rest at the pooled 4c. The census (L42) has not run: the watchdog says so.
    first (evaluations per tier per minute), then a per-tier window: live 0.2 s, starting_soon
    1 s, newborn 5 s, set on each discovery pass, mirrored in the replay harness (the rows carry
    the tier through `events.phase`). A bigger Graviton does not help a single loop thread; an x86
-   core (c7i.large) is about 1.5x if the window is not enough.
+   core (c7i.large) is about 1.5x if the window is not enough. Measured 02:20Z, ten minutes: 92
+   pre-match pollers wrote 8,017 rows, 33 in-play games 13,708 (the four busiest were in-play ITF
+   at ~870 rows each); the window buys about a third, the in-play ITF session is the rest. By
+   02:25Z the loop stamped frames late enough to HALT CLOCK on both venues intermittently: with
+   the kill on nothing is at risk, but pricing tonight is degraded until the session thins.
 1. Release the off-loop execution, then watch the box through Monday Night Football (~00:15Z)
    and the ITF/Challenger evening: `[exec]` lines with `first=` above zero, no `HALT STALL`, no
    `IN_FLIGHT` refusals piling up. The first three real covers reconciled by hand before the
