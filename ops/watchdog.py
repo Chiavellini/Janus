@@ -133,7 +133,31 @@ DISABLED: dict[str, str] = {
 #: so each host gets its own set (JANUS_HOST from /etc/janus.env on the box; unset = the Mac).
 SLAS_BY_HOST: dict[str, dict[str, Sla]] = {
     "box": {k: v for k, v in SLAS.items() if k in ("live_stream", "census")},
+    # The Mac stopped running a lane on 2026-09-08 (see DISABLED_BY_HOST); it still runs the census
+    # and the daily resolver.
+    "": {k: v for k, v in SLAS.items() if k in ("census", "watch_settle")},
 }
+
+
+#: Deliberately not running ON A PARTICULAR HOST, layered over DISABLED. The lane is the case that
+#: forces this to exist: it is the box's whole job and must keep its SLA there, while on the Mac it
+#: is retired. Dropping a job from that host's SLAS alone is not enough -- a job with rows in the
+#: index and no SLA alarms UNREGISTERED instead, which is the same permanent noise under a new name.
+DISABLED_BY_HOST: dict[str, dict[str, str]] = {
+    "": {"live_stream": "the Mac's lane, retired 2026-09-08. Its store corrupted under memory pressure at "
+                        "2026-09-07 22:57 (the header claimed 17 pages more than the file held) and launchd "
+                        "restarted it against the malformed file roughly seven hundred times, each run dying in "
+                        "half a second at `PRAGMA journal_mode=WAL`, before it was booted out and the store "
+                        "recovered. The box has been the only lane since 2026-09-07 and the retirement was "
+                        "already on the list. Restore with `launchctl bootstrap` of "
+                        "ops/com.janus.live-stream.plist, then move this entry back to SLAS_BY_HOST[\"\"]."},
+}
+
+
+def disabled_for_host(host: str | None = None) -> dict[str, str]:
+    """DISABLED plus whatever this host retires on its own. Same host convention as slas_for_host."""
+    h = host if host is not None else os.environ.get("JANUS_HOST", "")
+    return {**DISABLED, **DISABLED_BY_HOST.get(h, {})}
 
 
 def slas_for_host(host: str | None = None) -> dict[str, Sla]:
@@ -236,7 +260,7 @@ def check(index: Path = INDEX, *, now: float | None = None,
 
     alerts: list[str] = []
 
-    for job in sorted(set(by_job) - set(slas) - set(DISABLED)):
+    for job in sorted(set(by_job) - set(slas) - set(disabled_for_host())):
         alerts.append(f"{job}: UNREGISTERED — running but has no SLA in ops/watchdog.py")
 
     for job, sla in sorted(slas.items()):
@@ -298,7 +322,11 @@ def check(index: Path = INDEX, *, now: float | None = None,
                         alerts.extend(coverage_alerts(path, newest_census(), now=now))
                     except Exception as exc:  # noqa: BLE001 -- coverage must report, never crash the watchdog
                         alerts.append(f"coverage: UNREADABLE — {type(exc).__name__}")
-                    lane_up = any(r.get("job") == "live_stream" and r.get("status") == "started" and _pid_alive(r.get("pid"))
+                    # A host that has retired its lane cannot be "silent": there is nothing to hear.
+                    # Without this, a crash-looped start row whose pid the OS has since recycled
+                    # keeps LANE_SILENT firing forever on a host with no lane at all.
+                    lane_up = "live_stream" not in disabled_for_host() and \
+                              any(r.get("job") == "live_stream" and r.get("status") == "started" and _pid_alive(r.get("pid"))
                                   for r in rows)
                     alerts.extend(socket_alerts(path, now=now, max_silence_s=900.0 if lane_up else None))
             except Exception as exc:  # noqa: BLE001 -- the watchdog must report, never crash
@@ -576,7 +604,7 @@ def main() -> int:
         selftest()
         return 0
     alerts = check(a.index)
-    for job, why in sorted(DISABLED.items()):
+    for job, why in sorted(disabled_for_host().items()):
         print(f"info   {job}: DISABLED — {why}")
     for x in alerts:
         print(f"ALERT  {x}")
