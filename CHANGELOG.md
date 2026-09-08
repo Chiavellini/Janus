@@ -927,3 +927,35 @@ wrote (a WAL append, synchronous=NORMAL), and a journal write after the wire is 
 both venue clients: the ack always reaches the machine, the journal failure is printed and
 counted. Staged on the box with the override re-signed; the restart and the position are the
 operator's (kill/live is latched). The reconcile of the three non-terminal rows is by hand.
+
+## 2026-09-08 — hedge protection, R1 (foundations) and R2 (the position guard)
+
+The operator, after the unhedged fill: "we should always protect orders, hedging is the single
+most important part of the system." The plan (`~/.claude/plans/snazzy-wiggling-badger.md`) builds
+the protection layer in five releases under the latched kill. **R1**: the order protocol gains
+`sell_yes`/`sell_no` (a sell reduces a held position, never opens one), `FillRecord` carries the
+market and direction, `Position` and `orderbook()`/`positions()` join the venue contract; both
+venue clients sell a held position back (Polymarket: a SELL of the token after the conditional
+token allowance; Kalshi: an `ask`/`bid` on the single YES book, the venue's own words for "sell
+YES"), read a live book and their positions; the paper venue sells into bids and tracks positions,
+so every protective path is provable with fakes. `ExecutionState` gains `UNWIND_SUBMITTED` and
+`UNWOUND` (terminal, released); execution rows carry the unwinds, the attempt log and the guard's
+corrections, and read back with their plan (`ExecutionRecords.load`/`plan_of`, `Plan.from_dict`);
+`settle()` prices a sell leg with its sign flipped. `limits.toml` gains `[protect]` (30 s window,
+10 s unwind reserve, $1.00 / $0.10 per contract loss cap, 12 submits, unwind and auto off until
+R5, fail closed on) and `max_hedge_submits` (it was a hardcoded 3); the clearance arms the PROTECT
+window and admits protective legs under it; `clear_protect()` mints a re-run clearance that
+honours only the `all` and `venue-` kills. Incidental: `EXECUTION_STUCK` is quiet on HEDGED/SETTLED
+(it fired on every healthy cover), the operator's reconcile script writes the `order_events` row
+the schema has (its `--confirm` did nothing), `ops/box` defaults to the Mexico box and the 12/10/250
+caps. **R2**: `nodes/execute/guard.py`, the position guard: every `guard_period_s` in a real-order
+mode, serialised with executions, it re-polls UNCONFIRMED orders (`resolve_unconfirmed`, never
+called by a running process until now), adopts a Polymarket fill onto an order with no venue id
+(the 01:39Z shape), rewrites execution rows from the venues' fills, reopens a released rejection
+the venue contradicts, flags a fill no row explains (ORPHAN_FILL, and latches the live kill),
+compares positions with the fills seen (POSITION_MISMATCH), hands naked idle executions over
+(printed, not acted on, until `protect_auto`), and feeds the loss breaker `fills_today` (it was
+`()`: the breaker could never latch from trading). `ops/guard_once.py` runs one pass from its own
+process for the proof under the kill. The lane refuses to start LIMITED_LIVE while `kill/live`
+exists, so R1+R2 are staged on the box (checkout + override) and the running process stays on
+its tree until the operator lifts the kill.
