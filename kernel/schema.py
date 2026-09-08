@@ -104,6 +104,11 @@ class ExecutionState(str, Enum):
     LEG_B_PARTIAL = "LEG_B_PARTIAL"
     LEG_B_FILLED = "LEG_B_FILLED"
     HEDGED = "HEDGED"
+    #: The protection layer selling the naked side back (2026-09-08): a stage, like LEG_B_SUBMITTED.
+    UNWIND_SUBMITTED = "UNWIND_SUBMITTED"
+    #: Everything the first leg bought (and any over-hedge) was sold back: nothing is held, the
+    #: reservation is released, the realized loss (bounded by the protect cap) is settled at once.
+    UNWOUND = "UNWOUND"
     SETTLED = "SETTLED"
     RECONCILED = "RECONCILED"
     # failure states -- each is a distinct fact about the venue, never a retry hint
@@ -141,7 +146,7 @@ _HOLDING_FAILURES = frozenset({
     ExecutionState.HEDGE_UNAVAILABLE,
 })
 _EXECUTION_FAILURES = frozenset({
-    ExecutionState.ORDER_REJECTED, ExecutionState.ORDER_TIMEOUT,
+    ExecutionState.ORDER_REJECTED, ExecutionState.ORDER_TIMEOUT, ExecutionState.UNWOUND,
     ExecutionState.UNKNOWN_PROVIDER_STATE, ExecutionState.PARTIAL_FILL,
     ExecutionState.HEDGE_UNAVAILABLE, ExecutionState.HEDGE_SLIPPAGE_EXCEEDED,
     ExecutionState.MARKET_SUSPENDED, ExecutionState.VENUE_DISCONNECTED,

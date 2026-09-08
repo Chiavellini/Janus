@@ -48,7 +48,7 @@ TRANSITIONS: dict[S, frozenset] = {
     S.EXECUTION_PENDING: frozenset({S.PARTIALLY_FILLED, S.HEDGED, S.FAILED_HEDGE, S.PROFITABLE_UNEXECUTED}),
     S.PARTIALLY_FILLED: frozenset({S.HEDGED, S.FAILED_HEDGE}),
     S.HEDGED: frozenset({S.SETTLED}),
-    S.FAILED_HEDGE: frozenset({S.SETTLED}),
+    S.FAILED_HEDGE: frozenset({S.SETTLED, S.HEDGED}),      # HEDGED: the protection layer hedged it after all (2026-09-08)
     S.SETTLED: frozenset({S.RECONCILED}),
     S.RECONCILED: frozenset(),
     S.NO_EDGE: frozenset({S.DISCOVERED, S.PROFITABLE_UNEXECUTED, S.BLOCKED_MATCH, S.BLOCKED_RULES,

@@ -61,6 +61,20 @@ class Plan:
     fee_per_contract: float          # from the cover, at this size
     strategy_version: str = STRATEGY_VERSION
 
+    @classmethod
+    def from_dict(cls, d: Mapping, *, opportunity_id: str, event_id: str, league: str, quantity: float,
+                  strategy_version: str = STRATEGY_VERSION) -> "Plan":
+        """The plan back from `executions.plan_json` (what ExecutionRecords.start wrote: first,
+        hedge, max_cost, fee) plus the row's ids: the position guard re-runs the protection
+        layer from the record (2026-09-08)."""
+        def leg(x: Mapping) -> LegPlan:
+            return LegPlan(x["venue"], x["market_id"], x["outcome_id"], x["side"], float(x["limit_price"]),
+                           float(x["contracts"]), x.get("time_in_force", "ioc"), vwap=float(x.get("vwap") or 0.0),
+                           tick=float(x.get("tick") or 0.01))
+        return cls(opportunity_id, event_id, league, float(quantity), leg(d["first"]), leg(d["hedge"]),
+                   max_cost_per_contract=float(d["max_cost"]), fee_per_contract=float(d["fee"]),
+                   strategy_version=strategy_version)
+
     def hedge_budget(self, first_paid: float) -> float:
         """The most the hedge may AVERAGE per contract for the cover to clear the hurdle, given
         what leg A actually paid. A VWAP, never an order limit; recorded beside every attempt."""

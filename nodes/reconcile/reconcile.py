@@ -104,7 +104,9 @@ def settle(*, legs: Sequence[dict], winners: Mapping[str, str], now: float | Non
         else:
             won = w == bought
         payout = leg["contracts"] if won else 0.0
-        pnl = payout - leg["contracts"] * leg["price"] - float(leg.get("fee_usd") or 0.0)
+        # A sell leg (the unwind, 2026-09-08) took the price in and owes the payout: the sign flips.
+        sign = -1.0 if str(leg.get("side") or "").startswith("sell_") else 1.0
+        pnl = sign * (payout - leg["contracts"] * leg["price"]) - float(leg.get("fee_usd") or 0.0)
         out.append(RealizedFill(leg["client_order_id"], st, pnl, day_of(t)))
     return out
 
