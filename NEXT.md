@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-08 ~02:00 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-08 ~05:30 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
@@ -31,44 +31,27 @@ rest at the pooled 4c. The census (L42) has not run: the watchdog says so.
 ## Now — what is left, and whose it is
 
 **Yours (in order):**
-1. **The position.** GEA V ZANDSCH: 10.175 Polymarket shares of the Zandschulp token bought @ $0.57
-   at 01:39Z; the Kalshi hedge (KXATPMATCH-26SEP07GEAVAN-GEA, yes, planned <= $0.31, break-even
-   about $0.40) was never sent. Hedge it by hand, sell the shares back, or let $5.80 ride: your call.
-2. **Three non-terminal execution rows** (each blocks new covers on its match; the watchdog says
-   EXECUTION_STUCK): `88eba02e` and `c4a9e645` had no trade at the venue, `789ad9b2` is the position
-   above. For the first two, on the box (re-asks the venue first, refuses on any trade):
-   `JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-0a8c073c72dcdae11 bash ops/box/run.sh 'cd /opt/janus && sudo -u janus JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/reconcile_stuck_execution.py c4a9e645 --confirm'`
-   (and `88eba02e`). The third stays until the position is closed or hedged, then the same script
-   refuses (it sees the trade) and the row is settled by hand with the fill.
-3. **Restart the lane on the fixed tree** (`1b4bf04` is checked out and the override re-signed; the
-   running process refuses real orders as ARM_STALE and the kill file blocks a restart):
-   `JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-0a8c073c72dcdae11 bash ops/box/run.sh 'sudo -u janus rm -f /srv/janus/kill/live; systemctl restart janus-live-stream'`
-   then `bash ops/box/kill.sh live --clear` was already done (SSM). Pricing continues meanwhile.
+1. **The position resolved itself.** Polymarket redeemed the Zandschulp shares: +$10.18 on $5.80
+   paid (pUSD $308.32). Nothing to hedge. The row `789ad9b2` closes through the settlement pass
+   once the lane runs again (its Polymarket order is now adopted and correct).
+2. **Two no-trade rows** still block new covers on their (finished) matches; the script is fixed
+   and on the box (re-asks the venue first, refuses on any trade):
+   `bash ops/box/run.sh 'cd /opt/janus && sudo -u janus JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/reconcile_stuck_execution.py c4a9e645 --confirm'`
+   and the same with `88eba02e`.
+3. **Do not lift the kill yet.** The plan's condition (`~/.claude/plans/snazzy-wiggling-badger.md`,
+   A8): R3 (the bounded chase) on the box, the guard clean for a night, the two unwind proofs, and
+   a dated GATE row naming the layer. I will say when it is met; the restart command is then
+   `bash ops/box/run.sh 'sudo -u janus rm -f /srv/janus/kill/live; systemctl restart janus-live-stream'`.
 
 **Mine, in order:**
-0. **The box's CPU ceiling** (02:10Z: 126 pollers for the ITF Asian session, the lane at 100 % of
-   the single vCPU, loop lag 1.3-2.8 s, one transient HALT CLOCK). Every co-listed game in the
-   6 h window gets a poller with the same 0.2 s evaluation window, in play or hours away
-   (`reconcile()`; tiers newborn 36, starting_soon 31, live 18 at 01:33Z). Measure the split
-   first (evaluations per tier per minute), then a per-tier window: live 0.2 s, starting_soon
-   1 s, newborn 5 s, set on each discovery pass, mirrored in the replay harness (the rows carry
-   the tier through `events.phase`). A bigger Graviton does not help a single loop thread; an x86
-   core (c7i.large) is about 1.5x if the window is not enough. Measured 02:20Z, ten minutes: 92
-   pre-match pollers wrote 8,017 rows, 33 in-play games 13,708 (the four busiest were in-play ITF
-   at ~870 rows each); the window buys about a third, the in-play ITF session is the rest. By
-   02:25Z the loop stamped frames late enough to HALT CLOCK on both venues intermittently: with
-   the kill on nothing is at risk, but pricing tonight is degraded until the session thins.
-1. Release the off-loop execution, then watch the box through Monday Night Football (~00:15Z)
-   and the ITF/Challenger evening: `[exec]` lines with `first=` above zero, no `HALT STALL`, no
-   `IN_FLIGHT` refusals piling up. The first three real covers reconciled by hand before the
-   fourth (fills at the venue's size, fees at the pin, balances to the cent, reservations released).
-2. L41's result into `SLIPPAGE_BY_LEAGUE` (its rule: per-league p95 at 3 s, q = 25), ledger line,
-   release.
-3. Latency, from `ops/latency_report.py` once covers exist: the discovery pass's GIL share on 1
-   vCPU (a subprocess, or a c7g.large), balances cached off the path, the pooled Kalshi client.
-4. The non-sports census (L42) build; the CFB alias rows the near-miss lines name; coverage in
-   census order.
-5. Retire the Mac lane after 48 h of the box without SIGNAL_EXIT.
+1. **Hedge protection R3**: `nodes/execute/protect.py` (chase to the budget, then to the loss cap;
+   unwind off), the coordinator on it, the paper lane as the proof; then R4 (the two unwind proof
+   scripts for you to run) and R5 (unwind on, guard auto-protect on).
+2. The box's CPU ceiling (per-tier evaluation window; measured 02:20Z: pre-match pollers are a
+   third of the rows, the in-play ITF session the rest).
+3. L41's result into `SLIPPAGE_BY_LEAGUE`; the first three real covers reconciled by hand; the
+   coverage queue (NBA/WNBA/NHL on 2026-09-10, the CFB alias rows, UFC/KBO/NPB); L42; the Mac
+   lane's retirement; the key rotation and the read-only token after the pilot.
 
 **Time:** `bash ops/box/status.sh` for the box; `python3 ops/watchdog.py` on the Mac. Stop the
 bill: `aws ec2 stop-instances --region mx-central-1 --instance-ids i-0a8c073c72dcdae11`.
