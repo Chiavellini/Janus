@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-08 ~05:55 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
+Updated 2026-09-08 ~06:20 UTC, on main. CHECKLIST.md is the state list; CHANGELOG.md the dated
 story.
 
 ## Where it stands
@@ -52,9 +52,10 @@ leg, $250 a day, breaker $25)."
 1. R5 once the proofs pass: `unwind_enabled = true`, `protect_auto = true`, the guard's
    `_protect_off_loop` re-run wired in the lane, the GATE row text for you, the arm statement.
 2. The box's CPU ceiling (per-tier evaluation window; 210 pollers at 05:34Z).
-3. L41's result into `SLIPPAGE_BY_LEAGUE`; the first three real covers reconciled by hand; the
-   coverage queue (NBA/WNBA/NHL on 2026-09-10, the CFB alias rows, UFC/KBO/NPB); L42; the Mac
-   lane's retirement; the key rotation and the read-only token after the pilot.
+3. L41's result into `SLIPPAGE_BY_LEAGUE` (file 61 of 103 at 05:50Z); the first three real covers
+   reconciled by hand; the coverage queue (NBA/WNBA/NHL on 2026-09-10; UFC/KBO/NPB; the CFB
+   labels are done: `b3e7ae7`, staged); L42; the Mac lane's retirement; the key rotation and the
+   read-only token after the pilot.
 
 **Time:** `bash ops/box/status.sh` for the box; `python3 ops/watchdog.py` on the Mac. Stop the
 bill: `aws ec2 stop-instances --region mx-central-1 --instance-ids i-0a8c073c72dcdae11`.
