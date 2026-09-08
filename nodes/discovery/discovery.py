@@ -385,13 +385,14 @@ def record_events(store, d: Discovery, slate: Mapping[str, dict], blocked: Mappi
     t = now or time.time()
     store.ensure_ddl(EVENTS_DDL)
     con = store.con
+    _ensure_tier_column(con)
     written = 0
     for g in d.games:
         spec = slate.get(g.game_id)
         phase = f"{g.state}:co_listed" if spec else g.state
         tier = spec.get("tier") if spec else None
         reason = blocked.get(g.game_id)
-        row = con.execute("SELECT phase, block_reason FROM events WHERE event_id=?",
+        row = con.execute("SELECT phase, block_reason, tier FROM events WHERE event_id=?",
                           (g.game_id,)).fetchone()
         con.execute(
             "INSERT INTO events(event_id, league, start_utc, participants, short_name, phase, "
@@ -406,9 +407,11 @@ def record_events(store, d: Discovery, slate: Mapping[str, dict], blocked: Mappi
              phase, spec["kalshi_event"] if spec else None, spec["pm_slug"] if spec else None,
              json.dumps(spec["fee_params"], sort_keys=True) if spec else None,
              json.dumps(spec, sort_keys=True) if spec else None, t, t, reason, tier))
-        if row is None or (row[0], row[1]) != (phase, reason):
-            con.execute("INSERT INTO event_transitions(seen_ts, event_id, phase, block_reason) "
-                        "VALUES(?,?,?,?)", (t, g.game_id, phase, reason))
+        if row is None or (row[0], row[1], row[2]) != (phase, reason, tier):
+            # The tier rides on the transition (2026-09-08): the lane's evaluation window follows
+            # it, and the replay harness rebuilds the same window from this timeline.
+            con.execute("INSERT INTO event_transitions(seen_ts, event_id, phase, block_reason, tier) "
+                        "VALUES(?,?,?,?,?)", (t, g.game_id, phase, reason, tier))
             written += 1
         if spec:
             recs = records_from_spec(spec)
@@ -417,6 +420,25 @@ def record_events(store, d: Discovery, slate: Mapping[str, dict], blocked: Mappi
                 record_equivalence(store, event_id=g.game_id, league=g.league, rec_a=recs[0],
                                    rec_b=recs[1], result=certify_from_spec(spec, g.league), now=t)
     return written
+
+
+def _ensure_tier_column(con) -> None:
+    cols = {r[1] for r in con.execute("PRAGMA table_info(event_transitions)").fetchall()}
+    if "tier" not in cols:
+        con.execute("ALTER TABLE event_transitions ADD COLUMN tier TEXT")
+
+
+def load_tier_timeline(store, *, game_ids: list[str] | None = None) -> dict[str, list[tuple[float, str]]]:
+    """event_id -> [(seen_ts, tier), ...] in time order, from the transitions the lane wrote: what
+    the replay harness applies to mirror the lane's per-tier evaluation window (2026-09-08)."""
+    store.ensure_ddl(EVENTS_DDL)
+    _ensure_tier_column(store.con)
+    out: dict[str, list[tuple[float, str]]] = {}
+    for gid, ts, tier in store.con.execute("SELECT event_id, seen_ts, tier FROM event_transitions WHERE tier IS NOT NULL ORDER BY event_id, seen_ts"):
+        if game_ids is not None and gid not in game_ids:
+            continue
+        out.setdefault(gid, []).append((float(ts), tier))
+    return out
 
 
 def load_specs(store, *, game_ids: list[str] | None = None) -> dict[str, dict]:

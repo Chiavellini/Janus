@@ -397,3 +397,15 @@ def test_the_guard_s_hand_over_re_runs_the_layer_from_the_row_when_protect_auto_
     assert released == ["r-1"] and sup.in_flight is None and sup.executions == 1 and sup.reprotect_queue == []
     out = capsys.readouterr().out
     assert "[protect] re-run naked001" in out and "UNWOUND" in out
+
+
+def test_the_slate_tier_sets_and_moves_the_poller_s_window(tmp_path: Path):
+    """2026-09-08: a pre-match poller prices every 5 s, a game starting soon every second, a game in
+    play on every frame; the window follows the tier on every discovery pass."""
+    sup, s = _supervisor(tmp_path)
+    assert s.poller.min_eval_interval_s == 0.0, "the test harness spawns with no window at all"
+    from nodes.game_poller.poller import eval_interval_for
+    slate = {"g1": {"tier": "newborn"}}
+    for gid, spec in slate.items():
+        sup.live[gid].poller.min_eval_interval_s = eval_interval_for(spec.get("tier"), default=0.2)
+    assert s.poller.min_eval_interval_s == 5.0

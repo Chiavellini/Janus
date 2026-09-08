@@ -69,7 +69,7 @@ from kernel.code_sha import code_tree_sha, runner_head_sha  # noqa: E402
 from nodes.risk.kill import KillSwitches  # noqa: E402
 from nodes.risk.ledger import ExposureLedger  # noqa: E402
 from nodes.risk.limits import load_limits  # noqa: E402
-from nodes.game_poller.poller import GamePoller, PollerState  # noqa: E402
+from nodes.game_poller.poller import GamePoller, PollerState, eval_interval_for  # noqa: E402
 from nodes.settle_wedge.equivalence import SettlementEquivalence  # noqa: E402
 from nodes.settle_wedge.pair import certify_from_spec  # noqa: E402
 from nodes.opportunity.opportunity import Opportunity, OpportunityStore  # noqa: E402
@@ -290,12 +290,17 @@ class Supervisor:
         """Spawn what is newly live, reap what has settled. Subscriptions follow."""
         for gid, spec in slate.items():
             if gid in self.live:
+                # The evaluation window follows the slate tier (2026-09-08): a game that moved from
+                # newborn to live prices on every frame from this pass on; the replay harness reads
+                # the same change from the tier timeline the discovery pass recorded.
+                self.live[gid].poller.min_eval_interval_s = eval_interval_for(spec.get("tier"), default=EVAL_INTERVAL_S)
                 continue
             eq = certify_from_spec(spec, spec["league"])
-            # EVAL_INTERVAL_S is mirrored in nodes/replay/replay.py (Harness.spawn): replay must
-            # coalesce exactly as the lane did or the rows differ.
+            # The window per tier is nodes/game_poller/poller.EVAL_INTERVAL_BY_TIER, mirrored in
+            # nodes/replay/replay.py: replay must coalesce exactly as the lane did or the rows differ.
             p = GamePoller(gid, spec["league"], spec["outcomes"],
-                           quantities=QUANTITIES, max_book_age_s=self.max_book_age_s, min_eval_interval_s=EVAL_INTERVAL_S,
+                           quantities=QUANTITIES, max_book_age_s=self.max_book_age_s,
+                           min_eval_interval_s=eval_interval_for(spec.get("tier"), default=EVAL_INTERVAL_S),
                            min_return=MIN_RETURN, fee_params=spec["fee_params"],
                            equivalence=eq if isinstance(eq, SettlementEquivalence) else None,
                            order_limits={"polymarket": spec.get("pm_limits") or {}})

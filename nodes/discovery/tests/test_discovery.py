@@ -259,3 +259,22 @@ def test_a_game_neither_venue_paired_is_named_unpaired_with_the_missing_side(tmp
     row = store.con.execute("SELECT phase, block_reason FROM events WHERE event_id='espn:mlb:8'").fetchone()
     assert row == ("pre", "UNPAIRED:kalshi=found,polymarket=missing")
     store.close()
+
+
+def test_a_tier_change_is_a_transition_and_the_timeline_reads_back(tmp_path):
+    from types import SimpleNamespace
+    from nodes.discovery.discovery import load_tier_timeline, record_events
+    from nodes.store_tuples.store import TupleStore
+    st = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    g = SimpleNamespace(game_id="g1", league="mlb", start_utc=5000, participants_espn=("A", "B"), short_name="A @ B", state="pre")
+    d = SimpleNamespace(games=[g], made_utc=1000.0)
+    spec = {"tier": "newborn", "kalshi_event": "K", "pm_slug": "s", "fee_params": {}, "league": "mlb", "outcomes": {}}
+    assert record_events(st, d, {"g1": spec}, {}, now=1000.0) == 1
+    assert record_events(st, d, {"g1": spec}, {}, now=1030.0) == 0, "nothing changed: no row"
+    spec2 = {**spec, "tier": "starting_soon"}
+    assert record_events(st, d, {"g1": spec2}, {}, now=1060.0) == 1, "the tier moved: a transition row"
+    g.state = "in"
+    spec3 = {**spec, "tier": "live"}
+    assert record_events(st, d, {"g1": spec3}, {}, now=1090.0) == 1
+    assert load_tier_timeline(st) == {"g1": [(1000.0, "newborn"), (1060.0, "starting_soon"), (1090.0, "live")]}
+    assert load_tier_timeline(st, game_ids=["other"]) == {}

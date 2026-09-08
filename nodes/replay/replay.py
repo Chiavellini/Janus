@@ -30,8 +30,8 @@ from typing import Iterable
 
 from kernel.redact import brief_error
 from nodes.capture.capture import FRAMES_ROOT, Frame, iter_capture, merge
-from nodes.discovery.discovery import load_specs
-from nodes.game_poller.poller import GamePoller, PollerState
+from nodes.discovery.discovery import load_specs, load_tier_timeline
+from nodes.game_poller.poller import GamePoller, PollerState, eval_interval_for
 from nodes.settle_wedge.equivalence import SettlementEquivalence
 from nodes.settle_wedge.pair import certify_from_spec
 from kernel.schema import Mode, OpportunityStatus
@@ -61,9 +61,13 @@ class Harness:
     """The supervisor's shape without its sockets or its clock."""
     store: TupleStore
     quantities: tuple[float, ...] = QUANTITIES
-    #: mirrors grids/live_stream/grid.EVAL_INTERVAL_S; a capture replays only against rows the
-    #: same interval produced.
+    #: mirrors grids/live_stream/grid.EVAL_INTERVAL_S (the in-play window); a capture replays only
+    #: against rows the same interval produced. Since 2026-09-08 the window follows the slate tier
+    #: (nodes/game_poller/poller.EVAL_INTERVAL_BY_TIER): `tier_timeline` (event_id -> [(ts, tier)])
+    #: from the lane's event_transitions is applied as the replay clock passes each change.
     eval_interval_s: float = 0.2
+    tier_timeline: dict = field(default_factory=dict)
+    _tier_cursor: dict = field(default_factory=dict)
     max_book_age_s: float = 5.0
     min_return: float = MIN_RETURN
     #: Settlement rates; None = the evidence registry, exactly as the supervisor uses it.
@@ -113,9 +117,11 @@ class Harness:
         if game_id in self.pollers:
             return True
         eq = certify_from_spec(spec, spec["league"], rates=self.rates)
+        tl = self.tier_timeline.get(game_id) or []
+        first_tier = tl[0][1] if tl else spec.get("tier")
         p = GamePoller(game_id, spec["league"], spec["outcomes"], quantities=self.quantities,
                        max_book_age_s=self.max_book_age_s, min_return=self.min_return,
-                       min_eval_interval_s=self.eval_interval_s,      # mirrors grid.EVAL_INTERVAL_S
+                       min_eval_interval_s=eval_interval_for(first_tier, default=self.eval_interval_s),   # mirrors the lane's spawn
                        fee_params=spec["fee_params"],
                        equivalence=eq if isinstance(eq, SettlementEquivalence) else None,
                        order_limits={"polymarket": spec.get("pm_limits") or {}})
@@ -140,6 +146,7 @@ class Harness:
             p = self.pollers.get(gid)
             if p is None:
                 return
+            self._apply_tier(gid, p, now)
             for ev in p.on_event("stream", market_id, now=now):
                 self.evaluations += 1
                 rec = record_evaluation(self.store, ev, league=self.leagues[gid],
@@ -153,6 +160,18 @@ class Harness:
 
     def _advance(self, s: float) -> None:
         self._clock_now += s
+
+    def _apply_tier(self, gid: str, p, now: float) -> None:
+        """MIRROR of the lane's per-pass window update: every recorded tier change at or before
+        `now` is applied, in order, before the frame is priced."""
+        tl = self.tier_timeline.get(gid)
+        if not tl:
+            return
+        i = self._tier_cursor.get(gid, 0)
+        while i < len(tl) and tl[i][0] <= now:
+            p.min_eval_interval_s = eval_interval_for(tl[i][1], default=self.eval_interval_s)
+            i += 1
+        self._tier_cursor[gid] = i
 
     def _execute(self, gid: str, ev, rec) -> None:
         """MIRROR of grids/live_stream Supervisor._execute, on the replayed books and clock."""
@@ -255,12 +274,14 @@ def main(argv: list[str] | None = None) -> int:
     start, end = _parse_ts(a.start), _parse_ts(a.end)
 
     live = TupleStore(a.live_db)
-    specs = load_specs(live, game_ids=[g for g in a.games.split(",") if g] or None)
+    wanted = [g for g in a.games.split(",") if g] or None
+    specs = load_specs(live, game_ids=wanted)
     if not specs:
         print("no slate specs on record for that selection; nothing to rebuild", file=sys.stderr)
         return 2
     out = TupleStore(a.out)
-    h = Harness(out, max_book_age_s=a.max_book_age, mode=Mode(a.mode) if a.mode != "OFFLINE_REPLAY" else Mode.PAPER_EXECUTION)
+    h = Harness(out, max_book_age_s=a.max_book_age, mode=Mode(a.mode) if a.mode != "OFFLINE_REPLAY" else Mode.PAPER_EXECUTION,
+                tier_timeline=load_tier_timeline(live, game_ids=wanted))
     for gid, spec in specs.items():
         h.spawn(gid, spec)
     frames = merge([iter_capture(a.frames_root, "kalshi", start, end),

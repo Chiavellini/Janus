@@ -63,6 +63,21 @@ class Evaluation:
         return (1.0 - c.cost_per_contract) / c.cost_per_contract
 
 
+#: The evaluation coalescing window per slate tier (2026-09-08). Every co-listed game in the
+#: 6 h window used to price on every frame at the in-play window (0.2 s): on the box, 92 pre-match
+#: pollers wrote a third of the rows while one vCPU sat at 100 % and the loop stamped frames late
+#: enough to HALT CLOCK. A game hours from kickoff is priced every 5 s, one starting within two
+#: hours every second, a game in play on every frame as before. The lane sets it on every
+#: discovery pass; the replay harness applies the same map from the recorded tier timeline, so
+#: the rows stay identical (GATE step 4 parity).
+EVAL_INTERVAL_BY_TIER = {"live": 0.2, "starting_soon": 1.0, "newborn": 5.0, "recently_listed": 5.0,
+                         "closing_soon": 5.0, "long_term": 5.0}
+
+
+def eval_interval_for(tier: str | None, *, default: float = 0.2) -> float:
+    return float(EVAL_INTERVAL_BY_TIER.get(tier or "", default))
+
+
 def smallest_executable(offers) -> float:
     """The smallest size every leg on offer can be sent at: the venues' share minimums and, for a
     Polymarket leg, one dollar of notional at its best ask (ceil). Never below 1."""
