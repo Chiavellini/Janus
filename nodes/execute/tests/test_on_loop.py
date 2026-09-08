@@ -42,6 +42,24 @@ def test_a_call_from_a_worker_thread_runs_on_the_loop_thread_and_a_call_on_the_l
     asyncio.run(main())
 
 
+def test_a_nowait_method_is_queued_in_order_and_its_exception_is_said_not_raised(capsys):
+    async def main():
+        loop = asyncio.get_running_loop()
+        st = Store()
+        px = OnLoop(st, loop, nowait={"write", "boom"})
+        def worker():
+            assert px.write(1) is None and px.write(2) is None      # queued, no wait
+            assert px.boom() is None
+            return threading.get_ident()
+        wt = await asyncio.to_thread(worker)
+        await asyncio.sleep(0)                                      # the queued calls run on the loop
+        await asyncio.sleep(0)
+        assert st.rows == 3 and set(st.threads) == {threading.get_ident()} and wt != threading.get_ident()
+        out = capsys.readouterr().out
+        assert "boom refused off the loop: ValueError" in out
+    asyncio.run(main())
+
+
 def test_without_a_loop_every_call_is_direct():
     st = Store()
     px = OnLoop(st)

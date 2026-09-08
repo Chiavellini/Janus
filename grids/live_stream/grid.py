@@ -115,6 +115,9 @@ class Supervisor:
     ks: KalshiStream | None = None
     ps: PolymarketStream | None = None
     store: TupleStore | None = None
+    #: A second connection to the same file for the execution worker's journal and records: one
+    #: thread per connection, never marshalled (2026-09-08). Paper modes use it on the loop.
+    worker_store: TupleStore | None = None
     opportunities: OpportunityStore | None = None
     #: The execution side. None below PAPER_EXECUTION: detection only.
     mode: Mode = Mode.SHADOW_LIVE
@@ -533,6 +536,10 @@ class Supervisor:
                 self.in_flight = ev.game_id
                 for px in self.on_loop:
                     px.loop = loop
+                # The record is the machine's from this instant, ON the loop, before any frame can
+                # move it elsewhere (the first flight off the loop, STL @ SF 2026-09-08 00:40Z:
+                # a later frame's NO_EDGE landed first and every move of the execution was refused).
+                self._own_opportunity(plan.opportunity_id, sup)
                 task = loop.create_task(self._execute_off_loop(sup, ev, plan, cand, offers, pre, m_entry))
                 self.exec_tasks.add(task)
                 task.add_done_callback(self.exec_tasks.discard)
@@ -545,6 +552,19 @@ class Supervisor:
         ex = self.coordinator.execute(plan, clearance, offers_books=books_snapshot(offers),
                                       venues_connected=self._connected(), pre_stages=pre)
         self._after_execution(sup, ev, ex)
+
+    def _own_opportunity(self, opportunity_id: str, sup: Supervised) -> None:
+        if self.opportunities is None:
+            return
+        try:
+            opp = self.opportunities.load(opportunity_id)
+            if opp is not None:
+                self.opportunities.move(opp, OpportunityStatus.EXECUTION_PENDING, now=time.time(), detail="dispatched")
+        except Exception as exc:  # noqa: BLE001 -- the record must not stop the flight; said once per cause
+            key = f"{sup.short_name}:own:{type(exc).__name__}"
+            if self.said.get(key) != "said":
+                self.said[key] = "said"
+                print(f"  [exec] opportunity record not owned before dispatch: {brief_error(exc)}", flush=True)
 
     def _balances(self, pre: dict) -> dict | None:
         m = time.monotonic()
@@ -794,8 +814,8 @@ def main() -> int:
     sup.code_sha = code_sha
     print(f"[code] tree {code_sha} runner {head_sha[:12]} limits {limits.sha}", flush=True)
     if sup.mode.rank >= Mode.PAPER_EXECUTION.rank:
-        journal = OnLoop(Journal(sup.store))      # the venues journal from the worker thread (_execute_off_loop)
-        sup.on_loop.append(journal)
+        sup.worker_store = TupleStore(sup.db, check_same_thread=False)
+        journal = Journal(sup.worker_store)       # the worker thread's own connection (_execute_off_loop)
         # Real venues, built only for the modes that need them, from credentials that are named
         # by environment variable and never appear on the command line or in a log.
         def kalshi_factory(host: str):
@@ -819,9 +839,12 @@ def main() -> int:
         sup.limits, sup.kill = limits, kill
         sup.breaker = LossBreaker(kill=kill)
         sup.ledger = ExposureLedger(sup.store)
-        records, opps = OnLoop(ExecutionRecords(sup.store)), OnLoop(sup.opportunities)
-        sup.on_loop += [records, opps]
-        sup.coordinator = Coordinator(sup.venues, records, sup.mode,
+        # The opportunity record's in-memory state belongs to the loop (record_evaluation mutates it
+        # on every frame): the machine's status moves are queued to the loop, never waited for.
+        # Records and the journal write through the worker's own connection (2026-09-08).
+        opps = OnLoop(sup.opportunities, nowait={"move"})
+        sup.on_loop.append(opps)
+        sup.coordinator = Coordinator(sup.venues, ExecutionRecords(sup.worker_store), sup.mode,
                                       hedge_deadline_s=limits.max_hedge_latency_ms / 1000.0,
                                       opportunities=opps, kill=kill)
     print(f"[mode] {sup.mode.value}", flush=True)

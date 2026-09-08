@@ -233,15 +233,20 @@ def test_a_real_execution_leaves_the_socket_loop_one_at_a_time_and_writes_the_st
     sup.venues = {"kalshi": Venue(), "polymarket": Venue()}
     sup.ks = sup.ps = SimpleNamespace(connected=True, clock=SimpleNamespace(healthy=True))
 
-    class Records:
-        def start(self, *a, **k):
-            threads.append(threading.get_ident())
-    records = OnLoop(Records())
-    sup.on_loop.append(records)
+    from kernel.schema import OpportunityStatus as S
+    from nodes.opportunity.opportunity import Opportunity
+    opps = OnLoop(sup.opportunities, nowait={"move"})
+    sup.on_loop.append(opps)
+    oid = Opportunity.id_for("g1", 100.0)                       # the 100 rung is the profitable one here (3 stays DISCOVERED)
+
+    from nodes.store_tuples.store import TupleStore as _TS
+    sup.worker_store = _TS(tmp_path / "t.sqlite", enforce_volume=False, check_same_thread=False)
 
     def execute(plan, clearance, **k):
         seen.append(threading.get_ident())
-        records.start(None)                                     # a store write, from the worker
+        sup.worker_store.con.execute("SELECT COUNT(*) FROM sqlite_master").fetchone()   # the worker's own connection
+        threads.append(sup.opportunities.load(oid).status)      # already owned by the loop before dispatch
+        opps.move(sup.opportunities.load(oid), S.FAILED_HEDGE, now=T + 5, detail="test")   # queued to the loop
         time.sleep(0.2)
         return SimpleNamespace(state=SimpleNamespace(value="ORDER_REJECTED"), first_filled=0.0, first_avg_price=None,
                                hedge_filled=0.0, hedge_avg_price=None, unhedged=0.0, detail="leg A rejected: test",
@@ -261,14 +266,16 @@ def test_a_real_execution_leaves_the_socket_loop_one_at_a_time_and_writes_the_st
             sup._on_update("g1")("K_H", T)
             assert time.monotonic() - t0 < 0.05, "the callback did not wait for the machine"
             assert sup.in_flight == "g1" and len(sup.exec_tasks) == 1
+            assert sup.opportunities.load(oid).status is S.EXECUTION_PENDING, "owned on the loop at dispatch"
             await asyncio.sleep(0.1)                            # the balances are being fetched in the worker
             sup._on_update("g1")("K_H", T + 0.1)                # a second cover during the flight
             out = capsys.readouterr().out
             assert "IN_FLIGHT g1" in out and sup.executions == 0
             await asyncio.gather(*sup.exec_tasks)
-            assert sup.in_flight is None and sup.executions == 1
+            assert sup.in_flight is None and sup.executions == 1, capsys.readouterr().out
             assert seen and seen[0] != loop_thread, "the machine ran in a worker"
-            assert threads == [loop_thread], "its store write ran on the loop thread"
+            assert threads == [S.EXECUTION_PENDING], "the record was the machine's before the worker started"
+            assert sup.opportunities.load(oid).status is S.FAILED_HEDGE, "the queued move landed on the loop"
             assert sup.backoff.get("g1"), "the rejected leg A set the backoff"
         asyncio.run(main())
     finally:

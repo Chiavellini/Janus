@@ -237,11 +237,17 @@ class Coordinator:
         uncountable (2026-09-05)."""
         if self.opportunities is None:
             return
-        load = getattr(self.opportunities, "load", None)
-        opp = load(ex.opportunity_id) if load is not None else self.opportunities.live.get(ex.opportunity_id)
-        if opp is None:
-            return
         try:
+            # `live` first: the machine may run in a worker thread (2026-09-08) and the store's
+            # own connection belongs to the loop; the lane owns the record on the loop before
+            # dispatch, so it is in `live` for the flight. `load` is the harness/paper path.
+            live = getattr(self.opportunities, "live", None)
+            opp = live.get(ex.opportunity_id) if live is not None else None
+            if opp is None:
+                load = getattr(self.opportunities, "load", None)
+                opp = load(ex.opportunity_id) if load is not None else None
+            if opp is None:
+                return
             self.opportunities.move(opp, status, now=now, detail=ex.state.value)
         except Exception as exc:  # noqa: BLE001 -- the record must not break the machine; the transition table is pinned by tests
             key = f"{type(exc).__name__}:{opp.status.value}->{status.value}"

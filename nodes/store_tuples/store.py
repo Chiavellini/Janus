@@ -82,7 +82,7 @@ def _rel_change(new: float | None, old: float | None) -> float:
 
 
 class TupleStore:
-    def __init__(self, path: Path | str = DEFAULT_DB, *, enforce_volume: bool = True):
+    def __init__(self, path: Path | str = DEFAULT_DB, *, enforce_volume: bool = True, check_same_thread: bool = True):
         p = Path(path).resolve()
         if enforce_volume:
             guard(p, "tuple data")
@@ -90,7 +90,12 @@ class TupleStore:
         # The live lane holds write transactions on the shared file; a second writer (a proof, a
         # settle) must wait for it, not die with "database is locked" (seen 2026-09-03 on the
         # first armed proof attempt). 30 s is far longer than any lane transaction.
-        self.con = sqlite3.connect(str(p), timeout=30.0)
+        # `check_same_thread=False` is for a SECOND store on the same file that one other thread
+        # uses alone (the execution worker's journal and records, grids/live_stream/grid.py,
+        # 2026-09-08): a connection is never used by two threads at once (Python's sqlite3 raises
+        # "API misuse" when it is), WAL lets the two connections write in turn, and the 30 s busy
+        # timeout covers the wait.
+        self.con = sqlite3.connect(str(p), timeout=30.0, check_same_thread=check_same_thread)
         self.con.execute("PRAGMA journal_mode=WAL")
         self.con.execute("PRAGMA synchronous=NORMAL")
         self.con.executescript(DDL)
