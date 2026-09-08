@@ -31,8 +31,10 @@ def _hedged(tmp_path: Path, *, phase="post:co_listed", start=T - 4 * 3600):
     ledger = ExposureLedger(st)
     res = ledger.reserve(event_id="espn:mlb:1", league="mlb", per_venue_usd={"kalshi": 50.0, "polymarket": 45.0}, limits=load_limits(),
                          opportunity_id=OID, now=T - 3600)
-    st.con.execute("INSERT INTO executions(execution_id, opportunity_id, event_id, league, mode, state, started_utc, last_utc, quantity, reservation_id, released) "
-                   "VALUES('x1',?,'espn:mlb:1','mlb','PAPER_EXECUTION','HEDGED',?,?,100,?,0)", (OID, T - 3600, T - 3600, res.reservation_id))
+    st.con.execute("INSERT INTO executions(execution_id, opportunity_id, event_id, league, mode, state, started_utc, last_utc, quantity, "
+                   "first_client_id, hedge_client_ids, reservation_id, released) "
+                   "VALUES('x1',?,'espn:mlb:1','mlb','PAPER_EXECUTION','HEDGED',?,?,100,'a','[\"b\"]',?,0)",
+                   (OID, T - 3600, T - 3600, res.reservation_id))
     # the two legs: Polymarket LAD YES at 0.45, Kalshi NO on LAD (= STL) at 0.50
     st.con.execute("INSERT INTO orders(client_order_id, venue, mode, market_id, outcome_id, side, price, contracts, time_in_force, opportunity_id, state, "
                    "filled_contracts, avg_price, fee_usd, submitted_utc, last_utc) VALUES('a','polymarket','PAPER_EXECUTION',?,?,'buy_yes',0.45,100,'fok',?,'FILLED',100,0.45,0.0,?,?)",
@@ -86,6 +88,24 @@ def test_a_hedged_cover_settles_on_both_results_and_releases(tmp_path):
     assert pending(st, now=T) == [], "released executions are not asked again"
 
 
+def test_settlement_uses_exact_execution_order_ids_not_a_retried_opportunity(tmp_path):
+    st, ledger, opps, _ = _hedged(tmp_path)
+    # A later retry deliberately has the same opportunity id. Even a filled order on it must not
+    # enter x1's PnL or venue set; the execution row does not own client id `retry`.
+    st.con.execute(
+        "INSERT INTO orders(client_order_id, venue, mode, market_id, outcome_id, side, price, contracts, "
+        "time_in_force, opportunity_id, state, filled_contracts, avg_price, fee_usd, submitted_utc, last_utc) "
+        "VALUES('retry','polymarket','PAPER_EXECUTION',?,?, 'buy_yes',0.99,100,'fok',?,'FILLED',100,0.99,0,?,?)",
+        (STL, STL, OID, T - 100, T - 100),
+    )
+    st.con.commit()
+    items = pending(st, now=T)
+    fk, fe = _fetchers({"K-LAD": "no", "K-STL": "yes"}, "STL")
+    apply_settlements(st, ledger, None, opps, items,
+                      fetch_results(items, None, fetch_kalshi=fk, fetch_event=fe), now=T, log=lambda s: None)
+    assert st.con.execute("SELECT realized_usd FROM execution_settlements WHERE execution_id='x1'").fetchone() == (5.0,)
+
+
 def test_the_other_result_and_an_open_venue(tmp_path):
     st, ledger, opps, rid = _hedged(tmp_path)
     items = pending(st, now=T)
@@ -115,8 +135,9 @@ def _partial(tmp_path: Path):
     res = ledger.reserve(event_id="espn:mlb:401816802", league="mlb", per_venue_usd={"kalshi": 85.0, "polymarket": 13.0}, limits=load_limits(),
                          opportunity_id=oid, now=T - 3600)
     st.con.execute("INSERT INTO executions(execution_id, opportunity_id, event_id, league, mode, state, started_utc, last_utc, quantity, "
-                   "first_filled, first_avg_price, hedge_filled, hedge_avg_price, unhedged, reservation_id, released) "
-                   "VALUES('x2',?,'espn:mlb:401816802','mlb','PAPER_EXECUTION','PARTIAL_FILL',?,?,100,100,0.13,64.18,0.84,35.82,?,0)",
+                   "first_client_id, hedge_client_ids, first_filled, first_avg_price, hedge_filled, hedge_avg_price, unhedged, reservation_id, released) "
+                   "VALUES('x2',?,'espn:mlb:401816802','mlb','PAPER_EXECUTION','PARTIAL_FILL',?,?,100,'a','[\"b1\",\"b2\",\"b3\"]',"
+                   "100,0.13,64.18,0.84,35.82,?,0)",
                    (oid, T - 3600, T - 3600, res.reservation_id))
     ins = ("INSERT INTO orders(client_order_id, venue, mode, market_id, outcome_id, side, price, contracts, time_in_force, opportunity_id, state, "
            "filled_contracts, avg_price, fee_usd, submitted_utc, last_utc) VALUES(?,?,'PAPER_EXECUTION',?,?,?,?,?,?,?,?,?,?,?,?,?)")

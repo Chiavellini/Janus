@@ -137,15 +137,40 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
     out = {"settled": 0, "waiting": 0, "unreleasable": 0}
     for it in items:
         w = winners.get(it["execution_id"]) or {}
-        venues_needed = {r[0] for r in store.con.execute("SELECT DISTINCT venue FROM orders WHERE opportunity_id=?", (it["opportunity_id"],))}
+        execution = store.con.execute(
+            "SELECT first_client_id,hedge_client_ids,unwind_client_ids FROM executions WHERE execution_id=?",
+            (it["execution_id"],),
+        ).fetchone()
+        client_ids: list[str] = []
+        if execution is not None:
+            if execution[0]:
+                client_ids.append(execution[0])
+            for payload in execution[1:]:
+                try:
+                    client_ids.extend(str(x) for x in json.loads(payload or "[]"))
+                except (TypeError, ValueError):
+                    pass
+        # Opportunity ids are stable candidate keys and are deliberately reused by retries.
+        # Settlement must never include another retry's rejected order (or, worse, its fill).
+        if not client_ids:
+            log(f"[settle ] {it['event_id']} {it['mode']} execution {it['execution_id'][:8]} has no owned order ids; waiting")
+            out["waiting"] += 1
+            continue
+        marks = ",".join("?" * len(client_ids))
+        order_rows = store.con.execute(
+            "SELECT venue, client_order_id, outcome_id, side, filled_contracts, avg_price, fee_usd, state "
+            f"FROM orders WHERE client_order_id IN ({marks})", client_ids,
+        ).fetchall()
+        venues_needed = {r[0] for r in order_rows}
+        if not venues_needed:
+            out["waiting"] += 1
+            continue
         if any(w.get(v) is None for v in venues_needed):
             out["waiting"] += 1
             continue
         legs = [{"venue": r[0], "client_order_id": r[1], "outcome_id": r[2], "side": r[3], "contracts": float(r[4] or 0.0),
                  "price": float(r[5] or 0.0), "fee_usd": float(r[6] or 0.0), "state": r[7], "final": True}
-                for r in store.con.execute(
-                    "SELECT venue, client_order_id, outcome_id, side, filled_contracts, avg_price, fee_usd, state FROM orders "
-                    "WHERE opportunity_id=?", (it["opportunity_id"],))]
+                for r in order_rows]
         realized = settle(legs=legs, winners={v: w[v] for v in venues_needed}, now=t)
         pnl = sum(x.realized_usd for x in realized)
         ok = releasable(realized)
