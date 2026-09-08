@@ -644,6 +644,35 @@ class Supervisor:
         finally:
             self.in_flight = None
 
+    def fresh_book(self, venue: str, market_id: str, side: str = "buy_yes"):
+        """The protection layer's live book for a chase or an unwind: the venue's REST book (it runs
+        in the worker thread, off the loop). None when the venue cannot say; the layer then goes
+        to the phase's ceiling in one order."""
+        v = self.venues.get(venue)
+        try:
+            return v.orderbook(market_id, side) if v is not None and hasattr(v, "orderbook") else None
+        except Exception:  # noqa: BLE001
+            return None
+
+    def on_unprotected(self, ex, text: str) -> None:
+        """A position the layer could neither hedge nor unwind inside the cap (2026-09-08): the
+        operator's decision is fail closed. The live kill is latched (real orders stop; pricing
+        continues; protective re-runs still go through clear_protect), the flag is written for the
+        watchdog, and the line is said. Runs in the worker thread: files and the main-store flag only."""
+        print(f"  [PROTECT FAILED] {ex.event_id} {ex.execution_id[:8]} {text}", flush=True)
+        try:
+            if self.store is not None:
+                raise_flag(self.store, "PROTECT_FAILED", f"{ex.execution_id[:8]} {ex.event_id} {text}")
+        except Exception as exc:  # noqa: BLE001
+            print(f"  [risk] flag write failed: {type(exc).__name__}", flush=True)
+        kill_it = bool(getattr(getattr(self.limits, "protect", None), "protect_kill_on_failure", True))
+        if kill_it and self.kill is not None and self.mode.risks_capital:
+            try:
+                self.kill.latch("live", f"protect: {ex.execution_id[:8]} {ex.event_id} {text[:120]}")
+                print("  [risk] kill/live latched by the protection layer; real orders stop until a human clears it", flush=True)
+            except Exception as exc:  # noqa: BLE001
+                print(f"  [risk] kill latch failed: {type(exc).__name__}", flush=True)
+
     async def guard_pass(self) -> None:
         """One pass of the position guard: the network half in a worker, the state half here.
         Serialised with executions through `in_flight` (one connection, one thread at a time).
@@ -911,7 +940,8 @@ def main() -> int:
         records = ExecutionRecords(sup.worker_store)
         sup.coordinator = Coordinator(sup.venues, records, sup.mode,
                                       hedge_deadline_s=limits.max_hedge_latency_ms / 1000.0,
-                                      opportunities=opps, kill=kill)
+                                      opportunities=opps, kill=kill, limits=limits.protect,
+                                      fresh_book=sup.fresh_book, on_unprotected=sup.on_unprotected)
         if sup.mode.sends_real_orders:
             sup.guard = PositionGuard(venues=sup.venues, journal=journal, records=records, store=sup.store,
                                       limits=limits.protect, started_utc=time.time(), kill=kill)

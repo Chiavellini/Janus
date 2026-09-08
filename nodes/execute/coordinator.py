@@ -30,6 +30,7 @@ from typing import Callable, Mapping
 from kernel.execution_protocol import Ack, ExecutionVenue, OrderRequest
 from kernel.schema import ExecutionState as X, FillState, Mode, OpportunityStatus as S
 from nodes.execute.plan import LegPlan, Plan
+from nodes.execute.protect import protect
 from nodes.execute.records import Execution, ExecutionRecords
 from nodes.risk.clearance import RiskClearance
 
@@ -54,6 +55,12 @@ class Coordinator:
     opportunities: object | None = None       # nodes/opportunity.OpportunityStore, optional
     kill: object | None = None                # nodes/risk.KillSwitches, optional
     balances: Callable[[], Mapping[str, float] | None] | None = None
+    #: The hedge protection layer (nodes/execute/protect.py, 2026-09-08): its limits (None = the
+    #: checked-in defaults), a fresh-book reader `(venue, market_id, side) -> Book | None` for the
+    #: chase, and the lane's hook for a position that could not be protected (kill + page).
+    limits: object | None = None
+    fresh_book: Callable | None = None
+    on_unprotected: Callable | None = None
     executions: dict[str, Execution] = field(default_factory=dict)
     opp_refusals: dict[str, int] = field(default_factory=dict)
     _t0: dict[str, float] = field(default_factory=dict)      # execution_id -> mono at entry (stage stamps)
@@ -139,57 +146,35 @@ class Coordinator:
         if ack.state is FillState.PARTIAL:
             self._opp(ex, S.PARTIALLY_FILLED, self.clock())
 
-        # LEG B: Kalshi, IOC, for exactly what leg A filled, at the walked level (the limit); the
-        # VWAP budget rides beside it in the record (nodes/execute/plan.py, 2026-09-05).
-        paid = ex.first_avg_price or plan.first.limit_price
-        limit, budget = plan.hedge_limit(paid), plan.hedge_budget(paid)
-        if limit < 0.01:
-            return self._fail(ex, X.HEDGE_SLIPPAGE_EXCEEDED, f"hedge limit {limit:.4f} is not a price (budget {budget:.4f})", release=False)
-        # ONE hedge window, the clearance's, armed now that the position exists: the coordinator
-        # and the token used to count separate 3 s windows (the token's from the mint), so a slow
-        # leg A settle spent the token's before the first hedge went out (2026-09-07).
-        deadline = clearance.arm_hedge(self.mono()) if hasattr(clearance, "arm_hedge") else self.mono() + self.hedge_deadline_s
-        attempts = 0
-        while ex.unhedged > 1e-9 and self.mono() < deadline and attempts < clearance.max_hedge_submits:
-            attempts += 1
-            req_b = self._request(plan, plan.hedge, ex.unhedged, max(limit, 0.01), hedge=True)
-            ex.hedge_client_ids.append(req_b.client_order_id)
-            self._move(ex, X.LEG_B_SUBMITTED, detail=f"attempt {attempts} limit {limit:.4f} budget {budget:.4f}")
-            self._stamp(ex, "b_submit_ms")
-            hb = self.venues[plan.hedge.venue].submit(req_b, clearance)
-            self._stamp(ex, "b_ack_ms")
-            hb = self._settle_ack(plan.hedge.venue, hb, deadline_mono=deadline, ex=ex, key="b")
-            self._stamp(ex, "b_settled_ms")
-            ex.stages["b_attempts"] = attempts
-            if hb.state is FillState.UNCONFIRMED:
-                return self._fail(ex, X.UNKNOWN_PROVIDER_STATE, f"hedge unconfirmed: {hb.detail}", release=False)
-            if hb.state is FillState.REJECTED:
-                return self._fail(ex, X.HEDGE_UNAVAILABLE, f"hedge rejected: {hb.raw_status} {hb.detail}", release=False)
-            if hb.filled_contracts > 0:
-                prev = ex.hedge_filled
-                ex.hedge_filled += hb.filled_contracts
-                ex.hedge_avg_price = ((prev * (ex.hedge_avg_price or 0.0)) + hb.filled_contracts * (hb.avg_price or 0.0)) / ex.hedge_filled
-                self._move(ex, X.LEG_B_FILLED if ex.unhedged <= 1e-9 else X.LEG_B_PARTIAL,
-                           detail=f"hedge filled {hb.filled_contracts} @ {hb.avg_price}")
-            elif hb.state is FillState.UNFILLED:
-                # The book moved above the limit. Chasing is HEDGE_SLIPPAGE_EXCEEDED by definition.
-                self._timed(ex, self.records.sync, ex, now=self.clock())
-                if self.mono() >= deadline:
-                    break
-                self.sleep(self.poll_interval_s)
-        if ex.unhedged <= 1e-9:
-            above = (ex.hedge_avg_price or 0.0) > budget + 1e-9
-            self._stamp(ex, "done_ms")
-            self._move(ex, X.HEDGED, detail=f"{ex.hedge_filled} hedged @ {ex.hedge_avg_price}"
-                       + (f" ABOVE_BUDGET {budget:.4f}: below the hurdle, still a cover" if above else ""))
-            self._opp(ex, S.HEDGED, self.clock())
+        # LEG B and everything after it: the protection layer (nodes/execute/protect.py, 2026-09-08).
+        # The hedge at the walked limit as before, then the chase to the budget and to the loss cap,
+        # then the unwind; a position still naked at the end is a holding failure AND on_unprotected.
+        return protect(self, ex, plan, clearance, limits=self.limits, fresh_book=self.fresh_book,
+                       on_unprotected=self.on_unprotected)
+
+    def protect_existing(self, ex: Execution, plan: Plan, clearance: RiskClearance) -> Execution:
+        """The position guard's re-run on an execution the machine left naked (loaded from its row
+        with its plan, under a `clear_protect` clearance): the layer from the position as it stands.
+        A machine error here is recorded like `execute`'s."""
+        self._t0[ex.execution_id] = self.mono()
+        self.executions[ex.execution_id] = ex
+        ex.stages["guard_rerun"] = ex.stages.get("guard_rerun", 0) + 1
+        try:
+            return protect(self, ex, plan, clearance, limits=self.limits, fresh_book=self.fresh_book,
+                           on_unprotected=self.on_unprotected)
+        except Exception as exc:  # noqa: BLE001
+            detail = f"machine error in the protection re-run after {ex.state.value}: {type(exc).__name__}: {str(exc)[:160]}"
+            try:
+                self._fail(ex, X.UNKNOWN_PROVIDER_STATE, detail, release=False)
+            except Exception:  # noqa: BLE001
+                raise exc
+            ex.machine_error = exc
             return ex
-        reason = X.HEDGE_SLIPPAGE_EXCEEDED if attempts and ex.hedge_filled == 0 else X.PARTIAL_FILL
-        return self._fail(ex, reason, f"{ex.unhedged} contracts unhedged after {attempts} attempts", release=False)
 
     # ── pieces ───────────────────────────────────────────────────────────
-    def _request(self, plan: Plan, leg: LegPlan, contracts: float, limit: float, *, hedge: bool) -> OrderRequest:
-        return OrderRequest(leg.venue, leg.market_id, leg.outcome_id, leg.side, round(min(max(limit, 0.01), 0.99), 4),
+    def _request(self, plan: Plan, leg: LegPlan, contracts: float, limit: float, *, hedge: bool,
+                 side: str | None = None) -> OrderRequest:
+        return OrderRequest(leg.venue, leg.market_id, leg.outcome_id, side or leg.side, round(min(max(limit, 0.01), 0.99), 4),
                             round(contracts, 2), leg.time_in_force, uuid.uuid4().hex, plan.opportunity_id, hedge=hedge)
 
     def _settle_ack(self, venue: str, ack: Ack, *, deadline_mono: float,

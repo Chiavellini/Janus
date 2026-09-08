@@ -176,7 +176,9 @@ def test_an_unconfirmed_first_leg_that_turns_out_filled_is_hedged(tmp_path):
     assert ex.state is X.HEDGED and ex.hedge_filled == 100.0
 
 
-def test_the_hedge_is_for_exactly_what_leg_a_filled_and_stops_at_the_limit(tmp_path):
+def test_the_hedge_is_for_exactly_what_leg_a_filled_and_the_rest_is_chased_only_inside_the_cap(tmp_path):
+    """60 at the walked limit, the rest sits at 0.90: the chase goes to the budget and on to the loss
+    cap (about 0.53 here) and stops; with the unwind off the 40 stay a held PARTIAL_FILL (2026-09-08)."""
     co, vs, store, clk, _ = harness(tmp_path)
     offs = offers()
     p, _ = plan_for(offs)
@@ -185,20 +187,34 @@ def test_the_hedge_is_for_exactly_what_leg_a_filled_and_stops_at_the_limit(tmp_p
     ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
     assert ex.first_filled == 100.0 and ex.hedge_filled == 60.0 and ex.unhedged == 40.0
     assert ex.state is X.PARTIAL_FILL and not ex.released
+    caps = [a["ceiling"] for a in ex.protect["attempts"] if a.get("phase") == "loss_cap"]
+    assert caps and max(a["limit"] for a in ex.protect["attempts"]) == caps[-1] < 0.90, "chased to the cap, never to 0.90"
     assert store.con.execute("SELECT unhedged FROM executions").fetchone()[0] == 40.0
     assert co.records.open_unhedged() == [(ex.execution_id, 40.0)]
 
 
-def test_a_hedge_book_entirely_above_the_limit_is_slippage_exceeded_not_a_chase(tmp_path):
+def test_a_hedge_book_entirely_above_the_cap_is_chased_to_the_cap_then_held_and_paged(tmp_path):
+    """Until 2026-09-08 this was 'slippage exceeded, not a chase' after three IOCs at one price. Now
+    the limit is raised tick by tick to the budget and on to the loss cap; a book at 0.70 is never
+    reached, the position is a held failure, and on_unprotected fires (the lane latches the kill)."""
     co, vs, store, clk, _ = harness(tmp_path)
+    paged = []
+    co.on_unprotected = lambda ex, text: paged.append(text)
     offs = offers()
     p, _ = plan_for(offs)
     vs["polymarket"].books = {"P_H": offs["home"][0].book}
     vs["kalshi"].books = {"K_A": bk([(0.70, 5000)])}
     ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
-    assert ex.state is X.HEDGE_SLIPPAGE_EXCEEDED and ex.unhedged == 100.0
+    assert ex.state is X.HEDGE_SLIPPAGE_EXCEEDED and ex.unhedged == 100.0 and not ex.released
     n = store.con.execute("SELECT COUNT(*) FROM orders WHERE venue='kalshi'").fetchone()[0]
-    assert 1 <= n <= 3, "bounded attempts inside the deadline, never a chase"
+    assert 4 <= n <= 12, "phase 1's three, then the chase, all inside max_protect_submits"
+    phases = [a["phase"] for a in ex.protect["attempts"]]
+    assert phases[:3] == ["walked"] * 3 and "budget" in phases and "loss_cap" in phases
+    last = ex.protect["attempts"][-1]
+    paid = ex.first_avg_price
+    assert last["limit"] == pytest.approx(round(1 - paid - p.fee_per_contract + 0.01, 2), abs=0.011), "the cap: break-even plus $0.01 a contract"
+    assert paged and paged[0].startswith("UNPROTECTED: 100 unhedged") and "unwind disabled" in paged[0]
+    assert "UNPROTECTED" in ex.detail
 
 
 def test_a_kill_switch_or_disconnect_before_leg_a_aborts_and_releases(tmp_path):
@@ -283,19 +299,22 @@ def test_the_hedge_limit_is_the_walked_level_not_the_vwap_budget_mil_cin(tmp_pat
     assert moves[-2:] == ["EXECUTION_PENDING", "HEDGED"], moves
 
 
-def test_leg_a_overpay_tightens_the_limit_and_a_moved_book_is_slippage_not_a_chase(tmp_path):
+def test_leg_a_overpay_tightens_the_limit_and_a_moved_book_is_chased_inside_the_cap(tmp_path):
     co, vs, store, clk, opps = harness(tmp_path)
     offs = MIL_CIN_2026_09_04
     p, _ = plan_for(offs)
     # pure arithmetic: leg A averaging 0.15 against a priced 0.13 takes two ticks off the hedge limit.
     # (A limit FOK never fills ABOVE its limit, so overpay is bounded by limit - vwap on a layered book.)
     assert p.hedge_limit(0.15) == pytest.approx(0.83) and p.hedge_limit(0.13) == pytest.approx(0.85)
-    # the Kalshi book moved above the walked 0.85 between pricing and the hedge: HEDGE_SLIPPAGE_EXCEEDED,
-    # leg A held, nothing chased, capital kept (a holding failure, not terminal)
+    # the Kalshi book moved above the walked 0.85 between pricing and the hedge: the chase (2026-09-08)
+    # raises the limit past the budget into the loss cap and takes the 0.86 level -- a cover at a
+    # locked loss inside the cap, labelled, instead of a naked leg
     vs["polymarket"].books = {"P_CIN": offs["cin"][0].book}
     vs["kalshi"].books = {"K_MIL": bk([(0.86, 155.0), (0.87, 10.0)])}
     ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0), venues_connected={"kalshi": True, "polymarket": True})
-    assert ex.state is X.HEDGE_SLIPPAGE_EXCEEDED and ex.first_filled == 100.0 and ex.hedge_filled == 0.0 and not ex.released
+    assert ex.state is X.HEDGED and ex.first_filled == 100.0 and ex.hedge_filled == 100.0 and ex.hedge_avg_price == pytest.approx(0.86)
+    assert "ABOVE_BUDGET" in ex.detail or "ABOVE_BREAK_EVEN" in ex.detail
+    assert [a["phase"] for a in ex.protect["attempts"]][-1] in ("budget", "loss_cap")
     assert X.HEDGE_SLIPPAGE_EXCEEDED.holds_position and not X.HEDGE_SLIPPAGE_EXCEEDED.is_terminal
 
 

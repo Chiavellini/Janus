@@ -329,3 +329,25 @@ def test_the_guard_pass_feeds_the_breaker_and_holds_the_flight_slot(tmp_path: Pa
         assert got["fills_today"] == fills
     finally:
         G.clear = old
+
+
+def test_an_unprotected_position_latches_the_live_kill_and_flags(tmp_path: Path, capsys):
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.risk.flags import recent_flags
+    from nodes.risk.kill import KillSwitches
+    sup, s = _supervisor(tmp_path)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_kill_on_failure=True))
+    ex = SimpleNamespace(execution_id="abcdef0123456789", event_id="pm:atp:1")
+    sup.on_unprotected(ex, "UNPROTECTED: 10 unhedged after 7 attempts; no hedge inside the loss cap")
+    assert sup.kill.active(live=True) == ["live"]
+    assert recent_flags(tmp_path / "t.sqlite", "PROTECT_FAILED")
+    out = capsys.readouterr().out
+    assert "[PROTECT FAILED] pm:atp:1 abcdef01" in out and "kill/live latched" in out
+    # a paper mode never latches the live kill
+    sup.kill = KillSwitches(tmp_path / "kill2", enforce_volume=False)
+    sup.mode = Mode.PAPER_EXECUTION
+    sup.on_unprotected(ex, "UNPROTECTED (paper)")
+    assert sup.kill.active(live=True) == []
