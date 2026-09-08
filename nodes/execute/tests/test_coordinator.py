@@ -386,7 +386,9 @@ def test_the_hedge_window_is_the_clearance_s_and_starts_when_leg_a_is_known(tmp_
     c = clearance_for(tmp_path, now_mono=100.0)
     ex = co.execute(p, c)
     assert ex.state is X.HEDGED, ex.detail
-    assert c.hedge_deadline_mono == pytest.approx(clk.m - 0.0, abs=3.0) and c.hedge_deadline_mono > 102.5 + 2.9
+    # the armed deadline is the PROTECT window from the instant leg A was known (2026-09-08), well
+    # past the phase-1 3 s a slow settle used to spend
+    assert c.hedge_deadline_mono == pytest.approx(102.5 + c.protect_window_s, abs=0.2) and c.hedge_deadline_mono > 102.5 + 2.9
 
 
 def test_hedge_unavailable_holds_a_position_and_is_not_terminal():

@@ -45,19 +45,25 @@ class Candidate:
 class RiskClearance:
     """Single-use, short-lived, minted only by clear()."""
     __slots__ = ("opportunity_id", "event_id", "mode", "reservation", "limits_sha", "issued_mono",
-                 "expires_mono", "hedge_deadline_mono", "hedge_window_s", "max_hedge_submits", "_first_used",
-                 "_hedge_used", "_mint")
+                 "expires_mono", "hedge_deadline_mono", "hedge_window_s", "max_hedge_submits", "protect_window_s",
+                 "max_protect_submits", "_first_used", "_hedge_used", "_mint")
 
-    def __init__(self, *, opportunity_id: str, event_id: str, mode: Mode, reservation: Reservation,
+    def __init__(self, *, opportunity_id: str, event_id: str, mode: Mode, reservation: Reservation | None,
                  limits_sha: str, issued_mono: float, expires_mono: float,
-                 hedge_deadline_mono: float, max_hedge_submits: int = 3, _mint=None):
+                 hedge_deadline_mono: float, max_hedge_submits: int = 3, protect_window_s: float | None = None,
+                 max_protect_submits: int | None = None, _mint=None):
         if _mint is not _MINT:
             raise TypeError("RiskClearance cannot be constructed directly; call clearance.clear().")
         self.opportunity_id, self.event_id, self.mode = opportunity_id, event_id, mode
         self.reservation, self.limits_sha = reservation, limits_sha
         self.issued_mono, self.expires_mono = issued_mono, expires_mono
         self.hedge_deadline_mono, self.max_hedge_submits = hedge_deadline_mono, max_hedge_submits
+        #: Phase 1 of the hedge (the walked limit): max_hedge_latency_ms.
         self.hedge_window_s = max(0.0, hedge_deadline_mono - issued_mono)
+        #: The PROTECT window (2026-09-08): what `arm_hedge` arms and `consume(hedge=True)` admits
+        #: under -- the chase and the unwind included. Defaults to the phase-1 window (the old rule).
+        self.protect_window_s = float(protect_window_s) if protect_window_s is not None else self.hedge_window_s
+        self.max_protect_submits = int(max_protect_submits) if max_protect_submits is not None else max_hedge_submits
         self._first_used, self._hedge_used = False, 0
 
     def arm_hedge(self, now_mono: float | None = None) -> float:
@@ -69,7 +75,7 @@ class RiskClearance:
         t = now_mono if now_mono is not None else time.monotonic()
         if not self._first_used:
             raise ValueError("arm_hedge before the first leg was consumed")
-        self.hedge_deadline_mono = t + self.hedge_window_s
+        self.hedge_deadline_mono = t + self.protect_window_s
         return self.hedge_deadline_mono
 
     def valid(self, now_mono: float | None = None) -> bool:
@@ -87,7 +93,7 @@ class RiskClearance:
                 return False
             self._first_used = True
             return True
-        if not self._first_used or t > self.hedge_deadline_mono or self._hedge_used >= self.max_hedge_submits:
+        if not self._first_used or t > self.hedge_deadline_mono or self._hedge_used >= self.max_protect_submits:
             return False
         self._hedge_used += 1
         return True
@@ -203,4 +209,30 @@ def clear(cand: Candidate, *, mode: Mode, limits: RiskLimits, ledger: ExposureLe
     return RiskClearance(opportunity_id=cand.opportunity_id, event_id=cand.event_id, mode=mode,
                          reservation=res, limits_sha=limits.sha, issued_mono=t_mono,
                          expires_mono=t_mono + limits.clearance_ttl_ms / 1000.0,
-                         hedge_deadline_mono=t_mono + limits.max_hedge_latency_ms / 1000.0, _mint=_MINT)
+                         hedge_deadline_mono=t_mono + limits.max_hedge_latency_ms / 1000.0,
+                         max_hedge_submits=limits.max_hedge_submits,
+                         protect_window_s=limits.protect.hedge_protect_window_s,
+                         max_protect_submits=limits.protect.max_protect_submits, _mint=_MINT)
+
+
+def clear_protect(*, opportunity_id: str, event_id: str, venues: Sequence[str], mode: Mode, limits: RiskLimits,
+                  kill: KillSwitches, reservation: Reservation | None = None,
+                  now_mono: float | None = None) -> RiskClearance | Refused:
+    """A clearance for the position guard's RE-RUN of the protection layer on an execution that
+    already holds a position (2026-09-08). No new reservation (the execution's own is still held),
+    no profit or cap checks (nothing is being opened), the first leg already consumed. Refused
+    only on the `all` and `venue-<v>` kill switches: a `live` latched by the layer itself, or by
+    a human after a loss, must not stop the machine from protecting what is already naked."""
+    t_mono = now_mono if now_mono is not None else time.monotonic()
+    if not mode.executes:
+        return Refused("MODE", f"{mode.value} does not execute; nothing to protect with")
+    hit = [h for h in kill.active(event_id=event_id, live=False, venues=tuple(venues)) if h == "all" or h.startswith("venue-")]
+    if hit:
+        return Refused("KILL_SWITCH", f"active: {', '.join(hit)}")
+    c = RiskClearance(opportunity_id=opportunity_id, event_id=event_id, mode=mode, reservation=reservation,
+                      limits_sha=limits.sha, issued_mono=t_mono, expires_mono=t_mono,
+                      hedge_deadline_mono=t_mono + limits.protect.hedge_protect_window_s,
+                      max_hedge_submits=limits.max_hedge_submits, protect_window_s=limits.protect.hedge_protect_window_s,
+                      max_protect_submits=limits.protect.max_protect_submits, _mint=_MINT)
+    c._first_used = True
+    return c

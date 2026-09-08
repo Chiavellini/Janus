@@ -38,9 +38,10 @@ wta = 200.0
 max_daily_realized_usd = 25.0    # the latching breaker; human reset
 
 [execution]
-max_hedge_latency_ms = 3000
+max_hedge_latency_ms = 3000      # phase 1 of the hedge: IOCs at the walked limit; the chase and the unwind run under [protect]
+max_hedge_submits = 3            # attempts in phase 1 (hardcoded in nodes/risk/clearance.py until 2026-09-08)
 max_unhedged_contracts = 100
-max_unhedged_duration_ms = 5000
+# max_unhedged_duration_ms removed 2026-09-08: [protect] hedge_protect_window_s is the bound on unhedged duration
 max_stale_book_age_s = 5.0
 # 0.50 -> 0.10 on 2026-09-07 for the small real-fills pilot (ledger F8): at the pilot's $12 stake a 1%
 # locked return is $0.12, and 0.50 refused every cover the caps allow. The 1% return floor below
@@ -48,3 +49,16 @@ max_stale_book_age_s = 5.0
 min_net_profit_usd = 0.10
 min_locked_return = 0.01
 clearance_ttl_ms = 500           # a clearance is good for one submit, within this window
+
+[protect]                        # the hedge protection layer (nodes/execute/protect.py), 2026-09-08
+hedge_protect_window_s = 30.0    # from leg A known: chase to the budget, then to the loss cap, then unwind
+unwind_reserve_s = 10.0          # the last N s of the window belong to the unwind
+max_protect_loss_usd = 1.00      # per execution: the most a chase past break-even plus an unwind may lock in
+max_protect_loss_per_contract_usd = 0.10   # the same cap per contract; the tighter of the two binds
+max_protect_submits = 12         # hedge + unwind IOCs per execution under the protect window
+protect_resubmit_ms = 400        # between IOCs: enough for a fresh book, short enough for 12 tries
+unwind_enabled = false           # true from release R5: sell the naked side back inside the cap
+protect_auto = false             # true from R5: the position guard re-protects on its own
+protect_kill_on_failure = true   # the operator's decision (2026-09-08): an unprotectable position latches kill/live
+protect_dust_contracts = 1.0     # a naked remainder below the venue minimum is recorded, not chased or killed
+guard_period_s = 30.0            # nodes/execute/guard.py cadence, real modes only

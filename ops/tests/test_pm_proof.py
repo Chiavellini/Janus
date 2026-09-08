@@ -39,7 +39,7 @@ class FakeTransport:
         self.fee_bps, self.confirm, self.bal = fee_bps, confirm, balance
         self.orders, self.calls, self.n = {}, [], 0
 
-    def post_order(self, *, token_id, price, size, order_type):
+    def post_order(self, *, token_id, price, size, order_type, side="BUY"):
         self.n += 1
         oid = f"0x{self.n:03d}"
         self.calls.append(("post", order_type, price, size))

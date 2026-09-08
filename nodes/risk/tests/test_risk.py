@@ -140,7 +140,12 @@ def test_the_token_cannot_be_forged_and_is_single_use_and_short_lived(kill, brea
     assert c.used and not c.valid(100.1)
     # hedges: bounded in count and inside the hedge deadline (max_hedge_latency_ms from the limits)
     assert c.consume(100.5, hedge=True) and c.consume(101.0, hedge=True) and c.consume(102.0, hedge=True)
-    assert not c.consume(102.5, hedge=True), "three hedge submits at most"
+    # 2026-09-08: the token admits PROTECTIVE legs (the hedge, its chase, the unwind) up to the
+    # protect section's bound, not the phase-1 three; the machine keeps the phase-1 count itself.
+    n = 3
+    while c.consume(102.5, hedge=True):                      # inside the (un-armed) 3 s deadline throughout
+        n += 1
+    assert n == LIMITS.protect.max_protect_submits, "max_protect_submits protective submits at most"
     c2 = clear(cand(opportunity_id="o2", event_id="e2"), ledger=ExposureLedger(), **ok_env(kill=kill, breaker=breaker))
     assert c2.consume(100.1) and not c2.consume(100.0 + LIMITS.max_hedge_latency_ms / 1000 + 0.1, hedge=True)
 
@@ -152,9 +157,11 @@ def test_the_hedge_window_is_armed_when_the_position_exists_not_at_the_mint(kill
     with pytest.raises(ValueError):
         c.arm_hedge(100.1)                                     # no position yet
     assert c.consume(100.1)
-    assert c.arm_hedge(102.0) == pytest.approx(102.0 + w)
-    assert c.consume(102.0 + w - 0.1, hedge=True), "inside the window from the fill"
-    assert not c.consume(102.0 + w + 0.1, hedge=True), "past it"
+    assert c.arm_hedge(102.0) == pytest.approx(102.0 + LIMITS.protect.hedge_protect_window_s), "the PROTECT window is armed (2026-09-08), not phase 1's"
+    pw = LIMITS.protect.hedge_protect_window_s
+    assert c.consume(102.0 + w - 0.1, hedge=True), "inside phase 1 from the fill"
+    assert c.consume(102.0 + pw - 0.1, hedge=True), "still inside the protect window: a chase or an unwind may go"
+    assert not c.consume(102.0 + pw + 0.1, hedge=True), "past it"
 
 
 def test_refusals_come_in_the_fail_closed_order(kill, breaker):
