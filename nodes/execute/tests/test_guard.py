@@ -158,3 +158,22 @@ def test_a_position_the_fills_do_not_explain_is_a_mismatch(tmp_path):
     main, journal, records, g = _world(tmp_path, venues={"polymarket": pm})
     rep = g.apply(g.fetch())
     assert rep.mismatches and "venue holds 25" in rep.mismatches[0] and rep.orphans == [fa]
+
+
+def test_a_position_the_venue_no_longer_holds_is_not_handed_back_for_protection(tmp_path):
+    """The real R2 pass (2026-09-08 05:19Z): the venue had already redeemed the Zandschulp shares
+    (balance +$10.18); the row is corrected and alarmed, but protecting 10 shares that no longer
+    exist would open a new position. Left to the settlement pass."""
+    trade = FillRecord("polymarket", "0xorder", "5fc95d33", 10.175, 0.57, 0.0, True, T0 + 101, True, market_id=TOK, side="buy_yes")
+    pm = Venue("polymarket", fills=[trade], positions=[])            # the venue answered: nothing held
+    main, journal, records, g = _world(tmp_path, venues={"polymarket": pm, "kalshi": Venue("kalshi", [], [])})
+    _gea_row(journal, records)
+    rep = g.apply(g.fetch())
+    assert rep.corrected == ["789ad9b2"] and rep.to_protect == []
+    assert any(x.startswith("POSITION_GONE 789ad9b2") for x in rep.findings) and rep.mismatches
+    # an UNREADABLE venue is not an empty one: the hand-over stands
+    (tmp_path / "b").mkdir(exist_ok=True)
+    pm2 = Venue("polymarket", fills=[trade], positions=None)
+    main2, journal2, records2, g2 = _world(tmp_path / "b", venues={"polymarket": pm2})
+    _gea_row(journal2, records2)
+    assert g2.apply(g2.fetch()).to_protect == ["789ad9b2"]

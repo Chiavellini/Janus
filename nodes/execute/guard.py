@@ -170,6 +170,7 @@ class PositionGuard:
                         self.kill.latch("live", f"guard: orphan fill {detail}")
                     except Exception as exc:  # noqa: BLE001
                         rep.findings.append(f"kill latch failed: {type(exc).__name__}")
+        self._held = self._holdings(snap)
         for exid, pairs in by_exec.items():
             self._reconcile_execution(exid, pairs, snap, rep)
         self._scan_naked(snap, rep, skip=set(by_exec))
@@ -250,8 +251,44 @@ class PositionGuard:
                 rep.findings.append(f"UNHEDGED_POSITION {detail}")
                 self._flag("UNHEDGED_POSITION", detail, snap.now)
             working = (snap.now - float(self._last_utc(exid) or 0.0)) < IN_FLIGHT_GRACE_S and not ex.state.holds_position
-            if not working:
+            gone = self._gone(ex, plan)
+            if gone:
+                gk = f"gone:{exid}"
+                if gk not in self.said:
+                    self.said.add(gk)
+                    rep.findings.append(f"POSITION_GONE {exid[:8]} {gone}")
+            elif not working:
                 rep.to_protect.append(exid)
+
+    def _holdings(self, snap: GuardSnapshot) -> dict[str, dict[str, float]]:
+        """venue -> market -> signed contracts held, for the venues that answered this pass."""
+        out: dict[str, dict[str, float]] = {}
+        for v, pos in snap.positions.items():
+            if pos is None:
+                continue
+            out[v] = {}
+            for p in pos:
+                out[v][p.market_id] = out[v].get(p.market_id, 0.0) + (p.contracts if p.side == "yes" else -p.contracts)
+        return out
+
+    def _gone(self, ex, plan) -> str | None:
+        """The naked side's position is no longer at the venue (the market resolved and paid, or the
+        operator closed it by hand): nothing to protect, the settlement pass closes the row. Only
+        when the venue answered this pass; an unreadable venue never counts as empty."""
+        held = getattr(self, "_held", {})
+        if plan is None:
+            return None
+        if ex.unhedged > 1e-9:
+            leg = plan.first
+        elif ex.overhedged > 1e-9:
+            leg = plan.hedge
+        else:
+            return None
+        if leg.venue not in held:
+            return None
+        if abs(held[leg.venue].get(leg.market_id, 0.0)) <= 1e-9:
+            return f"{leg.venue} holds nothing on {leg.market_id[:14]}: settled or closed by hand; left to the settlement pass"
+        return None
 
     def _scan_naked(self, snap: GuardSnapshot, rep: GuardReport, *, skip: set[str]) -> None:
         """Every open execution that holds a naked (or over-hedged) position is handed over on EVERY
@@ -276,7 +313,14 @@ class PositionGuard:
                 rep.findings.append(f"UNHEDGED_POSITION {detail}")
                 self._flag("UNHEDGED_POSITION", detail, snap.now)
             working = (snap.now - float(last or 0.0)) < IN_FLIGHT_GRACE_S and not st.holds_position
-            if not working:
+            ex = self.records.load(exid)
+            gone = self._gone(ex, self.records.plan_of(exid)) if ex is not None else None
+            if gone:
+                gk = f"gone:{exid}"
+                if gk not in self.said:
+                    self.said.add(gk)
+                    rep.findings.append(f"POSITION_GONE {exid[:8]} {gone}")
+            elif not working:
                 rep.to_protect.append(exid)
 
     def _last_utc(self, exid: str) -> float | None:
