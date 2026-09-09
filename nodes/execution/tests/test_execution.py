@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from kernel.execution_protocol import OrderRequest
+from kernel.execution_protocol import FillRecord, OrderRequest
 from kernel.schema import Book, FillState, Mode, Quote
 from nodes.execution.gate import admit
 from nodes.execution.journal import Journal
@@ -46,6 +46,21 @@ def test_pending_is_journaled_as_unconfirmed_and_a_duplicate_id_is_refused(journ
     with pytest.raises(ValueError, match="already journaled"):
         journal.pending(req(), mode="PAPER_EXECUTION", now=T + 1)
     assert [r["client_order_id"] for r in journal.unconfirmed()] == ["c1"]
+
+
+def test_a_later_authoritative_fill_read_repairs_the_fee_fifo(journal):
+    """Polymarket can first report fee 0 and later be priced by the event's pinned schedule.
+    Re-reading the same fill id must repair accounting, not preserve the first incomplete row."""
+    first = FillRecord("polymarket", "o1", "f1", 10.0, 0.63, 0.0, True, T, False,
+                       market_id="tok", side="buy_yes")
+    corrected = FillRecord("polymarket", "o1", "f1", 10.0, 0.63, 0.11655, True, T, True,
+                           market_id="tok", side="buy_yes")
+    journal.record_fill(first)
+    journal.record_fill(corrected)
+    row = journal.store.con.execute(
+        "SELECT contracts,price,fee_usd,is_taker,ts,final FROM venue_fills WHERE fill_id='f1'"
+    ).fetchone()
+    assert row == pytest.approx((10.0, 0.63, 0.11655, 1, T, 1))
 
 
 def test_the_gate_needs_a_live_matching_clearance_and_spends_it(tmp_path):

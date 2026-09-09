@@ -90,7 +90,9 @@ class Journal:
 
     def record_fill(self, f) -> bool:
         cur = self.store.con.execute(
-            "INSERT INTO venue_fills VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(fill_id) DO UPDATE SET final=excluded.final",
+            "INSERT INTO venue_fills VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(fill_id) DO UPDATE SET "
+            "venue=excluded.venue, venue_order_id=excluded.venue_order_id, contracts=excluded.contracts, "
+            "price=excluded.price, fee_usd=excluded.fee_usd, is_taker=excluded.is_taker, ts=excluded.ts, final=excluded.final",
             (f.fill_id, f.venue, f.venue_order_id, f.contracts, f.price, f.fee_usd, int(f.is_taker), f.ts, int(f.final)))
         self.store.con.commit()
         return cur.rowcount > 0

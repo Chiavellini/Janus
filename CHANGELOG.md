@@ -121,6 +121,13 @@ ignores the live scope for an already-held execution. This makes automatic recon
 bounded re-protection survive systemd restart, deployment and box reboot instead of depending on
 an operator connection to start the guard after a protection failure.
 
+The historical fee repair exposed one more persistence boundary: `venue_fills` originally updated
+only `final` when a later read returned the same fill id. A Polymarket fill first persisted with
+the venue's misleading zero fee therefore stayed zero even after the client computed its pinned
+market fee. The fill FIFO now upserts every authoritative field, including fee, contracts and
+price; the guard then refreshes the linked order row from that FIFO. This is accounting-only and
+is required before the F13 balances are taken as a clean baseline.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and
