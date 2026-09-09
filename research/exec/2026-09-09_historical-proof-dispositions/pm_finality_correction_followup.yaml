@@ -1,0 +1,17 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_exact_disposition_correction
+known_before_registration:
+  - The first authenticated stopped-lane guard matched the Kalshi proof but returned the exact Polymarket proof fill as final=true, while confirmed disposition row2 froze the earlier final=false lifecycle field.
+  - The fill identity, quantity5.131577, price0.3799999493, fee0.0604400001709539, order, token and cash proof are unchanged; new ORPHAN_FILL flag212 records only the exact lifecycle mismatch.
+scope:
+  - Prepare one append-only superseding disposition for the exact Polymarket proof fill.
+  - Bind current final=true and exact orphan flags198/205/212 to the already verified immutable proof/cash sources.
+success:
+  - The new record must supersede exact row2 and match every current FillRecord field without tolerance.
+  - Prior rows remain immutable; reason states the lifecycle correction and makes no new cash, PnL, order or inventory claim.
+  - A fresh complete stopped-lane guard accepts both proof fills, resolves only exact orphan IDs, and reports zero current orphan/mismatch/protection need.
+  - Any concurrent fill/flag/head/source change blocks confirmation or resolution.
+constraints:
+  - No accounting rewrite, deletion, redemption, cap change, rearm or kill clearing.
+  - Keep the observer stopped and live kill present through correction and reconciliation.
