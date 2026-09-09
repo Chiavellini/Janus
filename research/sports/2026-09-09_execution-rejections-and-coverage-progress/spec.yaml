@@ -1,0 +1,33 @@
+ledger_row: L61
+registered_date: 2026-09-09
+track: sports/operations
+kind: descriptive live-operations audit
+status_at_registration: PENDING
+question: >-
+  Why did each Mexico-box LIMITED_LIVE execution attempt on the local 2026-09-09 calendar fail
+  or fill, which causes are venue/liquidity constraints versus implementation defects, and what
+  exact portion of the sports coverage universe is certified, locally repaired, or still only an
+  unverified onboarding candidate?
+known_before_registration:
+  - One TEX at SEA execution has two venue-confirmed filled legs and is reconciled at +0.7798 USD.
+  - Four other local-calendar attempts are recorded ORDER_REJECTED with zero filled contracts.
+  - L59 found 203 loose unregistered candidate rows across 44 mappings, including known false
+    cross-sport collisions; these are not canonical pairs or tradeability evidence.
+scope:
+  - Read-only execution, order, event, journal and service evidence on the running Mexico box.
+  - Local committed registry, coverage, settlement, entity and test artifacts through d6ed3d6.
+  - Classify each zero-fill attempt by the first authoritative refusal or terminal order result.
+prohibited:
+  - No order, cancel, account mutation, balance mutation, kill/override/cap change, deployment,
+    restart, signal, service mutation, database write, or live code change.
+  - No claim that a loose census row is co-listed, executable, or profitable.
+success_criteria:
+  - Every local-calendar execution is accounted for exactly once as filled or zero-fill.
+  - Zero-fill causes distinguish post-only/no-maker-fill, venue rejection, risk refusal, stale data,
+    and system error using exact recorded evidence.
+  - Coverage progress distinguishes deployed, committed-not-deployed, certified-but-absent,
+    settlement-blocked, venue-absent and unverified-unregistered populations.
+  - Recommendations name expected execution/EV tradeoffs and do not weaken the two-leg guarantee.
+expected_ev_effect: descriptive_only
+holdout_touched: false
+test_look_spent: false

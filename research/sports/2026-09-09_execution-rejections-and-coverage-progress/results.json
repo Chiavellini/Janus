@@ -1,0 +1,98 @@
+{
+  "ledger_row": "L61",
+  "observed_utc": "2026-09-09T23:56:00Z",
+  "calendar": {
+    "timezone": "America/Mexico_City",
+    "date": "2026-09-09",
+    "utc_window": ["2026-09-09T06:00:00Z", "2026-09-10T06:00:00Z"]
+  },
+  "execution_summary": {
+    "attempts": 5,
+    "complete_covers": 1,
+    "maker_zero_fills": 4,
+    "venue_rejections": 0,
+    "risk_refusals_among_recorded_attempts": 0,
+    "stale_data_failures_among_recorded_attempts": 0,
+    "system_errors_among_recorded_attempts": 0
+  },
+  "zero_fills": [
+    {
+      "execution_id": "5815da66cc7848cc912660982ebca94c",
+      "event": "WSH @ SD",
+      "polymarket_order": "Padres 5 @ 0.61",
+      "recorded_best_ask": 0.62,
+      "post_ack_rest_ms": 148,
+      "authoritative_result": "accepted live; canceled by Janus; zero matched"
+    },
+    {
+      "execution_id": "92d06b19294f4413a98afd559eca7edd",
+      "event": "JEANJEA V PAREJA",
+      "polymarket_order": "Jeanjean 10 @ 0.34",
+      "recorded_best_ask": 0.35,
+      "post_ack_rest_ms": 0,
+      "authoritative_result": "accepted live; canceled by Janus; zero matched"
+    },
+    {
+      "execution_id": "cf9fa81eae1346b8abf05513adda0067",
+      "event": "JEANJEA V PAREJA",
+      "polymarket_order": "Pareja 10 @ 0.40",
+      "recorded_best_ask": 0.41,
+      "post_ack_rest_ms": 229,
+      "authoritative_result": "accepted live; canceled by Janus; zero matched"
+    },
+    {
+      "execution_id": "23324c90760944b78d13c60a4c420586",
+      "event": "JEANJEA V PAREJA",
+      "polymarket_order": "Jeanjean 10 @ 0.54",
+      "recorded_best_ask": 0.55,
+      "post_ack_rest_ms": 273,
+      "authoritative_result": "accepted live; canceled by Janus; zero matched"
+    }
+  ],
+  "complete_cover": {
+    "execution_id": "13feaaad71f547428ba70b45b0d9bd49",
+    "event": "TEX @ SEA",
+    "quantity": 10,
+    "polymarket_avg_price": 0.69,
+    "kalshi_no_avg_price": 0.22,
+    "kalshi_fee_usd": 0.1202,
+    "settled_profit_usd": 0.7798,
+    "unhedged_contracts": 0
+  },
+  "current_live_block": {
+    "present": true,
+    "latched_utc": 1788992780.059617,
+    "reason": "post-only cancel/late-fill lifecycle unresolved: 5a162878dc8842d09e42b797475b81e9",
+    "later_resolution": "all five post-only markers terminal_proved=1 and violated=0; admission singleton empty",
+    "effect": "subsequent candidates refused KILL_SWITCH active: live"
+  },
+  "maker_timing_cause": {
+    "submit_clearance_ttl_ms": 500,
+    "quote_max_age_s": 3,
+    "coordinator_max_rest_s": 2,
+    "effective_deadline": "minimum of submit clearance expiry and quote expiry",
+    "finding": "network acknowledgement consumed most or all of the clearance, leaving 0-273 ms of deliberate maker rest"
+  },
+  "coverage": {
+    "deployed_commit": "76a68da88164047ba630c74c49cb30c8c33ccefd",
+    "committed_local_head": "d6ed3d6",
+    "local_commits_ahead": 2,
+    "deployed_enabled_leagues": 14,
+    "local_enabled_leagues": 14,
+    "local_change": "adds UCL and removes CFB; also repairs seven tennis identities, duplicate ITF enumeration, token ownership and completeness diagnostics",
+    "frozen_snapshot": {
+      "scheduled": 308,
+      "complete_slate": 270,
+      "discovery_ready": 263,
+      "explicit_non_ready": 45
+    },
+    "blocks": {
+      "venue_absent_tennis": 37,
+      "cfb_unmeasured_exact_pairs": 4,
+      "soccer_evidence_and_cap_exact_pairs": 3,
+      "schedule_conflicts": 1
+    },
+    "unregistered_loose_candidates": 203,
+    "unregistered_mapping_buckets": 44
+  }
+}
