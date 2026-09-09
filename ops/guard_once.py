@@ -12,6 +12,7 @@ box's credentials in the environment (the lane's /etc/janus.env and /run/janus).
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
@@ -30,6 +31,30 @@ from nodes.risk.ledger import ExposureLedger  # noqa: E402
 from nodes.risk.limits import load_limits  # noqa: E402
 from nodes.store_tuples.store import DEFAULT_DB, TupleStore  # noqa: E402
 from nodes.stream_kalshi.stream import load_private_key  # noqa: E402
+
+
+def load_polymarket_fee_params(store, venue) -> int:
+    """Key every Janus Polymarket execution token to its event's pinned fee schedule.
+
+    The running grid does this before a new order. This one-shot guard also reads historical fills,
+    so it must hydrate the same map before ``fills()`` replays them; otherwise a venue-reported
+    zero fee would remain zero during the accounting backfill.
+    """
+    rows = store.con.execute(
+        "SELECT DISTINCT o.market_id, ev.fee_params_json FROM executions x "
+        "JOIN orders o ON o.client_order_id=x.first_client_id "
+        "JOIN events ev ON ev.event_id=x.event_id WHERE o.venue='polymarket'"
+    ).fetchall()
+    n = 0
+    for market_id, payload in rows:
+        try:
+            params = (json.loads(payload or "{}") or {}).get("polymarket")
+        except (TypeError, ValueError):
+            params = None
+        if params:
+            venue.fee_params_by_market[str(market_id)] = dict(params)
+            n += 1
+    return n
 
 
 def run_once(*, venues, store, journal, records, limits, kill, started_utc: float, ledger=None, log=print) -> dict:
@@ -72,6 +97,7 @@ def main() -> int:
         print("JANUS_KALSHI_API_KEY / JANUS_KALSHI_PRIVATE_KEY_PATH are unset"); return 2
     venues = {"kalshi": KalshiExecution(api_key, load_private_key(key_path), journal, Mode.LIMITED_LIVE, base_url=PROD_BASE),
               "polymarket": PolymarketExecution(PyClobTransport(), journal, Mode.LIMITED_LIVE)}
+    load_polymarket_fee_params(store, venues["polymarket"])
     out = run_once(venues=venues, store=store, journal=journal, records=records, limits=limits, kill=kill, ledger=ledger,
                    started_utc=time.time() - a.since_hours * 3600.0)
     return 0 if not out["errors"] else 1

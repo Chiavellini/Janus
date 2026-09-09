@@ -6,7 +6,8 @@ released only by the reconcile node, after both venues reconcile". Until 2026-09
 the lane did that -- the first paper cover (F3) sat HEDGED with its reservation open and the
 watchdog said UNRECONCILED_TOO_LONG. This is the pass:
 
-  1. every execution not yet released whose game has ended (phase `post`, or start + 6 h);
+  1. every execution not yet released: venue finality is polled directly, so a stale schedule
+     phase cannot leave a paid/removed position looking missing to the guard;
   2. the venues' results: Kalshi `GET /markets/{ticker}` per ticker of the game, Polymarket the
      Gamma event's moneyline market(s) -- label -> YES token, the draw market for three-way;
   3. `reconcile.settle` over the execution's orders (venue, side, filled, average price, fee):
@@ -58,8 +59,15 @@ def _ensure_columns(store) -> None:
 
 
 def pending(store, *, now: float | None = None, grace_s: float = 6 * 3600.0) -> list[dict]:
-    """Executions still holding capital whose game has ended, with the event spec beside them."""
-    t = now or time.time()
+    """Executions still holding capital, with the event spec beside them.
+
+    ``now`` and ``grace_s`` remain accepted for callers written against the old phase/time filter.
+    They no longer gate the query: venue result endpoints are authoritative and return open until
+    final. At the live cap there are at most six simultaneous events, so polling those held rows
+    every settlement pass is both bounded and safer than waiting on a potentially stale schedule
+    transition (MIN-DET finalized while its event row still said ``in:co_listed`` on 2026-09-09).
+    """
+    _ = now, grace_s
     marks = ",".join("?" * len(OPEN_STATES))
     rows = store.con.execute(
         "SELECT e.execution_id, e.opportunity_id, e.event_id, e.league, e.mode, e.state, e.reservation_id, "
@@ -68,10 +76,6 @@ def pending(store, *, now: float | None = None, grace_s: float = 6 * 3600.0) -> 
         OPEN_STATES).fetchall()
     out = []
     for r in rows:
-        phase, start = r[9] or "", r[10]
-        ended = phase.startswith("post") or (start is not None and t - float(start) > grace_s)
-        if not ended:
-            continue
         if X(r[5]).holds_position and not (r[11] or 0.0) > 0:
             continue            # a holding failure with nothing filled on leg A holds nothing
         spec = json.loads(r[8]) if r[8] else {}

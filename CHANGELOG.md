@@ -128,6 +128,15 @@ market fee. The fill FIFO now upserts every authoritative field, including fee, 
 price; the guard then refreshes the linked order row from that FIFO. This is accounting-only and
 is required before the F13 balances are taken as a clean baseline.
 
+Settlement polling also no longer waits for the schedule row to say `post` (or for a six-hour
+fallback). MIN-DET finalized at Kalshi while the discovery row still said `in:co_listed`; Kalshi
+correctly removed the paid position, but the guard temporarily read that as a position mismatch.
+Every unreleased execution is now asked at the venue result endpoints on the bounded settlement
+period; open remains open, and a final result is persisted immediately even while the other venue
+waits. The one-shot guard also hydrates every historical Janus Polymarket token with its own event
+fee schedule before replaying fills, allowing the authoritative-fill upsert to repair the F12 fee
+FIFO and linked order rows.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and

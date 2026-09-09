@@ -62,10 +62,10 @@ def _fetchers(kalshi: dict, pm_label: str | None):
     return fk, fe
 
 
-def test_pending_waits_for_the_game_to_end(tmp_path):
+def test_pending_polls_held_executions_even_when_the_schedule_phase_is_stale(tmp_path):
     st, *_ = _hedged(tmp_path, phase="in:co_listed", start=T - 3600)
-    assert pending(st, now=T) == []
-    assert len(pending(st, now=T + 7 * 3600)) == 1, "six hours after the start counts as ended"
+    assert len(pending(st, now=T)) == 1, "venue finality, not the schedule phase, decides settlement"
+    assert len(pending(st, now=T + 7 * 3600)) == 1
     (tmp_path / "b").mkdir()
     st2, *_ = _hedged(tmp_path / "b", phase="post:co_listed")
     assert len(pending(st2, now=T)) == 1
