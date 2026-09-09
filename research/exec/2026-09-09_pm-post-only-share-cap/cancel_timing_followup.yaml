@@ -1,0 +1,12 @@
+row: L54
+date: 2026-09-09
+kind: descriptive_offline_review_followup
+known_before_registration:
+  - A synchronous status read started before expiry can block for five seconds and delay cancellation beyond the 500ms clearance.
+success_criteria:
+  - After POST, perform no blocking status/trade/activity reads until cancellation has been issued at the original rest deadline.
+  - Cancel is the first post-ack network operation; a slow status callback cannot postpone its dispatch.
+  - Partial/full fills arriving before, at, or after expiry remain visible and protected after cancellation; no replacement and no clamp.
+  - Recovery immediately cancels expired unresolved orders before ordinary status reads.
+implementation_choice: Sleep only until the minimum original clearance/quote deadline, issue durable cancel first, then perform bounded reconciliation. Early fill-driven cancellation is deliberately not promised by this synchronous route.
+constraints: Offline only; no live mutations or expanded trading authority. Deadline is cancel dispatch, not a guarantee of venue/network completion.

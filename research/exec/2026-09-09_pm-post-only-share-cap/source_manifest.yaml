@@ -1,0 +1,43 @@
+row: L54
+retrieved_date: 2026-09-09
+source_scope: Public official documentation/source plus installed SDK; no account or venue API calls.
+sdk:
+  package: py_clob_client_v2
+  installed_version: 1.1.0
+  installed_root: /opt/homebrew/lib/python3.14/site-packages/py_clob_client_v2
+  repository: https://github.com/Polymarket/py-clob-client-v2
+  tag: v1.1.0
+  commit: 215fc63a8fd6ec3a10c7edb73997c9772d8686d3
+  verification: Each listed official pinned source SHA256 exactly matched the local installed file; tag resolved with git ls-remote.
+  sha256:
+    client.py: 66604f43bf37f8482f3f50674b9f3e3834ff13ef83722c00c69520e37052bd3a
+    order_builder/builder.py: cb5d2499da246ec713840ac0c490b5d7cf80e6bef68ff51e6f43fe8e1f231e82
+    order_builder/helpers.py: cb33f32aa9a96fde06c6d21ea4e978b9ab11342a13fd331df98f21a46eabeb7e
+    order_utils/model/order_data_v2.py: 30de6da40c7e859bab404c7df4ef7b25d0145d01a013d6d510d96cce78b6dfe9
+    order_utils/exchange_order_builder_v2.py: 967329219b8b46445a186dc157344ee47752b4552277f55d7f4e768df9c38dd3
+    config.py: 2b914b1e643fac9afb3056ec6959e3736ca4b4c7a24b593fce26949a86d4bf2a
+contract:
+  repository: https://github.com/Polymarket/ctf-exchange-v2
+  commit: ccc0596074f4dfd62c944fbca4de252893b82b4b
+  deployment_association: Official README/SDK config associate Polygon normal and neg-risk V2 addresses; independently deployed bytecode was not queried or verified.
+  polygon_exchange: '0xE111180000d2663C0091e4f400237545B87B996B'
+  polygon_neg_risk_exchange: '0xe2222d279d744050d28e00520010520000310F59'
+  polygon_collateral: '0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB'
+  polygon_conditional_tokens: '0x4D97DCd97eC945f40cF65F87097ACe5EA0476045'
+  signing_domain_name: Polymarket CTF Exchange
+  signing_domain_version: '2'
+  signing_chain_id: 137
+  sha256:
+    src/exchange/mixins/Trading.sol: dd8d18fca897e664583a93944b379435e6f70e84f4190c39d669b2be62596012
+    src/exchange/libraries/CalculatorHelper.sol: b8dce122a07f5fe7898747ee61f73a82c4b96bf206b238e98da2ceed97737dc1
+    src/exchange/libraries/Structs.sol: 533fe017a934e9f7500519961f1b7d350c2e76732ca66cb837bd82406854c8c2
+documentation:
+  - https://docs.polymarket.com/concepts/order-lifecycle
+  - https://docs.polymarket.com/trading/place-orders
+  - https://docs.polymarket.com/trading/manage-orders
+  - https://docs.polymarket.com/api-reference/trade/get-trades
+  - https://docs.polymarket.com/api-reference/wss/user
+limitations:
+  - Public source association is not an independent deployed-bytecode attestation.
+  - Arithmetic fixtures are not execution of the contract EVM test suite.
+  - No signed F15 request was captured; L53 reconstruction remains explicitly separate.

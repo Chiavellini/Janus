@@ -53,7 +53,7 @@ from nodes.slate.slate import next_transition, windows_for  # noqa: E402
 from nodes.execute.coordinator import Coordinator  # noqa: E402
 from nodes.execute.guard import PositionGuard  # noqa: E402
 from nodes.execute.on_loop import OnLoop  # noqa: E402
-from nodes.execute.plan import plan_from_cover  # noqa: E402
+from nodes.execute.plan import plan_from_cover, maker_plan_from_cover  # noqa: E402
 from nodes.execute.records import ExecutionRecords  # noqa: E402
 from nodes.execute.venues import build_venues  # noqa: E402
 from nodes.exec_kalshi.client import DEMO_BASE, PROD_BASE, KalshiExecution  # noqa: E402
@@ -544,9 +544,11 @@ class Supervisor:
         pre = {"frame_to_eval_ms": round(float(getattr(ev, "latency_ms", 0.0) or 0.0), 2),
                "eval_to_exec_ms": round(max(0.0, time.time() - ev.evaluated_utc) * 1000.0, 2)}
         offers = {o: list(v) for o, v in ev.offers.items()}
-        plan = plan_from_cover(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
+        planner = maker_plan_from_cover if self.mode.risks_capital else plan_from_cover
+        maker_options = {"max_quote_age_s": min(sup.poller.max_book_age_s, sup.poller.max_rest_book_age_s)} if self.mode.risks_capital else {}
+        plan = planner(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
                                league=sup.poller.league, cov=cov, offers=offers, hurdle=MIN_RETURN,
-                               min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0))
+                               min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0), **maker_options)
         if plan is None:
             return
         # Paper venues fill against the books the cover was priced from -- the same instant.
@@ -563,7 +565,10 @@ class Supervisor:
                         side = "buy_no" if (l.venue == "kalshi" and l.outcome_id.endswith(":NO")) else "buy_yes"
                         v.books[(l.market_id, side)] = l.book
         max_age = max((ev.evaluated_utc - l.book.fetched_utc) for legs in offers.values() for l in legs)
-        planned_cost = plan.first.limit_price + plan.hedge.vwap + plan.fee_per_contract + plan.settlement_buffer_per_contract
+        # Passive quoting is not an executable-price EV claim. Keep the original walked
+        # first-leg price and conservative fees in the eligibility/risk economics.
+        first_cost = plan.first.vwap if plan.first.post_only else plan.first.limit_price
+        planned_cost = first_cost + plan.hedge.vwap + plan.fee_per_contract + plan.settlement_buffer_per_contract
         planned_profit = plan.quantity * (1.0 - planned_cost)
         planned_capital = plan.quantity * planned_cost
         cand = Candidate(plan.opportunity_id, ev.game_id, sup.poller.league,
@@ -1115,7 +1120,7 @@ def main() -> int:
             return KalshiExecution(api_key, load_private_key(key_path), journal, sup.mode, base_url=PROD_BASE)
 
         def polymarket_factory():
-            return PolymarketExecution(PyClobTransport(), journal, sup.mode)
+            return PolymarketExecution(PyClobTransport(), journal, sup.mode, kill=kill)
 
         try:
             sup.venues = build_venues(sup.mode, journal, kalshi_factory=kalshi_factory,

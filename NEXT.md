@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-09 10:07 UTC from the F15 STOP, live kill latch, and local L52/L53 repairs.
+Updated 2026-09-09 after the F15 STOP and independently reviewed local L52-L54/F18 candidate.
 CHECKLIST.md is the state list; CHANGELOG.md and the F rows in `snooping_ledger.md` are the
 append-only history.
 
@@ -15,8 +15,10 @@ operator-side audit confirmed that a nominal 10-share Polymarket BUY returned 10
 the coordinator hedged 10.17, violating the signed 10-contract cap. The same Maximus execution was
 stored about 4.226 cents too high. `kill/live` is deliberately latched. The old `64f54c7` observer may
 remain active, but no new first leg may clear; do not clear the kill. F17 produced no evaluation and
-is superseded before start. There is currently no release candidate: the local L52/L53 repair blocks
-all real Polymarket BUY entry until a transport with a proved maximum received-share bound exists.
+is superseded before start. The local F18 candidate restores only a post-only GTC maker-first
+Polymarket BUY route; immediate, FAK/FOK and non-post-only BUYs remain blocked. It is fully tested and
+independently reviewed but uncommitted and undeployed. Its share cap relies on Polymarket's documented
+post-only maker guarantee; the unsigned operator instruction is an explicit venue trust boundary.
 
 The arm remains **$12 combined stake, 10 contracts per leg, $250 committed daily notional, $25
 realized-loss breaker, $0.10 minimum net profit, 1% locked return, $1 maximum protection loss,
@@ -81,14 +83,13 @@ Capture gzip level 3 used about 58% less compression CPU with exact frame/timest
 
 ## Immediate next step
 
-Keep `kill/live` latched. Design and independently prove a Polymarket entry transport whose wire
-semantics impose a maximum received-share quantity; a minimum-received collateral BUY is not
-acceptable. Then preregister a fresh forward row, run the full green suite and independent review,
-verify zero flight/imbalance/unhedged exposure and healthy streams/clocks/guard/watchdog, commit and
-release the exact tree with a matching re-signed arm. The first three covers still require hand
-reconciliation before the fourth. Stop on any cent discrepancy, cap breach, protection delay beyond
-30 seconds, orphan, mismatch, missing reservation, post-submit store error, fee above pin, breaker,
-or stream alarm.
+Keep `kill/live` latched. Commit the exact reviewed F18 tree, then wait for healthy streams/clocks and
+a fully green guard/watchdog. Before any operator release, verify zero flight/material imbalance/
+unhedged exposure, zero unresolved post-only admission or persistence error, and a matching re-signed
+unchanged arm. The first three covers require hand reconciliation before the fourth. Stop on any cent
+discrepancy, non-maker fill, cap breach, late cancel dispatch, protection delay beyond 30 seconds,
+orphan, mismatch, missing reservation, post-submit store error, fee above pin, breaker, or stream
+alarm. This file and the F18 registration do not authorize clearing the current live kill.
 
 The next profit-relevant evidence is per-league executable fill rate and realized net EV under the
 unchanged small arm. Coverage creates access, not evidence of profit. Do not raise caps until forward

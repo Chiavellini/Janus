@@ -41,6 +41,13 @@ from kernel.schema import Book, FillState, Mode
 from nodes.execution.gate import admit
 from nodes.execution.journal import Journal
 from nodes.exec_polymarket.quantity import BUY_CAP_UNPROVEN, taker_trade_vwap
+from nodes.exec_polymarket.fill_projection import project_account_trade
+from nodes.exec_polymarket.post_only import post_only_order, check_post_only_quantity
+from nodes.exec_polymarket.post_only import (
+    POST_ONLY_TERMINAL_GRACE_S, ensure_post_only_tables, claim_post_only, release_post_only, reviewed_signing_domain,
+    record_post_only_violation,
+)
+from nodes.exec_polymarket.post_only_sizing import validate_post_only_amounts
 
 ORDER_TYPE = {"fok": "FOK", "ioc": "FAK", "gtc": "GTC"}
 FINAL_TRADE = {"CONFIRMED"}
@@ -88,11 +95,22 @@ class PolymarketUserStream:
         self.last_frame_utc = 0.0
         self._orders: dict[str, dict] = {}
         self._trades: dict[str, dict[str, dict]] = {}
+        self._role_evidence: dict[str, dict[str, set[str]]] = {}
+        self._quantity_evidence: dict[str, dict[str, Decimal]] = {}
         self._lock = threading.Lock()
 
     @staticmethod
     def _get(d: dict, snake: str, camel: str | None = None, default=None):
         return d.get(snake, d.get(camel or snake, default))
+
+    def _remember_quantity(self, oid, tid, value):
+        try:
+            quantity = Decimal(str(value))
+            if quantity.is_finite() and quantity >= 0:
+                previous = self._quantity_evidence.setdefault(oid, {}).get(tid, Decimal(0))
+                self._quantity_evidence[oid][tid] = max(previous, quantity)
+        except ArithmeticError:
+            pass
 
     def handle(self, raw, *, now: float | None = None) -> list[str]:
         self.frames += 1
@@ -124,6 +142,9 @@ class PolymarketUserStream:
                     taker = str(self._get(payload, "taker_order_id", "takerOrderId", "") or "")
                     if taker and tid:
                         self._trades.setdefault(taker, {})[tid] = {**payload, "_janus_trade_role": "taker"}
+                        if str(payload.get("status", "")).upper().replace("TRADE_STATUS_", "") not in DEAD_TRADE:
+                            self._role_evidence.setdefault(taker, {}).setdefault(tid, set()).add("taker")
+                            self._remember_quantity(taker, tid, self._get(payload, "size", "matchedAmount", 0))
                     for maker in self._get(payload, "maker_orders", "makerOrders", ()) or ():
                         oid = str(self._get(maker, "order_id", "orderId", "") or "")
                         if oid and tid:
@@ -133,6 +154,9 @@ class PolymarketUserStream:
                             row["size"] = self._get(maker, "matched_amount", "matchedAmount", 0)
                             row["_janus_trade_role"] = "maker"
                             self._trades.setdefault(oid, {})[tid] = row
+                            if str(payload.get("status", "")).upper().replace("TRADE_STATUS_", "") not in DEAD_TRADE:
+                                self._role_evidence.setdefault(oid, {}).setdefault(tid, set()).add("maker")
+                                self._remember_quantity(oid, tid, row["size"])
                     if taker or self._get(payload, "maker_orders", "makerOrders"):
                         kinds.append("trade")
             self.last_frame_utc = now or time.time()
@@ -148,6 +172,10 @@ class PolymarketUserStream:
         with self._lock:
             trades = list(self._trades.get(order_id, {}).values())
             order = dict(self._orders.get(order_id, {}))
+            evidence = {tid: sorted(roles) for tid, roles in self._role_evidence.get(order_id, {}).items()}
+            observed = float(sum(self._quantity_evidence.get(order_id, {}).values(), Decimal(0)))
+        role_detail = {"_janus_trade_roles": sorted({role for roles in evidence.values() for role in roles}),
+                       "_janus_role_evidence": evidence} if evidence else {}
         good = [t for t in trades if str(t.get("status", "")).upper().replace("TRADE_STATUS_", "") not in DEAD_TRADE]
         if good:
             qty = sum(_f(self._get(t, "size", "matchedAmount")) for t in good)
@@ -155,12 +183,12 @@ class PolymarketUserStream:
                        else _f(t.get("price"), None)) for t in good]
             cost = (sum(_f(self._get(t, "size", "matchedAmount")) * price
                         for t, price in zip(good, prices)) if all(p is not None for p in prices) else None)
-            return {"id": order_id, "status": "MATCHED", "size_matched": qty,
-                    "price": (cost / qty if cost is not None and qty else None), "user_stream": True}
+            return {"id": order_id, "status": "MATCHED", "size_matched": max(qty, observed),
+                    "price": (cost / qty if cost is not None and qty and qty >= observed else None), "user_stream": True, **role_detail}
         matched = _f(self._get(order, "size_matched", "sizeMatched"))
         if matched > 0:
             return {"id": order_id, "status": str(order.get("status") or "MATCHED"),
-                    "size_matched": matched, "price": order.get("price"), "user_stream": True}
+                    "size_matched": max(matched, observed), "price": order.get("price"), "user_stream": True, **role_detail}
         status = str(order.get("status") or "").upper()
         event_type = str(self._get(order, "order_event_type", "orderEventType", order.get("type") or "")).upper()
         order_type = str(self._get(order, "order_type", "orderType", "")).upper()
@@ -170,8 +198,11 @@ class PolymarketUserStream:
         zero_final = status in ("CANCELED", "CANCELLED") or event_type == "CANCELLATION"
         zero_final = zero_final or (status == "UNMATCHED" and order_type in ("FAK", "FOK", "IOC"))
         if zero_final:
-            return {"id": order_id, "status": "CANCELED", "size_matched": 0.0,
-                    "price": order.get("price"), "user_stream": True}
+            return {"id": order_id, "status": "CANCELED", "size_matched": observed,
+                    "price": order.get("price"), "user_stream": True, **role_detail}
+        if evidence:
+            return {"id": order_id, "status": "UNKNOWN", "size_matched": observed,
+                    "price": None, "user_stream": True, **role_detail}
         return None
 
     async def run(self, stop: asyncio.Event, *, connect=None, on_state=None) -> None:
@@ -333,6 +364,35 @@ class PyClobTransport:
     def get_order(self, order_id: str) -> dict:
         return self._c.get_order(order_id)
 
+    def prepare_post_only_buy(self, req: OrderRequest) -> dict:
+        """Sign one V2 maker order, but do not post; caller must durably journal it first."""
+        from py_clob_client_v2.order_utils.exchange_order_builder_v2 import ExchangeOrderBuilderV2
+        from py_clob_client_v2.order_utils.model.order_data_v2 import order_to_json_v2
+        if not req.post_only or req.time_in_force != "gtc" or req.side != "buy_yes" or req.hedge:
+            raise ValueError("only post-only GTC first-leg BUY is supported")
+        config = reviewed_signing_domain(self._c)
+        tick = str(Decimal(str(req.tick)).normalize())
+        neg = self._c.get_neg_risk(req.market_id)
+        options = self._T.CreateOrderOptions(tick_size=tick, neg_risk=neg)
+        signed = self._c.builder.build_order(
+            self._T.OrderArgsV2(token_id=req.market_id, price=req.price, size=req.contracts, side="BUY"),
+            options, version=2)
+        validate_post_only_amounts(maker_amount=signed.makerAmount, taker_amount=signed.takerAmount,
+                                  requested_contracts=req.contracts, limit_price=req.price)
+        address = config.neg_risk_exchange_v2 if neg else config.exchange_v2
+        builder = ExchangeOrderBuilderV2(address, self._c.chain_id, self._c.signer)
+        order_id = builder.build_order_hash(builder.build_order_typed_data(signed))
+        wire = order_to_json_v2(signed, "redacted", "GTC", True, True)
+        wire["order"]["signature"] = "redacted"  # Exact economic fields, not a replayable authorization.
+        wire["_janus_reviewed_domain"] = {"chainId": 137, "version": "2", "verifyingContract": address,
+                                          "collateral": config.collateral, "conditional_tokens": config.conditional_tokens}
+        return {"signed": signed, "venue_order_id": order_id, "maker_amount": signed.makerAmount,
+                "taker_amount": signed.takerAmount, "wire": wire}
+
+    def post_prepared_post_only(self, prepared: dict) -> dict:
+        # Separate from generic post_order: neither FAK/FOK nor ordinary GTC is unblocked.
+        return self._c.post_order(prepared["signed"], self._T.OrderType.GTC, post_only=True, defer_exec=True)
+
     def user_order(self, order_id: str) -> dict | None:
         return self.user_stream.order(order_id)
 
@@ -448,6 +508,11 @@ def authoritative_cash_fill(trade: dict, activity: dict) -> tuple[float, float]:
         raise ValueError("nonfinite cash activity")
     if size != activity_size or size <= 0 or not 0 < price < 1 or cash < 0:
         raise ValueError("cash activity quantity/price is inconsistent")
+    if trade.get('_janus_projection_role') == 'MAKER':
+        maker_price = Decimal(str(trade.get('price')))
+        if not maker_price.is_finite() or not 0 < maker_price < 1 or abs(maker_price - price) > Decimal('0.000000001'):
+            raise ValueError('cash VWAP disagrees with owned maker price')
+        price = maker_price  # Maker price belongs to this order, never the taker top-level price.
     notional = size * price
     fee = cash - notional if activity["side"] == "BUY" else notional - cash
     # A ten-decimal reported VWAP may create a sub-micro-dollar negative residual at zero
@@ -479,6 +544,13 @@ class PolymarketExecution:
     rejected_http: int = 0
     last_fee_source: str = ""
     last_error: str = ""
+    #: A partial trade batch still returns validated quantities, but cannot prove cash
+    #: uniqueness or terminal lifecycle coverage. Guard/status consume this separately.
+    projection_batch_error: str = ""
+    #: A failed disk write cannot erase already observed inventory. Retain exact fill
+    #: identities/high-water quantities in this process until operator repair.
+    _unpersisted_fills: dict[tuple[str, str], FillRecord] = field(default_factory=dict)
+    kill: Any = None
     #: Set when the CLOB answered 403 "Trading restricted in your region": this host cannot place
     #: Polymarket orders at all (2026-09-07, the Ashburn box's first real order). The lane refuses
     #: every cover cheaply from then on; only a restart from a permitted host clears it.
@@ -487,9 +559,148 @@ class PolymarketExecution:
     #: Tokens whose sell allowance was set this process (once per token; the approval is on-chain).
     _sell_ok: set = field(default_factory=set)
     _last_trade_check: dict[str, float] = field(default_factory=dict)
+    _post_only_cancel_attempts: dict[str, float] = field(default_factory=dict)
+    _post_only_observed: dict[str, Decimal] = field(default_factory=dict)
+    persistence_error: str = ""
 
     def __post_init__(self) -> None:
         self.journal.store.ensure_ddl(PM_CASH_SOURCES_DDL)
+        ensure_post_only_tables(self.journal)
+
+    def _post_only_violation(self, cid, code, detail):
+        record_post_only_violation(self.journal, cid, code, detail, now=self.clock(), kill=self.kill)
+
+    def _persistence_failure(self, cid, exc):
+        self.persistence_error = f"POST_ONLY_PERSISTENCE_FAILED: {cid}: {brief_error(exc)}"
+        self.last_error = self.persistence_error
+        self.journal_failures = getattr(self, "journal_failures", 0) + 1
+        try:
+            record_post_only_violation(self.journal, cid, "POST_ONLY_PERSISTENCE_FAILED",
+                                       self.persistence_error, now=self.clock(), kill=self.kill)
+        except Exception as audit_exc:
+            self.persistence_error += "; durable audit also failed: " + brief_error(audit_exc)
+        return self.persistence_error
+
+    def _record_post_only_after_wire(self, ack, *, kind, raw, terminal_proof=False):
+        try:
+            if terminal_proof:
+                self.journal.store.con.execute("UPDATE pm_post_only_orders SET terminal_proved=1 WHERE client_order_id=?", (ack.client_order_id,))
+            self.journal.record(ack, kind=kind, raw=raw)
+            if terminal_proof:
+                release_post_only(self.journal, ack.client_order_id, now=self.clock(), reason="explicit post-only rejection")
+        except Exception as exc:
+            try:
+                self.journal.store.con.rollback()
+            except Exception:
+                pass
+            self._persistence_failure(ack.client_order_id, exc)
+            return replace(ack, state=ack.state if ack.filled_contracts > 0 else FillState.UNCONFIRMED,
+                           open=True, settlement_pending=True, detail=self.persistence_error)
+        return ack
+
+    def _submit_post_only(self, req, t, clearance):
+        con = self.journal.store.con
+        if self.journal.get(req.client_order_id) is not None:
+            # A duplicate caller must not replace the held order's quantity/open state
+            # with this refusal. The original lifecycle owns that journal row.
+            ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0, None, None,
+                      "POST_ONLY_BLOCKED", t, detail="client order id already exists; no resubmission")
+            self.journal._event(req.client_order_id, "post_only_duplicate_rejected", None, {"prewire": True}, t)
+            con.commit()
+            return ack
+        # Convert the ORIGINAL monotonic clearance once, conservatively, for restart.
+        # Preparation/persistence never grants another rest window.
+        cancel_deadline = t + max(0, clearance.expires_mono - self.mono())
+        if req.entry_expires_utc is not None:
+            cancel_deadline = min(cancel_deadline, req.entry_expires_utc)
+        if self.kill is None or not callable(getattr(self.transport, "prepare_post_only_buy", None)):
+            error = "post-only requires a bounded V2 transport and host-local kill binding"
+        elif con.execute("SELECT 1 FROM pm_post_only_orders WHERE terminal_proved=0 OR violated=1 LIMIT 1").fetchone():
+            error = "an earlier post-only order is unresolved or violated its contract; no replacement"
+        elif any(r["venue"] == self.venue for r in self.journal.unconfirmed()):
+            error = "an earlier Polymarket order is unresolved; one order at a time"
+        elif not claim_post_only(self.journal, req.client_order_id, now=t):
+            error = "another connection or interrupted process owns post-only admission; no replacement"
+        else:
+            error = None
+        if error:
+            self.journal.pending(req, mode=self.mode.value, now=t)
+            ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0, None, None,
+                      "POST_ONLY_BLOCKED", t, detail=error)
+            self.journal.record(ack, kind="reject", raw={"prewire": True})
+            return ack
+        # Preparation may sign but cannot post. A failed durable write below propagates and
+        # prevents the transport's post method from being reached.
+        self.journal.pending(req, mode=self.mode.value, now=t)
+        try:
+            prepared = self.transport.prepare_post_only_buy(req)
+            validate_post_only_amounts(maker_amount=prepared["maker_amount"], taker_amount=prepared["taker_amount"],
+                                      requested_contracts=req.contracts, limit_price=req.price)
+        except Exception as exc:
+            ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0, None, None,
+                      "POST_ONLY_PREPARE_FAILED", self.clock(), detail=brief_error(exc))
+            self.journal.record(ack, kind="post_only_no_send", raw={"prewire": True})
+            release_post_only(self.journal, req.client_order_id, now=self.clock(), reason="preparation failed; no POST")
+            return ack
+        if self.mono() >= clearance.expires_mono or (req.entry_expires_utc is not None and self.clock() >= req.entry_expires_utc):
+            ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0, None, None,
+                      "POST_ONLY_EXPIRED", self.clock(), detail="economic proof expired during preparation; no POST")
+            self.journal.record(ack, kind="reject", raw={"prewire": True})
+            release_post_only(self.journal, req.client_order_id, now=self.clock(), reason="expired before POST")
+            return ack
+        oid = prepared["venue_order_id"]
+        con.execute("INSERT INTO pm_post_only_orders(client_order_id,venue_order_id,maker_amount,taker_amount,wire_json,cancel_deadline_utc) "
+                    "VALUES(?,?,?,?,?,?)", (req.client_order_id, oid, str(prepared["maker_amount"]),
+                                           str(prepared["taker_amount"]), json.dumps(prepared["wire"]), cancel_deadline))
+        pending = Ack(self.venue, req.client_order_id, oid, FillState.UNCONFIRMED, 0, None, None,
+                      "post_only_prepared", t, open=True)
+        self.journal.record(pending, kind="post_only_prepared", raw=prepared["wire"])
+        self._requests[req.client_order_id] = req
+        if (self.persistence_error or self.kill.active(live=True)
+                or con.execute("SELECT 1 FROM pm_post_only_orders WHERE violated=1 LIMIT 1").fetchone()
+                or not con.execute("SELECT 1 FROM pm_post_only_admission WHERE slot=1 AND client_order_id=?", (req.client_order_id,)).fetchone()):
+            con.execute("UPDATE pm_post_only_orders SET terminal_proved=1 WHERE client_order_id=?", (req.client_order_id,))
+            ack = replace(pending, state=FillState.REJECTED, open=False, raw_status="POST_ONLY_STOPPED",
+                          detail="live stop, durable violation or lost admission at final prewire check; no POST")
+            self.journal.record(ack, kind="post_only_no_send", raw={"prewire": True})
+            release_post_only(self.journal, req.client_order_id, now=self.clock(), reason="final prewire stop; no POST")
+            return ack
+        if self.mono() >= clearance.expires_mono or (req.entry_expires_utc is not None and self.clock() >= req.entry_expires_utc):
+            con.execute("UPDATE pm_post_only_orders SET terminal_proved=1 WHERE client_order_id=?", (req.client_order_id,))
+            ack = replace(pending, state=FillState.REJECTED, open=False, raw_status="POST_ONLY_EXPIRED",
+                          detail="economic proof expired during durable journal; no POST")
+            self.journal.record(ack, kind="post_only_no_send", raw={"prewire": True})
+            release_post_only(self.journal, req.client_order_id, now=self.clock(), reason="expired during journal; no POST")
+            return ack
+        self.submits += 1
+        try:
+            response = self.transport.post_prepared_post_only(prepared)
+        except Exception as exc:  # A signed hash is known even if POST delivery is unknown.
+            self.last_error = brief_error(exc)
+            if getattr(exc, "status_code", None) in {400, 401, 403, 422}:
+                ack = replace(pending, state=FillState.REJECTED, open=False, raw_status="post_only_rejected",
+                              received_utc=self.clock(), detail=self.last_error)
+                return self._record_post_only_after_wire(ack, kind="post_only_reject",
+                    raw={"status_code": exc.status_code, "error": self.last_error}, terminal_proof=True)
+            ack = replace(pending, raw_status="TRANSPORT", received_utc=self.clock(), detail=self.last_error)
+            return self._record_post_only_after_wire(ack, kind="unconfirmed", raw={"error": self.last_error})
+        if not isinstance(response, dict):
+            response = {}
+        returned_id = response.get("orderID") or response.get("orderId") or response.get("id")
+        if returned_id and returned_id != oid:
+            try:
+                self._post_only_violation(req.client_order_id, "POST_ONLY_ROLE_VIOLATION", "response order hash differs from signed hash")
+            except Exception as exc:
+                self._persistence_failure(req.client_order_id, exc)
+        if response.get("success") is False and not returned_id:
+            # Explicit venue rejection is no order; never infer it from an empty response.
+            ack = replace(pending, state=FillState.REJECTED, open=False, raw_status="post_only_rejected",
+                          detail=str(response.get("errorMsg") or response.get("error") or "venue rejection"))
+        else:
+            ack = replace(pending, raw_status=str(response.get("status") or "unknown"),
+                          detail="post-only accepted or delivery unresolved; reconcile exact signed hash")
+        return self._record_post_only_after_wire(ack, kind="post_only_ack", raw=response,
+                                                terminal_proof=ack.state is FillState.REJECTED)
 
     def submit(self, req: OrderRequest, clearance) -> Ack:
         t = self.clock()
@@ -501,6 +712,8 @@ class PolymarketExecution:
             return Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None, "SIDE", t,
                        detail="Polymarket outcomes are separate tokens: pass the outcome's token id as "
                               "market_id with side buy_yes (or sell_yes to reduce a held position)")
+        if req.post_only:
+            return self._submit_post_only(req, t, clearance)
         if not req.is_sell:
             cap_check = getattr(self.transport, "buy_contract_cap_error", None)
             cap_error = cap_check() if cap_check is not None else BUY_CAP_UNPROVEN
@@ -588,6 +801,9 @@ class PolymarketExecution:
     def status(self, client_order_id: str) -> OrderState:
         row = self.journal.get(client_order_id)
         t = self.clock()
+        if row and self.journal.store.con.execute(
+                "SELECT 1 FROM pm_post_only_orders WHERE client_order_id=?", (client_order_id,)).fetchone():
+            return self._post_only_status(row, t)
         if row is None or not row.get("venue_order_id"):
             return OrderState(self.venue, client_order_id, None, FillState.UNCONFIRMED, 0.0, None, None, "NOT_FOUND", t,
                               detail="no venue order id; reconcile through trades() before any retry")
@@ -666,6 +882,126 @@ class PolymarketExecution:
             print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
         return st
 
+    def _post_only_status(self, row, t):
+        from nodes.exec_polymarket.post_only import check_post_only_quantity
+        cid, oid, con = row["client_order_id"], row["venue_order_id"], self.journal.store.con
+        marker = con.execute(
+            "SELECT taker_amount,maker_amount,terminal_seen_utc,terminal_fingerprint,terminal_proved,violated,cancel_deadline_utc "
+            "FROM pm_post_only_orders WHERE client_order_id=?", (cid,)).fetchone()
+        if not marker[4] and (marker[6] is None or t >= marker[6]):
+            # On recovery this process-local retry cache is empty: dispatch cancel
+            # immediately, before any possibly slow status/trade/cash read. Persisted
+            # intent alone never means a prior process reached the wire.
+            attempted = self._post_only_cancel_attempts.get(cid)
+            if attempted is None or self.mono() - attempted >= 1.0:
+                try:
+                    self._post_only_cancel_wire(row)
+                except Exception as exc:
+                    self._persistence_failure(cid, exc)
+        known = max(Decimal(str(row.get("filled_contracts") or 0)), self._post_only_observed.get(cid, Decimal(0)))
+        payload, reads_ok = None, False
+        # Socket cache is local, so role/quantity evidence must not wait behind REST
+        # or be lost when REST fails. Conflicting roles remain durable stop evidence.
+        try:
+            streamed = getattr(self.transport, "user_order", lambda _: None)(oid)
+            if streamed:
+                streamed_qty = Decimal(str(streamed.get("size_matched")))
+                if streamed_qty.is_finite() and streamed_qty >= 0:
+                    known = max(known, streamed_qty)
+                    self._post_only_observed[cid] = known
+                if "taker" in streamed.get("_janus_trade_roles", ()):
+                    self._post_only_violation(cid, "POST_ONLY_ROLE_VIOLATION",
+                                              "user-stream owned taker/conflicting role: " +
+                                              json.dumps(streamed.get("_janus_role_evidence", {}), sort_keys=True))
+            check_post_only_quantity(self.journal, oid, known, now=t, kill=self.kill)
+        except Exception as exc:
+            self.last_error = brief_error(exc)
+        # Even an independent guard status call cannot start slow REST I/O while
+        # deliberately resting. Expired recovery above dispatches cancel first.
+        if marker[4] or cid in self._post_only_cancel_attempts:
+            try:
+                payload = self.transport.get_order(oid)
+                if payload:
+                    reported = Decimal(str(payload.get("size_matched")))
+                    if not reported.is_finite() or reported < 0:
+                        raise ValueError("invalid order size")
+                    known = max(known, reported)
+                    self._post_only_observed[cid] = known
+                check_post_only_quantity(self.journal, oid, known, now=t, kill=self.kill)
+                observed_fills = self.fills(since_utc=max(0, float(row["submitted_utc"]) - 1))
+                returned_qty = sum((Decimal(str(f.contracts)) for f in observed_fills if f.venue_order_id == oid), Decimal(0))
+                known = max(known, returned_qty)
+                self._post_only_observed[cid] = known
+                reads_ok = not bool(getattr(self, "projection_batch_error", "") or self.persistence_error)
+            except Exception as exc:
+                self.last_error = brief_error(exc)
+        try:
+            fills = con.execute("SELECT fill_id,contracts,final,is_taker FROM venue_fills WHERE venue_order_id=?", (oid,)).fetchall()
+        except Exception as exc:
+            self._persistence_failure(cid, exc)
+            fills = []
+        fifo = sum((Decimal(str(f[1])) for f in fills), Decimal(0))
+        known = max(known, fifo)
+        self._post_only_observed[cid] = known
+        try:
+            check_post_only_quantity(self.journal, oid, known, now=t, kill=self.kill)
+            return self._finish_post_only_status(cid, oid, con, marker, known, payload, reads_ok, fills, fifo, t)
+        except Exception as exc:
+            try:
+                con.rollback()
+            except Exception:
+                pass  # The independent kill is still attempted when the store is unusable.
+            self._persistence_failure(cid, exc)
+            cap = Decimal(marker[0]) / 1_000_000
+            state = FillState.FILLED if known >= cap else FillState.PARTIAL if known > 0 else FillState.UNCONFIRMED
+            return OrderState(self.venue, cid, oid, state, float(known),
+                              float(Decimal(marker[1]) / Decimal(marker[0])) if known else None,
+                              None, "post_only_persistence_failed", t, open=True, final=False,
+                              settlement_pending=True, detail=self.persistence_error)
+
+    def _finish_post_only_status(self, cid, oid, con, marker, known, payload, reads_ok, fills, fifo, t):
+        # A cancel response alone is not proof that no earlier match can arrive late.
+        # Require two stable terminal GET observations, associated-trade coverage, and a
+        # fresh successful fill read with complete maker-confirmed cash before reuse.
+        terminal = False
+        if payload and str(payload.get("status", "")).upper() in {"CANCELED", "CANCELLED", "MATCHED"}:
+            associations = payload.get("associate_trades")
+            if isinstance(associations, list) and all(isinstance(x, str) for x in associations):
+                fingerprint = json.dumps([str(payload.get("status")).upper(), str(payload.get("size_matched")), sorted(associations)])
+                if marker[3] != fingerprint:
+                    con.execute("UPDATE pm_post_only_orders SET terminal_seen_utc=?,terminal_fingerprint=? WHERE client_order_id=?",
+                                (t, fingerprint, cid))
+                else:
+                    ids = {str(f[0]).split(":maker:")[0] for f in fills}
+                    terminal = bool(reads_ok and t - float(marker[2] or t) >= POST_ONLY_TERMINAL_GRACE_S
+                                    and fifo == known and set(associations) == ids
+                                    and all(f[2] and not f[3] for f in fills)
+                                    and not con.execute("SELECT violated FROM pm_post_only_orders WHERE client_order_id=?", (cid,)).fetchone()[0])
+        else:
+            con.execute("UPDATE pm_post_only_orders SET terminal_seen_utc=NULL,terminal_fingerprint=NULL WHERE client_order_id=?", (cid,))
+        # A later contradictory fact reopens the lock; historical source/audit stays intact.
+        con.execute("UPDATE pm_post_only_orders SET terminal_proved=? WHERE client_order_id=?", (int(terminal), cid))
+        qty = float(known)
+        cap = Decimal(marker[0]) / 1_000_000
+        state = (FillState.FILLED if known >= cap and qty > 0 else FillState.PARTIAL if qty > 0
+                 else FillState.UNFILLED if terminal else FillState.UNCONFIRMED)
+        price = float(Decimal(marker[1]) / Decimal(marker[0])) if qty else None
+        st = OrderState(self.venue, cid, oid, state, qty, price, None, "post_only_terminal" if terminal else "post_only_pending",
+                        t, open=not terminal, final=terminal, settlement_pending=not terminal,
+                        detail="maker lifecycle reconciled" if terminal else "maker order/late-fill coverage remains unresolved")
+        try:
+            self.journal.record(st, kind="post_only_status", raw=payload if isinstance(payload, dict) else {"missing": True})
+            if terminal:
+                release_post_only(self.journal, cid, now=self.clock(), reason="stable terminal order and complete maker/cash coverage")
+        except Exception as exc:
+            # Do not commit the tentative terminal update when its evidence failed.
+            con.rollback()
+            self._persistence_failure(cid, exc)
+            return replace(st, open=True, final=False, settlement_pending=True, detail=self.persistence_error)
+        if self.persistence_error:
+            return replace(st, open=True, final=False, settlement_pending=True, detail=self.persistence_error)
+        return st
+
     def _state_from_order(self, o: dict, cid: str, requested: float, t: float) -> OrderState:
         status = str(o.get("status", "")).upper()
         matched = _f(o.get("size_matched"))
@@ -682,25 +1018,130 @@ class PolymarketExecution:
                           detail="order price provisional; cash accounting pending" if matched > 0 else "",
                           final=status in ("MATCHED", "CANCELED", "CANCELLED", "UNMATCHED"))
 
+    def _post_only_cancel_wire(self, row):
+        cid, oid, con, t = row["client_order_id"], row["venue_order_id"], self.journal.store.con, self.clock()
+        # A DB failure must prevent the network call, including recovery/retries.
+        self.journal._event(cid, "post_only_cancel_intent", None, {"venue_order_id": oid}, t)
+        con.execute("UPDATE pm_post_only_orders SET cancel_attempt_utc=? WHERE client_order_id=?", (t, cid))
+        con.commit()
+        self._post_only_cancel_attempts[cid] = self.mono()
+        try:
+            result = self.transport.cancel(oid)
+        except Exception as exc:
+            self.last_error = brief_error(exc)
+            return
+        try:
+            self.journal._event(cid, "post_only_cancel_response", None, result, self.clock())
+            con.commit()
+        except Exception as exc:
+            self._persistence_failure(cid, exc)
+
     def cancel(self, client_order_id: str) -> Ack:
         row = self.journal.get(client_order_id)
         t = self.clock()
         if row is None or not row.get("venue_order_id"):
             return Ack(self.venue, client_order_id, None, FillState.UNCONFIRMED, 0.0, None, None, "NOT_FOUND", t)
-        try:
-            self.transport.cancel(row["venue_order_id"])
-        except Exception as exc:  # noqa: BLE001
-            self.last_error = brief_error(exc)
+        if self.journal.store.con.execute("SELECT 1 FROM pm_post_only_orders WHERE client_order_id=?", (client_order_id,)).fetchone():
+            try:
+                self._post_only_cancel_wire(row)
+            except Exception as exc:
+                self._persistence_failure(client_order_id, exc)
+        else:
+            try:
+                self.transport.cancel(row["venue_order_id"])
+            except Exception as exc:  # noqa: BLE001
+                self.last_error = brief_error(exc)
         st = self.status(client_order_id)
         try:
             self.journal.record(st, kind="cancel")
         except Exception as exc:  # noqa: BLE001 -- the order is OUT; a store failure here must not hide the ack from the machine (2026-09-08)
+            if self.journal.store.con.execute("SELECT 1 FROM pm_post_only_orders WHERE client_order_id=?", (client_order_id,)).fetchone():
+                self._persistence_failure(client_order_id, exc)
+                return replace(st, open=True, final=False, settlement_pending=True, detail=self.persistence_error)
             self.journal_failures = getattr(self, "journal_failures", 0) + 1
             print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
         return st
 
+    def _fill_violation(self, cid: str, code: str, detail: str) -> None:
+        try:
+            self._post_only_violation(cid, code, detail)
+        except Exception as exc:
+            # The independent kill is attempted even when its DB audit fails. The
+            # failed audit must not turn a known held quantity into an empty result.
+            self._persistence_failure(cid, exc)
+
     def fills(self, *, since_utc: float) -> Sequence[FillRecord]:
-        trades = list(self.transport.trades(after_ts=since_utc))
+        self.projection_batch_error = ""
+        projection_errors = []
+        raw_trades = []
+        try:
+            for raw in self.transport.trades(after_ts=since_utc):
+                raw_trades.append(raw)
+        except Exception as exc:  # A valid prefix is quantity evidence, not completeness.
+            projection_errors.append('trade read: ' + brief_error(exc))
+        # An unrelated malformed maker row must not hide an already observed owned taker.
+        for raw in raw_trades:
+            if not isinstance(raw, dict):
+                continue
+            marker = post_only_order(self.journal, str(raw.get('taker_order_id') or ''))
+            if marker is not None and str(raw.get('status', '')).upper() not in DEAD_TRADE:
+                self._fill_violation(marker['client_order_id'], 'POST_ONLY_ROLE_VIOLATION',
+                                     f"trade {raw.get('id')}: owned order observed in taker/conflicting role")
+        owned_ids = {row[0] for row in self.journal.store.con.execute(
+            "SELECT venue_order_id FROM orders WHERE venue=? AND venue_order_id IS NOT NULL", (self.venue,))}
+        trades = []
+        for index, raw in enumerate(raw_trades):
+            try:
+                if not isinstance(raw, dict):
+                    raise ValueError('trade is not an object')
+                if str(raw.get('status', '')).upper() in DEAD_TRADE:
+                    continue
+                projections = project_account_trade(
+                    raw, owned_order_ids=owned_ids, funder=os.environ.get('JANUS_PM_FUNDER', ''))
+                for projected in projections:
+                    quantity = Decimal(str(projected.get('size')))
+                    if not quantity.is_finite() or quantity <= 0:
+                        raise ValueError('invalid projected fill quantity')
+                    trades.append(projected)
+            except Exception as exc:
+                projection_errors.append(f'trade row {index}: ' + brief_error(exc))
+        if projection_errors:
+            self.projection_batch_error = 'PROJECTION_BATCH_INCOMPLETE: ' + '; '.join(projection_errors)
+            self.last_error = self.projection_batch_error
+        # Role/cumulative-cap STOP evidence precedes fresh cash reads and accounting writes.
+        post_markers = {}
+        for tr in trades:
+            if str(tr.get('status', '')).upper() in DEAD_TRADE:
+                continue
+            oid = str(tr.get('taker_order_id') or tr.get('order_id') or '')
+            marker = post_only_order(self.journal, oid)
+            if marker is None:
+                continue
+            post_markers[oid] = marker
+            if tr.get('_janus_projection_role') == 'TAKER' or tr.get('_janus_role_conflict'):
+                self._fill_violation(marker['client_order_id'], 'POST_ONLY_ROLE_VIOLATION',
+                                     f"trade {tr.get('_janus_source_trade_id')}: owned order observed in taker/conflicting role")
+            request = self.journal.store.con.execute(
+                'SELECT market_id,side FROM orders WHERE client_order_id=?', (marker['client_order_id'],)).fetchone()
+            if request is None or tr.get('side') != 'BUY' or request[1] != 'buy_yes' or tr.get('asset_id') != request[0]:
+                self._fill_violation(marker['client_order_id'], 'POST_ONLY_ROLE_VIOLATION',
+                                     f"trade {tr.get('_janus_source_trade_id')}: maker token/side contradicts signed BUY order")
+        for oid, marker in post_markers.items():
+            quantities = {row[0]: Decimal(str(row[1])) for row in self.journal.store.con.execute(
+                "SELECT fill_id,contracts FROM venue_fills WHERE venue_order_id=?", (oid,))}
+            for (pending_oid, fill_id), pending in self._unpersisted_fills.items():
+                if pending_oid == oid:
+                    quantities[fill_id] = max(quantities.get(fill_id, Decimal(0)), Decimal(str(pending.contracts)))
+            for tr in trades:
+                if str(tr.get('taker_order_id') or tr.get('order_id') or '') == oid and str(tr.get('status', '')).upper() not in DEAD_TRADE:
+                    quantity = Decimal(str(tr.get('size')))
+                    quantities[str(tr.get('id'))] = max(quantity, quantities.get(str(tr.get('id')), Decimal(0)))
+            row = self.journal.store.con.execute('SELECT filled_contracts FROM orders WHERE venue_order_id=?', (oid,)).fetchone()
+            quantity = max(sum(quantities.values(), Decimal(0)), Decimal(str(row[0] or 0)) if row else Decimal(0))
+            try:
+                check_post_only_quantity(self.journal, oid, quantity, now=self.clock(), kill=self.kill)
+            except Exception as exc:
+                self._persistence_failure(marker['client_order_id'], exc)
         cash_reader = getattr(self.transport, "trade_activity", None)
         activities: dict[tuple, list[dict]] = {}
         trade_counts: dict[tuple, int] = {}
@@ -709,7 +1150,7 @@ class PolymarketExecution:
                 key = _activity_key(tr, trade=True)
                 trade_counts[key] = trade_counts.get(key, 0) + 1
         confirmed = [tr for tr in trades if str(tr.get("status", "")).upper() in FINAL_TRADE]
-        if callable(cash_reader) and confirmed:
+        if callable(cash_reader) and confirmed and not self.projection_batch_error and not self.persistence_error:
             try:
                 # Publish the fresh index only after the entire read/iteration succeeds.
                 # Keeping a valid prefix after a malformed row or lazy-reader exception
@@ -730,10 +1171,18 @@ class PolymarketExecution:
                 continue                     # a reversal: reconcile handles it, never a fill here
             size = _f(tr.get("size"))
             order_id = str(tr.get("taker_order_id") or tr.get("order_id") or "")
+            pending_key = (order_id, str(tr.get('id')))
+            pending = self._unpersisted_fills.get(pending_key)
+            previous = self.journal.store.con.execute(
+                'SELECT contracts FROM venue_fills WHERE fill_id=? AND venue_order_id=?',
+                (str(tr.get('id')), order_id)).fetchone()
+            # Missing cash or a stale smaller trade is not reversal authority. Preserve
+            # the largest independently observed exposure across rereads and restarts.
+            size = max(size, float(previous[0]) if previous else 0.0, pending.contracts if pending else 0.0)
             order = self.journal.store.con.execute(
                 "SELECT client_order_id,price FROM orders WHERE venue_order_id=?", (order_id,)).fetchone()
-            taker = str(tr.get("trader_side", "TAKER")).upper() == "TAKER"
-            price = taker_trade_vwap(tr) if taker else None
+            taker = str(tr.get("trader_side", "")).upper() == "TAKER"
+            price = _f(tr.get('price'), None) if tr.get('_janus_projection_role') == 'MAKER' else taker_trade_vwap(tr) if taker else None
             if price is None:
                 # No cash and no maker-leg VWAP: the top-level price is NOT an average.
                 # Use the durable request ceiling for a BUY. An orphan BUY without a
@@ -749,9 +1198,20 @@ class PolymarketExecution:
             activity = None
             key = _activity_key(tr, trade=True)
             candidates = activities.get(key, [])
+            marker = post_only_order(self.journal, order_id)
+            role_proved = bool(tr.get('_janus_role_verified'))
+            role_blocked = bool(marker and (marker['violated'] or not role_proved or not tr.get('_janus_projection_role') == 'MAKER'))
             try:
+                if self.projection_batch_error:
+                    raise ValueError('trade projection batch incomplete; cash uniqueness unproved')
+                if self.persistence_error:
+                    raise ValueError('persistence STOP requires operator repair')
+                if not role_proved or role_blocked:
+                    raise ValueError('owned fill role unproved or post-only role/cap violated')
                 if trade_counts.get(key) != 1 or len(candidates) != 1:
                     raise ValueError("cash activity absent or ambiguous")
+                if Decimal(str(size)) != Decimal(str(tr.get('size'))):
+                    raise ValueError('cash candidate covers a stale smaller quantity, not all observed exposure')
                 candidate = candidates[0]
                 price, fee = authoritative_cash_fill(tr, candidate)
                 activity = candidate  # Do not audit an invalid candidate as source authority.
@@ -769,24 +1229,61 @@ class PolymarketExecution:
                 # price/fee/quantity; a stale chain status alone cannot undo confirmation.
                 if prior is not None and prior.final and prior.contracts == rec.contracts:
                     rec = replace(rec, final=True)
-                self._remember_cash_source(tr, activity)
             elif prior is not None:
-                rec = prior
-                fee_source = "venue activity cash (durable; reread unavailable)"
-            self.journal.record_fill(rec)
-            if cash_final and activity is not None:
-                # Preserve source evidence append-only. A corrected cash line appends a new
-                # event; it never edits the historical response or invents a replacement id.
-                source = {"fill_id": rec.fill_id, "endpoint": "data-api.polymarket.com/activity",
-                          "activity": json.loads(json.dumps(activity, default=str))}
-                raw = json.dumps(source)
-                if order and not self.journal.store.con.execute(
-                        "SELECT 1 FROM order_events WHERE client_order_id=? AND kind='authoritative_cash' AND raw_json=?",
-                        (order[0], raw)).fetchone():
-                    self.journal._event(order[0], "authoritative_cash", None, source, self.clock())
-                    self.journal.store.con.commit()
+                same_identity = (prior.venue_order_id == rec.venue_order_id
+                                 and prior.market_id == rec.market_id and prior.side == rec.side)
+                if same_identity and prior.contracts == rec.contracts:
+                    rec = prior
+                    fee_source = "venue activity cash (durable; reread unavailable)"
+                else:
+                    # Source authority remains in the append-only cash table for its
+                    # covered quantity only. Never substitute six cash-covered shares
+                    # for eleven observed shares or extrapolate its cash/fee to eleven.
+                    rec = replace(rec, final=False)
+                    fee_source = f"provisional; durable cash covers {prior.contracts:g} of {rec.contracts:g} observed contracts"
+            if role_blocked or self.projection_batch_error or self.persistence_error:
+                # Proved cash is retained, but an unproved/violated post-only role cannot
+                # become accounting-final merely through a durable cash fallback.
+                rec = replace(rec, final=False)
+            try:
+                # Publish source, audit and projection together. record_fill commits
+                # last; no failed prefix may mint fresh durable cash authority.
+                con = self.journal.store.con
+                if not con.in_transaction:
+                    con.execute('BEGIN')
+                if cash_final and activity is not None:
+                    self._remember_cash_source(tr, activity)
+                    source = {"fill_id": rec.fill_id, "endpoint": "data-api.polymarket.com/activity",
+                              "activity": json.loads(json.dumps(activity, default=str))}
+                    raw = json.dumps(source)
+                    if order and not con.execute(
+                            "SELECT 1 FROM order_events WHERE client_order_id=? AND kind='authoritative_cash' AND raw_json=?",
+                            (order[0], raw)).fetchone():
+                        self.journal._event(order[0], "authoritative_cash", None, source, self.clock())
+                self.journal.record_fill(rec)
+            except Exception as exc:
+                rec = replace(rec, final=False)
+                self._unpersisted_fills[pending_key] = rec
+                try:
+                    self.journal.store.con.rollback()
+                except Exception:
+                    pass  # The persistent STOP below remains visible even with a dead connection.
+                self._persistence_failure(order[0] if order else order_id, exc)
+                fee_source = 'provisional; persistence STOP'
             self.last_fee_source = fee_source
             out.append(rec)
+        if self.persistence_error:
+            # A later failing row cannot leave an earlier returned prefix final. Also
+            # replay unpersisted inventory when subsequent reads are empty or stale.
+            returned = {}
+            for rec in [*out, *self._unpersisted_fills.values()]:
+                key = (rec.venue_order_id, rec.fill_id)
+                if key not in returned or rec.contracts >= returned[key].contracts:
+                    returned[key] = rec
+            out = [replace(rec, final=False) for rec in returned.values()]
+            self.last_error = self.persistence_error
+        elif self.projection_batch_error:
+            self.last_error = self.projection_batch_error
         return out
 
     def _durable_cash_fill(self, fill_id: str, *, current_trade: dict) -> FillRecord | None:
@@ -816,6 +1313,7 @@ class PolymarketExecution:
                           side='sell_yes' if str(tr.get('side', '')).upper() == 'SELL' else 'buy_yes')
 
     def _remember_cash_source(self, trade: dict, activity: dict) -> None:
+        """Stage source evidence; fills() commits it atomically with audit/projection."""
         source = json.dumps({'trade': trade, 'activity': activity}, default=str, sort_keys=True, separators=(',', ':'))
         digest = hashlib.sha256(source.encode()).hexdigest()
         previous = self.journal.store.con.execute(
@@ -825,7 +1323,6 @@ class PolymarketExecution:
             self.journal.store.con.execute(
                 "INSERT INTO pm_cash_sources(fill_id,source_sha256,source_json,observed_utc) VALUES(?,?,?,?)",
                 (str(trade['id']), digest, source, self.clock()))
-            self.journal.store.con.commit()
 
     def _pinned_fee(self, tr: dict, size: float, price: float, fee_params: Any) -> float:
         from nodes.fees.models import Fill
@@ -884,6 +1381,7 @@ class PolymarketExecution:
         user_stream = getattr(self.transport, "user_stream", None)
         return {"venue": self.venue, "mode": self.mode.value, "submits": self.submits,
                 "unconfirmed": self.unconfirmed, "last_error": self.last_error,
+                "persistence_error": self.persistence_error, "projection_batch_error": self.projection_batch_error,
                 "user_stream": None if user_stream is None else {
                     "connected": bool(user_stream.connected), "errors": user_stream.errors,
                     "last_frame_utc": user_stream.last_frame_utc,

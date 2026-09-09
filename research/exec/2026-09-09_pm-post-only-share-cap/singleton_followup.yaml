@@ -1,0 +1,12 @@
+row: L54
+date: 2026-09-09
+kind: descriptive_offline_admission_followup
+known_before_registration:
+  - The live grid serializes execution but the adapter check-before-prepare is not atomic across independent connections/processes.
+success_criteria:
+  - Exactly one adapter acquires a durable database singleton before signing or posting; a second connection cannot prepare while the first signer is blocked.
+  - The claim survives adapter restart and an interrupted preparation, ambiguous POST, cancel timeout, missing order, and incomplete late-fill coverage.
+  - Only durably proven no-send/rejection or complete authoritative terminal lifecycle can release that order's claim; retained markers/events are never deleted.
+  - A late contradiction preserves history, latches stop, and blocks all new admission even if a later order already owns the singleton.
+  - Two worker threads with separate database connections reproduce the pre-fix race; exact RED/GREEN and lifecycle/accounting/execute regressions follow.
+constraints: Offline only; no venue, credential, live-process, arming, cap or kill mutations.

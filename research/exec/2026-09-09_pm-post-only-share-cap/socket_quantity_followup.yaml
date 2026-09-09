@@ -1,0 +1,10 @@
+row: L54
+date: 2026-09-09
+kind: descriptive_offline_review_followup
+known_before_registration:
+  - Reviewer observed one owned socket trade first as taker quantity11 then conflicting maker quantity4 before status; sticky role STOP survives but quantity shrinks to4.
+success_criteria:
+  - Maintain independent per-order/per-trade quantity high-water across role overwrite, stale smaller frames and later failed frames; none establishes explicit reversal authority.
+  - Exact taker11 then maker4 repro returns and journals11, latches violation, and preserves it on later polling.
+  - Distinct trade IDs aggregate once each; duplicate updates do not double-count and conflicting price stays provisional.
+constraints: Offline fixtures only, no venue reads, live mutation, cap change or new look.

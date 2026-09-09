@@ -1,0 +1,29 @@
+row: L54
+date: 2026-09-09
+kind: descriptive_offline_semantic_audit_and_conditional_local_repair
+question: Can a Polymarket V2 post-only GTC or GTD BUY prove an upper bound on received shares no greater than the signed takerAmount and original Janus cap?
+known_before_registration:
+  - Immediate BUY signed makerAmount caps collateral while takerAmount is a minimum received-share amount; F15 exceeded the nominal share size.
+  - Production BUY submission is intentionally blocked by L53.
+  - The installed SDK exposes post_only support; its full semantic guarantees remain to be audited.
+allowed_sources:
+  - Official public Polymarket CTF Exchange V2 contract source at a pinned commit.
+  - Official public CLOB and SDK documentation/source plus the locally installed SDK.
+  - Offline deterministic arithmetic models and adversarial fixture tests; no signer or network-connected venue client.
+proof_requirements:
+  - Prove maker-only role at matching and settlement, including quote movement and matching races.
+  - Prove per-fill and cumulative received-share bounds under partial/full fills, price improvement, fees, integer arithmetic and rounding.
+  - Establish exact post-only wire encoding, supported order types, rejection behavior, and fail-closed handling of ambiguous acknowledgement.
+  - Establish bounded wait/cancel behavior preserving every authoritative late fill without treating a missing answer as no fill.
+  - Preserve original share caps and hedge actual filled quantity; no production bypass flag and no immediate BUY unblocking.
+conditional_implementation:
+  - Only if every proof requirement is met, implement a maker-first never-crossing route with bounded wait/cancel and authoritative late-fill reconciliation.
+  - Otherwise stop with precise counterexample or evidence gap; change no production code.
+validation_if_proved:
+  - Adversarial tests for partial and full fill, post-only rejection, ambiguous acknowledgement, matching/cancel races and late fills.
+  - Exact cumulative cap and rounding boundary tests, including multiple fills and maker/taker role confusion.
+  - Relevant existing PM and coordinator/guard tests plus diff check remain green.
+expected_ev_effect: Unmeasured; a maker-first route changes execution timing/fill selection and cannot inherit immediate-arbitrage EV. No profitability or NFL-readiness claim follows from a quantity proof alone.
+prohibited:
+  - Venue/account API calls, credentials/signers, live orders or mutation, deploy/restart, kill clearing, arming or cap changes.
+  - Relaxing proof requirements after inspecting outcomes or using undocumented engine behavior as a guarantee.

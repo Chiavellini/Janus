@@ -45,6 +45,9 @@ class OrderRequest:
     #: Venue price increment carried from the executable book. Polymarket needs it to find the
     #: nearest share-sized order whose collateral is exact to cents without widening the limit.
     tick: float | None = None
+    #: A venue-enforced maker-only instruction, never an exemption from quantity limits.
+    post_only: bool = False
+    entry_expires_utc: float | None = None
 
     @property
     def is_sell(self) -> bool:
@@ -63,6 +66,8 @@ class OrderRequest:
             raise ValueError("tick must be positive when supplied")
         if not self.client_order_id:
             raise ValueError("client_order_id is required before submission")
+        if self.post_only and (self.time_in_force != "gtc" or self.side != "buy_yes" or self.hedge):
+            raise ValueError("post-only route is a GTC buy_yes first leg only")
 
 
 @dataclass(frozen=True)

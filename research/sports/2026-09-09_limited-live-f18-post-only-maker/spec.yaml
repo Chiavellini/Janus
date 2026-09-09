@@ -1,0 +1,45 @@
+id: F18
+date: 2026-09-09
+track: sports
+kind: forward_evaluation
+arm: >-
+  LIMITED_LIVE on the Mexico box using the independently reviewed L54 Polymarket
+  post-only maker-first route, the F17 settlement/coverage and L51 performance tree,
+  and the unchanged signed arm. Immediate, FAK/FOK, and non-post-only Polymarket BUYs
+  remain blocked.
+start: >-
+  The first [mode] LIMITED_LIVE line on the exact committed F18 tree, only after the
+  full suite and independent review pass; zero flight, material imbalance, unhedged
+  exposure, unresolved post-only admission or accounting-persistence error; clean
+  authenticated guard; healthy streams, clocks and watchdog; and a matching
+  operator-signed arm. The existing live kill is not cleared by this registration.
+stop: >-
+  37 hedged covers, first STOP, breaker, or operator closure. A STOP includes any
+  non-maker Polymarket first fill, received quantity above the exact signed takerAmount
+  or 10-contract arm cap, post-only cancellation not dispatched by the registered
+  quote/clearance deadline, unresolved predecessor order, missing durable pre-wire
+  journal/admission, post-wire persistence failure, unprotected fill, >=$0.01 account
+  discrepancy, fee above pin, socket/clock health breach, or existing gate STOP.
+success_criteria:
+  - Every Polymarket first fill is venue-authoritatively maker and no order or leg exceeds the exact signed or arm quantity cap.
+  - Every filled first leg is protected within 30 seconds; zero material unhedged exposure and zero unresolved predecessor admission.
+  - The first three covers are reconciled by hand to authoritative venue cash and fills before the fourth.
+  - Report executable fill rate, realized net P&L, EV per trade and Sharpe per trade with all fees, slippage and settlement reserves; claim nothing from coverage or passive quotes alone.
+fixed_arm:
+  combined_stake_usd: 12
+  contracts_per_leg: 10
+  daily_committed_notional_usd: 250
+  realized_loss_breaker_usd: 25
+  min_net_profit_usd: 0.10
+  min_locked_return: 0.01
+  max_protection_loss_usd: 1
+  protect_auto: true
+  unwind_enabled: false
+trust_boundary: >-
+  The share cap is conditional on Polymarket's documented post-only guarantee that the
+  order remains maker. The V2 signature itself does not bind postOnly. Any observed
+  contradiction is a STOP; no Byzantine or deployed-bytecode identity claim is made.
+notes:
+  - Registered before commit, deployment, rearming, kill clearing, or any F18 evaluation.
+  - F17 produced zero evaluations and is superseded before start.
+  - Outer caps and economic hurdles are unchanged; this row does not authorize a cap increase.

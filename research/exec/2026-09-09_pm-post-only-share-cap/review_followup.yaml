@@ -1,0 +1,15 @@
+row: L54
+date: 2026-09-09
+kind: descriptive_offline_review_followup
+known_before_registration:
+  - Initial combined suite passed 436 tests but independent review found three untested safety boundaries.
+  - Expiry during durable persistence could still POST; a second prewire expiry check was independently added immediately before review feedback and remains unverified, so no RED claim is made for this already-edited case.
+  - Restart recovery polls an expired GTC without replaying a durable cancel deadline.
+  - An authoritative quantity increase to 11 can be replaced by prior cash-backed quantity 6 during a failed cash reread.
+success_criteria:
+  - Advancing clock past clearance expiry inside durable persistence yields no POST and a prewire-expired journal result.
+  - Persist original clearance/quote cancel deadline; a restarted adapter cancels expired unresolved GTC before ordinary status polling, with durable cancel intent.
+  - Prior cash-backed 6 followed by authoritative 11 retains 11 for protection, latches the signed-cap violation, and does not price/finalize all 11 from cash evidence covering only 6.
+  - Repeated failure/restart cannot infer a reversal or release an unresolved order; no clamp and no new submit.
+  - Focused RED/GREEN repros where applicable, combined PM/execute/risk/accounting/reconcile/grid/proof tests, and diff check.
+constraints: Offline only; no venue access, deployment, restart of live services, kill clearing, arming, cap changes or EV claim.

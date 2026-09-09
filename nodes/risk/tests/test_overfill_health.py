@@ -13,3 +13,19 @@ def test_order_overfill_has_a_watchdog_alarm_even_without_an_open_position(tmp_p
     alarms = [a for a in risk_alerts(**opts) if "ORDER_OVERFILL" in a]
     assert len(alarms) == 1 and "10.166667" in alarms[0]
     assert "live entry stopped" in alarms[0]
+
+
+def test_post_only_role_violation_remains_a_watchdog_stop(tmp_path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    raise_flag(store, "POST_ONLY_ROLE_VIOLATION", "post-only order appeared as TAKER", now=1000)
+    alarms = risk_alerts(db_path=tmp_path / "t.sqlite", kill_root=tmp_path / "kill",
+                         breaker_path=tmp_path / "breaker.json", mode_conf=tmp_path / "mode.conf", now=1001)
+    assert any("POST_ONLY_ROLE_VIOLATION" in a and "live entry stopped" in a for a in alarms)
+
+
+def test_post_only_persistence_failure_remains_a_watchdog_stop(tmp_path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    raise_flag(store, "POST_ONLY_PERSISTENCE_FAILED", "status record failed after observed fill6", now=1000)
+    alarms = risk_alerts(db_path=tmp_path / "t.sqlite", kill_root=tmp_path / "kill",
+                         breaker_path=tmp_path / "breaker.json", mode_conf=tmp_path / "mode.conf", now=1001)
+    assert any("POST_ONLY_PERSISTENCE_FAILED" in a and "live entry stopped" in a for a in alarms)

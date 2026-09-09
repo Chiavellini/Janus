@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import math
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Mapping, Sequence
 
 from kernel.schema import Book
@@ -54,6 +54,7 @@ class LegPlan:
     time_in_force: str
     vwap: float = 0.0         # what the pricer expects this leg to average at this size
     tick: float = 0.01        # the venue's price increment for this market
+    post_only: bool = False
 
 
 @dataclass(frozen=True)
@@ -72,6 +73,7 @@ class Plan:
     #: included it, so a padded first leg or chased hedge could cross the registered hurdle.
     settlement_buffer_per_contract: float = 0.0
     strategy_version: str = STRATEGY_VERSION
+    quote_expires_utc: float | None = None
 
     @classmethod
     def from_dict(cls, d: Mapping, *, opportunity_id: str, event_id: str, league: str, quantity: float,
@@ -82,11 +84,11 @@ class Plan:
         def leg(x: Mapping) -> LegPlan:
             return LegPlan(x["venue"], x["market_id"], x["outcome_id"], x["side"], float(x["limit_price"]),
                            float(x["contracts"]), x.get("time_in_force", "ioc"), vwap=float(x.get("vwap") or 0.0),
-                           tick=float(x.get("tick") or 0.01))
+                           tick=float(x.get("tick") or 0.01), post_only=bool(x.get("post_only", False)))
         return cls(opportunity_id, event_id, league, float(quantity), leg(d["first"]), leg(d["hedge"]),
                    max_cost_per_contract=float(d["max_cost"]), fee_per_contract=float(d["fee"]),
                    settlement_buffer_per_contract=float(d.get("settlement_buffer") or 0.0),
-                   strategy_version=strategy_version)
+                   strategy_version=strategy_version, quote_expires_utc=d.get("quote_expires_utc"))
 
     @property
     def holding_reserve_per_contract(self) -> float:
@@ -119,6 +121,32 @@ def marginal_price(book: Book, contracts: float) -> float | None:
         if cum >= contracts - 1e-9:
             return q.price
     return None
+
+
+def maker_plan_from_cover(*, max_quote_age_s: float = 3.0, **kwargs) -> Plan | None:
+    """Live maker-first variant; the original executable cover gates eligibility unchanged.
+
+    This passive quote is not a claimed executable fill or an inherited EV estimate.
+    Historical/paper plans continue to use plan_from_cover without reinterpretation.
+    """
+    from nodes.exec_polymarket.post_only_sizing import maker_price
+    plan = plan_from_cover(**kwargs)
+    if plan is None:
+        return None
+    source = next((leg for legs in kwargs["offers"].values() for leg in legs
+                   if leg.venue == plan.first.venue and leg.outcome_id == plan.first.outcome_id), None)
+    if source is None or not source.book.asks:
+        return None
+    price = maker_price(best_ask=source.book.asks[0].price, ceiling=plan.first.limit_price, tick=plan.first.tick)
+    if price is None:
+        return None
+    selected = {(plan.first.venue, plan.first.outcome_id), (plan.hedge.venue, plan.hedge.outcome_id)}
+    times = [leg.book.fetched_utc for legs in kwargs["offers"].values() for leg in legs
+             if (leg.venue, leg.outcome_id) in selected]
+    if len(times) != 2 or any(not x for x in times) or not 0 < max_quote_age_s <= 5:
+        return None
+    return replace(plan, first=replace(plan.first, limit_price=price, time_in_force="gtc", post_only=True),
+                   quote_expires_utc=min(times) + max_quote_age_s)
 
 
 def _leg_side(leg: Leg) -> tuple[str, str]:

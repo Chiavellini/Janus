@@ -47,8 +47,9 @@ An authoritative order fill above its request latches live entries immediately a
 from order totals too, even below protection dust. Protective requests floor share precision
 and aggregate hedge buys cannot exceed the original plan's hedge quantity. Any remainder is
 kept as held exposure; a request for 10 with a 10.166667 fill cannot authorize a 10.17 hedge.
-The Polymarket transport currently blocks BUY entry because its wire cannot prove this share
-bound (L53); these protections also cover orders from before that repair.
+The Polymarket transport blocks immediate/non-post-only BUY entry because that wire cannot prove
+this share bound (L53); these protections also cover orders from before that repair. L54 adds a
+separate, local post-only route conditional on the documented maker-role guarantee.
 
 The guard checks existing overfills before syncing its trade FIFO. Partial FIFO coverage cannot
 reduce a larger authoritative order quantity or replace its average/fee with the partial subset;
@@ -68,3 +69,25 @@ with a state-to-same-state audit entry, without reopening a released execution o
 quantities/protection. Paid fees remain on the authoritative order rows; the existing settlement
 revision path updates P&L and preserves old/new accounting. `test_guard_cash_finality.py`
 checks these paths together using the Maximus cash values.
+
+## Local maker-first entry (L54)
+
+Historical/paper/replay `plan_from_cover` behavior is unchanged. The live grid selects the separate
+`maker_plan_from_cover`: a tick-aligned GTC post-only price strictly below the observed PM ask and
+no higher than the existing executable-cover ceiling. This passive price is not represented as
+executable ask liquidity or a measured EV gain; cover/fee/risk proof remains conservative.
+
+The plan carries the oldest selected quote's freshness deadline. The coordinator bounds deliberate
+rest by that deadline and the original clearance, performs no blocking predeadline status reads,
+dispatches cancel first, and only then reconciles. A cancel/fill race or delayed partial fill is
+protected at actual known quantity using the existing recomputed hurdle and loss-cap limits;
+hedge buys cumulatively remain within the original authorization. No replacement is attempted.
+The PM adapter owns the durable singleton, original cancel deadline, terminal/late-fill proof and
+restart cancellation. Guard cash finality does not close a maker order with a resting remainder.
+
+If reconciliation is still ambiguous after its bounded attempt, new entry is latched, reservation
+and maker admission stay held, and known exposure still enters protection. Synchronous network
+calls may delay completion/protection after cancel dispatch; the route does not promise venue
+cancellation exactly at expiry. `tests/test_maker_entry.py` covers zero fill, partial/full cancel
+races, proof expiry, slow status I/O and unchanged historical plans. Local only and undeployed;
+maker fill selection, expected EV and Sharpe need a separately authorized forward evaluation.

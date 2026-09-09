@@ -1,0 +1,17 @@
+row: L54
+date: 2026-09-09
+kind: descriptive_offline_fill_persistence_followup
+parent_registration: persistence_domain_followup.yaml
+known_before_registration:
+  - Journal fill, cash-source or cash-event write exceptions escape fills after validated owned exposure has been observed.
+  - GuardSnapshot loses the returned list when fills raises; guard accounting also needs to retain quantities not yet in its durable FIFO.
+success_criteria:
+  - Exact injected record_fill failures for partial4, complete10, cap11 and owned taker4 reproduce RED before repair and return all observed quantities provisionally after repair.
+  - Injected cash-source and authoritative-cash-event write failures also return the observed quantity; incomplete transactions mint no committed fresh cash source or audit.
+  - An independent live kill latch and persistent persistence_error report every failure; failed audit persistence cannot erase the in-process STOP.
+  - Later stale or empty reads retain unpersisted per-fill high-water quantities; a successful reread does not automatically clear the persistence STOP or finalize returned fills.
+  - A later failure in one fill does not discard an earlier valid prefix, and every returned fill is nonfinal once persistence has failed.
+  - GuardSnapshot receives the quantities that pass and the explicit persistence error; the coordinated guard integration makes those holdings available to protection without inventing full cash authority.
+  - Focused RED/GREEN, L52 cash/projection regressions, combined integration tests and diff check pass.
+constraints: Synthetic offline writes/failures only; no venue access, live mutation, deployment, live restart, signing, orders, arm/cap changes or kill clearing.
+expected_ev_effect: No EV claim; storage failure must not hide held inventory or permit a new entry.

@@ -1,0 +1,20 @@
+row: L54-maker-accounting
+date: 2026-09-09
+parent_spec: spec.yaml
+kind: descriptive_offline_adapter_integration
+registered_before_tests: true
+scope: PM owned-maker fill projection and cash/role identity only; no venue/live actions or guard changes.
+requirements:
+  - Maker fills use an exact owned journal order ID or explicit funder-address ownership, never title/token similarity.
+  - Project own maker matched_amount, price, asset and side; never top-level taker quantity/order/token/side.
+  - Multiple owned makers in one trade retain distinct immutable source identities; ambiguous aggregate cash remains provisional.
+  - An explicitly verified MAKER role is required for a post-only maker fill to be accounting-final.
+  - Unknown role remains provisional, including when prior durable cash exists; cash amount authority is retained separately.
+  - An owned post-only order observed as taker raises a durable role violation before ordinary cash accounting; authoritative quantity is not clamped.
+  - Per-order aggregate projected quantity is checked against the recorded signed cap through the lifecycle owner's helper.
+  - L52 exact cash, append-only source, durable reread, atomic fresh-batch and orphan guarantees remain covered.
+validation:
+  - Same-token and complementary-token maker fills with unrelated taker/other-maker fields.
+  - Partial and repeated fills, multiple owned makers, unknown role and explicit taker-role violation.
+  - Maker cash source identity, wrong taker-activity refusal, durable source after timeout, and malformed fresh-batch rejection.
+expected_ev_effect: No EV claim; correct maker attribution and role checks are safety/accounting prerequisites only.

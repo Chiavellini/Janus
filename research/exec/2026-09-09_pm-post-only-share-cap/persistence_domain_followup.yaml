@@ -1,0 +1,15 @@
+row: L54
+date: 2026-09-09
+kind: descriptive_offline_release_boundary_followup
+known_before_registration:
+  - Combined suite passed 456 tests; review identified untested post-wire journal failures and reliance on unpinned runtime SDK contract config.
+  - A post-only status record exception can escape after an authoritative positive order observation; a fill-record exception can prevent returned quantity evidence.
+  - The reviewed SDK config contains Polygon137 V2 exchange/neg-risk, pUSD collateral and CTF addresses, but preparation does not currently allowlist them before signing.
+success_criteria:
+  - Observed partial/full quantities survive post-wire status/fill persistence exceptions, are returned for protection, and never become terminal/accounting-final from failed persistence.
+  - Persistence failure is separately visible and latches STOP; it retains admission and never silently discards evidence or authorizes replacement.
+  - Restart cannot automatically release a claim whose durable lifecycle lacks terminal proof; in-process high-water quantity survives stale later reads.
+  - Before signing, require reviewed SDK package1.1.0, Polygon137, V2 domain name/version and exact reviewed exchange, neg-risk, collateral and conditional-token addresses; mismatches perform no signing or POST.
+  - Dedicated injected disk/config failures reproduce RED before fixes, then focused and combined regression suites and diff checks pass.
+bytecode_boundary: No public RPC is configured in this task and no account/network-connected client is constructed. Do not add a credentialed RPC or infer deployed bytecode identity. Official contract-address association remains an explicit operator trust boundary.
+constraints: Local offline tests only; no venue/account calls, credentials, live mutation, deployment, restart, kill clearing, arming or cap changes.

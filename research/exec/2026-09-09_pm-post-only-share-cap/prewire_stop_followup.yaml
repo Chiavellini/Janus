@@ -1,0 +1,10 @@
+row: L54
+date: 2026-09-09
+kind: descriptive_offline_review_followup
+known_before_registration:
+  - Reviewer found c1 terminal/released, c2 claimed, then c1 role violation during c2 preparation; final prewire expiry-only check still permits c2 POST.
+success_criteria:
+  - Immediately before POST after all preparation/persistence, recheck live kill, durable post-only violations and singleton ownership in addition to original freshness.
+  - Exact old-order violation during new preparation produces proven no-send, releases only c2 admission, and retains c1 violation/kill/history.
+  - Lost singleton ownership or newly latched kill independently prevents POST; no new permission or stop clearing.
+constraints: Offline fixtures only, no live mutations, venue access or new look.

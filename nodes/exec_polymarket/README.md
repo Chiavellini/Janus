@@ -5,13 +5,13 @@
 
 The Polymarket order path, disarmed by construction like Kalshi's, with two venue facts baked in.
 
-**BUY submission is blocked (`QUANTITY_CAP_UNPROVEN`, L53).** The V2 signed `makerAmount`
+**Immediate/non-post-only BUY submission is blocked (`QUANTITY_CAP_UNPROVEN`, L53).** The V2 signed `makerAmount`
 caps collateral spent; `takerAmount` is the minimum received shares at full budget consumption.
 `OrderArgsV2.size=10` and REST `original_size=10` therefore do not cap the shares a taker BUY
 can receive. F15 filled 10.166667. Cent-exact nominal size/price did not fix this. The real
-transport rejects every BUY before signing/posting, including a GTC that could cross immediately;
+ordinary transport route rejects every BUY before signing/posting, including a GTC that could cross immediately;
 the adapter also refuses transports with unknown cap semantics. There is no runtime opt-out.
-A reviewed venue-enforced quantity bound is required before this route can execute again.
+A separate local-only L54 post-only route is described below; it is not an opt-out from this block.
 Held-order reads and already-authorized SELL protection remain available.
 
 **Every outcome is its own token.** `buy_no` is refused; the coordinator passes the outcome's
@@ -92,3 +92,68 @@ batch, including any otherwise valid prefix. It cannot hide a later duplicate or
 cash authority. SHA-backed prior cash remains usable through the separate durable fallback.
 Regressions cover `[valid, null, duplicate]` and a generator yielding valid then raising,
 both without prior authority and with a previously verified cash record.
+
+## Post-only maker entry (L54, local and undeployed)
+
+The dedicated route uses exact V2 `GTC`, `postOnly=True`, and `deferExec=True`; FAK/FOK and
+ordinary crossing GTC BUY remain refused. Its share bound is conditional on the CLOB honoring
+its documented post-only maker guarantee. Post-only is NOT an EIP-712/on-chain restriction;
+a malicious or faulty operator can violate the premise. The pinned contract/SDK proof and
+explicit trust boundary are in `research/exec/2026-09-09_pm-post-only-share-cap/semantics.md`.
+
+For an always-maker BUY with signed collateral M and shares T, each collateral fill f receives
+floor(f*T/M) token units and cumulative collateral fills cannot exceed M. Consequently total
+maker receipts cannot exceed T. The adapter validates actual signed integers, not nominal SDK
+size: T/1e6 <= authorized contracts, exact cent-share precision, and M/T <= limit. Exact economic
+wire fields and the signed hash are durable before POST; the replayable signature is redacted.
+An atomic database singleton is committed before preparation/signing, so independent adapters
+and interrupted processes cannot create a second unresolved order. Old markers remain intact.
+
+The original clearance and both quotes bound the deliberate rest period. No blocking status,
+trade or cash read starts before cancellation dispatch; the coordinator sleeps to the deadline,
+records cancel intent, cancels first, then reconciles. The deadline is persisted before POST;
+recovery cancels an expired or legacy-unknown deadline before ordinary status I/O. Dispatch is
+not a promise of network/venue completion, and GTD's minimum lifetime cannot replace this short
+deadline. Any unproved cancel/late-fill lifecycle latches new entry while protecting known fill.
+
+A cancel reply alone never releases admission. Complete matching trade IDs, confirmed maker
+fills, authoritative cash, and two stable terminal order observations separated by at least two
+seconds are required. Missing answers, partial cash/FIFO, failed reads or role uncertainty stay
+pending. Later contradictory fills reopen the lifecycle and stop new entry, never clamp holdings.
+This is an operational evidence window, not a Byzantine or infinite-future no-fill proof.
+
+Maker fills use their owned order's quantity/token/side/price, with composite source identity
+`raw_trade_id:maker:owned_order_id`. Taker/conflicting socket or REST roles and signed-cap breaches
+write durable stop evidence and invoke the live kill even below dust. Socket role evidence is
+sticky and checked independently of REST. Unknown role cannot be accounting-final. Max observed
+quantity survives a smaller cash-backed record: cash for six cannot turn eleven observed shares
+back into six or price all eleven. An incomplete projection returns validated quantities as
+provisional plus a separate coverage error; it cannot mint fresh cash authority or terminal proof.
+
+`test_post_only_sizing.py`, `test_post_only_lifecycle.py`, and `test_maker_fills.py` cover integer
+math, actual wire validation, concurrent admission/restart, rejection/ambiguity, bounded cancel,
+late fills, maker identity/role, cash and quantity independence. No live deployment, rearm or EV
+claim follows. Expected selection effect: lower fill rate than marketable orders; potentially
+better maker price/fees and elimination of the cap breach conditional on maker role. EV/Sharpe
+remain unmeasured until separately authorized forward evaluation.
+
+The signing boundary allowlists SDK 1.1.0, Polygon137, the exact V2 EIP-712 name/version, both
+reviewed exchange addresses, pUSD collateral, CTF token contract, and both runtime signer chains.
+Unknown configuration refuses before signing. This is address/config identity, not deployed
+bytecode attestation. Final prewire checks repeat live kill, any durable violation, admission
+ownership and original freshness after all preparation/persistence.
+
+Post-wire persistence failure raises `POST_ONLY_PERSISTENCE_FAILED` and a separate adapter/guard
+error, but returns the highest observed quantity for protection. In-memory per-order and
+per-trade high-water evidence cannot be reduced by a smaller or conflicting later response;
+ordinary cash/terminal finality remains blocked. A failed terminal write cannot release admission.
+If the disk is truly unavailable, no implementation can durably recreate an unpersisted fact
+across power loss: the retained prewire claim and independent kill enforce recovery STOP, and
+authoritative re-reconciliation is required. The code does not claim otherwise.
+
+Each fill stages its source proof and cash audit in one transaction; `record_fill` is the final
+commit. A write failure rolls back the staged batch, returns all validated prefix quantities as
+nonfinal, and keeps an in-process unpersisted-fill high-water for stale/empty rereads. The guard
+can persist the union of returned and stored fill IDs as a cash-pending order total for same-pass
+protection. If that fallback also cannot write, the persistence failure is explicit; it never
+silently declares protection successful or bypasses required execution journaling.

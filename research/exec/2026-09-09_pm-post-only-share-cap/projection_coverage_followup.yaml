@@ -1,0 +1,18 @@
+row: L54
+date: 2026-09-09
+kind: descriptive_offline_projection_coverage_followup
+parent_registration: review_followup.yaml
+known_before_registration:
+  - A cash-backed maker fill of 6 can replace a later observed quantity of 11 during a cash timeout; the existing review registration already requires retaining all 11.
+  - An owned taker quantity of 4 followed by an unrelated malformed maker projection latches STOP but raises before returning or recording the protectable quantity.
+  - Guard fetch consumes the returned fill sequence; persisting a valid prefix and then raising does not deliver same-pass protection.
+success_criteria:
+  - Demonstrate both known defects RED before repair, then GREEN with exact quantities.
+  - An increase from cash-covered 6 to observed 11 survives return, journal persistence, repeated stale reads, adapter restart and guard application without a clamp; cap STOP remains latched and the complete 11 remains nonfinal.
+  - Prior SHA-backed cash evidence remains immutable and authoritative only for its covered quantity; never extrapolate its cash or fee to the larger exposure.
+  - Every independently validated owned projection survives an unrelated malformed row or raising trade iterator and reaches GuardSnapshot on that pass; all returned fills in an incomplete projection batch remain nonfinal.
+  - Expose an explicit projection_batch_error separately from returned fills; guard reports it and maker lifecycle cannot prove terminal completion from that pass.
+  - Fresh cash authority is not minted from an incomplete trade projection batch; L52 atomic fresh-activity and durable complete-cash guarantees remain covered.
+  - Run focused maker/cash and guard-facing regressions, then the combined relevant suite and diff check.
+constraints: Offline synthetic fixtures only; no venue access, live state changes, guard/status-region edits by this subtask, deployment, restart, arm/cap changes or kill clearing.
+expected_ev_effect: No EV claim; exposes held inventory promptly and prevents incomplete accounting from authorizing further risk.

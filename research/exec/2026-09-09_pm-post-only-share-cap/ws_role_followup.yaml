@@ -1,0 +1,12 @@
+row: L54
+date: 2026-09-09
+kind: descriptive_offline_review_followup
+known_before_registration:
+  - The user-stream trade cache stores per-order role but its order-shaped projection drops role evidence.
+  - Post-only status reads the socket only after REST, so a failed REST read can hide a socket-proved taker-role violation within the quantity cap.
+success_criteria:
+  - Preserve observed taker and conflicting-role evidence in the order-shaped user-stream projection, including same-trade overwrite and later maker updates.
+  - A post-only socket taker observation at quantity 6 of cap 10 latches durable role STOP even when REST is absent or raises; preserve observed quantity and never cash-finalize the violation.
+  - Reading a resting post-only order before its original deadline performs no blocking venue reads; at expiry durable cancel precedes REST.
+  - Focused failure reproduction before repair, then combined lifecycle, execution, accounting, risk and proof regression tests.
+constraints: Local offline fixtures only; no venue access, live mutation, cap change, kill clearing or new look.

@@ -105,6 +105,11 @@ class PositionGuard:
             snap.fills = list(ingest_fills(self.journal, self.venues, since_utc=fill_since))
         except Exception as exc:  # noqa: BLE001
             snap.errors["fills"] = f"{type(exc).__name__}: {exc}"
+        for venue_name, adapter in self.venues.items():
+            if getattr(adapter, "projection_batch_error", ""):
+                snap.errors[f"fills:{venue_name}"] = adapter.projection_batch_error
+            if getattr(adapter, "persistence_error", ""):
+                snap.errors[f"persistence:{venue_name}"] = adapter.persistence_error
         for fill in snap.fills:
             venue = self.venues.get(fill.venue)
             per_market = getattr(venue, "fee_params_by_market", {}) or {}
@@ -171,6 +176,7 @@ class PositionGuard:
         # Preserve/alarm the venue's order-level fact before a partial trade FIFO is
         # considered. The second pass below also catches newly adopted late fills.
         self._detect_order_overfills(snap, rep)
+        self._preserve_unpersisted_fills(snap, rep)
         for k, e in snap.errors.items():
             rep.findings.append(f"{k}: {e}")
         for cid, vid in snap.adopted:
@@ -237,6 +243,62 @@ class PositionGuard:
         rep.fills_today = self.fills_today(snap.now)
         self.cursor_utc = snap.now - ADOPT_WINDOW_S
         return rep
+
+    def _preserve_unpersisted_fills(self, snap, rep):
+        """Returned validated quantity is evidence even if its FIFO write failed.
+
+        Persist a cash-pending order total before ordinary FIFO sync/reconciliation.
+        This fallback never invents complete cash and never bypasses failed execution
+        persistence to send an unjournaled protective order.
+        """
+        by_order = {}
+        for fill in snap.fills:
+            by_order.setdefault(fill.venue_order_id, {})[fill.fill_id] = max(
+                fill.contracts, by_order.get(fill.venue_order_id, {}).get(fill.fill_id, 0.0))
+        con = self.journal.store.con
+        for vid, observed in by_order.items():
+            cid = None
+            try:
+                found = con.execute("SELECT client_order_id FROM orders WHERE venue_order_id=?", (vid,)).fetchone()
+                if found is None:
+                    continue  # The existing orphan/adoption path owns unknown order identity.
+                cid = found[0]
+                row = self.journal.get(cid)
+                stored = {fid: float(q) for fid, q in con.execute(
+                    "SELECT fill_id,contracts FROM venue_fills WHERE venue_order_id=?", (vid,))}
+                if all(stored.get(fid, 0.0) >= quantity for fid, quantity in observed.items()):
+                    continue
+                for fid, quantity in observed.items():
+                    stored[fid] = max(quantity, stored.get(fid, 0.0))
+                quantity = max(sum(stored.values()), float(row.get("filled_contracts") or 0.0))
+                if quantity <= float(row.get("filled_contracts") or 0.0):
+                    continue
+                price = float(row.get("price") or 0.0)
+                prior_price = row.get("avg_price")
+                if prior_price is not None:
+                    price = min(price, float(prior_price)) if row["side"].startswith("sell") else max(price, float(prior_price))
+                state = FillState.FILLED if quantity >= float(row["contracts"]) else FillState.PARTIAL
+                open_order = bool(row.get("open"))
+                if con.execute("SELECT 1 FROM sqlite_master WHERE name='pm_post_only_orders'").fetchone():
+                    marker = con.execute("SELECT terminal_proved FROM pm_post_only_orders WHERE client_order_id=?", (cid,)).fetchone()
+                    open_order = open_order or bool(marker is not None and not marker[0])
+                detail = f"validated unpersisted fill evidence retained: {quantity:g}; cash/FIFO coverage pending"
+                self.journal.record(Ack(row["venue"], cid, vid, state, quantity, price, row.get("fee_usd"),
+                                        "guard_unpersisted_fill", snap.now, open=open_order,
+                                        settlement_pending=True, detail=detail), kind="guard_unpersisted_fill",
+                                    raw={"observed_fill_quantities": observed, "union_quantity": quantity})
+                rep.findings.append(f"UNPERSISTED_FILL_RETAINED {cid}: {quantity:g} recorded pending for reconciliation")
+            except Exception as exc:
+                detail = f"PERSISTENCE_FAILED {cid or vid}: returned quantity {sum(observed.values()):g}; order fallback failed: {type(exc).__name__}: {exc}"
+                rep.findings.append(detail)
+                for fill in snap.fills:
+                    if fill.venue_order_id == vid:
+                        adapter = self.venues.get(fill.venue)
+                        if callable(getattr(adapter, "_persistence_failure", None)):
+                            adapter._persistence_failure(cid or vid, exc)
+                        elif self.kill is not None:
+                            self.kill.latch("live", detail)
+                        break
 
     def _detect_order_overfills(self, snap: GuardSnapshot, rep: GuardReport) -> None:
         """Catch authoritative late fills even when the coordinator's poll saw zero/partial.
@@ -412,16 +474,23 @@ class PositionGuard:
         avg = float(agg[1]) / qty
         fee = float(agg[2] or 0.0)
         settlement_pending = not bool(agg[3])
+        maker_pending = False
+        if self.journal.store.con.execute("SELECT 1 FROM sqlite_master WHERE name='pm_post_only_orders'").fetchone():
+            marker = self.journal.store.con.execute(
+                "SELECT terminal_proved FROM pm_post_only_orders WHERE client_order_id=?", (row["client_order_id"],)).fetchone()
+            maker_pending = marker is not None and not bool(marker[0])
+        settlement_pending = settlement_pending or maker_pending
         state = FillState.FILLED if qty >= float(row["contracts"]) - 1e-6 else FillState.PARTIAL
         if (row["state"] == state.value
                 and abs(float(row.get("filled_contracts") or 0.0) - qty) <= 1e-6
                 and abs(float(row.get("avg_price") or 0.0) - avg) <= 1e-9
                 and abs(float(row.get("fee_usd") or 0.0) - fee) <= 1e-9
+                and bool(row.get("open")) == maker_pending
                 and bool(row.get("settlement_pending")) == settlement_pending):
             return
         self.journal.record(
             Ack(row["venue"], row["client_order_id"], vid, state, qty, avg, fee,
-                "guard_fills", self.clock(), settlement_pending=settlement_pending,
+                "guard_fills", self.clock(), open=maker_pending, settlement_pending=settlement_pending,
                 detail="venue fill FIFO overrides order lookup"),
             kind="guard_fill",
         )

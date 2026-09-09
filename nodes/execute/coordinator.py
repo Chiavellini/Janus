@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from decimal import Decimal, ROUND_DOWN
 from typing import Callable, Mapping
 
@@ -82,7 +82,8 @@ class Coordinator:
         self.executions[ex.execution_id] = ex
         self._timed(ex, self.records.start, ex, plan={"first": plan.first.__dict__, "hedge": plan.hedge.__dict__,
                                                       "max_cost": plan.max_cost_per_contract, "fee": plan.fee_per_contract,
-                                                      "settlement_buffer": plan.settlement_buffer_per_contract},
+                                                      "settlement_buffer": plan.settlement_buffer_per_contract,
+                                                      "quote_expires_utc": plan.quote_expires_utc},
                     books=offers_books or {})
         self._opp(ex, S.EXECUTION_PENDING, t)
         try:
@@ -111,6 +112,8 @@ class Coordinator:
         # VALIDATED: the clearance is for this plan and still live; both venues present and connected.
         if clearance.opportunity_id != plan.opportunity_id or not clearance.valid(self.mono()):
             return self._fail(ex, X.ORDER_REJECTED, "clearance does not cover this plan or has expired", release=True)
+        if plan.first.post_only and (plan.quote_expires_utc is None or self.clock() >= plan.quote_expires_utc):
+            return self._fail(ex, X.ORDER_REJECTED, "maker quote proof expired or missing", release=True)
         for v in (plan.first.venue, plan.hedge.venue):
             if v not in self.venues:
                 return self._fail(ex, X.VENUE_DISCONNECTED, f"no {v} adapter in this mode", release=True)
@@ -134,12 +137,18 @@ class Coordinator:
         # LEG A: Polymarket, FAK (`ioc` in the internal protocol). Ambiguity here costs nothing;
         # that is why it goes first.
         req_a = self._request(plan, plan.first, plan.first.contracts, plan.first.limit_price, hedge=False)
+        if req_a.post_only and hasattr(self.venues[plan.first.venue], "kill"):
+            self.venues[plan.first.venue].kill = self.kill
         ex.first_client_id = req_a.client_order_id
         self._move(ex, X.LEG_A_SUBMITTED)
         self._stamp(ex, "a_submit_ms")
         ack = self.venues[plan.first.venue].submit(req_a, clearance)
         self._stamp(ex, "a_ack_ms")
-        ack = self._settle_ack(plan.first.venue, ack, deadline_mono=self.mono() + self.leg_a_settle_s, ex=ex, key="a")
+        if req_a.post_only:
+            rest_deadline = min(clearance.expires_mono, self.mono() + max(0.0, plan.quote_expires_utc - self.clock()))
+            ack = self._settle_maker_ack(plan.first.venue, ack, ex=ex, rest_deadline_mono=rest_deadline)
+        else:
+            ack = self._settle_ack(plan.first.venue, ack, deadline_mono=self.mono() + self.leg_a_settle_s, ex=ex, key="a")
         self._stamp(ex, "a_settled_ms")
         if ack.state is FillState.UNCONFIRMED:
             return self._fail(ex, X.UNKNOWN_PROVIDER_STATE, f"leg A unconfirmed: {ack.raw_status} {ack.detail}", release=False)
@@ -211,7 +220,64 @@ class Coordinator:
         quantity = float(Decimal(str(contracts)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
         return OrderRequest(leg.venue, leg.market_id, leg.outcome_id, side or leg.side, round(min(max(limit, 0.01), 0.99), 4),
                             quantity, leg.time_in_force, uuid.uuid4().hex, plan.opportunity_id,
-                            hedge=hedge, tick=leg.tick)
+                            hedge=hedge, tick=leg.tick, post_only=leg.post_only and not hedge,
+                            entry_expires_utc=plan.quote_expires_utc if leg.post_only and not hedge else None)
+
+    def _settle_maker_ack(self, venue, ack, *, ex, rest_deadline_mono=None):
+        """Wait briefly for maker liquidity, then cancel and reconcile; never replace.
+
+        Known quantity is retained on cancel/GET failure and hedged even if the residual
+        order is unresolved. That ambiguity latches entry and leaves the durable lock open.
+        """
+        if ack.state is FillState.REJECTED:
+            return ack
+        adapter = self.venues[venue]
+        wait_until = min(self.mono() + min(2.0, self.leg_a_settle_s),
+                         rest_deadline_mono if rest_deadline_mono is not None else self.mono())
+        ex.stages["maker_rest_remaining_ms"] = max(0, (wait_until - self.mono()) * 1000)
+        known = ack
+        polls = 0
+        # No synchronous venue reads may begin while deliberately resting: a slow GET
+        # could otherwise postpone cancel beyond the economic proof. Cancel is the
+        # first network request after POST, even when no early fill was observed.
+        while self.mono() < wait_until:
+            self.sleep(max(0, wait_until - self.mono()))
+        deadline = self.mono() + self.leg_a_settle_s
+        try:
+            canceled = adapter.cancel(ack.client_order_id)
+            if canceled.filled_contracts >= known.filled_contracts:
+                known = canceled
+            if getattr(canceled, "final", False) and not canceled.open and canceled.filled_contracts >= known.filled_contracts:
+                ex.stages["a_poll_count"] = polls
+                return known
+        except Exception:
+            pass  # Known holdings still require protection if cancel cannot be proved.
+        while self.mono() < deadline:
+            if polls:
+                self.sleep(min(self.poll_interval_s, max(0, deadline - self.mono())))
+            polls += 1
+            try:
+                st = adapter.status(ack.client_order_id)
+            except Exception:
+                st = None
+            if st is None:
+                continue
+            if st.filled_contracts >= known.filled_contracts:
+                known = st
+            if st.final and not st.open and st.filled_contracts >= known.filled_contracts:
+                ex.stages["a_poll_count"] = polls
+                return known
+        detail = f"post-only cancel/late-fill lifecycle unresolved: {ack.client_order_id}"
+        self._quantity_stop = detail
+        if self.kill is not None and self.mode.risks_capital:
+            try:
+                self.kill.latch("live", detail)
+            except Exception:
+                raise_flag(self.records.store, "POST_ONLY_ROLE_VIOLATION", detail + "; kill latch failed", now=self.clock())
+        ex.protect["post_only_unresolved"] = ack.client_order_id
+        if known.filled_contracts > 0:
+            return known  # Protect actual held quantity, without asserting order finality.
+        return replace(known, state=FillState.UNCONFIRMED, detail=detail)
 
     def _settle_ack(self, venue: str, ack: Ack, *, deadline_mono: float,
                     ex: Execution | None = None, key: str = "") -> Ack:
