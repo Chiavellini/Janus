@@ -228,14 +228,14 @@ class PositionGuard:
         if self.ledger is None:
             return
         rows = self.records.store.con.execute(
-            "SELECT execution_id,reservation_id FROM executions WHERE released=0 AND reservation_id IS NOT NULL "
+            "SELECT execution_id,reservation_id,released FROM executions WHERE reservation_id IS NOT NULL "
             "AND (first_filled>0 OR hedge_filled>0)"
         ).fetchall()
-        for exid, rid in rows:
-            if rid not in self.ledger.open and self.ledger.reopen(
+        for exid, rid, released in rows:
+            if not released and rid not in self.ledger.open and self.ledger.reopen(
                     rid, reason=f"guard restored exposure for {exid[:8]}", now=snap.now):
                 rep.findings.append(f"RESERVATION_REOPENED {rid[:8]} for {exid[:8]}")
-            if rid not in self.ledger.open:
+            if not released and rid not in self.ledger.open:
                 detail = f"{exid[:8]} holds venue quantity but reservation {str(rid)[:8]} is missing"
                 rep.findings.append(f"RESERVATION_MISSING {detail}")
                 self._flag("RESERVATION_MISSING", detail, snap.now)

@@ -144,6 +144,15 @@ class ExposureLedger:
         shrink here: until settlement, the original unspent allowance remains the conservative view.
         """
         old = self.open.get(reservation_id)
+        is_open = old is not None
+        if old is None and self.store is not None:
+            row = self.store.con.execute(
+                "SELECT event_id,league,per_venue_json,opportunity_id,created_utc "
+                "FROM capital_reservations WHERE reservation_id=?",
+                (reservation_id,),
+            ).fetchone()
+            if row is not None:
+                old = Reservation(reservation_id, row[0], row[1], json.loads(row[2]), row[3], float(row[4]))
         if old is None:
             return False
         amounts = dict(old.per_venue_usd)
@@ -157,13 +166,14 @@ class ExposureLedger:
             return False
         new = Reservation(old.reservation_id, old.event_id, old.league, amounts,
                           old.opportunity_id, old.created_utc)
-        self.open[reservation_id] = new
+        if is_open:
+            self.open[reservation_id] = new
         if self.store is not None:
             t = now or time.time()
             before = json.dumps(dict(old.per_venue_usd), sort_keys=True)
             after = json.dumps(amounts, sort_keys=True)
             self.store.con.execute(
-                "UPDATE capital_reservations SET per_venue_json=? WHERE reservation_id=? AND released_utc IS NULL",
+                "UPDATE capital_reservations SET per_venue_json=? WHERE reservation_id=?",
                 (after, reservation_id),
             )
             self.store.con.execute(

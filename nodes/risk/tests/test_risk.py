@@ -339,6 +339,23 @@ def test_a_protective_fill_grows_the_reservation_and_daily_notional(tmp_path):
     assert row[0] == "GROW_COMMITTED" and "hedge chased" in row[1]
 
 
+def test_a_late_fee_backfill_grows_a_released_filled_reservation_without_reopening_it(tmp_path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    ledger = ExposureLedger(store)
+    r = ledger.reserve(event_id="e1", league="mlb", per_venue_usd={"polymarket": 3.1, "kalshi": 5.5},
+                       limits=LIMITS, now=1000.0)
+    ledger.release(r.reservation_id, reason="settled", now=1001.0)
+    assert ledger.grow_to_committed(r.reservation_id,
+                                    per_venue_usd={"polymarket": 3.20695, "kalshi": 5.6733},
+                                    reason="late exact fees", now=1002.0)
+    assert r.reservation_id not in ledger.open
+    assert ledger.day_notional_usd(1003.0) == pytest.approx(8.88025)
+    saved = store.con.execute(
+        "SELECT per_venue_json,released_utc FROM capital_reservations WHERE reservation_id=?", (r.reservation_id,)
+    ).fetchone()
+    assert json.loads(saved[0]) == {"polymarket": 3.20695, "kalshi": 5.6733} and saved[1] == 1001.0
+
+
 def test_a_hedged_executions_reservation_is_committed_capital_not_an_unreconciled_fill(tmp_path):
     import sqlite3
     from nodes.risk.health import risk_alerts
