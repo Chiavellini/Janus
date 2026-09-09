@@ -1,0 +1,11 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_exact_historical_flag_resolution
+known_before_registration:
+  - Filtering an exact acknowledged overfill alone leaves its pre-existing ORDER_OVERFILL alarm active.
+success_criteria:
+  - Explicit operator-confirmed overfill manifests also bind exact historical flag rows by id/time/class/detail/hash.
+  - Only a complete successful guard pass with every observed overfill acknowledged and every currently unresolved flag exactly covered can append exact-ID resolution evidence.
+  - Unacknowledged orders, changed/corrupt/revoked evidence, new/unmatched flags or incomplete/errorful scan block resolution; no timestamp blanket clearing and no kill clearing.
+  - Include legitimate unrelated no-order executions, closed zero-fill rejected hedge legs and exact released reservation binding without loosening positive-fill cash validation.
+constraints: Local/offline fixtures only; no box or live mutation, no accounting edits or new look.

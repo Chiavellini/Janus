@@ -29,3 +29,12 @@ def test_post_only_persistence_failure_remains_a_watchdog_stop(tmp_path):
     alarms = risk_alerts(db_path=tmp_path / "t.sqlite", kill_root=tmp_path / "kill",
                          breaker_path=tmp_path / "breaker.json", mode_conf=tmp_path / "mode.conf", now=1001)
     assert any("POST_ONLY_PERSISTENCE_FAILED" in a and "live entry stopped" in a for a in alarms)
+
+
+def test_legacy_order_persistence_failure_is_a_distinct_watchdog_stop(tmp_path):
+    store = TupleStore(tmp_path / 't.sqlite', enforce_volume=False)
+    raise_flag(store, 'ORDER_PERSISTENCE_FAILED', 'legacy IOC fallback: database is locked', now=1000)
+    alarms = risk_alerts(db_path=tmp_path / 't.sqlite', kill_root=tmp_path / 'kill',
+                         breaker_path=tmp_path / 'breaker.json', mode_conf=tmp_path / 'mode.conf', now=1001)
+    assert any('ORDER_PERSISTENCE_FAILED' in a and 'live entry stopped' in a for a in alarms)
+    assert not any('POST_ONLY_PERSISTENCE_FAILED' in a for a in alarms)

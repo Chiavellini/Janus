@@ -39,8 +39,13 @@ from kernel.execution_protocol import Ack, FillRecord, Position
 from kernel.schema import ExecutionState as X, FillState, Mode
 from nodes.reconcile.reconcile import check_fees, ingest_fills, resolve_unconfirmed
 from nodes.reconcile.settle_executions import refresh_settlement_accounting
+from nodes.execution.dispositions import latest as latest_disposition, match_disposition
+from nodes.execution.overfill_ack import match_overfill_ack
+from nodes.execution.legacy_incident_ack import resolve_idle_incidents
+from nodes.execution.legacy_incident_ack import match_incident
+from nodes.exec_polymarket.position_evidence import terminal_zero_positions
 from nodes.risk.breaker import RealizedFill, day_of
-from nodes.risk.flags import raise_flag, resolve_flag
+from nodes.risk.flags import raise_flag, resolve_flag, resolve_exact_flags
 
 #: A trade this close in time to an UNCONFIRMED order on the same asset, with no other claimant,
 #: is that order's fill (a FAK/IOC never rests; its fill is within seconds of its submit).
@@ -63,6 +68,8 @@ class GuardSnapshot:
     adopted: list[tuple[str, str]] = field(default_factory=list)      # (client_order_id, venue_order_id)
     fee_findings: list = field(default_factory=list)
     errors: dict[str, str] = field(default_factory=dict)
+    fills_read_complete: bool = False
+    position_evidence: dict[str, dict] = field(default_factory=dict)
 
 
 @dataclass
@@ -71,6 +78,7 @@ class GuardReport:
     corrected: list[str] = field(default_factory=list)                # execution ids rewritten
     to_protect: list[str] = field(default_factory=list)               # execution ids that are naked and idle
     orphans: list[FillRecord] = field(default_factory=list)
+    dispositions: list[tuple[FillRecord, int]] = field(default_factory=list)
     mismatches: list[str] = field(default_factory=list)
     fills_today: tuple[RealizedFill, ...] = ()
 
@@ -103,6 +111,7 @@ class PositionGuard:
             snap.errors["unconfirmed"] = f"{type(exc).__name__}: {exc}"
         try:
             snap.fills = list(ingest_fills(self.journal, self.venues, since_utc=fill_since))
+            snap.fills_read_complete = True
         except Exception as exc:  # noqa: BLE001
             snap.errors["fills"] = f"{type(exc).__name__}: {exc}"
         for venue_name, adapter in self.venues.items():
@@ -123,6 +132,10 @@ class PositionGuard:
         for v, venue in self.venues.items():
             try:
                 snap.positions[v] = venue.positions() if hasattr(venue, "positions") else None
+                if snap.positions[v] is not None and getattr(venue, 'position_evidence', None) is not None:
+                    # Freeze the evidence from this exact reader call. Never consult
+                    # mutable adapter metadata during the application/writer pass.
+                    snap.position_evidence[v] = json.loads(json.dumps(venue.position_evidence))
             except Exception as exc:  # noqa: BLE001
                 snap.positions[v] = None
                 snap.errors[f"positions:{v}"] = f"{type(exc).__name__}: {exc}"
@@ -201,26 +214,44 @@ class PositionGuard:
         by_exec: dict[str, list[tuple[dict, FillRecord]]] = {}
         for f in snap.fills:
             row = self._row_for(f)
-            if row is None:
-                rep.orphans.append(f)
-                continue
-            exid = self._execution_for(row)
-            if exid is None:
+            exid = self._execution_for(row) if row is not None else None
+            if row is None or exid is None:
+                try:
+                    # A disposition lifecycle must never inherit a stale reporting
+                    # cache from the earlier unknown fill in this same process.
+                    if latest_disposition(self.journal.store.con, f.venue, f.fill_id) is not None:
+                        self.said.discard(f"orphan:{f.fill_id}")
+                    disposition = match_disposition(self.journal.store.con, f)
+                except Exception as exc:
+                    self.said.discard(f"orphan:{f.fill_id}")
+                    disposition = None
+                    rep.findings.append(f'DISPOSITION_INVALID {f.venue}:{f.fill_id}: {type(exc).__name__}: {exc}')
+                if disposition is not None:
+                    self.said.discard(f"orphan:{f.fill_id}")
+                    rep.dispositions.append((f, disposition['id']))
+                    rep.findings.append(f"EXTERNAL_FILL_DISPOSITION {f.venue}:{f.fill_id} row={disposition['id']} "
+                                        f"fill_sha256={disposition['fill_sha256']} {disposition['reason']}")
+                    continue
                 rep.orphans.append(f)
                 continue
             by_exec.setdefault(exid, []).append((row, f))
         for f in rep.orphans:
             key = f"orphan:{f.fill_id}"
+            detail = f"{f.venue} {f.market_id[:16]} {f.side} {f.contracts:g} @ {f.price} order {f.venue_order_id[:12]}"
+            latched = True
+            # Reporting may be deduplicated; a current unknown holding must
+            # still stop after an operator reset, and failed latches must retry.
+            if self.kill is not None and getattr(self.limits, "protect_kill_on_failure", True):
+                try:
+                    self.kill.latch("live", f"guard: orphan fill {detail}")
+                except Exception as exc:  # noqa: BLE001
+                    latched = False
+                    rep.findings.append(f"kill latch failed: {type(exc).__name__}")
             if key not in self.said:
-                self.said.add(key)
-                detail = f"{f.venue} {f.market_id[:16]} {f.side} {f.contracts:g} @ {f.price} order {f.venue_order_id[:12]}"
                 rep.findings.append(f"ORPHAN_FILL {detail}")
                 self._flag("ORPHAN_FILL", detail, snap.now)
-                if self.kill is not None and getattr(self.limits, "protect_kill_on_failure", True):
-                    try:
-                        self.kill.latch("live", f"guard: orphan fill {detail}")
-                    except Exception as exc:  # noqa: BLE001
-                        rep.findings.append(f"kill latch failed: {type(exc).__name__}")
+                if latched:
+                    self.said.add(key)
         self._close_final_zero_fills(snap, rep)
         self._repair_reservations(snap, rep)
         self._held = self._holdings(snap)
@@ -241,8 +272,86 @@ class PositionGuard:
         if not material:
             resolve_flag(self.store, "UNHEDGED_POSITION", "no unreleased execution exceeds protection dust", now=snap.now)
         rep.fills_today = self.fills_today(snap.now)
+        self._resolve_disposed_orphan_flags(snap, rep)
+        self._resolve_acknowledged_overfills(snap, rep)
+        self._resolve_legacy_incidents(snap, rep)
         self.cursor_utc = snap.now - ADOPT_WINDOW_S
         return rep
+
+    def _resolve_disposed_orphan_flags(self, snap: GuardSnapshot, rep: GuardReport) -> None:
+        if (not snap.fills_read_complete or snap.errors or rep.orphans or not rep.dispositions
+                or any(finding.startswith('DISPOSITION_INVALID') for finding in rep.findings)):
+            return
+        relevant = {fill.venue for fill, _ in rep.dispositions}
+        if any(venue not in self.venues or snap.positions.get(venue) is None for venue in relevant):
+            return
+        acknowledged = []
+        def verify():
+            acknowledged.clear()
+            for fill, row_id in rep.dispositions:
+                current = match_disposition(self.store.con, fill)
+                if current is None or current['id'] != row_id:
+                    return False
+                acknowledged.extend(current['orphan_flags'])
+            return True
+        # Populate once for the API argument, then revalidate under its writer lock.
+        try:
+            if verify() and resolve_exact_flags(self.store, 'ORPHAN_FILL', acknowledged,
+                    'Complete guard pass; exact confirmed external-proof dispositions ' + ','.join(str(row_id) for _, row_id in rep.dispositions),
+                    now=snap.now, verify=verify):
+                rep.findings.append('ORPHAN_FILL_RESOLVED_EXACT: every unresolved incident matched confirmed proof ownership; kill unchanged')
+        except Exception as exc:
+            rep.findings.append(f'DISPOSITION_RESOLUTION_BLOCKED: {type(exc).__name__}: {exc}')
+
+    def _resolve_legacy_incidents(self, snap, rep):
+        if not self.store.con.execute("SELECT 1 FROM sqlite_master WHERE name='historical_legacy_incident_acknowledgements'").fetchone():
+            return
+        invalid = False
+        for (flag_id,) in self.store.con.execute('SELECT DISTINCT flag_id FROM historical_legacy_incident_acknowledgements').fetchall():
+            try:
+                match_incident(self.store.con, flag_id, require_idle=False)
+            except Exception as exc:
+                invalid = True
+                detail = f'LEGACY_INCIDENT_ACK_INVALID flag={flag_id}: {type(exc).__name__}: {exc}'
+                rep.findings.append(detail)
+                if self.kill is not None:
+                    try:
+                        self.kill.latch('live', detail)
+                    except Exception as kill_exc:
+                        rep.findings.append(f'kill latch failed: {type(kill_exc).__name__}')
+                self._flag('POST_ONLY_PERSISTENCE_FAILED', detail, snap.now)
+        if invalid:
+            return
+        position_proof = {}
+        position_error = []
+        def complete_safe_pass():
+            eligible = (snap.fills_read_complete and not snap.errors and not rep.orphans and not rep.mismatches
+                    and all(venue in self.venues for venue in ('kalshi', 'polymarket'))
+                    and snap.positions.get('kalshi') == []
+                    and not any(any(word in finding for word in ('INVALID', 'FAILED', 'BLOCKED', 'ORDER_OVERFILL ', 'FEE_ABOVE_PIN '))
+                                for finding in rep.findings))
+            if not eligible:
+                return False
+            try:
+                current = terminal_zero_positions(snap.positions.get('polymarket'), snap.position_evidence.get('polymarket'),
+                                                  pass_started_utc=snap.now, now=self.clock())
+                if position_proof and current != position_proof:
+                    return False
+                position_proof.update(current)
+                return True
+            except (ValueError, TypeError, ArithmeticError, AttributeError):
+                if not position_error:
+                    position_error.append('fresh complete Polymarket terminal-zero position evidence unavailable or contradictory')
+                return False
+        if not complete_safe_pass():
+            if position_error:
+                rep.findings.append('LEGACY_POSITION_EVIDENCE_BLOCKED: ' + position_error[0])
+            return
+        try:
+            if resolve_idle_incidents(self.store, now=snap.now, verify_pass=complete_safe_pass, position_evidence=position_proof):
+                rep.findings.append('POST_ONLY_PERSISTENCE_FAILED_RESOLVED_EXACT: confirmed historical legacy label; kill unchanged')
+        except Exception as exc:
+            rep.findings.append(f'LEGACY_INCIDENT_RESOLUTION_BLOCKED: {type(exc).__name__}: {exc}')
 
     def _preserve_unpersisted_fills(self, snap, rep):
         """Returned validated quantity is evidence even if its FIFO write failed.
@@ -258,6 +367,7 @@ class PositionGuard:
         con = self.journal.store.con
         for vid, observed in by_order.items():
             cid = None
+            marker = None
             try:
                 found = con.execute("SELECT client_order_id FROM orders WHERE venue_order_id=?", (vid,)).fetchone()
                 if found is None:
@@ -291,14 +401,34 @@ class PositionGuard:
             except Exception as exc:
                 detail = f"PERSISTENCE_FAILED {cid or vid}: returned quantity {sum(observed.values()):g}; order fallback failed: {type(exc).__name__}: {exc}"
                 rep.findings.append(detail)
+                snap.errors[f"persistence:guard:{cid or vid}"] = detail
+                try:
+                    con.rollback()
+                except Exception as rollback_error:
+                    rep.findings.append(f"persistence rollback failed: {type(rollback_error).__name__}: {rollback_error}")
                 for fill in snap.fills:
                     if fill.venue_order_id == vid:
                         adapter = self.venues.get(fill.venue)
-                        if callable(getattr(adapter, "_persistence_failure", None)):
+                        if marker is not None and callable(getattr(adapter, "_persistence_failure", None)):
                             adapter._persistence_failure(cid or vid, exc)
-                        elif self.kill is not None:
-                            self.kill.latch("live", detail)
+                        else:
+                            # A legacy immediate-order lock remains a STOP, never a
+                            # fabricated post-only lifecycle violation.
+                            if self.kill is not None:
+                                self.kill.latch("live", detail)
+                            self._flag("ORDER_PERSISTENCE_FAILED", detail, snap.now)
                         break
+
+    def _overfill_candidates(self):
+        con = self.journal.store.con
+        rows = {r[0]: r for r in con.execute(
+            "SELECT client_order_id,venue,contracts,filled_contracts,mode FROM orders "
+            "WHERE filled_contracts > contracts + 0.000000001") if r[4] in _REAL_MODES}
+        if con.execute("SELECT 1 FROM sqlite_master WHERE name='historical_order_overfill_acknowledgements'").fetchone():
+            for (cid,) in con.execute("SELECT DISTINCT client_order_id FROM historical_order_overfill_acknowledgements"):
+                row = con.execute("SELECT client_order_id,venue,contracts,filled_contracts,mode FROM orders WHERE client_order_id=?", (cid,)).fetchone()
+                rows[cid] = row or (cid, 'missing', 0., 0., 'missing')
+        return list(rows.values())
 
     def _detect_order_overfills(self, snap: GuardSnapshot, rep: GuardReport) -> None:
         """Catch authoritative late fills even when the coordinator's poll saw zero/partial.
@@ -306,14 +436,20 @@ class PositionGuard:
         Dust is a protection threshold, never permission to exceed a requested order.
         Read the durable totals after sync/adoption, without changing the reported fill.
         """
-        rows = self.journal.store.con.execute(
-            "SELECT client_order_id,venue,contracts,filled_contracts,mode FROM orders "
-            "WHERE filled_contracts > contracts + 0.000000001"
-        ).fetchall()
-        for cid, venue, requested, filled, mode in rows:
-            if mode not in _REAL_MODES:
-                continue
+        for cid, venue, requested, filled, mode in self._overfill_candidates():
             key = f"overfill:{cid}:{filled}"
+            try:
+                acknowledgement = match_overfill_ack(self.journal.store.con, cid)
+            except Exception as exc:
+                acknowledgement = None
+                rep.findings.append(f"OVERFILL_ACK_INVALID {cid}: {type(exc).__name__}: {exc}")
+                self.said.discard(key)
+            if acknowledgement is not None:
+                self.said.discard(key)
+                finding = f"HISTORICAL_OVERFILL_ACKNOWLEDGED {cid}: row={acknowledgement['id']} snapshot={acknowledgement['snapshot_sha256']}"
+                if finding not in rep.findings:
+                    rep.findings.append(finding)
+                continue
             if key in self.said:
                 continue
             detail = f"{venue} {cid}: requested {requested:g}, venue filled {filled:g}"
@@ -329,6 +465,41 @@ class PositionGuard:
             else:
                 self.said.add(key)
             self._flag("ORDER_OVERFILL", detail, snap.now)
+
+    def _resolve_acknowledged_overfills(self, snap, rep):
+        """A complete pass closes only confirmed exact historical flag identities."""
+        if (not snap.fills_read_complete or snap.errors or rep.orphans or rep.mismatches or rep.to_protect
+                or any(f.stop for f in snap.fee_findings)
+                or any('INVALID' in f or 'PERSISTENCE_FAILED' in f for f in rep.findings)
+                or not {'polymarket', 'kalshi'} <= set(self.venues)
+                or any(snap.positions.get(v) is None for v in self.venues)):
+            return
+        evidence = []
+        def verify():
+            current = []
+            for cid, *_ in self._overfill_candidates():
+                ack = match_overfill_ack(self.journal.store.con, cid)
+                if ack is None:
+                    return False
+                current.extend(ack['flag_evidence'])
+            return current == evidence
+        try:
+            for cid, *_ in self._overfill_candidates():
+                ack = match_overfill_ack(self.journal.store.con, cid)
+                if ack is None:
+                    self._detect_order_overfills(snap, rep)
+                    return
+                evidence.extend(ack['flag_evidence'])
+            if evidence and resolve_exact_flags(self.journal.store, 'ORDER_OVERFILL', evidence,
+                    'complete guard pass: exact source-confirmed settled historical overfills; kill unchanged',
+                    now=snap.now, verify=verify):
+                rep.findings.append('ORDER_OVERFILL_RESOLVED exact acknowledged historical incident IDs; kill unchanged')
+        except Exception as exc:
+            rep.findings.append(f"OVERFILL_RESOLUTION_BLOCKED {type(exc).__name__}: {exc}")
+        finally:
+            # Revalidation may discover changed quantity/state after the earlier
+            # detector pass. Once the writer transaction is over, surface/latch it.
+            self._detect_order_overfills(snap, rep)
 
     def _close_final_zero_fills(self, snap: GuardSnapshot, rep: GuardReport) -> None:
         """Release an ambiguous execution once the venue finally proves zero fill.

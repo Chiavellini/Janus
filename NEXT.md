@@ -4,7 +4,7 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-09 after the F15 STOP and independently reviewed local L52-L54/F18 candidate.
+Updated 2026-09-09 after the F15 STOP and the reviewed L52-L56/F18 release candidate.
 CHECKLIST.md is the state list; CHANGELOG.md and the F rows in `snooping_ledger.md` are the
 append-only history.
 
@@ -17,8 +17,16 @@ stored about 4.226 cents too high. `kill/live` is deliberately latched. The old 
 remain active, but no new first leg may clear; do not clear the kill. F17 produced no evaluation and
 is superseded before start. The local F18 candidate restores only a post-only GTC maker-first
 Polymarket BUY route; immediate, FAK/FOK and non-post-only BUYs remain blocked. It is fully tested and
-independently reviewed but uncommitted and undeployed. Its share cap relies on Polymarket's documented
+reviewed and is being staged for deployment. Its share cap relies on Polymarket's documented
 post-only maker guarantee; the unsigned operator instruction is an explicit venue trust boundary.
+
+L56 preserves the historical execution records while providing append-only, source/hash/operator-
+bound dispositions for the two proof fills, five overfills and the one legacy false post-only label.
+Only a complete authenticated guard may resolve their exact flag IDs; no class-wide timestamp clear,
+P&L rewrite or kill clear is performed. The actual PM account's positive token remnants remain in the
+physical position feed. For this narrow incident gate only, a complete fresh paginated read may prove
+zero current economic exposure when every token is uniquely account-bound, venue-redeemable, exact
+zero value/price and non-contradictory. Unknown or valuable holdings remain a BLOCK.
 
 The arm remains **$12 combined stake, 10 contracts per leg, $250 committed daily notional, $25
 realized-loss breaker, $0.10 minimum net profit, 1% locked return, $1 maximum protection loss,
@@ -83,13 +91,17 @@ Capture gzip level 3 used about 58% less compression CPU with exact frame/timest
 
 ## Immediate next step
 
-Keep `kill/live` latched. Commit the exact reviewed F18 tree, then wait for healthy streams/clocks and
-a fully green guard/watchdog. Before any operator release, verify zero flight/material imbalance/
-unhedged exposure, zero unresolved post-only admission or persistence error, and a matching re-signed
-unchanged arm. The first three covers require hand reconciliation before the fourth. Stop on any cent
+Keep `kill/live` latched while the reviewed tree is staged and the append-only historical manifests
+are explicitly confirmed. With the observer stopped, run one authenticated 72-hour guard and require
+the exact historical flags to resolve, zero current flight/material imbalance/economic exposure,
+zero unresolved post-only admission or persistence error, and a clean watchdog apart from the
+intentional stopped-lane/kill state. The operator then uses the repository's daily release paste to
+re-sign the unchanged arm, verifies fresh streams/clocks, and clears only the reviewed live latch.
+The first three covers require hand reconciliation before the fourth. Stop on any cent
 discrepancy, non-maker fill, cap breach, late cancel dispatch, protection delay beyond 30 seconds,
 orphan, mismatch, missing reservation, post-submit store error, fee above pin, breaker, or stream
-alarm. This file and the F18 registration do not authorize clearing the current live kill.
+alarm. Exact commands and actor boundaries are in
+`research/exec/2026-09-09_historical-proof-dispositions/operator_runbook.md`.
 
 The next profit-relevant evidence is per-league executable fill rate and realized net EV under the
 unchanged small arm. Coverage creates access, not evidence of profit. Do not raise caps until forward

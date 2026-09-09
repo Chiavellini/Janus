@@ -1,0 +1,19 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_terminal_position_evidence
+known_before_registration:
+  - Parent reports approximately73 positive-size PM token remnants in current positions; literal empty holdings cannot pass the prior incident guard.
+  - Physical token quantity must remain visible even when venue evidence proves terminal zero economic value.
+scope:
+  - Review official position/redeemability semantics and frozen row schema without new account/venue calls.
+  - Attach same-read atomic raw position evidence and complete-read identity to the existing unchanged physical Position projection.
+  - Add an exact fail-closed economic-position predicate only for historical incident resolution; it does not alter orders, risk holdings, PnL, protection sizing or physical positions.
+success:
+  - Registered realistic positive-size terminal zero-value fixtures fail the literal-empty gate before repair and pass only with fresh source-bound complete position evidence.
+  - Only strictly typed venue redeemable/resolution evidence plus exact zero currentValue and current price may prove no current economic exposure; explicit unresolved/active/trading or positive-value contradictions block.
+  - Raw quantity/token identity matches the exact Position set without tolerance; duplicate/missing/extra, malformed/nonfinite/unknown values, stale or failed/partial batches and incomplete pagination block.
+  - Source evidence and accepted remnant identities/hashes are retained in the exact resolution audit; no fresh evidence is manufactured from a valid prefix.
+  - Both venues must be freshly known; Kalshi nonempty holdings remain blocked. Prior incident/state/source and maker/cash safeguards stay intact.
+constraints:
+  - No redemption, deletion, live/account read, deploy, restart, rearm, cap change, kill clearing or accounting mutation.
+  - Additional authority beyond documented venue redeemability is a BLOCK, not inferred finality.

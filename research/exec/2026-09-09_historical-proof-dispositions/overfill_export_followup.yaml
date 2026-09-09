@@ -1,0 +1,10 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_exact_acknowledgement_export
+known_before_registration: The acknowledgement CLI accepts a fully frozen snapshot but does not yet generate one reproducibly from an exact operator-selected candidate set.
+success_criteria:
+  - A prepare-only CLI reads the database in mode=ro and exports full current settled snapshots plus exact flag rows for explicitly listed client IDs, source refs and substantive reasons.
+  - Export refuses extra or missing live overfill candidates and any unresolved ORDER_OVERFILL flag not exactly covered by the proposal; source or settled-state failures refuse.
+  - Export uses exclusive file creation, never overwrites, changes no database rows, and does not confirm or resolve anything.
+  - Dry confirmation and exact explicit confirmation remain separate; stale target evidence refuses insertion.
+constraints: Local/offline fixture tests only; no venue reads, live writes, accounting edits, kill clearing or new look.

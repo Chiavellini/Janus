@@ -1,0 +1,17 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_historical_fill_disposition
+known_before_registration:
+  - The fresh authenticated F18 guard identifies two historical execution-proof fills as orphans because they have no live execution owner.
+  - Committed CHECKLIST/BATTERY/CHANGELOG identify the Sept7 Kalshi and PM execution proofs as settled; no current exposure is claimed from those proof positions.
+  - Exact current fill identities and full-precision accounting fields must be frozen before any disposition can match; approximate PM VWAP is insufficient.
+success_criteria:
+  - Provide a generic append-only external/proof fill disposition table with exact canonical venue/fill/order/quantity/price/fee and other FillRecord fields, source git commit/ref/SHA256, reason and explicit operator confirmation.
+  - Guard excludes a fill from orphan classification only after an exact fill hash, immutable disposition hash and source identity validation; it reports the disposition explicitly.
+  - Every unregistered fill, changed ID/order/quantity/price/fee, corrupt source/disposition, revoked disposition or unconfirmed proposal remains an orphan and preserves STOP/kill behavior.
+  - Corrections and revocations append superseding records; historical rows cannot be updated/deleted through the schema.
+  - CLI defaults to read-only dry-run, shows exact manifest/hash/target, and requires an explicit matching confirmation digest before any disposition insertion.
+  - No order/execution/accounting row or live kill is silently edited, and disposition neither invents realized P&L nor suppresses position mismatches/other alarms.
+  - Focused exact-match/negative/correction/CLI/guard tests, combined relevant regressions and diff check pass before release instructions.
+constraints: Local implementation and immutable-source inspection only; no venue requests, direct box/live mutation, deployment, rearm, kill clearing or cap change by this subtask.
+expected_ev_effect: No EV claim; source-bound historical proof attribution removes only documented non-current orphan classification, without weakening unknown-inventory controls.

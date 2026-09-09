@@ -1,0 +1,11 @@
+row: L56
+date: 2026-09-09
+parent_registration: legacy_persistence_followup.yaml
+kind: descriptive_offline_adapter_label_followup
+known_before_registration:
+  - The generic PM fills persistence catch still invokes the post-only persistence helper for legacy immediate orders without a post-only marker.
+success_criteria:
+  - A legacy order's fill/source write failure returns observed quantity provisionally, latches independent STOP and creates only ORDER_PERSISTENCE_FAILED, never a post-only violation row.
+  - An exact post-only marker preserves POST_ONLY_PERSISTENCE_FAILED behavior; both error kinds retain all L52/L54 cash/quantity/finality protections.
+  - Exact injected legacy regression runs RED before repair, then focused and integration tests pass.
+constraints: Local synthetic tests only; no live writes, venue access, kill clearing or retrospective flag mutation.

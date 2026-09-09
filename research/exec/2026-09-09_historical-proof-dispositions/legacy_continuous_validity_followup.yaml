@@ -1,0 +1,10 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_post_resolution_acknowledgement_integrity
+scope: independently revalidate historical legacy acknowledgement after exact flag resolution
+success:
+  - Same-process accepted and exactly resolved acknowledgement followed by operator fake-kill reset and revocation, corruption or bound-source/state mismatch produces new visible flag and kill.
+  - Static confirmation/source/linear-chain/exact-incident checks run on every guard pass even if positions/read errors prevent a fresh idle resolution pass.
+  - Later legitimate maker orders/admission/execution activity alone never invalidates a previously confirmed historical acknowledgement.
+  - Resolution still requires complete fresh economic-zero position evidence and writer-locked current-idle checks; static validity does not itself grant resolution.
+constraints: Append-only audit, fake kill and temporary SQLite tests only; no original row deletion, venue/live action or new look.

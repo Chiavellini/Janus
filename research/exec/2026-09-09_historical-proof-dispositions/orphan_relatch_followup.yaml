@@ -1,0 +1,17 @@
+id: L56
+date: 2026-09-09
+type: descriptive_offline_review_repair
+immutable: true
+scope: same-process historical orphan disposition lifecycle
+expected_ev_effect: no strategy change; restore inventory STOP after acknowledgement revocation or mismatch
+red_before_fix:
+  - Same guard sees unknown fill, confirms exact disposition, accepts it, operator clears a fake kill, then disposition is revoked.
+  - Repeat with changed fill identity or corrupt latest disposition after acceptance.
+success:
+  - Every re-orphan is reported, flags again and latches kill in the same process.
+  - Exact acceptance clears only the orphan reporting cache; no live kill is cleared.
+  - A failed latch cannot poison the deduplication cache and prevent a later retry.
+  - Existing exact disposition, strict mismatch and exact incident resolution tests remain green.
+constraints:
+  - Tests use temporary databases and fake kill only; no venue, box, deploy, accounting mutation or live action.
+  - Original registration and results remain append-only; no new look.

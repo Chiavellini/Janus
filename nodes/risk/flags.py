@@ -8,6 +8,9 @@ from __future__ import annotations
 
 import sqlite3
 import time
+import hashlib
+import json
+from decimal import Decimal
 from pathlib import Path
 
 FLAGS_DDL = """
@@ -15,6 +18,72 @@ CREATE TABLE IF NOT EXISTS lane_flags(
   id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, flag TEXT NOT NULL, detail TEXT);
 CREATE INDEX IF NOT EXISTS lane_flags_ts ON lane_flags(flag, seen_ts);
 """
+
+EXACT_RESOLUTION_PREFIX = 'EXACT_INCIDENTS_V1 '
+
+
+def flag_snapshot(row) -> dict:
+    return {'id': int(row[0]), 'seen_ts': format(Decimal(str(row[1])).normalize(), 'f'),
+            'flag': row[2], 'detail': row[3] or ''}
+
+
+def unresolved_flag_rows(con, flag: str, *, since_ts: float = 0) -> list[tuple]:
+    """Legacy markers retain their boundary; exact markers close named IDs only."""
+    if not con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='lane_flags'").fetchone():
+        return []
+    floor, closed = (since_ts, -1), set()
+    for rid, ts, marker, detail in con.execute('SELECT id,seen_ts,flag,detail FROM lane_flags WHERE flag IN (?,?)',
+                                               (flag + '_RESOLVED', flag + '_RESOLVED_EXACT')):
+        if marker == flag + '_RESOLVED_EXACT':
+            try:
+                if not (detail or '').startswith(EXACT_RESOLUTION_PREFIX):
+                    continue
+                payload = json.loads(detail[len(EXACT_RESOLUTION_PREFIX):])
+                if set(payload) != {'ids', 'rows_sha256', 'detail'} or not isinstance(payload['ids'], list):
+                    continue
+                if not all(type(value) is int and value > 0 for value in payload['ids']):
+                    continue
+                rows = [con.execute('SELECT id,seen_ts,flag,detail FROM lane_flags WHERE id=? AND flag=?', (value, flag)).fetchone()
+                        for value in payload['ids']]
+                if any(row is None for row in rows):
+                    continue
+                raw = json.dumps([flag_snapshot(row) for row in rows], sort_keys=True, separators=(',', ':'))
+                if hashlib.sha256(raw.encode()).hexdigest() == payload['rows_sha256']:
+                    closed.update(payload['ids'])
+            except (TypeError, ValueError):
+                continue  # A broken exact marker is not a blanket legacy resolution.
+        else:
+            floor = max(floor, (float(ts), int(rid)))
+    return [row for row in con.execute('SELECT id,seen_ts,flag,detail FROM lane_flags WHERE flag=? ORDER BY seen_ts,id', (flag,))
+            if (float(row[1]), int(row[0])) > floor and row[0] not in closed]
+
+
+def resolve_exact_flags(store, flag: str, acknowledged: list[dict], detail: str, *, now: float, verify=None) -> bool:
+    """Atomic all-incident coverage check; never resolves a row absent from confirmation."""
+    con = store.con
+    if con.in_transaction:
+        raise ValueError('exact flag resolution requires its own writer transaction')
+    con.execute('BEGIN IMMEDIATE')
+    try:
+        if verify is not None and not verify():
+            con.rollback()
+            return False
+        rows = unresolved_flag_rows(con, flag)
+        allowed = {row['id']: row for row in acknowledged}
+        if (not rows or len(allowed) != len(acknowledged)
+                or any(allowed.get(row[0]) != flag_snapshot(row) for row in rows)):
+            con.rollback()
+            return False
+        snapshots = [flag_snapshot(row) for row in rows]
+        payload = {'ids': [row[0] for row in rows], 'detail': detail,
+                   'rows_sha256': hashlib.sha256(json.dumps(snapshots, sort_keys=True, separators=(',', ':')).encode()).hexdigest()}
+        con.execute('INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?,?,?)',
+                    (now, flag + '_RESOLVED_EXACT', EXACT_RESOLUTION_PREFIX + json.dumps(payload, sort_keys=True, separators=(',', ':'))))
+        con.commit()
+        return True
+    except Exception:
+        con.rollback()
+        raise
 
 
 def raise_flag(store, flag: str, detail: str = "", *, now: float | None = None) -> None:
@@ -58,10 +127,6 @@ def recent_flags(db_path: Path | str, flag: str, *, since_s: float = 24 * 3600, 
     try:
         if not con.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='lane_flags'").fetchall():
             return []
-        resolved = f"{flag}_RESOLVED"
-        marker = con.execute("SELECT MAX(seen_ts) FROM lane_flags WHERE flag=?", (resolved,)).fetchone()[0]
-        floor = max(t - since_s, float(marker or 0.0))
-        return con.execute("SELECT seen_ts, detail FROM lane_flags WHERE flag=? AND seen_ts > ? ORDER BY seen_ts DESC",
-                           (flag, floor)).fetchall()
+        return [(row[1], row[3]) for row in reversed(unresolved_flag_rows(con, flag, since_ts=t - since_s))]
     finally:
         con.close()

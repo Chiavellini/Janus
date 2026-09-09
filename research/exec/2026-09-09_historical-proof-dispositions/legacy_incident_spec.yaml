@@ -1,0 +1,17 @@
+row: L56
+date: 2026-09-09
+parent: legacy_persistence_followup.yaml
+type: descriptive_offline_exact_false_label_incident
+scope: separate append-only historical legacy IOC persistence-label acknowledgement
+expected_ev_effect: no strategy or accounting change; remove only proved historical false-label alarm from active health
+schema:
+  - Explicit operator confirmation binds exact database path, complete manifest digest and current predecessor.
+  - Manifest binds exact flag211 and pm violation1, full settled order/execution/reservation/owned-leg snapshot and immutable Git source excerpt showing unconditional old guard hook.
+  - Read-only prepare dynamically exports current database snapshot from exact explicit incident IDs; dry-run does not create tables; confirm is writer-locked and stale plans fail.
+  - Immutable linear corrections/revocations retain all original flag, violation and accounting rows.
+success:
+  - An exact confirmed legacy IOC database-lock false-label incident may resolve only its named flag after a fresh complete guard pass with both venues present, known empty positions, no errors/orphans/mismatches, no open or cash-pending order, unreleased execution or reservation, maker marker or admission claim.
+  - Changed source, flag, violation, order, settlement, reservation, new same-class incident, corrupt confirmation, revocation or incomplete/current-risk evidence prevents resolution.
+  - Revalidation runs under the same writer lock as exact-ID resolution; kill is never cleared and no overfill/accounting exemption is minted.
+  - CLI prepare/dry/confirm and guard-facing adversarial tests pass; focused integration and diff checks pass.
+constraints: No venue/box action, deployment, live restart/rearm, cap or PnL change; exact live snapshots will be exported by separately authorized operator, not this local subtask.

@@ -1,0 +1,17 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_frozen_maximus_sources
+known_before_registration:
+  - Parent identified archived activity page0004 with Maximus BUY10.166667/cash3.71626 and positions page0001 with same token, currentValue0 and redeemable true.
+  - Source-only commit is explicitly authorized for exactly these two byte-identical files; no shared code or ledger is to be committed.
+inputs:
+  activity: /Volumes/Kilos/janus/accounting/L52/20260909T093056Z_pm_activity/0004.json
+  activity_sha256: 3e0ba1e395ed3737b945246f955803c7da19d345b4fea32195f071786cf1c982
+  positions: /Volumes/Kilos/janus/accounting/L52/20260909T093018Z_pm_positions/0001.json
+  positions_known_sha256_prefix: 1b0dba9
+success_criteria:
+  - Read existing archive/metadata only; compare full file SHA256 to metadata and supplied expected hash/prefix.
+  - Freeze byte-identical copies under this row's evidence directory and verify exact equality and SHA256.
+  - Commit only the two named copied evidence files; leave shared implementation, specs, ledger and docs unstaged.
+  - Positions value0/redeemable is not mislabeled as redemption cash or a new payout; external source meaning remains explicit.
+constraints: Local archive reads and exact source-only commit only; no venue/box actions, accounting mutations, release, kill clearing, or new look.

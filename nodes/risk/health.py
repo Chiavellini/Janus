@@ -131,6 +131,7 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
                                ("ORDER_OVERFILL", "venue quantity exceeded the order request; live entry stopped; authoritative quantity retained"),
                                ("POST_ONLY_ROLE_VIOLATION", "post-only maker guarantee violated; live entry stopped; held quantity retained"),
                                ("POST_ONLY_PERSISTENCE_FAILED", "post-wire persistence failed; live entry stopped; observed quantity retained"),
+                               ("ORDER_PERSISTENCE_FAILED", "order persistence failed; live entry stopped; observed quantity requires reconciliation"),
                                ("POSITION_MISMATCH", "a venue position the fills since start do not explain"),
                                ("PROTECT_FAILED", "the protection layer could neither hedge nor unwind inside the cap; the live kill was latched"),
                                ("EXEC_CRASHED", "the execution machine raised outside its own failure recording")):

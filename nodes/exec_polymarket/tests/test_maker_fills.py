@@ -41,7 +41,7 @@ class Transport:
 
 
 def own(journal, *, cid='client', oid='maker-order', post_only=True, side='buy_yes', asset='owned-token'):
-    journal.pending(OrderRequest('polymarket', asset, asset, side, .65, 10, 'gtc', cid, 'opportunity'),
+    journal.pending(OrderRequest('polymarket', asset, asset, side, .65, 10, 'gtc' if post_only else 'ioc', cid, 'opportunity'),
                     mode='LIMITED_LIVE', now=999)
     journal.record(Ack('polymarket', cid, oid, FillState.UNCONFIRMED, 0, None, None, 'live', 999,
                        open=True, settlement_pending=True), kind='ack')
@@ -354,6 +354,20 @@ def test_cash_persistence_failure_returns_fill_without_committed_false_authority
     assert adapter.persistence_error and kill.active(live=True)
     assert journal.store.con.execute('SELECT COUNT(*) FROM pm_cash_sources').fetchone()[0] == 0
     assert journal.store.con.execute("SELECT COUNT(*) FROM order_events WHERE kind='authoritative_cash'").fetchone()[0] == 0
+
+
+@pytest.mark.parametrize('stage', ['fill', 'cash_source'])
+def test_legacy_fill_persistence_failure_is_generic_not_post_only(tmp_path, monkeypatch, stage):
+    adapter, journal, _, kill = world(tmp_path, post_only=False)
+    def fail(*args, **kwargs): raise OSError('synthetic legacy write failure')
+    if stage == 'fill': monkeypatch.setattr(journal, 'record_fill', fail)
+    else: monkeypatch.setattr(adapter, '_remember_cash_source', fail)
+    assert [(f.contracts, f.final) for f in adapter.fills(since_utc=0)] == [(6, False)]
+    assert adapter.persistence_error.startswith('ORDER_PERSISTENCE_FAILED:')
+    assert adapter.last_error == adapter.persistence_error and kill.active(live=True)
+    assert journal.store.con.execute('SELECT COUNT(*) FROM pm_post_only_violations').fetchone()[0] == 0
+    assert journal.store.con.execute("SELECT COUNT(*) FROM lane_flags WHERE flag='ORDER_PERSISTENCE_FAILED'").fetchone()[0] == 1
+    assert journal.store.con.execute('SELECT COUNT(*) FROM pm_cash_sources').fetchone()[0] == 0
 
 
 def test_later_fill_write_failure_returns_whole_prefix_nonfinal(tmp_path, monkeypatch):

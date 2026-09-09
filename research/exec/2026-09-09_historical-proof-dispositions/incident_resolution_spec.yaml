@@ -1,0 +1,15 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_exact_incident_resolution
+known_before_registration:
+  - Exact matching dispositions do not close existing ORPHAN_FILL flags, and blanket timestamp resolution can hide aged-out or equal-timestamp unknown incidents.
+  - Operator supplied exact unresolved orphan rows 197/198/204/205 with timestamps and full stored details, explicitly linking them to the two historical proof fills.
+  - Initial implementation review found confirmation digest was not reconstructed at read time; this was corrected before the first focused test run, with no RED claim.
+success_criteria:
+  - Bind exact source-line locators and exact historical flag-row snapshots into the explicit manifest confirmation; display source excerpts and full fill facts before confirmation.
+  - Runtime reconstructs confirmation digest, target, complete manifest hash, exact entry membership and predecessor identities; hash-consistent but unconfirmed/corrupt envelopes remain invalid.
+  - Resolve orphan flags only after a successful complete relevant fill scan with adapters and known positions present, no errors, no unacknowledged orphans and no invalid dispositions.
+  - Re-read every unresolved incident and append exact-ID resolution in one writer transaction; every unresolved row must have an exact confirmed snapshot match.
+  - Exact resolution excludes only named IDs, never new/equal-timestamp/unacknowledged incidents; empty rolling snapshots cannot close older unknown incidents.
+  - No kill clearing, order/fill/accounting mutation or suppression of other flag classes.
+constraints: Local synthetic regression and source preparation only; no direct box/live mutations or venue requests.

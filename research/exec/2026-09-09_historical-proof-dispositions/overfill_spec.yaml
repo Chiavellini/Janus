@@ -1,0 +1,15 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_exact_historical_order_overfill_acknowledgement
+known_before_registration:
+  - Guard currently flags and latches every durable historical real-mode order overfill, even when its linked execution is fully reconciled and released.
+  - The parallel L56 external-fill disposition uses append-only records and portable Git source membership verification; this subtask must not broaden its orphan filter.
+success_criteria:
+  - Add a separate append-only exact overfill acknowledgement with explicit operator identity/reason and source Git commit/ref/SHA256 membership proof.
+  - Bind the exact order/client/requested/filled identity, complete order snapshot, unique linked execution snapshot, RECONCILED/released1 state, closed order/open0/cash-pending0, and exact released settlement/owned-leg evidence.
+  - Require a read-only proposal then exact digest confirmation bound to database path, immutable manifest, current snapshot and latest acknowledgement head; no default writes.
+  - An acknowledgement filters only the identical historical overfill from repeated guard overfill alarms; changed identities, quantities, lifecycle, settlement/legs, source bytes/hashes, revocation or absent confirmation still flag and kill.
+  - Retain all historical orders/fills/executions/settlements/PnL and all prior acknowledgement rows without edits; never clear existing kill or alarm flags.
+  - Focused adversarial identity/lifecycle/source/correction/revocation/CLI/guard tests, relevant combined regression tests and diff check pass.
+constraints: Offline/local implementation and frozen fixtures only; no venue/box/database mutation outside tests, deploy, rearm, kill clearing, cap changes or new look.
+expected_ev_effect: No measured EV change; exact settled-history recognition avoids repeat stale-stop noise without weakening current/new overfill detection or changing accounting.

@@ -1,0 +1,12 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_legacy_guard_lock_classification
+known_before_registration:
+  - Box flag211 at17:07:13Z says POST_ONLY_PERSISTENCE_FAILED for legacy immediate order40797bee after a concurrent preflight database lock in guard fallback.
+  - The fallback currently invokes the PM post-only persistence hook even for historical orders with no post-only marker.
+success_criteria:
+  - A legacy immediate-order fallback write/lock failure never invokes POST_ONLY hooks or creates a post-only-labelled flag; rollback, accurate generic persistence error and independent STOP remain fail-closed.
+  - Actual post-only orders keep existing post-only persistence protections and returned quantity handling.
+  - A separate explicit operator/source-confirmed exact flag disposition may resolve only the bound false-label incident after a complete fresh error-free guard pass proves no current persistence error, open/pending order, unresolved admission or execution flight.
+  - Changed flag/source, newer same-class flag, any active/errorful state or absent confirmation prevents resolution; kill is never cleared.
+constraints: Offline local code/tests only; no venue/box mutation, live process changes, PnL/order/fill edits or new look.

@@ -1,0 +1,9 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_cover_redemption_evidence_strengthening
+known_before_registration:
+  - Independent reviewer verified that page0003 holds the BUY evidence for flags201 SF5.241936 and202 Cubs7.769231, while committed page0004 holds terminal REDEEM evidence.
+success_criteria:
+  - Add exact df911419de7947ed35cd41b1191f8107fb36bf9d page0004 source to both exact proposal entries201/202 without altering identity, flag IDs or accounting snapshots.
+  - Verify source Git membership and exact SHA256 plus the expected redemption quantities, and update runbook/verdict source meaning without new PnL inference.
+  - Shell syntax and diff checks pass; no commit, venue/box action, confirmation, accounting edit or kill clearing.

@@ -452,14 +452,27 @@ class PyClobTransport:
     def positions(self) -> list[dict] | None:
         """What the data API says the funder holds (asset, size, avgPrice, ...). No signature: a
         public read of a public address. None when unreachable."""
+        self.position_read_evidence = None
         funder = os.environ.get("JANUS_PM_FUNDER")
         if not funder:
             return None
         try:
             from kernel.fetch import Client
+            from nodes.exec_polymarket.position_evidence import ENDPOINT, PAGE_LIMIT, MAX_OFFSET, sha
             cl = Client("polymarket-data", rate=2, burst=4, cache_dir=None, timeout=10.0)
-            d = cl.get_json(f"{PM_DATA_API}/positions", params={"user": funder, "sizeThreshold": 0}, use_cache=False)
-            return list(d) if isinstance(d, list) else None
+            rows, pages = [], []
+            for offset in range(0, MAX_OFFSET + 1, PAGE_LIMIT):
+                page = cl.get_json(ENDPOINT, params={"user": funder, "sizeThreshold": 0,
+                                                    "limit": PAGE_LIMIT, "offset": offset}, use_cache=False)
+                if not isinstance(page, list) or len(page) > PAGE_LIMIT:
+                    raise ValueError('malformed positions page')
+                pages.append(dict(offset=offset, count=len(page), sha256=sha(page)))
+                rows.extend(page)
+                if len(page) < PAGE_LIMIT:
+                    self.position_read_evidence = dict(user=funder, sizeThreshold=0, limit=PAGE_LIMIT,
+                                                       pages=pages, complete=True)
+                    return rows
+            raise ValueError('positions pagination cap reached without terminal page')
         except Exception as exc:  # noqa: BLE001
             self.last_error = f"{type(exc).__name__}: {exc}"
             return None
@@ -579,6 +592,23 @@ class PolymarketExecution:
                                        self.persistence_error, now=self.clock(), kill=self.kill)
         except Exception as audit_exc:
             self.persistence_error += "; durable audit also failed: " + brief_error(audit_exc)
+        return self.persistence_error
+
+    def _legacy_fill_persistence_failure(self, cid, exc):
+        """A historical non-maker order cannot manufacture a post-only violation."""
+        from nodes.risk.flags import raise_flag
+        self.persistence_error = f"ORDER_PERSISTENCE_FAILED: {cid}: {brief_error(exc)}"
+        self.journal_failures = getattr(self, "journal_failures", 0) + 1
+        if self.kill is not None:
+            try:
+                self.kill.latch("live", self.persistence_error)
+            except Exception as kill_exc:
+                self.persistence_error += "; independent kill failed: " + brief_error(kill_exc)
+        try:
+            raise_flag(self.journal.store, "ORDER_PERSISTENCE_FAILED", self.persistence_error, now=self.clock())
+        except Exception as audit_exc:
+            self.persistence_error += "; durable audit also failed: " + brief_error(audit_exc)
+        self.last_error = self.persistence_error
         return self.persistence_error
 
     def _record_post_only_after_wire(self, ack, *, kind, raw, terminal_proof=False):
@@ -1268,7 +1298,8 @@ class PolymarketExecution:
                     self.journal.store.con.rollback()
                 except Exception:
                     pass  # The persistent STOP below remains visible even with a dead connection.
-                self._persistence_failure(order[0] if order else order_id, exc)
+                failure = self._persistence_failure if marker is not None else self._legacy_fill_persistence_failure
+                failure(order[0] if order else order_id, exc)
                 fee_source = 'provisional; persistence STOP'
             self.last_fee_source = fee_source
             out.append(rec)
@@ -1345,6 +1376,8 @@ class PolymarketExecution:
             return None
 
     def positions(self) -> Sequence[Position] | None:
+        self.position_evidence = None
+        self.position_evidence_error = ''
         try:
             rows = self.transport.positions()
         except Exception as exc:  # noqa: BLE001
@@ -1360,6 +1393,13 @@ class PolymarketExecution:
                 continue
             out.append(Position(self.venue, str(r.get("asset") or r.get("asset_id") or ""), "yes", size,
                                 _f(r.get("avgPrice"), None) if r.get("avgPrice") is not None else None, t))
+        try:
+            from nodes.exec_polymarket.position_evidence import capture
+            self.position_evidence = capture(rows, getattr(self.transport, 'position_read_evidence', None), observed_utc=t)
+        except Exception as exc:
+            # Keep the physical holdings unchanged; only the narrow economic-zero
+            # incident classifier requires complete source evidence.
+            self.position_evidence_error = brief_error(exc)
         return out
 
     def balance(self) -> Balance | None:

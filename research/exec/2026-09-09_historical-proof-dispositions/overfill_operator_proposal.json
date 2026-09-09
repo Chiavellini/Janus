@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "acknowledgements": [
+    {
+      "client_order_id": "9d36d91cf99e46d39b9e579020261c64",
+      "sources": [
+        {
+          "git_commit": "f4ccffdc7ddceb785dec34c4e9cebca648abe2ff",
+          "ref": "research/exec/2026-09-09_historical-proof-dispositions/evidence/pm_activity_page0003.json",
+          "sha256": "fecae07c7f0b31fae93726882002ffb720b66573673b85ef9dc5a39a962343b0"
+        }
+      ],
+      "reason": "Operator acknowledges this exact settled historical directional Polymarket overfill, not a successful arbitrage cover. Archived exact-token redemption supports net cash +4.250739; full current order, released reservation, execution and settlement snapshots are frozen without rewriting P&L or the historical STOP.",
+      "supersedes_id": null,
+      "flag_ids": [
+        199
+      ]
+    },
+    {
+      "client_order_id": "17dd8b4ab307494f99e02306249525d0",
+      "sources": [
+        {
+          "git_commit": "f4ccffdc7ddceb785dec34c4e9cebca648abe2ff",
+          "ref": "research/exec/2026-09-09_historical-proof-dispositions/evidence/pm_activity_page0003.json",
+          "sha256": "fecae07c7f0b31fae93726882002ffb720b66573673b85ef9dc5a39a962343b0"
+        }
+      ],
+      "reason": "Operator acknowledges this exact settled historical two-leg cover overfill. Archived activity is supporting venue evidence; the complete current released execution, all terminal cash-final legs, reservation and settlement retain their exact recorded cover outcome, without inferring or changing P&L.",
+      "supersedes_id": null,
+      "flag_ids": [
+        200
+      ]
+    },
+    {
+      "client_order_id": "e9a2cddfc6284424be62b01d7be8bb0b",
+      "sources": [
+        {
+          "git_commit": "f4ccffdc7ddceb785dec34c4e9cebca648abe2ff",
+          "ref": "research/exec/2026-09-09_historical-proof-dispositions/evidence/pm_activity_page0003.json",
+          "sha256": "fecae07c7f0b31fae93726882002ffb720b66573673b85ef9dc5a39a962343b0"
+        },
+        {
+          "git_commit": "df911419de7947ed35cd41b1191f8107fb36bf9d",
+          "ref": "research/exec/2026-09-09_historical-proof-dispositions/evidence/pm_activity_page0004.json",
+          "sha256": "3e0ba1e395ed3737b945246f955803c7da19d345b4fea32195f071786cf1c982"
+        }
+      ],
+      "reason": "Operator acknowledges this exact settled historical two-leg cover overfill. Page0003 contains the San Francisco BUY of 5.241936 shares and page0004 the same-token terminal REDEEM of 5.241936 with cash 5.241936; the complete current released execution, all terminal cash-final legs, reservation and settlement retain their exact recorded cover outcome, without inferring or changing P&L.",
+      "supersedes_id": null,
+      "flag_ids": [
+        201
+      ]
+    },
+    {
+      "client_order_id": "a38ae7929a5a4fddbd5d48785e099378",
+      "sources": [
+        {
+          "git_commit": "f4ccffdc7ddceb785dec34c4e9cebca648abe2ff",
+          "ref": "research/exec/2026-09-09_historical-proof-dispositions/evidence/pm_activity_page0003.json",
+          "sha256": "fecae07c7f0b31fae93726882002ffb720b66573673b85ef9dc5a39a962343b0"
+        },
+        {
+          "git_commit": "df911419de7947ed35cd41b1191f8107fb36bf9d",
+          "ref": "research/exec/2026-09-09_historical-proof-dispositions/evidence/pm_activity_page0004.json",
+          "sha256": "3e0ba1e395ed3737b945246f955803c7da19d345b4fea32195f071786cf1c982"
+        }
+      ],
+      "reason": "Operator acknowledges this exact settled historical two-leg cover overfill. Page0003 contains the Chicago Cubs BUY of 7.769231 shares and page0004 the same-token terminal REDEEM of 7.769231 with cash 0 for the losing Polymarket leg; the complete current released execution, all terminal cash-final legs, reservation and settlement retain their exact recorded cover outcome, without inferring or changing P&L.",
+      "supersedes_id": null,
+      "flag_ids": [
+        202
+      ]
+    },
+    {
+      "client_order_id": "40797bee0f17449ca1e4fa3840125232",
+      "sources": [
+        {
+          "git_commit": "df911419de7947ed35cd41b1191f8107fb36bf9d",
+          "ref": "research/exec/2026-09-09_historical-proof-dispositions/evidence/pm_activity_page0004.json",
+          "sha256": "3e0ba1e395ed3737b945246f955803c7da19d345b4fea32195f071786cf1c982"
+        },
+        {
+          "git_commit": "df911419de7947ed35cd41b1191f8107fb36bf9d",
+          "ref": "research/exec/2026-09-09_historical-proof-dispositions/evidence/pm_positions_page0001.json",
+          "sha256": "1b0dba9b99e5bf6f9f7f92217d14ce46a2301682862f952462dcca53ef79d071"
+        }
+      ],
+      "reason": "Operator acknowledges the exact historical F15 Maximus cap breach, not successful cap compliance. Activity proves BUY 10.166667 with 3.71626 cash; the positions snapshot has currentValue zero and redeemable true, not redemption cash. The complete released cover settlement, all seven final legs and reservation remain unchanged; the historical STOP and loss are retained.",
+      "supersedes_id": null,
+      "flag_ids": [
+        203
+      ]
+    }
+  ]
+}

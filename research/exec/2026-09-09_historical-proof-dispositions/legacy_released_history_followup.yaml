@@ -1,0 +1,11 @@
+row: L56
+date: 2026-09-09
+kind: descriptive_offline_current_inventory_vs_released_history
+known_before_registration:
+  - Legacy directional executions may retain historical unhedged quantity after release and exact settlement.
+  - Current risk is unreleased execution inventory plus fresh venue holdings, not rewriting released historical quantities to zero.
+success:
+  - A separate released historical directional row may retain its quantity while the exact bound legacy incident target is zero-unhedged and fully settled, and both fresh venue positions are empty.
+  - Any unreleased execution or reservation, nonzero bound-target unhedged, open/pending order or nonempty/unknown current venue holdings still blocks resolution.
+  - No execution or accounting row is modified; prior tests remain green.
+constraints: Local synthetic regression only, registered before test; no live or venue actions.
