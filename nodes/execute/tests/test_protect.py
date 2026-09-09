@@ -1,10 +1,12 @@
 """The hedge protection layer (2026-09-08), one rule per test, on paper venues."""
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from kernel.schema import Book, ExecutionState as X, FillState, Quote
-from nodes.execute.protect import (hedge_ceilings, loss_allowance, next_hedge_limit, projected_pnl_usd,
+from nodes.execute.protect import (hedge_ceilings, loss_allowance, next_hedge_limit, projected_pnl_usd, tick_floor,
                                    remaining_loss_usd, unwind_floor)
 from nodes.execute.records import Execution
 from nodes.execute.tests.test_coordinator import T, bk, clearance_for, harness, offers, plan_for
@@ -22,7 +24,8 @@ def test_the_arithmetic():
     offs = offers()
     p, _ = plan_for(offs)
     c = hedge_ceilings(p, 0.45, 0.01)
-    assert c.walked == p.hedge_limit(0.45) and c.budget == p.hedge_budget(0.45)
+    assert c.walked == tick_floor(p.hedge_limit(0.45), p.hedge.tick)
+    assert c.budget == tick_floor(p.hedge_budget(0.45), p.hedge.tick)
     assert c.break_even == pytest.approx(p.hedge_break_even(0.45)) and c.loss_cap == pytest.approx(round(c.break_even + 0.01, 2), abs=0.0101)
     assert c.walked < c.budget < c.break_even < c.loss_cap
     # the next limit: one tick up, or the fresh book's marginal price, never past the ceiling
@@ -30,6 +33,7 @@ def test_the_arithmetic():
     assert next_hedge_limit(0.44, 0.01, book2([], [(0.47, 5), (0.48, 20)]), 10, 0.50) == 0.48
     assert next_hedge_limit(0.44, 0.01, book2([], [(0.60, 50)]), 10, 0.50) == 0.50
     assert next_hedge_limit(0.50, 0.01, None, 10, 0.50) is None
+    assert next_hedge_limit(0.32, 0.01, None, 10, 0.3272) is None, "a continuous budget is floored to the valid buy tick"
     # the unwind floor: sell at no worse than entry + one side's fee - L
     assert unwind_floor(0.57, 0.01, 0.10, 0.01) == 0.48 and unwind_floor(0.57, 0.01, 0.0, 0.01) == 0.58
     ex = Execution("e", "o", "ev", "mlb", "PAPER_EXECUTION", 10.0, T, first_filled=10.0, first_avg_price=0.57,
@@ -62,6 +66,29 @@ def test_a_fresh_book_jumps_the_limit_to_its_marginal_price(tmp_path):
     assert ex.state is X.HEDGED
     chase = [a for a in ex.protect["attempts"] if a["phase"] != "walked"]
     assert len(chase) == 1 and chase[0]["limit"] == 0.47, "one chase attempt straight at the book, not three ticks"
+
+
+def test_an_off_tick_budget_is_floored_and_the_valid_loss_cap_phase_still_hedges(tmp_path):
+    """Exact regression for F12 ARI-KC: 32.72c is an economic ceiling, not a valid Kalshi
+    price.  The budget retry stays at 32c and the next phase may take 33c inside the unchanged
+    loss allowance; no invalid-price rejection can strand the first leg."""
+    co, vs, _, _, _ = harness(tmp_path)
+    p0, _ = plan_for(offers(), q=10.0)
+    p = replace(p0,
+                quantity=10.0,
+                first=replace(p0.first, limit_price=0.63, vwap=0.63, contracts=10.0),
+                hedge=replace(p0.hedge, limit_price=0.32, vwap=0.32, contracts=10.0, tick=0.01),
+                max_cost_per_contract=0.9900990099009901,
+                fee_per_contract=0.026895,
+                settlement_buffer_per_contract=0.00600012)
+    vs["polymarket"].books = {"P_H": bk([(0.63, 10)])}
+    vs["kalshi"].books = {"K_A": bk([(0.33, 10)])}
+    co.fresh_book = lambda venue, market, side: vs[venue].orderbook(market, side)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.HEDGED and ex.hedge_avg_price == pytest.approx(0.33)
+    hedge_attempts = [a for a in ex.protect["attempts"] if a["kind"] == "hedge"]
+    assert {a["limit"] for a in hedge_attempts} <= {0.32, 0.33}
+    assert hedge_attempts[-1]["phase"] == "loss_cap" and hedge_attempts[-1]["state"] == "FILLED"
 
 
 def test_cap_reached_with_the_unwind_on_sells_leg_a_back_inside_the_cap(tmp_path):

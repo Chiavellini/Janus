@@ -97,6 +97,24 @@ parameters inside the paper-book branch; a shared live client therefore wrote ze
 now keys fee parameters by market token and supplies them for both real and paper venues. This repairs
 account/settlement PnL without changing selection, order prices, caps, hurdles or the F12 clock.
 
+### F12 STOP: a continuous protection budget became an invalid venue price
+
+F12 execution `78abd011` bought 10 Kansas City shares on Polymarket at $0.63. Its first three
+Kalshi Kansas City-NO IOCs at the walked $0.32 limit were valid but did not fill as the book moved.
+The next phase used the continuous economic budget, $0.3272, directly as a Kalshi limit. That
+market's price structure is whole-cent; Kalshi rejected `invalid_price`, and the protection rule
+correctly treats a venue rejection as final rather than guessing that it is safe to retry. The
+position remained unhedged and the box latched `kill/live`, satisfying F12's immutable STOP.
+
+All hedge ceilings are now floored to the venue tick (a buy limit can never be rounded above its
+economic cap), `next_hedge_limit` normalizes both its prior price and ceiling, and the request path
+normalizes again immediately before submission. For this execution the valid phases are $0.32 at
+the walked/budget ceiling and at most $0.43 at the existing $1 loss cap. The repair adds no loss,
+price, stake or notional authority; it makes the authority already registered executable. F13 is
+registered before the repaired process may resume new entries. The F12 position must first be
+hedged, unwound under separately enabled authority, or resolved; the kill remains latched until
+the account is flat or exactly paired.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and

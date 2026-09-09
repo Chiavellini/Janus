@@ -72,7 +72,12 @@ class Ceilings:
 def hedge_ceilings(plan, paid: float, L: float) -> Ceilings:
     tick = plan.hedge.tick or 0.01
     be = plan.hedge_break_even(paid)
-    return Ceilings(walked=plan.hedge_limit(paid), budget=plan.hedge_budget(paid), break_even=be,
+    # Every ceiling can become an IOC price.  A buy limit must be floored, never rounded up past
+    # its economic cap, and must sit on the venue tick.  The budget is often a continuous value
+    # (32.72c in the 2026-09-08 ARI-KC incident); passing it through unchanged made Kalshi reject
+    # `invalid_price` and prevented the loss-cap phase from running at all.
+    return Ceilings(walked=clamp(tick_floor(plan.hedge_limit(paid), tick)),
+                    budget=clamp(tick_floor(plan.hedge_budget(paid), tick)), break_even=be,
                     loss_cap=clamp(tick_floor(be + L, tick)))
 
 
@@ -82,13 +87,15 @@ def next_hedge_limit(prev: float, tick: float, book, qty: float, ceiling: float)
     fresh book the next limit IS the ceiling: one order that takes whatever sits under it, instead
     of a tick-by-tick crawl that spends the submit budget. With a fresh book, the book's marginal
     price for `qty` (at least one tick up), capped."""
+    ceiling = clamp(tick_floor(ceiling, tick))
+    prev = clamp(tick_floor(prev, tick))
     if prev >= ceiling - 1e-9:
         return None
     if book is None:
-        return round(ceiling, 4)
+        return ceiling
     want = marginal_price(book, qty)
     nxt = max(prev + tick, want if want is not None else ceiling)
-    return round(min(nxt, ceiling), 4)
+    return tick_floor(min(nxt, ceiling), tick)
 
 
 def unwind_floor(entry: float, fee_per_contract: float, L: float, tick: float) -> float:
@@ -140,8 +147,10 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
     ex.protect.setdefault("attempts", [])
     ex.protect.update({"loss_cap_usd": lim.max_protect_loss_usd, "window_s": round(deadline - now, 3),
                        "unwind_enabled": lim.unwind_enabled})
+    base_ceiling = hedge_ceilings(plan, paid, 0.0)
+    # Keep the continuous VWAP budget in the record/label; only the order ceiling is tick-floored.
     budget = plan.hedge_budget(paid)
-    limit = max(plan.hedge_limit(paid), 0.01)
+    limit = max(base_ceiling.walked, 0.01)
     attempts = phase1 = 0
     rejected = None
     #: Submits kept for the unwind so the chase can never starve it (phases 2-3 get the rest).
@@ -182,12 +191,15 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                     # in the resubmit wait), then the next phase, or the unwind
                     if phase_attempts >= 2 or limit < ceiling - 1e-9:
                         break
-                    nxt = round(ceiling, 4)
+                    nxt = tick_floor(ceiling, tick)
                 limit = nxt
             phase_attempts += 1
             attempts += 1
             phase1 += int(phase == "walked")
-            req = co._request(plan, hedge, ex.unhedged, max(limit, 0.01), hedge=True)
+            # Defence in depth: no protection request reaches a venue off tick even if a future
+            # ceiling or book adapter introduces a continuous price again.
+            limit = tick_floor(clamp(max(limit, 0.01)), tick)
+            req = co._request(plan, hedge, ex.unhedged, limit, hedge=True)
             ex.hedge_client_ids.append(req.client_order_id)
             co._move(ex, X.LEG_B_SUBMITTED, detail=f"attempt {attempts} limit {limit:.4f} budget {budget:.4f}"
                                                    + ("" if phase == "walked" else f" phase {phase} ceiling {ceiling:.4f}"))

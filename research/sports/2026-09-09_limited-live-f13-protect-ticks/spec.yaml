@@ -1,0 +1,51 @@
+experiment_id: "janus-sports-limited-live-f13-protect-ticks-2026-09-09"
+date_registered: "2026-09-09"
+track: "sports/execution"
+row_kind: "F (forward operational evaluation; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F13"
+test_looks_spent: 0
+supersedes: "F12, stopped when a filled first leg reached an off-tick continuous protection budget"
+
+# IMMUTABLE ONCE THE FIRST LIMITED_LIVE LINE AFTER THIS REGISTRATION IS WRITTEN.
+purpose: >
+  Prove that every live protective order is valid on its venue tick, reaches the existing bounded
+  chase phases when the walked touch moves, and that exact venue fees reconcile to both cash
+  accounts without changing the economic selection rule.
+
+known_before_start:
+  - "F12 execution 78abd011 filled Polymarket 10 at 0.63; three Kalshi 0.32 IOCs were valid zero-fills."
+  - "The next continuous budget was 0.3272 on a whole-cent Kalshi market and was rejected invalid_price."
+  - "The lane autonomously latched local kill/live and retained the position/reservation."
+  - "The registered loss-cap ceiling for that position is 0.43; the observed Kalshi NO ask at registration was 0.45."
+  - "Polymarket's trade record may report zero fee while the cash account is charged the market's pinned quadratic schedule."
+
+arm: >
+  janus-live-stream.service on the Mexico box in LIMITED_LIVE under unchanged limits: $12 combined
+  stake per cover, 10 contracts per leg, $250 committed daily notional, $25 realized-loss breaker,
+  $0.10 minimum net profit, 1% minimum locked return, max protection loss $1 per execution and
+  $0.10 per contract. protect_auto=true; unwind_enabled=false. Runtime, credentials, data, streams,
+  guard, kill sync, restart and watchdog remain box-local.
+
+window:
+  start: "the first [mode] LIMITED_LIVE after this registration, a full green suite, the F12 position exactly paired/unwound/resolved, zero unexplained imbalance, green watchdog and matching F13 arm"
+  end: "37 cleared covers, the first STOP, breaker, or operator closure"
+
+criteria:
+  - "No threshold, cap, league, settlement rule or definition moves after start."
+  - "Every submitted limit is a valid venue tick; a protective buy price is floored and never rounded above its economic ceiling."
+  - "After valid walked-limit zero-fills, protection proceeds through the valid budget and loss-cap phases within the one 30-second window and existing submit cap."
+  - "A true venue rejection, unconfirmed answer or exhausted protection window still fails closed; it is never blindly retried."
+  - "STOP on any venue fill not protected within 30 seconds, store error after submission, orphan, missing reservation, unresolved position mismatch, fee above pin, or breaker."
+  - "Polymarket zero-reported fees use the event's own pinned schedule keyed by market token; exact balance deltas are reported separately from model PnL."
+  - "F12's authenticated account-stream, exact-client-id, lifetime-fill, committed-notional, settlement and laptop-independence criteria remain in force."
+  - "The first three valid F13 covers are hand-reconciled before the fourth; paper and live fill rates remain separate."
+
+outputs:
+  registration: "snooping_ledger.md F13 with append-only results"
+  records: "box logs, executions, exact order events/fills, reservations, per-venue settlements, balances, flags, systemd and watchdog"
+
+what_this_does_not_establish:
+  - "Permission to raise a cap, exceed the protection loss allowance, enable unwind, or weaken an economic/settlement hurdle."
+  - "That a paper fill predicts a live fill."
+  - "That venue or AWS connectivity cannot fail; those failures must fail closed and recover locally."
