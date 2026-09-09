@@ -1,0 +1,63 @@
+{
+  "blocker_counts": {
+    "CONDITIONAL_ORIGINAL_REQUIRES_DATED_DECISION": 44,
+    "MULTIPLE_CONDITIONAL_ORIGINALS": 3
+  },
+  "clubs": 18,
+  "duplicate_original_fixture_keys": [
+    [
+      "AZ",
+      "PEC Zwolle"
+    ],
+    [
+      "FC Utrecht",
+      "Excelsior Rotterdam"
+    ],
+    [
+      "Feyenoord",
+      "Fortuna Sittard"
+    ]
+  ],
+  "final_inventory_requested": false,
+  "first_precise_publication": {
+    "autumn": 81,
+    "definitive": 126,
+    "spring": 99
+  },
+  "fixtures_requiring_original_decision_review": 47,
+  "id": "L49",
+  "matches_per_club": {
+    "AZ": 34,
+    "Ajax": 34,
+    "Excelsior Rotterdam": 34,
+    "FC Groningen": 34,
+    "FC Twente": 34,
+    "FC Utrecht": 34,
+    "FC Volendam": 34,
+    "Feyenoord": 34,
+    "Fortuna Sittard": 34,
+    "Go Ahead Eagles": 34,
+    "Heracles Almelo": 34,
+    "N.E.C.": 34,
+    "NAC Breda": 34,
+    "PEC Zwolle": 34,
+    "PSV": 34,
+    "Sparta Rotterdam": 34,
+    "Telstar": 34,
+    "sc Heerenveen": 34
+  },
+  "original_raw_fixture_rows": 309,
+  "original_unique_fixtures": 306,
+  "outcome_distribution_scored": false,
+  "precise_unconditional_candidates": 259,
+  "registered_evidence_keys": [],
+  "row_artifact": "original_audit.json",
+  "row_artifact_sha256": "c03cf15ce4d3537ec738c868b65f199b838a2d587e0ce50d1ff73083fc415951",
+  "source_rows": {
+    "autumn": 272,
+    "definitive": 309,
+    "spring": 154
+  },
+  "stage": "original_schedule_only",
+  "verdict": "BLOCKED_ORIGINAL_LINEAGE"
+}

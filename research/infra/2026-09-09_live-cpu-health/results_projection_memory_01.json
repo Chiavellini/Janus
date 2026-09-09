@@ -1,0 +1,8 @@
+{
+  "frames": 10000,
+  "books": 410,
+  "cached_sides": 820,
+  "cache_reachable_bytes_upper_bound": 8654592,
+  "measurement": "Recursive sys.getsizeof over the per-book _quoted_ladders structures after the same bounded Kalshi sample, deduplicated by object identity.",
+  "limitation": "Upper bound includes objects also held by the original ladder dictionaries; not a live resident-memory measurement."
+}

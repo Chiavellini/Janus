@@ -1,0 +1,36 @@
+{
+  "id": "L50",
+  "purpose": "Current template verification after registered evidence; no rate or cap changes",
+  "runs": [
+    {
+      "command": [
+        "python3",
+        "ops/harvest_templates.py",
+        "--league",
+        "ere",
+        "--pre-hours",
+        "48"
+      ],
+      "finished_at": "2026-09-09T09:12:23.272612+00:00",
+      "path": "/Volumes/Kilos/janus/research/eredivisie-L50/current-harvest-48-20260909T091218832931Z.txt",
+      "returncode": 0,
+      "sha256": "214caa3e627ae8a1804c214d773873d2121ac4795c27d3bf5de8819dc3f9bed4",
+      "started_at": "2026-09-09T09:12:18.832931+00:00"
+    },
+    {
+      "command": [
+        "python3",
+        "ops/harvest_templates.py",
+        "--league",
+        "ere",
+        "--pre-hours",
+        "168"
+      ],
+      "finished_at": "2026-09-09T09:12:27.066533+00:00",
+      "path": "/Volumes/Kilos/janus/research/eredivisie-L50/current-harvest-168-20260909T091223272767Z.txt",
+      "returncode": 0,
+      "sha256": "aaf252a78b9aab9c87099cd512195b80820efc0710f63de434ef57681ed3b501",
+      "started_at": "2026-09-09T09:12:23.272767+00:00"
+    }
+  ]
+}

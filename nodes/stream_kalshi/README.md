@@ -60,6 +60,17 @@ and tested offline:
 
 Prices are probabilities in [0,1]; a `40` is rejected as an API change, not read as 40¢.
 
+`TickerBook.project()` memoizes the immutable `Quote` and complementary-ask
+derivations for each bid ladder. Every call rechecks the sorted price/size
+objects, so any replacement, direct dictionary edit or partially failed
+snapshot forces the appropriate reconstruction. Numeric equality alone does
+not qualify (it aliases signed zero). It still validates with `Quote` and folds
+with `kernel.schema.fold_complement_bids`, and returns fresh lists to callers.
+This removes repeated allocation when both YES and NO replicas consume the
+same frame; it changes no receive timestamp, heartbeat or integrity check.
+L51's offline reference comparisons and CPU benchmark are recorded in
+`research/infra/2026-09-09_live-cpu-health/`.
+
 ## Tests
 
 `tests/test_protocol.py` (12) + `tests/test_stream.py` (17), including the interleaved-subscription

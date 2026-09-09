@@ -55,11 +55,20 @@ def _first(body: dict, *names):
 
 
 @dataclass
+class _QuotedLadder:
+    levels: tuple[tuple[float, float], ...]
+    bids: tuple[Quote, ...]
+    asks: tuple[Quote, ...] | None = None
+
+
+@dataclass
 class TickerBook:
     """Kalshi's native state for one market: two BID ladders, never asks."""
     yes: dict[float, float] = field(default_factory=dict)
     no: dict[float, float] = field(default_factory=dict)
     seq: int | None = None
+    _quoted_ladders: dict[str, _QuotedLadder] = field(default_factory=dict, init=False,
+                                                    repr=False, compare=False)
 
     def apply_snapshot(self, body: dict, seq: int | None) -> None:
         self.yes = _levels(_first(body, "yes_dollars_fp", "yes_dollars", "yes"))
@@ -86,13 +95,29 @@ class TickerBook:
             book[price] = size
         self.seq = seq
 
+    def _quoted_side(self, side: str) -> _QuotedLadder:
+        levels = tuple(sorted(getattr(self, side).items(), reverse=True))
+        cached = self._quoted_ladders.get(side)
+        # Prices and sizes are immutable numbers. Reuse only the exact objects in
+        # the exact order, never a seq/time assumption or numeric-equality key:
+        # -0.0 and 0.0, for example, compare equal but must retain their rendering.
+        # Recomputing this key also observes direct dictionary edits and a partial
+        # snapshot parse failure, so neither can leave a stale derived ladder.
+        if (cached is None or len(cached.levels) != len(levels)
+                or any(p is not old_p or s is not old_s
+                       for (p, s), (old_p, old_s) in zip(levels, cached.levels))):
+            cached = _QuotedLadder(levels, tuple(Quote(p, s) for p, s in levels))
+            self._quoted_ladders[side] = cached
+        return cached
+
     def project(self, outcome: str = "yes") -> tuple[list, list]:
         """(bids, asks) for one side, with asks folded from the complementary bid ladder."""
-        own, other = (self.yes, self.no) if outcome == "yes" else (self.no, self.yes)
-        bids = tuple(Quote(p, s) for p, s in sorted(own.items(), reverse=True))
-        other_bids = tuple(Quote(p, s) for p, s in sorted(other.items(), reverse=True))
-        asks = fold_complement_bids(other_bids)
-        return ([(q.price, q.size) for q in bids], [(q.price, q.size) for q in asks])
+        own_side, other_side = ("yes", "no") if outcome == "yes" else ("no", "yes")
+        own, other = self._quoted_side(own_side), self._quoted_side(other_side)
+        if other.asks is None:
+            other.asks = fold_complement_bids(other.bids)
+        # Never expose the memoized containers: a consumer may mutate its lists.
+        return ([(q.price, q.size) for q in own.bids], [(q.price, q.size) for q in other.asks])
 
 
 @dataclass(frozen=True)

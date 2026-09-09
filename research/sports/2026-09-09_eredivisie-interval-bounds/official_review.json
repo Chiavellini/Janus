@@ -1,0 +1,113 @@
+{
+  "id": "L50",
+  "reviewed_at": "2026-09-09",
+  "timezone": "Europe/Amsterdam",
+  "source_resolution": "Source labels resolve uniquely to SHA256-pinned raw files and request metadata in source_manifest.json. Announcement sources corroborate changed dates, not actual completion clocks; the latter are always ESPN period-2 final-whistle wallclocks. All three identified suspensions additionally have official completion reports.",
+  "events": {
+    "741100": {
+      "home": "Ajax", "away": "FC Groningen",
+      "original_lower_date": "2025-11-30", "final_date_local": "2025-12-02",
+      "completion_date_local": "2025-12-02", "kind": "completed_suspension",
+      "sources": ["ajax-completion", "ajax-resumption"],
+      "note": "KNVB December 1 schedules the remainder for December 2 14:30 after November 30 fireworks. Ajax's dated December 2 report confirms the sixth-minute resumption was completed 2-0. Original day remains November 30; not replaced with the resume time."
+    },
+    "741255": {
+      "home": "AZ", "away": "FC Twente",
+      "original_lower_date": "2026-05-02", "final_date_local": "2026-05-03",
+      "kind": "explicit_original_alternative",
+      "sources": ["spring", "az-results"],
+      "note": "The December spring program names May 3 16:45 and an explicit conditional May 2 21:00 alternative. Earliest May 2 midnight was frozen before finals. AZ's official result inventory confirms the May 3 league fixture ended 2-2. Its current result page is used only as final corroboration, never as the original source."
+    },
+    "740997": {
+      "home": "AZ", "away": "PEC Zwolle",
+      "original_lower_date": "2025-08-24", "final_date_local": "2025-09-24",
+      "kind": "schedule_change",
+      "sources": ["august-decision", "az-results"],
+      "note": "KNVB August 15 moves August 24 to September 24 20:00 after AZ's Conference League qualification. June's 18:45 alternative conflicts in clock only and is retained. AZ's official results confirm September 24, 2-2. August 24 midnight controls."
+    },
+    "741111": {
+      "home": "AZ", "away": "Excelsior Rotterdam",
+      "original_lower_date": "2025-12-14", "final_date_local": "2026-01-21",
+      "kind": "schedule_change",
+      "sources": ["december-announcement", "excelsior-reschedule", "az-results"],
+      "note": "KNVB December 23 explicitly names original December 14 and January 21 18:45 makeup for European commitments; Excelsior corroborates it. AZ's official results show January 21, 1-1. December 14 remains the original bound."
+    },
+    "741267": {
+      "home": "NAC Breda", "away": "sc Heerenveen",
+      "original_lower_date": "2026-05-10", "final_date_local": "2026-05-11",
+      "completion_date_local": "2026-05-11", "kind": "completed_suspension",
+      "sources": ["nac-completion"],
+      "note": "NAC's May 11 completion report confirms Sunday's interrupted match was completed Monday in Friesland, retaining NAC as the home side and the 2-0 score. The physical venue changed for safety; do not rewrite the canonical ordered fixture. May 10 remains the original bound."
+    },
+    "741031": {
+      "home": "FC Groningen", "away": "Feyenoord",
+      "original_lower_date": "2025-09-27", "final_date_local": "2025-09-28",
+      "kind": "schedule_change",
+      "sources": ["august-decision"],
+      "note": "KNVB August 15 explicitly moves Saturday September 27 to Sunday September 28 14:30 following Feyenoord's European outcome. September 27 remains the earliest baseline."
+    },
+    "741135": {
+      "home": "N.E.C.", "away": "FC Utrecht",
+      "original_lower_date": "2026-01-09", "final_date_local": "2026-02-11",
+      "kind": "schedule_change",
+      "sources": ["nec-january-reschedule"],
+      "note": "KNVB January 16 identifies the snow-postponed Eredivisie game and announces February 11 21:00 makeup. Original January 9 is preserved from the September first-specific program."
+    },
+    "741206": {
+      "home": "N.E.C.", "away": "FC Volendam",
+      "original_lower_date": "2026-03-06", "final_date_local": "2026-03-08",
+      "kind": "schedule_change",
+      "sources": ["march-reschedule"],
+      "note": "KNVB February 2 explicitly moves March 6 20:00 to March 8 20:00 for the cup semifinal calendar. Earlier original midnight is retained; completion on March 8 is charged adverse."
+    },
+    "741177": {
+      "home": "Sparta Rotterdam", "away": "N.E.C.",
+      "original_lower_date": "2026-02-15", "final_date_local": "2026-02-17",
+      "completion_date_local": "2026-02-17", "kind": "completed_suspension",
+      "sources": ["sparta-completion", "sparta-suspension"],
+      "note": "Sparta's February 15 notice identifies snow suspension after roughly six minutes and February 17 20:00 resumption. February 17's completion report confirms the remainder ended 1-1. Reports differ by seconds on the suspension minute (6:56 versus 6:45); neither affects the day or conservative deadline, and neither is used as final completion."
+    },
+    "741145": {
+      "home": "Excelsior Rotterdam", "away": "Telstar",
+      "original_lower_date": "2026-01-16", "final_date_local": "2026-01-17",
+      "kind": "schedule_change",
+      "sources": ["excelsior-reschedule"],
+      "note": "Excelsior's December 23 announcement identifies a new January 17 20:00 home date. January 16 from the September first-specific program remains the original."
+    },
+    "741126": {
+      "home": "FC Volendam", "away": "Sparta Rotterdam",
+      "original_lower_date": "2025-12-20", "final_date_local": "2025-12-21",
+      "kind": "schedule_change",
+      "sources": ["december-reschedule"],
+      "note": "KNVB November 13 explicitly moves December 20 16:30 to December 21 16:45 for the cup calendar. December 20 midnight remains the original."
+    },
+    "741149": {
+      "home": "Go Ahead Eagles", "away": "sc Heerenveen",
+      "original_lower_date": "2026-01-25", "final_date_local": "2026-02-11",
+      "kind": "schedule_change",
+      "sources": ["december-announcement", "nec-january-reschedule"],
+      "note": "KNVB December 23 explicitly moves January 25 to February 11 20:00 at Go Ahead's request. KNVB January 16 adjusts the new clock to 18:45. All earlier originals remain, and no makeup replaces January 25 midnight."
+    },
+    "741048": {
+      "home": "Heracles Almelo", "away": "Feyenoord",
+      "original_lower_date": "2025-10-18", "final_date_local": "2025-10-19",
+      "kind": "schedule_change",
+      "sources": ["september-announcement"],
+      "note": "The September 10 official announcement explicitly moves October 18 16:30 to October 19 16:45. The June October 18 original is not overwritten."
+    },
+    "741122": {
+      "home": "Heracles Almelo", "away": "sc Heerenveen",
+      "original_lower_date": "2025-12-19", "final_date_local": "2025-12-20",
+      "kind": "schedule_change",
+      "sources": ["december-reschedule"],
+      "note": "KNVB November 13 explicitly moves December 19 20:00 to December 20 16:30 for the cup calendar. December 19 midnight remains the original."
+    },
+    "741209": {
+      "home": "Heracles Almelo", "away": "FC Utrecht",
+      "original_lower_date": "2026-03-07", "final_date_local": "2026-03-06",
+      "kind": "schedule_advance",
+      "sources": ["march-reschedule"],
+      "note": "KNVB February 2 advances March 7 to March 6 20:00 as a consequence of N.E.C.–Volendam's move. The original frozen March 7 baseline is retained, with the negative delay visible; this is not a postponement and was not excluded."
+    }
+  }
+}

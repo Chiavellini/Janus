@@ -117,3 +117,77 @@ def test_sid_and_seq_are_ints_even_when_the_wire_sends_strings():
                "msg": {"market_ticker": "K1", "side": "yes", "price_dollars": "0.40", "delta_fp": "-1",
                        "ts_ms": 1788410903579}}, {"K1": __import__("nodes.stream_kalshi.protocol", fromlist=["TickerBook"]).TickerBook()})
     assert p.sid == 1 and p.seq == 3 and p.server_utc == 1788410903.579
+
+
+def _uncached_project(book, outcome):
+    """The original projection, retained as an independent equivalence oracle."""
+    from kernel.schema import Quote, fold_complement_bids
+    own, other = (book.yes, book.no) if outcome == "yes" else (book.no, book.yes)
+    bids = tuple(Quote(p, s) for p, s in sorted(own.items(), reverse=True))
+    other_bids = tuple(Quote(p, s) for p, s in sorted(other.items(), reverse=True))
+    asks = fold_complement_bids(other_bids)
+    return ([(q.price, q.size) for q in bids], [(q.price, q.size) for q in asks])
+
+
+def test_projection_cache_matches_reference_through_ladder_mutations():
+    import random
+    rng = random.Random(51)
+    book = TickerBook()
+    for i in range(2000):
+        side = rng.choice(("yes", "no"))
+        levels = getattr(book, side)
+        price = rng.randrange(101) / 100
+        if i % 17 == 0:
+            setattr(book, side, {rng.randrange(101) / 100: float(rng.randrange(100)) for _ in range(50)})
+        elif i % 7 == 0:
+            levels.pop(price, None)
+        else:
+            levels[price] = float(rng.randrange(1000))
+        for outcome in ("yes", "no"):
+            want = _uncached_project(book, outcome)
+            got = book.project(outcome)
+            assert got == want
+            got[0].clear()
+            got[1].append((0.5, 9999.0))
+            assert book.project(outcome) == want, "caller mutation poisoned the cache"
+
+
+@pytest.mark.parametrize("side", ["yes", "no"])
+@pytest.mark.parametrize("price,size", [(float("nan"), 1.0), (float("inf"), 1.0),
+                                         (-0.01, 1.0), (1.01, 1.0), (0.5, -1.0)])
+def test_invalid_ladder_edit_cannot_hide_behind_a_cached_projection(side, price, size):
+    book = TickerBook(yes={0.4: 10.0}, no={0.6: 20.0})
+    book.project("yes")
+    book.project("no")
+    setattr(book, side, {price: size})
+    for outcome in ("yes", "no"):
+        with pytest.raises(ValueError):
+            _uncached_project(book, outcome)
+        with pytest.raises(ValueError):
+            book.project(outcome)
+
+
+def test_projection_cache_observes_partial_snapshot_failure_and_same_sequence_delta():
+    books, book = snap()
+    book.project("yes")
+    # apply_snapshot changes YES before parsing NO. Even this partial failure must
+    # expose the same book as the uncached implementation, never its old projection.
+    failed = parse({"type": "orderbook_snapshot", "seq": 1,
+                    "msg": {"market_ticker": "T", "yes": [[0.3, 2]], "no": [[40, 1]]}}, books)
+    assert failed.kind == "error"
+    for outcome in ("yes", "no"):
+        assert book.project(outcome) == _uncached_project(book, outcome)
+    parse({"type": "orderbook_delta", "seq": 1,
+           "msg": {"market_ticker": "T", "side": "yes", "price": 0.3, "delta": 5}}, books)
+    for outcome in ("yes", "no"):
+        assert book.project(outcome) == _uncached_project(book, outcome)
+
+
+def test_projection_cache_does_not_alias_equal_numbers_with_different_rendering():
+    import json
+    book = TickerBook(yes={-0.0: 1.0}, no={0.5: 2.0})
+    book.project("yes")
+    book.project("no")
+    book.yes = {0.0: 1}
+    for outcome in ("yes", "no"):
+        assert json.dumps(book.project(outcome)) == json.dumps(_uncached_project(book, outcome))

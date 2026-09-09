@@ -141,3 +141,18 @@ ESPN `regular-season` tag and exact slate game ID. Missing/unknown/preseason/pos
 block; the tag survives discovery, supervisor/replay recertification and the diagnostic grid.
 See
 `research/sports/2026-09-09_mls-original-schedule/verdict.md` for the complete audit and limitations.
+
+**Eredivisie evidence added 2026-09-09 (L50).** All 306 fixtures from three dated official
+2025/26 scheduling publications join to actual final-whistle clocks; all 15 original date
+exceptions have official reviews, including three resumed matches. Original lower bounds use
+the earliest candidate date at local midnight, not a selected later confirmation. A discovered
+March 7-to-6 advance is corrected append-only; initial artifacts and L49's failure remain.
+Independent replay verifies all 329 source/request hashes and every original/corrected row.
+Zero cancellations and seven conservative delays register exact one-sided 95% upper bounds
+0.009742208949783377 and 0.04253671926053953, reserving 2.6139464 cents at a $0.50 PM fill.
+Certification requires the exact ESPN `espn:ere:<id>` regular-season schedule population and
+matching slate game ID. Unknown, foreign, preseason and playoff populations still block.
+No other league's rates transfer. L50 itself changed no cap. The later F17 operational integration
+adds a checked-in `$200` PAPER/DEMO Eredivisie allowance so an evidence-enabled game is not refused
+at zero; signed LIMITED_LIVE event/day/contract caps and economic hurdles remain unchanged. See
+`research/sports/2026-09-09_eredivisie-interval-bounds/verdict.md` for sources and reproduction.

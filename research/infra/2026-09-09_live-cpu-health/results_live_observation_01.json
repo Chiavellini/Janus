@@ -1,0 +1,72 @@
+{
+  "kind": "read_only_live_diagnostics",
+  "host": "Mexico F15 box",
+  "instance_id": "i-0a8c073c72dcdae11",
+  "observed_at_utc": "2026-09-09T08:45:06Z",
+  "service": {
+    "main_pid": 46739,
+    "python_pid": 46753,
+    "start_utc": "2026-09-09T03:39:29Z",
+    "nrestarts": 0,
+    "tasks": 5,
+    "memory_current_bytes": 951808000,
+    "cpu_usage_nsec": 17858205036000,
+    "nproc": 1,
+    "python_lifetime_cpu_percent": 97.3
+  },
+  "cpu_delta": {
+    "end_epoch": 1788943556.6534576,
+    "elapsed_s": 10.000764025986427,
+    "threads": [
+      {"tid": 46739, "comm": "zsh", "cpu_percent": 0.0},
+      {"tid": 46753, "comm": "python3", "state": "R", "cpu_percent": 97.59},
+      {"tid": 46761, "comm": "python3", "state": "S", "cpu_percent": 0.0},
+      {"tid": 46762, "comm": "python3", "state": "S", "cpu_percent": 0.0},
+      {"tid": 46827, "comm": "python3", "state": "R", "cpu_percent": 1.9}
+    ],
+    "cgroup_usage_usec": 17907137618,
+    "cgroup_user_usec": 17695685512,
+    "cgroup_system_usec": 211452106,
+    "cpu_pressure_some_avg10": 3.28,
+    "memory_pressure_some_avg10": 0.0,
+    "memory_pressure_full_avg10": 0.0,
+    "io_pressure_some_avg10": 0.27,
+    "io_pressure_full_avg10": 0.24
+  },
+  "health_at_epoch_1788943556_226852": {
+    "loop_lag_s": 2.204,
+    "kalshi": {
+      "connected": true,
+      "subscriptions": 454,
+      "frames": 20333050,
+      "seq_gaps": 0,
+      "errors": 87,
+      "clock_offset_s": 17.0231,
+      "clock_healthy": false,
+      "age_s": 0.14,
+      "last_error": "ConnectionClosedError: sent 1011 (internal error) keepalive ping timeout; no close frame received"
+    },
+    "polymarket": {
+      "connected": true,
+      "subscriptions": 438,
+      "frames": 10664593,
+      "errors": 7,
+      "clock_offset_s": 9.2831,
+      "clock_healthy": false,
+      "age_s": 0.0
+    },
+    "polymarket_user": {"connected": true, "frames": 1598, "errors": 0, "age_s": 6.92}
+  },
+  "preceding_health_at_epoch_1788943495_2863903": {
+    "kalshi_frames": 20275176,
+    "kalshi_errors": 86,
+    "kalshi_clock_offset_s": 25.2476,
+    "polymarket_frames": 10609709,
+    "polymarket_clock_offset_s": 10.278,
+    "loop_lag_s": 2.261
+  },
+  "slate_log": {"pollers": 216, "starting_soon": 98, "live": 68, "newborn": 50},
+  "volume": {"srv_janus_size_gb": 49, "srv_janus_used_gb": 9.6, "srv_janus_available_gb": 37},
+  "local_replay_limitation": "Read-only SELECT sqlite_master on /Volumes/Kilos/janus/tuples/tuples.sqlite raised sqlite3.DatabaseError: database disk image is malformed. No repair, write, or outcome query was attempted.",
+  "scope": "procfs/systemd/bounded log/recent socket-health reads only; no live profile attach, signal, restart, deployment, orders, arm or cap change."
+}

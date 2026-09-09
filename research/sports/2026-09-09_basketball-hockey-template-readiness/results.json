@@ -1,0 +1,1698 @@
+{
+  "archive": "/Volumes/Kilos/janus/research/L48/20260909T083844Z",
+  "as_of": "2026-09-09T08:38:44.988157+00:00",
+  "complete": true,
+  "errors": [],
+  "leagues": {
+    "nba": {
+      "complete": true,
+      "discovery": {
+        "blocked": {},
+        "co_listed": [],
+        "pair_rules": {},
+        "schedule": [],
+        "schedule_failures": {},
+        "stats": {}
+      },
+      "enablement": [
+        "NO_KALSHI_TEMPLATE",
+        "NO_POLYMARKET_TEMPLATE"
+      ],
+      "gamma_tags": [
+        [
+          "tag_slug",
+          "nba"
+        ],
+        [
+          "tag_id",
+          "745"
+        ]
+      ],
+      "kalshi_events": [
+        {
+          "id": "KXNBAGAME-26OCT20BOSDET",
+          "title": "Boston vs Detroit"
+        },
+        {
+          "id": "KXNBAGAME-26OCT20PHINYK",
+          "title": "Philadelphia vs New York"
+        },
+        {
+          "id": "KXNBAGAME-26OCT20OKCSAS",
+          "title": "Oklahoma City vs San Antonio"
+        }
+      ],
+      "polymarket_event_count": 24,
+      "polymarket_moneylines": [],
+      "templates": {
+        "kalshi:72a912923ff0350e": {
+          "market_ids": [
+            "KXNBAGAME-26OCT20BOSDET-BOS",
+            "KXNBAGAME-26OCT20BOSDET-DET",
+            "KXNBAGAME-26OCT20PHINYK-PHI",
+            "KXNBAGAME-26OCT20PHINYK-NYK",
+            "KXNBAGAME-26OCT20OKCSAS-OKC",
+            "KXNBAGAME-26OCT20OKCSAS-SAS"
+          ],
+          "participants": [
+            "Boston",
+            "Detroit"
+          ],
+          "record": {
+            "market_id": "KXNBAGAME-26OCT20BOSDET-BOS",
+            "provenance": "api_field",
+            "retrieved_at": 1788943124.988157,
+            "rules_hash": "1eedc4f7e2d9b5bf",
+            "settlement_sources": [
+              "the Governing League"
+            ],
+            "source_type": "api_field",
+            "source_url": "https://assets.kalshi.com/regulatory/product-certifications/BASKETBALLGAMEWIN.pdf",
+            "template_hash": "72a912923ff0350e",
+            "template_text": "if wins the vs pro basketball game originally scheduled for then the market resolves to yes if the game is postponed but begins within 48 hours of its originally scheduled start time the market will remain open and resolve based on the official final result if the game is cancelled or not started within 48 hours of its originally scheduled start all markets will resolve to a fair price kalshi is not affiliated associated authorized endorsed by or in any way officially connected with the governing league all trademarks logos and brand names are the property of their respective owners",
+            "text": "If Boston wins the Boston vs Detroit Pro Basketball game originally scheduled for Oct 20, 2026, then the market resolves to Yes.\nIf the game is postponed but begins within 48 hours of its originally scheduled start time, the market will remain open and resolve based on the official final result. If the game is cancelled or not started within 48 hours of its originally scheduled start, all markets will resolve to a fair price.\n\nKalshi is not affiliated, associated, authorized, endorsed by, or in any way officially connected with the Governing League. All trademarks, logos, and brand names are the property of their respective owners.",
+            "venue": "kalshi"
+          },
+          "reviewed_template": null
+        }
+      }
+    },
+    "nhl": {
+      "complete": true,
+      "discovery": {
+        "blocked": {},
+        "co_listed": [],
+        "pair_rules": {},
+        "schedule": [],
+        "schedule_failures": {},
+        "stats": {}
+      },
+      "enablement": [
+        "NO_KALSHI_TEMPLATE",
+        "NO_POLYMARKET_TEMPLATE"
+      ],
+      "gamma_tags": [
+        [
+          "tag_slug",
+          "nhl"
+        ],
+        [
+          "tag_id",
+          "899"
+        ]
+      ],
+      "kalshi_events": [],
+      "polymarket_event_count": 111,
+      "polymarket_moneylines": [
+        {
+          "event_slug": "nhl-tor-mon-2026-09-19",
+          "participants": [
+            "Maple Leafs",
+            "Canadiens",
+            "Maple Leafs",
+            "Canadiens"
+          ],
+          "slug": "nhl-tor-mon-2026-09-19",
+          "start": "2026-09-19 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-dal-stl-2026-09-19",
+          "participants": [
+            "Stars",
+            "Blues",
+            "Stars",
+            "Blues"
+          ],
+          "slug": "nhl-dal-stl-2026-09-19",
+          "start": "2026-09-19 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-chi-min-2026-09-19",
+          "participants": [
+            "Blackhawks",
+            "Wild",
+            "Blackhawks",
+            "Wild"
+          ],
+          "slug": "nhl-chi-min-2026-09-19",
+          "start": "2026-09-20 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-wpg-edm-2026-09-19",
+          "participants": [
+            "Jets",
+            "Oilers",
+            "Jets",
+            "Oilers"
+          ],
+          "slug": "nhl-wpg-edm-2026-09-19",
+          "start": "2026-09-20 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-las-lak-2026-09-19",
+          "participants": [
+            "Golden Knights",
+            "Kings",
+            "Golden Knights",
+            "Kings"
+          ],
+          "slug": "nhl-las-lak-2026-09-19",
+          "start": "2026-09-20 01:00:00+00"
+        },
+        {
+          "event_slug": "nhl-van-sea-2026-09-19",
+          "participants": [
+            "Canucks",
+            "Kraken",
+            "Canucks",
+            "Kraken"
+          ],
+          "slug": "nhl-van-sea-2026-09-19",
+          "start": "2026-09-20 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nyi-nj-2026-09-20",
+          "participants": [
+            "Islanders",
+            "Devils",
+            "Islanders",
+            "Devils"
+          ],
+          "slug": "nhl-nyi-nj-2026-09-20",
+          "start": "2026-09-20 17:00:00+00"
+        },
+        {
+          "event_slug": "nhl-sj-ana-2026-09-20",
+          "participants": [
+            "Sharks",
+            "Ducks",
+            "Sharks",
+            "Ducks"
+          ],
+          "slug": "nhl-sj-ana-2026-09-20",
+          "start": "2026-09-20 20:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nsh-tb-2026-09-20",
+          "participants": [
+            "Predators",
+            "Lightning",
+            "Predators",
+            "Lightning"
+          ],
+          "slug": "nhl-nsh-tb-2026-09-20",
+          "start": "2026-09-20 21:00:00+00"
+        },
+        {
+          "event_slug": "nhl-wsh-bos-2026-09-20",
+          "participants": [
+            "Capitals",
+            "Bruins",
+            "Capitals",
+            "Bruins"
+          ],
+          "slug": "nhl-wsh-bos-2026-09-20",
+          "start": "2026-09-20 21:00:00+00"
+        },
+        {
+          "event_slug": "nhl-car-fla-2026-09-20",
+          "participants": [
+            "Hurricanes",
+            "Panthers",
+            "Hurricanes",
+            "Panthers"
+          ],
+          "slug": "nhl-car-fla-2026-09-20",
+          "start": "2026-09-20 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-utah-col-2026-09-20",
+          "participants": [
+            "Mammoth",
+            "Avalanche",
+            "Utah",
+            "Avalanche"
+          ],
+          "slug": "nhl-utah-col-2026-09-20",
+          "start": "2026-09-20 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-sea-cal-2026-09-20",
+          "participants": [
+            "Kraken",
+            "Flames",
+            "Kraken",
+            "Flames"
+          ],
+          "slug": "nhl-sea-cal-2026-09-20",
+          "start": "2026-09-21 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-det-cbj-2026-09-21",
+          "participants": [
+            "Red Wings",
+            "Blue Jackets",
+            "Red Wings",
+            "Blue Jackets"
+          ],
+          "slug": "nhl-det-cbj-2026-09-21",
+          "start": "2026-09-21 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-phi-wsh-2026-09-21",
+          "participants": [
+            "Flyers",
+            "Capitals",
+            "Flyers",
+            "Capitals"
+          ],
+          "slug": "nhl-phi-wsh-2026-09-21",
+          "start": "2026-09-21 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-buf-pit-2026-09-21",
+          "participants": [
+            "Sabres",
+            "Penguins",
+            "Sabres",
+            "Penguins"
+          ],
+          "slug": "nhl-buf-pit-2026-09-21",
+          "start": "2026-09-21 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nyr-nj-2026-09-21",
+          "participants": [
+            "Rangers",
+            "Devils",
+            "Rangers",
+            "Devils"
+          ],
+          "slug": "nhl-nyr-nj-2026-09-21",
+          "start": "2026-09-21 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-ott-mon-2026-09-21",
+          "participants": [
+            "Senators",
+            "Canadiens",
+            "Senators",
+            "Canadiens"
+          ],
+          "slug": "nhl-ott-mon-2026-09-21",
+          "start": "2026-09-21 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-col-wpg-2026-09-21",
+          "participants": [
+            "Avalanche",
+            "Jets",
+            "Avalanche",
+            "Jets"
+          ],
+          "slug": "nhl-col-wpg-2026-09-21",
+          "start": "2026-09-22 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-stl-dal-2026-09-21",
+          "participants": [
+            "Blues",
+            "Stars",
+            "Blues",
+            "Stars"
+          ],
+          "slug": "nhl-stl-dal-2026-09-21",
+          "start": "2026-09-22 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-min-chi-2026-09-21",
+          "participants": [
+            "Wild",
+            "Blackhawks",
+            "Wild",
+            "Blackhawks"
+          ],
+          "slug": "nhl-min-chi-2026-09-21",
+          "start": "2026-09-22 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-det-pit-2026-09-22",
+          "participants": [
+            "Red Wings",
+            "Penguins",
+            "Red Wings",
+            "Penguins"
+          ],
+          "slug": "nhl-det-pit-2026-09-22",
+          "start": "2026-09-22 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nyi-nyr-2026-09-22",
+          "participants": [
+            "Islanders",
+            "Rangers",
+            "Islanders",
+            "Rangers"
+          ],
+          "slug": "nhl-nyi-nyr-2026-09-22",
+          "start": "2026-09-22 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-fla-car-2026-09-22",
+          "participants": [
+            "Panthers",
+            "Hurricanes",
+            "Panthers",
+            "Hurricanes"
+          ],
+          "slug": "nhl-fla-car-2026-09-22",
+          "start": "2026-09-22 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-cbj-buf-2026-09-22",
+          "participants": [
+            "Blue Jackets",
+            "Sabres",
+            "Blue Jackets",
+            "Sabres"
+          ],
+          "slug": "nhl-cbj-buf-2026-09-22",
+          "start": "2026-09-22 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-phi-bos-2026-09-22",
+          "participants": [
+            "Flyers",
+            "Bruins",
+            "Flyers",
+            "Bruins"
+          ],
+          "slug": "nhl-phi-bos-2026-09-22",
+          "start": "2026-09-22 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-edm-wpg-2026-09-22",
+          "participants": [
+            "Oilers",
+            "Jets",
+            "Oilers",
+            "Jets"
+          ],
+          "slug": "nhl-edm-wpg-2026-09-22",
+          "start": "2026-09-23 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-tb-nsh-2026-09-22",
+          "participants": [
+            "Lightning",
+            "Predators",
+            "Lightning",
+            "Predators"
+          ],
+          "slug": "nhl-tb-nsh-2026-09-22",
+          "start": "2026-09-23 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-van-cal-2026-09-22",
+          "participants": [
+            "Canucks",
+            "Flames",
+            "Canucks",
+            "Flames"
+          ],
+          "slug": "nhl-van-cal-2026-09-22",
+          "start": "2026-09-23 01:00:00+00"
+        },
+        {
+          "event_slug": "nhl-las-sj-2026-09-22",
+          "participants": [
+            "Golden Knights",
+            "Sharks",
+            "Golden Knights",
+            "Sharks"
+          ],
+          "slug": "nhl-las-sj-2026-09-22",
+          "start": "2026-09-23 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-utah-lak-2026-09-22",
+          "participants": [
+            "Mammoth",
+            "Kings",
+            "Utah",
+            "Kings"
+          ],
+          "slug": "nhl-utah-lak-2026-09-22",
+          "start": "2026-09-23 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-tor-ott-2026-09-23",
+          "participants": [
+            "Maple Leafs",
+            "Senators",
+            "Maple Leafs",
+            "Senators"
+          ],
+          "slug": "nhl-tor-ott-2026-09-23",
+          "start": "2026-09-23 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-min-dal-2026-09-23",
+          "participants": [
+            "Wild",
+            "Stars",
+            "Wild",
+            "Stars"
+          ],
+          "slug": "nhl-min-dal-2026-09-23",
+          "start": "2026-09-24 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-lak-ana-2026-09-23",
+          "participants": [
+            "Kings",
+            "Ducks",
+            "Kings",
+            "Ducks"
+          ],
+          "slug": "nhl-lak-ana-2026-09-23",
+          "start": "2026-09-24 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-pit-cbj-2026-09-24",
+          "participants": [
+            "Penguins",
+            "Blue Jackets",
+            "Penguins",
+            "Blue Jackets"
+          ],
+          "slug": "nhl-pit-cbj-2026-09-24",
+          "start": "2026-09-24 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-fla-tb-2026-09-24",
+          "participants": [
+            "Panthers",
+            "Lightning",
+            "Panthers",
+            "Lightning"
+          ],
+          "slug": "nhl-fla-tb-2026-09-24",
+          "start": "2026-09-24 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-bos-phi-2026-09-24",
+          "participants": [
+            "Bruins",
+            "Flyers",
+            "Bruins",
+            "Flyers"
+          ],
+          "slug": "nhl-bos-phi-2026-09-24",
+          "start": "2026-09-24 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nj-nyr-2026-09-24",
+          "participants": [
+            "Devils",
+            "Rangers",
+            "Devils",
+            "Rangers"
+          ],
+          "slug": "nhl-nj-nyr-2026-09-24",
+          "start": "2026-09-24 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nsh-car-2026-09-24",
+          "participants": [
+            "Predators",
+            "Hurricanes",
+            "Predators",
+            "Hurricanes"
+          ],
+          "slug": "nhl-nsh-car-2026-09-24",
+          "start": "2026-09-24 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-buf-det-2026-09-24",
+          "participants": [
+            "Sabres",
+            "Red Wings",
+            "Sabres",
+            "Red Wings"
+          ],
+          "slug": "nhl-buf-det-2026-09-24",
+          "start": "2026-09-24 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-chi-stl-2026-09-24",
+          "participants": [
+            "Blackhawks",
+            "Blues",
+            "Blackhawks",
+            "Blues"
+          ],
+          "slug": "nhl-chi-stl-2026-09-24",
+          "start": "2026-09-25 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-edm-van-2026-09-24",
+          "participants": [
+            "Oilers",
+            "Canucks",
+            "Oilers",
+            "Canucks"
+          ],
+          "slug": "nhl-edm-van-2026-09-24",
+          "start": "2026-09-25 01:00:00+00"
+        },
+        {
+          "event_slug": "nhl-cal-sea-2026-09-24",
+          "participants": [
+            "Flames",
+            "Kraken",
+            "Flames",
+            "Kraken"
+          ],
+          "slug": "nhl-cal-sea-2026-09-24",
+          "start": "2026-09-25 01:40:00+00"
+        },
+        {
+          "event_slug": "nhl-utah-las-2026-09-24",
+          "participants": [
+            "Mammoth",
+            "Golden Knights",
+            "Utah",
+            "Golden Knights"
+          ],
+          "slug": "nhl-utah-las-2026-09-24",
+          "start": "2026-09-25 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-ana-sj-2026-09-24",
+          "participants": [
+            "Ducks",
+            "Sharks",
+            "Ducks",
+            "Sharks"
+          ],
+          "slug": "nhl-ana-sj-2026-09-24",
+          "start": "2026-09-25 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-bos-wsh-2026-09-25",
+          "participants": [
+            "Bruins",
+            "Capitals",
+            "Bruins",
+            "Capitals"
+          ],
+          "slug": "nhl-bos-wsh-2026-09-25",
+          "start": "2026-09-25 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nyr-nyi-2026-09-25",
+          "participants": [
+            "Rangers",
+            "Islanders",
+            "Rangers",
+            "Islanders"
+          ],
+          "slug": "nhl-nyr-nyi-2026-09-25",
+          "start": "2026-09-25 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-dal-min-2026-09-25",
+          "participants": [
+            "Stars",
+            "Wild",
+            "Stars",
+            "Wild"
+          ],
+          "slug": "nhl-dal-min-2026-09-25",
+          "start": "2026-09-26 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-wpg-col-2026-09-25",
+          "participants": [
+            "Jets",
+            "Avalanche",
+            "Jets",
+            "Avalanche"
+          ],
+          "slug": "nhl-wpg-col-2026-09-25",
+          "start": "2026-09-26 00:30:00+00"
+        },
+        {
+          "event_slug": "nhl-ott-mon-2026-09-26",
+          "participants": [
+            "Senators",
+            "Canadiens",
+            "Senators",
+            "Canadiens"
+          ],
+          "slug": "nhl-ott-mon-2026-09-26",
+          "start": "2026-09-26 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-car-nsh-2026-09-26",
+          "participants": [
+            "Hurricanes",
+            "Predators",
+            "Hurricanes",
+            "Predators"
+          ],
+          "slug": "nhl-car-nsh-2026-09-26",
+          "start": "2026-09-26 19:00:00+00"
+        },
+        {
+          "event_slug": "nhl-pit-buf-2026-09-26",
+          "participants": [
+            "Penguins",
+            "Sabres",
+            "Penguins",
+            "Sabres"
+          ],
+          "slug": "nhl-pit-buf-2026-09-26",
+          "start": "2026-09-26 19:00:00+00"
+        },
+        {
+          "event_slug": "nhl-ana-lak-2026-09-26",
+          "participants": [
+            "Ducks",
+            "Kings",
+            "Ducks",
+            "Kings"
+          ],
+          "slug": "nhl-ana-lak-2026-09-26",
+          "start": "2026-09-26 20:00:00+00"
+        },
+        {
+          "event_slug": "nhl-col-utah-2026-09-26",
+          "participants": [
+            "Avalanche",
+            "Mammoth",
+            "Avalanche",
+            "Utah"
+          ],
+          "slug": "nhl-col-utah-2026-09-26",
+          "start": "2026-09-26 21:00:00+00"
+        },
+        {
+          "event_slug": "nhl-wsh-phi-2026-09-26",
+          "participants": [
+            "Capitals",
+            "Flyers",
+            "Capitals",
+            "Flyers"
+          ],
+          "slug": "nhl-wsh-phi-2026-09-26",
+          "start": "2026-09-26 21:00:00+00"
+        },
+        {
+          "event_slug": "nhl-tb-fla-2026-09-26",
+          "participants": [
+            "Lightning",
+            "Panthers",
+            "Lightning",
+            "Panthers"
+          ],
+          "slug": "nhl-tb-fla-2026-09-26",
+          "start": "2026-09-26 22:00:00+00"
+        },
+        {
+          "event_slug": "nhl-sea-van-2026-09-26",
+          "participants": [
+            "Kraken",
+            "Canucks",
+            "Kraken",
+            "Canucks"
+          ],
+          "slug": "nhl-sea-van-2026-09-26",
+          "start": "2026-09-26 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nj-nyi-2026-09-26",
+          "participants": [
+            "Devils",
+            "Islanders",
+            "Devils",
+            "Islanders"
+          ],
+          "slug": "nhl-nj-nyi-2026-09-26",
+          "start": "2026-09-26 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-cbj-det-2026-09-26",
+          "participants": [
+            "Blue Jackets",
+            "Red Wings",
+            "Blue Jackets",
+            "Red Wings"
+          ],
+          "slug": "nhl-cbj-det-2026-09-26",
+          "start": "2026-09-26 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-stl-chi-2026-09-26",
+          "participants": [
+            "Blues",
+            "Blackhawks",
+            "Blues",
+            "Blackhawks"
+          ],
+          "slug": "nhl-stl-chi-2026-09-26",
+          "start": "2026-09-26 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-cal-edm-2026-09-26",
+          "participants": [
+            "Flames",
+            "Oilers",
+            "Flames",
+            "Oilers"
+          ],
+          "slug": "nhl-cal-edm-2026-09-26",
+          "start": "2026-09-27 01:00:00+00"
+        },
+        {
+          "event_slug": "nhl-sj-las-2026-09-26",
+          "participants": [
+            "Sharks",
+            "Golden Knights",
+            "Sharks",
+            "Golden Knights"
+          ],
+          "slug": "nhl-sj-las-2026-09-26",
+          "start": "2026-09-27 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-fla-car-2026-09-29",
+          "participants": [
+            "Panthers",
+            "Hurricanes",
+            "Panthers",
+            "Hurricanes"
+          ],
+          "slug": "nhl-fla-car-2026-09-29",
+          "start": "2026-09-29 21:00:00+00"
+        },
+        {
+          "event_slug": "nhl-mon-tor-2026-09-29",
+          "participants": [
+            "Canadiens",
+            "Maple Leafs",
+            "Canadiens",
+            "Maple Leafs"
+          ],
+          "slug": "nhl-mon-tor-2026-09-29",
+          "start": "2026-09-29 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nyr-bos-2026-09-29",
+          "participants": [
+            "Rangers",
+            "Bruins",
+            "Rangers",
+            "Bruins"
+          ],
+          "slug": "nhl-nyr-bos-2026-09-29",
+          "start": "2026-09-30 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-van-edm-2026-09-29",
+          "participants": [
+            "Canucks",
+            "Oilers",
+            "Canucks",
+            "Oilers"
+          ],
+          "slug": "nhl-van-edm-2026-09-29",
+          "start": "2026-09-30 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-chi-las-2026-09-29",
+          "participants": [
+            "Blackhawks",
+            "Golden Knights",
+            "Blackhawks",
+            "Golden Knights"
+          ],
+          "slug": "nhl-chi-las-2026-09-29",
+          "start": "2026-09-30 02:30:00+00"
+        },
+        {
+          "event_slug": "nhl-buf-cbj-2026-10-01",
+          "participants": [
+            "Sabres",
+            "Blue Jackets",
+            "Sabres",
+            "Blue Jackets"
+          ],
+          "slug": "nhl-buf-cbj-2026-10-01",
+          "start": "2026-10-01 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-tb-nyr-2026-10-01",
+          "participants": [
+            "Lightning",
+            "Rangers",
+            "Lightning",
+            "Rangers"
+          ],
+          "slug": "nhl-tb-nyr-2026-10-01",
+          "start": "2026-10-01 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-phi-nj-2026-10-01",
+          "participants": [
+            "Flyers",
+            "Devils",
+            "Flyers",
+            "Devils"
+          ],
+          "slug": "nhl-phi-nj-2026-10-01",
+          "start": "2026-10-01 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-min-nsh-2026-10-01",
+          "participants": [
+            "Wild",
+            "Predators",
+            "Wild",
+            "Predators"
+          ],
+          "slug": "nhl-min-nsh-2026-10-01",
+          "start": "2026-10-02 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-chi-utah-2026-10-01",
+          "participants": [
+            "Blackhawks",
+            "Mammoth",
+            "Blackhawks",
+            "Utah"
+          ],
+          "slug": "nhl-chi-utah-2026-10-01",
+          "start": "2026-10-02 01:30:00+00"
+        },
+        {
+          "event_slug": "nhl-sea-cal-2026-10-01",
+          "participants": [
+            "Kraken",
+            "Flames",
+            "Kraken",
+            "Flames"
+          ],
+          "slug": "nhl-sea-cal-2026-10-01",
+          "start": "2026-10-02 01:00:00+00"
+        },
+        {
+          "event_slug": "nhl-edm-van-2026-10-01",
+          "participants": [
+            "Oilers",
+            "Canucks",
+            "Oilers",
+            "Canucks"
+          ],
+          "slug": "nhl-edm-van-2026-10-01",
+          "start": "2026-10-02 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-fla-sj-2026-10-01",
+          "participants": [
+            "Panthers",
+            "Sharks",
+            "Panthers",
+            "Sharks"
+          ],
+          "slug": "nhl-fla-sj-2026-10-01",
+          "start": "2026-10-02 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nyr-det-2026-10-02",
+          "participants": [
+            "Rangers",
+            "Red Wings",
+            "Rangers",
+            "Red Wings"
+          ],
+          "slug": "nhl-nyr-det-2026-10-02",
+          "start": "2026-10-02 22:30:00+00"
+        },
+        {
+          "event_slug": "nhl-wsh-car-2026-10-02",
+          "participants": [
+            "Capitals",
+            "Hurricanes",
+            "Capitals",
+            "Hurricanes"
+          ],
+          "slug": "nhl-wsh-car-2026-10-02",
+          "start": "2026-10-02 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-bos-wpg-2026-10-02",
+          "participants": [
+            "Bruins",
+            "Jets",
+            "Bruins",
+            "Jets"
+          ],
+          "slug": "nhl-bos-wpg-2026-10-02",
+          "start": "2026-10-03 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-stl-dal-2026-10-02",
+          "participants": [
+            "Blues",
+            "Stars",
+            "Blues",
+            "Stars"
+          ],
+          "slug": "nhl-stl-dal-2026-10-02",
+          "start": "2026-10-03 01:00:00+00"
+        },
+        {
+          "event_slug": "nhl-ana-las-2026-10-02",
+          "participants": [
+            "Ducks",
+            "Golden Knights",
+            "Ducks",
+            "Golden Knights"
+          ],
+          "slug": "nhl-ana-las-2026-10-02",
+          "start": "2026-10-03 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-ott-tor-2026-10-03",
+          "participants": [
+            "Senators",
+            "Maple Leafs",
+            "Senators",
+            "Maple Leafs"
+          ],
+          "slug": "nhl-ott-tor-2026-10-03",
+          "start": "2026-10-03 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-utah-cbj-2026-10-03",
+          "participants": [
+            "Mammoth",
+            "Blue Jackets",
+            "Utah",
+            "Blue Jackets"
+          ],
+          "slug": "nhl-utah-cbj-2026-10-03",
+          "start": "2026-10-03 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-wsh-tb-2026-10-03",
+          "participants": [
+            "Capitals",
+            "Lightning",
+            "Capitals",
+            "Lightning"
+          ],
+          "slug": "nhl-wsh-tb-2026-10-03",
+          "start": "2026-10-03 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-mon-pit-2026-10-03",
+          "participants": [
+            "Canadiens",
+            "Penguins",
+            "Canadiens",
+            "Penguins"
+          ],
+          "slug": "nhl-mon-pit-2026-10-03",
+          "start": "2026-10-03 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-car-phi-2026-10-03",
+          "participants": [
+            "Hurricanes",
+            "Flyers",
+            "Hurricanes",
+            "Flyers"
+          ],
+          "slug": "nhl-car-phi-2026-10-03",
+          "start": "2026-10-03 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-sea-edm-2026-10-03",
+          "participants": [
+            "Kraken",
+            "Oilers",
+            "Kraken",
+            "Oilers"
+          ],
+          "slug": "nhl-sea-edm-2026-10-03",
+          "start": "2026-10-03 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-chi-buf-2026-10-03",
+          "participants": [
+            "Blackhawks",
+            "Sabres",
+            "Blackhawks",
+            "Sabres"
+          ],
+          "slug": "nhl-chi-buf-2026-10-03",
+          "start": "2026-10-03 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-nj-nyi-2026-10-03",
+          "participants": [
+            "Devils",
+            "Islanders",
+            "Devils",
+            "Islanders"
+          ],
+          "slug": "nhl-nj-nyi-2026-10-03",
+          "start": "2026-10-03 23:30:00+00"
+        },
+        {
+          "event_slug": "nhl-bos-min-2026-10-03",
+          "participants": [
+            "Bruins",
+            "Wild",
+            "Bruins",
+            "Wild"
+          ],
+          "slug": "nhl-bos-min-2026-10-03",
+          "start": "2026-10-04 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-dal-nsh-2026-10-03",
+          "participants": [
+            "Stars",
+            "Predators",
+            "Stars",
+            "Predators"
+          ],
+          "slug": "nhl-dal-nsh-2026-10-03",
+          "start": "2026-10-04 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-stl-col-2026-10-03",
+          "participants": [
+            "Blues",
+            "Avalanche",
+            "Blues",
+            "Avalanche"
+          ],
+          "slug": "nhl-stl-col-2026-10-03",
+          "start": "2026-10-04 01:00:00+00"
+        },
+        {
+          "event_slug": "nhl-cal-van-2026-10-03",
+          "participants": [
+            "Flames",
+            "Canucks",
+            "Flames",
+            "Canucks"
+          ],
+          "slug": "nhl-cal-van-2026-10-03",
+          "start": "2026-10-04 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-lak-sj-2026-10-03",
+          "participants": [
+            "Kings",
+            "Sharks",
+            "Kings",
+            "Sharks"
+          ],
+          "slug": "nhl-lak-sj-2026-10-03",
+          "start": "2026-10-04 02:00:00+00"
+        },
+        {
+          "event_slug": "nhl-wpg-det-2026-10-04",
+          "participants": [
+            "Jets",
+            "Red Wings",
+            "Jets",
+            "Red Wings"
+          ],
+          "slug": "nhl-wpg-det-2026-10-04",
+          "start": "2026-10-04 17:00:00+00"
+        },
+        {
+          "event_slug": "nhl-utah-nyr-2026-10-04",
+          "participants": [
+            "Mammoth",
+            "Rangers",
+            "Utah",
+            "Rangers"
+          ],
+          "slug": "nhl-utah-nyr-2026-10-04",
+          "start": "2026-10-04 22:00:00+00"
+        },
+        {
+          "event_slug": "nhl-cal-sea-2026-10-04",
+          "participants": [
+            "Flames",
+            "Kraken",
+            "Flames",
+            "Kraken"
+          ],
+          "slug": "nhl-cal-sea-2026-10-04",
+          "start": "2026-10-05 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-fla-ana-2026-10-04",
+          "participants": [
+            "Panthers",
+            "Ducks",
+            "Panthers",
+            "Ducks"
+          ],
+          "slug": "nhl-fla-ana-2026-10-04",
+          "start": "2026-10-05 00:00:00+00"
+        },
+        {
+          "event_slug": "nhl-las-van-2026-10-04",
+          "participants": [
+            "Golden Knights",
+            "Canucks",
+            "Golden Knights",
+            "Canucks"
+          ],
+          "slug": "nhl-las-van-2026-10-04",
+          "start": "2026-10-05 01:00:00+00"
+        },
+        {
+          "event_slug": "nhl-phi-tb-2026-10-05",
+          "participants": [
+            "Flyers",
+            "Lightning",
+            "Flyers",
+            "Lightning"
+          ],
+          "slug": "nhl-phi-tb-2026-10-05",
+          "start": "2026-10-05 23:00:00+00"
+        },
+        {
+          "event_slug": "nhl-wpg-pit-2026-10-05",
+          "participants": [
+            "Jets",
+            "Penguins",
+            "Jets",
+            "Penguins"
+          ],
+          "slug": "nhl-wpg-pit-2026-10-05",
+          "start": "2026-10-05 23:30:00+00"
+        },
+        {
+          "event_slug": "nhl-ott-bos-2026-10-05",
+          "participants": [
+            "Senators",
+            "Bruins",
+            "Senators",
+            "Bruins"
+          ],
+          "slug": "nhl-ott-bos-2026-10-05",
+          "start": "2026-10-05 23:30:00+00"
+        },
+        {
+          "event_slug": "nhl-sj-dal-2026-10-05",
+          "participants": [
+            "Sharks",
+            "Stars",
+            "Sharks",
+            "Stars"
+          ],
+          "slug": "nhl-sj-dal-2026-10-05",
+          "start": "2026-10-06 00:00:00+00"
+        }
+      ],
+      "templates": {
+        "polymarket:f88aa393390c266f": {
+          "market_ids": [
+            "nhl-tor-mon-2026-09-19",
+            "nhl-dal-stl-2026-09-19",
+            "nhl-chi-min-2026-09-19",
+            "nhl-wpg-edm-2026-09-19",
+            "nhl-las-lak-2026-09-19",
+            "nhl-van-sea-2026-09-19",
+            "nhl-nyi-nj-2026-09-20",
+            "nhl-sj-ana-2026-09-20",
+            "nhl-nsh-tb-2026-09-20",
+            "nhl-wsh-bos-2026-09-20",
+            "nhl-car-fla-2026-09-20",
+            "nhl-utah-col-2026-09-20",
+            "nhl-sea-cal-2026-09-20",
+            "nhl-det-cbj-2026-09-21",
+            "nhl-phi-wsh-2026-09-21",
+            "nhl-buf-pit-2026-09-21",
+            "nhl-nyr-nj-2026-09-21",
+            "nhl-ott-mon-2026-09-21",
+            "nhl-col-wpg-2026-09-21",
+            "nhl-stl-dal-2026-09-21",
+            "nhl-min-chi-2026-09-21",
+            "nhl-det-pit-2026-09-22",
+            "nhl-nyi-nyr-2026-09-22",
+            "nhl-fla-car-2026-09-22",
+            "nhl-cbj-buf-2026-09-22",
+            "nhl-phi-bos-2026-09-22",
+            "nhl-edm-wpg-2026-09-22",
+            "nhl-tb-nsh-2026-09-22",
+            "nhl-van-cal-2026-09-22",
+            "nhl-las-sj-2026-09-22",
+            "nhl-utah-lak-2026-09-22",
+            "nhl-tor-ott-2026-09-23",
+            "nhl-min-dal-2026-09-23",
+            "nhl-lak-ana-2026-09-23",
+            "nhl-pit-cbj-2026-09-24",
+            "nhl-fla-tb-2026-09-24",
+            "nhl-bos-phi-2026-09-24",
+            "nhl-nj-nyr-2026-09-24",
+            "nhl-nsh-car-2026-09-24",
+            "nhl-buf-det-2026-09-24",
+            "nhl-chi-stl-2026-09-24",
+            "nhl-edm-van-2026-09-24",
+            "nhl-cal-sea-2026-09-24",
+            "nhl-utah-las-2026-09-24",
+            "nhl-ana-sj-2026-09-24",
+            "nhl-bos-wsh-2026-09-25",
+            "nhl-nyr-nyi-2026-09-25",
+            "nhl-dal-min-2026-09-25",
+            "nhl-wpg-col-2026-09-25",
+            "nhl-ott-mon-2026-09-26",
+            "nhl-car-nsh-2026-09-26",
+            "nhl-pit-buf-2026-09-26",
+            "nhl-ana-lak-2026-09-26",
+            "nhl-col-utah-2026-09-26",
+            "nhl-wsh-phi-2026-09-26",
+            "nhl-tb-fla-2026-09-26",
+            "nhl-sea-van-2026-09-26",
+            "nhl-nj-nyi-2026-09-26",
+            "nhl-cbj-det-2026-09-26",
+            "nhl-stl-chi-2026-09-26",
+            "nhl-cal-edm-2026-09-26",
+            "nhl-sj-las-2026-09-26",
+            "nhl-fla-car-2026-09-29",
+            "nhl-mon-tor-2026-09-29",
+            "nhl-nyr-bos-2026-09-29",
+            "nhl-van-edm-2026-09-29",
+            "nhl-chi-las-2026-09-29",
+            "nhl-buf-cbj-2026-10-01",
+            "nhl-tb-nyr-2026-10-01",
+            "nhl-phi-nj-2026-10-01",
+            "nhl-min-nsh-2026-10-01",
+            "nhl-chi-utah-2026-10-01",
+            "nhl-sea-cal-2026-10-01",
+            "nhl-edm-van-2026-10-01",
+            "nhl-fla-sj-2026-10-01",
+            "nhl-nyr-det-2026-10-02",
+            "nhl-wsh-car-2026-10-02",
+            "nhl-bos-wpg-2026-10-02",
+            "nhl-stl-dal-2026-10-02",
+            "nhl-ana-las-2026-10-02",
+            "nhl-ott-tor-2026-10-03",
+            "nhl-utah-cbj-2026-10-03",
+            "nhl-wsh-tb-2026-10-03",
+            "nhl-mon-pit-2026-10-03",
+            "nhl-car-phi-2026-10-03",
+            "nhl-sea-edm-2026-10-03",
+            "nhl-chi-buf-2026-10-03",
+            "nhl-nj-nyi-2026-10-03",
+            "nhl-bos-min-2026-10-03",
+            "nhl-dal-nsh-2026-10-03",
+            "nhl-stl-col-2026-10-03",
+            "nhl-cal-van-2026-10-03",
+            "nhl-lak-sj-2026-10-03",
+            "nhl-wpg-det-2026-10-04",
+            "nhl-utah-nyr-2026-10-04",
+            "nhl-cal-sea-2026-10-04",
+            "nhl-fla-ana-2026-10-04",
+            "nhl-las-van-2026-10-04",
+            "nhl-phi-tb-2026-10-05",
+            "nhl-wpg-pit-2026-10-05",
+            "nhl-ott-bos-2026-10-05",
+            "nhl-sj-dal-2026-10-05"
+          ],
+          "participants": [
+            "Maple Leafs",
+            "Canadiens",
+            "Maple Leafs",
+            "Canadiens"
+          ],
+          "record": {
+            "market_id": "nhl-tor-mon-2026-09-19",
+            "provenance": "api_field",
+            "retrieved_at": 1788943124.988157,
+            "rules_hash": "4b9028bbc1f9802c",
+            "settlement_sources": [
+              "https://www.nhl.com/scores"
+            ],
+            "source_type": "api_field",
+            "source_url": "https://www.nhl.com/scores",
+            "template_hash": "f88aa393390c266f",
+            "template_text": "in the upcoming nhl game scheduled for at if the win the market will resolve to if the win the market will resolve to if the game is postponed this market will remain open until the game has been completed if the game is canceled entirely with no make-up game this market will resolve 50-50 the result will be determined based on the final score including any overtime periods and shootouts in the event of a shootout one goal will be added to the winning team s score for the purpose of resolution",
+            "text": "In the upcoming NHL game, scheduled for September 19 at 7:00PM ET:\nIf the Maple Leafs win, the market will resolve to \"Maple Leafs\".\nIf the Canadiens win, the market will resolve to \"Canadiens\".\nIf the game is postponed, this market will remain open until the game has been completed.\nIf the game is canceled entirely, with no make-up game, this market will resolve 50-50.\nThe result will be determined based on the final score including any overtime periods and shootouts. In the event of a shootout, one goal will be added to the winning team's score for the purpose of resolution.",
+            "venue": "polymarket"
+          },
+          "reviewed_template": null
+        }
+      }
+    },
+    "wnba": {
+      "complete": true,
+      "discovery": {
+        "blocked": {},
+        "co_listed": [],
+        "pair_rules": {},
+        "schedule": [],
+        "schedule_failures": {},
+        "stats": {}
+      },
+      "enablement": [
+        "NO_KALSHI_TEMPLATE",
+        "NO_POLYMARKET_TEMPLATE"
+      ],
+      "gamma_tags": [
+        [
+          "tag_slug",
+          "wnba"
+        ],
+        [
+          "tag_id",
+          "100254"
+        ]
+      ],
+      "kalshi_events": [],
+      "polymarket_event_count": 35,
+      "polymarket_moneylines": [
+        {
+          "event_slug": "wnba-conn-atl-2026-09-17",
+          "participants": [
+            "Connecticut Sun",
+            "Atlanta Dream",
+            "Connecticut Sun",
+            "Atlanta Dream"
+          ],
+          "slug": "wnba-conn-atl-2026-09-17",
+          "start": "2026-09-17 23:30:00+00"
+        },
+        {
+          "event_slug": "wnba-wsh-chi-2026-09-17",
+          "participants": [
+            "Washington Mystics",
+            "Chicago Sky",
+            "Washington Mystics",
+            "Chicago Sky"
+          ],
+          "slug": "wnba-wsh-chi-2026-09-17",
+          "start": "2026-09-18 00:00:00+00"
+        },
+        {
+          "event_slug": "wnba-la-dal-2026-09-17",
+          "participants": [
+            "Los Angeles Sparks",
+            "Dallas Wings",
+            "Los Angeles Sparks",
+            "Dallas Wings"
+          ],
+          "slug": "wnba-la-dal-2026-09-17",
+          "start": "2026-09-18 00:00:00+00"
+        },
+        {
+          "event_slug": "wnba-phx-por-2026-09-17",
+          "participants": [
+            "Phoenix Mercury",
+            "Portland Fire",
+            "Phoenix Mercury",
+            "Portland Fire"
+          ],
+          "slug": "wnba-phx-por-2026-09-17",
+          "start": "2026-09-18 02:00:00+00"
+        },
+        {
+          "event_slug": "wnba-las-sea-2026-09-17",
+          "participants": [
+            "Las Vegas Aces",
+            "Seattle Storm",
+            "Las Vegas Aces",
+            "Seattle Storm"
+          ],
+          "slug": "wnba-las-sea-2026-09-17",
+          "start": "2026-09-18 02:00:00+00"
+        },
+        {
+          "event_slug": "wnba-ind-tor-2026-09-18",
+          "participants": [
+            "Indiana Fever",
+            "Toronto Tempo",
+            "Indiana Fever",
+            "Toronto Tempo"
+          ],
+          "slug": "wnba-ind-tor-2026-09-18",
+          "start": "2026-09-18 23:30:00+00"
+        },
+        {
+          "event_slug": "wnba-nyl-min-2026-09-18",
+          "participants": [
+            "New York Liberty",
+            "Minnesota Lynx",
+            "New York Liberty",
+            "Minnesota Lynx"
+          ],
+          "slug": "wnba-nyl-min-2026-09-18",
+          "start": "2026-09-18 23:30:00+00"
+        },
+        {
+          "event_slug": "wnba-por-gsv-2026-09-18",
+          "participants": [
+            "Portland Fire",
+            "Golden State Valkyries",
+            "Portland Fire",
+            "Golden State Valkyries"
+          ],
+          "slug": "wnba-por-gsv-2026-09-18",
+          "start": "2026-09-19 02:00:00+00"
+        },
+        {
+          "event_slug": "wnba-phx-dal-2026-09-19",
+          "participants": [
+            "Phoenix Mercury",
+            "Dallas Wings",
+            "Phoenix Mercury",
+            "Dallas Wings"
+          ],
+          "slug": "wnba-phx-dal-2026-09-19",
+          "start": "2026-09-19 17:00:00+00"
+        },
+        {
+          "event_slug": "wnba-chi-atl-2026-09-19",
+          "participants": [
+            "Chicago Sky",
+            "Atlanta Dream",
+            "Chicago Sky",
+            "Atlanta Dream"
+          ],
+          "slug": "wnba-chi-atl-2026-09-19",
+          "start": "2026-09-19 23:00:00+00"
+        },
+        {
+          "event_slug": "wnba-sea-gsv-2026-09-19",
+          "participants": [
+            "Seattle Storm",
+            "Golden State Valkyries",
+            "Seattle Storm",
+            "Golden State Valkyries"
+          ],
+          "slug": "wnba-sea-gsv-2026-09-19",
+          "start": "2026-09-20 01:00:00+00"
+        },
+        {
+          "event_slug": "wnba-min-conn-2026-09-20",
+          "participants": [
+            "Minnesota Lynx",
+            "Connecticut Sun",
+            "Minnesota Lynx",
+            "Connecticut Sun"
+          ],
+          "slug": "wnba-min-conn-2026-09-20",
+          "start": "2026-09-20 17:00:00+00"
+        },
+        {
+          "event_slug": "wnba-nyl-tor-2026-09-20",
+          "participants": [
+            "New York Liberty",
+            "Toronto Tempo",
+            "New York Liberty",
+            "Toronto Tempo"
+          ],
+          "slug": "wnba-nyl-tor-2026-09-20",
+          "start": "2026-09-20 19:00:00+00"
+        },
+        {
+          "event_slug": "wnba-wsh-ind-2026-09-20",
+          "participants": [
+            "Washington Mystics",
+            "Indiana Fever",
+            "Washington Mystics",
+            "Indiana Fever"
+          ],
+          "slug": "wnba-wsh-ind-2026-09-20",
+          "start": "2026-09-20 20:00:00+00"
+        },
+        {
+          "event_slug": "wnba-por-la-2026-09-20",
+          "participants": [
+            "Portland Fire",
+            "Los Angeles Sparks",
+            "Portland Fire",
+            "Los Angeles Sparks"
+          ],
+          "slug": "wnba-por-la-2026-09-20",
+          "start": "2026-09-20 23:00:00+00"
+        },
+        {
+          "event_slug": "wnba-sea-las-2026-09-20",
+          "participants": [
+            "Seattle Storm",
+            "Las Vegas Aces",
+            "Seattle Storm",
+            "Las Vegas Aces"
+          ],
+          "slug": "wnba-sea-las-2026-09-20",
+          "start": "2026-09-21 01:00:00+00"
+        },
+        {
+          "event_slug": "wnba-atl-nyl-2026-09-21",
+          "participants": [
+            "Atlanta Dream",
+            "New York Liberty",
+            "Atlanta Dream",
+            "New York Liberty"
+          ],
+          "slug": "wnba-atl-nyl-2026-09-21",
+          "start": "2026-09-22 00:00:00+00"
+        },
+        {
+          "event_slug": "wnba-dal-phx-2026-09-21",
+          "participants": [
+            "Dallas Wings",
+            "Phoenix Mercury",
+            "Dallas Wings",
+            "Phoenix Mercury"
+          ],
+          "slug": "wnba-dal-phx-2026-09-21",
+          "start": "2026-09-22 02:00:00+00"
+        },
+        {
+          "event_slug": "wnba-conn-wsh-2026-09-22",
+          "participants": [
+            "Connecticut Sun",
+            "Washington Mystics",
+            "Connecticut Sun",
+            "Washington Mystics"
+          ],
+          "slug": "wnba-conn-wsh-2026-09-22",
+          "start": "2026-09-22 23:30:00+00"
+        },
+        {
+          "event_slug": "wnba-min-ind-2026-09-22",
+          "participants": [
+            "Minnesota Lynx",
+            "Indiana Fever",
+            "Minnesota Lynx",
+            "Indiana Fever"
+          ],
+          "slug": "wnba-min-ind-2026-09-22",
+          "start": "2026-09-23 00:00:00+00"
+        },
+        {
+          "event_slug": "wnba-tor-chi-2026-09-22",
+          "participants": [
+            "Toronto Tempo",
+            "Chicago Sky",
+            "Toronto Tempo",
+            "Chicago Sky"
+          ],
+          "slug": "wnba-tor-chi-2026-09-22",
+          "start": "2026-09-23 00:00:00+00"
+        },
+        {
+          "event_slug": "wnba-la-las-2026-09-22",
+          "participants": [
+            "Los Angeles Sparks",
+            "Las Vegas Aces",
+            "Los Angeles Sparks",
+            "Las Vegas Aces"
+          ],
+          "slug": "wnba-la-las-2026-09-22",
+          "start": "2026-09-23 02:00:00+00"
+        },
+        {
+          "event_slug": "wnba-gsv-por-2026-09-22",
+          "participants": [
+            "Golden State Valkyries",
+            "Portland Fire",
+            "Golden State Valkyries",
+            "Portland Fire"
+          ],
+          "slug": "wnba-gsv-por-2026-09-22",
+          "start": "2026-09-23 02:00:00+00"
+        }
+      ],
+      "templates": {
+        "polymarket:3ad1cae690aca2e7": {
+          "market_ids": [
+            "wnba-conn-atl-2026-09-17",
+            "wnba-wsh-chi-2026-09-17",
+            "wnba-la-dal-2026-09-17",
+            "wnba-phx-por-2026-09-17",
+            "wnba-las-sea-2026-09-17",
+            "wnba-ind-tor-2026-09-18",
+            "wnba-nyl-min-2026-09-18",
+            "wnba-por-gsv-2026-09-18",
+            "wnba-phx-dal-2026-09-19",
+            "wnba-chi-atl-2026-09-19",
+            "wnba-sea-gsv-2026-09-19",
+            "wnba-min-conn-2026-09-20",
+            "wnba-nyl-tor-2026-09-20",
+            "wnba-wsh-ind-2026-09-20",
+            "wnba-por-la-2026-09-20",
+            "wnba-sea-las-2026-09-20",
+            "wnba-atl-nyl-2026-09-21",
+            "wnba-dal-phx-2026-09-21",
+            "wnba-conn-wsh-2026-09-22",
+            "wnba-min-ind-2026-09-22",
+            "wnba-tor-chi-2026-09-22",
+            "wnba-la-las-2026-09-22",
+            "wnba-gsv-por-2026-09-22"
+          ],
+          "participants": [
+            "Connecticut Sun",
+            "Atlanta Dream",
+            "Connecticut Sun",
+            "Atlanta Dream"
+          ],
+          "record": {
+            "market_id": "wnba-conn-atl-2026-09-17",
+            "provenance": "api_field",
+            "retrieved_at": 1788943124.988157,
+            "rules_hash": "7001ea9c2f1e61d8",
+            "settlement_sources": [
+              "https://www.wnba.com/scores"
+            ],
+            "source_type": "api_field",
+            "source_url": "https://www.wnba.com/scores",
+            "template_hash": "3ad1cae690aca2e7",
+            "template_text": "in the upcoming wnba game scheduled for at if the win the market will resolve to if the win the market will resolve to if the game is postponed this market will remain open until the game has been completed if the game is canceled entirely with no make-up game this market will resolve 50-50 the result will be determined based on the final score including any overtime periods",
+            "text": "In the upcoming WNBA game, scheduled for September 17 at 7:30PM ET:\nIf the Connecticut Sun win, the market will resolve to \"Connecticut Sun\".\nIf the Atlanta Dream win, the market will resolve to \"Atlanta Dream\".\nIf the game is postponed, this market will remain open until the game has been completed.\nIf the game is canceled entirely, with no make-up game, this market will resolve 50-50.\nThe result will be determined based on the final score including any overtime periods.",
+            "venue": "polymarket"
+          },
+          "reviewed_template": null
+        }
+      }
+    }
+  },
+  "ledger_ref": "L48",
+  "manifest_sha256": "7862ce25741fa5ac53c9ab5c725b5056d0acfcaf82c34ce8d376e3fbf88ee5a2",
+  "requests": 21
+}

@@ -54,13 +54,14 @@ def test_enablement_names_what_each_league_lacks():
     assert enablement("mls") == []                  # L43; individual certification requires regular-season scope
     for c in ("elc", "el1", "ita"):
         assert enablement(c) == [], c                # L35, the same proxy
-    for c in ("fl1", "ere", "por", "scop", "bel1"):  # registered and reviewed; no archive to measure from
+    assert enablement("ere") == []                  # L50; exact regular-season schedule population required
+    for c in ("fl1", "por", "scop", "bel1"):  # registered and reviewed; no measured complete archive
         assert enablement(c) == [f"EVIDENCE_UNMEASURED:soccer.{c}.cancelled_rate", f"EVIDENCE_UNMEASURED:soccer.{c}.postponed_gt48h_rate"], c
     for c in ("atp", "wta"):
         # one rate pair for both tours: the walkover rate (L39) and, since 2026-09-05, the forward delay rate (F4, an upper bound)
         assert enablement(c) == [], c
     assert enablement("itf") == []                 # L46; never the ATP/WTA forward population
-    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "mls", "cfb", "elc", "el1", "ita", "atp", "wta", "itf"]
+    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "mls", "cfb", "elc", "el1", "ita", "ere", "atp", "wta", "itf"]
 
 
 def test_a_league_may_own_more_than_one_kalshi_series_and_itf_is_registered():

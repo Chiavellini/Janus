@@ -38,6 +38,22 @@ def test_files_rotate_on_the_hour(tmp_path: Path):
     assert [f.raw for f in iter_capture(tmp_path, "polymarket", T0 + 3600, T0 + 7300)] == ["b", "c"]
 
 
+def test_append_after_a_level_nine_member_preserves_every_frame_and_timestamp(tmp_path: Path):
+    """A release during an hour must retain the older gzip member and append compatibly."""
+    import gzip
+    import json
+
+    path = tmp_path / "kalshi" / "2027-01-15" / "08.jsonl.gz"
+    path.parent.mkdir(parents=True)
+    old = Frame("kalshi", T0, 10.0, '{"old": "ünïcödé"}')
+    with gzip.open(path, "wt", encoding="utf-8", compresslevel=9) as fh:
+        fh.write(json.dumps({"t": old.received_utc, "m": old.received_mono, "raw": old.raw}) + "\n")
+    writer = FrameWriter("kalshi", tmp_path, enforce_volume=False)
+    writer.write("new {not json}", received_utc=T0 + 1, received_mono=11.0)
+    writer.close()
+    assert list(read_frames(path)) == [old, Frame("kalshi", T0 + 1, 11.0, "new {not json}")]
+
+
 def test_the_root_disk_is_refused():
     with pytest.raises(ValueError, match="Volumes/Kilos"):
         FrameWriter("kalshi", "/tmp/frames")

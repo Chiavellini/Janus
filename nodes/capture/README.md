@@ -34,6 +34,14 @@ report tick. The hour boundary closes and reopens the file, so at most one hour 
 **Volume.** Polymarket `book` events carry full ladders; measure a day before fixing retention.
 The writer refuses any root outside `/Volumes/Kilos`.
 
+**Compression CPU.** Capture uses gzip level 3. L51's bounded offline sample of
+10,000 raw frames per venue retained every frame, timestamp and ordering exactly,
+used about 59% less compression CPU than level 9, and increased file size by
+25% on Polymarket and 34% on Kalshi. Existing level-9 members remain readable and
+new members may append to the same hour. This is a capture-cost measurement;
+it does not establish a live CPU or socket-health improvement. See
+`research/infra/2026-09-09_live-cpu-health/` for measurements and limitations.
+
 ## Tests
 
 `tests/test_capture.py` — round trip byte-for-byte, non-JSON frames kept, hour rotation, the

@@ -1,0 +1,62 @@
+experiment_id: "janus-sports-limited-live-f17-coverage-performance-2026-09-09"
+date_registered: "2026-09-09"
+track: "sports/execution"
+row_kind: "F (forward limited-live execution; no historical result is reused)"
+ledger_ref: "snooping_ledger.md row F17"
+status_at_registration: PENDING
+
+purpose: >
+  Supersede the never-started F16 candidate with the same cent-exact ledger, settlement-template
+  identity, MLS and ITF evidence and entity repairs, plus independently replayed Eredivisie
+  regular-season evidence and the behaviorally equivalent L51 reader/capture CPU reductions.
+  Coverage and latency are means; the measured outcomes remain realized EV per hedged cover,
+  Sharpe per trade, protection latency and venue-authoritative accounting agreement.
+
+population:
+  leagues: "Every registry-enabled league; MLS and Eredivisie only when ESPN marks the exact fixture regular-season; ITF main draw and qualifying use distinct registered rates."
+  venue_pair: "Kalshi plus Polymarket only, with different liquidity_source values and exhaustive complementary outcomes."
+  window: "From the first LIMITED_LIVE evaluation after the F17 release until 37 hedged covers, the first STOP, the realized-loss breaker, or operator closure."
+
+unchanged_live_limits:
+  max_combined_stake_usd: 12
+  max_contracts_per_leg: 10
+  max_committed_daily_notional_usd: 250
+  max_daily_realized_loss_usd: 25
+  min_net_profit_usd: 0.10
+  min_locked_return: 0.01
+  max_protect_loss_usd: 1.00
+  unwind_enabled: false
+  note: "MLS, ITF and Eredivisie have $200 checked-in paper/demo per-league allowances; these do not raise any signed live outer cap."
+
+start_gates:
+  - "All repository tests, watchdog selftest, shell syntax and diff checks pass on the exact release tree."
+  - "L43, L46, L47 and L50 registered artifacts and independent replays pass; current NFL, MLS, ITF and Eredivisie rule texts hash to reviewed templates."
+  - "L51 behavioral equivalence and independent review pass; no claim of live CPU improvement is made before forward observation."
+  - "No execution is in flight, no material unhedged position or unexplained venue imbalance exists, and the authenticated guard is clean."
+  - "Public and authenticated streams and the box watchdog are healthy; socket flapping, clock skew or reader backlog blocks release until it clears."
+  - "The operator's existing statement and unchanged caps are signed against the new code and limits hashes by ops/box/release.sh."
+
+accounting:
+  - "The first three F17 hedged covers are reconciled manually before the fourth."
+  - "Every order, exact venue fill quantity/price, fee, settlement and post-settlement revision is append-only and attributable by exact order/execution id."
+  - "Deposits and withdrawals are external cash flows, never realized trading P&L; open positions remain separate from realized P&L."
+  - "Venue-authoritative cash/fill/position facts must reconcile to the account ledger to the cent; sub-cent venue precision is retained internally and only formatted at presentation."
+
+stop_conditions:
+  - "Any unprotected real fill, UNKNOWN_PROVIDER_STATE after wire, orphan, execution-store error, unresolved position mismatch, fee above its pin, or breaker trigger."
+  - "Any account-ledger discrepancy of at least $0.01 against authoritative venue cash/fill/settlement facts."
+  - "Any settlement proof whose template, population, evidence key or schedule game id does not match the executable event."
+  - "Any enabled league with a zero effective per-league allowance."
+  - "Any socket-health alert, venue clock skew above the existing bound, or evidence that reader backlog serves stale executable books."
+
+reports:
+  - "Hedged-cover count, realized P&L, EV per trade and Sharpe per trade; directional/unhedged outcomes reported separately."
+  - "Refusals and blocks by exact reason, including venue-asymmetric listings and settlement-population mismatches."
+  - "First-three manual reconciliation evidence and cent-exact account-ledger reconciliation."
+  - "Before/after live CPU, loop lag, venue timestamp skew, socket errors and frame throughput; do not attribute a change without the exact release boundary."
+
+claims: >
+  This row does not claim that wider coverage or the offline CPU reduction is profitable in live
+  operation. Historical settlement bounds price risk; only forward executable fills and
+  authoritative settlements can establish realized EV. F16 never started and contributes no
+  observation to this window.

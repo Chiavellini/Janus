@@ -28,6 +28,9 @@ cfb = 200.0
 epl = 200.0
 lal = 200.0
 bun = 200.0
+# L50 regular-season evidence; PAPER/DEMO allowance only. Live outer caps still bind;
+# deployment requires a fresh signed override with this limits SHA and the GATE sequence.
+ere = 200.0
 # L43 regular-season evidence; PAPER/DEMO allowance only. Live outer caps still bind;
 # deployment requires a fresh signed override with this limits SHA and the GATE sequence.
 mls = 200.0

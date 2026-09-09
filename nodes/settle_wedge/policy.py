@@ -359,7 +359,9 @@ def _soccer_verdicts(code: str) -> tuple[Verdict, ...]:
         Verdict("suspended", "SAME", "a suspended match resumes; if the resumption falls outside Kalshi's 48 hours it "
                 "is a rescheduled match and is COUNTED UNDER POSTPONEMENT. "
                 + ("L43 verifies every MLS final-whistle wallclock, including any delayed completion. "
-                   if code == "mls" else "The L33/L35 proxy sees it as played late. ")
+                   if code == "mls" else
+                   "L50 verifies every Eredivisie final whistle and officially reviews all three resumed matches. "
+                   if code == "ere" else "The L33/L35 proxy sees it as played late. ")
                 + "Charging it again here would price the same event twice."),
         Verdict("abandoned", "SAME", "a match abandoned before full time is replayed (counted under postponement, as "
                 "above) or its result is awarded by the competition (both venues settle on the awarded result)."),

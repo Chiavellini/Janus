@@ -1,0 +1,51 @@
+id: L49
+registered_at: 2026-09-09
+track: sports/settlement
+kind: descriptive
+question: Can immutable official original schedules and authoritative completion records establish independent Eredivisie settlement bounds?
+known_at_registration:
+  - No Eredivisie outcome distribution has been read or computed in this task.
+  - MLS source reconnaissance located a June 18, 2025 official concept schedule with exact early-round times, later round windows, and UEFA-dependent alternatives.
+  - The generic definitive-program PDF URL has been overwritten with 2026/27 and cannot prove the 2025/26 originals.
+  - Other leagues' settlement rates cannot satisfy Eredivisie evidence keys.
+population:
+  season: 2025/26
+  competition: Eredivisie regular season only
+  expected_clubs: 18
+  expected_matches_per_club: 34
+  expected_matches: 306
+  excluded: European qualification playoffs, promotion/relegation playoffs, cups, friendlies, and all other seasons.
+sources:
+  original_concept: https://d3et0fncpz2hhr.cloudfront.net/CONCEPT-Competitieprogramma-VriendenLoterij-Eredivisie.pdf
+  original_announcement: https://eredivisie.nl/nieuws/concept-speelschema-vriendenloterij-eredivisie-2025-26/
+  original_updates: Dated official Eredivisie or KNVB fixture-level scheduling publications and their archived attachments; official club publications may independently corroborate a fixture.
+  final: Complete ESPN ned.1 2025/26 regular-season inventory and event summaries with final-whistle wallclocks, or official league final/completion records.
+  exceptions: Official league, KNVB, or club publications reconciling each schedule change, suspension, abandonment, forfeiture, or cancellation.
+archive:
+  root: /Volumes/Kilos/janus/research/eredivisie-L49
+  requirements: Preserve each original response verbatim with URL, acquisition UTC, SHA256, and HTTP status; never overwrite a response or reuse mutable current content as historical evidence.
+method:
+  stages: Establish the complete original population first; do not fetch or score final outcomes if the original gate fails.
+  identity: Canonical home club plus away club and regular-season phase; require exactly one of every ordered pair of distinct clubs.
+  original: The first unconditionally confirmed fixture-specific kickoff in a dated official publication before that fixture. A round window, concept-only conditional kickoff, mutable current schedule, or publication after the game is insufficient.
+  updates: Preserve publication chronology; later revisions cannot replace the first confirmed kickoff. Conditional alternatives require an independently dated decision, never selection from the eventual result.
+  completion: Actual second-half final-whistle wallclock must be present and chronologically valid, including resumed matches. Kickoff, lastUpdated, or a nominal endDate is not a completion proxy.
+  postponement: Charge every completion more than 48 hours after its first confirmed scheduled kickoff, including pre-market schedule changes; uncertain 48-hour boundaries are charged conservatively.
+  cancellation: Charge an original fixture officially cancelled, abandoned without completion, or forfeited. Unresolved/missing records are retained and prevent evidence registration.
+  estimator: Always use a one-sided exact 95 percent Clopper-Pearson upper bound for each rate, including zero events.
+gates:
+  - Original population contains all 306 unique ordered fixtures and 18 clubs each playing 34 matches.
+  - All 306 fixtures have an auditable first confirmed kickoff; zero unresolved date ranges or conditional alternatives.
+  - Every original joins uniquely to one authoritative final/completion or cancellation record; no silent drops or extra playoff rows.
+  - Every changed kickoff and all suspension-only exceptions receive individual official-source review.
+  - All completed fixtures have authoritative final-whistle clocks or an independent complete suspension/resumption inventory that bounds their actual completion.
+  - Every source hash and inventory is reproducible offline; any failed gate leaves both evidence keys absent.
+failure_route: Preserve the failed gate and all sources, do not score a partial outcome distribution, and specify a new forward collector registration with a watchdog SLA before any forward capture.
+evidence_keys:
+  - soccer.ere.cancelled_rate
+  - soccer.ere.postponed_gt48h_rate
+outputs:
+  - source_manifest.json
+  - results.json
+  - verdict.md
+claims: No prices, books, fills, or P&L are read; this can price a settlement reserve only and establishes no positive net EV or Sharpe. No deployment, orders, live-box mutation, or cap increase is authorized by this row.

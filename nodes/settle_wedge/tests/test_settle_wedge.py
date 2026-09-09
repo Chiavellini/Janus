@@ -156,9 +156,12 @@ def test_the_registry_carries_l26_and_mlb_certifies_from_it():
     assert all(e.research_ref.startswith("research/sports/2026-09-03_nfl-settlement-wedge-rates-v2")
                for k, e in EVIDENCE.items() if k.startswith("nfl."))
     assert all(e.research_ref.startswith("research/sports/2026-09-03_soccer-settlement-wedge-rates")
-               for k, e in EVIDENCE.items() if k.startswith("soccer.") and not k.startswith("soccer.mls."))
+               for k, e in EVIDENCE.items() if k.startswith("soccer.")
+               and not k.startswith(("soccer.mls.", "soccer.ere.")))
     assert all(e.research_ref == "research/sports/2026-09-09_mls-original-schedule/spec.yaml"
                for k, e in EVIDENCE.items() if k.startswith("soccer.mls."))
+    assert all(e.research_ref == "research/sports/2026-09-09_eredivisie-interval-bounds/spec.yaml"
+               for k, e in EVIDENCE.items() if k.startswith("soccer.ere."))
     assert EVIDENCE["tennis.walkover_rate"].research_ref.startswith("research/sports/2026-09-04_tennis-settlement-wedge-rates")
     assert {k.split(".")[0] for k in EVIDENCE} == {"mlb", "nfl", "soccer", "cfb", "tennis"}
     # F4 (2026-09-05): the delay rate is the forward row's UPPER BOUND, never a point estimate below n = 300
@@ -170,7 +173,8 @@ def test_the_registry_carries_l26_and_mlb_certifies_from_it():
     assert d.n >= 42 and d.value <= round(3 / 42, 6) + 1e-9 and d.value >= 0.0   # the bound shrinks as n grows
     assert all(e.research_ref.startswith("research/sports/2026-09-03_cfb-settlement-wedge-rates") for k, e in EVIDENCE.items() if k.startswith("cfb."))
     assert all("FLOOR" in e.note for k, e in EVIDENCE.items()
-               if k.startswith("soccer.") and not k.startswith("soccer.mls.") and k.endswith("postponed_gt48h_rate"))
+               if k.startswith("soccer.") and not k.startswith(("soccer.mls.", "soccer.ere."))
+               and k.endswith("postponed_gt48h_rate"))
     k, p = records()
     eq = certify(k, p, league="mlb")
     assert isinstance(eq, SettlementEquivalence)

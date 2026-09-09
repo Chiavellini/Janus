@@ -1,0 +1,367 @@
+{
+  "kind": "offline_component_profile",
+  "data_root": "/Volumes/Kilos/janus/research/l51-capture-7q8lj2ab",
+  "hour": "2026-09-09/04",
+  "limitation": "No game callbacks, store, network or warm-start parity. Cold capture prefix may omit prior snapshots.",
+  "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "venues": {
+    "kalshi": {
+      "source": "/Volumes/Kilos/janus/frames/kalshi/2026-09-09/04.jsonl.gz",
+      "selected_sha256": "1c53f33ac7d03ccfd4d55d9978d3f5ee95ab7b36fa390bf450b7dbfef212c135",
+      "frames": 10000,
+      "start_utc": 1788926400.1557848,
+      "end_utc": 1788926432.946825,
+      "capture": {
+        "9": {
+          "runs": [
+            {
+              "cpu_s": 0.32358,
+              "compressed_bytes": 342494,
+              "uncompressed_bytes": 3972131,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.32392300000000007,
+              "compressed_bytes": 342494,
+              "uncompressed_bytes": 3972131,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.32499199999999995,
+              "compressed_bytes": 342494,
+              "uncompressed_bytes": 3972131,
+              "round_trip_equal": true
+            }
+          ],
+          "median_cpu_s": 0.32392300000000007
+        },
+        "1": {
+          "runs": [
+            {
+              "cpu_s": 0.12992399999999993,
+              "compressed_bytes": 481979,
+              "uncompressed_bytes": 3972131,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.13068100000000005,
+              "compressed_bytes": 481979,
+              "uncompressed_bytes": 3972131,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.13111799999999985,
+              "compressed_bytes": 481979,
+              "uncompressed_bytes": 3972131,
+              "round_trip_equal": true
+            }
+          ],
+          "median_cpu_s": 0.13068100000000005
+        },
+        "3": {
+          "runs": [
+            {
+              "cpu_s": 0.13349499999999992,
+              "compressed_bytes": 457245,
+              "uncompressed_bytes": 3972131,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.1341000000000001,
+              "compressed_bytes": 457245,
+              "uncompressed_bytes": 3972131,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.13329000000000013,
+              "compressed_bytes": 457245,
+              "uncompressed_bytes": 3972131,
+              "round_trip_equal": true
+            }
+          ],
+          "median_cpu_s": 0.13349499999999992
+        }
+      },
+      "reader": {
+        "cpu_s": 2.991638,
+        "registrations": 908
+      },
+      "reader_profile": {
+        "cpu_s": 7.414402,
+        "registrations": 908,
+        "profile_total_s": 7.323370681000001,
+        "profile_top_self_time": [
+          {
+            "function": "stream.py:153:handle",
+            "calls": 10000,
+            "self_s": 1.961506041,
+            "cumulative_s": 7.203053419000001
+          },
+          {
+            "function": "<string>:2:__init__",
+            "calls": 1452477,
+            "self_s": 1.0576916120000002,
+            "cumulative_s": 2.674755394
+          },
+          {
+            "function": "replica.py:122:heartbeat",
+            "calls": 9080000,
+            "self_s": 0.8783619090000001,
+            "cumulative_s": 0.8783619090000001
+          },
+          {
+            "function": "schema.py:250:assert_price_range",
+            "calls": 1452477,
+            "self_s": 0.8349573560000001,
+            "cumulative_s": 1.1615507580000002
+          },
+          {
+            "function": "schema.py:345:__post_init__",
+            "calls": 1452477,
+            "self_s": 0.45551302400000004,
+            "cumulative_s": 1.617063782
+          },
+          {
+            "function": "replica.py:212:project_in",
+            "calls": 19178,
+            "self_s": 0.370126742,
+            "cumulative_s": 0.374511011
+          },
+          {
+            "function": "schema.py:404:fold_complement_bids",
+            "calls": 19998,
+            "self_s": 0.268930506,
+            "cumulative_s": 1.26729449
+          },
+          {
+            "function": "~:0:<built-in method builtins.sorted>",
+            "calls": 69994,
+            "self_s": 0.234435776,
+            "cumulative_s": 0.27465944600000003
+          },
+          {
+            "function": "protocol.py:89:project",
+            "calls": 19998,
+            "self_s": 0.22884425200000003,
+            "cumulative_s": 3.801043636
+          },
+          {
+            "function": "~:0:<built-in method builtins.isinstance>",
+            "calls": 1462888,
+            "self_s": 0.208134281,
+            "cumulative_s": 0.208134281
+          },
+          {
+            "function": "protocol.py:92:<genexpr>",
+            "calls": 504157,
+            "self_s": 0.204643496,
+            "cumulative_s": 1.113124707
+          },
+          {
+            "function": "protocol.py:93:<genexpr>",
+            "calls": 504157,
+            "self_s": 0.202001131,
+            "cumulative_s": 1.09194867
+          },
+          {
+            "function": "~:0:<built-in method math.isfinite>",
+            "calls": 1452477,
+            "self_s": 0.11965429100000001,
+            "cumulative_s": 0.11965429100000001
+          },
+          {
+            "function": "protocol.py:142:parse",
+            "calls": 10000,
+            "self_s": 0.044854295,
+            "cumulative_s": 0.137846722
+          },
+          {
+            "function": "schema.py:413:<lambda>",
+            "calls": 484159,
+            "self_s": 0.04022367,
+            "cumulative_s": 0.04022367
+          }
+        ]
+      }
+    },
+    "polymarket": {
+      "source": "/Volumes/Kilos/janus/frames/polymarket/2026-09-09/04.jsonl.gz",
+      "selected_sha256": "4ab480341dc88d10380c62e3df1571bbf767e923d8b5cea722540f851537ad44",
+      "frames": 10000,
+      "start_utc": 1788926400.094887,
+      "end_utc": 1788926463.6697018,
+      "capture": {
+        "9": {
+          "runs": [
+            {
+              "cpu_s": 0.45802100000000046,
+              "compressed_bytes": 1104058,
+              "uncompressed_bytes": 7858148,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.4596929999999997,
+              "compressed_bytes": 1104058,
+              "uncompressed_bytes": 7858148,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.4551230000000004,
+              "compressed_bytes": 1104058,
+              "uncompressed_bytes": 7858148,
+              "round_trip_equal": true
+            }
+          ],
+          "median_cpu_s": 0.45802100000000046
+        },
+        "1": {
+          "runs": [
+            {
+              "cpu_s": 0.18039899999999953,
+              "compressed_bytes": 1454884,
+              "uncompressed_bytes": 7858148,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.18423899999999982,
+              "compressed_bytes": 1454884,
+              "uncompressed_bytes": 7858148,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.18320999999999898,
+              "compressed_bytes": 1454884,
+              "uncompressed_bytes": 7858148,
+              "round_trip_equal": true
+            }
+          ],
+          "median_cpu_s": 0.18320999999999898
+        },
+        "3": {
+          "runs": [
+            {
+              "cpu_s": 0.19219500000000167,
+              "compressed_bytes": 1380058,
+              "uncompressed_bytes": 7858148,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.1915659999999999,
+              "compressed_bytes": 1380058,
+              "uncompressed_bytes": 7858148,
+              "round_trip_equal": true
+            },
+            {
+              "cpu_s": 0.19095099999999832,
+              "compressed_bytes": 1380058,
+              "uncompressed_bytes": 7858148,
+              "round_trip_equal": true
+            }
+          ],
+          "median_cpu_s": 0.1915659999999999
+        }
+      },
+      "reader": {
+        "cpu_s": 0.9809809999999999,
+        "registrations": 438
+      },
+      "reader_profile": {
+        "cpu_s": 2.165082999999999,
+        "registrations": 438,
+        "profile_total_s": 2.129859654,
+        "profile_top_self_time": [
+          {
+            "function": "stream.py:177:_beat",
+            "calls": 10000,
+            "self_s": 1.006472135,
+            "cumulative_s": 1.4902011480000001
+          },
+          {
+            "function": "replica.py:122:heartbeat",
+            "calls": 4380000,
+            "self_s": 0.48186665100000003,
+            "cumulative_s": 0.48186665100000003
+          },
+          {
+            "function": "replica.py:212:project_in",
+            "calls": 13047,
+            "self_s": 0.15278254100000002,
+            "cumulative_s": 0.156131041
+          },
+          {
+            "function": "~:0:<built-in method builtins.sorted>",
+            "calls": 37014,
+            "self_s": 0.07566312500000001,
+            "cumulative_s": 0.07566312500000001
+          },
+          {
+            "function": "stream.py:99:handle",
+            "calls": 10000,
+            "self_s": 0.073738574,
+            "cumulative_s": 2.06964219
+          },
+          {
+            "function": "protocol.py:135:parse_event",
+            "calls": 10397,
+            "self_s": 0.048231673,
+            "cumulative_s": 0.119072696
+          },
+          {
+            "function": "decoder.py:351:raw_decode",
+            "calls": 9998,
+            "self_s": 0.045994612000000004,
+            "cumulative_s": 0.045994612000000004
+          },
+          {
+            "function": "protocol.py:87:ladders",
+            "calls": 13507,
+            "self_s": 0.039920676,
+            "cumulative_s": 0.058060683
+          },
+          {
+            "function": "~:0:<method 'get' of 'dict' objects>",
+            "calls": 165080,
+            "self_s": 0.030541089,
+            "cumulative_s": 0.030541089
+          },
+          {
+            "function": "<string>:2:__init__",
+            "calls": 20355,
+            "self_s": 0.022847693000000002,
+            "cumulative_s": 0.022847693000000002
+          },
+          {
+            "function": "decoder.py:340:decode",
+            "calls": 9998,
+            "self_s": 0.014790907,
+            "cumulative_s": 0.07281122500000001
+          },
+          {
+            "function": "protocol.py:91:agrees_with",
+            "calls": 13079,
+            "self_s": 0.014566742,
+            "cumulative_s": 0.037571208
+          },
+          {
+            "function": "protocol.py:54:apply_change",
+            "calls": 13079,
+            "self_s": 0.012542189,
+            "cumulative_s": 0.015381129
+          },
+          {
+            "function": "clock.py:48:observe",
+            "calls": 6628,
+            "self_s": 0.011113606,
+            "cumulative_s": 0.018398105
+          },
+          {
+            "function": "__init__.py:304:loads",
+            "calls": 9998,
+            "self_s": 0.00895193,
+            "cumulative_s": 0.08474493100000001
+          }
+        ]
+      }
+    }
+  }
+}

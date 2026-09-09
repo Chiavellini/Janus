@@ -1,0 +1,28 @@
+{
+  "frames": 10000,
+  "baseline": [
+    5.261624000000001,
+    5.645293000000002,
+    5.215640999999998
+  ],
+  "optimized": [
+    4.200695,
+    3.7392830000000004,
+    3.661163000000002
+  ],
+  "source_protocol_sha256": "5ae0d2e7bbcc9c70566a411cf92c5c65355146c2b6d1f344593b88e4e2b1b579",
+  "baseline_trace": {
+    "projection_count": 19998,
+    "projection_sha256": "7b1f97004e5eabff07e48e2fd20d12dcfcf12ee024bb5dce099b43e81cd96469",
+    "final_books_health_timestamps_sha256": "bbab051f1b75822523dae25787f8c2cc919ce5e82683bf68d627643535cef45f"
+  },
+  "optimized_trace": {
+    "projection_count": 19998,
+    "projection_sha256": "7b1f97004e5eabff07e48e2fd20d12dcfcf12ee024bb5dce099b43e81cd96469",
+    "final_books_health_timestamps_sha256": "bbab051f1b75822523dae25787f8c2cc919ce5e82683bf68d627643535cef45f"
+  },
+  "scope": "Reader/replica processing only; callbacks, network and store excluded.",
+  "median_baseline_cpu_s": 5.261624000000001,
+  "median_optimized_cpu_s": 3.7392830000000004,
+  "reader_cpu_reduction": 0.28932911207642364
+}

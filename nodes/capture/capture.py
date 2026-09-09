@@ -27,6 +27,11 @@ from typing import Iterable, Iterator
 
 from kernel.paths import FRAMES_ROOT, guard  # noqa: E402
 
+# L51: retain every byte and timestamp while reducing synchronous compression work
+# on the socket reader. Level 3 used ~59% less CPU than level 9 on the recorded
+# sample, at 25-34% more compressed bytes. The gzip/JSONL format is unchanged.
+CAPTURE_COMPRESSION_LEVEL = 3
+
 
 @dataclass(frozen=True)
 class Frame:
@@ -62,7 +67,7 @@ class FrameWriter:
         day, hour = key
         path = self.root / self.venue / day / f"{hour}.jsonl.gz"
         path.parent.mkdir(parents=True, exist_ok=True)
-        self._fh = gzip.open(path, "at", encoding="utf-8")
+        self._fh = gzip.open(path, "at", encoding="utf-8", compresslevel=CAPTURE_COMPRESSION_LEVEL)
         self._key = key
 
     def write(self, raw, *, received_utc: float | None = None,

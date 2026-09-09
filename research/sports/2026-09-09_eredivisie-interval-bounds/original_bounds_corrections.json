@@ -1,0 +1,18 @@
+{
+  "id": "L50",
+  "recorded_at": "2026-09-09",
+  "discovered_after_initial_outcome_measurement": true,
+  "frozen_original_sha256": "10aaaf0b3b9fed76d21990887e72b8403dc79ea2e89327e94f5d6c3fb45ff647",
+  "authority": "The immutable L50 spec permits a later official revision to lower the conservative original bound, never raise it. Initial source, outcome and review artifacts remain unchanged. This appended correction may not reduce any fixture's adverse indicator.",
+  "corrections": [
+    {
+      "home": "Heracles Almelo", "away": "FC Utrecht", "round": 26,
+      "old_lower_date": "2026-03-07", "new_lower_date": "2026-03-06",
+      "source_label": "march-reschedule",
+      "source_url": "https://www.knvb.nl/node/71450",
+      "source_sha256": "8759617263e9dd44a5f8dd4abc47049e52807f372a538dea6e9d9d6d1336e86c",
+      "published": "2026-02-02", "scheduled": "2026-03-06T20:00:00+01:00",
+      "note": "The February 2 official scheduling decision advances this fixture from March 7 to Friday March 6 20:00. It was collected during final exception review rather than the initial PDF freeze. Therefore March 6 midnight must replace March 7 as a strictly earlier bound in a separately preserved corrected table. No later-date correction is allowed."
+    }
+  ]
+}

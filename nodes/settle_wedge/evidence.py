@@ -43,6 +43,7 @@ _L39 = "research/sports/2026-09-04_tennis-settlement-wedge-rates/spec.yaml"
 _L43 = "research/sports/2026-09-09_mls-original-schedule/spec.yaml"
 _L46 = "research/sports/2026-09-09_itf-delay-atomic/spec.yaml"
 _L47 = "research/sports/2026-09-09_itf-qualifying-atomic/spec.yaml"
+_L50 = "research/sports/2026-09-09_eredivisie-interval-bounds/spec.yaml"
 _F4_DIR = "research/sports/2026-09-04_tennis-delay-forward"
 _F4 = _F4_DIR + "/spec.yaml"
 EVIDENCE: dict[str, Evidence] = {
@@ -81,6 +82,24 @@ EVIDENCE: dict[str, Evidence] = {
         "every fixture has a unique ESPN final-whistle wallclock", "2026-09-09", _L43,
         "One-sided exact 95% Clopper-Pearson UPPER BOUND: zero cancellations in 510 complete regular-season "
         "fixtures. Zero observations is not registered as zero risk. No missing/ambiguous fixture was dropped."),
+    "soccer.ere.postponed_gt48h_rate": Evidence(
+        "soccer.ere.postponed_gt48h_rate", 0.04253671926053953, 306,
+        "Official June/September/December Eredivisie 2025/26 scheduling publications; all 306 regular-season "
+        "fixtures joined to ESPN actual period-two final-whistle wallclocks", "2026-09-09", _L50,
+        "One-sided exact 95% Clopper-Pearson UPPER BOUND: 7/306 conservative completion delays. "
+        "Every original uses its earliest candidate date at Europe/Amsterdam midnight; alternatives retained, "
+        "including a separately preserved March 7-to-6 correction discovered in official review. "
+        "All 15 initial date exceptions reviewed, including three official suspension-completion reports; "
+        "329 raw/request hashes and every initial/corrected row independently replayed. Regular season only, "
+        "not playoffs or another league's rate. A historical settlement reserve, not a future-rate or profit guarantee."),
+    "soccer.ere.cancelled_rate": Evidence(
+        "soccer.ere.cancelled_rate", 0.009742208949783377, 306,
+        "All 306 ordered fixtures in the official Eredivisie 2025/26 original population completed; "
+        "18 clubs each play 34 matches; one validated ESPN final whistle per fixture", "2026-09-09", _L50,
+        "One-sided exact 95% Clopper-Pearson UPPER BOUND for 0/306 cancellations, abandonments without "
+        "completion or forfeitures; zero observations is never zero risk. Every fixture retained, three "
+        "European qualification playoff games excluded by explicit season phase. L49's original-lineage "
+        "failure and L50's initial/corrected/replayed artifacts remain preserved."),
     "mlb.postponed_gt2d_rate": Evidence(
         "mlb.postponed_gt2d_rate", 0.004762, 2100,
         "MLB Stats API schedule, 2026 regular season 2026-03-25..2026-09-02", "2026-09-03", _L26,

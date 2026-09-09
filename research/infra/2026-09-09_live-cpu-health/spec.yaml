@@ -1,0 +1,33 @@
+ledger_row: L51
+registered_date: 2026-09-09
+track: infra
+kind: descriptive
+status_at_registration: PENDING
+question: >-
+  Which work accounts for the F15 lane's reported approximately 97.5 percent
+  single-vCPU use, and can correctness-preserving local work reduce reader
+  backpressure contributing to Kalshi keepalive timeouts?
+known_before_registration:
+  - F15 is reported active on executable commit 64f54c7 with recurring Kalshi socket errors.
+  - The Kalshi reader captures, parses, refreshes replica heartbeat state and invokes poller callbacks synchronously.
+  - Capture currently uses gzip's default compression level and rotates by hour.
+scope:
+  - Read-only process/thread CPU deltas, procfs, systemd metadata, bounded logs and existing socket-health rows on the Mexico box.
+  - Existing public raw-frame captures, code inspection and bounded offline profiling or benchmarks on the laptop under nice 19.
+  - No outcomes, realized returns, holdout scoring or strategy threshold selection.
+prohibited:
+  - No live restart, deployment, signals, profiler attach, arm changes, orders, cap changes or watchdog weakening.
+  - No bulk live data scan or capture processing on the live box.
+  - No reduction in coverage, frame integrity, replay semantics or book health checks.
+success_criteria:
+  - Separate observed process/thread CPU from inferred function-level attribution.
+  - Explain the buffering and scheduling mechanism and explicitly retain uncertainty where evidence cannot identify dominant work.
+  - A local optimization requires exact behavioral equivalence on deterministic fixtures and a bounded before/after CPU benchmark.
+  - Attribute no live CPU or timeout improvement to an undeployed local optimization.
+  - Preserve every prior criterion, safety gate, capture frame and executable price calculation.
+expected_ev_effect: >-
+  No direct change to quoted EV or price selection. Reducing duplicate CPU work
+  may reduce stale-book and hedge latency risk, but any realized EV benefit must
+  be measured forward under unchanged execution gates and caps.
+holdout_touched: false
+test_look_spent: false

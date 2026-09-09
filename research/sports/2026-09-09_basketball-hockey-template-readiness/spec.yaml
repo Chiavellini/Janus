@@ -1,0 +1,40 @@
+experiment_id: janus-basketball-hockey-template-readiness-2026-09-09
+registered_on: 2026-09-09
+ledger_ref: L48
+row_kind: descriptive
+status_at_registration: PENDING
+test_looks_spent: 0
+purpose: >
+  Establish the actual current NBA, WNBA and NHL listing/template blockers, and
+  distinguish unavailable cross-venue pairs from discovery failures without reading
+  executable books, scoring outcomes or inferring that coverage proves profit.
+known_before_registration:
+  - No reviewed Kalshi or Polymarket templates are registered for these three leagues.
+  - No basketball or hockey settlement-frequency evidence is registered.
+  - The existing harvest tool accepts pre-hours=168 but the matcher universe remains 48 hours.
+population:
+  leagues: [nba, wnba, nhl]
+  markets: full-game moneyline only
+  current_discovery: the unchanged repository discovery and harvest path with pre-hours=168
+  raw_inventory: all currently open/unopened Kalshi game-series events and nonclosed Gamma league-tag events
+sources:
+  - Kalshi public /events with nested markets, /series/{ticker}, open and unopened states, complete cursor chains
+  - Gamma /sports and /events for the registry tag plus the matching sport primaryTagId when different
+  - ESPN schedule through the existing discovery path
+  - Current verbatim rules_primary/rules_secondary and description, harvested by nodes.settle_wedge
+criteria:
+  - Every requested catalog must terminate naturally with no error or cursor repetition; otherwise report INCOMPLETE, never absence.
+  - Archive every successful HTTP response plus request parameters, timestamp and SHA256 on /Volumes/Kilos/janus before reporting.
+  - Use exact canonical schedule matches from the production matcher; title similarity never establishes a pair.
+  - Report production schedule/co-listed/blocked counts separately from raw venue inventories and their time bounds.
+  - A league with no current same-event cross-venue pair stays unavailable; future listings are not inferred from season dates.
+  - Review all distinct observed actual moneyline template texts and name every missing settlement dimension or population.
+  - Any policy registration requires complete review of twelve dimensions and existing same-population evidence for every bounded dimension.
+  - No evidence rate is estimated here; a missing frequency requires a separate preregistered measurement.
+  - Unknown or unmeasured basis remains BLOCK; no cap, live mode, deployment, arm or order changes.
+outputs:
+  - results.json and verdict.md in this directory
+  - complete response archive and manifest under /Volumes/Kilos/janus/research/L48/
+expected_ev_effect: >
+  No trading EV change from this audit. A later evidence-backed enablement may add
+  executable opportunities with the same net-EV hurdle; coverage itself claims no profit.

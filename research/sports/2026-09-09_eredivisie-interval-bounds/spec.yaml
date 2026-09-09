@@ -1,0 +1,51 @@
+id: L50
+registered_at: 2026-09-09
+track: sports/settlement
+kind: descriptive
+supersedes: L49, which remains BLOCKED_ORIGINAL_LINEAGE with no outcome distribution scored.
+question: Can conservative original-date intervals over the complete Eredivisie 2025/26 regular season bound its settlement timing and cancellation risks?
+known_at_registration:
+  - L49 archived the June 24 definitive, September 10 autumn, and December 23 spring official programs and their dated announcements.
+  - The original program has 309 fixture rows representing exactly 306 ordered fixtures, 18 clubs each appearing 34 times. AZ-PEC, Utrecht-Excelsior, and Feyenoord-Fortuna have duplicate alternative rows.
+  - First fixture-specific timings occur in June for 126 fixtures, September for 81, and December for 99. Of these, 47 first publications are conditional (44 starred singles and three alternative pairs).
+  - No ESPN final inventory or completion distribution has been read. Schedule announcements mention specific changes, including AZ-Excelsior and Go Ahead-Heerenveen being moved to 2026; no counts/rates have been derived from outcomes.
+  - KNVB August 15 scheduling decision resolves Feyenoord-Fortuna to September 17 and moves AZ-PEC to September 24; earlier candidate dates must remain in the conservative bound.
+population:
+  season: 2025/26
+  competition: Eredivisie regular season only
+  expected_clubs: 18
+  expected_matches_per_club: 34
+  expected_matches: 306
+  excluded: European qualification and promotion/relegation playoffs, cups, friendlies, other seasons.
+sources:
+  originals: L49 preserved official June definitive, September autumn, December spring PDFs and publication pages; verify every SHA256 before use.
+  alternatives: Every duplicate row and fixture-specific footnote in those PDFs, plus dated official scheduling decision pages. Later announcements may lower the conservative earliest original but never move it later.
+  final: ESPN ned.1 complete season inventory and summary second-half final-whistle wallclocks; official league/KNVB/club completion or cancellation records for explicit exceptions.
+  archive_root: /Volumes/Kilos/janus/research/eredivisie-L50
+  provenance: Preserve URL, UTC acquisition, raw bytes, HTTP status, SHA256 and all failures; no overwritten source file, terminal result, or manual exception decision.
+original_bound:
+  identity: Every ordered home-away pair of 18 canonically mapped clubs exactly once; all alternatives attach to that identity, never new games.
+  first_specific: A round window alone is not a fixture-specific original. The first dated official batch that gives a fixture-specific calendar date supplies its baseline, retaining every caveat.
+  lower_date: Take the earliest calendar date of its explicit candidate rows and fixture-specific alternative dates in the preserved pre-match official publications. A later revision can lower this date but can never raise it.
+  clocks: Use 00:00 Europe/Amsterdam on the lower date for every fixture, including exact clocks. This is deliberately earlier than the published kickoff, and treats same-day permutations conservatively.
+  unbounded_alternative: If a fixture-specific conditional footnote permits an earlier date which has no auditable lower bound, retain the fixture and charge it adverse for delay unconditionally. Never silently assume the nominal date is the earliest possibility.
+  no_hindsight: Freeze all 306 original lower bounds and conditional-adverse flags before retrieving final outcomes. A later source review can only add conservatism or cause a STOP, never remove an already charged ambiguity.
+method:
+  final_join: Exact canonical home and away IDs, regular-season phase and season; require unique joins, retain extra/missing/ambiguous rows, and reject an ID whose summary names different competitors.
+  completion: Require actual period-2 end-regular-time wallclock later than event start; never replace with scheduled kickoff, lastUpdated, nominal endDate, or last non-final play. A resumption after an on-time start must be detected.
+  delayed: Adverse if authoritative completion is more than 48 hours after the frozen earliest original midnight, or the original alternative was unbounded. Charge an uncertain deadline boundary adverse.
+  cancelled: Adverse if officially cancelled, abandoned without completion, or forfeited. Unresolved/missing fixtures remain in the population and block evidence registration until disposition is authoritative.
+  exceptions: Individually reconcile every changed kickoff calendar date and every completion outside the original calendar date to official league/KNVB/club sources; retain every unresolved case and STOP registration.
+  estimator: Always use a one-sided exact 95 percent Clopper-Pearson upper bound for both dimensions, including zero events. This is an upper bound on a conservative event indicator, not a zero-risk or profitability claim.
+gates:
+  - Exactly 306 original ordered fixtures, 18 clubs each playing 34; all rows/footnotes inspected and hashes reproduced.
+  - Freeze the entire original lower-bound table before the first final-inventory request; zero future-dependent source choices.
+  - Every original has one authoritative terminal record; every completed record has one validated actual completion wallclock or an official completion timestamp bounding the deadline.
+  - No silent exclusion, unknown phase, competitor mismatch, unmatched fixture, duplicate final key, unresolved source alternative, or unreviewed exception.
+  - A separate offline replay verifies all raw request hashes, rebuilds the original table and final joins, and reproduces the rates and full row outputs.
+  - Any failed gate leaves both evidence keys absent and the league blocked; no rate transfers from MLS or any other league.
+evidence_keys:
+  - soccer.ere.cancelled_rate
+  - soccer.ere.postponed_gt48h_rate
+implementation_if_pass: Bind evidence and certification to externally anchored ESPN Eredivisie regular-season game IDs; unsupported/missing/preseason/postseason populations remain blocked. No cap changes.
+claims: No books, fills, prices, realized P&L, positive EV, or Sharpe are inferred. The expected effect is a conservative settlement reserve deducted from executable trade EV, never evidence of profitable coverage. No deployment, orders, live-box changes, or raised outer caps.
