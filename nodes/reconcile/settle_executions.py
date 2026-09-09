@@ -129,10 +129,13 @@ def fetch_results(items: list[dict], cl, *, fetch_kalshi=fetch_kalshi_market, fe
             yes = [tk for tk, r in results.items() if r == "yes"]
             if len(yes) == 1 and all(r is not None for r in results.values()):
                 winners["kalshi"] = yes[0]
+        except Exception as exc:  # noqa: BLE001 -- one venue down must not hide the other's final result
+            winners["kalshi_error"] = f"{type(exc).__name__}"
+        try:
             if it.get("pm_slug"):
                 winners["polymarket"] = _pm_winner(fetch_event(it["pm_slug"]), it["pm_slug"], it["outcomes"])
-        except Exception as exc:  # noqa: BLE001 -- one venue down must not stop the pass
-            winners["error"] = f"{type(exc).__name__}"
+        except Exception as exc:  # noqa: BLE001 -- one venue down must not hide the other's final result
+            winners["polymarket_error"] = f"{type(exc).__name__}"
         out[it["execution_id"]] = winners
     return out
 

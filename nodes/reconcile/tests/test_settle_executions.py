@@ -122,6 +122,17 @@ def test_the_other_result_and_an_open_venue(tmp_path):
     assert st.con.execute("SELECT realized_usd FROM execution_settlements").fetchone()[0] == 5.0
 
 
+def test_one_venue_result_survives_the_other_venues_transport_error(tmp_path):
+    st, *_ = _hedged(tmp_path)
+    items = pending(st, now=T)
+    fk, _ = _fetchers({"K-LAD": "yes", "K-STL": "no"}, None)
+    def pm_down(_slug):
+        raise TimeoutError("gamma unavailable")
+    winners = fetch_results(items, None, fetch_kalshi=fk, fetch_event=pm_down)
+    assert winners["x1"]["kalshi"] == "K-LAD"
+    assert winners["x1"]["polymarket"] is None and winners["x1"]["polymarket_error"] == "TimeoutError"
+
+
 def _partial(tmp_path: Path):
     """Execution 69852b86, MIL @ CIN, 2026-09-05 00:49:35Z: Polymarket CIN YES 100 @ 0.13 filled;
     Kalshi MIL YES hedge 64.18 @ 0.84 PARTIAL, two more attempts UNFILLED; 35.82 unhedged."""

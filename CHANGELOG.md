@@ -137,6 +137,11 @@ waits. The one-shot guard also hydrates every historical Janus Polymarket token 
 fee schedule before replaying fills, allowing the authoritative-fill upsert to repair the F12 fee
 FIFO and linked order rows.
 
+Venue-result reads are isolated as well. A Gamma/Polymarket error no longer discards a Kalshi
+result already read in the same pass (or vice versa); each authoritative half is persisted and the
+cover continues waiting for the other. This prevents a transient endpoint fault from generating a
+false missing-position alarm on the venue that has already paid or removed its contracts.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and
