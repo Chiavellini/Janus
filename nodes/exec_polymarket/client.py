@@ -330,6 +330,10 @@ class PolymarketExecution:
     #: moved by fills + exactly the pinned 0.0604 while the trade said 0). When the venue reports
     #: no fee and params are known, the fill carries the pinned fee, labelled so in the journal.
     fee_params: Any = None
+    #: Live supervision shares one venue client across many concurrent games. Fee schedules are
+    #: market-specific, so a single mutable ``fee_params`` slot races with whichever poller ran
+    #: last. The live grid fills this map by token; ``fee_params`` remains the proof/test fallback.
+    fee_params_by_market: dict[str, Any] = field(default_factory=dict)
     submits: int = 0
     unconfirmed: int = 0
     rejected_http: int = 0
@@ -537,24 +541,26 @@ class PolymarketExecution:
             taker = str(tr.get("trader_side", "TAKER")).upper() == "TAKER"
             fee = size * price * _f(tr.get("fee_rate_bps")) / 10_000.0
             fee_source = "venue"
-            if fee <= 0 and taker and self.fee_params and size > 0:
-                fee, fee_source = self._pinned_fee(tr, size, price), "pinned (venue reported none)"
+            market_id = str(tr.get("asset_id") or "")
+            fee_params = self.fee_params_by_market.get(market_id) or self.fee_params
+            if fee <= 0 and taker and fee_params and size > 0:
+                fee, fee_source = self._pinned_fee(tr, size, price, fee_params), "pinned (venue reported none)"
             rec = FillRecord(self.venue, str(tr.get("taker_order_id") or tr.get("order_id") or ""),
                              str(tr.get("id")), size, price, fee, taker, _f(tr.get("match_time"), since_utc), status in FINAL_TRADE,
-                             market_id=str(tr.get("asset_id") or ""),
+                             market_id=market_id,
                              side="sell_yes" if str(tr.get("side", "")).upper() == "SELL" else "buy_yes")
             self.journal.record_fill(rec)
             self.last_fee_source = fee_source
             out.append(rec)
         return out
 
-    def _pinned_fee(self, tr: dict, size: float, price: float) -> float:
+    def _pinned_fee(self, tr: dict, size: float, price: float, fee_params: Any) -> float:
         from nodes.fees.models import Fill
         from nodes.fees.registry import model_for, params_for
         try:
             f = Fill(venue=self.venue, market_id=str(tr.get("asset_id") or ""), outcome_id=str(tr.get("asset_id") or ""),
                      side="yes", price=price, contracts=size, liquidity="taker", order_seq=0)
-            return float(model_for(self.venue).entry_cost([f], params_for(self.venue, self.fee_params)))
+            return float(model_for(self.venue).entry_cost([f], params_for(self.venue, fee_params)))
         except Exception:  # noqa: BLE001
             return 0.0
 

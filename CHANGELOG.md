@@ -89,6 +89,14 @@ used the stale fee. It now also requires average price and fee to agree before s
 fill FIFO corrects all four fields. This changes reported realized PnL only, not an order, cap,
 hurdle or forward predicate.
 
+The next cover exposed the Polymarket half of the same accounting boundary. CLOB V2 reported
+`fee_rate_bps=0` on a 10-contract fill at $0.31, while the authenticated cash balance fell by the
+$3.10 fill plus $0.10695 — exactly that market's Gamma `fee_rate=0.05` curve. The adapter already
+substituted the pinned fee when the trade feed reported none, but the real grid only supplied fee
+parameters inside the paper-book branch; a shared live client therefore wrote zero. Live supervision
+now keys fee parameters by market token and supplies them for both real and paper venues. This repairs
+account/settlement PnL without changing selection, order prices, caps, hurdles or the F12 clock.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and

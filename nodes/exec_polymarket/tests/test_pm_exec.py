@@ -100,6 +100,25 @@ def test_a_taker_fill_the_venue_reports_without_a_fee_carries_the_pinned_fee(tmp
     assert f.fee_usd > 0 and v.last_fee_source.startswith("pinned")
 
 
+def test_live_fee_params_are_keyed_by_market_not_the_last_pollers_schedule(tmp_path):
+    """One shared live client serves concurrent games whose Gamma fee schedules differ."""
+    tr = FakeTransport(trades=[
+        {"id": "t1", "taker_order_id": "o1", "asset_id": "tok-five", "size": "10", "price": "0.31",
+         "fee_rate_bps": "0", "trader_side": "TAKER", "match_time": T, "status": "CONFIRMED"},
+        {"id": "t2", "taker_order_id": "o2", "asset_id": "tok-seven", "size": "10", "price": "0.31",
+         "fee_rate_bps": "0", "trader_side": "TAKER", "match_time": T, "status": "CONFIRMED"},
+    ])
+    v, _ = venue(tmp_path, tr)
+    v.fee_params = {"fee_rate": 0.04}
+    v.fee_params_by_market = {
+        "tok-five": {"fee_rate": 0.05},
+        "tok-seven": {"fee_rate": 0.07},
+    }
+    fills = v.fills(since_utc=0)
+    assert fills[0].fee_usd == pytest.approx(10 * 0.05 * 0.31 * 0.69)
+    assert fills[1].fee_usd == pytest.approx(10 * 0.07 * 0.31 * 0.69)
+
+
 def test_a_fak_match_is_unconfirmed_until_status_reports_the_size(tmp_path):
     tr = FakeTransport(posts=[{"success": True, "orderID": "0xabc", "status": "matched"}],
                        orders=[{"id": "0xabc", "status": "MATCHED", "size_matched": "6", "price": "0.44"}])

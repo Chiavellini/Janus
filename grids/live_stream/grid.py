@@ -505,11 +505,15 @@ class Supervisor:
         for outcome, legs in offers.items():
             for l in legs:
                 v = self.venues.get(l.venue)
-                if v is not None and hasattr(v, "books"):
-                    side = "buy_no" if (l.venue == "kalshi" and l.outcome_id.endswith(":NO")) else "buy_yes"
-                    v.books[(l.market_id, side)] = l.book
-                    if hasattr(v, "fee_params"):
-                        v.fee_params = dict(sup.fee_params.get(l.venue) or {})    # paper fills carry the pinned fee
+                if v is not None:
+                    params = dict(sup.fee_params.get(l.venue) or {})
+                    if hasattr(v, "fee_params_by_market"):
+                        v.fee_params_by_market[l.market_id] = params
+                    elif hasattr(v, "fee_params"):
+                        v.fee_params = params
+                    if hasattr(v, "books"):
+                        side = "buy_no" if (l.venue == "kalshi" and l.outcome_id.endswith(":NO")) else "buy_yes"
+                        v.books[(l.market_id, side)] = l.book
         max_age = max((ev.evaluated_utc - l.book.fetched_utc) for legs in offers.values() for l in legs)
         cand = Candidate(plan.opportunity_id, ev.game_id, sup.poller.league,
                          ((plan.first.venue, plan.first.contracts, plan.first.limit_price),
