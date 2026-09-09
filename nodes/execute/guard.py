@@ -189,6 +189,12 @@ class PositionGuard:
             rep.findings.append(f"SETTLEMENT_ACCOUNTING_REVISED {revised}")
         if not rep.mismatches:
             resolve_flag(self.store, "POSITION_MISMATCH", "the venue positions match every unreleased execution", now=snap.now)
+        material = self.records.store.con.execute(
+            "SELECT COUNT(*) FROM executions WHERE released=0 AND ABS(unhedged)>?",
+            (self.limits.protect_dust_contracts,),
+        ).fetchone()[0]
+        if not material:
+            resolve_flag(self.store, "UNHEDGED_POSITION", "no unreleased execution exceeds protection dust", now=snap.now)
         rep.fills_today = self.fills_today(snap.now)
         self.cursor_utc = snap.now - ADOPT_WINDOW_S
         return rep
@@ -269,7 +275,8 @@ class PositionGuard:
                 ).fetchall()
             }
             if self.ledger.grow_to_committed(
-                    rid, per_venue_usd=committed, reason=f"guard authoritative fills for {exid[:8]}", now=snap.now):
+                    rid, per_venue_usd=committed, reason=f"guard authoritative fills for {exid[:8]}",
+                    now=snap.now, exact=bool(released)):
                 rep.findings.append(
                     f"RESERVATION_GROWN {rid[:8]} for {exid[:8]} to "
                     + ", ".join(f"{v}={usd:.4f}" for v, usd in sorted(committed.items()))

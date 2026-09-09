@@ -104,6 +104,7 @@ def test_a_late_fee_correction_revises_settled_pnl_once_with_an_audit_row(tmp_pa
     assert audit[:2] == pytest.approx((5.0, 4.8)) and "accounting changed" in audit[2]
     assert refresh_settlement_accounting(st, now=T + 3, log=lambda *_: None) == 0
     assert st.con.execute("SELECT COUNT(*) FROM execution_settlement_revisions").fetchone()[0] == 1
+    assert "settled +4.8000 USD" in st.con.execute("SELECT detail FROM executions WHERE execution_id='x1'").fetchone()[0]
 
 
 def test_settlement_uses_exact_execution_order_ids_not_a_retried_opportunity(tmp_path):

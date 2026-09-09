@@ -136,12 +136,13 @@ class ExposureLedger:
         return True
 
     def grow_to_committed(self, reservation_id: str, *, per_venue_usd: Mapping[str, float],
-                          reason: str, now: float | None = None) -> bool:
-        """Grow an open reservation to the venue-authoritative capital already spent.
+                          reason: str, now: float | None = None, exact: bool = False) -> bool:
+        """Reconcile a reservation to the venue-authoritative capital already spent.
 
         Protection may legitimately cross the entry's quoted hedge price. The original reservation
-        must then stop understating both open exposure and the day's committed-notional cap. Never
-        shrink here: until settlement, the original unspent allowance remains the conservative view.
+        must then stop understating both open exposure and the day's committed-notional cap. An open
+        reservation never shrinks; after release, ``exact`` removes unused planned allowance so the
+        daily cap measures actual filled capital rather than a stale quote.
         """
         old = self.open.get(reservation_id)
         is_open = old is not None
@@ -155,13 +156,13 @@ class ExposureLedger:
                 old = Reservation(reservation_id, row[0], row[1], json.loads(row[2]), row[3], float(row[4]))
         if old is None:
             return False
-        amounts = dict(old.per_venue_usd)
-        changed = False
-        for venue, usd in per_venue_usd.items():
-            value = max(0.0, float(usd))
-            if value > float(amounts.get(venue, 0.0)) + 1e-9:
-                amounts[venue] = value
-                changed = True
+        actual = {venue: max(0.0, float(usd)) for venue, usd in per_venue_usd.items() if float(usd) > 0}
+        amounts = actual if exact else dict(old.per_venue_usd)
+        if not exact:
+            for venue, value in actual.items():
+                if value > float(amounts.get(venue, 0.0)) + 1e-9:
+                    amounts[venue] = value
+        changed = amounts != dict(old.per_venue_usd)
         if not changed:
             return False
         new = Reservation(old.reservation_id, old.event_id, old.league, amounts,
@@ -178,7 +179,8 @@ class ExposureLedger:
             )
             self.store.con.execute(
                 "INSERT INTO capital_reservation_events(seen_ts,reservation_id,kind,detail) VALUES(?,?,?,?)",
-                (t, reservation_id, "GROW_COMMITTED", f"{reason}; {before} -> {after}"[:500]),
+                (t, reservation_id, "SET_COMMITTED" if exact else "GROW_COMMITTED",
+                 f"{reason}; {before} -> {after}"[:500]),
             )
             self.store.con.commit()
         return True

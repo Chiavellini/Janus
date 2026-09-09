@@ -306,6 +306,11 @@ def refresh_settlement_accounting(store, *, now: float | None = None,
             (pnl, new_legs, split["kind"], split["hedged"], split["unhedged"],
              split["cover_usd"], split["directional_usd"], exid),
         )
+        store.con.execute(
+            "UPDATE executions SET detail=? WHERE execution_id=? AND state IN (?,?)",
+            (f"settled {pnl:+.4f} USD ({split['kind']}); accounting revised",
+             exid, X.RECONCILED.value, X.SETTLED.value),
+        )
         changed += 1
         log(f"[settle ] revised {exid[:8]} realized {float(old_pnl or 0.0):+.4f} -> {pnl:+.4f} USD")
     store.con.commit()
