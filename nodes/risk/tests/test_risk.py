@@ -325,6 +325,20 @@ def test_a_late_fill_reopens_its_durable_reservation_with_an_audit_event(tmp_pat
     assert store.con.execute("SELECT kind FROM capital_reservation_events WHERE reservation_id=?", (r.reservation_id,)).fetchone()[0] == "REOPEN"
 
 
+def test_a_protective_fill_grows_the_reservation_and_daily_notional(tmp_path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    ledger = ExposureLedger(store)
+    r = ledger.reserve(event_id="e1", league="mlb", per_venue_usd={"polymarket": 6.3, "kalshi": 3.2},
+                       limits=LIMITS, now=1000.0)
+    assert ledger.grow_to_committed(r.reservation_id, per_venue_usd={"polymarket": 6.41655, "kalshi": 4.4716},
+                                    reason="hedge chased", now=1001.0)
+    assert ledger.open[r.reservation_id].total_usd == pytest.approx(10.88815)
+    assert ledger.day_notional_usd(1002.0) == pytest.approx(10.88815)
+    assert not ledger.grow_to_committed(r.reservation_id, per_venue_usd={"kalshi": 4.0}, reason="stale", now=1002.0)
+    row = store.con.execute("SELECT kind,detail FROM capital_reservation_events WHERE reservation_id=?", (r.reservation_id,)).fetchone()
+    assert row[0] == "GROW_COMMITTED" and "hedge chased" in row[1]
+
+
 def test_a_hedged_executions_reservation_is_committed_capital_not_an_unreconciled_fill(tmp_path):
     import sqlite3
     from nodes.risk.health import risk_alerts

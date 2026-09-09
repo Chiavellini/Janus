@@ -38,6 +38,7 @@ from typing import Callable, Mapping, Sequence
 from kernel.execution_protocol import Ack, FillRecord, Position
 from kernel.schema import ExecutionState as X, FillState, Mode
 from nodes.reconcile.reconcile import ingest_fills, resolve_unconfirmed
+from nodes.reconcile.settle_executions import refresh_settlement_accounting
 from nodes.risk.breaker import RealizedFill, day_of
 from nodes.risk.flags import raise_flag, resolve_flag
 
@@ -183,6 +184,9 @@ class PositionGuard:
             self._reconcile_execution(exid, pairs, snap, rep)
         self._scan_naked(snap, rep, skip=set(by_exec))
         self._compare_positions(snap, rep)
+        revised = refresh_settlement_accounting(self.store, now=snap.now, log=self.log)
+        if revised:
+            rep.findings.append(f"SETTLEMENT_ACCOUNTING_REVISED {revised}")
         if not rep.mismatches:
             resolve_flag(self.store, "POSITION_MISMATCH", "the venue positions match every unreleased execution", now=snap.now)
         rep.fills_today = self.fills_today(snap.now)
@@ -228,11 +232,10 @@ class PositionGuard:
             "AND (first_filled>0 OR hedge_filled>0)"
         ).fetchall()
         for exid, rid in rows:
-            if rid in self.ledger.open:
-                continue
-            if self.ledger.reopen(rid, reason=f"guard restored exposure for {exid[:8]}", now=snap.now):
+            if rid not in self.ledger.open and self.ledger.reopen(
+                    rid, reason=f"guard restored exposure for {exid[:8]}", now=snap.now):
                 rep.findings.append(f"RESERVATION_REOPENED {rid[:8]} for {exid[:8]}")
-            else:
+            if rid not in self.ledger.open:
                 detail = f"{exid[:8]} holds venue quantity but reservation {str(rid)[:8]} is missing"
                 rep.findings.append(f"RESERVATION_MISSING {detail}")
                 self._flag("RESERVATION_MISSING", detail, snap.now)
@@ -241,6 +244,36 @@ class PositionGuard:
                         self.kill.latch("live", f"guard: {detail}")
                     except Exception as exc:  # noqa: BLE001
                         rep.findings.append(f"kill latch failed: {type(exc).__name__}")
+                continue
+            execution = self.records.store.con.execute(
+                "SELECT first_client_id,hedge_client_ids,unwind_client_ids FROM executions WHERE execution_id=?",
+                (exid,),
+            ).fetchone()
+            if execution is None:
+                continue
+            client_ids = [execution[0]] if execution[0] else []
+            for payload in execution[1:]:
+                try:
+                    client_ids.extend(str(x) for x in json.loads(payload or "[]"))
+                except (TypeError, ValueError):
+                    pass
+            if not client_ids:
+                continue
+            marks = ",".join("?" * len(client_ids))
+            committed = {
+                venue: float(usd or 0.0)
+                for venue, usd in self.records.store.con.execute(
+                    "SELECT venue,SUM(COALESCE(filled_contracts,0)*COALESCE(avg_price,0)+COALESCE(fee_usd,0)) "
+                    f"FROM orders WHERE client_order_id IN ({marks}) AND side LIKE 'buy_%' GROUP BY venue",
+                    client_ids,
+                ).fetchall()
+            }
+            if self.ledger.grow_to_committed(
+                    rid, per_venue_usd=committed, reason=f"guard authoritative fills for {exid[:8]}", now=snap.now):
+                rep.findings.append(
+                    f"RESERVATION_GROWN {rid[:8]} for {exid[:8]} to "
+                    + ", ".join(f"{v}={usd:.4f}" for v, usd in sorted(committed.items()))
+                )
 
     def _row_for(self, f: FillRecord) -> dict | None:
         con = self.journal.store.con

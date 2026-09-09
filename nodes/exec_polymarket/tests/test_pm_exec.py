@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -165,6 +166,28 @@ def test_the_mode_gate_and_the_optional_library(tmp_path, monkeypatch):
     monkeypatch.setattr(builtins, "__import__", no_clob)
     with pytest.raises(TransportUnavailable, match="pip install"):
         PyClobTransport()
+
+
+def test_immediate_buy_uses_cent_exact_market_amount_not_invalid_limit_amount():
+    """5 @ .481 used to sign a 2.405 maker amount and the CLOB rejected all such BUYs."""
+    class Client:
+        def __init__(self): self.market = []; self.limit = []; self.posts = []
+        def create_market_order(self, args): self.market.append(args); return "signed-market"
+        def create_order(self, args): self.limit.append(args); return "signed-limit"
+        def post_order(self, signed, typ, defer_exec):
+            self.posts.append((signed, typ, defer_exec)); return {"status": "matched"}
+    class Args:
+        def __init__(self, **kwargs): self.__dict__.update(kwargs)
+    tr = PyClobTransport.__new__(PyClobTransport)
+    tr._c = Client()
+    tr._T = SimpleNamespace(OrderType=SimpleNamespace(FAK="FAK", FOK="FOK", GTC="GTC"),
+                            MarketOrderArgsV2=Args, OrderArgsV2=Args)
+    tr.post_order(token_id="tok", price=.481, size=5.0, order_type="FAK", side="BUY")
+    assert len(tr._c.market) == 1 and not tr._c.limit
+    assert tr._c.market[0].amount == 2.40 and tr._c.market[0].price == .481
+    assert tr._c.posts == [("signed-market", "FAK", True)]
+    tr.post_order(token_id="tok", price=.481, size=5.0, order_type="GTC", side="BUY")
+    assert len(tr._c.limit) == 1, "resting limits retain share-size semantics"
 
 
 def test_a_venue_http_refusal_is_rejected_and_a_geoblock_latches(tmp_path):

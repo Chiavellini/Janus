@@ -30,6 +30,7 @@ import os
 import threading
 import time
 from dataclasses import dataclass, field
+from decimal import Decimal, ROUND_DOWN
 from typing import Any, Callable, Protocol, Sequence
 
 from kernel.execution_protocol import Ack, Balance, FillRecord, OrderRequest, OrderState, Position
@@ -243,13 +244,25 @@ class PyClobTransport:
 
     def post_order(self, *, token_id: str, price: float, size: float, order_type: str, side: str = "BUY") -> dict:
         # side "SELL" (2026-09-08): the protection layer selling a held token back. `size` is shares
-        # either way; the library builds the maker/taker amounts from the side.
-        args = self._T.OrderArgsV2(token_id=token_id, price=price, size=size, side=side)
-        signed = self._c.create_order(args)
+        # either way. Immediate BUYs must use the SDK's market-order builder: the CLOB requires
+        # their maker (collateral) amount to have at most two decimals, while OrderArgsV2 follows
+        # the token tick and produced 2.405 USD for 5 @ .481 (HTTP 400, 2026-09-09). A market BUY
+        # takes a cent-exact collateral amount and a ceiling price; price improvement may therefore
+        # return a fractional share quantity, which status()/the coordinator already trust.
+        typ = getattr(self._T.OrderType, order_type)
+        if order_type in ("FAK", "FOK"):
+            amount = (Decimal(str(size)) if side == "SELL" else Decimal(str(size)) * Decimal(str(price)))
+            amount = float(amount.quantize(Decimal("0.01"), rounding=ROUND_DOWN))
+            args = self._T.MarketOrderArgsV2(token_id=token_id, amount=amount, price=price,
+                                             side=side, order_type=typ)
+            signed = self._c.create_market_order(args)
+        else:
+            args = self._T.OrderArgsV2(token_id=token_id, price=price, size=size, side=side)
+            signed = self._c.create_order(args)
         # defer_exec: the library otherwise polls the fill's settlement hashes INSIDE the post
         # (best effort, seconds); the hedge needs the match, not the hash. fills() reads
         # CONFIRMED trades later (2026-09-07).
-        return self._c.post_order(signed, getattr(self._T.OrderType, order_type), defer_exec=True)
+        return self._c.post_order(signed, typ, defer_exec=True)
 
     def get_order(self, order_id: str) -> dict:
         return self._c.get_order(order_id)

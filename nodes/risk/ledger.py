@@ -135,6 +135,44 @@ class ExposureLedger:
             self.store.con.commit()
         return True
 
+    def grow_to_committed(self, reservation_id: str, *, per_venue_usd: Mapping[str, float],
+                          reason: str, now: float | None = None) -> bool:
+        """Grow an open reservation to the venue-authoritative capital already spent.
+
+        Protection may legitimately cross the entry's quoted hedge price. The original reservation
+        must then stop understating both open exposure and the day's committed-notional cap. Never
+        shrink here: until settlement, the original unspent allowance remains the conservative view.
+        """
+        old = self.open.get(reservation_id)
+        if old is None:
+            return False
+        amounts = dict(old.per_venue_usd)
+        changed = False
+        for venue, usd in per_venue_usd.items():
+            value = max(0.0, float(usd))
+            if value > float(amounts.get(venue, 0.0)) + 1e-9:
+                amounts[venue] = value
+                changed = True
+        if not changed:
+            return False
+        new = Reservation(old.reservation_id, old.event_id, old.league, amounts,
+                          old.opportunity_id, old.created_utc)
+        self.open[reservation_id] = new
+        if self.store is not None:
+            t = now or time.time()
+            before = json.dumps(dict(old.per_venue_usd), sort_keys=True)
+            after = json.dumps(amounts, sort_keys=True)
+            self.store.con.execute(
+                "UPDATE capital_reservations SET per_venue_json=? WHERE reservation_id=? AND released_utc IS NULL",
+                (after, reservation_id),
+            )
+            self.store.con.execute(
+                "INSERT INTO capital_reservation_events(seen_ts,reservation_id,kind,detail) VALUES(?,?,?,?)",
+                (t, reservation_id, "GROW_COMMITTED", f"{reason}; {before} -> {after}"[:500]),
+            )
+            self.store.con.commit()
+        return True
+
     def reopen(self, reservation_id: str, *, reason: str, now: float | None = None) -> bool:
         """Restore a reservation when a venue later contradicts a released zero-fill.
 

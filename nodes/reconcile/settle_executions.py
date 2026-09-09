@@ -41,6 +41,14 @@ CREATE TABLE IF NOT EXISTS execution_venue_results(
   execution_id TEXT NOT NULL, venue TEXT NOT NULL, winner TEXT NOT NULL, observed_ts REAL NOT NULL,
   PRIMARY KEY(execution_id, venue));
 """
+SETTLEMENT_REVISIONS_DDL = """
+CREATE TABLE IF NOT EXISTS execution_settlement_revisions(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, revised_ts REAL NOT NULL, execution_id TEXT NOT NULL,
+  old_realized_usd REAL NOT NULL, new_realized_usd REAL NOT NULL, reason TEXT NOT NULL,
+  old_legs_json TEXT NOT NULL, new_legs_json TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS execution_settlement_revisions_execution
+  ON execution_settlement_revisions(execution_id, revised_ts);
+"""
 #: Columns added after the table first existed (one production row on 2026-09-05); added in place.
 _SETTLEMENT_COLUMNS = {"kind": "TEXT", "hedged_contracts": "REAL", "unhedged_contracts": "REAL",
                        "cover_usd": "REAL", "directional_usd": "REAL"}
@@ -226,6 +234,82 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
             + ("; reservation released" if released else "; NOT released"))
     store.con.commit()
     return out
+
+
+def refresh_settlement_accounting(store, *, now: float | None = None,
+                                  log: Callable[[str], None] = print) -> int:
+    """Reprice settled rows from their owned orders after an authoritative fee correction.
+
+    Polymarket's V2 trade record reports zero fee even when collateral was charged. Once the guard
+    backfills the pinned per-market fee into ``orders``, an already-settled row must change too;
+    otherwise the loss breaker and the operator ledger both overstate P&L. Revisions are append-only
+    and idempotent. Winners and settlement time are never changed here.
+    """
+    t = now or time.time()
+    store.ensure_ddl(SETTLEMENTS_DDL)
+    store.ensure_ddl(SETTLEMENT_REVISIONS_DDL)
+    _ensure_columns(store)
+    rows = store.con.execute(
+        "SELECT s.execution_id,s.settled_ts,s.kalshi_winner,s.polymarket_winner,s.realized_usd,s.legs_json,"
+        "e.first_client_id,e.hedge_client_ids,e.unwind_client_ids,e.first_filled,e.hedge_filled,"
+        "e.first_avg_price,e.hedge_avg_price FROM execution_settlements s "
+        "JOIN executions e ON e.execution_id=s.execution_id"
+    ).fetchall()
+    changed = 0
+    for row in rows:
+        exid, settled_ts, kalshi_winner, pm_winner, old_pnl, old_legs = row[:6]
+        client_ids = [row[6]] if row[6] else []
+        for payload in row[7:9]:
+            try:
+                client_ids.extend(str(x) for x in json.loads(payload or "[]"))
+            except (TypeError, ValueError):
+                pass
+        if not client_ids:
+            continue
+        marks = ",".join("?" * len(client_ids))
+        order_rows = store.con.execute(
+            "SELECT venue,client_order_id,outcome_id,side,filled_contracts,avg_price,fee_usd,state "
+            f"FROM orders WHERE client_order_id IN ({marks})",
+            client_ids,
+        ).fetchall()
+        if not order_rows:
+            continue
+        winners = {"kalshi": kalshi_winner, "polymarket": pm_winner}
+        venues = {r[0] for r in order_rows if float(r[4] or 0.0) > 0}
+        if any(winners.get(v) is None for v in venues):
+            continue
+        legs = [
+            {"venue": r[0], "client_order_id": r[1], "outcome_id": r[2], "side": r[3],
+             "contracts": float(r[4] or 0.0), "price": float(r[5] or 0.0),
+             "fee_usd": float(r[6] or 0.0), "state": r[7], "final": True}
+            for r in order_rows
+        ]
+        realized = settle(legs=legs, winners={v: winners[v] for v in venues}, now=float(settled_ts))
+        if not releasable(realized):
+            continue
+        pnl = sum(x.realized_usd for x in realized)
+        item = {"first_filled": float(row[9] or 0.0), "hedge_filled": float(row[10] or 0.0),
+                "first_avg_price": row[11], "hedge_avg_price": row[12]}
+        split = _split(item, legs, pnl)
+        new_legs = json.dumps(legs)
+        if abs(float(old_pnl or 0.0) - pnl) <= 1e-9 and json.loads(old_legs or "[]") == legs:
+            continue
+        store.con.execute(
+            "INSERT INTO execution_settlement_revisions(revised_ts,execution_id,old_realized_usd,new_realized_usd,"
+            "reason,old_legs_json,new_legs_json) VALUES(?,?,?,?,?,?,?)",
+            (t, exid, float(old_pnl or 0.0), pnl, "authoritative order/fill accounting changed",
+             old_legs or "[]", new_legs),
+        )
+        store.con.execute(
+            "UPDATE execution_settlements SET realized_usd=?,legs_json=?,kind=?,hedged_contracts=?,"
+            "unhedged_contracts=?,cover_usd=?,directional_usd=? WHERE execution_id=?",
+            (pnl, new_legs, split["kind"], split["hedged"], split["unhedged"],
+             split["cover_usd"], split["directional_usd"], exid),
+        )
+        changed += 1
+        log(f"[settle ] revised {exid[:8]} realized {float(old_pnl or 0.0):+.4f} -> {pnl:+.4f} USD")
+    store.con.commit()
+    return changed
 
 
 def _split(it: dict, legs: list[dict], pnl: float) -> dict:

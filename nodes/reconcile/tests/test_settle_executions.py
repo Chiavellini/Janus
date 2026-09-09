@@ -12,7 +12,7 @@ from nodes.discovery.discovery import EVENTS_DDL
 from nodes.execute.records import EXECUTION_DDL
 from nodes.execution.journal import JOURNAL_DDL
 from nodes.opportunity.opportunity import Opportunity, OpportunityStore
-from nodes.reconcile.settle_executions import apply_settlements, fetch_results, pending
+from nodes.reconcile.settle_executions import apply_settlements, fetch_results, pending, refresh_settlement_accounting
 from nodes.risk.ledger import ExposureLedger
 from nodes.risk.limits import load_limits
 from nodes.store_tuples.store import TupleStore
@@ -86,6 +86,24 @@ def test_a_hedged_cover_settles_on_both_results_and_releases(tmp_path):
     assert st.con.execute("SELECT released_utc IS NOT NULL, release_reason FROM capital_reservations WHERE reservation_id=?", (rid,)).fetchone()[0] == 1
     assert opps.live[OID].status is S.RECONCILED
     assert pending(st, now=T) == [], "released executions are not asked again"
+
+
+def test_a_late_fee_correction_revises_settled_pnl_once_with_an_audit_row(tmp_path):
+    st, ledger, opps, _ = _hedged(tmp_path)
+    items = pending(st, now=T)
+    fk, fe = _fetchers({"K-LAD": "no", "K-STL": "yes"}, "STL")
+    apply_settlements(st, ledger, None, opps, items,
+                      fetch_results(items, None, fetch_kalshi=fk, fetch_event=fe), now=T, log=lambda *_: None)
+    st.con.execute("UPDATE orders SET fee_usd=0.2 WHERE client_order_id='a'")
+    st.con.commit()
+    assert refresh_settlement_accounting(st, now=T + 2, log=lambda *_: None) == 1
+    assert st.con.execute("SELECT realized_usd,cover_usd FROM execution_settlements").fetchone() == pytest.approx((4.8, 4.8))
+    audit = st.con.execute(
+        "SELECT old_realized_usd,new_realized_usd,reason FROM execution_settlement_revisions"
+    ).fetchone()
+    assert audit[:2] == pytest.approx((5.0, 4.8)) and "accounting changed" in audit[2]
+    assert refresh_settlement_accounting(st, now=T + 3, log=lambda *_: None) == 0
+    assert st.con.execute("SELECT COUNT(*) FROM execution_settlement_revisions").fetchone()[0] == 1
 
 
 def test_settlement_uses_exact_execution_order_ids_not_a_retried_opportunity(tmp_path):
