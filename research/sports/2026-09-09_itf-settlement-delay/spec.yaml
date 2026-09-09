@@ -1,0 +1,47 @@
+experiment_id: "janus-sports-itf-settlement-delay-l42-2026-09-09"
+date_registered: "2026-09-09"
+track: "sports/settlement"
+row_kind: "L (descriptive settlement measurement; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row L42"
+test_looks_spent: 0
+
+# IMMUTABLE FROM REGISTRATION. No closed ITF outcome or close-time distribution was read before
+# this file and the PENDING ledger row were written. The already-reviewed live templates establish
+# the question but not its frequency: both venues wait fourteen days; after that Kalshi's wording
+# is silent while Polymarket resolves 50-50.
+purpose: >
+  Measure the ITF-specific frequency with which a Polymarket ITF moneyline is not winner-resolved
+  within fourteen days of its originally scheduled start. The current ITF policy incorrectly uses
+  tennis.delayed_gt7d_rate from F4 even though F4's immutable population excludes ITF. This row may
+  register tennis.itf.delayed_gt14d_rate; it may not alter F4 or transfer an ATP/WTA rate to ITF.
+
+source:
+  primary: "Polymarket Gamma /events, closed=true, tennis tag, paginated to exhaustion; public venue record"
+  identification: "event slug starts with itf- and contains one two-outcome sportsMarketType=moneyline market"
+  scheduled_start: "the explicit originally-scheduled timestamp in the immutable market description; gameStartTime is a cross-check only because the venue may rewrite it when a match moves"
+  terminal_time: "event closedTime, or the moneyline market closedTime when the event field is absent; endDate is not accepted as a terminal timestamp"
+  terminal_result: "one outcome price >= 0.999 and all others <= 0.001; 0.5/0.5 is HALF and reported separately"
+
+definitions:
+  population: "all exhaustively enumerated closed ITF singles moneylines whose description supplies an unambiguous original scheduled timestamp and whose terminal timestamp/result parse"
+  delayed_gt14d: "terminal_time - originally_scheduled_start > 14 * 86400 seconds and terminal_result is a winner"
+  half: "terminal prices are 0.5/0.5; reported separately and counted as a settlement-wedge realization, not silently classified as a winner delay"
+  registered_value: "tennis.itf.delayed_gt14d_rate = one-sided 95% upper bound (rule of three at zero events; Wilson otherwise) while n < 300, and delayed_gt14d / n once n >= 300"
+
+criteria:
+  - "The enumeration must paginate until an empty page and deduplicate by event id; duplicate ids or a pagination loop fail the run."
+  - "At least 300 terminal ITF singles moneylines and at least 95% parseability among identified closed ITF singles events are required to register a point estimate; below 300 only the declared upper bound may register."
+  - "Every excluded row is reason-coded and counts against parseability. Doubles and non-moneyline markets are excluded by structure and reported separately."
+  - "The measurement reads no order-book price, trade entry, or P&L and claims no edge."
+  - "If Gamma does not expose an authoritative close timestamp, this historical arm fails; the successor must be a new forward row using first-seen starts. endDate may not be substituted after seeing the data."
+
+outputs:
+  results: "research/sports/2026-09-09_itf-settlement-delay/results.json"
+  verdict: "research/sports/2026-09-09_itf-settlement-delay/verdict.md"
+  evidence_registration: "nodes/settle_wedge/evidence.py: tennis.itf.delayed_gt14d_rate only if the gates above pass"
+
+what_this_does_not_establish:
+  - "That Kalshi's unspecified post-fourteen-day payout equals Polymarket's 50-50 payout."
+  - "ATP, WTA, doubles, qualifying, or any non-ITF population."
+  - "Edge, fill probability, or profitability."

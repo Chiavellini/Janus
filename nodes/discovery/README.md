@@ -58,6 +58,12 @@ reached from exactly those words. `record_events` writes the `settlement_records
 hash) and `equivalence_records` (the verdict, append-on-change). The supervisor and the replay
 re-certify from the same spec, so what was priced and what was recorded cannot diverge.
 
+The spec also preserves `game_id` and `schedule_population` (source, league, game ID and season
+slug). L43 MLS evidence is regular-season-only; losing this tag would otherwise allow a
+league-level template to transfer the measured reserve to unmeasured postseason games. MLS
+recertification requires an ESPN `regular-season` tag bound to this exact slate game; old specs
+without the tag fail closed until fresh discovery rebuilds them.
+
 ## The co-listing census (2026-09-03, ledger L28)
 
 `census.py` answers a different question from the slate: not *which games are watchable now* but

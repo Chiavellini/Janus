@@ -37,7 +37,7 @@ from nodes.opportunity.status import status_for  # noqa: E402
 from kernel.schema import OpportunityStatus  # noqa: E402
 from nodes.rules_exhaustive.rules import NotExhaustive, prove  # noqa: E402
 from nodes.settle_wedge.equivalence import NotEquivalent, certify_cover  # noqa: E402
-from nodes.settle_wedge.pair import certify_from_spec  # noqa: E402
+from nodes.settle_wedge.pair import certify_from_spec, population_from_schedule  # noqa: E402
 from nodes.fees.targeting import hurdle_for  # noqa: E402
 from nodes.store_tuples.store import TupleStore  # noqa: E402
 from ops import run_index  # noqa: E402
@@ -221,7 +221,9 @@ def scan(leagues: list[str], *, include_near: bool = False, db: Path = DB,
                 first = rows[0]
                 names = sorted({x for m in rows for x in (m.get("kalshi_label"), m.get("pm_label")) if x}
                                | {g.home_name, g.away_name})
-                spec = {"rules": {"kalshi": {"market": first.get("kalshi_rules") or {}, "participants": names,
+                spec = {"game_id": g.game_id, "league": g.league,
+                        "schedule_population": population_from_schedule(g),
+                        "rules": {"kalshi": {"market": first.get("kalshi_rules") or {}, "participants": names,
                                              "series": d.series.get(league)},
                                   "polymarket": {"market": first.get("pm_rules") or {}, "participants": names},
                                   "retrieved_at": d.made_utc}}

@@ -38,6 +38,16 @@ rules_exhaustive proof ──▶ [certify_cover] ──▶ CoverProof ──▶ 
 3. `policy.PAIR_POLICY` holds, per pair of templates, a verdict on all twelve dimensions:
    `SAME`, `NA` (with the citation), `BOUNDED` (with the evidence key and loss model),
    `DIFFERENT`, `UNKNOWN`. Any `DIFFERENT`/`UNKNOWN`, or a missing dimension, blocks.
+   `verdicts_for(..., league=...)` also selects the evidence population when leagues share wording.
+   Kalshi's explicit half-at-walkover tennis wording is used on both ITF and tour matches; that
+   shared hash cannot transfer a measured ATP/WTA frequency to ITF or an ITF frequency to the tours.
+   Explicit ITF qualifying also selects its own evidence key (L47); the main-draw key (L46)
+   cannot satisfy it. A missing population-specific rate remains `EVIDENCE_UNMEASURED`.
+   L46/L47 completed the fresh historical ITF catalog on 2026-09-09: main-draw reserve
+   `0.01768867361249885` (178 adverse / 11,370 mature) and qualifying reserve
+   `0.031076457689201795` (27 / 1,185), each an always-one-sided 95% upper bound with
+   100% all-singles parseability. HALF/open/malformed cases stay conservative; no future-profit
+   guarantee is claimed. L46's corrected offline replay reproduced results/rows byte-for-byte.
 4. A `BOUNDED` dimension is priced as probability × worst-case loss. The probability must be in
    `evidence.EVIDENCE`, which only a `research/` row may fill; absent → `EVIDENCE_UNMEASURED` → block.
 5. `certify()` mints `SettlementEquivalence`; `certify_cover()` checks it names the same
@@ -62,7 +72,27 @@ Polymarket has no NFL game market listed yet, so nothing is reviewed and NFL blo
 
 **Normalisation is by stripping, not by parsing.** Team names come from the pair (venue labels
 and ESPN names); a name the caller does not supply survives into the template and moves the
-hash — a false block, never a false pass. Digits, months and timezones are dropped wholesale.
+hash. Only recognizable calendar dates, timezone/AM-PM clock literals, Kalshi tickers and the
+league's explicit tournament/round patterns are removed. All other numbers remain, including
+settlement durations, payout splits, percentages and decimal amounts. `7 days` and `14 days`
+must hash differently. An unfamiliar date/time format remains in the text and blocks for review.
+The first validated date and repetitions of that same date are event metadata. Later full dates
+retain their signed calendar-day offsets from it, including across month/year/leap boundaries;
+their clocks and timezones remain literal settlement content. For example, September 2 → 16 and
+October 3 → 17 both retain `calendar_offset_+14d`, while September 2 → 15 does not match. The event
+clock may vary; changing the later deadline clock or timezone changes the hash. This also catches
+a calendar deadline changed without updating its stated relative duration. A lone yearless event
+date may be removed; multiple dates with missing years and invalid calendar dates remain literal.
+
+**Numeric-hash migration (2026-09-09).** The former normalizer dropped every digit-bearing token,
+making substantive rule changes invisible. Reviewed hashes now derive automatically from their
+verbatim samples with numeric terms preserved; no legacy-hash fallback is permitted. Fresh
+discovery and `records_from_spec` reharvest raw rules, so they need no network refetch or manual
+hash mapping. Already spawned pollers/proofs must be rebuilt under the new code before use.
+Historical `settlement_records` retain legacy hashes (their insert key is the unchanged raw hash),
+and `equivalence_records` do not append merely because normalization changed. Preserve those audit
+rows as historical evidence; reharvest the stored raw text for current certification. Do not
+interpret a legacy stored template hash as approval under the new normalizer.
 
 **The buffer is conservative and orientation-aware.** It charges only Polymarket legs, at the
 fill price, summed over bounded dimensions. It is not an expectation; it is a reserve.
@@ -98,3 +128,16 @@ By the evening of 2026-09-03: MLB, NFL (L30), EPL / La Liga / Bundesliga (L33, a
 FLOOR) and college football (L32, FLOOR for FCS) pass step 5 and run unasked. MLS sits at step 4
 (no round structure, no original-date source). NBA/WNBA/NHL sit at step 3. UCL and every
 competition ESPN does not schedule as team games sit at step 1.
+
+**MLS evidence added 2026-09-09 (L43).** The official preseason 2025 MLS record book supplies the
+original schedule that was missing on September 3. All 510 regular-season fixtures join uniquely
+to final records and actual final-whistle wallclocks; every one of 19 changed dates is reconciled
+to official club sources. Zero cancellations and 13 >48-hour completion delays are registered as
+one-sided exact 95% upper bounds, **0.005856766730583303** and **0.040221661406316125**, not zero-risk
+or another league's proxy. At a $0.50 Polymarket fill the two dimensions reserve 2.3039214 cents.
+MLS now passes evidence enablement; executable edge, other risk gates and operator caps remain.
+The research population is regular season only: proof minting requires the externally anchored
+ESPN `regular-season` tag and exact slate game ID. Missing/unknown/preseason/postseason tags
+block; the tag survives discovery, supervisor/replay recertification and the diagnostic grid.
+See
+`research/sports/2026-09-09_mls-original-schedule/verdict.md` for the complete audit and limitations.

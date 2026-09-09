@@ -1,0 +1,50 @@
+{
+  "actual_closed_candidates": 9948,
+  "adverse": 158,
+  "adverse_point_estimate": 0.01588258946521914,
+  "archive": "/Volumes/Kilos/janus/research/L44_itf_delay/20260909T072716Z",
+  "catalog_state_mismatches": 0,
+  "catalog_state_transitions": 0,
+  "complete": false,
+  "error": "JSONDecodeError: Expecting value: line 1 column 2814001 (char 2814000)",
+  "estimator": "one_sided_95_upper_bound_at_all_n",
+  "gate_failures": [
+    "ENUMERATION_INCOMPLETE"
+  ],
+  "gates": "FAIL",
+  "http_stats": {
+    "429s": 0,
+    "cache_hits": 0,
+    "offset_caps": 0,
+    "requests": 0,
+    "retries": 0
+  },
+  "identified_singles": 9948,
+  "immature": 0,
+  "itf_events": 10236,
+  "mature_before_utc": "2026-08-26T07:24:03+00:00",
+  "mature_n": 9948,
+  "mature_reasons": {
+    "HALF": 121,
+    "WINNER_AFTER_14D": 6,
+    "WINNER_BEFORE_ORIGINAL_START": 31,
+    "WINNER_WITHIN_14D": 9790
+  },
+  "parseability": 1.0,
+  "registered_value": null,
+  "resumed_from_archive": true,
+  "run": "20260909T074945Z",
+  "snapshot_utc": "2026-09-09T07:24:03+00:00",
+  "source": "https://gamma-api.polymarket.com/events/keyset",
+  "spec_sha256": "46cd36b58a2f659406a8738c8255bc997fc44ce8876b696a78c4f6b396d50b6a",
+  "structural_exclusions": {
+    "QUALIFYING": 288
+  },
+  "tennis_events": {
+    "closed": 25600,
+    "open": 0
+  },
+  "unparseable": {},
+  "unparseable_events": 0,
+  "upper_bound_95": 0.01807998749572365
+}

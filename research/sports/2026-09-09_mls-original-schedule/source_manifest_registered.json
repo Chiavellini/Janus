@@ -1,0 +1,3212 @@
+[
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/2025-mls-fact-book.pdf",
+    "bytes": 4978134,
+    "url": "https://nyc3.digitaloceanspaces.com/sportsarchive-documents/prod/67b3cfa34e31f/2025%20MLS%20Fact%20and%20Record%20Book_FINAL.pdf",
+    "sha256": "c1cebec5cc0ec04b68dfbcb344e6cac0d958242cbdec17037d77d15a8f86c05b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/2025-mls-fact-book.txt",
+    "bytes": 3117111,
+    "url": "https://nyc3.digitaloceanspaces.com/sportsarchive-documents/prod/67b3cfa34e31f/2025%20MLS%20Fact%20and%20Record%20Book_FINAL.pdf",
+    "sha256": "a6fbd52379b5818b9b711eb14059a7a4dda0c97c602b7de723558e2dc441a9a9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/2025-mls-official.pdf",
+    "bytes": 4924720,
+    "url": "https://images.mlssoccer.com/image/private/fl_attachment/mls/lcq7kwlyhdgd4qnpfnqy.pdf",
+    "sha256": "65ce092fff5ad01d9fe3499e10fb7afcdabb025a93d2107b4e8ec84a1cf807f9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/2025-mls-official.txt",
+    "bytes": 3116684,
+    "url": "https://images.mlssoccer.com/image/private/fl_attachment/mls/lcq7kwlyhdgd4qnpfnqy.pdf",
+    "sha256": "749a6eda97b0fa22557c0bd680196499b25be82b8fcb4d4c84ea9d77ccdf914e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-2025-final.json",
+    "bytes": 6194831,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=20250201-20251019&limit=1000",
+    "sha256": "8aca637f726c31ee2b233ad3f800645927736eb2a0bf61077a59ea311476a876"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-plays-726800.json",
+    "bytes": 340356,
+    "url": "https://sports.core.api.espn.com/v2/sports/soccer/leagues/usa.1/events/726800/competitions/726800/plays?limit=1000",
+    "sha256": "8fb2f435f4d57065d356bb0ebce5d13d1c65183395fbc0f67e7b598188e973b8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726799.json",
+    "bytes": 416951,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726799",
+    "sha256": "df4c913f7f41b4fac16df0200aa76f1b3bfb9b8e4c0bd17c4d3b96451ddfbe88"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726800.json",
+    "bytes": 431598,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726800",
+    "sha256": "0125812ce489f2b1386dfda097a228c528b87e2545bdfa976a931671863b0b49"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726801.json",
+    "bytes": 371535,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726801",
+    "sha256": "6690b6eda287636fb9a84c7d88710dde94b97a85ff6a8e0361de07f942ae3e53"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726802.json",
+    "bytes": 384597,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726802",
+    "sha256": "acbb6e43587ea2535c0e1640345318797da717c3af88bc11179d46bf84b015e6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726803.json",
+    "bytes": 394704,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726803",
+    "sha256": "07dcd72c44d77aaea30028c117231091bb4dc9172b706139bdd5ab833f330732"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726804.json",
+    "bytes": 406868,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726804",
+    "sha256": "b61516c041c40527144a55e4338e7e818475551f62cd28facaa71ea0bb4809bf"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726805.json",
+    "bytes": 411043,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726805",
+    "sha256": "5fdbdbf5200056a907bb16b8a4a4518346623588ab5f810404f95eb40613c2e4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726806.json",
+    "bytes": 370244,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726806",
+    "sha256": "3abe8066a4cb91b3b6ba6b5a82395b82c05175f69b4c7ca2b43012e34224caa1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726807.json",
+    "bytes": 393530,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726807",
+    "sha256": "117dcbd2143ded3f7116a3d27003cf0c331413830fa0054a2205133999ab3892"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726808.json",
+    "bytes": 361085,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726808",
+    "sha256": "b6995cc404deed671399309f51d12191903c4895682057f5c3d133b28556dd78"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726809.json",
+    "bytes": 387721,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726809",
+    "sha256": "d33e8132387dc2e439367b8f33c24bef04421f3d7d8b3db4acf9c8aeee4c1097"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726810.json",
+    "bytes": 413536,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726810",
+    "sha256": "921accef049e24d5624efe00abb8e5e30974be2afa75f2e001b4d17e78a6be05"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726811.json",
+    "bytes": 413978,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726811",
+    "sha256": "b705fef12bf95611d480d0d348000648b02bc5b75d371aa56ef2fce3db554830"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726812.json",
+    "bytes": 447202,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726812",
+    "sha256": "3343f0973b31580cba626dc017d59be384f6cfb6b87936e5d4cf6743e048be69"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726813.json",
+    "bytes": 357636,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726813",
+    "sha256": "7c3fee75e49991ca9120ce361b1cf7ddad287f0d4d0ab9ff95720a3b732d3ed2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726814.json",
+    "bytes": 431247,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726814",
+    "sha256": "7179aa10ca1c79c6a9037d18e516f6e9edda4ab4dcd6d77401689c660d383ae8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726815.json",
+    "bytes": 432809,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726815",
+    "sha256": "bf51f953958bde882820088036ae8f115559452b3473ce28409d7e94e1c3b367"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726816.json",
+    "bytes": 383449,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726816",
+    "sha256": "2f5070e86e76a654ec928097a5cb4a93fecdb424cf4d8650ca301072aba6f8f9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726817.json",
+    "bytes": 397581,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726817",
+    "sha256": "58dfdce0f2ea64f311c3256a909e76fec8e12e7ca362fdeba36142e99c3b29cd"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726818.json",
+    "bytes": 375143,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726818",
+    "sha256": "94796b0cb841058e151143083622c3b08875f0b9485aeaa9aee8dcbbbb23f5f6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726819.json",
+    "bytes": 381697,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726819",
+    "sha256": "ad2bd2a13acf59db466c7bdbabad2abd4926583c333a54cb97c9326db07b177d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726820.json",
+    "bytes": 398316,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726820",
+    "sha256": "1010c92efef82cf48bfeff3b6103aefd12380b9083531a3a27ea75eda99a6736"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726821.json",
+    "bytes": 417806,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726821",
+    "sha256": "4f413895f45125120eb26ac9ca273ee907ea56c267ce78082358dc485d367fb7"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726822.json",
+    "bytes": 399853,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726822",
+    "sha256": "a5ac1f974607bceb38b6b962af01c202dd7e4225974a52f8d4610e3d38f7de27"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726823.json",
+    "bytes": 391034,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726823",
+    "sha256": "7908c6962abd6f3f4f14dfc209a21ef3fac5abc0176728e3859a3a958849e62c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726824.json",
+    "bytes": 367277,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726824",
+    "sha256": "7a347f7d2131936f502adff30c6a138f652c03b6d1593f8ac4c384b73b7cd20b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726825.json",
+    "bytes": 410253,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726825",
+    "sha256": "6719fed00d477571beafc81613dddf89dfdca42526c28c47ba43b7ae02009bf1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726826.json",
+    "bytes": 381125,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726826",
+    "sha256": "162d7945485b2cc878b7b44ae915241e248ebfc86f3182e0ce37a8f120bc9b6b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726827.json",
+    "bytes": 431174,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726827",
+    "sha256": "645fb1cbf86b34e53b22714dd53b1e84ec979778d0c7f819a4d4f10eb700784e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726828.json",
+    "bytes": 460085,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726828",
+    "sha256": "7ef02fd1936f7c560938a0cd0e976c2c32317f1aaffdec873a72fc4183b49278"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726829.json",
+    "bytes": 437717,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726829",
+    "sha256": "9a5b35bb1e5cb22f546b6a7c3001aaf858515f0e51248896ae2f7a2970de743a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726830.json",
+    "bytes": 440999,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726830",
+    "sha256": "de618722125c11957190a68d187896e63c729c11f5ececc60e332b1c63bec595"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726831.json",
+    "bytes": 369129,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726831",
+    "sha256": "107da2626bd0dbfe097959982ef2a6a159447520959f6ee65a35869ee7b073dc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726832.json",
+    "bytes": 372916,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726832",
+    "sha256": "c85c63c0facb89659ca4ec9bffc87373ab925d29b180b40bb990b9a1b988a84b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726833.json",
+    "bytes": 400522,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726833",
+    "sha256": "5c7d022aee3921aedac363cd7078e87aa7f832dc2c30bdf26e9d7a3dd8b422f6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726834.json",
+    "bytes": 428253,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726834",
+    "sha256": "85170d3c9252fc48ffbf9af907c3a6ca65b9c30d1dbfafeac7e756d517083452"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726835.json",
+    "bytes": 412657,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726835",
+    "sha256": "3b86cb55c781f381c8bb14324ff8b4af741176e35c746bfe90ae4bfc13571ea2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726836.json",
+    "bytes": 426295,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726836",
+    "sha256": "c58077be16c977ac45f0aba1861b8bfa7a97bb93f6645bebbfd60daea0ae0ab0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726837.json",
+    "bytes": 404973,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726837",
+    "sha256": "ae444d66782646af35c8f658c493f059f43734f65d7d2924ab13d51c05a66bef"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726838.json",
+    "bytes": 393957,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726838",
+    "sha256": "a4fff36938f10f4912b73be709da64e7db77397749b8ddb68071d59efc4f2f52"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726839.json",
+    "bytes": 407996,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726839",
+    "sha256": "9dabaafedbe0670482548dc36b9439fd9ecfe5e3fd2de9235f982c24899a0bd2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726840.json",
+    "bytes": 420974,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726840",
+    "sha256": "4f063ff74e3debc417fced5bb53925717e8e55174975f856a57cd85afe85ff11"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726841.json",
+    "bytes": 393245,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726841",
+    "sha256": "0d528ad8bfbc6fad3e8da5ad46832349c582be0f9d1dcd79e62001448f96c534"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726842.json",
+    "bytes": 430533,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726842",
+    "sha256": "a6f44c61f878cf70d239c72da29b106f4f056e7507fcf146cc71323b46668b5b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726843.json",
+    "bytes": 436402,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726843",
+    "sha256": "9cdbb0d9fd0f09afcda5266aa341b8de9d74dae9a9e2d5371e09b39ba2c29fc5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726844.json",
+    "bytes": 437762,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726844",
+    "sha256": "42d25b6bab5cc9189dd2c95d68f803cd6bc8f052df3695133d2f48005be00ce3"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726845.json",
+    "bytes": 405679,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726845",
+    "sha256": "f721dcc96b7afbeae5ebbaeffbb55f242fcfec67d179835cf86857bbf8efad69"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726846.json",
+    "bytes": 444965,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726846",
+    "sha256": "296b04fd78a05d02d8c6494ead113848892edc90c9abf5789d68333a32a4eb3e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726847.json",
+    "bytes": 417522,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726847",
+    "sha256": "2b9782ec3b5221f12c2ed686c136bcbe4daf988d08ba8287daee70093db1d691"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726848.json",
+    "bytes": 440012,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726848",
+    "sha256": "3414774ac2f7bd379df0f374ce1078d48128e3672992894a47372445fbd1a4ea"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726849.json",
+    "bytes": 420642,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726849",
+    "sha256": "86fd54f9fedd06d4858225d191526b979304500174599c42c88ff63fbd2ce5cf"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726850.json",
+    "bytes": 405282,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726850",
+    "sha256": "d3392731f9336023a2a39c012735233d7e053e8900a7aa1abb7d103dcd6641a8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726851.json",
+    "bytes": 385623,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726851",
+    "sha256": "fdb400f2cc7dd161e51151046b6c294eb9f8be19697c56e162fdfe88570ddf15"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726852.json",
+    "bytes": 409925,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726852",
+    "sha256": "5db1dfd3b09d53b9b3d0c005d1ad30ea7d02f650c0e9c032bd72e1d4bdaee462"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726853.json",
+    "bytes": 391607,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726853",
+    "sha256": "08abccea13d0ae994e5f0231adf5531094ad6a0068806b34c8b2d92ce9a84790"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726854.json",
+    "bytes": 393466,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726854",
+    "sha256": "4afea41f35a0f4373cd42c63317e35d8fe9461817e7d2987b492dbe4c323daaf"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726855.json",
+    "bytes": 394419,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726855",
+    "sha256": "61ac57cb7e0f0d44334c9649de55346509ea9b35afc08665fed0e61580ccafbe"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726856.json",
+    "bytes": 448861,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726856",
+    "sha256": "46d2b415a03f608def20af19e2c31c338d2251c8c9f5a6f83f62c5e749b17035"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726857.json",
+    "bytes": 414366,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726857",
+    "sha256": "6066d8cb245e4a29554b537bae659a1a4f828551d0580299f0b6ba17d79a69bf"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726858.json",
+    "bytes": 432592,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726858",
+    "sha256": "3042a9930189c5fc5bfb66a636c9b09d939371d7593493647576b0ef68d03d13"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726859.json",
+    "bytes": 432700,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726859",
+    "sha256": "047b4c8276cdf72c05e3a13d4497598ef30fc5f311f649a65c00815e5a0b7b66"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726860.json",
+    "bytes": 455804,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726860",
+    "sha256": "c106e696e46729e2238ca3ec8394abbf3fa342c64ca031a1fde7af0d8b6da050"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726861.json",
+    "bytes": 440499,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726861",
+    "sha256": "50b0f0a45c5d4bc78cbf00fa797e413d308e13cbcf4fa1c25c1e96f86c6461a6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726862.json",
+    "bytes": 456659,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726862",
+    "sha256": "ad46a36973b59233928840b190008dfe134ebc833cda0295a362c786e77924f5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726863.json",
+    "bytes": 401792,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726863",
+    "sha256": "28c645cfb04143553b56df7365f2b31463c24fccb3adb44e11413667cbf9b513"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726864.json",
+    "bytes": 439092,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726864",
+    "sha256": "af53670cec174bc49e6ffd9e9893ea33fd0dc70afe12c14f00aeda8a2bf4de62"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726865.json",
+    "bytes": 427578,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726865",
+    "sha256": "b58877de4bf68f2e839753526ef82fd5a9063e86f8fdf99361274445498ef8c4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726866.json",
+    "bytes": 407213,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726866",
+    "sha256": "3fbbbc011bc7574543676dc0e9957ebcd86cd2e1d58afdde308bb984d90752f8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726867.json",
+    "bytes": 380497,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726867",
+    "sha256": "263dad73ef9f71880f5b1c67f91293495fa1eb674d6e530c55f1e0db19759105"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726868.json",
+    "bytes": 375102,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726868",
+    "sha256": "3ff4224f99b737dfebe8c4c5ae3caf7ca188cabdb92306f2adf8d93d234a38da"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726869.json",
+    "bytes": 403206,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726869",
+    "sha256": "138a0c0026d3a53246501422b03bcd2367f0da88527a2e8754cf15811f820174"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726870.json",
+    "bytes": 391477,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726870",
+    "sha256": "e9e647037878389a9ee8f38e9aa3e6060010ad22ff115d61b51e850bdcce4211"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726871.json",
+    "bytes": 414306,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726871",
+    "sha256": "9e74d956a9182303d149bd9990e9c56c1f1adb734f54625bea28b9fa147849b5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726872.json",
+    "bytes": 440113,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726872",
+    "sha256": "5c9a3592e4873d9ee264c5c65a34335092324cdd2a3408d637c5934792274a0f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726873.json",
+    "bytes": 456804,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726873",
+    "sha256": "11ae872da99655e43b08ae8e450612d0af659fa00b2a35be4a4424b0028bc184"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726874.json",
+    "bytes": 446261,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726874",
+    "sha256": "6ad2e008452cfdd4c6c89f411eecbad0c08b3fd796309b05373ba1920e2e0022"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726875.json",
+    "bytes": 430154,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726875",
+    "sha256": "12f698cb19a153dd97704e7d87614eeae6af00c14aed677438919a4affdd8177"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726876.json",
+    "bytes": 482042,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726876",
+    "sha256": "a775f7458f8456df9149842199e30b2e04411b26c143ebe9e4c36f4f1597eaa8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726877.json",
+    "bytes": 420456,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726877",
+    "sha256": "05539e233471021ff76654906237faf4f13b031b47c92aa7fe3a281a7b0673d1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726878.json",
+    "bytes": 429058,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726878",
+    "sha256": "4d8003397f504295a2e2c773bfde330fe905b2964a3b956e746e5c33c7da950b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726879.json",
+    "bytes": 399625,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726879",
+    "sha256": "64b61cf5295f3c25aa45bc87aa6f0b6bd31c1924fe00bb546983c7777481c476"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726880.json",
+    "bytes": 406287,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726880",
+    "sha256": "8e5c8e5009c3d8a08defd18b15bda7b24ba0b67e647892540840220b24be7a1c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726881.json",
+    "bytes": 383853,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726881",
+    "sha256": "370e6497885e9b2f4dded8d06d91f63a0f0e822255c7bae8f91a379b5232b41d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726882.json",
+    "bytes": 389836,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726882",
+    "sha256": "79721c971080d1ec8286437fbd5d56caed548ca70bf33115bfa9216c44f97563"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726883.json",
+    "bytes": 409216,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726883",
+    "sha256": "223b1832893365e74c9d164505c503ccf2ed21a63e90141f9835670775ad00f9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726884.json",
+    "bytes": 400404,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726884",
+    "sha256": "cf171b8fb32cd3b82543c412388c8dc426491a135cb74ccf3cb46c8ed43ecb70"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726885.json",
+    "bytes": 419117,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726885",
+    "sha256": "d7e446ea29faf6837c7824460557190bfb64c3ec84546e52dd1dd7fd37394e1f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726886.json",
+    "bytes": 430312,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726886",
+    "sha256": "88173471845727f86148c9e3e16291646b992941d24c375c0cb35bfb6a311338"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726887.json",
+    "bytes": 408447,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726887",
+    "sha256": "8fc1b2eb1dcb68731898263611872e890e2e3eb8963a300e0465569d5cd947dd"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726888.json",
+    "bytes": 439532,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726888",
+    "sha256": "03041f44a68f064acb2656a8b0adb9dc155415e8f237651c413d850288631bcb"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726889.json",
+    "bytes": 434379,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726889",
+    "sha256": "93e27a24426cffa388daa3ca2dba5a6d594c3670282dbe6fb688f07d8526668d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726890.json",
+    "bytes": 379949,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726890",
+    "sha256": "dfe5d10dc8c6467c7657f509678d2bd93b810901a6e789757fd25d7e16ab8b51"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726891.json",
+    "bytes": 400935,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726891",
+    "sha256": "3099e9f6a4bb2c69be592e0710fabd7f1bc65a35d3dadd042ae782846b736b36"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726892.json",
+    "bytes": 384954,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726892",
+    "sha256": "86aa8792b704b05d80f13f45919b9cf041b1ea05393581764de212db034071ab"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726893.json",
+    "bytes": 388914,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726893",
+    "sha256": "9de71cd8e9a0be1545fc0bfbcbbd8dfa2fc2fcd9d24a576ff0dcd41259160d24"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726894.json",
+    "bytes": 408214,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726894",
+    "sha256": "9f66a9db0f46adfde88287de7f5172f88565035a95d7dcde68b83aa198ab4b97"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726895.json",
+    "bytes": 381298,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726895",
+    "sha256": "d8883544244e3954d046fb135f0afa55a8847098bfda904efbf9c95effbea315"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726896.json",
+    "bytes": 380231,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726896",
+    "sha256": "2cbe8bf5c471bbb890aab2c7421882deaa3d6f9a420d8912ddbb2a8cd85e18be"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726897.json",
+    "bytes": 424197,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726897",
+    "sha256": "e73c1aa3431ffbdd2b7a1b3b810d965d7939ee41e3520eaf7c8467e6ab8bda17"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726898.json",
+    "bytes": 383544,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726898",
+    "sha256": "c86bee813a15795e8047bd3d94d59adbb8afd1b727724c4d45381051194f58d9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726899.json",
+    "bytes": 410542,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726899",
+    "sha256": "4a7042c6b3612e34a47c6bdcbbb8ee3e7bd788589e4a5ef9a2ebeda68de70293"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726900.json",
+    "bytes": 482893,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726900",
+    "sha256": "70465ee86fe009507285f9aab9293a6524e39e88c54c71a10f9163bbf32269c1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726901.json",
+    "bytes": 414634,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726901",
+    "sha256": "7e31aeef9da63fd96d2fd687f2e52d037e8c88d552f1f89dc750bb33fecca871"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726902.json",
+    "bytes": 499495,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726902",
+    "sha256": "83df8b6eb234f19b75442efe9f08dcead7332bc9316d9c1535b1d1429890f729"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726903.json",
+    "bytes": 440340,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726903",
+    "sha256": "fce75afd9b8747b139a60b50295d6e99fdf8b072502dabe80868d2db7ba1e75b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726904.json",
+    "bytes": 451438,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726904",
+    "sha256": "cd5755f630d0fc652b40e7d01040abdc8e727fd5c06cecc44c07457de21eec60"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726905.json",
+    "bytes": 434299,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726905",
+    "sha256": "f39522b8e71f667bad55209c63d4ed16a94476326ba543630d38c59bdb8f1b22"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726906.json",
+    "bytes": 428531,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726906",
+    "sha256": "9a0805833c6cc4a71ee0bc457d6cba5abccaeb504e63b358490c5e9ff25f87e2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726907.json",
+    "bytes": 382966,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726907",
+    "sha256": "0a3bdf55a10dfc6107be7e1c7d654b9e734fcf55a803c1abbf5522d6e8645414"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726908.json",
+    "bytes": 383764,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726908",
+    "sha256": "a2a2388a76a5d2c91dc8ca58b2adbfc60e474b284cfcf71284774cb469bf4fcb"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726909.json",
+    "bytes": 419885,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726909",
+    "sha256": "bb08368c609e28f125e305c134180531654facf03f6144f157a9473e954fbcdf"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726910.json",
+    "bytes": 411821,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726910",
+    "sha256": "f1920b2916fdac8abde98289d42bb28b14d5dfbd253f817649f9da62acc4e522"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726911.json",
+    "bytes": 396196,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726911",
+    "sha256": "882970c5961bf4cf237930435c90f1d08275edea61e2f5a9c37b2bb0db5abe96"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726912.json",
+    "bytes": 392778,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726912",
+    "sha256": "c23db7a45fad1f7dbad91e21e3d1b177f61d21bf39287159a5fc1840bfb437ea"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726913.json",
+    "bytes": 398379,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726913",
+    "sha256": "f12cbd38196424b80dff876c0b7b94531abd49d70c72f0e6d1288a6ffb46c10f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726914.json",
+    "bytes": 386085,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726914",
+    "sha256": "382e60e107e3807aef688ea6ab35330d9b17ee5e0e4f2b45264c74c4a972dec6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726915.json",
+    "bytes": 459487,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726915",
+    "sha256": "04c539af111d23a9bfc856bbeb3c1d40431d98dfc373909b9331ca99bcd8b6de"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726916.json",
+    "bytes": 442884,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726916",
+    "sha256": "6ed33990e84d19e6310421885f4b6d82401ca2c0c1327fc76847cb904b1ec514"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726917.json",
+    "bytes": 411417,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726917",
+    "sha256": "26ba86e18008dc9ebe66bc9818d240e69a75939017ecb15c2f5d581efb3d9055"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726918.json",
+    "bytes": 442815,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726918",
+    "sha256": "3a585eddd6d92ce52bce4eca06bdb5bcd3db01737dc8147279df0812ebedffb9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726919.json",
+    "bytes": 448166,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726919",
+    "sha256": "1ff3438dbea3a0a903279bac269f3e94a4a7bf811ea28e93ad1e2e0516cb8d8e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726920.json",
+    "bytes": 431506,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726920",
+    "sha256": "2bb60170037fe08b043ecf6a29a87c2de0392dc287c5819f08f995c3a63be66a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726921.json",
+    "bytes": 388257,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726921",
+    "sha256": "cb647f94f100e9d0714846da4c0793f7f28b851cdea88b35d1a4ea516fea917e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726922.json",
+    "bytes": 449779,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726922",
+    "sha256": "84d17dea285df08ae3bcb6101dca86b74ab3cd19ee16447cc68f8c5c69524239"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726923.json",
+    "bytes": 379358,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726923",
+    "sha256": "519e375cf4a158ff2cb3f4e14d5d7521285dc532d5a60802437ee9d4fb75642b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726924.json",
+    "bytes": 382054,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726924",
+    "sha256": "f093699f7dd7c29723de3bac0b55f201c5af6434ac26ea97117864bd8ab09688"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726925.json",
+    "bytes": 384490,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726925",
+    "sha256": "61091a68d5e9e8ea7e9aec1ab5e9f592dacbaa301d8d4966666a7342db1de937"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726926.json",
+    "bytes": 383996,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726926",
+    "sha256": "5a69f464ab77962bffaad724694c44a34df903500fca829dc52a17084cda5815"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726927.json",
+    "bytes": 403373,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726927",
+    "sha256": "c0b3913cdd789f553496e2fe608c80eb34087258897fdd1f44eac30413c3c8ae"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726928.json",
+    "bytes": 391045,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726928",
+    "sha256": "d1cccc37b33850cb4ffd1c2eb0ad846a97696005a5e722850c13c29ec05828fe"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726929.json",
+    "bytes": 396446,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726929",
+    "sha256": "26757b201187e6d8ac99e4bb451b5d3a1bbdfba069155a1f945ae69991322c50"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726930.json",
+    "bytes": 421968,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726930",
+    "sha256": "bce9e0f1743d2ae5d3788bacd9fdda647103309c0733efc602e1108dfe9875ea"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726931.json",
+    "bytes": 403868,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726931",
+    "sha256": "0cf7e9ae52a15e7fc6897641697d6fc92a98c7a7ba3bcb816f16cd37cd2e7cba"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726932.json",
+    "bytes": 412658,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726932",
+    "sha256": "aecea21dcc3e5cd1222932cc2efc440967bcc90ada5359a06b4e011c386df93b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726933.json",
+    "bytes": 449791,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726933",
+    "sha256": "a2fbdc4e28fdead53a57717ff4951b392a8f0ca37d90c5266f60f98bde976dfd"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726934.json",
+    "bytes": 413602,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726934",
+    "sha256": "423bea61095f49eb021b538cd3ce6c84433e30a336104a7cbc324581582ab461"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726935.json",
+    "bytes": 415052,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726935",
+    "sha256": "c2325ccd6693350bb0ac98949cd79f1ca8b527c01dbcb3ee4e4c7903a82ca945"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726936.json",
+    "bytes": 435791,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726936",
+    "sha256": "31f5e1fc4d4f5f7c0c1bb5d6f484f073f5ff48f3af2e44152f467f44b6b1f66d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726937.json",
+    "bytes": 388674,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726937",
+    "sha256": "5a17548247ce954d2930d748b97fc40d158c5667cef84d33f745a226f0b8237b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726938.json",
+    "bytes": 427773,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726938",
+    "sha256": "91c7406b13739a80493e4d4e37258ca0f6aed4f11058153f02741d414f7c31dd"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726939.json",
+    "bytes": 492472,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726939",
+    "sha256": "970f8317df41e557b0a20175e261d69e36a043a4fbbba4458ac4c2b34d9581f0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726940.json",
+    "bytes": 392830,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726940",
+    "sha256": "7c956ee1d2077e3ff965d9ec39d76977e1bd4a96a75a64cd0f15bb03a11b31f2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726941.json",
+    "bytes": 412358,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726941",
+    "sha256": "e51db0760d202f65e9b907ebdfc60d971a98caf8c8bbe73875a92db387622465"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726942.json",
+    "bytes": 418641,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726942",
+    "sha256": "5d44578f8a1a5fcfd13913b6c613f2a59a0418832cc175538f420bc74caa9e44"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726943.json",
+    "bytes": 404864,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726943",
+    "sha256": "c019ba57a2cc439513dcb6787551ac28303bfcf57968faead1ef915dc59e3ccc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726944.json",
+    "bytes": 429097,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726944",
+    "sha256": "3622899a76be12e4bed6c35cdc8294b374a900843d645e1ee58cb1f5e314db8e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726945.json",
+    "bytes": 388044,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726945",
+    "sha256": "ee0ec6a3ea746d90d30f62bcb8dbed9eee1683076379c6d90d1fd6967ec3a7b0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726946.json",
+    "bytes": 396878,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726946",
+    "sha256": "04566caa87e5c1693cd587b91bc5cb1d7f52f057a3a7845de19d0a9c73876214"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726947.json",
+    "bytes": 409273,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726947",
+    "sha256": "c3069df4f93af13dd48cb850a07ee3d8b4f12f7f74519d29114923228daa62ca"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726948.json",
+    "bytes": 401058,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726948",
+    "sha256": "c5e86d830a64dbd721c66e0dd9b81b6b28ec2bb5747e83e5f5325623a70de900"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726949.json",
+    "bytes": 423121,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726949",
+    "sha256": "ca17511a05832d9e18c3a8ed52dfc347140dc6d0e79bd3ec52dae8d9143004cc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726950.json",
+    "bytes": 413759,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726950",
+    "sha256": "ae5b49492f22db139f63049fe16c01d62bde1326dbc64ae25a91bd374cbc4edc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726951.json",
+    "bytes": 432537,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726951",
+    "sha256": "46960493b879c04a53221fd81fe9bca3c84d5ef183784f8778f708781f75b14d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726952.json",
+    "bytes": 385041,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726952",
+    "sha256": "03cdf5e33b9f0a67a641876f396752ea1c4fe7631bb992500268e887b07bf6e7"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726953.json",
+    "bytes": 418856,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726953",
+    "sha256": "47aeddfabdac647c246bedb4fb66b929a3aa48b9852c68f0fa83fb3176aa558d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726954.json",
+    "bytes": 392797,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726954",
+    "sha256": "db7f5753044310dbfb61b3b51396813c2fb70200632d240b233b8123143e2db4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726955.json",
+    "bytes": 404341,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726955",
+    "sha256": "c93caedd4717570e366a70ee612834a05a1bcb716aee2b9f968160296193e49c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726956.json",
+    "bytes": 418121,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726956",
+    "sha256": "4a058a1dd30810cf379edd9de35d1e5de734de573856ffb94b18eddbe496e4bc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726957.json",
+    "bytes": 415249,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726957",
+    "sha256": "94086e1f200e142837a1236474292fd185f8c02a77b6471ec929ed6a4b03b408"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726958.json",
+    "bytes": 403267,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726958",
+    "sha256": "d2877f90ccaa7662147265fcbe3e93c3c7734d7b6f3ecec719f5b8b9ac162131"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726959.json",
+    "bytes": 406043,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726959",
+    "sha256": "3b2cbc4a1c43d4a91446fc1e3daa364bd1c7bbe5db696bb1d52316d4c3be3ca9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726960.json",
+    "bytes": 403158,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726960",
+    "sha256": "2a5bcc9b81f8136bad75117b6c77c4b05fe19de6ec6b0882e3460619aa03a219"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726961.json",
+    "bytes": 442326,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726961",
+    "sha256": "695e939425a32b5185c275366cfe96bdef6206504a703912cd54bbb648abecae"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726962.json",
+    "bytes": 358617,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726962",
+    "sha256": "44826d2ebce670d8ea9227b5fc65b378b3423ed284c3d32a0e013e60ff4c3f80"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726963.json",
+    "bytes": 429103,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726963",
+    "sha256": "eb33fbf5acadfb1ff95408965728bcf5a9c8fdac4e117e62c62e9d746340fd29"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726964.json",
+    "bytes": 434482,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726964",
+    "sha256": "853dcb8cd598f9bab236bb031ba7beda6ccdf878201e49bea0cdbb8443ce14b0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726965.json",
+    "bytes": 467836,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726965",
+    "sha256": "d9e79e23d91ba778176e352709e99da87bf611567023e2ea96efb3fb3c790c40"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726966.json",
+    "bytes": 399709,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726966",
+    "sha256": "9f002d544b514fa87e207e3fdee477dee57e9d5dbac2d6c6eab087e7e0ed4bea"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726967.json",
+    "bytes": 409726,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726967",
+    "sha256": "90205ac295202bec389c89134e7ccac35b7457cdd309f9366971e8a0e748a877"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726968.json",
+    "bytes": 417941,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726968",
+    "sha256": "d01fa098568b20d83560b37a8c42b95a221c5a63bc5b68443d3ac95de0f5b4a5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726969.json",
+    "bytes": 405310,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726969",
+    "sha256": "ea94b6c5cec6fdee931a21b3e30cbed6f345fd9c1ba4ac9ba5d0a109dd0f67e4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726970.json",
+    "bytes": 461794,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726970",
+    "sha256": "a5537cf6fadb866e164367773454ef935b4752027ec731f747c41444fa6b287d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726971.json",
+    "bytes": 364282,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726971",
+    "sha256": "25fe852de5f84541cf2b478b49deb5d04168209c3ba8272d5f55082c11a2bf21"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726972.json",
+    "bytes": 414346,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726972",
+    "sha256": "e3193c1f19d20ff1db0b7654c2cabb3c2deaa1bcdbdd5681fc1f67b0c336c506"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726973.json",
+    "bytes": 406816,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726973",
+    "sha256": "853858d01d0395376dc0a1975b6ffade828cadd7dae7a88b9ddb0a005a607c65"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726974.json",
+    "bytes": 391749,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726974",
+    "sha256": "9dd441f5e521ae7b48df45f048ede6adae6c748e0a9591b1140849afdf3697c0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726975.json",
+    "bytes": 392801,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726975",
+    "sha256": "8ea717bcc31d0012ec2db210cfd520bdc0d1e726c26594c0154f6eb1fb1095da"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726976.json",
+    "bytes": 388116,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726976",
+    "sha256": "5eeebc510899631817d8dadae89b10f447cc9da8cedd028066bb53094b1f453f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726977.json",
+    "bytes": 417957,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726977",
+    "sha256": "cbab117894085e72329fc5f75fb3594d9c83d5c7f1cc37308e3e0281a9174b9e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726978.json",
+    "bytes": 367324,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726978",
+    "sha256": "fc690b1a11484dc382f75a00d7e4109c59983ebf7bbd138117eb0d7411590e10"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726979.json",
+    "bytes": 371555,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726979",
+    "sha256": "dc1524ff1323d7ef1c43d76020b92b7d5fb6f6fb15f50ab54f86e8957e0d7140"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726980.json",
+    "bytes": 389745,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726980",
+    "sha256": "ab0a2c038951fed428345ab291620d48484d4159cdd171d268adcbbb692f50ce"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726981.json",
+    "bytes": 414780,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726981",
+    "sha256": "0eee8957a31338ca5e71376dc4de634e97dbfad5706976077cadc0d2b8a7e823"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726982.json",
+    "bytes": 379932,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726982",
+    "sha256": "d14b3711b76da169e5f975790ab9608734a15b43a3210a48acb96b4c65eec886"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726983.json",
+    "bytes": 397562,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726983",
+    "sha256": "a24e725d4bf674a51616d717b3ba36388e7290cfac4c76e6d4716a6b1f1a3ca5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726984.json",
+    "bytes": 394435,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726984",
+    "sha256": "dc6cb7b2c127568ef0fbfe3fde679f960333f5a48ef9a9917292b40b41b771f3"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726985.json",
+    "bytes": 397582,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726985",
+    "sha256": "2df8e5f9651688a00a5c7b6682ab11a9c7c32a0977af11418858e6130fbcd1e9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726986.json",
+    "bytes": 416738,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726986",
+    "sha256": "c277a1765e4178c79a085fdd523d1e8d5c05b85a83dd708e0995053cda0a3deb"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726987.json",
+    "bytes": 376892,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726987",
+    "sha256": "62a7905333f349ffff80559c04af67ed338a671987e23f2e405221fe38796a21"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726988.json",
+    "bytes": 400236,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726988",
+    "sha256": "932197351b7b5307271628d14f0ff78ccfe65ed117b37d171c448b82fe944e14"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726989.json",
+    "bytes": 442308,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726989",
+    "sha256": "227340db2ae05e654729f4fe899c223cdc3053392d68b8b35992ffca20582268"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726990.json",
+    "bytes": 420971,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726990",
+    "sha256": "b9ee73ced7f0bbd16774d5bd687ccad6fdebcffadacbd9e31302e0a6d91348be"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726991.json",
+    "bytes": 445849,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726991",
+    "sha256": "2c9c691a78f6f6b0b5e5704921d2a86f875cd5f74fc7bd08ac44f0b58629cfc4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726992.json",
+    "bytes": 446592,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726992",
+    "sha256": "ff19712bf945691432a3b4f395d10edacadf1098f4a2135efb23f0c5d6cdf8da"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726993.json",
+    "bytes": 383706,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726993",
+    "sha256": "1b08d2fae546a74780729526f058345af86f232c93c5ebf231cafa388482da5b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726994.json",
+    "bytes": 382864,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726994",
+    "sha256": "1a97b1afb1a5245407cc6771eafc7581ff4a792b58f1995ed2ae927bf398f2cd"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726995.json",
+    "bytes": 405949,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726995",
+    "sha256": "9508cbe1b9b69a16cdb31fcf90477c1f0b60c6c4701eda668656e34d69dd2f8d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726996.json",
+    "bytes": 423573,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726996",
+    "sha256": "31badbcb3b6287e710452054595b54c2631225d5bc494397fc7a92efdfadbce6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726997.json",
+    "bytes": 416872,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726997",
+    "sha256": "3cf79c1a2ce79ace3ba7ece088c903afc4360959a91eaab04dc64b73d6f8759e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726998.json",
+    "bytes": 389195,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726998",
+    "sha256": "f569ce0a1b3addf2052a5f14c71de48b48a57657d806b0f37bd2bfb87d9793f9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-726999.json",
+    "bytes": 378850,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=726999",
+    "sha256": "ad5335621bd4cc9a527524f20c74e3a64533e36fe5f5a03a360eacc28d54aab7"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727000.json",
+    "bytes": 387455,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727000",
+    "sha256": "312acd65db44478270296b48ee1effa8c2f051d3d8307f95248de742d388be99"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727001.json",
+    "bytes": 376013,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727001",
+    "sha256": "cbfb1be6ec8dd3a0207721536110d08739d5efc5507d132ad54aace4a2e5a194"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727002.json",
+    "bytes": 386179,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727002",
+    "sha256": "081147bf1f05933c1c9f221b46d634fe66813336948f1483b465c1a0b7f00c6a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727003.json",
+    "bytes": 384665,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727003",
+    "sha256": "3ee83b9ecc39fad39c02346c7f4521669c728259505afab73a8d404302c8b5ce"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727004.json",
+    "bytes": 444477,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727004",
+    "sha256": "fe9c54eeb765a06bb49af42a4b106580f5d207b0eb91e879c057b1bd7c6f1b40"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727005.json",
+    "bytes": 427837,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727005",
+    "sha256": "d7d77a671706823154f10b968a50028c9c6c0225acbbb0e6ae0e05e883479155"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727006.json",
+    "bytes": 435640,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727006",
+    "sha256": "3ebd4bfa9d4363efe7c8e321725c0c4bb71171e4d8a3bc58ea6f246b28426c1d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727007.json",
+    "bytes": 432748,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727007",
+    "sha256": "d3bd43f7f577e0cc0bb0506df6b4097b8ab6d9a094e92d48cdc0de819cd3e87f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727008.json",
+    "bytes": 434252,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727008",
+    "sha256": "6e5b6dee2a4610ca4c03fc55dcef1c02f1492469bc05664a97867512cb026351"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727009.json",
+    "bytes": 372532,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727009",
+    "sha256": "08c3b69ff6c5645219819d33fea5695e90041429be2896ffc8d151c4f5f6449d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727010.json",
+    "bytes": 388676,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727010",
+    "sha256": "22da5eef201c9d43c8c94d9d81490dba1aff903264b7fafaf00e05eed4b03533"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727011.json",
+    "bytes": 405342,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727011",
+    "sha256": "8449b3169a95ccb655937e9926547b5dc2a63d9e47d2f52a4f40d93ee0b7414c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727012.json",
+    "bytes": 434026,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727012",
+    "sha256": "c74354b670bd8503ba5306197e9fa086ecf697ed518d746b484325f6076c7b17"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727013.json",
+    "bytes": 375632,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727013",
+    "sha256": "a7e1e1face470f06a48b45ff6f38cf492edc2ed0024d9cda9ab2c74a3f2bf8b6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727014.json",
+    "bytes": 426472,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727014",
+    "sha256": "93233e14bab9011b8209b386912fc0a801e64f8974d643b97baa81fb70106fca"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727015.json",
+    "bytes": 389303,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727015",
+    "sha256": "d588d8086165b94db049338008a8c8d1a89737502eae239dcf171f8a21ee966f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727016.json",
+    "bytes": 369896,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727016",
+    "sha256": "fe9dc77108f394182e17442d9dd77eefdbe18f647f22bc52c3a5e93ad0f918e0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727017.json",
+    "bytes": 417338,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727017",
+    "sha256": "c42aa6becd8f47437ce4bf4bb071dcd060aea523ecc6f10ac89bbde83ebe0c78"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727018.json",
+    "bytes": 419982,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727018",
+    "sha256": "04292b538a6f140790156ef2d9580141e71f5b54299b62d1e559362f04220b50"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727019.json",
+    "bytes": 492976,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727019",
+    "sha256": "4c600962cfa0ebb08cb3b971af5d08c994cd8fe6f370ba77b0daca207f2a90c3"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727020.json",
+    "bytes": 431963,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727020",
+    "sha256": "b6a226d71754076863da42a9d2337d419cccb0a3e96f3fad41da66ad074e9d5b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727021.json",
+    "bytes": 390494,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727021",
+    "sha256": "e06e5b23cb3cb45194af62c3c1d5ba1d2e1f1824153a2d33ad1cd7aa5d8b3a9b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727022.json",
+    "bytes": 438031,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727022",
+    "sha256": "7ff146b2402ed73ffeeefcff4ef23f171eaf95fbf64b81bc9f7517af39a773bc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727023.json",
+    "bytes": 401173,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727023",
+    "sha256": "23f045506f7cc04ae5cc3d31457ab4c776639641d97667aa9e3e1d0888126d6c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727024.json",
+    "bytes": 421387,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727024",
+    "sha256": "c8304bc07e952b8742813df13a89714f2bb7f22d70c501726b2218ea1645085e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727025.json",
+    "bytes": 420287,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727025",
+    "sha256": "971dcc441f2110f6ea15bbfd32f5b8263d6719907c1ed43fbd0ac13e36b40e86"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727026.json",
+    "bytes": 391401,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727026",
+    "sha256": "2940bd26eba97dc558381eaeebdd77467d05b7e3d988749767dc69d7642b2640"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727027.json",
+    "bytes": 394287,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727027",
+    "sha256": "e7677350afce41401f57f265336d51a363a820c511cb9ccd397b57bfb107003b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727028.json",
+    "bytes": 391518,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727028",
+    "sha256": "033edbae1c91ddff41a6ee164a7a8f900d8090378178fcfd5ae35cc63ca3a463"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727029.json",
+    "bytes": 399945,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727029",
+    "sha256": "668e241859472c8df673b1e4e2edbcd2fa36e02e5b7c1374b8c5ac6f56009521"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727030.json",
+    "bytes": 407890,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727030",
+    "sha256": "b8fb56f42bded24a93eeee30561b9a0a204739a42266ee29dc6664ff6f8dcfed"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727031.json",
+    "bytes": 402812,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727031",
+    "sha256": "90914f56ad45fe90f518a4b2016a04a047bba3a100a1aa2fb0946bead4a68d3e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727032.json",
+    "bytes": 401367,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727032",
+    "sha256": "cc273ae299234a58e863a9f9ba575add16deb72352500ea6870146e11b738897"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727033.json",
+    "bytes": 383487,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727033",
+    "sha256": "2a75be2846a3e2c4069f777eb7604724405bfacce31952730b66d4d65835c1a1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727034.json",
+    "bytes": 408175,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727034",
+    "sha256": "19041a788778ee20d7606b772a24f12176afb93301bd50ccd7e9bf5221144160"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727035.json",
+    "bytes": 454411,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727035",
+    "sha256": "47047be1d6cc448540755ccc725e37252f6dde5c510cd38a1503e6e55c888347"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727036.json",
+    "bytes": 428238,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727036",
+    "sha256": "245f78ea3be5f47073a49b2448c87b58900174c29d4f21f301829ce2a329275b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727037.json",
+    "bytes": 386713,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727037",
+    "sha256": "350f372b71071d21976b806a5a2b01c53411c863e979d629ef176e5aac15a54a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727038.json",
+    "bytes": 415686,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727038",
+    "sha256": "6a5fa311a225f6efe572ff3013cdd0cc580d5c2b14d754701b77e6cdfb09a332"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727039.json",
+    "bytes": 405940,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727039",
+    "sha256": "424bc1f4bb9c9a6a4287ea6b907acb34523c05ef5a56d01125fbfc8a566a9212"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727040.json",
+    "bytes": 421369,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727040",
+    "sha256": "6904b8bb179f9f271284350686e0f02b5711b3d8a75f72c9b3d3ab2df8092b96"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727041.json",
+    "bytes": 409393,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727041",
+    "sha256": "16213e6510cd403cb4f93de290c771749ab025340ca6d0a3b935d5afcd6bd444"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727042.json",
+    "bytes": 383443,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727042",
+    "sha256": "be2596ade7f1c416de8a988c28d2bbb999c030f1cb7ccacf321b83aa7663b618"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727043.json",
+    "bytes": 419900,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727043",
+    "sha256": "e461aece5b5e776f54493d546d439df9e194982cc3eb29b31d03fca5e8629d8b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727044.json",
+    "bytes": 412627,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727044",
+    "sha256": "3703eeb7d69a8fb2dc5de8069e3fbcdacfdeb34d9acca5ed626bf7277bcb5b5f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727045.json",
+    "bytes": 435741,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727045",
+    "sha256": "6842f767751e1aefa357d19acdae60cd8470c0f0be1ad27815120661b385d81c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727046.json",
+    "bytes": 403649,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727046",
+    "sha256": "d03cecefb62b9bc7279af90329bf2d6eafb6aadf25846fdcf0c48f774246c4ec"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727047.json",
+    "bytes": 402204,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727047",
+    "sha256": "36e83d9362407e54ee2ba46c262ca58fc5108d2e26ce0a59fc81644a62597722"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727048.json",
+    "bytes": 388287,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727048",
+    "sha256": "4c53dfcfa78cdd24cd1102461df6f80687a7533cce70781bcdf3d01910a55d7a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727049.json",
+    "bytes": 464138,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727049",
+    "sha256": "30a370fd082059a64f8718f1012bdbca08eead2c81966546ce9207dabaf013b4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727050.json",
+    "bytes": 425805,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727050",
+    "sha256": "f8a7d274a54c4d0151befd0caf35001e64b109f84159b13911c86c345fa8ea6a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727051.json",
+    "bytes": 387002,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727051",
+    "sha256": "55f4d68b1df7710777089a5272d0d5a4ff7c7c2ba8e8554fa0b367f8f6e04665"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727052.json",
+    "bytes": 421094,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727052",
+    "sha256": "5c82bed9ca1e868834e9bb24ae087fae1503d968ffc3707ad256e47ebca5cd69"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727053.json",
+    "bytes": 392349,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727053",
+    "sha256": "a02619f15bbbbd94a58fab46cff4d3c24fdfd97a761e387a8400d91be410a529"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727054.json",
+    "bytes": 390083,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727054",
+    "sha256": "f8dcd357b22ea35669c856accd981d5176abbe88efc691af72a6940cf09d23e1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727055.json",
+    "bytes": 412773,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727055",
+    "sha256": "4d6dd8942bb4097e94587dc85d63363c75505b6e4fd493e226926f6ede10a2ea"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727056.json",
+    "bytes": 385600,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727056",
+    "sha256": "e3b808e18625022aa01e162aa70d63af796043edb21412240234bb97d6cb2a7b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727057.json",
+    "bytes": 437260,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727057",
+    "sha256": "500b21a73343b680066521b8e9caa82edfcde9fcfd5bc4b321489e7b4aa247f2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727058.json",
+    "bytes": 410764,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727058",
+    "sha256": "1adc3213748191d1c8b1a386818e070aa5bc81cee725ca24a1b2505f1d00f27a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727059.json",
+    "bytes": 378441,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727059",
+    "sha256": "c54c97e0a3386cc2c6319a48e24372a48285fa1efa7aff7b99960a54ca110e06"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727060.json",
+    "bytes": 416520,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727060",
+    "sha256": "45bd76d4bcc0429aad03920246c3147ed7823c0be02809185c4c2f950af3c62e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727061.json",
+    "bytes": 389432,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727061",
+    "sha256": "6a2ab1ebbd2b57cb26d5f0e43a8cb071ab0ff57058ea83964a556743e01ca7a6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727062.json",
+    "bytes": 438231,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727062",
+    "sha256": "ac3e34fd39c5ba0492f7bd24c67b84115d47697712a07e0e0d0046eba3cc4495"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727063.json",
+    "bytes": 398353,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727063",
+    "sha256": "bb4078bd2cffb62b9a5a6e93850f4ea74099e7de494d93f1b8f781712423f688"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727064.json",
+    "bytes": 426371,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727064",
+    "sha256": "8097939262e99007925c3373983ddc67062c71f183b6946b1b0d928bcac86119"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727065.json",
+    "bytes": 436147,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727065",
+    "sha256": "8ceec8a382150cbe6164e0d61f8fe40ed6ef158161c2efd97eb2d2bbf6b221fa"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727066.json",
+    "bytes": 409050,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727066",
+    "sha256": "d5166c9b85ec692187ce95365415afdbd969193330a76d7829c9613f14749d31"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727067.json",
+    "bytes": 435423,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727067",
+    "sha256": "3c1885aa9229df56b52c829fa885e101bd3742154af763ece24904db237f0a3f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727068.json",
+    "bytes": 392750,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727068",
+    "sha256": "135ed1ed421ef0f84d3b5fcb332ec57f5b31c1141329df07f80ba6187fa964e3"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727069.json",
+    "bytes": 390440,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727069",
+    "sha256": "a24614a893db388a643940cb03bf3b04f0597b8b3bd57c62ef7ed77afb9b90ea"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727070.json",
+    "bytes": 392690,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727070",
+    "sha256": "ba77cc522d2725055d7697caf62bcf633456420f68420963d5301e2dcb4754ae"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727071.json",
+    "bytes": 407704,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727071",
+    "sha256": "9e099242efa3461a13993ccb1b31d801d7c14aed7b92af7716006fee98e1f4a2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727072.json",
+    "bytes": 401040,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727072",
+    "sha256": "8d7b4b2f1b804da450883fd34ee33a69df5bd3d8438ebe8490bc11f0f2eec7e5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727073.json",
+    "bytes": 422514,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727073",
+    "sha256": "11f00aa3fafdabb52be90de6ba9aef4e5b419e4f22cad32e1bba6939a2992b13"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727074.json",
+    "bytes": 410762,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727074",
+    "sha256": "c7daab9063a5712c14f7a22cf9f56650635ce6c6242e8a8c914c61b8c7a6c8d1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727075.json",
+    "bytes": 410173,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727075",
+    "sha256": "15858ee0b05bebe274ec4c2f9a7274bc8b5128ad521ad0a9bef8ba65854d2470"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727076.json",
+    "bytes": 411064,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727076",
+    "sha256": "2ad9ae76f569b35e04c443d3e3f39d31001c4de19808936c869c0cd01cd514ea"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727077.json",
+    "bytes": 425765,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727077",
+    "sha256": "e1b7b622d2d3e77246cae3c4bbd9de72994a0a828bf7fad68cb83c119f2310a7"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727078.json",
+    "bytes": 378240,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727078",
+    "sha256": "93f5cef060b10529220457cb644ad148aee8ec8b9e481e876d64b60c8953918c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727079.json",
+    "bytes": 393089,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727079",
+    "sha256": "d0384307b5e4b6c5d49f5a5c197965b715f5c3c5ae8a5cdc3e19f27178f0ef47"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727080.json",
+    "bytes": 373231,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727080",
+    "sha256": "545ce37c797b6dd8697ca97c12550ddab6f2174ab1df14c7196fb5948ac1937b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727081.json",
+    "bytes": 380622,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727081",
+    "sha256": "36bfe2e236de1233a35de28bd1c7e0e96dda2107d6bf9734c1760e2a8dfad77a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727082.json",
+    "bytes": 380716,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727082",
+    "sha256": "241920e9be687375abbc86f15b0f3055eccaa8f65c69e464021e65981c5420c5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727083.json",
+    "bytes": 419289,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727083",
+    "sha256": "b49b4f16b37245d65e70fd3e9632b4263b6bcc9ea20ec0b5ea3828664b46a764"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727084.json",
+    "bytes": 416808,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727084",
+    "sha256": "e30209953fbc471760921a2b8f57e46e6bb8b783ff0200bf958192535a601968"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727085.json",
+    "bytes": 388304,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727085",
+    "sha256": "2ce4add71f6cdcec21f2705012fb19e82f492b451de5a43848f210fee1eabc3c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727086.json",
+    "bytes": 405144,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727086",
+    "sha256": "9687c10a52bd061f25712d29f0261ad4cc85a07a6a8e3ef267e4bde91e23bd5c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727087.json",
+    "bytes": 397102,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727087",
+    "sha256": "39c09235b147ab96caf01f3def390972709460c3c66e3661658c72dc689c6453"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727088.json",
+    "bytes": 385253,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727088",
+    "sha256": "951f60d00d9182a8844e36894f3c549bb877e3eeb65668bb48080b81ff1afd2f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727089.json",
+    "bytes": 406634,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727089",
+    "sha256": "1c7c80e5e052c01d1d747fb52579100dda3c53a5070428408f885ffe7cf27d3c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727090.json",
+    "bytes": 379295,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727090",
+    "sha256": "a7b5b534777080171820b08dac503812b1689d84a3a4ee8773f3cb78cf79b885"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727091.json",
+    "bytes": 393372,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727091",
+    "sha256": "da0fd0e46b768ac660a7f12fabcf06721eace5d8c2c34824b4aceaf10f9f73b7"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727092.json",
+    "bytes": 393129,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727092",
+    "sha256": "91adbfe27d6544be2737e9ea4723c1d0bc84372d78549668af8ce2d5101b816c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727093.json",
+    "bytes": 379999,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727093",
+    "sha256": "a25d865b3ac0efbfd0530b58a46cb5ce6f9869c6191d609a6aee4c9827f9ab71"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727094.json",
+    "bytes": 428941,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727094",
+    "sha256": "27572bf116a6ccdc245832c312356e7f237b8c696d44e2c266a1cb983dd65a78"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727095.json",
+    "bytes": 385495,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727095",
+    "sha256": "66031a4ea070f7702e6f45200b4bbf604410bd88311c7dae50433476c11052a0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727096.json",
+    "bytes": 396023,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727096",
+    "sha256": "0a17ede321a186b05507dc572d1fe1bbbf0154abb6a1a2013c2146ee17211117"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727097.json",
+    "bytes": 386312,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727097",
+    "sha256": "254ce92db8b6905bc8c3b0d790095ec05250fccb1d2990cef43be9de093e2d58"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727098.json",
+    "bytes": 410024,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727098",
+    "sha256": "c95983b43289c63ca2bb9d9d49379cfc3251a71322075fe9f4387782776f5228"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727099.json",
+    "bytes": 400175,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727099",
+    "sha256": "3f05649d89125e1bb67a93700c88fd2b0a8e975379b849bfe5810e923abaa900"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727100.json",
+    "bytes": 400051,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727100",
+    "sha256": "a9d867b39ae82ebc870c9945c595d03889cdc4296ae5c7280d7a32aa1f404f85"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727101.json",
+    "bytes": 366051,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727101",
+    "sha256": "0e546c2fab1088272327970c272e240c773bdbe31f30aec657855bc479238d62"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727102.json",
+    "bytes": 428571,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727102",
+    "sha256": "d2c5ee055ee9e3862c974303970198ae0843dea6d7c84863e9d56db647ab3a5b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727103.json",
+    "bytes": 364157,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727103",
+    "sha256": "411c5092942e214bff85ce73cf09412171af625246ac0f69bdc99d9b7ace468a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727104.json",
+    "bytes": 389331,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727104",
+    "sha256": "d5e105c24c4a60ebc96dc24120bb060a96aa09a2fb9f42e5366f513153b43ca3"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727105.json",
+    "bytes": 391924,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727105",
+    "sha256": "3566f4b7534c5f040e4c5cb88777c747471327488f58c616a69f4bb5292f20a8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727106.json",
+    "bytes": 423970,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727106",
+    "sha256": "f0d3cdc727bc8a5784f3f9edb9cf4a0e2bdae4ae973f7a4cbb3d03898849d594"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727107.json",
+    "bytes": 432611,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727107",
+    "sha256": "dd160c324fe19312caae5d412e856ec792416fc3e0d6d92e869083b28a2f9d34"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727108.json",
+    "bytes": 390509,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727108",
+    "sha256": "13848d5a0248b7b4662d48981c8958ba675af56f8bf27999aa0d4c949291ee34"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727109.json",
+    "bytes": 442265,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727109",
+    "sha256": "3bb1d6007ca87885b9d954ec2e7de543ab5496d949d116ea47f34895197199a8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727110.json",
+    "bytes": 421802,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727110",
+    "sha256": "21e3c9a2961ba3cf9c4c3355ae433e7e7b8dcb6f15e2c2686da10a695ba4f501"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727111.json",
+    "bytes": 406719,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727111",
+    "sha256": "4363ce296704d59096f7d06071a180afcfda168b64919d5770d82ac3e9671693"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727112.json",
+    "bytes": 380318,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727112",
+    "sha256": "b45cb4bb7af9626ad4174049ba72d04d56a1fe7970a341974b2d53a9d6ce171f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727113.json",
+    "bytes": 418940,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727113",
+    "sha256": "883abc7cdd3b483f486fa2193877c3763c0f797eccff900b9f2fea719f77d78a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727114.json",
+    "bytes": 409520,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727114",
+    "sha256": "ab98a2ba8ebf3922fb1f1a3498d173b4a25c19aa8a5dbfb72aff9b7d6fb118f2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727115.json",
+    "bytes": 381872,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727115",
+    "sha256": "086acfff92c0765a150a9c8619f2e4b417daae3ae4862afb59b67977b5d7a006"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727116.json",
+    "bytes": 399460,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727116",
+    "sha256": "c83600101b15c43843f320c6f5e38d8ccab4a022a536c312316d20a007de2c91"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727117.json",
+    "bytes": 432267,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727117",
+    "sha256": "5f02ed4ce4a04215e57dbb9221cde66fa89fb6f00458b620f66f5649dfcf2752"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727118.json",
+    "bytes": 411537,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727118",
+    "sha256": "ee56d32a73326a80328030f98f92067cb28e55f924d75adf5bcdd4fc67b374f2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727119.json",
+    "bytes": 402785,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727119",
+    "sha256": "d76eb166b7f3e7ffb2a5310b99e1dc15927ebd4b411c91ffe38552fd81079adc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727120.json",
+    "bytes": 415488,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727120",
+    "sha256": "64f8766666f1b6ce027bcda662b81c6c8e03c602d8510410365ff8e450ea34f0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727121.json",
+    "bytes": 403137,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727121",
+    "sha256": "296c6bf4b46eeb84ddd8c8d6bc201141f1585980a58c796af42602f9c1adf3e5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727122.json",
+    "bytes": 397133,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727122",
+    "sha256": "d1e83c8c05d218f811d8dd59f78983afce2b3ef623581394e521d25db5bce5ef"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727123.json",
+    "bytes": 435842,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727123",
+    "sha256": "15c7250e1114b87e83e3f3f4b49c6b7d1e8ebe47aca65a80facbba47bb7cf5c6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727124.json",
+    "bytes": 408090,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727124",
+    "sha256": "8a10f0ae7e10e2a0905049cd96ab65723fbb7d509143a2a6783d36df8c7b3ea0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727125.json",
+    "bytes": 386588,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727125",
+    "sha256": "8822487b9f68a600d61f2a28bb6dfa02a62c3cdce58fb03750d678c9b1bcba16"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727126.json",
+    "bytes": 384715,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727126",
+    "sha256": "bc33bcf6f6b05215efde84ad99fd124d53901f24b3794f53658d1d74e3cacb1b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727127.json",
+    "bytes": 456203,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727127",
+    "sha256": "374d929061bd9d103b2f6e237f1ba36cb709940158d1ba2a220300006cfb04f4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727128.json",
+    "bytes": 406870,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727128",
+    "sha256": "1b3e23eab6a9d089f36a9c21dcbfc2cf1dc87bfba4994215cb26693561763171"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727129.json",
+    "bytes": 407210,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727129",
+    "sha256": "462a0443a414d389131ee62a9d1f953c3341b51982cc8c73f4fe3440e17f4bf5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727130.json",
+    "bytes": 397076,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727130",
+    "sha256": "994ba374f4613ba8ced89c32e4a682d3f44f213869e8bd5d8dee57b575b8e6c2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727131.json",
+    "bytes": 379741,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727131",
+    "sha256": "05ae27ba0dd8c13c48ecc40ea977412e004e57b290cbd35f06cd6e10e3e7984e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727132.json",
+    "bytes": 409299,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727132",
+    "sha256": "784923afe05ede817c50e83247b811a9bdadfdc9b3b203847e38777357b8cec1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727133.json",
+    "bytes": 388860,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727133",
+    "sha256": "f9fa30b7219c0c3f80dd7a46b950ea391b4c2057462613348067087a629baf24"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727134.json",
+    "bytes": 388847,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727134",
+    "sha256": "1b9be95c18a29c21bbccb0a88e1330becf02d8d6715b6c69f95c6fa73950ceaa"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727135.json",
+    "bytes": 398889,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727135",
+    "sha256": "077b42370cca9dccf89c5019d34b6ba911c0a7fb1079a69c25416323d0db14f6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727136.json",
+    "bytes": 414748,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727136",
+    "sha256": "18d5183186741eb72acc17cfcec27ca2ddd8f94420ef5007207818ecc5ff7da6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727137.json",
+    "bytes": 392014,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727137",
+    "sha256": "85a37799d132674edc4bac56fc3416f66baa71bd79b886df677f982c0c87c758"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727138.json",
+    "bytes": 374054,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727138",
+    "sha256": "268485265e0cada873183c1303cbb76d59a2a0e70a4a79a12e0737fed7cfccbc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727139.json",
+    "bytes": 418024,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727139",
+    "sha256": "d778850325f233307c6158a7001fc3dd3e4fd5af1def25909808765610f17e23"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727140.json",
+    "bytes": 409753,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727140",
+    "sha256": "11dce261c2e88a1271e928ff2de95cb697be916721e8169ef6c33f2d507f3e0f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727141.json",
+    "bytes": 412702,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727141",
+    "sha256": "6692a909e94440fd2b8f096d82fb0651b7f74fb6a21a5f5e7411807bd99ebb79"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727142.json",
+    "bytes": 387938,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727142",
+    "sha256": "6667495fca4d70550fb75ee0954321f5dac2cc1e7fd1d50ef080c3d38ba359e8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727143.json",
+    "bytes": 429082,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727143",
+    "sha256": "cc6eda63dda3da48972c69f6adfad84be05f952ce59c4dd8934fde21074600ce"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727144.json",
+    "bytes": 383359,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727144",
+    "sha256": "ec493be42f9afe8e7a03196ca7983882270d48f7020cb87dbe6d647f659021b6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727145.json",
+    "bytes": 430091,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727145",
+    "sha256": "cfb940c310e3eadf7f85d2e0944d3893305f87c12f19abd62b1202b97ac5261b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727146.json",
+    "bytes": 401591,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727146",
+    "sha256": "2468a9f1091460227726a882bde3ebc296587eb1b6ae18f8f50064a3dad666df"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727147.json",
+    "bytes": 390372,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727147",
+    "sha256": "c0040dc8f870b087a55e822aab376261bc55019171bffcacd4263b11ce2ce5f2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727148.json",
+    "bytes": 356314,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727148",
+    "sha256": "be60e99404df5c69f3c3af1c1891a052b842e1dd17f4d01ecea5bc831168ba21"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727149.json",
+    "bytes": 457873,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727149",
+    "sha256": "07b48b57f6d88626856cc1baf32d5f6c246abe07fd4be429721311e64681f838"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727150.json",
+    "bytes": 414474,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727150",
+    "sha256": "81beaa391671f66dc99eb24d851d90a47d520fa8a5e386d27fc132e73b380465"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727151.json",
+    "bytes": 416564,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727151",
+    "sha256": "c56e2f774bca4ca1afbbfe20b1ce0f27ec100e7c0090c013a1799559b570d767"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727152.json",
+    "bytes": 401385,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727152",
+    "sha256": "693e586e644e60e79bb3f2715d51f1d75a3dc77fc27fda675a949575ff6ec5c9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727153.json",
+    "bytes": 364803,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727153",
+    "sha256": "9d6ffc8e83b013bdfa9d9394689341f133db0249104d9f1d8eb76602c43f316e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727154.json",
+    "bytes": 382362,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727154",
+    "sha256": "0970275c21648f1ad92c0688502de34a299344c7f7edf15c6ff3dcbd24bfab00"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727155.json",
+    "bytes": 385625,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727155",
+    "sha256": "058ca02986e949b4754cb97a48775d0dca3c9bc4f451bc24a4ca66e986a29157"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727156.json",
+    "bytes": 424229,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727156",
+    "sha256": "a8ac6a85d65185c85e5501bb65223e837aa32b3b8a93207615a6fb9ff268e136"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727157.json",
+    "bytes": 395432,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727157",
+    "sha256": "da87ad2dd3f5cd28adfc67ee1e1107ac15a5a37531b59c7fa385251d943ab22f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727158.json",
+    "bytes": 401606,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727158",
+    "sha256": "da757ad97d353d79ea876f7118faf61c16f694f8209920464297e11f016c95e4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727159.json",
+    "bytes": 363917,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727159",
+    "sha256": "4afc3244c3b5dc0e75262c0a45aa4857a3498a95dcce450de8428c189cc4f058"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727160.json",
+    "bytes": 383357,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727160",
+    "sha256": "1f9384ac9b7606426e5458b7b8c5094793e6a37c8aa3aa556c9ffaa08152f978"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727161.json",
+    "bytes": 420820,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727161",
+    "sha256": "41b839051db442da7ae147c0e67120dfee7c57b672464ed244a5d7a882ddff19"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727162.json",
+    "bytes": 370660,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727162",
+    "sha256": "e7e6ea46645d7c50c357060468e7f156ef1da464f7b95f502e1b9951cffa9233"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727163.json",
+    "bytes": 423051,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727163",
+    "sha256": "14058a091a760aef01d30b472101bd207978532e12755d1817aaa7c1e04a3b97"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727164.json",
+    "bytes": 415861,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727164",
+    "sha256": "ab8667a5a52d2733605ba563a8e2102b1344af5981416b9e90889b67c63d1731"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727165.json",
+    "bytes": 392684,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727165",
+    "sha256": "2c126958f29a229483809bfe479ee9921a0c855b44047d724cc458c5d7bfc664"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727166.json",
+    "bytes": 392963,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727166",
+    "sha256": "5fe31a38a2038992e0f3e73933ea436fc766c4f986c5ebe040c0c1b6c1e92bf2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727167.json",
+    "bytes": 400911,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727167",
+    "sha256": "f4c32856b1f39d4f5a7987ce3b4f2bae44ff47d3729331b692eec65ad6296863"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727168.json",
+    "bytes": 418148,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727168",
+    "sha256": "5bff9e0a203bc8d5c6f53525eefcd9ab71e4ee69df28c9c3427e4783b632d041"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727169.json",
+    "bytes": 388101,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727169",
+    "sha256": "04f1e8d7b9bf1d93b2ef71ddd63d00187bd9f8a5fb9bc98b61a9f096eabd26a1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727170.json",
+    "bytes": 391312,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727170",
+    "sha256": "1d42cabfae8c826c5563e111f349e8d954a27e946071c88c018f20f2af85e3a8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727171.json",
+    "bytes": 390185,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727171",
+    "sha256": "3304a28578b2adf15315daec9cdcfb1334b901f3c0fa7a66b953fe45c7e95d03"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727172.json",
+    "bytes": 394034,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727172",
+    "sha256": "103f90120da67cf1f3a747fab3a730be9f6d34ada4a7f1b621ce7c35854c0245"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727173.json",
+    "bytes": 376242,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727173",
+    "sha256": "dc20c75ee1483bf59107f3b0da6cbe1bde30d2e1a29cb00deab7ce8c531f7ab7"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727174.json",
+    "bytes": 420826,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727174",
+    "sha256": "dffad5d9a5710e62dae990a05e679ed014e7fcbe1cac5a64fc87da58706e9cd1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727175.json",
+    "bytes": 404185,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727175",
+    "sha256": "7ede8cc9315b40ae8e6dfeebec6523cc1246d1726f804564e83479eeda5462d5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727176.json",
+    "bytes": 406766,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727176",
+    "sha256": "5a1de6064fc2d64f4d0458dc9c0e5b4f92ce7a34383682515be87a71929e8bfa"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727177.json",
+    "bytes": 376977,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727177",
+    "sha256": "18570d4ddea93738f0de410ad01051e5fbad064a4a384112382d41183eed02f6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727178.json",
+    "bytes": 397305,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727178",
+    "sha256": "009da7042b2af94d79b1d2c7b990b97933abf2eab7647e02e6848313ddcf2a86"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727179.json",
+    "bytes": 467227,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727179",
+    "sha256": "eecd2eb19265b80f66f40ddf65346f76c2630de6a3963f650205f641635bb11c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727180.json",
+    "bytes": 375367,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727180",
+    "sha256": "325a8e9a6174fb8df7e07ac167f28c1a38791651d805c40327c1fd4ab8bb0ef8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727181.json",
+    "bytes": 426790,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727181",
+    "sha256": "fc244227b952ccc5e0797c21e3006f75b0d9d4aaf39f141207247474a504cc74"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727182.json",
+    "bytes": 400819,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727182",
+    "sha256": "c400a3f23aa4d8acd2c02d71b6aaeeef3fefbb62a32301b31e28dc4a19bd5008"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727183.json",
+    "bytes": 406105,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727183",
+    "sha256": "a012691eeb9e9265e58d12c78b48f996894d31c4e6cc132b628ad5cfe8c5c66d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727184.json",
+    "bytes": 413203,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727184",
+    "sha256": "0d87d5df418bde31cd2e1f1ab02bf13ef587c91f504f8c6d4b038b52603f1898"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727185.json",
+    "bytes": 388992,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727185",
+    "sha256": "b9f2715836a9557cfba48a07eacef97e75c7cc7b51b67865274f8f366c333027"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727186.json",
+    "bytes": 388025,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727186",
+    "sha256": "89af6dfc12e8d29a0506b20753753a8c8e6dee0258e6d39b13ce95383769c122"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727187.json",
+    "bytes": 398607,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727187",
+    "sha256": "15864ecc57c74dba875714c4b1b8b79238a04ad2620cc22a0d41772fa960befe"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727188.json",
+    "bytes": 416514,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727188",
+    "sha256": "b9bd14f13fd956147036e95fb878c85d05becdad74a95a74f5492373d592fcad"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727189.json",
+    "bytes": 369027,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727189",
+    "sha256": "0e3467d18744b1a86c8f2f164a4ae7af9afdbc2a9b4368833289821a1ac95f52"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727190.json",
+    "bytes": 442646,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727190",
+    "sha256": "731b4cfc4892805f086aea5247e28cfad180a97a263b0d1b2bd880c886f803e4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727191.json",
+    "bytes": 367971,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727191",
+    "sha256": "41293e7e319dd77a914587f29ffe6d0acd2569ebe65af48487be3920f3ced339"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727192.json",
+    "bytes": 398360,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727192",
+    "sha256": "a28b40f1b3db58aa37bcfcd195fd8f91cc582e5bcfbc03b4b9d01a83a33f08a4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727193.json",
+    "bytes": 416162,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727193",
+    "sha256": "a4fce38a025ec11097bed4663de6b2d93bb1be0755b689cec67a7545cd1224da"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727194.json",
+    "bytes": 391645,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727194",
+    "sha256": "58d13b0103aa96b77d717ba857d09b33ca448817110071f230e5f1545a613bca"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727195.json",
+    "bytes": 418765,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727195",
+    "sha256": "38493d806cf81d6a12c4e0acf4d9a86362558196669c0b5a89c6ad85ae81c8cc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727196.json",
+    "bytes": 431662,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727196",
+    "sha256": "b284a19d3547f41ac44f059f47f495dd93f3d0e101c0e072989579e54c59acb1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727197.json",
+    "bytes": 380476,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727197",
+    "sha256": "c3c6bf82d03e961217ad78a9cc18f1f24dfeecde4dd6229ed0cc4f40664fa037"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727198.json",
+    "bytes": 419250,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727198",
+    "sha256": "f7e9cda754bf4669e031e6903a5a0e95649de4b238c33934205f76c35b8ae57f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727199.json",
+    "bytes": 408136,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727199",
+    "sha256": "657c6d0b6486b78167324d508a827dc82afa85bf3a86f9262a22bbfd929c2ec3"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727200.json",
+    "bytes": 407621,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727200",
+    "sha256": "a3c4d0d3dda3436ef56ace871dc78432791072686ec280613c5db8a3c52e0087"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727201.json",
+    "bytes": 388424,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727201",
+    "sha256": "2f9827f328f9d21a23c9cf6270b8c7363f5a885cc8e0fb8db35cecaff7e53731"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727202.json",
+    "bytes": 415461,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727202",
+    "sha256": "6db817af2cf82371e2773af72a2b713f9b9334e5108e81e17309a7dd977f9012"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727203.json",
+    "bytes": 378347,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727203",
+    "sha256": "0411a27373803efb9f640d18a5578dca26ee58f75d85553e494947144eb8b02e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727204.json",
+    "bytes": 407164,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727204",
+    "sha256": "14ac0a29f38d81ee7c7f3af1cf481fb6fffaa2cd98a5317ab1d1774c1c82a45e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727205.json",
+    "bytes": 405479,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727205",
+    "sha256": "7417f8fac3277e21b2ee7bf8c1b465f3dcbcb6ae55d66d8d081e8dab5c78e965"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727206.json",
+    "bytes": 392269,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727206",
+    "sha256": "6fb9cd6316cae3c44e3654c31a3dc20a7540c09dffc69a44c1bbf1f023f4b324"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727207.json",
+    "bytes": 401852,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727207",
+    "sha256": "aea27871a4aed5f29b4d3beb3f74088152dd614888d6d8af6fddff38d2f6e136"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727208.json",
+    "bytes": 406948,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727208",
+    "sha256": "0f760335fa5420526a563b5ec4db8c3b8c2216666367bd21368d514a66b2c69d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727209.json",
+    "bytes": 395933,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727209",
+    "sha256": "a09d4d5c712203a2a601a1de22960cacd956bd3556e39dbde7915ab56520e195"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727210.json",
+    "bytes": 361343,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727210",
+    "sha256": "1fbc6fbd1e9ab7d395cbe6b174c6311766b9a920ceda8676ef992380a4561bbf"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727211.json",
+    "bytes": 382339,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727211",
+    "sha256": "6b6c5fe485169fe08ea85c7050a2a7a82698ae96afaff0fe6b548ed3c444b2d7"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727212.json",
+    "bytes": 377066,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727212",
+    "sha256": "d95d440e7809f31d4e1d53c355014b01d9ef15c19842251b9d7b28320ff8f498"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727213.json",
+    "bytes": 391157,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727213",
+    "sha256": "9cc50c17ad0cbe36f72e7254516f06a0485760081f8ab6c5f2e27150bc0a2b84"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727214.json",
+    "bytes": 461533,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727214",
+    "sha256": "6d3e4951451cbc6f8f94db84fb4e0c765b564049f5e2191f3a3626f1e25417e5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727215.json",
+    "bytes": 380945,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727215",
+    "sha256": "004504f990e243ae25558f8361587259220e29fe50c287118b6ad666e1b35e45"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727216.json",
+    "bytes": 369706,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727216",
+    "sha256": "7d8245f816a267c8e113f20c6ea8bf86381fbf544e71e7ed8f6d6de3cfa2e95e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727217.json",
+    "bytes": 400372,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727217",
+    "sha256": "40c5d1f3ce73629789ac95275361cef43517b45683871e76e012e785b30bf2d5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727218.json",
+    "bytes": 401224,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727218",
+    "sha256": "2a835d31b294794f617eb49d66daac48d4675ef08705714fbfdccdb05389c18c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727219.json",
+    "bytes": 402170,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727219",
+    "sha256": "c953c1dbc171572c401de30bf78497cca86e5762f64fafbcdf7492fdd3320a0f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727220.json",
+    "bytes": 399125,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727220",
+    "sha256": "80d0b10ed5d595afde37784706858e54058662ba3d1ee92236e27ad1f5cf2459"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727221.json",
+    "bytes": 379187,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727221",
+    "sha256": "74e3bc0b13e5b361ff3927b2b3579227ed53b6b8637cd20955d93ae9b52d8b00"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727222.json",
+    "bytes": 403758,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727222",
+    "sha256": "772ba9e9b6ffa6e8c67ba775f0987ec2dd3355d3e0f5446475d9bed1e64c8134"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727223.json",
+    "bytes": 405494,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727223",
+    "sha256": "c6552ab7d6de09603448810295bc306f95e92a1a6afba10ec6685e2e25efb83e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727224.json",
+    "bytes": 405905,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727224",
+    "sha256": "c071c2a651e0cd8f26a426a3ba234b0000fed34c2db26972dbc68f264ba815a6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727225.json",
+    "bytes": 402358,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727225",
+    "sha256": "ff99c186a52d9efc73f8e69daa8a7c57e573f09ce7d52cfb84e77696a2f19459"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727226.json",
+    "bytes": 394127,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727226",
+    "sha256": "81bd4482c85c8da48ca3bfec8ea0cf3d77880a53ff2a4359fd69cd21872ba36d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727227.json",
+    "bytes": 379999,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727227",
+    "sha256": "140ae0ba78a0ce3fe9fac980ffc0576722264b86b7315d58d177d80d87064665"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727228.json",
+    "bytes": 390245,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727228",
+    "sha256": "6e9da9db25760e3dd76500d87da8c971eb69afd88200aaecc669dc61b0b10c40"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727229.json",
+    "bytes": 404391,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727229",
+    "sha256": "ee354ef29ba77ed0ea7f20f1be64a3c75a0b1d8985138467a43d9abae23ba9bf"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727230.json",
+    "bytes": 399235,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727230",
+    "sha256": "40718701bae0015b7bd367c261d6ad1710b2ba10a9fbaae809a23dac95b78eee"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727231.json",
+    "bytes": 408140,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727231",
+    "sha256": "27b80c68d4524b065a91042e997c551f372ff48e7a2ba85476431172ef9227e9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727232.json",
+    "bytes": 401576,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727232",
+    "sha256": "51c8d68acd692b71ef1e44538dce2db8913d458db0c2fb72d3a9c4453d6b9ed1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727233.json",
+    "bytes": 404775,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727233",
+    "sha256": "4dde2e12e832659fabe81be87b6cbf59005e614addf47e2427bf60082763b6d8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727234.json",
+    "bytes": 406850,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727234",
+    "sha256": "1aef0b4b3dee1d2c7984f5dde828c0ed782f6905278ac715ea8f6b52d00d26b0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727235.json",
+    "bytes": 424037,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727235",
+    "sha256": "ea0cfb4650bf0dfdaf546c9bf8dd5d613c6564c97021fe690cd1271c7f145c90"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727236.json",
+    "bytes": 385257,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727236",
+    "sha256": "ec66c8f98438b1ad0d170c2a0e87ffd2188e4229edd9e5dbb0cba9b40657d6cd"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727237.json",
+    "bytes": 394804,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727237",
+    "sha256": "c49b5e595425a2cee4c001f9170df2929b1110add879df35dd6c5c0ad83aac5b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727238.json",
+    "bytes": 404343,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727238",
+    "sha256": "2e93e5e06bf6d0c9606551d20392b001d1374cdbb0e4ad0a9034daa3857c0736"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727239.json",
+    "bytes": 399883,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727239",
+    "sha256": "52c1c2d5b7f7146e6dc5ec190d9598d1503d7a600c9eb893fa286d2faab3c709"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727240.json",
+    "bytes": 400835,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727240",
+    "sha256": "3178f8bf746ffb8c5d6a466b3d4a6ded112f7afd4e380fa5dfc8d58c6540f2b3"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727241.json",
+    "bytes": 378022,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727241",
+    "sha256": "f17b815f681dbc0eebc18345db4930f163b1f9d4efd7741b9de3f4df5025d60d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727242.json",
+    "bytes": 397748,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727242",
+    "sha256": "1a4d99ca42dbd6099fde9e40307b335e73df298846729c9290ce15dc75f255a1"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727243.json",
+    "bytes": 461514,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727243",
+    "sha256": "f969981a3debafb1d8fbe89fa2b09714b44ef9a424aef147efdab68985bd4e2f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727244.json",
+    "bytes": 385358,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727244",
+    "sha256": "bf94bcee1bffbf21ec3fe41f69dac40946cbc55da77b16f619f1c76335199b35"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727245.json",
+    "bytes": 398248,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727245",
+    "sha256": "eccce0c989e4f732c58d3eb7d775be82adac5394ebbb6c85692be5509bcac7c5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727246.json",
+    "bytes": 418432,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727246",
+    "sha256": "c592a73c5d16f2f7d95dbd4b60bbfc2273c083aaae7edcf30995dafed292feb9"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727247.json",
+    "bytes": 402767,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727247",
+    "sha256": "1e36df9edee26fea0784f6d565421f89e4dff47f8044d72de47d8b70e4afdbcf"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727248.json",
+    "bytes": 430428,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727248",
+    "sha256": "e0bfda5c7b13d600b22b0a5b29c4d03fac1fc2c894d14c52c9a1a20414fbab86"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727249.json",
+    "bytes": 436364,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727249",
+    "sha256": "82e5e5d27df4df2af8f4dbf75f8ec412c593ec5ecdf00fa96d7f1dcbdf9bb13d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727250.json",
+    "bytes": 401077,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727250",
+    "sha256": "5aea63cb0996040e92f235de5c45001ea0f7565c1fe2cd629382b1653aea0f06"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727251.json",
+    "bytes": 391304,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727251",
+    "sha256": "0a51e9e51c4e58d117c3245ccc73be8dd748a88d3a463a4004658971f4602058"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727252.json",
+    "bytes": 409310,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727252",
+    "sha256": "6b4e4c15b8198d8f52ff91c5e18b1ceb949a5887eb94879df59a3199ee55261e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727253.json",
+    "bytes": 432003,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727253",
+    "sha256": "3ea301bc0a1ad7b8875b4c856930bacde4d3638c5d2950aee97911c531fe53c6"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727254.json",
+    "bytes": 401801,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727254",
+    "sha256": "81e813e69f83b7798071a437e0978acba760beb545204267df9809c4497b55d5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727255.json",
+    "bytes": 392701,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727255",
+    "sha256": "a344d6c46b59f92a2fa4a49a2f9c078ad3e4e7b41060aa100bd1e75a00f5b8ac"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727256.json",
+    "bytes": 397039,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727256",
+    "sha256": "08e9acae00a030904f2eb99b5184ba64478dc85caa2ee332f6ac57131011aa66"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727257.json",
+    "bytes": 424251,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727257",
+    "sha256": "321284b8f40fa20295367c2d506f8f55672a383294bdbd5c9b1940b0a36835a0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727258.json",
+    "bytes": 379508,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727258",
+    "sha256": "fedfbc66b32f86b0a707a4f676f177163ae7b687f0f03d6d21f82ee8be5e20dc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727259.json",
+    "bytes": 397447,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727259",
+    "sha256": "c46caa06a1852c61bb2f7842309e96fda13fd5780ecb420e24a9d5fc634b7b4c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727260.json",
+    "bytes": 419779,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727260",
+    "sha256": "2f1f36295983c5cd12bf1c10ebbbb3baa5cc89a44c6c46ab7b7ddb4f145fbe0d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727261.json",
+    "bytes": 421744,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727261",
+    "sha256": "b79054b840e38fe9b57e1cb59b25ad3cf604e20be92e863a48667457a93edcd4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727262.json",
+    "bytes": 425147,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727262",
+    "sha256": "d92ce1192555c1f55fe4df7de35921b1096f06c301197924ece7d10d53de97be"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727263.json",
+    "bytes": 419924,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727263",
+    "sha256": "cf2b0031ab8acc831590ebdb012140e18365862dfc2f96819489f736866d9b8a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727264.json",
+    "bytes": 412737,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727264",
+    "sha256": "6e6209dd2ecec55d5b94170aa807458099e13d8697c233943cb0d06e0bc49f41"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727265.json",
+    "bytes": 427413,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727265",
+    "sha256": "cbdc1ae66cffb08b87d6ce9572bf031b51b4b5731c589859cf9f80b937e738bc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727266.json",
+    "bytes": 407843,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727266",
+    "sha256": "33d87f44715fc25b315376bdd404e32f5e8c2f55dff416f2b75eefacace6e5fc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727267.json",
+    "bytes": 406596,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727267",
+    "sha256": "06a0e2056864cafc54d8169e9bdfd4f420e96f07500ebc28ef006e90c561600d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727268.json",
+    "bytes": 400210,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727268",
+    "sha256": "46b70f9e65813bbca78f73d062031880490b3e78ed2604d3a09d23a3abe73a4b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727269.json",
+    "bytes": 408358,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727269",
+    "sha256": "b5d59cb2f058cba683496df97b8b0e67eceeec6c58181256888ba62ca4eb0f52"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727270.json",
+    "bytes": 382691,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727270",
+    "sha256": "499ca7636ef830fe5b0c8e17dffc135d4182648339b14a286199294a4ff316c3"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727271.json",
+    "bytes": 416393,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727271",
+    "sha256": "16798fe8f07abd89f60396cf4548d633517879b9fdbc3fb93eece16b32cd9f21"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727272.json",
+    "bytes": 416543,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727272",
+    "sha256": "78e9af8e8409c5e14b20796507f852d2ad70000bdfe8f170702b773037333202"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727273.json",
+    "bytes": 393186,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727273",
+    "sha256": "c1dec5c72a6cc0d0898a2797e07dc60f2994abd76be705088881813ba4160626"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727274.json",
+    "bytes": 368842,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727274",
+    "sha256": "9583bb10eb3ccda8ada258ec543458381047c05ad71c224bf0c84b2ac7277535"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727275.json",
+    "bytes": 408969,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727275",
+    "sha256": "f9f46abbce348a7f1d3ee191f438f6ad159e066f0c8083944ec8cf0f4185b774"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727276.json",
+    "bytes": 394228,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727276",
+    "sha256": "8dae511f365ae463092b85a0bed71d71a5eed9ff93e7fff9c71b95f87b29e906"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727277.json",
+    "bytes": 412061,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727277",
+    "sha256": "6f9536bf54452944d31ec23410c5caa14b5b5a960ac179539747bdb0a680d001"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727278.json",
+    "bytes": 386381,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727278",
+    "sha256": "5bca76a738e41434e41b715db8bdbca18e83a4ba1cef5616fd41f5948a4d31a5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727279.json",
+    "bytes": 433598,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727279",
+    "sha256": "e1c900ce10ff1bb9f3e391275f652d3bf1a5c51ff95f67eeef8ac84a19a4e3cf"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727280.json",
+    "bytes": 448841,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727280",
+    "sha256": "d744102cdd4a9eaefc2fe9748d83b86d30aae3701f8d206899c17541ac9aec23"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727281.json",
+    "bytes": 381470,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727281",
+    "sha256": "b20a3f577521f30f68b0d48819e4ce8f84d14c2272523d52d267b52b3641aad5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727282.json",
+    "bytes": 420205,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727282",
+    "sha256": "7059b1210781112cc72e6fff890d11964fa94e47f7f0d78f6617eea3168e6c32"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727283.json",
+    "bytes": 406439,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727283",
+    "sha256": "b11fa923d47e3385af9ee0a6d6cbacb17e67c5b5ac112ee4f1d6ed6d623894a4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727284.json",
+    "bytes": 420552,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727284",
+    "sha256": "00d01697c28f03d707a16de54a91d05b528128cf851674ce3850c5332b7a8f7c"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727285.json",
+    "bytes": 392681,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727285",
+    "sha256": "d21e96c6212eefb5976139038502a188c3602850e6cf3031056a906e4003736e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727286.json",
+    "bytes": 415805,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727286",
+    "sha256": "ee688e322bccb0dda89dafafbacfdcdea4f65f747ffbf26c17ca88d0acdf5e5a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727287.json",
+    "bytes": 404287,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727287",
+    "sha256": "f36c8b25c5b4107975c9fa13ed0599cbae9bf9d900bb3f2f54d119bc0cb956f3"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727288.json",
+    "bytes": 384801,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727288",
+    "sha256": "be50fbd79ce74a3cd2c5c729a90fde6f6db25bf49bbd5d8340555e0975e401dd"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727289.json",
+    "bytes": 390551,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727289",
+    "sha256": "5e9de71ef1ceb704ce853ecac25dad1ee82bdee8e7147b85b5ddcda96bc430b0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727290.json",
+    "bytes": 378274,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727290",
+    "sha256": "d40f775071073b789b5ee8e9fe3e43ee7a7c5aa81f6b1c328367d11164dbe745"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727291.json",
+    "bytes": 379067,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727291",
+    "sha256": "f888a3734ae181839297ef186e6e33a5754e955927bf14e2513f360936007f6b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727292.json",
+    "bytes": 429042,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727292",
+    "sha256": "ac46f3e81ba9f3168016ae1c47a3ace2f94c30c399f86aa50b65b1c1514d8646"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727293.json",
+    "bytes": 391388,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727293",
+    "sha256": "3776b999e8155cae0948aa1df82506b49ff86e322d46299d673abd0a41fa839e"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727294.json",
+    "bytes": 431283,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727294",
+    "sha256": "98cfd53f5fc041f008906ecf4a2f38adcd9ee6ce95737c00c0f564e1fb4a2ce2"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727295.json",
+    "bytes": 447652,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727295",
+    "sha256": "bf95db90a0761853ff200aeeb1593e21f849f65d76b0ee8bec827986e62e6f84"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727296.json",
+    "bytes": 469892,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727296",
+    "sha256": "6a7b7e4c28d097e5ac943f978921d90e5b53e1cf31174289729f2cb4bc06bdee"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727297.json",
+    "bytes": 482151,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727297",
+    "sha256": "ea79a60659ca7a78a95a4b00ae269640eeacc6b6fb13e5fd2537090cd488facd"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727298.json",
+    "bytes": 429647,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727298",
+    "sha256": "fa81881cfb888ba6641db5b2eec375ccb94dbdad74b1a377fefac3e25dc80423"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727299.json",
+    "bytes": 431892,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727299",
+    "sha256": "d7901fbdaec0f90e1074f9446cdd786375c33c09a4ef4e1b54ac9b99bbd20cf0"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727300.json",
+    "bytes": 416741,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727300",
+    "sha256": "64249bd749d5eaf33bd0608cbb41152ef377f50d9024d863e7373354ee421d02"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727301.json",
+    "bytes": 386969,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727301",
+    "sha256": "281dca241912dcac08c7f21b6ce2076d510aa9486c689494fdbb1fa299ea34dd"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727302.json",
+    "bytes": 409506,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727302",
+    "sha256": "001f2b6ae705cb4563399217b7e0972c236db4a8677010293d6fb7580bd91b33"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727303.json",
+    "bytes": 392274,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727303",
+    "sha256": "f38a45aec8d83de305167dbb3b9c1b3690d9c6f8b50ed8ae22f79dd3daf1cf1b"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727304.json",
+    "bytes": 385055,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727304",
+    "sha256": "8e4d2d69c7cc9e5f772cc89457113242c2165d0a372f2e18c8f9411826ebf5de"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727305.json",
+    "bytes": 396027,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727305",
+    "sha256": "d284aab4a92355b7edf66f5720513a61e099f0c6e0a3099dee92584f908b3702"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727306.json",
+    "bytes": 397638,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727306",
+    "sha256": "a3668003c24d9ba9165ee1d26d3149c5c356152808d190df291b0b595f65b148"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727307.json",
+    "bytes": 403475,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727307",
+    "sha256": "cf3b076505e6f35c5e6d311fd3eb88b6f689f1695c4e9c3fffad561bf4b05bfc"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/espn-summary-727308.json",
+    "bytes": 414958,
+    "url": "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/summary?event=727308",
+    "sha256": "7ff8ddbd192e23c8e426ddb8d3b2b48e2115870838f0d4ea7b5a6d9fdeff6523"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-726939.html",
+    "bytes": 175463,
+    "url": "https://www.intermiamicf.com/news/inter-miami-cf-vs-fc-dallas-rescheduled-to-april-27-due-to-concacaf-semifinals",
+    "sha256": "fb3109483d9d69613cdbd923745c20a430f0ec3026e380b54f7544042d94f594"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-726944.html",
+    "bytes": 222601,
+    "url": "https://www.mnufc.com/news/mnufc-announces-date-and-time-change-for-vancouver-whitecaps-home-game",
+    "sha256": "bc5b82d812af50bc5ed75c374e453479d3cba0d33fff815427ab8a162bf936db"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727034.html",
+    "bytes": 215864,
+    "url": "https://www.lafc.com/news/lafc-announces-date-changes-for-matches-against-sporting-kansas-city-and-colorado-rapids",
+    "sha256": "eb2b12c89af9d2e853bde2d89ca3c30e9bf8fc42459675a56ca7b780dfd58583"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727045.html",
+    "bytes": 209469,
+    "url": "https://www.timbers.com/news/timbers-road-match-against-vancouver-whitecaps-fc-rescheduled-for-sept-24",
+    "sha256": "22997c40191b977c3d7ab603434f656566a761d491076ef7a69184cea90a7030"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727046.html",
+    "bytes": 215864,
+    "url": "https://www.lafc.com/news/lafc-announces-date-changes-for-matches-against-sporting-kansas-city-and-colorado-rapids",
+    "sha256": "eb2b12c89af9d2e853bde2d89ca3c30e9bf8fc42459675a56ca7b780dfd58583"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727055.html",
+    "bytes": 216063,
+    "url": "https://www.lafc.com/news/dates-changed-for-matches-against-toronto-fc-and-real-salt-lake",
+    "sha256": "db5dc1b6a924c6f632806f0febec7d85b46a0cc4989cea3f0145f1fc64706c68"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727077.html",
+    "bytes": 216063,
+    "url": "https://www.lafc.com/news/dates-changed-for-matches-against-toronto-fc-and-real-salt-lake",
+    "sha256": "db5dc1b6a924c6f632806f0febec7d85b46a0cc4989cea3f0145f1fc64706c68"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727082.html",
+    "bytes": 175552,
+    "url": "https://www.intermiamicf.com/news/match-rescheduled-inter-miami-cf-vs-atlanta-united-match-moved-to-october-11",
+    "sha256": "c5b834a472c3aad208c679fc3fa00970beaa579dbf667fa11d7bfac2ba5f6d6f"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727093.html",
+    "bytes": 177399,
+    "url": "https://www.whitecapsfc.com/news/vwfc-at-lafc-rescheduled-for-june-29",
+    "sha256": "079f736329a6952a55b6454943b400acb322d8f43959b3749c2148cc21399ce5"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727103.html",
+    "bytes": 161204,
+    "url": "https://www.austinfc.com/news/mls-reschedules-austin-fc-s-home-match-vs-lafc-for-october-12",
+    "sha256": "dc356f33f4be80c166dcf28bf05aca7393aa4f84d3dba22207bbaef3f28030a4"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727157.html",
+    "bytes": 186188,
+    "url": "https://www.houstondynamofc.com/news/match-preview-houston-dynamo-fc-host-the-la-galaxy-in-continued-playoff-push",
+    "sha256": "d03211c40bb36f45ad92ee9ab4875f28c3fb3930e0523c9531e77ecdb04232ee"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727169.html",
+    "bytes": 184250,
+    "url": "https://www.newyorkcityfc.com/news/new-york-city-fc-vs-columbus-crew-on-august-9-rescheduled",
+    "sha256": "a071464c0118b50da8ccb0729497fad40818897cfa7c324222cfe5d6c89a5938"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727214.html",
+    "bytes": 174619,
+    "url": "https://www.intermiamicf.com/news/mls-regular-season-match-date-change-inter-miami-cf-vs-chicago-fire-fc-rescheduled",
+    "sha256": "ec2e4ac8581a1e0d7b68245cab52696d257bb535ff5119b65bceb055f5079f6a"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727217.html",
+    "bytes": 176552,
+    "url": "https://www.whitecapsfc.com/news/orlvvan-oct11",
+    "sha256": "79086700faa6c0aa7831875a6e3d32dd1f092eb46e339d05d991a61b33cf2103"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727226.html",
+    "bytes": 220997,
+    "url": "https://www.soundersfc.com/news/sounders-fc-s-home-match-vs-real-salt-lake-rescheduled-for-saturday-october-11",
+    "sha256": "83b47fb9ee83fb3f91072f5421ad1149bb24bbb92ebed00a1563b99adbcec8a8"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727227.html",
+    "bytes": 156526,
+    "url": "https://www.fcdallas.com/news/fc-dallas-road-match-against-the-la-galaxy-rescheduled-for-saturday-oct-11",
+    "sha256": "c1947dd6c0ec1a7b963de79dac670bf275d58f43f9abcc0a7a5eceb22f634c21"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727248.html",
+    "bytes": 184250,
+    "url": "https://www.newyorkcityfc.com/news/new-york-city-fc-vs-columbus-crew-on-august-9-rescheduled",
+    "sha256": "a071464c0118b50da8ccb0729497fad40818897cfa7c324222cfe5d6c89a5938"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727258.html",
+    "bytes": 161744,
+    "url": "https://www.austinfc.com/news/mls-announces-new-date-for-austin-fc-s-september-home-match-vs-seattle",
+    "sha256": "b9e5adba4298eb8e024d4fa7112d46e68bb6624b88aef6c231a455d4ad3ce70d"
+  },
+  {
+    "path": "/Volumes/Kilos/janus/research/mls-L43/official-review-727264.html",
+    "bytes": 200989,
+    "url": "https://www.fccincinnati.com/news/preview-fc-cincinnati-host-orlando-city-sc-in-sunday-night-soccer-clash-at-tql-stadium",
+    "sha256": "f7fd2d77225a418dda40ce83302f8d9d4a305d2bd1715c81c21fc71c36c20e13"
+  }
+]

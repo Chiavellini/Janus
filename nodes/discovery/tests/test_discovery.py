@@ -67,6 +67,8 @@ def test_a_co_listed_game_carries_four_ids_and_both_fee_schedules():
                                   "polymarket": {"fee_rate": 0.03}}
     assert spec["pm_limits"] == {"min_order_contracts": 5.0, "tick": 0.01}
     assert spec["state"] == "in" and spec["league"] == "mlb"
+    assert spec["schedule_population"] == {"source": "espn", "game_id": "espn:mlb:7",
+                                          "league": "mlb", "season_slug": "regular-season"}
     assert spec["settlement"]["result"] == "EQUIVALENT", spec["settlement"]
     assert spec["rules"]["kalshi"]["market"]["rules_secondary"].startswith("The following market")
 

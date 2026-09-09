@@ -1,0 +1,43 @@
+{
+  "gates": "PASS",
+  "gate_failures": [],
+  "complete": true,
+  "error": null,
+  "itf_events": 15689,
+  "identified_singles": 2222,
+  "mature_n": 1185,
+  "adverse": 27,
+  "adverse_point_estimate": 0.02278481012658228,
+  "upper_bound_95": 0.031076457689201795,
+  "registered_value": 0.031076457689201795,
+  "parseability": 1.0,
+  "estimator": "one_sided_95_upper_bound_at_all_n",
+  "mature_reasons": {
+    "WINNER_WITHIN_14D": 1158,
+    "HALF": 25,
+    "WINNER_BEFORE_ORIGINAL_START": 1,
+    "MATURE_STILL_OPEN": 1
+  },
+  "structural_exclusions": {
+    "NOT_QUALIFYING": 13467
+  },
+  "immature": 1037,
+  "unparseable": {},
+  "unparseable_events": 0,
+  "actual_closed_candidates": 2119,
+  "catalog_state_transitions": 0,
+  "catalog_state_mismatches": 0,
+  "snapshot_utc": "2026-09-09T07:24:03+00:00",
+  "mature_before_utc": "2026-08-26T07:24:03+00:00",
+  "run": "20260909T081048Z",
+  "population": "ITF qualifying singles",
+  "tennis_events": {
+    "closed": 33295,
+    "open": 531
+  },
+  "archive": "/Volumes/Kilos/janus/research/L46_itf_delay/20260909T075545Z",
+  "source": "https://gamma-api.polymarket.com/events/keyset",
+  "network_requests": 0,
+  "spec_sha256": "deb14456e84ab5c367eab3f2b6025d1961633e58d688e8505fbe66bd0711e934",
+  "source_row": "L46"
+}

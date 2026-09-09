@@ -1,0 +1,44 @@
+experiment_id: "janus-sports-itf-delay-atomic-l46-2026-09-09"
+date_registered: "2026-09-09"
+track: "sports/settlement"
+row_kind: "L (descriptive; no test look spent)"
+ledger_ref: "snooping_ledger.md row L46"
+status_at_registration: PENDING
+test_looks_spent: 0
+supersedes: "L44 FAIL on interrupted archived JSON, not a statistical rejection"
+
+# IMMUTABLE. No new ITF distribution has been read for this row. L44's failed replay exposed
+# incomplete main-draw counts: 9948 mature candidates, 158 adverse (121 HALF, 6 late winner,
+# 31 winner before original start). Those counts are disclosed and cannot satisfy this row.
+# The population, fixed maturity cutoff, 95% completeness threshold, and estimator are unchanged.
+purpose: "Complete a fresh ITF main-draw catalog safely; do not reuse any L44 raw page or result."
+source:
+  primary: "Fresh Polymarket Gamma /events/keyset tennis catalog; separate closed=true and closed=false passes"
+  pagination: "order=id, ascending=true, limit=500; pass next_cursor verbatim as after_cursor until events=[] or no next_cursor"
+  archive: "Fresh directory under /Volumes/Kilos/janus/research/L46_itf_delay; each page records URL, exact params, response and SHA-256"
+  durability: "Write each page to an exclusive temporary file, close gzip, fsync complete file, rename to exclusive final page name, and fsync directory. Final paths never expose partial JSON. No interrupted archive reuse."
+  identification: "itf- slug; one two-outcome singles moneyline; doubles and explicit qualifying excluded structurally"
+  scheduled_start: "explicit originally-scheduled timestamp including year in market description; gameStartTime only cross-check"
+  terminal_time: "event closedTime; moneyline market closedTime only when event key is absent; present null/empty/invalid event value fails parsing; never endDate"
+  terminal_result: "exactly one outcome >=0.999 and the other <=0.001 is winner; both 0.5 is HALF"
+window:
+  snapshot_utc: "2026-09-09T07:24:03Z"
+  maturity: "original start <= snapshot_utc minus 14 days; unchanged from L44"
+definitions:
+  denominator: "All mature identified singles, open or closed; unknown original start counts conservatively as mature adverse. Recent parseable originals excluded from rate denominator."
+  adverse: "Late winner (>14 days), any HALF, mature still-open, required-field error, winner before original start, or catalog state mismatch/transition; count each mature event once."
+  parseability: "Valid required fields for ACTUAL payload state among ALL identified non-structural singles, including immature rows. Age exclusion never hides malformed state-required fields. Record every field error."
+  estimator: "Always one-sided 95% upper bound: min(1,3/n) at zero adverse cases, Wilson upper with z=1.6449 otherwise; never a point estimate"
+  evidence_key: "tennis.itf.delayed_gt14d_rate"
+criteria:
+  - "Both cursor passes must complete. Null/missing ids, duplicate ids within a pass, invalid shapes/hashes, cursor loops, request failure or incomplete page fail the run."
+  - "Cross-pass event duplicates count once, adverse if mature, and retain actual closed state and all parse errors; structural/immature exclusions remain excluded."
+  - "At least one mature candidate and >=95% required-field parseability among all identified singles are required."
+  - "An authoritative close timestamp must be parseable among actual closed candidates regardless of the requested catalog. Total close-source absence fails."
+  - "Every structural, immature, malformed, HALF, open, late-winner and transition row is retained and reason-coded."
+  - "Only PASS may register its evidence key and the ITF paper/demo risk allowance. Outer live caps do not change."
+  - "Reads no book, entry or P&L and claims no edge. A historical bound does not guarantee future frequencies or profits."
+outputs:
+  results: "research/sports/2026-09-09_itf-delay-atomic/results.json"
+  verdict: "research/sports/2026-09-09_itf-delay-atomic/verdict.md"
+  evidence: "nodes/settle_wedge/evidence.py: tennis.itf.delayed_gt14d_rate only on PASS"

@@ -41,7 +41,7 @@ from nodes.entities.leagues import LEAGUES, venue_structured
 from nodes.entities.seed import KALSHI_GAME_SERIES, NON_TEAM_OUTCOMES
 from nodes.match_sports.sports_match import DRAW_ENTITY, kalshi_markets, pair, pm_markets, seed_live_players, pull_pm, _client
 from nodes.schedule_espn import espn
-from nodes.settle_wedge.pair import certify_from_spec, records_from_spec, summary
+from nodes.settle_wedge.pair import certify_from_spec, population_from_schedule, records_from_spec, summary
 from nodes.settle_wedge.records import record_equivalence, record_rules
 from nodes.venue_kalshi.books import fetch_kalshi_series, kalshi_fee_params
 from nodes.venue_polymarket.books import pm_outcome_no_tokens, pm_fee_params, pm_order_limits, pm_primary_market, pm_token_map
@@ -319,7 +319,8 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
                             if x and normalize(x) not in NON_TEAM_OUTCOMES} | {g.home_name, g.away_name})
             k_rules = dict(first.get("kalshi_rules") or {})
             p_rules = dict(first.get("pm_rules") or {})
-            spec = {"league": league, "short_name": g.short_name, "state": g.state,
+            spec = {"game_id": gid, "league": league, "short_name": g.short_name, "state": g.state,
+                    "schedule_population": population_from_schedule(g),
                     "tier": tier_of(g, now or d.made_utc, first_seen_ts=(first_seen or {}).get(gid)),
                     "start_utc": g.start_utc, "outcomes": outcomes, "fee_params": fees,
                     "pm_slug": slug, "kalshi_event": first["kalshi_event"],

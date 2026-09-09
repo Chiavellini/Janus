@@ -382,6 +382,23 @@ def test_a_hedged_executions_reservation_is_committed_capital_not_an_unreconcile
     assert any("UNRECONCILED_TOO_LONG" in a for a in risk_alerts(now=10_000.0, **kw)), "an unhedged one is late"
 
 
+def test_an_enabled_league_with_zero_effective_cap_is_an_operational_alarm():
+    from dataclasses import replace
+    from nodes.risk.health import enabled_league_cap_alerts
+
+    bad = replace(LIMITS, per_league_usd={**LIMITS.per_league_usd, "itf": 0.0})
+    got = enabled_league_cap_alerts(limits=bad, enabled=["mlb", "itf"])
+    assert len(got) == 1 and "ENABLED_LEAGUE_ZERO_CAP" in got[0] and "itf" in got[0]
+    good = replace(LIMITS, per_league_usd={**LIMITS.per_league_usd, "itf": 200.0})
+    assert enabled_league_cap_alerts(limits=good, enabled=["mlb", "itf"]) == []
+
+
+def test_every_default_enabled_league_has_a_positive_risk_allowance():
+    from nodes.entities.leagues import default_leagues
+
+    assert {code: LIMITS.league_cap(code) for code in default_leagues() if LIMITS.league_cap(code) <= 0.0} == {}
+
+
 def test_override_state_is_what_the_report_tick_and_the_watchdog_read(tmp_path):
     """Until 2026-09-07 the override was read once at start; an arm that expired under a running
     lane stopped nothing. override_state() is the per-tick read, stale_reason() its verdict."""

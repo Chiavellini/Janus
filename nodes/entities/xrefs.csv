@@ -1251,7 +1251,7 @@ polymarket,por,118507,por:por.arouca,teams[].id,FC Arouca
 polymarket,por,118508,por:por.rio_ave,teams[].id,Rio Ave FC
 polymarket,por,118513,por:alverca,teams[].id,FC Alverca
 polymarket,por,118516,por:eng.fc_famalicao,teams[].id,FC Famalicão
-polymarket,por,118517,por:estrela,teams[].id,Estoril Praia
+polymarket,por,118517,por:por.estoril,teams[].id,Estoril Praia
 polymarket,por,118518,por:por.gil_vicente,teams[].id,Gil Vicente FC
 polymarket,por,118519,por:por.moreirense,teams[].id,Moreirense FC
 polymarket,por,3284195,por:viseu,teams[].id,Académico de Viseu FC
@@ -1319,6 +1319,17 @@ polymarket,wta,3270979,wta:siniakova-townsend,teams[].id,Siniakova/Townsend
 polymarket,wta,3270982,wta:bucsa-melichar,teams[].id,Bucsa/Melichar
 polymarket,wta,3270986,wta:aoyama-liang,teams[].id,Aoyama/Liang
 polymarket,wta,3270987,wta:mihalikova-nicholls,teams[].id,Mihalikova/Nicholls
+kalshi,por,dca44d67-d382-4a24-b504-2839f6e59cb6,por:por.benfica,custom_strike,SLB
+polymarket,por,118503,por:por.benfica,teams[].id,Sport Lisboa e Benfica
+kalshi,por,ca5d00cc-f18d-4802-8337-32c0e7152d64,por:estrela,custom_strike,ESA
+polymarket,por,118515,por:estrela,teams[].id,CF Estrela da Amadora
+kalshi,bel1,cd4f6267-e0bf-4074-9c47-abb625ad14e1,bel1:bel.kv-mechelen,custom_strike,KVM
+polymarket,bel1,3282319,bel1:bel.kv-mechelen,teams[].id,Yellow-Red KV Mechelen
+polymarket,bel1,3284406,bel1:bel.anderlecht,teams[].id,RSC Anderlecht
+kalshi,ere,167b048f-0412-4626-9766-ec08603e62cc,ere:ned.az,custom_strike,AZA
+polymarket,ere,115303,ere:ned.willem_ii,teams[].id,Willem II Tilburg
+kalshi,cfb,a3484578-3134-4a25-9c98-e1a05965f9aa,cfb:troy-trojans,custom_strike,TROY
+kalshi,cfb,48514282-2c62-4c7a-a8c5-d66d90c4e7e3,cfb:ut-rio-grande-valley-vaqueros,custom_strike,UTRGV
 polymarket,wta,3271917,wta:maleckova-skoch,teams[].id,Maleckova/Skoch
 polymarket,wta,3271928,wta:muhammad-stollar,teams[].id,Muhammad/Stollar
 polymarket,wta,3275537,wta:pridankina-tang,teams[].id,Pridankina/Tang

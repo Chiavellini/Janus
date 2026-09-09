@@ -160,3 +160,18 @@ cfb,Louisiana-Monroe,cfb:ul-monroe-warhawks,near_miss_2026-09-08,Kalshi/Polymark
 cfb,Louisiana Monroe,cfb:ul-monroe-warhawks,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
 cfb,Mississippi,cfb:ole-miss-rebels,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
 cfb,Texas Christian,cfb:tcu-horned-frogs,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+atp,Gabi Adrian Boitan,atp:gabi-boitan,near_miss_2026-09-09,"Kalshi KXATPCHALLENGERMATCH-26SEP09BOIMAY; Polymarket player id 3269868 names the same participant Gabi Boitan"
+wta,Tessa Johanna Brockmann,wta:tessa-brockmann,near_miss_2026-09-09,"Kalshi KXWTACHALLENGERMATCH-26SEP09BROBUR; Polymarket player id 3270416 names the same participant Tessa Brockmann"
+wta,Miriam Bianca Bulgaru,wta:miriam-bulgaru,near_miss_2026-09-09,"Kalshi KXWTACHALLENGERMATCH-26SEP09BURBUL; Polymarket player id 229717 names the same participant Miriam Bulgaru"
+por,SL Benfica,por:por.benfica,current_slate_2026-09-09,"Kalshi KXLIGAPORTUGALGAME-26SEP09MORBEN custom_strike dca44d67-d382-4a24-b504-2839f6e59cb6; Polymarket team id 118503 is Sport Lisboa e Benfica"
+por,Sport Lisboa e Benfica,por:por.benfica,current_slate_2026-09-09,"Polymarket team id 118503; ESPN team 1929 is Benfica"
+por,Estrela Amadora,por:estrela,current_slate_2026-09-09,"Kalshi KXLIGAPORTUGALGAME-26SEP10ESABRA custom_strike ca5d00cc-f18d-4802-8337-32c0e7152d64; ESPN team 21610"
+por,CF Estrela da Amadora,por:estrela,current_slate_2026-09-09,"Polymarket team id 118515; ESPN team 21610"
+por,Estoril Praia,por:por.estoril,current_slate_2026-09-09,"Polymarket team id 118517; ESPN team 12216 is Estoril"
+bel1,Mechelen,bel1:bel.kv-mechelen,current_slate_2026-09-09,"Kalshi KXBELGIANPLGAME-26SEP11YRMRSC custom_strike cd4f6267-e0bf-4074-9c47-abb625ad14e1; ESPN team 7879"
+bel1,Yellow-Red KV Mechelen,bel1:bel.kv-mechelen,current_slate_2026-09-09,"Polymarket team id 3282319; ESPN team 7879"
+bel1,RSC Anderlecht,bel1:bel.anderlecht,current_slate_2026-09-09,"Polymarket team id 3284406; ESPN team 441"
+ere,Alkmaar,ere:ned.az,current_slate_2026-09-09,"Kalshi KXEREDIVISIEGAME-26SEP11AZAWIL custom_strike 167b048f-0412-4626-9766-ec08603e62cc; ESPN team 140"
+ere,Willem II Tilburg,ere:ned.willem_ii,current_slate_2026-09-09,"Polymarket team id 115303; ESPN team 156"
+cfb,UT Rio Grande Valley,cfb:ut-rio-grande-valley-vaqueros,current_slate_2026-09-09,"Kalshi KXNCAAFGAME-26SEP12UTRGVNICH custom_strike 48514282-2c62-4c7a-a8c5-d66d90c4e7e3; ESPN team 292"
+cfb,UTRGV,cfb:ut-rio-grande-valley-vaqueros,current_slate_2026-09-09,"Kalshi ticker suffix UTRGV; ESPN team 292 abbreviation RGV"

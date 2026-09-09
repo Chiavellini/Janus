@@ -51,7 +51,7 @@ def test_enablement_names_what_each_league_lacks():
     # soccer: rule cited, both templates reviewed 2026-09-03, rates unmeasured per competition
     for c in ("epl", "lal", "bun"):
         assert enablement(c) == [], c                # L33 (a proxy, labelled FLOOR in the evidence note)
-    assert enablement("mls") == ["EVIDENCE_UNMEASURED:soccer.mls.cancelled_rate", "EVIDENCE_UNMEASURED:soccer.mls.postponed_gt48h_rate"]
+    assert enablement("mls") == []                  # L43; individual certification requires regular-season scope
     for c in ("elc", "el1", "ita"):
         assert enablement(c) == [], c                # L35, the same proxy
     for c in ("fl1", "ere", "por", "scop", "bel1"):  # registered and reviewed; no archive to measure from
@@ -59,7 +59,8 @@ def test_enablement_names_what_each_league_lacks():
     for c in ("atp", "wta"):
         # one rate pair for both tours: the walkover rate (L39) and, since 2026-09-05, the forward delay rate (F4, an upper bound)
         assert enablement(c) == [], c
-    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "cfb", "elc", "el1", "ita", "atp", "wta", "itf"]
+    assert enablement("itf") == []                 # L46; never the ATP/WTA forward population
+    assert default_leagues() == ["mlb", "nfl", "epl", "lal", "bun", "mls", "cfb", "elc", "el1", "ita", "atp", "wta", "itf"]
 
 
 def test_a_league_may_own_more_than_one_kalshi_series_and_itf_is_registered():
@@ -67,6 +68,15 @@ def test_a_league_may_own_more_than_one_kalshi_series_and_itf_is_registered():
     assert league_for_series("KXATPMATCH") == "atp"
     assert LEAGUES["atp"].kalshi_series_all == ("KXATPMATCH", "KXATPCHALLENGERMATCH")
     assert league_for_series("KXITFWMATCH") == "itf" and LEAGUES["itf"].pm_prefix == "itf"
-    # enabled since its two templates were reviewed (2026-09-07): the ITF pair is closer than the
-    # tour pair (both venues pay half a dollar a side on a match that never starts)
+    # Reviewed templates alone do not enable it: its own L46 population must be measured too.
+    # Both venues pay half a dollar a side on a match that never starts.
     assert "itf" in default_leagues() and enablement("itf") == []
+
+
+def test_itf_cannot_enable_using_the_tour_delay_population(monkeypatch):
+    from nodes.settle_wedge import evidence
+    monkeypatch.setattr(evidence, "EVIDENCE", {
+        key: value for key, value in evidence.EVIDENCE.items() if not key.startswith("tennis.itf.")})
+    assert enablement("itf") == ["EVIDENCE_UNMEASURED:tennis.itf.delayed_gt14d_rate"]
+    assert "itf" not in default_leagues()
+    assert enablement("atp") == [] and enablement("wta") == []

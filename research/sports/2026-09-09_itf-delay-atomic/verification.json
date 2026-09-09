@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "results_byte_identical": true,
+  "rows_byte_identical": true,
+  "original_results_sha256": "f89fcc3ae43539952960488d81a382176337da469d801bebf8993dc7d14060a9",
+  "replayed_results_sha256": "f89fcc3ae43539952960488d81a382176337da469d801bebf8993dc7d14060a9",
+  "original_rows_sha256": "d3dc03be348a1ea223a84cb5070332afc866957801df9085c81353bcc6c95983",
+  "replayed_rows_sha256": "d3dc03be348a1ea223a84cb5070332afc866957801df9085c81353bcc6c95983",
+  "archive_manifest_sha256": "0b68a7d4a646a030e18893494f94bc357fd19a0cdb80b2fd56537e35a30dd577",
+  "raw_page_count": 339,
+  "network_requests": 0,
+  "tennis_events": {
+    "closed": 33295,
+    "open": 531
+  },
+  "scorer_sha256": "17345f60c3cfd8807ee4d72f96a0ae1782aa827ad7da82040ec05c7166fecd81",
+  "correction": "Total authoritative-close absence fails even if all candidates are actually open."
+}

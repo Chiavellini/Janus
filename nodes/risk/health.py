@@ -23,6 +23,28 @@ OVERRIDE_EXPIRING_S = 24 * 3600
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def enabled_league_cap_alerts(*, limits=None, enabled=None) -> list[str]:
+    """An enabled league with no allowance is not safely disabled; it is a configuration defect.
+
+    The discovery registry and the risk file deliberately live in separate layers, so this
+    cross-layer invariant belongs at the operational-health boundary.  ITF exposed the failure
+    mode on 2026-09-09: discovery and settlement both said ENABLED while every profitable print
+    was refused later at ``LEAGUE_EXPOSURE ... > 0.00``.
+    """
+    if limits is None:
+        from nodes.risk.limits import load_limits
+        limits = load_limits()
+    if enabled is None:
+        from nodes.entities.leagues import default_leagues
+        enabled = default_leagues()
+    missing = sorted(code for code in enabled if limits.league_cap(code) <= 0.0)
+    if not missing:
+        return []
+    return ["risk: ENABLED_LEAGUE_ZERO_CAP — " + ", ".join(missing) +
+            " are settlement/rules-enabled but have no positive [events.per_league_usd] allowance; "
+            "every cover will be refused at LEAGUE_EXPOSURE"]
+
+
 def armed_mode(mode_conf: Path | str) -> str | None:
     """The `--mode` the drop-in names, or None when there is no drop-in (or it names none)."""
     p = Path(mode_conf)
@@ -75,6 +97,7 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
                 now: float | None = None) -> list[str]:
     t = time.time() if now is None else now
     out: list[str] = []
+    out.extend(enabled_league_cap_alerts())
     root = Path(kill_root)
     out.extend(override_alerts(override_path=Path(override_path) if override_path else root / "arming_override.json",
                                mode_conf=mode_conf, code_sha=code_sha, limits_sha=limits_sha, now=t))

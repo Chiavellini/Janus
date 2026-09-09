@@ -45,7 +45,9 @@ def test_the_texts_hash_to_their_templates_and_polymarket_is_one_template_for_ev
     # text and pinned to the one the lane recorded for LIV @ IPS and KOE @ VFB (TEMPLATE_UNKNOWN all
     # evening on 2026-09-04); the pair verdicts are the same rulings as V1/V2.
     from nodes.settle_wedge.policy import POLYMARKET_SOCCER_GAME_V3, TEMPLATES
-    assert POLYMARKET_SOCCER_GAME_V3.template_hash == "7580dcecfba14bc3" and POLYMARKET_SOCCER_GAME_V3.template_hash in TEMPLATES
+    # The numeric-preserving normalizer supersedes legacy 7580dcecfba14bc3: the 90-minute
+    # period, 2-hour fallback and payout numbers are now part of the reviewed identity.
+    assert POLYMARKET_SOCCER_GAME_V3.template_hash == "c96e5aa78081bdba" and POLYMARKET_SOCCER_GAME_V3.template_hash in TEMPLATES
     assert verdicts_for(KALSHI_LAL_GAME_V1.template_id, "polymarket_soccer_game_v3") == verdicts_for(KALSHI_LAL_GAME_V1.template_id, "polymarket_soccer_game_v1")
     # Kalshi names the competition in the sentence, so La Liga and MLS are their own templates
     assert len({KALSHI_EPL_GAME_V1.template_hash, KALSHI_LAL_GAME_V1.template_hash, KALSHI_MLS_GAME_V1.template_hash}) == 3

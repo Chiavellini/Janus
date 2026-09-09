@@ -10,6 +10,12 @@ from nodes.settle_wedge.equivalence import NotEquivalent, SettlementEquivalence,
 from nodes.settle_wedge.harvest import RulesRecord, harvest_kalshi, harvest_polymarket
 
 
+def population_from_schedule(game) -> dict:
+    """Preserve the external schedule classification for every certification consumer."""
+    return {"source": "espn" if game.game_id.startswith("espn:") else "venue_structured",
+            "game_id": game.game_id, "league": game.league, "season_slug": game.season_slug}
+
+
 def _scrub(league: str | None) -> tuple[str, ...]:
     from nodes.entities.leagues import LEAGUES
     return LEAGUES[league].template_scrub if league in LEAGUES else ()
@@ -32,7 +38,12 @@ def certify_from_spec(spec: Mapping, league: str, *,
     recs = records_from_spec(spec, league)
     if recs is None:
         return NotEquivalent("RULES_MISSING", "the slate spec carries no rules text for one or both venues")
-    return certify(recs[0], recs[1], league=league, rates=rates)
+    if league == "mls":
+        population = spec.get("schedule_population")
+        if not isinstance(population, Mapping) or population.get("game_id") != spec.get("game_id"):
+            return NotEquivalent("EVIDENCE_POPULATION_MISMATCH",
+                                 "MLS schedule population must identify this exact slate game")
+    return certify(recs[0], recs[1], league=league, population=spec.get("schedule_population"), rates=rates)
 
 
 def summary(result: SettlementEquivalence | NotEquivalent) -> dict:

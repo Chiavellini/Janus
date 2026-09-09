@@ -357,8 +357,10 @@ def _soccer_verdicts(code: str) -> tuple[Verdict, ...]:
                 "which is what kalshi_fair_vs_pm_result charges; the draw leg's payout is a gain, not charged.",
                 evidence_key=f"soccer.{code}.cancelled_rate", loss_model="kalshi_fair_vs_pm_result"),
         Verdict("suspended", "SAME", "a suspended match resumes; if the resumption falls outside Kalshi's 48 hours it "
-                "is a rescheduled match and is COUNTED UNDER POSTPONEMENT (the L33 proxy sees it as played late). "
-                "Charging it again here would price the same event twice."),
+                "is a rescheduled match and is COUNTED UNDER POSTPONEMENT. "
+                + ("L43 verifies every MLS final-whistle wallclock, including any delayed completion. "
+                   if code == "mls" else "The L33/L35 proxy sees it as played late. ")
+                + "Charging it again here would price the same event twice."),
         Verdict("abandoned", "SAME", "a match abandoned before full time is replayed (counted under postponement, as "
                 "above) or its result is awarded by the competition (both venues settle on the awarded result)."),
         Verdict("player_non_participation", "NA", "team moneyline; no player condition on either venue."),
@@ -690,13 +692,22 @@ KALSHI_ITF_MATCH_V1 = Template(
               terms_url=None, provenance="api_field"),
     scrub=ITF_SCRUB)
 
-def _itf_verdicts() -> tuple[Verdict, ...]:
+def _itf_verdicts(*, tour_population: bool = False, qualifying: bool = False) -> tuple[Verdict, ...]:
     """Kalshi ITF match vs Polymarket ITF match (2026-09-07). Closer than the tour pair: BOTH venues
     pay half a dollar a side on a match that never starts, so the walkover dimension is SAME and
     carries no reserve; both wait 14 days on a delay, and part only past it."""
-    delayed = "tennis.delayed_gt7d_rate"
+    delayed = ("tennis.delayed_gt7d_rate" if tour_population else
+               "tennis.itf.qualifying.delayed_gt14d_rate" if qualifying else "tennis.itf.delayed_gt14d_rate")
+    delay_evidence = (
+        "For ATP/WTA matches carrying this wording, F4's same-population >7-day bound also bounds "
+        "a >14-day delay. ITF is excluded from F4 and may not use that rate."
+        if tour_population else
+        "An ITF qualifying-specific registered measurement of >14-day delay is required; main-draw "
+        "and ATP/WTA evidence do not establish that rate." if qualifying else
+        "An ITF main-draw-specific registered measurement of >14-day delay is required; qualifying "
+        "and ATP/WTA evidence do not establish that rate.")
     return (
-        Verdict("official_source", "SAME", "both settle on the ITF's official result."),
+        Verdict("official_source", "SAME", "both settle on the official tour/tournament result."),
         Verdict("winner_determination", "SAME", "the player who wins or advances, both venues."),
         Verdict("overtime", "NA", "a tennis match has no clock."),
         Verdict("tie", "NA", "a tennis match has no draw; Polymarket's tie clause cannot fire."),
@@ -707,8 +718,7 @@ def _itf_verdicts() -> tuple[Verdict, ...]:
         Verdict("cancellation", "SAME", "a cancellation before the first ball is the walkover above; after it the match has a result."),
         Verdict("postponement", "BOUNDED",
                 "both wait 14 days for a rescheduled match; past that Kalshi's text is silent (a fair price) while "
-                "Polymarket resolves 50-50. The tour's measured >7-day delay rate bounds the >14-day one from above; "
-                "an ITF-specific rate is the forward row's to measure.",
+                "Polymarket resolves 50-50. " + delay_evidence,
                 evidence_key=delayed, loss_model="pm_half_vs_kalshi_result"),
         Verdict("suspended", "SAME", "a suspended match resumes and both venues wait for the result (within 14 days)."),
         Verdict("abandoned", "SAME", "an abandoned match is a retirement or a cancellation, ruled above."),
@@ -718,6 +728,8 @@ def _itf_verdicts() -> tuple[Verdict, ...]:
 
 
 _ITF_K_PM = _itf_verdicts()
+_ITF_QUALIFYING_K_PM = _itf_verdicts(qualifying=True)
+_ITF_WORDING_TOUR_K_PM = _itf_verdicts(tour_population=True)
 
 
 def _tennis_verdicts() -> tuple[Verdict, ...]:
@@ -842,5 +854,16 @@ PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
 }
 
 
-def verdicts_for(template_a: str, template_b: str) -> tuple[Verdict, ...] | None:
+def verdicts_for(template_a: str, template_b: str, *, league: str | None = None,
+                 qualifying: bool = False) -> tuple[Verdict, ...] | None:
+    # A shared rules template does not make the event populations interchangeable. Kalshi uses
+    # its explicit half-at-walkover wording on some ATP/WTA matches too; those retain F4's tour
+    # measurement. ITF requires its own registered source, even though the template hashes match.
+    if {template_a, template_b} == {"kalshi_itf_match_v1", "polymarket_tennis_match_v2"}:
+        if league in {"atp", "wta"}:
+            return _ITF_WORDING_TOUR_K_PM
+        if league != "itf":
+            return None
+        if qualifying:
+            return _ITF_QUALIFYING_K_PM
     return PAIR_POLICY.get((template_a, template_b)) or PAIR_POLICY.get((template_b, template_a))

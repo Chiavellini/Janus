@@ -1,0 +1,11 @@
+{
+  "gates": "FAIL",
+  "gate_failures": ["SOURCE_L44_ARCHIVE_INCOMPLETE"],
+  "complete": false,
+  "qualifying_distribution_read": false,
+  "mature_n": null,
+  "adverse": null,
+  "registered_value": null,
+  "source_archive": "/Volumes/Kilos/janus/research/L44_itf_delay/20260909T072716Z",
+  "note": "Closed without scoring because the specified L44 archive failed completeness. No qualifying outcomes inspected."
+}

@@ -23,6 +23,11 @@ venue label ──▶ [entities] ──▶ entity_id ──▶ [match_sports]
 `Resolver.resolve(league, text=..., venue=..., venue_team_id=...)` → `Resolution`.
 Resolution order is **xref first, alias second**. `Resolution.ok` is the only valid success test.
 
+Tennis players are seeded in memory from Polymarket's current singles slate before Kalshi is
+resolved. A verified venue spelling difference belongs in `aliases_manual.csv`, with both venue
+identifiers and the observed date in its note; do not replace that audit trail with a fuzzy
+middle-name rule.
+
 ## Failure modes
 
 **`resolve()` signals failure by RETURNING `Resolution(entity_id=None)`. It does not raise.**

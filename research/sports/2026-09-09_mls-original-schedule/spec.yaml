@@ -1,0 +1,41 @@
+id: L43
+registered_at: 2026-09-09
+track: sports/settlement
+kind: descriptive
+question: Can a complete immutable preseason MLS schedule establish league-specific cancellation and greater-than-48-hour postponement bounds?
+known_at_registration:
+  - MLS is blocked on two missing settlement probabilities; no MLS outcome distribution has been computed.
+  - A search located the preseason 2025 MLS Fact and Record Book with a full-season schedule.
+  - Existing soccer round-window estimates do not cover MLS and cannot be transferred.
+population:
+  season: 2025
+  competition: MLS regular season only
+  expected_clubs: 30
+  expected_matches_per_club: 34
+  expected_matches: 510
+sources:
+  original: Official preseason MLS Fact and Record Book or official dated preseason schedule publication, preserved verbatim with source URL and SHA256.
+  final: Complete ESPN usa.1 2025 regular-season event inventory or official MLS completed-match inventory, preserving raw payloads.
+  exceptions: Official MLS or club announcements identifying cancellation, suspension, abandonment, or rescheduling; each detected mismatch must be reconciled individually.
+method:
+  join: Canonical home team plus away team, then original date when a pairing repeats; every assignment must be unique.
+  postponement: Actual match completion calendar date later than original scheduled date by more than 48 hours; count uncertain two-day boundaries conservatively as moved.
+  suspension: A match beginning on schedule but resumed or finished more than 48 hours later counts as moved. A source retaining only original kickoff without detecting such suspensions is insufficient.
+  cancellation: Scheduled fixtures officially cancelled, abandoned without completion, forfeited, or unresolved are charged to the cancellation numerator.
+  delayed_registration: Changes announced before market listing remain counted, which is conservative for a market-listing-time reserve.
+  estimator: Each rate uses a one-sided 95 percent Clopper-Pearson upper bound; zero events does not register a zero probability.
+gates:
+  - Original source is explicitly preseason and contains all 510 unique fixtures; all 30 clubs appear exactly 34 times.
+  - Every original fixture has exactly one final record or an authoritative cancellation record; unmatched and ambiguous fixtures block registration.
+  - Final source contains all 510 scheduled fixtures and no postseason fixtures; per-club counts reconcile.
+  - Every date mismatch is individually reviewed against official sources.
+  - Source records or an independent complete suspension inventory establish that resumption after a same-day start is detected; absence of that field or inventory blocks registration.
+  - Any failed gate leaves both evidence keys absent; report exact failure and implement a forward collector with a fresh registration if necessary.
+outputs:
+  - source_manifest.json
+  - results.json
+  - verdict.md
+evidence_keys:
+  - soccer.mls.cancelled_rate
+  - soccer.mls.postponed_gt48h_rate
+claims: No book prices, fills, P&L, or edge are read or inferred. Successful registration only permits the existing settlement reserve to be priced.

@@ -40,9 +40,47 @@ _L33 = "research/sports/2026-09-03_soccer-settlement-wedge-rates/spec.yaml"
 _L32 = "research/sports/2026-09-03_cfb-settlement-wedge-rates/spec.yaml"
 _L35 = "research/sports/2026-09-03_soccer-settlement-wedge-rates-batch2/spec.yaml"
 _L39 = "research/sports/2026-09-04_tennis-settlement-wedge-rates/spec.yaml"
+_L43 = "research/sports/2026-09-09_mls-original-schedule/spec.yaml"
+_L46 = "research/sports/2026-09-09_itf-delay-atomic/spec.yaml"
+_L47 = "research/sports/2026-09-09_itf-qualifying-atomic/spec.yaml"
 _F4_DIR = "research/sports/2026-09-04_tennis-delay-forward"
 _F4 = _F4_DIR + "/spec.yaml"
 EVIDENCE: dict[str, Evidence] = {
+    "tennis.itf.delayed_gt14d_rate": Evidence(
+        "tennis.itf.delayed_gt14d_rate", 0.01768867361249885, 11370,
+        "Complete fresh Polymarket Gamma tennis keyset catalog: 33,295 closed and 531 open listings; "
+        "ITF main-draw singles only; explicit original schedule versus authoritative closedTime", "2026-09-09", _L46,
+        "Always one-sided 95% Wilson UPPER BOUND (z=1.6449), not point estimate: 178/11370 mature "
+        "events adverse (136 HALF, 6 winner after 14 days, 34 winner before original start, 2 still open). "
+        "All 13,467 identified main-draw singles parseable, including 2,097 immature exclusions; 2,222 "
+        "qualifiers excluded structurally. Both full cursor chains and all request/response hashes verified; "
+        "corrected offline replay reproduced result and row files byte-for-byte. This deliberately counts "
+        "all HALF outcomes as adverse even when the venues agree. Historical reserve, not a future-rate "
+        "or profitability guarantee. May not substitute for qualifying or ATP/WTA evidence."),
+    "tennis.itf.qualifying.delayed_gt14d_rate": Evidence(
+        "tennis.itf.qualifying.delayed_gt14d_rate", 0.031076457689201795, 1185,
+        "Independent qualifying-only offline score of L46's complete fresh Polymarket Gamma tennis catalog; "
+        "all 339 raw request/hash/cursor pages verified, zero network requests", "2026-09-09", _L47,
+        "Always one-sided 95% Wilson UPPER BOUND (z=1.6449), not point estimate: 27/1185 mature "
+        "qualifiers adverse (25 HALF, one winner before original start, one still open; zero late winners). "
+        "All 2,222 identified qualifiers parseable, including 1,037 immature exclusions; main-draw events "
+        "excluded structurally. All HALF outcomes are conservatively adverse. This historical reserve is "
+        "not a future-rate or profitability guarantee, and may not substitute for main-draw or ATP/WTA evidence."),
+    "soccer.mls.postponed_gt48h_rate": Evidence(
+        "soccer.mls.postponed_gt48h_rate", 0.040221661406316125, 510,
+        "Official MLS preseason 2025 Fact and Record Book (schedule as of January 6) joined one-to-one "
+        "to all 510 ESPN regular-season fixtures and their actual final-whistle wallclocks", "2026-09-09", _L43,
+        "One-sided exact 95% Clopper-Pearson UPPER BOUND: 13/510 completions more than 48 hours late. "
+        "All 510 final-whistle timestamps present; every 19 changed kickoff date reviewed against official club "
+        "sources. Includes changes announced before venue listing, and conservatively counts two-calendar-day "
+        "boundaries. Regular season only; no postseason result or profitability claim. Registered result and "
+        "source hashes are preserved separately from the initial pending-review result."),
+    "soccer.mls.cancelled_rate": Evidence(
+        "soccer.mls.cancelled_rate", 0.005856766730583303, 510,
+        "All 510 fixtures in the official January 6, 2025 MLS schedule completed; 30 clubs each appear 34 times; "
+        "every fixture has a unique ESPN final-whistle wallclock", "2026-09-09", _L43,
+        "One-sided exact 95% Clopper-Pearson UPPER BOUND: zero cancellations in 510 complete regular-season "
+        "fixtures. Zero observations is not registered as zero risk. No missing/ambiguous fixture was dropped."),
     "mlb.postponed_gt2d_rate": Evidence(
         "mlb.postponed_gt2d_rate", 0.004762, 2100,
         "MLB Stats API schedule, 2026 regular season 2026-03-25..2026-09-02", "2026-09-03", _L26,

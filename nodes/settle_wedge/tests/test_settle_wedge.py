@@ -156,7 +156,9 @@ def test_the_registry_carries_l26_and_mlb_certifies_from_it():
     assert all(e.research_ref.startswith("research/sports/2026-09-03_nfl-settlement-wedge-rates-v2")
                for k, e in EVIDENCE.items() if k.startswith("nfl."))
     assert all(e.research_ref.startswith("research/sports/2026-09-03_soccer-settlement-wedge-rates")
-               for k, e in EVIDENCE.items() if k.startswith("soccer."))
+               for k, e in EVIDENCE.items() if k.startswith("soccer.") and not k.startswith("soccer.mls."))
+    assert all(e.research_ref == "research/sports/2026-09-09_mls-original-schedule/spec.yaml"
+               for k, e in EVIDENCE.items() if k.startswith("soccer.mls."))
     assert EVIDENCE["tennis.walkover_rate"].research_ref.startswith("research/sports/2026-09-04_tennis-settlement-wedge-rates")
     assert {k.split(".")[0] for k in EVIDENCE} == {"mlb", "nfl", "soccer", "cfb", "tennis"}
     # F4 (2026-09-05): the delay rate is the forward row's UPPER BOUND, never a point estimate below n = 300
@@ -167,7 +169,8 @@ def test_the_registry_carries_l26_and_mlb_certifies_from_it():
     assert 0.0 < upper_bound_95(1, 100) < 0.05 and upper_bound_95(50, 100) > 0.5
     assert d.n >= 42 and d.value <= round(3 / 42, 6) + 1e-9 and d.value >= 0.0   # the bound shrinks as n grows
     assert all(e.research_ref.startswith("research/sports/2026-09-03_cfb-settlement-wedge-rates") for k, e in EVIDENCE.items() if k.startswith("cfb."))
-    assert all("FLOOR" in e.note for k, e in EVIDENCE.items() if k.startswith("soccer.") and k.endswith("postponed_gt48h_rate"))
+    assert all("FLOOR" in e.note for k, e in EVIDENCE.items()
+               if k.startswith("soccer.") and not k.startswith("soccer.mls.") and k.endswith("postponed_gt48h_rate"))
     k, p = records()
     eq = certify(k, p, league="mlb")
     assert isinstance(eq, SettlementEquivalence)
@@ -245,3 +248,73 @@ def test_every_template_hash_is_unique_and_the_tennis_texts_land_where_reviewed(
             "officially connected with the Governing League. All trademarks, logos, and brand names are the property of their "
             "respective owners.")
     assert normalise_template(text, ("Denisa Zoldakova", "Noha Akugue"), P.TENNIS_SCRUB) == P.KALSHI_TENNIS_MATCH_V1.template_text
+
+
+def itf_wording_records():
+    from nodes.settle_wedge import policy as P
+    kt, pt = P.KALSHI_ITF_MATCH_V1, P.POLYMARKET_TENNIS_MATCH_V2
+    k = harvest_kalshi({"ticker": "itf-test", "rules_primary": kt.sample_text},
+                       participants=kt.sample_participants, retrieved_at=T, scrub=kt.scrub)
+    p = harvest_polymarket({"slug": "itf-test", "description": pt.sample_text},
+                          participants=pt.sample_participants, retrieved_at=T, scrub=pt.scrub)
+    return k, p
+
+
+def test_shared_tennis_wording_does_not_transfer_evidence_between_populations(monkeypatch):
+    from nodes.settle_wedge import evidence, policy
+    k, p = itf_wording_records()
+    tour_rate = evidence.EVIDENCE["tennis.delayed_gt7d_rate"]
+    monkeypatch.setattr(evidence, "EVIDENCE", {tour_rate.key: tour_rate})
+    blocked = certify(k, p, league="itf")
+    assert isinstance(blocked, NotEquivalent)
+    assert blocked.code == "EVIDENCE_UNMEASURED"
+    assert blocked.context["evidence_key"] == "tennis.itf.delayed_gt14d_rate"
+    for league in ("atp", "wta"):
+        eq = certify(k, p, league=league)
+        assert isinstance(eq, SettlementEquivalence)
+        assert set(eq.rates) == {"tennis.delayed_gt7d_rate"}
+    # Even the identical template pair cannot select a population without the canonical league.
+    assert policy.verdicts_for("kalshi_itf_match_v1", "polymarket_tennis_match_v2") is None
+    itf = certify(k, p, league="itf", rates={"tennis.itf.delayed_gt14d_rate": 0.02})
+    assert isinstance(itf, SettlementEquivalence)
+    assert itf.rates == {"tennis.itf.delayed_gt14d_rate": 0.02}
+    assert itf.settlement_buffer([("polymarket", 0.8), ("kalshi", 0.19)]) == pytest.approx(0.01)
+
+
+def test_itf_qualifying_cannot_borrow_the_main_draw_or_tour_reserve(monkeypatch):
+    from nodes.settle_wedge import evidence, policy as P
+    main, p = itf_wording_records()
+    monkeypatch.setattr(evidence, "EVIDENCE", {
+        key: value for key, value in evidence.EVIDENCE.items() if not key.startswith("tennis.itf.")})
+    kt = P.KALSHI_ITF_MATCH_V1
+    k = harvest_kalshi({"ticker": "itf-qualifying", "rules_primary": kt.sample_text.replace("Round of 32", "Qualifying")},
+                       participants=kt.sample_participants, retrieved_at=T, scrub=kt.scrub)
+    assert k.template_hash == kt.template_hash
+    result = certify(k, p, league="itf", rates={"tennis.itf.delayed_gt14d_rate": 0.02})
+    assert isinstance(result, NotEquivalent) and result.code == "EVIDENCE_UNMEASURED"
+    assert result.context["evidence_key"] == "tennis.itf.qualifying.delayed_gt14d_rate"
+    qualifier = certify(k, p, league="itf", rates={"tennis.itf.qualifying.delayed_gt14d_rate": 0.03})
+    assert isinstance(qualifier, SettlementEquivalence)
+    assert qualifier.rates == {"tennis.itf.qualifying.delayed_gt14d_rate": 0.03}
+    assert qualifier.settlement_buffer([("polymarket", 0.7), ("kalshi", 0.29)]) == pytest.approx(0.015)
+    wrong_population = certify(main, p, league="itf", rates={"tennis.itf.qualifying.delayed_gt14d_rate": 0.03})
+    assert isinstance(wrong_population, NotEquivalent)
+    assert wrong_population.context["evidence_key"] == "tennis.itf.delayed_gt14d_rate"
+
+
+def test_itf_current_fourteen_day_text_certifies_but_an_unreviewed_seven_day_edit_blocks():
+    from nodes.settle_wedge import policy as P
+    k, p = itf_wording_records()
+    current = certify(k, p, league="itf", rates={"tennis.itf.delayed_gt14d_rate": 0.02})
+    assert isinstance(current, SettlementEquivalence)
+    pt = P.POLYMARKET_TENNIS_MATCH_V2
+    edited = harvest_polymarket({"slug": "itf-test", "description": pt.sample_text.replace("14 days", "7 days")},
+                               participants=pt.sample_participants, retrieved_at=T, scrub=pt.scrub)
+    blocked = certify(k, edited, league="itf", rates={"tennis.itf.delayed_gt14d_rate": 0.02})
+    assert isinstance(blocked, NotEquivalent) and blocked.code == "TEMPLATE_UNKNOWN"
+    # The separately reviewed old tour wording remains reviewed for its own population only.
+    old = P.POLYMARKET_TENNIS_MATCH_V1
+    old_record = harvest_polymarket({"slug": "wta-test", "description": old.sample_text},
+                                  participants=old.sample_participants, retrieved_at=T, scrub=old.scrub)
+    assert P.template_for(old_record.template_hash) is old
+    assert isinstance(certify(k, old_record, league="itf"), NotEquivalent)

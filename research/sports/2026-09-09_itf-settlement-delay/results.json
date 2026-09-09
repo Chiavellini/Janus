@@ -1,0 +1,38 @@
+{
+  "archive": "/Volumes/Kilos/janus/research/L42_itf_delay/20260909T072122Z",
+  "candidate_singles": 0,
+  "closed_before_original_start": 0,
+  "complete": false,
+  "delayed_gt14d": 0,
+  "error": "OffsetCap: https://gamma-api.polymarket.com/events?tag_slug=tennis&closed=true&limit=200&offset=2100&order=id&ascending=true",
+  "estimator": "one_sided_95_upper_bound",
+  "gate_failures": [
+    "ENUMERATION_INCOMPLETE",
+    "NO_TERMINAL_ITF_SINGLES",
+    "PARSEABILITY_BELOW_95_PERCENT"
+  ],
+  "gates": "FAIL",
+  "half": 0,
+  "half_gt14d": 0,
+  "http_stats": {
+    "429s": 0,
+    "cache_hits": 0,
+    "offset_caps": 1,
+    "requests": 22,
+    "retries": 0
+  },
+  "itf_events": 0,
+  "n": 0,
+  "non_moneyline_markets": 0,
+  "parse_exclusions": {},
+  "parseability": 0.0,
+  "registered_value": null,
+  "run": "20260909T072122Z",
+  "source": "https://gamma-api.polymarket.com/events",
+  "spec_sha256": "d44c0dc25ba7d57cc668b719bab6f16c555c0163c69e9d5e913901174741b5ef",
+  "start_crosscheck_changed": 0,
+  "start_crosscheck_missing": 0,
+  "structural_exclusions": {},
+  "tennis_events": 2100,
+  "upper_bound_95": null
+}

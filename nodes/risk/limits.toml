@@ -28,11 +28,17 @@ cfb = 200.0
 epl = 200.0
 lal = 200.0
 bun = 200.0
+# L43 regular-season evidence; PAPER/DEMO allowance only. Live outer caps still bind;
+# deployment requires a fresh signed override with this limits SHA and the GATE sequence.
+mls = 200.0
 elc = 200.0
 el1 = 200.0
 ita = 200.0
 atp = 200.0
 wta = 200.0
+# L46 complete, independently replayed ITF main-draw evidence; PAPER/DEMO allowance only.
+# Qualifying requires its own evidence key. Event/day/live outer caps remain unchanged.
+itf = 200.0
 
 [loss]
 max_daily_realized_usd = 25.0    # the latching breaker; human reset

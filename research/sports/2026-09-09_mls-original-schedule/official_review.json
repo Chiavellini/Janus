@@ -1,0 +1,25 @@
+{
+  "reviewed_at": "2026-09-09",
+  "review_scope": "Every original-vs-final kickoff calendar-date mismatch, including short moves excluded from the numerator. Each original date also appears in the Jan. 6 official preseason schedule.",
+  "events": {
+    "726939": {"final_date_eastern": "2025-04-27", "source": "https://www.intermiamicf.com/news/inter-miami-cf-vs-fc-dallas-rescheduled-to-april-27-due-to-concacaf-semifinals", "reason": "Concacaf semifinal: April 26 to April 27, less than 48 hours."},
+    "726944": {"final_date_eastern": "2025-04-27", "source": "https://www.mnufc.com/news/mnufc-announces-date-and-time-change-for-vancouver-whitecaps-home-game", "reason": "April 26 to April 27, less than 48 hours."},
+    "727034": {"final_date_eastern": "2025-06-08", "source": "https://www.lafc.com/news/lafc-announces-date-changes-for-matches-against-sporting-kansas-city-and-colorado-rapids", "reason": "Club World Cup play-in: May 28 to June 8."},
+    "727045": {"final_date_eastern": "2025-09-24", "source": "https://www.timbers.com/news/timbers-road-match-against-vancouver-whitecaps-fc-rescheduled-for-sept-24", "reason": "May 31 to September 24."},
+    "727046": {"final_date_eastern": "2025-07-09", "source": "https://www.lafc.com/news/lafc-announces-date-changes-for-matches-against-sporting-kansas-city-and-colorado-rapids", "reason": "Club World Cup play-in: May 31 to July 9."},
+    "727157": {"final_date_eastern": "2025-09-06", "source": "https://www.houstondynamofc.com/news/match-preview-houston-dynamo-fc-host-the-la-galaxy-in-continued-playoff-push", "reason": "Weather/pitch safety: July 25 to September 6."},
+    "727055": {"final_date_eastern": "2025-10-08", "source": "https://www.lafc.com/news/dates-changed-for-matches-against-toronto-fc-and-real-salt-lake", "reason": "Club World Cup: June 13 to October 8."},
+    "727169": {"final_date_eastern": "2025-09-17", "source": "https://www.newyorkcityfc.com/news/new-york-city-fc-vs-columbus-crew-on-august-9-rescheduled", "reason": "Citi Field maintenance: August 9 to September 17."},
+    "727077": {"final_date_eastern": "2025-09-17", "source": "https://www.lafc.com/news/dates-changed-for-matches-against-toronto-fc-and-real-salt-lake", "reason": "Club World Cup: June 25 to September 17."},
+    "727082": {"final_date_eastern": "2025-10-11", "source": "https://www.intermiamicf.com/news/match-rescheduled-inter-miami-cf-vs-atlanta-united-match-moved-to-october-11", "reason": "Club World Cup knockout: June 28 to October 11."},
+    "727093": {"final_date_eastern": "2025-06-29", "source": "https://www.whitecapsfc.com/news/vwfc-at-lafc-rescheduled-for-june-29", "reason": "Club World Cup: June 28 to June 29, less than 48 hours."},
+    "727103": {"final_date_eastern": "2025-10-12", "source": "https://www.austinfc.com/news/mls-reschedules-austin-fc-s-home-match-vs-lafc-for-october-12", "reason": "Severe Central Texas weather: July 5 to October 12; later kickoff adjustment remains same day."},
+    "727217": {"final_date_eastern": "2025-10-11", "source": "https://www.whitecapsfc.com/news/orlvvan-oct11", "reason": "Leagues Cup semifinalists: August 30 to October 11."},
+    "727214": {"final_date_eastern": "2025-09-30", "source": "https://www.intermiamicf.com/news/mls-regular-season-match-date-change-inter-miami-cf-vs-chicago-fire-fc-rescheduled", "reason": "Leagues Cup semifinalists: August 30 to September 30."},
+    "727227": {"final_date_eastern": "2025-10-11", "source": "https://www.fcdallas.com/news/fc-dallas-road-match-against-the-la-galaxy-rescheduled-for-saturday-oct-11", "reason": "Leagues Cup semifinalists: August 30 to October 11."},
+    "727226": {"final_date_eastern": "2025-10-11", "source": "https://www.soundersfc.com/news/sounders-fc-s-home-match-vs-real-salt-lake-rescheduled-for-saturday-october-11", "reason": "Leagues Cup semifinalists: August 30 to October 11."},
+    "727248": {"final_date_eastern": "2025-09-20", "source": "https://www.newyorkcityfc.com/news/new-york-city-fc-vs-columbus-crew-on-august-9-rescheduled", "reason": "Related fixture adjustment: September 19 to September 20, less than 48 hours."},
+    "727258": {"final_date_eastern": "2025-09-21", "source": "https://www.austinfc.com/news/mls-announces-new-date-for-austin-fc-s-september-home-match-vs-seattle", "reason": "Sunday Night Soccer selection: September 20 to September 21, less than 48 hours."},
+    "727264": {"final_date_eastern": "2025-09-28", "source": "https://www.fccincinnati.com/news/preview-fc-cincinnati-host-orlando-city-sc-in-sunday-night-soccer-clash-at-tql-stadium", "reason": "Official dated September 28 preview confirms Sunday Night Soccer; original September 27 in preseason schedule, less than 48 hours."}
+  }
+}

@@ -47,6 +47,8 @@ WHAT IT DETECTS, and why each check is here rather than an obvious alternative:
   CAP_BINDS_SMALLEST  (nodes/risk/health) the override's cap refused the smallest quantity the
                 lane prices: nothing the lane can send would clear it. A GATE row (raise the cap
                 or lower QUANTITIES), not a restart.
+  ENABLED_LEAGUE_ZERO_CAP  (nodes/risk/health) rules and settlement permit a league but its
+                per-league risk allowance is absent or zero, so every cover would be refused.
   COVERAGE_GAP  the census says both venues list an event in the window and the lane did not pair
                 it: a market the lane should be covering and is not.
   EXECUTION_STUCK  (nodes/risk/health) a non-terminal execution that stopped moving for 120 s,
@@ -393,6 +395,16 @@ def selftest() -> None:
         assert recent_flags(fdb, "CAP_BINDS_SMALLEST", now=NOW) and any(
             "CAP_BINDS_SMALLEST" in a and "LAA @ BOS" in a for a in _ra(kill_root=Path(d) / "k0", breaker_path=Path(d) / "k0" / "b.json", db_path=fdb, now=NOW)), "CAP_BINDS_SMALLEST"
         assert not any("CAP_BINDS_SMALLEST" in a for a in _ra(kill_root=Path(d) / "k0", breaker_path=Path(d) / "k0" / "b.json", db_path=fdb, now=NOW + 2 * 86400)), "a day later it is history"
+
+        # ENABLED_LEAGUE_ZERO_CAP — discovery says the league is tradeable but risk silently
+        # refuses every one of its covers (ITF exposed this on 2026-09-09).
+        from dataclasses import replace as _replace
+        from nodes.risk.health import enabled_league_cap_alerts as _elca
+        from nodes.risk.limits import load_limits as _load_limits
+        _limits = _load_limits()
+        _bad_limits = _replace(_limits, per_league_usd={**_limits.per_league_usd, "itf": 0.0})
+        assert any("ENABLED_LEAGUE_ZERO_CAP" in a and "itf" in a
+                   for a in _elca(limits=_bad_limits, enabled=["mlb", "itf"])), "ENABLED_LEAGUE_ZERO_CAP"
 
         # ORPHAN_FILL / POSITION_MISMATCH / PROTECT_FAILED / EXEC_CRASHED — the guard's and the protection layer's flags (2026-09-08)
         fst = _TS2(fdb, enforce_volume=False)

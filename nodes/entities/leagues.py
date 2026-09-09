@@ -168,7 +168,7 @@ def enablement(code: str) -> list[str]:
         # at EVIDENCE_UNMEASURED (nodes/settle_wedge/equivalence.py), which is what NFL does today.
         from nodes.settle_wedge.evidence import EVIDENCE
         from nodes.settle_wedge.policy import verdicts_for
-        verdicts = verdicts_for(by_venue["kalshi"], by_venue["polymarket"]) or ()
+        verdicts = verdicts_for(by_venue["kalshi"], by_venue["polymarket"], league=code) or ()
         for key in sorted({v.evidence_key for v in verdicts if v.outcome == "BOUNDED" and v.evidence_key}):
             if key not in EVIDENCE:
                 missing.append(f"EVIDENCE_UNMEASURED:{key}")

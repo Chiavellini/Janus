@@ -14,6 +14,7 @@ dimension whose probability nobody has measured: each is `NotEquivalent`, with a
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from typing import Mapping, Sequence
 
 from nodes.rules_exhaustive.rules import ExhaustiveOutcomeSet
@@ -41,6 +42,8 @@ class SettlementEquivalence:
     rules_hash_b: str
     verdicts: tuple[Verdict, ...]
     rates: Mapping[str, float]
+    evidence_population: str | None = None
+    schedule_game_id: str | None = None
     _mint: object = field(default=None, repr=False, compare=False)
 
     def __post_init__(self) -> None:
@@ -84,7 +87,8 @@ class SettlementEquivalence:
                 "template_b": self.template_b, "rules_hash_a": self.rules_hash_a,
                 "rules_hash_b": self.rules_hash_b,
                 "dimensions": {v.dimension: v.outcome for v in self.verdicts},
-                "rates": dict(self.rates)}
+                "rates": dict(self.rates), "evidence_population": self.evidence_population,
+                "schedule_game_id": self.schedule_game_id}
 
 
 @dataclass(frozen=True)
@@ -98,6 +102,7 @@ class NotEquivalent:
 
 def certify(rec_a: RulesRecord, rec_b: RulesRecord, *, league: str, market_type: str = "moneyline",
             period: str = "game",
+            population: Mapping[str, object] | None = None,
             rates: Mapping[str, float] | None = None) -> SettlementEquivalence | NotEquivalent:
     """The ONLY way to obtain a SettlementEquivalence. `rates` defaults to the evidence registry;
     tests inject their own so the buffer arithmetic can be pinned without a measurement."""
@@ -113,7 +118,21 @@ def certify(rec_a: RulesRecord, rec_b: RulesRecord, *, league: str, market_type:
             return NotEquivalent("LEAGUE_MISMATCH",
                                  f"{t.template_id} is reviewed for {sorted(t.leagues)}, not {league}",
                                  context={"template_id": t.template_id})
-    verdicts = verdicts_for(ta.template_id, tb.template_id)
+    # The round is stripped from template identity because it varies by game, but it still
+    # selects an evidence population. L46 excludes qualifying; L47 measures it separately.
+    qualifying = league == "itf" and any(re.search(r"\bqualifying\b", rec.text, re.I) for rec in (rec_a, rec_b))
+    if league == "mls":
+        # L43 measured regular-season fixtures only. Reviewed venue wording alone cannot
+        # distinguish postseason; the external schedule classification must survive discovery.
+        p = population if isinstance(population, Mapping) else {}
+        if (p.get("source") != "espn" or p.get("league") != "mls"
+                or p.get("season_slug") != "regular-season"
+                or not re.fullmatch(r"espn:mls:[0-9]+", str(p.get("game_id") or ""))):
+            return NotEquivalent("EVIDENCE_POPULATION_MISMATCH",
+                                 "L43 MLS evidence requires an ESPN-anchored regular-season fixture; "
+                                 "unknown, preseason and postseason populations are unmeasured",
+                                 context={"league": league, "required_population": "regular-season"})
+    verdicts = verdicts_for(ta.template_id, tb.template_id, league=league, qualifying=qualifying)
     if verdicts is None:
         return NotEquivalent("PAIR_UNREVIEWED",
                              f"no reviewed verdicts for ({ta.template_id}, {tb.template_id})",
@@ -136,7 +155,9 @@ def certify(rec_a: RulesRecord, rec_b: RulesRecord, *, league: str, market_type:
     used = {v.evidence_key: r[v.evidence_key] for v in verdicts if v.outcome == "BOUNDED"}
     return SettlementEquivalence(league, market_type, period, rec_a.venue, rec_b.venue, ta.template_id,
                                  tb.template_id, rec_a.rules_hash, rec_b.rules_hash, tuple(verdicts),
-                                 used, _mint=_MINT)
+                                 used, evidence_population="regular-season" if league == "mls" else None,
+                                 schedule_game_id=str(population["game_id"]) if league == "mls" else None,
+                                 _mint=_MINT)
 
 
 @dataclass(frozen=True)
