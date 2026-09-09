@@ -22,7 +22,7 @@ class FakeTransport:
         self.posts, self.orders, self.tr = list(posts), list(orders), list(trades)
         self.user_orders = list(user_orders)
         self.calls = []
-    def post_order(self, *, token_id, price, size, order_type, side="BUY"):
+    def post_order(self, *, token_id, price, size, order_type, side="BUY", tick=None):
         self.calls.append(("post", token_id, price, size, order_type, side))
         out = self.posts.pop(0)
         if isinstance(out, Exception): raise out
@@ -168,8 +168,8 @@ def test_the_mode_gate_and_the_optional_library(tmp_path, monkeypatch):
         PyClobTransport()
 
 
-def test_immediate_buy_uses_cent_exact_market_amount_not_invalid_limit_amount():
-    """5 @ .481 used to sign a 2.405 maker amount and the CLOB rejected all such BUYs."""
+def test_immediate_buy_preserves_share_quantity_with_a_cent_exact_limit():
+    """5 @ .481 cannot sign 2.405 maker dollars; move the limit to .480, never the size up."""
     class Client:
         def __init__(self): self.market = []; self.limit = []; self.posts = []
         def create_market_order(self, args): self.market.append(args); return "signed-market"
@@ -182,12 +182,37 @@ def test_immediate_buy_uses_cent_exact_market_amount_not_invalid_limit_amount():
     tr._c = Client()
     tr._T = SimpleNamespace(OrderType=SimpleNamespace(FAK="FAK", FOK="FOK", GTC="GTC"),
                             MarketOrderArgsV2=Args, OrderArgsV2=Args)
-    tr.post_order(token_id="tok", price=.481, size=5.0, order_type="FAK", side="BUY")
-    assert len(tr._c.market) == 1 and not tr._c.limit
-    assert tr._c.market[0].amount == 2.40 and tr._c.market[0].price == .481
-    assert tr._c.posts == [("signed-market", "FAK", True)]
+    tr.post_order(token_id="tok", price=.481, size=5.0, order_type="FAK", side="BUY", tick=.001)
+    assert not tr._c.market and len(tr._c.limit) == 1
+    assert tr._c.limit[0].size == 5.0 and tr._c.limit[0].price == .480
+    assert tr._c.posts == [("signed-limit", "FAK", True)]
     tr.post_order(token_id="tok", price=.481, size=5.0, order_type="GTC", side="BUY")
-    assert len(tr._c.limit) == 1, "resting limits retain share-size semantics"
+    assert len(tr._c.limit) == 2, "resting limits retain share-size semantics"
+
+
+def test_cent_exact_buy_never_increases_size_or_price_and_can_reduce_fractional_size():
+    assert PyClobTransport._cent_exact_buy(size=5.0, price=.202, tick=.001) == (.202, 5.0)
+    assert PyClobTransport._cent_exact_buy(size=5.24, price=.62, tick=.01) == (.62, 5.0)
+    assert PyClobTransport._cent_exact_buy(size=10.0, price=.481, tick=.001) == (.481, 10.0)
+    assert PyClobTransport._cent_exact_buy(size=5.26, price=.19, tick=.01) is None, \
+        "do not grow quantity to cross the venue's $1 minimum"
+
+
+def test_adjusted_wire_size_and_price_are_the_durable_order_record(tmp_path):
+    tr = FakeTransport(posts=[{"success": False, "errorMsg": "no match"}])
+    v, j = venue(tmp_path, tr)
+    ack = v.submit(req(price=.481, contracts=5.0, time_in_force="ioc", tick=.001), cl(tmp_path))
+    assert ack.state is FillState.REJECTED
+    assert tr.calls[0] == ("post", "tok-1", .48, 5.0, "FAK", "BUY")
+    assert j.get("c1")["price"] == .48 and j.get("c1")["contracts"] == 5.0
+
+
+def test_impossible_cent_exact_buy_is_rejected_before_the_wire(tmp_path):
+    tr = FakeTransport()
+    v, j = venue(tmp_path, tr)
+    ack = v.submit(req(price=.19, contracts=5.26, time_in_force="ioc", tick=.01), cl(tmp_path))
+    assert ack.state is FillState.REJECTED and ack.raw_status == "PRECISION" and not tr.calls
+    assert j.get("c1")["state"] == "REJECTED"
 
 
 def test_a_venue_http_refusal_is_rejected_and_a_geoblock_latches(tmp_path):

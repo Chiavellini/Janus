@@ -26,10 +26,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import math
 import os
 import threading
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from decimal import Decimal, ROUND_DOWN
 from typing import Any, Callable, Protocol, Sequence
 
@@ -198,7 +199,8 @@ class PolymarketUserStream:
 
 
 class ClobTransport(Protocol):
-    def post_order(self, *, token_id: str, price: float, size: float, order_type: str, side: str = "BUY") -> dict: ...
+    def post_order(self, *, token_id: str, price: float, size: float, order_type: str,
+                   side: str = "BUY", tick: float | None = None) -> dict: ...
     def get_order(self, order_id: str) -> dict: ...
     def cancel(self, order_id: str) -> dict: ...
     def trades(self, *, after_ts: float) -> list[dict]: ...
@@ -242,20 +244,65 @@ class PyClobTransport:
         self._sig_type = sig_type
         self.last_error: str | None = None
 
-    def post_order(self, *, token_id: str, price: float, size: float, order_type: str, side: str = "BUY") -> dict:
-        # side "SELL" (2026-09-08): the protection layer selling a held token back. `size` is shares
-        # either way. Immediate BUYs must use the SDK's market-order builder: the CLOB requires
-        # their maker (collateral) amount to have at most two decimals, while OrderArgsV2 follows
-        # the token tick and produced 2.405 USD for 5 @ .481 (HTTP 400, 2026-09-09). A market BUY
-        # takes a cent-exact collateral amount and a ceiling price; price improvement may therefore
-        # return a fractional share quantity, which status()/the coordinator already trust.
+    @staticmethod
+    def _cent_exact_buy(*, size: float, price: float, tick: float | None) -> tuple[float, float] | None:
+        """Nearest share-sized order inside the request whose maker collateral is whole cents.
+
+        CLOB V2's marketable BUY validator accepts two maker decimals, while the SDK's ordinary
+        limit builder otherwise follows the market tick.  A collateral-sized market BUY fixes
+        that precision but lets price improvement increase shares (F14: 5 became 7.769231). Search
+        the finite size/tick grid instead. Preserve the limit first (fill probability), then take
+        the largest valid share size; neither dimension can exceed the coordinator request.
+        """
+        size_d = Decimal(str(size)).quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+        price_d = Decimal(str(price))
+        if size_d < Decimal("5.00") or price_d <= 0:
+            return None
+        if tick is None:
+            places = max(0, -price_d.normalize().as_tuple().exponent)
+            tick_d = Decimal(1).scaleb(-places)
+        else:
+            tick_d = Decimal(str(tick))
+        places = max(0, -tick_d.normalize().as_tuple().exponent,
+                     -price_d.normalize().as_tuple().exponent)
+        scale = 10 ** places
+        tick_units = int(tick_d * scale)
+        if tick_units <= 0:
+            return None
+        max_k = int((price_d / tick_d).to_integral_value(rounding=ROUND_DOWN))
+        target_n = int(size_d * 100)
+        for k in range(max_k, 0, -1):
+            divisor = scale // math.gcd(k * tick_units, scale)
+            n = (target_n // divisor) * divisor
+            if n < 500:
+                continue
+            candidate_price = tick_d * k
+            maker = (Decimal(n) / 100) * candidate_price
+            if maker < Decimal("1.00") or maker != maker.quantize(Decimal("0.01")):
+                continue
+            return float(candidate_price), float(Decimal(n) / 100)
+        return None
+
+    def post_order(self, *, token_id: str, price: float, size: float, order_type: str,
+                   side: str = "BUY", tick: float | None = None) -> dict:
+        # side "SELL" (2026-09-08): the protection layer sells held shares back and the market
+        # builder's amount is already share-sized. Immediate BUYs use a share-sized limit order
+        # submitted with FAK/FOK after moving size/price only downward to a cent-exact maker amount.
         typ = getattr(self._T.OrderType, order_type)
-        if order_type in ("FAK", "FOK"):
-            amount = (Decimal(str(size)) if side == "SELL" else Decimal(str(size)) * Decimal(str(price)))
+        if order_type in ("FAK", "FOK") and side == "SELL":
+            amount = Decimal(str(size))
             amount = float(amount.quantize(Decimal("0.01"), rounding=ROUND_DOWN))
             args = self._T.MarketOrderArgsV2(token_id=token_id, amount=amount, price=price,
                                              side=side, order_type=typ)
             signed = self._c.create_market_order(args)
+        elif order_type in ("FAK", "FOK"):
+            exact = self._cent_exact_buy(size=size, price=price, tick=tick)
+            if exact is None:
+                return {"success": False, "status": "rejected",
+                        "errorMsg": "no cent-exact share-sized BUY inside requested size/price and $1 minimum"}
+            exact_price, exact_size = exact
+            args = self._T.OrderArgsV2(token_id=token_id, price=exact_price, size=exact_size, side=side)
+            signed = self._c.create_order(args)
         else:
             args = self._T.OrderArgsV2(token_id=token_id, price=price, size=size, side=side)
             signed = self._c.create_order(args)
@@ -377,13 +424,24 @@ class PolymarketExecution:
             ok = getattr(self.transport, "ensure_sell_allowance", lambda _t: True)(req.market_id)
             if ok:
                 self._sell_ok.add(req.market_id)
+        if not req.is_sell and req.time_in_force in ("ioc", "fok"):
+            exact = PyClobTransport._cent_exact_buy(size=req.contracts, price=req.price, tick=req.tick)
+            if exact is None:
+                self.journal.pending(req, mode=self.mode.value, now=t)
+                ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None,
+                          "PRECISION", t, detail="no cent-exact share-sized BUY inside requested "
+                                                 "size/price and $1 minimum; nothing sent")
+                self.journal.record(ack, kind="reject", raw={"prewire": True})
+                return ack
+            exact_price, exact_size = exact
+            req = replace(req, price=exact_price, contracts=exact_size)
         self.journal.pending(req, mode=self.mode.value, now=t)       # BEFORE the POST
         self._requests[req.client_order_id] = req
         self.submits += 1
         try:
             d = self.transport.post_order(token_id=req.market_id, price=req.price, size=req.contracts,
                                           order_type=ORDER_TYPE[req.time_in_force],
-                                          side="SELL" if req.is_sell else "BUY")
+                                          side="SELL" if req.is_sell else "BUY", tick=req.tick)
         except Exception as exc:  # noqa: BLE001 -- ambiguous unless the venue itself answered
             self.last_error = brief_error(exc)
             code = getattr(exc, "status_code", None)

@@ -1,0 +1,47 @@
+experiment_id: "janus-sports-limited-live-f15-quantity-preserving-fak-2026-09-09"
+date_registered: "2026-09-09"
+track: "sports/execution"
+row_kind: "F (forward operational evaluation; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F15"
+test_looks_spent: 0
+supersedes: "F14, stopped by its first cover after market-BUY price improvement increased requested quantity"
+
+# IMMUTABLE ONCE THE FIRST LIMITED_LIVE LINE AFTER THIS REGISTRATION IS WRITTEN.
+purpose: >
+  Prove that an immediate Polymarket BUY remains a share-sized FAK/FOK order, never exceeds the
+  requested contracts or price, and is encoded with a cent-exact maker amount accepted by CLOB V2.
+
+known_before_start:
+  - "F14 requested 5 CHC contracts at a 0.202 ceiling through a collateral-sized market BUY; price improvement to 0.13 returned 7.769231 shares."
+  - "The resulting cover was protected inside 30 seconds and later settled +0.116065 USD, but collateral sizing can exceed the requested contract count and therefore stops F14."
+  - "CLOB V2 rejects a marketable limit BUY whose maker collateral has more than two decimals; 5 at 0.481 produced 2.405 USD and HTTP 400."
+  - "A share-sized limit order can remain immediate under FAK/FOK if its size and price are adjusted downward within their original ceilings until maker collateral is cent-exact."
+
+arm: >
+  Mexico box LIMITED_LIVE under unchanged limits: $12 combined stake, 10 contracts per leg,
+  $250 committed daily notional, $25 realized-loss breaker, $0.10 minimum net profit, 1% locked
+  return, and $1 maximum protection loss per execution. protect_auto=true; unwind_enabled=false.
+
+window:
+  start: "first LIMITED_LIVE entry after this registration, green full suite, zero material imbalance, clean guard, green watchdog and matching unchanged arm"
+  end: "37 cleared covers, the first STOP, breaker, or operator closure"
+
+criteria:
+  - "No threshold, cap, league, settlement rule or definition moves after start."
+  - "Every immediate Polymarket BUY is a share-sized OrderArgsV2 submitted as FAK/FOK, not a collateral-sized MarketOrderArgsV2."
+  - "The wire size and price never exceed the coordinator request; the signed maker amount is exact to cents and at least the venue's 1 USD marketable-BUY minimum."
+  - "If no cent-exact pair exists inside the original size and price ceilings, the adapter refuses before the wire and records a definite zero-fill rejection."
+  - "Authoritative price improvement may improve cost but never increases filled contracts above the adjusted request."
+  - "Reservations, exact fee revisions, authenticated-stream finality, guard protection and settlement accounting retain F14 behavior."
+  - "STOP on any venue fill above the registered contract cap, any fill not protected within 30 seconds above dust, store error after submission, orphan, unresolved mismatch, fee above pin, or breaker."
+  - "The first three valid F15 covers are hand-reconciled before the fourth."
+
+outputs:
+  registration: "snooping_ledger.md F15 with append-only results"
+  records: "box logs, executions, exact order/fill rows, reservations, settlements, balances, flags and watchdog"
+
+what_this_does_not_establish:
+  - "Permission to raise a cap, increase a requested quantity or price, enable unwind, or weaken an economic or settlement hurdle."
+  - "That paper fills predict live fills or that a FAK is guaranteed to match."
+

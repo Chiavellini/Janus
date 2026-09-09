@@ -178,7 +178,8 @@ class Coordinator:
     def _request(self, plan: Plan, leg: LegPlan, contracts: float, limit: float, *, hedge: bool,
                  side: str | None = None) -> OrderRequest:
         return OrderRequest(leg.venue, leg.market_id, leg.outcome_id, side or leg.side, round(min(max(limit, 0.01), 0.99), 4),
-                            round(contracts, 2), leg.time_in_force, uuid.uuid4().hex, plan.opportunity_id, hedge=hedge)
+                            round(contracts, 2), leg.time_in_force, uuid.uuid4().hex, plan.opportunity_id,
+                            hedge=hedge, tick=leg.tick)
 
     def _settle_ack(self, venue: str, ack: Ack, *, deadline_mono: float,
                     ex: Execution | None = None, key: str = "") -> Ack:

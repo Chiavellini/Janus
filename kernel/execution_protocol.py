@@ -42,6 +42,9 @@ class OrderRequest:
     #: True for a PROTECTIVE leg (the hedge, a chased hedge, an unwind): the clearance admits it
     #: under the protect window, not the first-leg TTL.
     hedge: bool = False
+    #: Venue price increment carried from the executable book. Polymarket needs it to find the
+    #: nearest share-sized order whose collateral is exact to cents without widening the limit.
+    tick: float | None = None
 
     @property
     def is_sell(self) -> bool:
@@ -56,6 +59,8 @@ class OrderRequest:
             raise ValueError("price is a probability strictly inside (0, 1)")
         if self.contracts <= 0:
             raise ValueError("contracts must be positive")
+        if self.tick is not None and self.tick <= 0:
+            raise ValueError("tick must be positive when supplied")
         if not self.client_order_id:
             raise ValueError("client_order_id is required before submission")
 
