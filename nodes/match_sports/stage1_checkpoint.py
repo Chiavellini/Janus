@@ -51,9 +51,12 @@ from typing import Sequence
 from zoneinfo import ZoneInfo
 
 from nodes.entities.resolve import Resolver, normalize
-from nodes.entities.seed import KALSHI_GAME_SERIES, NON_TEAM_OUTCOMES, PM_TAG
-from kernel.fetch import Client
+from nodes.entities.leagues import kalshi_series
+from kernel.fetch import Client, HttpError, OffsetCap
 from nodes.schedule_espn import espn
+
+KALSHI_GAME_SERIES = kalshi_series()
+NON_TEAM_OUTCOMES = {"tie", "draw", "no winner"}
 
 KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
 PM_GAMMA = "https://gamma-api.polymarket.com"
@@ -138,45 +141,417 @@ def kalshi_date_from_ticker(ticker: str) -> tuple[int, int, int, int | None] | N
 
 # ── venue pulls ──────────────────────────────────────────────────────────────
 
-def pull_kalshi(league: str, client: Client) -> list[dict]:
+class VenuePullError(RuntimeError):
+    """A venue enumeration was not complete enough to be called successful."""
+
+    def __init__(self, message: str, *, diagnostics=None):
+        super().__init__(message)
+        self.diagnostics = dict(diagnostics or {})
+
+
+class PulledEvents(list):
+    """List-compatible venue result with machine-readable enumeration diagnostics."""
+
+    def __init__(self, events=(), *, diagnostics=None):
+        super().__init__(events)
+        self.diagnostics = dict(diagnostics or {})
+
+
+def _event_identity(event: dict) -> tuple[str, str]:
+    return str(event.get("id") or ""), str(event.get("slug") or "")
+
+
+def _merge_records(left: dict, right: dict) -> dict:
+    """Merge sparse representations without replacing a non-empty field."""
+    out = dict(left)
+    for key, value in right.items():
+        if key not in out or out[key] in (None, "", [], {}):
+            out[key] = value
+        elif isinstance(out[key], dict) and isinstance(value, dict):
+            out[key] = _merge_records(out[key], value)
+        elif isinstance(out[key], list) and isinstance(value, list):
+            combined = list(out[key])
+            for item in value:
+                match = next((i for i, old in enumerate(combined)
+                              if isinstance(old, dict) and isinstance(item, dict)
+                              and ((old.get("id") and old.get("id") == item.get("id"))
+                                   or (old.get("slug") and old.get("slug") == item.get("slug")))), None)
+                if match is not None:
+                    combined[match] = _merge_records(combined[match], item)
+                elif item not in combined:
+                    combined.append(item)
+            out[key] = combined
+    return out
+
+
+def _normal_critical(value):
+    if isinstance(value, str) and value[:1] in ("[", "{"):
+        try:
+            return _normal_critical(json.loads(value))
+        except ValueError:
+            pass
+    if isinstance(value, dict):
+        return tuple(sorted((str(k), _normal_critical(v)) for k, v in value.items()))
+    if isinstance(value, list):
+        return tuple(_normal_critical(v) for v in value)
+    return value
+
+
+def _critical_fields(event: dict, venue: str) -> dict[str, object]:
+    """Only fields that can change game identity, executable markets, fees, or settlement."""
+    flat: dict[str, object] = {}
+
+    def put(path: str, value) -> None:
+        if value not in (None, "", [], {}):
+            flat[path] = _normal_critical(value)
+
+    if venue == "polymarket":
+        for key in ("id", "slug", "startTime", "resolutionSource"):
+            put(f"event.{key}", event.get(key))
+        for i, team in enumerate(event.get("teams") or []):
+            if not isinstance(team, dict):
+                continue
+            ident = str(team.get("id") or f"index:{i}")
+            for key in ("id", "providerId", "name", "abbreviation"):
+                put(f"team.{ident}.{key}", team.get(key))
+        for i, market in enumerate(event.get("markets") or []):
+            if not isinstance(market, dict):
+                continue
+            ident = str(market.get("id") or market.get("slug") or f"index:{i}")
+            for key in ("id", "slug", "sportsMarketType", "gameStartTime", "outcomes", "clobTokenIds",
+                        "description", "resolutionSource", "feeSchedule", "orderMinSize", "minimumTickSize"):
+                put(f"market.{ident}.{key}", market.get(key))
+    else:
+        for key in ("event_ticker", "series_ticker"):
+            put(f"event.{key}", event.get(key))
+        for i, market in enumerate(event.get("markets") or []):
+            if not isinstance(market, dict):
+                continue
+            ident = str(market.get("ticker") or f"index:{i}")
+            for key in ("ticker", "market_type", "strike_type", "yes_sub_title", "no_sub_title",
+                        "custom_strike", "rules_primary", "rules_secondary"):
+                put(f"market.{ident}.{key}", market.get(key))
+    return flat
+
+
+def _critical_conflicts(left: dict, right: dict, venue: str) -> list[str]:
+    a, b = _critical_fields(left, venue), _critical_fields(right, venue)
+    out = [path for path in a.keys() & b.keys() if a[path] != b[path]]
+    if venue == "polymarket":
+        ids: dict[str, set[str]] = defaultdict(set)
+        slugs: dict[str, set[str]] = defaultdict(set)
+        for event in (left, right):
+            for market in event.get("markets") or []:
+                if not isinstance(market, dict):
+                    continue
+                ident, slug = str(market.get("id") or ""), str(market.get("slug") or "")
+                if ident and slug:
+                    ids[ident].add(slug)
+                    slugs[slug].add(ident)
+        out += [f"market.id:{ident}" for ident, values in ids.items() if len(values) > 1]
+        out += [f"market.slug:{slug}" for slug, values in slugs.items() if len(values) > 1]
+    return sorted(out)
+
+
+def _pm_representation_conflicts(events: list[dict]) -> list[str]:
+    ids: dict[str, set[str]] = defaultdict(set)
+    slugs: dict[str, set[str]] = defaultdict(set)
+    for event in events:
+        ident, slug = _event_identity(event)
+        if ident and slug:
+            ids[ident].add(slug)
+            slugs[slug].add(ident)
+    out = [f"id:{ident}->{','.join(sorted(values))}" for ident, values in ids.items() if len(values) > 1]
+    out += [f"slug:{slug}->{','.join(sorted(values))}" for slug, values in slugs.items() if len(values) > 1]
+    groups: dict[tuple[str, str], list[dict]] = defaultdict(list)
+    for event in events:
+        groups[_event_identity(event)].append(event)
+    for (ident, slug), representations in groups.items():
+        team_sets = {tuple(sorted(str(t.get("id")) for t in (event.get("teams") or [])
+                                  if isinstance(t, dict) and t.get("id") is not None))
+                     for event in representations if event.get("teams")}
+        starts = {tuple(sorted({str(m.get("gameStartTime")) for m in (event.get("markets") or [])
+                                if isinstance(m, dict) and m.get("sportsMarketType") == "moneyline"
+                                and m.get("gameStartTime")}))
+                  for event in representations if event.get("markets")}
+        label = f"id:{ident}" if ident else f"slug:{slug}"
+        if len(team_sets) > 1:
+            out.append(f"{label}:team_ids_disagree")
+        if len(starts) > 1:
+            out.append(f"{label}:start_times_disagree")
+    return sorted(out)
+
+
+def _normalize_pm_event(event: dict) -> tuple[dict, list[str]]:
+    """Merge complementary duplicate markets inside one event; reject identity contradictions.
+
+    This must run even for the first event representation. Cross-selector comparison alone cannot
+    see two contradictory records already present in that representation's own `markets` array.
+    """
+    markets = event.get("markets")
+    if markets is None:
+        return dict(event), []
+    if not isinstance(markets, list) or any(not isinstance(market, dict) for market in markets):
+        return {}, ["event.markets:malformed"]
+    merged: list[dict] = []
+    for market in markets:
+        ident, slug = str(market.get("id") or ""), str(market.get("slug") or "")
+        if not ident and not slug:
+            return {}, ["market:missing_identity"]
+        matches = [i for i, old in enumerate(merged)
+                   if (ident and ident == str(old.get("id") or ""))
+                   or (slug and slug == str(old.get("slug") or ""))]
+        if not matches:
+            merged.append(market)
+            continue
+        first = matches[0]
+        combined = merged[first]
+        for other in [market] + [merged[i] for i in matches[1:]]:
+            # If one representation omits id (or slug), compare both records under the stable
+            # identity supplied by its duplicate. Otherwise their critical-field paths differ
+            # (`market.<id>` vs `market.<slug>`) and contradictory tokens evade intersection.
+            left_cmp, right_cmp = dict(combined), dict(other)
+            for key in ("id", "slug"):
+                canonical = left_cmp.get(key) or right_cmp.get(key)
+                if canonical:
+                    if not left_cmp.get(key):
+                        left_cmp[key] = canonical
+                    if not right_cmp.get(key):
+                        right_cmp[key] = canonical
+            disagreement = _critical_conflicts({"markets": [left_cmp]},
+                                               {"markets": [right_cmp]}, "polymarket")
+            if disagreement:
+                label = f"id:{ident}" if ident else f"slug:{slug}"
+                return {}, [f"{label}:critical:{path}" for path in disagreement]
+            combined = _merge_records(combined, other)
+        merged[first] = combined
+        for match in reversed(matches[1:]):
+            del merged[match]
+    normalized = dict(event)
+    normalized["markets"] = merged
+    return normalized, []
+
+
+def _pm_cross_event_conflicts(left: dict, right: dict) -> list[str]:
+    """Critical conflicts after aligning sparse overlapping nested-market identities.
+
+    Missing id/slug values inherit only from a record that overlaps on the other stable key.
+    Two present but different ids or slugs are never rewritten, so genuine identity
+    contradictions remain visible to `_critical_conflicts`.
+    """
+    out = list(_critical_conflicts(left, right, "polymarket"))
+    for a in left.get("markets") or []:
+        for b in right.get("markets") or []:
+            aid, bid = str(a.get("id") or ""), str(b.get("id") or "")
+            aslug, bslug = str(a.get("slug") or ""), str(b.get("slug") or "")
+            if not ((aid and aid == bid) or (aslug and aslug == bslug)):
+                continue
+            a_cmp, b_cmp = dict(a), dict(b)
+            for key in ("id", "slug"):
+                canonical = a_cmp.get(key) or b_cmp.get(key)
+                if canonical:
+                    if not a_cmp.get(key):
+                        a_cmp[key] = canonical
+                    if not b_cmp.get(key):
+                        b_cmp[key] = canonical
+            out.extend(_critical_conflicts({"markets": [a_cmp]},
+                                           {"markets": [b_cmp]}, "polymarket"))
+    return sorted(set(out))
+
+
+def _merge_pm_events(events: list[dict]) -> tuple[list[dict], list[str]]:
+    normalized_events: list[dict] = []
+    for event in events:
+        normalized, conflicts = _normalize_pm_event(event)
+        if conflicts:
+            ident, slug = _event_identity(event)
+            label = f"id:{ident}" if ident else f"slug:{slug}"
+            return [], [f"{label}:{conflict}" for conflict in conflicts]
+        normalized_events.append(normalized)
+    events = normalized_events
+    conflicts = _pm_representation_conflicts(events)
+    if conflicts:
+        return [], conflicts
+    merged: list[dict] = []
+    for event in events:
+        ident, slug = _event_identity(event)
+        matches = [i for i, old in enumerate(merged)
+                   if (ident and ident == _event_identity(old)[0])
+                   or (slug and slug == _event_identity(old)[1])]
+        if not matches:
+            merged.append(event)
+            continue
+        first = matches[0]
+        disagreement = _pm_cross_event_conflicts(merged[first], event)
+        if disagreement:
+            label = f"id:{ident}" if ident else f"slug:{slug}"
+            return [], [f"{label}:critical:{path}" for path in disagreement]
+        combined = _merge_records(merged[first], event)
+        for match in matches[1:]:
+            disagreement = _pm_cross_event_conflicts(combined, merged[match])
+            if disagreement:
+                label = f"id:{ident}" if ident else f"slug:{slug}"
+                return [], [f"{label}:critical:{path}" for path in disagreement]
+            combined = _merge_records(combined, merged[match])
+        merged[first] = combined
+        for match in reversed(matches[1:]):
+            del merged[match]
+    return merged, []
+
+
+def _kalshi_pages(series: str, status: str, client: Client, *, max_pages: int) -> list[dict]:
+    out: list[dict] = []
+    cursor = None
+    seen_cursors: set[str] = set()
+    for _page in range(max_pages):
+        params = {"series_ticker": series, "status": status, "limit": 200,
+                  "with_nested_markets": "true"}
+        if cursor:
+            params["cursor"] = cursor
+        d = client.get_json(f"{KALSHI_BASE}/events", params=params, use_cache=False)
+        if not isinstance(d, dict) or not isinstance(d.get("events"), list):
+            raise VenuePullError(f"kalshi {series}/{status} page is malformed")
+        for event in d["events"]:
+            if not isinstance(event, dict) or not event.get("event_ticker"):
+                raise VenuePullError(f"kalshi {series}/{status} event is malformed")
+            markets = event.get("markets")
+            if not isinstance(markets, list):
+                raise VenuePullError(f"kalshi {series}/{status} event markets are malformed")
+            if any(not isinstance(market, dict) or not market.get("ticker") for market in markets):
+                raise VenuePullError(f"kalshi {series}/{status} market is malformed")
+        out.extend(d["events"])
+        nxt = d.get("cursor")
+        if not nxt:
+            return out
+        if not isinstance(nxt, str) or nxt in seen_cursors:
+            raise VenuePullError(f"kalshi {series}/{status} cursor is malformed or repeated")
+        seen_cursors.add(nxt)
+        cursor = nxt
+    raise VenuePullError(f"kalshi {series}/{status} exceeded {max_pages} pages")
+
+
+def _pm_pages(selector: str, value: str | int, client: Client, *, max_pages: int) -> list[dict]:
+    out: list[dict] = []
+    for page in range(max_pages):
+        d = client.get_json(f"{PM_GAMMA}/events",
+                            params={selector: value, "closed": "false", "limit": 100,
+                                    "offset": page * 100}, use_cache=False)
+        if not isinstance(d, list):
+            raise VenuePullError(f"polymarket {selector}={value} page is not a list")
+        if any(not isinstance(event, dict) or not any(_event_identity(event)) for event in d):
+            raise VenuePullError(f"polymarket {selector}={value} event is malformed")
+        out.extend(d)
+        if len(d) < 100:
+            return out
+    raise VenuePullError(f"polymarket {selector}={value} exceeded {max_pages} pages")
+
+
+def pull_kalshi(league: str, client: Client, *, max_pages: int = 1000) -> PulledEvents:
     """Every open and unopened event of every Kalshi series the league owns, following the
     cursor: one page of 200 silently cut college football's tail until 2026-09-07."""
     from nodes.entities.leagues import LEAGUES
     series_all = LEAGUES[league].kalshi_series_all if league in LEAGUES else (KALSHI_GAME_SERIES[league],)
     out = []
+    diagnostics = {"venue": "kalshi", "league": league, "selectors": {}, "errors": {}}
     for series in series_all:
         for status in ("open", "unopened"):
-            cursor = None
-            for _page in range(50):
-                params = {"series_ticker": series, "status": status, "limit": 200, "with_nested_markets": "true"}
-                if cursor:
-                    params["cursor"] = cursor
-                try:
-                    d = client.get_json(f"{KALSHI_BASE}/events", params=params, use_cache=False)
-                except Exception:  # noqa: BLE001
-                    break
-                out.extend(d.get("events") or [])
-                cursor = d.get("cursor")
-                if not cursor:
-                    break
-    return out
+            key = f"{series}:{status}"
+            try:
+                got = _kalshi_pages(series, status, client, max_pages=max_pages)
+            except (HttpError, OffsetCap, OSError, RuntimeError, ValueError, KeyError) as exc:
+                diagnostics["errors"][key] = f"{type(exc).__name__}: {exc}"
+                raise VenuePullError(f"incomplete Kalshi pull for {league}: {key}: {exc}",
+                                     diagnostics=diagnostics) from exc
+            diagnostics["selectors"][key] = {"events": len(got), "complete": True}
+            out.extend(got)
+    merged: dict[str, dict] = {}
+    market_owners: dict[str, str] = {}
+    for event in out:
+        ticker = str(event.get("event_ticker") or "")
+        # A nested market ticker is a stable venue identity. It may be repeated verbatim across
+        # selector pages/statuses, but it may neither belong to two events nor carry two critical
+        # representations within one event.
+        normalized = dict(event)
+        markets: dict[str, dict] = {}
+        for market in event["markets"]:
+            market_ticker = str(market["ticker"])
+            owner = market_owners.setdefault(market_ticker, ticker)
+            if owner != ticker:
+                path = f"market:{market_ticker}:owners:{owner},{ticker}"
+                diagnostics["errors"][f"market:{market_ticker}"] = path
+                raise VenuePullError(f"conflicting Kalshi representations for {league}: {path}",
+                                     diagnostics=diagnostics)
+            if market_ticker in markets:
+                disagreement = _critical_conflicts(
+                    {"event_ticker": ticker, "markets": [markets[market_ticker]]},
+                    {"event_ticker": ticker, "markets": [market]}, "kalshi")
+                if disagreement:
+                    paths = ", ".join(disagreement)
+                    diagnostics["errors"][f"market:{market_ticker}"] = (
+                        f"critical fields disagree: {paths}")
+                    raise VenuePullError(
+                        f"conflicting Kalshi representations for {league} {market_ticker}: {paths}",
+                        diagnostics=diagnostics)
+                markets[market_ticker] = _merge_records(markets[market_ticker], market)
+            else:
+                markets[market_ticker] = market
+        normalized["markets"] = [markets[key] for key in sorted(markets)]
+        if ticker in merged:
+            disagreement = _critical_conflicts(merged[ticker], normalized, "kalshi")
+            if disagreement:
+                diagnostics["errors"][f"event:{ticker}"] = f"critical fields disagree: {', '.join(disagreement)}"
+                raise VenuePullError(f"conflicting Kalshi representations for {league} {ticker}: "
+                                     f"{', '.join(disagreement)}", diagnostics=diagnostics)
+            merged[ticker] = _merge_records(merged[ticker], normalized)
+        else:
+            merged[ticker] = normalized
+    result = [merged[k] for k in sorted(merged)]
+    diagnostics.update({"events": len(result), "duplicates_merged": len(out) - len(result), "complete": True})
+    return PulledEvents(result, diagnostics=diagnostics)
 
 
-def pull_pm(league: str, client: Client) -> list[dict]:
-    out = []
-    for off in range(0, 6000, 100):
+def pull_pm(league: str, client: Client, *, max_pages: int = 60) -> PulledEvents:
+    """Complete, independently enumerated Gamma representations for one registered league."""
+    from nodes.entities.leagues import LEAGUES
+    lg = LEAGUES[league]
+    selectors: list[tuple[str, str | int]] = []
+    if lg.pm_tag_id is not None:
+        selectors.append(("tag_id", lg.pm_tag_id))
+    selectors.append(("tag_slug", lg.pm_tag))
+    selectors = list(dict.fromkeys(selectors))
+    diagnostics = {"venue": "polymarket", "league": league, "selectors": {}, "errors": {},
+                   "representation_conflicts": [], "selector_disagreement": {}}
+    complete: list[dict] = []
+    complete_by_selector: dict[str, list[dict]] = {}
+    for selector, value in selectors:
+        key = f"{selector}:{value}"
         try:
-            d = client.get_json(f"{PM_GAMMA}/events",
-                                params={("tag_id" if isinstance(PM_TAG[league], int) else "tag_slug"): PM_TAG[league],
-                                        "closed": "false", "limit": 100, "offset": off}, use_cache=False)
-        except Exception:  # noqa: BLE001
-            break
-        if not d:
-            break
-        out += d
-        if len(d) < 100:
-            break
-    return out
+            got = _pm_pages(selector, value, client, max_pages=max_pages)
+        except (HttpError, OffsetCap, OSError, RuntimeError, ValueError, KeyError) as exc:
+            diagnostics["errors"][key] = f"{type(exc).__name__}: {exc}"
+            diagnostics["selectors"][key] = {"events": 0, "complete": False}
+            continue
+        diagnostics["selectors"][key] = {"events": len(got), "complete": True}
+        complete_by_selector[key] = got
+        complete.extend(got)
+    if not any(v["complete"] for v in diagnostics["selectors"].values()):
+        raise VenuePullError(f"no complete Polymarket selector for {league}: {diagnostics['errors']}",
+                             diagnostics=diagnostics)
+    merged, conflicts = _merge_pm_events(complete)
+    diagnostics["representation_conflicts"] = conflicts
+    if conflicts:
+        raise VenuePullError(f"conflicting Polymarket representations for {league}: {'; '.join(conflicts)}",
+                             diagnostics=diagnostics)
+    if len(complete_by_selector) > 1:
+        keys = list(complete_by_selector)
+        def identities(events):
+            return {f"id:{ident}" if ident else f"slug:{slug}" for ident, slug in map(_event_identity, events)}
+        a, b = identities(complete_by_selector[keys[0]]), identities(complete_by_selector[keys[1]])
+        diagnostics["selector_disagreement"] = {
+            "selectors": keys, "only_first": sorted(a - b), "only_second": sorted(b - a)}
+    diagnostics.update({"events": len(merged), "complete": not diagnostics["errors"],
+                        "degraded": bool(diagnostics["errors"])})
+    return PulledEvents(merged, diagnostics=diagnostics)
 
 
 def _pm_start(ev: dict) -> int | None:

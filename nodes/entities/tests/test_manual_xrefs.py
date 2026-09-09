@@ -54,10 +54,11 @@ def test_audited_ucl_uuid_does_not_relabel_mun_or_suppress_generated_disagreemen
     assert r.resolve("ucl", venue="kalshi", venue_team_id=uuid).entity_id == "epl:eng.man_utd"
     assert r.by_text("ucl", "MUN").entity_id == "bun:ger.bayern_munich"
     class PublicFixture:
-        def get_json(self, _url, params=None):
+        def get_json(self, _url, params=None, use_cache=False):
             if params["status"] == "unopened":
                 return {"events": []}
-            return {"events": [{"markets": [{"ticker": "KXUCLGAME-26SEP10-MUN",
+            return {"events": [{"event_ticker": "KXUCLGAME-26SEP10",
+                                "markets": [{"ticker": "KXUCLGAME-26SEP10-MUN",
                                               "yes_sub_title": "Manchester United",
                                               "custom_strike": {"soccer_team": uuid}}]}]}
     rows, conflicts = seed_kalshi_xrefs(r, leagues=["ucl"], client=PublicFixture())

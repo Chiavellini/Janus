@@ -47,7 +47,8 @@ def test_enablement_names_what_each_league_lacks():
     # computed from the rule and template registries at call time.
     assert enablement("mlb") == []
     assert enablement("nfl") == []                 # L30 registered both rates on 2026-09-03
-    assert enablement("cfb") == []                 # L32 (a FLOOR for FCS, said so in the evidence note)
+    assert enablement("cfb") == ["EVIDENCE_UNMEASURED:cfb.cancelled_rate",
+                                  "EVIDENCE_UNMEASURED:cfb.postponed_gt48h_rate"]  # L32 quarantined by L60
     for c in ("nba", "wnba", "nhl"):
         assert enablement(c) == ["NO_KALSHI_TEMPLATE", "NO_POLYMARKET_TEMPLATE"], c
     # soccer: rule cited, both templates reviewed 2026-09-03, rates unmeasured per competition
@@ -64,7 +65,7 @@ def test_enablement_names_what_each_league_lacks():
         # one rate pair for both tours: the walkover rate (L39) and, since 2026-09-05, the forward delay rate (F4, an upper bound)
         assert enablement(c) == [], c
     assert enablement("itf") == []                 # L46; never the ATP/WTA forward population
-    assert default_leagues() == ["mlb", "nfl", "epl", "ucl", "lal", "bun", "mls", "cfb",
+    assert default_leagues() == ["mlb", "nfl", "epl", "ucl", "lal", "bun", "mls",
                                  "elc", "el1", "ita", "ere", "atp", "wta", "itf"]
 
 

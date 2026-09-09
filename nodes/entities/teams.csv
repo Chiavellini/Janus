@@ -115,10 +115,12 @@ atp:james-kent-trotter,atp,3267748,TROTTER,James Kent,Trotter,James Kent Trotter
 atp:jan-lennard-struff,atp,147122,STRUFF,Jan-Lennard,Struff,Jan-Lennard Struff
 atp:jasika-tomic,atp,3287148,JASITOM,,Jasika/Tomic,Jasika/Tomic
 atp:jaume-munar,atp,147316,MUNAR,Jaume,Munar,Jaume Munar
+atp:jay-dylan-friend,atp,3265229,FRIEND,Jay Dylan,Friend,Jay Dylan Friend
 atp:jebens-reyes,atp,3288530,JEBEREY,,Jebens/Reyes,Jebens/Reyes
 atp:jesper-de-jong,atp,147218,JONG,Jesper de,Jong,Jesper de Jong
 atp:jiang-zhang,atp,3287147,JIANZHA,,Jiang/Zhang,Jiang/Zhang
 atp:jiri-lehecka,atp,147101,LEHECKA,Jiri,Lehecka,Jiri Lehecka
+atp:joao-lucas-da-silva,atp,229608,SILV,Joao Lucas Da,Silva,Joao Lucas Da Silva
 atp:johan-nikles,atp,3267793,NIKLES,Johan,Nikles,Johan Nikles
 atp:johnson-zielinski,atp,3279662,JOHNZIE,,Johnson/Zielinski,Johnson/Zielinski
 atp:juan-manuel-la-serna,atp,230554,SERNA,Juan Manuel La,Serna,Juan Manuel La Serna
@@ -129,6 +131,7 @@ atp:kadhe-yuzuki,atp,3287154,KADHYUZ,,Kadhe/Yuzuki,Kadhe/Yuzuki
 atp:kalender-serdarusic,atp,3281126,KALESER,,Kalender/Serdarusic,Kalender/Serdarusic
 atp:karen-khachanov,atp,147292,KHACHAN,Karen,Khachanov,Karen Khachanov
 atp:kasidit-samrej,atp,3267771,SAMREJ,Kasidit,Samrej,Kasidit Samrej
+atp:kenta-miyoshi,atp,3281694,MIYOSHI,Kenta,Miyoshi,Kenta Miyoshi
 atp:kiger-kovacevic,atp,3288524,KIGEKOV,,Kiger/Kovacevic,Kiger/Kovacevic
 atp:kolar-poljak,atp,3278918,KOLAPOL,,Kolar/Poljak,Kolar/Poljak
 atp:kong-meng,atp,3287149,KONGMEN,,Kong/Meng,Kong/Meng
@@ -178,6 +181,7 @@ atp:seggerman-trhac,atp,3283298,SEGGTRH,,Seggerman/Trhac,Seggerman/Trhac
 atp:siniakov-vanshelboim,atp,3287164,SINIVAN,,Siniakov/Vanshelboim,Siniakov/Vanshelboim
 atp:stefanos-tsitsipas,atp,147291,TSITSIP,Stefanos,Tsitsipas,Stefanos Tsitsipas
 atp:stevenson-willis,atp,3278907,STEVWIL,,Stevenson/Willis,Stevenson/Willis
+atp:tai-sach,atp,3270406,SACH,Tai,Sach,Tai Sach
 atp:taylor-fritz,atp,178130,FRITZ,Taylor,Fritz,Taylor Fritz
 atp:terence-atmane,atp,147223,ATMANE,Terence,Atmane,Terence Atmane
 atp:thiago-agustin-tirante,atp,183152,TIRANTE,Thiago Agustin,Tirante,Thiago Agustin Tirante
@@ -190,6 +194,7 @@ atp:tristan-schoolkate,atp,147217,SCHOOLK,Tristan,Schoolkate,Tristan Schoolkate
 atp:valentin-vacherot,atp,147245,VACHERO,Valentin,Vacherot,Valentin Vacherot
 atp:valerio-aboian,atp,3246384,ABOIAN,Valerio,Aboian,Valerio Aboian
 atp:yanaki-milev,atp,3280144,MILEV,Yanaki,Milev,Yanaki Milev
+atp:yanis-durand,atp,3289713,DUR,Yanis,Durand,Yanis Durand
 atp:yibing-wu,atp,229199,WU,Yibing,Wu,Yibing Wu
 atp:yunchaokete-bu,atp,229205,BU,Yunchaokete,Bu,Yunchaokete Bu
 atp:zachary-svajda,atp,229651,SVAJDA,Zachary,Svajda,Zachary Svajda
@@ -1407,9 +1412,11 @@ wta:li-tauson,wta,3275547,LITAUS,,Li/Tauson,Li/Tauson
 wta:lilli-tagger,wta,178028,TAGGER,Lilli,Tagger,Lilli Tagger
 wta:linda-noskova,wta,147237,NOSKOVA,Linda,Noskova,Linda Noskova
 wta:liudmila-samsonova,wta,229237,SAMSONO,Liudmila,Samsonova,Liudmila Samsonova
+wta:lucija-bagaric,wta,3267774,BAGARIC,Lucija,Bagaric,Lucija Bagaric
 wta:madison-keys,wta,183137,KEYS,Madison,Keys,Madison Keys
 wta:maleckova-skoch,wta,3271917,MALESKO,,Maleckova/Skoch,Maleckova/Skoch
 wta:marcinko-oliynykova,wta,3288437,MARCOLI,,Marcinko/Oliynykova,Marcinko/Oliynykova
+wta:maria-lourdes-carle,wta,229684,CARLE,Maria Lourdes,Carle,Maria Lourdes Carle
 wta:maria-sakkari,wta,147196,SAKKARI,Maria,Sakkari,Maria Sakkari
 wta:maria-sonmez,wta,3275602,MARISON,,Maria/Sonmez,Maria/Sonmez
 wta:marie-bouzkova,wta,147178,BOUZKOV,Marie,Bouzkova,Marie Bouzkova

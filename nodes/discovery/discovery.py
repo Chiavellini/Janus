@@ -152,6 +152,7 @@ def match_live(league: str, games: list, now: datetime, universe: list | None = 
         "kalshi_games": sorted(stats.get("k_games") or ()),
         "polymarket_games": sorted(stats.get("p_games") or ()),
         "matcher_reasons": {"kalshi": dict(stats["k_reason"]), "polymarket": dict(stats["p_reason"])},
+        "enumeration": dict(stats.get("enumeration") or {}),
     }, resolver
 
 
@@ -196,6 +197,10 @@ class Discovery:
     fee_params: dict[str, dict[str, dict]] = field(default_factory=lambda: {"kalshi": {}, "polymarket": {}})
     fee_errors: dict[str, dict[str, str]] = field(default_factory=dict)
     series: dict[str, dict] = field(default_factory=dict)    # league -> raw Kalshi series record
+    #: Per-league, per-venue enumeration completeness and selector diagnostics. A failed complete
+    #: pull blocks through schedule_failures; a failed redundant selector remains visible here
+    #: when another independent selector completed the same league.
+    enumeration_diagnostics: dict[str, dict] = field(default_factory=dict)
 
     def age_s(self, now: float | None = None) -> float:
         return (now or time.time()) - self.made_utc
@@ -205,7 +210,7 @@ def discover(leagues: list[str], now: datetime, include_near: bool, pre_hours: f
              pclient: Client, kclient: Client | None = None) -> Discovery:
     """Build the watch set. Every failure is recorded, none is fatal."""
     games, meta = live_games(leagues, now, include_near, pre_hours)
-    per_league, slugs = {}, set()
+    per_league, slugs, enumeration = {}, set(), {}
     for league in leagues:
         lg_games = [g for g in games if g.league == league]
         if not lg_games:
@@ -217,6 +222,7 @@ def discover(leagues: list[str], now: datetime, include_near: bool, pre_hours: f
             meta["schedule_failures"][league] = f"match: {brief_error(exc)}"
             continue
         per_league[league] = (matches, stats, resolver)
+        enumeration[league] = dict(stats.get("enumeration") or {})
         slugs |= {m["pm_event"] for m in matches}
     tokens = pm_token_map(sorted(slugs), pclient) if slugs else {}
     token_errors = tokens.pop("__errors__", {})
@@ -234,7 +240,8 @@ def discover(leagues: list[str], now: datetime, include_near: bool, pre_hours: f
         sorted(per_league), kclient or Client("kalshi", rate=4, burst=8, cache_dir=None), series)
     return Discovery(time.time(), games, meta["schedule_failures"], per_league, tokens, token_errors,
                      fee_params={"kalshi": k_fees, "polymarket": pm_fees},
-                     fee_errors={"kalshi": k_errors, "polymarket": pm_fee_errors}, series=series)
+                     fee_errors={"kalshi": k_errors, "polymarket": pm_fee_errors}, series=series,
+                     enumeration_diagnostics=enumeration)
 
 
 def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
@@ -253,44 +260,90 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
     games_by_id = {g.game_id: g for g in d.games}
     for league, (matches, _stats, resolver) in d.per_league.items():
         n_out = LEAGUES[league].outcomes if league in LEAGUES else 2
-        tok_by: dict[tuple, str] = {}
+        # Token ownership must preserve the exact entity decision already made by the matcher.
+        # Re-resolving an outcome label without that match's schedule context dropped valid CFB
+        # tokens (``Miami (FL)`` on 2026-09-09).  Candidates remain scoped by event slug and a
+        # collision is deliberately unresolved, so this cannot leak a token across games or pick
+        # the first of two conflicting labels.
+        tok_candidates: dict[tuple[str, str], set[str]] = {}
+        def add_token(slug: str, entity: str, token: str) -> None:
+            tok_candidates.setdefault((slug, entity), set()).add(str(token))
+
         for slug, (names, _ev) in d.tokens.items():
             for name, token in names.items():
                 if name == "Draw":
-                    tok_by[(slug, DRAW_ENTITY)] = token
-                    continue
-                res = resolver.resolve(league, text=name, venue="polymarket")
-                if res.ok:
-                    tok_by[(slug, res.entity_id)] = token
-        by_game: dict[str, dict] = {}
+                    add_token(slug, DRAW_ENTITY, token)
+        allow_suffix = league in venue_structured()
         for m in matches:
-            by_game.setdefault(m["game_id"], {})[m["entity_id"]] = m
+            slug = m["pm_event"]
+            # Direct token ownership uses only the label the matcher independently resolved to
+            # this participant. `pm_label` is the structured team/player name and is deliberately
+            # reserved for the conservative tennis surname fallback below.
+            label = normalize(m.get("pm_token_label") or "")
+            if not label or slug not in d.tokens:
+                continue
+            for name, token in d.tokens[slug][0].items():
+                candidate = normalize(name)
+                if label == candidate:
+                    add_token(slug, m["entity_id"], token)
+        ambiguous_tokens = {key for key, tokens in tok_candidates.items() if len(tokens) != 1}
+        tok_by = {key: next(iter(tokens)) for key, tokens in tok_candidates.items() if len(tokens) == 1}
+        by_game: dict[str, dict[str, list[dict]]] = {}
+        for m in matches:
+            by_game.setdefault(m["game_id"], {}).setdefault(m["entity_id"], []).append(m)
             # A tennis market labels its outcomes by surname ("Siegemund") while the event names the
             # player in full; when the label resolves to nothing, the participant whose full name
             # ends with the label owns the token. Exact suffix on normalised text, never a score.
             slug, label = m["pm_event"], m.get("pm_label") or ""
-            if slug in d.tokens and (slug, m["entity_id"]) not in tok_by:
+            if (allow_suffix and slug in d.tokens and (slug, m["entity_id"]) not in tok_by
+                    and (slug, m["entity_id"]) not in ambiguous_tokens):
                 full = normalize(label)
+                candidates = set()
                 for name, token in d.tokens[slug][0].items():
                     n = normalize(name)
                     if n and (full == n or full.endswith(" " + n)):
-                        tok_by[(slug, m["entity_id"])] = token
-                        break
-        for gid, rows in by_game.items():
+                        candidates.add(str(token))
+                if len(candidates) == 1:
+                    tok_by[(slug, m["entity_id"])] = next(iter(candidates))
+        for gid, candidates in by_game.items():
             g = games_by_id.get(gid)
+            ambiguous = [entity for entity, options in candidates.items()
+                         if any(option != options[0] for option in options[1:])]
+            if ambiguous:
+                blocked[gid] = "AMBIGUOUS_DUPLICATE_OUTCOME_MATCH"
+                continue
+            rows = {entity: options[0] for entity, options in candidates.items()}
             if g is None or len(rows) != n_out:
                 blocked[gid] = "INCOMPLETE_EXACT_TWO_OUTCOME_MATCH" if n_out == 2 else "INCOMPLETE_EXACT_THREE_OUTCOME_MATCH"
+                continue
+            if (len({m["kalshi_event"] for m in rows.values()}) != 1
+                    or len({m["pm_event"] for m in rows.values()}) != 1):
+                blocked[gid] = "MIXED_EVENT_REPRESENTATION"
                 continue
             outcomes: dict[str, dict] = {}
             slug = next(iter(rows.values()))["pm_event"]
             # Three-way: the NO token of each TEAM market pays on the other two outcomes, which
             # is how a soccer cover is executed as two legs (nodes/game_poller, nodes/cover).
             no_by_label = pm_outcome_no_tokens(d.tokens.get(slug, (None, {}))[1] or {}, slug) if n_out == 3 else {}
-            no_by_ent: dict[str, str] = {}
+            no_candidates: dict[str, set[str]] = {}
+            def add_no(entity: str, token: str) -> None:
+                no_candidates.setdefault(entity, set()).add(str(token))
+
             for name, tok_no in no_by_label.items():
                 res = resolver.resolve(league, text=name, venue="polymarket")
                 if res.ok:
-                    no_by_ent[res.entity_id] = tok_no
+                    add_no(res.entity_id, tok_no)
+                candidate = normalize(name)
+                for entity, row in rows.items():
+                    if entity != DRAW_ENTITY and candidate == normalize(row.get("pm_token_label") or ""):
+                        add_no(entity, tok_no)
+            no_by_ent = {entity: next(iter(tokens)) for entity, tokens in no_candidates.items()
+                         if len(tokens) == 1}
+            coverage_warnings = []
+            if n_out == 3:
+                missing_no = sorted(set(rows) - {DRAW_ENTITY} - set(no_by_ent))
+                if missing_no:
+                    coverage_warnings.append("PM_NO_TOKEN_MISSING:" + ",".join(missing_no))
             for ent, m in rows.items():
                 tok = tok_by.get((m["pm_event"], ent))
                 if not tok:
@@ -325,6 +378,7 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
                     "start_utc": g.start_utc, "outcomes": outcomes, "fee_params": fees,
                     "pm_slug": slug, "kalshi_event": first["kalshi_event"],
                     "pm_limits": pm_order_limits(pm_primary_market(ev, slug) or {}),
+                    "coverage_warnings": coverage_warnings,
                     "rules": {"kalshi": {"market": k_rules, "participants": names,
                                          "series": d.series.get(league)},
                               "polymarket": {"market": p_rules, "participants": names},

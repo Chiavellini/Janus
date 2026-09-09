@@ -125,9 +125,13 @@ audit. In census order (`research/sports/2026-09-03_co-listing-census/`, ledger 
 5. **Certify on a fixture pair** in tests, then the league runs unasked (`default_leagues()`).
 
 By the evening of 2026-09-09: MLB, NFL (L30), EPL / La Liga / Bundesliga (L33, a proxy labelled
-FLOOR), college football (L32, FLOOR for FCS), MLS (L43), Eredivisie (L50), and UCL league-phase
-games (L58) pass step 5 and run unasked. NBA/WNBA/NHL sit at step 3. Other registered soccer
-competitions without their own measured rates remain at step 4.
+FLOOR), MLS (L43), Eredivisie (L50), and UCL league-phase games (L58) pass step 5 and run unasked.
+College football's current Polymarket V2 wording is reviewed, but L60 quarantines L32's two rates:
+its denominator included declared-out-of-population conference-title/FCS-playoff games, its FCS
+numerator is an acknowledged press-coverage FLOOR, and the values are point estimates rather than
+exact upper bounds. CFB therefore blocks at step 4 until a complete authoritative original-to-final
+schedule corpus replaces L32. NBA/WNBA/NHL sit at step 3. Other registered soccer competitions
+without their own measured rates remain at step 4.
 
 **MLS evidence added 2026-09-09 (L43).** The official preseason 2025 MLS record book supplies the
 original schedule that was missing on September 3. All 510 regular-season fixtures join uniquely

@@ -1,0 +1,1834 @@
+{
+  "classification_definitions": {
+    "KALSHI_ABSENT_AND_PM_SELECTOR_DISAGREEMENT": "PM event existed under one selector but not the other; no current Kalshi counterpart. Dual-selector enumeration now exposes the disagreement.",
+    "KALSHI_NOT_CURRENTLY_EXECUTABLE": "Kalshi counterpart was already settled/finalized or absent while PM still exposed the event; not a current two-venue pair.",
+    "KALSHI_VENUE_ABSENCE": "PM listed the match; no current matching open/unopened Kalshi event was enumerated.",
+    "LOCAL_DUPLICATE_SCHEDULE_REPRESENTATION_FIXED": "The same PM event id appeared twice; exact-id schedule dedupe now collapses compatible duplicates and rejects conflicts.",
+    "LOCAL_IDENTITY_DEFECT_FIXED": "Exact audited player alias/xref was missing; both venue events existed.",
+    "LOCAL_TOKEN_BINDING_DEFECT_FIXED": "Matcher resolved Miami (FL), but co_listed re-resolved the label without preserving exact event/token binding.",
+    "SCHEDULE_REFERENCE_CONFLICT_BLOCKED": "Valencia-Sevilla Kalshi retained Sep 13 while ESPN/current PM referenced Sep 11; exact-time join correctly blocks the unmeasured basis.",
+    "SETTLEMENT_EVIDENCE_AND_ZERO_CAP_BLOCKED": "Pair exists, but settlement evidence is unmeasured and effective risk cap is zero."
+  },
+  "ledger_row": "L59",
+  "limitations": [
+    "The venue-native census uses a loose participant-token/date join and contains known false collisions.",
+    "Unregistered rows are research candidates only and never feed operational alerts.",
+    "No order books were sampled for capacity.",
+    "Counts are point-in-time and listings can change."
+  ],
+  "methodology": {
+    "immediate_window": "Global census run time minus 3h through plus 6h.",
+    "raw_snapshots": [
+      "/tmp/janus_l59_discovery.json",
+      "/tmp/janus_l59_discovery_final.json",
+      "/tmp/janus_l59_global_census.json"
+    ],
+    "registered": "Every LEAGUES row through schedule, complete venue enumeration, exact matching, settlement, token/fee and risk gates over 48h.",
+    "unregistered": "Independent loose participant-token/date join over 48h, excluding Kalshi series in LEAGUES. Rows are UNVERIFIED_COVERAGE_CANDIDATE research leads only; they are not canonical pairs, co-listing assertions, tradeability evidence, or operational alerts."
+  },
+  "public_client_health": {
+    "diagnostics_relay_verification": {
+      "blocked": {},
+      "fee_errors": {
+        "kalshi": {},
+        "polymarket": {}
+      },
+      "games": 6,
+      "kalshi": {
+        "complete": true,
+        "events": 6,
+        "selectors": {
+          "KXUCLGAME:open": {
+            "complete": true,
+            "events": 6
+          },
+          "KXUCLGAME:unopened": {
+            "complete": true,
+            "events": 0
+          }
+        }
+      },
+      "league": "ucl",
+      "polymarket": {
+        "complete": true,
+        "degraded": false,
+        "events": 65,
+        "representation_conflicts": [],
+        "selectors": {
+          "tag_slug:ucl": {
+            "complete": true,
+            "events": 65
+          }
+        }
+      },
+      "schedule_failures": {},
+      "slate": 6,
+      "timestamp_utc": "2026-09-09T23:22:11.334456+00:00",
+      "token_errors": {}
+    },
+    "global": {
+      "client_stats": {
+        "kalshi": {
+          "429s": 28,
+          "cache_hits": 0,
+          "offset_caps": 0,
+          "requests": 353,
+          "retries": 28
+        },
+        "polymarket": {
+          "429s": 0,
+          "cache_hits": 0,
+          "offset_caps": 0,
+          "requests": 1039,
+          "retries": 0
+        }
+      },
+      "errors": {}
+    },
+    "note": "No public-client failure was recorded. Empty selector diagnostics in the full post snapshot exposed a reporting-propagation defect; the following focused UCL probe verifies the repaired relay end to end.",
+    "registered_post": {
+      "fee_errors": {
+        "kalshi": {},
+        "polymarket": {}
+      },
+      "schedule_failures": {},
+      "token_errors": {}
+    },
+    "registered_pre": {
+      "client_stats": {
+        "kclient": {
+          "429s": 0,
+          "cache_hits": 0,
+          "offset_caps": 0,
+          "requests": 17,
+          "retries": 0
+        },
+        "pclient": {
+          "429s": 0,
+          "cache_hits": 0,
+          "offset_caps": 0,
+          "requests": 252,
+          "retries": 0
+        }
+      },
+      "fee_errors": {
+        "kalshi": {},
+        "polymarket": {}
+      },
+      "schedule_failures": {},
+      "token_errors": {}
+    }
+  },
+  "registered_post_fix": {
+    "counts": {
+      "blocked_or_degraded": 45,
+      "ready": 263,
+      "scheduled": 308,
+      "slate": 270
+    },
+    "default_enabled": [
+      "mlb",
+      "nfl",
+      "epl",
+      "ucl",
+      "lal",
+      "bun",
+      "mls",
+      "elc",
+      "el1",
+      "ita",
+      "ere",
+      "atp",
+      "wta",
+      "itf"
+    ],
+    "note": "Public listings changed between snapshots, so aggregates are not a paired experiment. Exact repaired cases were re-probed. CFB now fails closed on newly explicit unmeasured cancellation/postponement rates.",
+    "per_league_counts": {
+      "atp": {
+        "blocked_or_unpaired": 25,
+        "kalshi_matched": 25,
+        "live_or_6h": 8,
+        "pm_matched": 51,
+        "ready": 25,
+        "scheduled": 50
+      },
+      "bel1": {
+        "blocked_or_unpaired": 1,
+        "enablement": [
+          "EVIDENCE_UNMEASURED:soccer.bel1.cancelled_rate",
+          "EVIDENCE_UNMEASURED:soccer.bel1.postponed_gt48h_rate"
+        ],
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 0,
+        "scheduled": 1
+      },
+      "bun": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 1,
+        "scheduled": 1
+      },
+      "cfb": {
+        "blocked_or_unpaired": 4,
+        "enablement": [
+          "EVIDENCE_UNMEASURED:cfb.cancelled_rate",
+          "EVIDENCE_UNMEASURED:cfb.postponed_gt48h_rate"
+        ],
+        "kalshi_matched": 4,
+        "live_or_6h": 0,
+        "pm_matched": 4,
+        "ready": 0,
+        "scheduled": 4
+      },
+      "el1": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 1,
+        "scheduled": 1
+      },
+      "elc": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 1,
+        "scheduled": 1
+      },
+      "epl": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 0,
+        "ready": 0,
+        "scheduled": 0
+      },
+      "ere": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 1,
+        "scheduled": 1
+      },
+      "fl1": {
+        "blocked_or_unpaired": 1,
+        "enablement": [
+          "EVIDENCE_UNMEASURED:soccer.fl1.cancelled_rate",
+          "EVIDENCE_UNMEASURED:soccer.fl1.postponed_gt48h_rate"
+        ],
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 0,
+        "scheduled": 1
+      },
+      "ita": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 1,
+        "scheduled": 1
+      },
+      "itf": {
+        "blocked_or_unpaired": 1,
+        "kalshi_matched": 187,
+        "live_or_6h": 48,
+        "pm_matched": 192,
+        "ready": 175,
+        "scheduled": 176
+      },
+      "lal": {
+        "blocked_or_unpaired": 1,
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 0,
+        "scheduled": 1
+      },
+      "mlb": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 24,
+        "live_or_6h": 10,
+        "pm_matched": 25,
+        "ready": 24,
+        "scheduled": 24
+      },
+      "mls": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 14,
+        "live_or_6h": 14,
+        "pm_matched": 14,
+        "ready": 14,
+        "scheduled": 14
+      },
+      "nba": {
+        "blocked_or_unpaired": 0,
+        "enablement": [
+          "NO_KALSHI_TEMPLATE",
+          "NO_POLYMARKET_TEMPLATE"
+        ],
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 0,
+        "ready": 0,
+        "scheduled": 0
+      },
+      "nfl": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 2,
+        "live_or_6h": 1,
+        "pm_matched": 2,
+        "ready": 2,
+        "scheduled": 2
+      },
+      "nhl": {
+        "blocked_or_unpaired": 0,
+        "enablement": [
+          "NO_KALSHI_TEMPLATE",
+          "NO_POLYMARKET_TEMPLATE"
+        ],
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 0,
+        "ready": 0,
+        "scheduled": 0
+      },
+      "por": {
+        "blocked_or_unpaired": 1,
+        "enablement": [
+          "EVIDENCE_UNMEASURED:soccer.por.cancelled_rate",
+          "EVIDENCE_UNMEASURED:soccer.por.postponed_gt48h_rate"
+        ],
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 2,
+        "ready": 0,
+        "scheduled": 1
+      },
+      "scop": {
+        "blocked_or_unpaired": 0,
+        "enablement": [
+          "EVIDENCE_UNMEASURED:soccer.scop.cancelled_rate",
+          "EVIDENCE_UNMEASURED:soccer.scop.postponed_gt48h_rate"
+        ],
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 0,
+        "ready": 0,
+        "scheduled": 0
+      },
+      "ucl": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 6,
+        "live_or_6h": 0,
+        "pm_matched": 6,
+        "ready": 6,
+        "scheduled": 6
+      },
+      "wnba": {
+        "blocked_or_unpaired": 0,
+        "enablement": [
+          "NO_KALSHI_TEMPLATE",
+          "NO_POLYMARKET_TEMPLATE"
+        ],
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 0,
+        "ready": 0,
+        "scheduled": 0
+      },
+      "wta": {
+        "blocked_or_unpaired": 11,
+        "kalshi_matched": 12,
+        "live_or_6h": 6,
+        "pm_matched": 23,
+        "ready": 12,
+        "scheduled": 23
+      }
+    },
+    "remaining_classification_counts": {
+      "CFB_SETTLEMENT_EVIDENCE_UNMEASURED": 4,
+      "KALSHI_NOT_CURRENTLY_EXECUTABLE": 1,
+      "KALSHI_VENUE_ABSENCE": 36,
+      "SCHEDULE_REFERENCE_CONFLICT_BLOCKED": 1,
+      "SETTLEMENT_EVIDENCE_AND_ZERO_CAP_BLOCKED": 3
+    },
+    "remaining_names_by_class": {
+      "CFB_SETTLEMENT_EVIDENCE_UNMEASURED": [
+        "cfb:espn:cfb:401858213:FAMU @ MIA",
+        "cfb:espn:cfb:401858215:VILL @ LOU",
+        "cfb:espn:cfb:401858220:NORF @ UVA",
+        "cfb:espn:cfb:401858222:RICH @ NCSU"
+      ],
+      "KALSHI_NOT_CURRENTLY_EXECUTABLE": [
+        "atp:pm:atp:986763:KHACHAN V BLOCKX"
+      ],
+      "KALSHI_VENUE_ABSENCE": [
+        "atp:pm:atp:989079:DELLIEN V DODIG",
+        "wta:pm:wta:991034:OLMO V LINANA",
+        "atp:pm:atp:991189:VALLE V TRAVAGL",
+        "wta:pm:wta:991037:TREVISA V MARISTA",
+        "atp:pm:atp:991188:LAGUTIN V GURRI",
+        "atp:pm:atp:996399:MASSELL V BEHRMAN",
+        "atp:pm:atp:996400:KENNEDY V MACKENZ",
+        "atp:pm:atp:996401:LATAK V HANCE",
+        "atp:pm:atp:996402:MIGUEL V JORDANL",
+        "itf:pm:itf:995698:NIJBOE1 V PARISC1",
+        "wta:pm:wta:996211:SU V MAKAROV",
+        "wta:pm:wta:996212:PRESTO V KOVACKO",
+        "wta:pm:wta:996213:CLARKE V SILVA",
+        "wta:pm:wta:996214:PUSHKAR V DOTSENK",
+        "atp:pm:atp:989073:WILD V GIUNTA",
+        "wta:pm:wta:991035:BUYUKAK V BENNEMA",
+        "wta:pm:wta:991036:WALTERT V PAPAMIC",
+        "atp:pm:atp:989092:ROCHA V TAVERNA",
+        "atp:pm:atp:991187:HEMERY V LAJOVIC",
+        "atp:pm:atp:991186:PASSARO V VARILLA",
+        "atp:pm:atp:993327:KOTOV V GALARNE",
+        "atp:pm:atp:994724:JASIKA V SHARIPO",
+        "atp:pm:atp:993325:MORIYA V SHIMIZU",
+        "atp:pm:atp:994731:MAESTRE V KASNIKO",
+        "atp:pm:atp:994736:KUZMANO V MAYOT",
+        "atp:pm:atp:994729:KOLAR V BARRENA",
+        "atp:pm:atp:994733:SOTO V SACHKO",
+        "atp:pm:atp:996404:DJERE V SAKELLA",
+        "atp:pm:atp:996406:MARTINE V ABOIAN",
+        "wta:pm:wta:994556:ZANTEDE V IBRAGIM",
+        "wta:pm:wta:994557:ESCORIH V YANEVA",
+        "wta:pm:wta:996215:SOBOLIE V AKUGUE",
+        "atp:pm:atp:994738:DROGUET V GLINKA",
+        "atp:pm:atp:994739:BLANCHE V MASUR",
+        "atp:pm:atp:996403:ACOSTA V OFNER",
+        "atp:pm:atp:996405:MUNAR V BRANCAC"
+      ],
+      "SCHEDULE_REFERENCE_CONFLICT_BLOCKED": [
+        "lal:espn:lal:401882878:VAL @ SEV"
+      ],
+      "SETTLEMENT_EVIDENCE_AND_ZERO_CAP_BLOCKED": [
+        "por:espn:por:401885474:SCB @ EST",
+        "bel1:espn:bel1:401878996:AND @ KVM",
+        "fl1:espn:fl1:401876459:OLM @ REN"
+      ]
+    },
+    "timestamp_utc": "2026-09-09T23:16:47.253914+00:00"
+  },
+  "registered_pre_fix": {
+    "blocked_rows": [
+      {
+        "classification": "KALSHI_NOT_CURRENTLY_EXECUTABLE",
+        "delta_h": -4.743,
+        "game_id": "pm:atp:991185",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": true,
+        "league": "atp",
+        "n": 1,
+        "name": "MUNAR V BUENO",
+        "occurrence": 1,
+        "start_utc": 1788977700,
+        "state": "in"
+      },
+      {
+        "classification": "KALSHI_NOT_CURRENTLY_EXECUTABLE",
+        "delta_h": -1.826,
+        "game_id": "pm:atp:986763",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": true,
+        "league": "atp",
+        "n": 2,
+        "name": "KHACHAN V BLOCKX",
+        "occurrence": 1,
+        "start_utc": 1788988200,
+        "state": "in"
+      },
+      {
+        "classification": "KALSHI_ABSENT_AND_PM_SELECTOR_DISAGREEMENT",
+        "delta_h": -1.743,
+        "game_id": "pm:atp:985654",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=missing"
+        ],
+        "immediate": true,
+        "league": "atp",
+        "n": 3,
+        "name": "JADE V JORDANL",
+        "occurrence": 1,
+        "start_utc": 1788988500,
+        "state": "in"
+      },
+      {
+        "classification": "LOCAL_IDENTITY_DEFECT_FIXED",
+        "delta_h": 3.507,
+        "game_id": "pm:atp:987757",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": true,
+        "league": "atp",
+        "n": 4,
+        "name": "MIYOSHI V PELIWO",
+        "occurrence": 1,
+        "start_utc": 1789007400,
+        "state": "pre"
+      },
+      {
+        "classification": "LOCAL_IDENTITY_DEFECT_FIXED",
+        "delta_h": 3.507,
+        "game_id": "pm:atp:987758",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": true,
+        "league": "atp",
+        "n": 5,
+        "name": "SACH V WEBER",
+        "occurrence": 1,
+        "start_utc": 1789007400,
+        "state": "pre"
+      },
+      {
+        "classification": "LOCAL_DUPLICATE_SCHEDULE_REPRESENTATION_FIXED",
+        "delta_h": 9.007,
+        "game_id": "pm:itf:995780",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=missing"
+        ],
+        "immediate": false,
+        "league": "itf",
+        "n": 6,
+        "name": "NUUDI1 V KMIECI1",
+        "occurrence": 1,
+        "start_utc": 1789027200,
+        "state": "pre"
+      },
+      {
+        "classification": "LOCAL_DUPLICATE_SCHEDULE_REPRESENTATION_FIXED",
+        "delta_h": 9.007,
+        "game_id": "pm:itf:995780",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=missing"
+        ],
+        "immediate": false,
+        "league": "itf",
+        "n": 7,
+        "name": "NUUDI1 V KMIECI1",
+        "occurrence": 2,
+        "start_utc": 1789027200,
+        "state": "pre"
+      },
+      {
+        "classification": "LOCAL_IDENTITY_DEFECT_FIXED",
+        "delta_h": 10.007,
+        "game_id": "pm:atp:987748",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 8,
+        "name": "REGUIG V FRIEND",
+        "occurrence": 1,
+        "start_utc": 1789030800,
+        "state": "pre"
+      },
+      {
+        "classification": "LOCAL_IDENTITY_DEFECT_FIXED",
+        "delta_h": 10.507,
+        "game_id": "pm:atp:989093",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 9,
+        "name": "KJAER V DUR",
+        "occurrence": 1,
+        "start_utc": 1789032600,
+        "state": "pre"
+      },
+      {
+        "classification": "LOCAL_IDENTITY_DEFECT_FIXED",
+        "delta_h": 10.507,
+        "game_id": "pm:wta:988868",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 10,
+        "name": "BAGARIC V HAVLICK",
+        "occurrence": 1,
+        "start_utc": 1789032600,
+        "state": "pre"
+      },
+      {
+        "classification": "LOCAL_IDENTITY_DEFECT_FIXED",
+        "delta_h": 11.507,
+        "game_id": "pm:wta:988866",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 11,
+        "name": "CARLE V VEDDER",
+        "occurrence": 1,
+        "start_utc": 1789036200,
+        "state": "pre"
+      },
+      {
+        "classification": "LOCAL_IDENTITY_DEFECT_FIXED",
+        "delta_h": 12.007,
+        "game_id": "pm:atp:989095",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 12,
+        "name": "SILV V MONTEIR",
+        "occurrence": 1,
+        "start_utc": 1789038000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 12.507,
+        "game_id": "pm:atp:989079",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 13,
+        "name": "DELLIEN V DODIG",
+        "occurrence": 1,
+        "start_utc": 1789039800,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 13.007,
+        "game_id": "pm:wta:991034",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 14,
+        "name": "OLMO V LINANA",
+        "occurrence": 1,
+        "start_utc": 1789041600,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 14.007,
+        "game_id": "pm:atp:991189",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 15,
+        "name": "VALLE V TRAVAGL",
+        "occurrence": 1,
+        "start_utc": 1789045200,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 16.007,
+        "game_id": "pm:itf:995697",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "itf",
+        "n": 16,
+        "name": "CHIDEK2 V GARCIA5",
+        "occurrence": 1,
+        "start_utc": 1789052400,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 16.007,
+        "game_id": "pm:itf:995824",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "itf",
+        "n": 17,
+        "name": "CIREZ1 V LLAVER1",
+        "occurrence": 1,
+        "start_utc": 1789052400,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 16.007,
+        "game_id": "pm:wta:991037",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 18,
+        "name": "TREVISA V MARISTA",
+        "occurrence": 1,
+        "start_utc": 1789052400,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 17.007,
+        "game_id": "pm:atp:991188",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 19,
+        "name": "LAGUTIN V GURRI",
+        "occurrence": 1,
+        "start_utc": 1789056000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 17.007,
+        "game_id": "pm:itf:995698",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "itf",
+        "n": 20,
+        "name": "NIJBOE1 V PARISC1",
+        "occurrence": 1,
+        "start_utc": 1789056000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 17.007,
+        "game_id": "pm:wta:996211",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 21,
+        "name": "SU V MAKAROV",
+        "occurrence": 1,
+        "start_utc": 1789056000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 17.007,
+        "game_id": "pm:wta:996212",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 22,
+        "name": "PRESTO V KOVACKO",
+        "occurrence": 1,
+        "start_utc": 1789056000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 17.007,
+        "game_id": "pm:wta:996213",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 23,
+        "name": "CLARKE V SILVA",
+        "occurrence": 1,
+        "start_utc": 1789056000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 17.007,
+        "game_id": "pm:wta:996214",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 24,
+        "name": "PUSHKAR V DOTSENK",
+        "occurrence": 1,
+        "start_utc": 1789056000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 17.507,
+        "game_id": "pm:atp:989073",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 25,
+        "name": "WILD V GIUNTA",
+        "occurrence": 1,
+        "start_utc": 1789057800,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 17.507,
+        "game_id": "pm:wta:991035",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 26,
+        "name": "BUYUKAK V BENNEMA",
+        "occurrence": 1,
+        "start_utc": 1789057800,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 17.507,
+        "game_id": "pm:wta:991036",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 27,
+        "name": "WALTERT V PAPAMIC",
+        "occurrence": 1,
+        "start_utc": 1789057800,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 18.507,
+        "game_id": "pm:atp:989092",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 28,
+        "name": "ROCHA V TAVERNA",
+        "occurrence": 1,
+        "start_utc": 1789061400,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 19.257,
+        "game_id": "pm:atp:991187",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 29,
+        "name": "HEMERY V LAJOVIC",
+        "occurrence": 1,
+        "start_utc": 1789064100,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 19.507,
+        "game_id": "pm:atp:991186",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 30,
+        "name": "PASSARO V VARILLA",
+        "occurrence": 1,
+        "start_utc": 1789065000,
+        "state": "pre"
+      },
+      {
+        "classification": "SETTLEMENT_EVIDENCE_AND_ZERO_CAP_BLOCKED",
+        "delta_h": 20.257,
+        "game_id": "espn:por:401885474",
+        "gate": [
+          "SETTLEMENT:EVIDENCE_UNMEASURED",
+          "ZERO_RISK_CAP"
+        ],
+        "immediate": false,
+        "league": "por",
+        "n": 31,
+        "name": "SCB @ EST",
+        "occurrence": 1,
+        "start_utc": 1789067700,
+        "state": "pre"
+      },
+      {
+        "classification": "LOCAL_TOKEN_BINDING_DEFECT_FIXED",
+        "delta_h": 25.007,
+        "game_id": "espn:cfb:401858213",
+        "gate": [
+          "PM_TOKEN_RESOLUTION"
+        ],
+        "immediate": false,
+        "league": "cfb",
+        "n": 32,
+        "name": "FAMU @ MIA",
+        "occurrence": 1,
+        "start_utc": 1789084800,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 27.007,
+        "game_id": "pm:atp:993327",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 33,
+        "name": "KOTOV V GALARNE",
+        "occurrence": 1,
+        "start_utc": 1789092000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 27.007,
+        "game_id": "pm:atp:994724",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 34,
+        "name": "JASIKA V SHARIPO",
+        "occurrence": 1,
+        "start_utc": 1789092000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 28.007,
+        "game_id": "pm:atp:993325",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 35,
+        "name": "MORIYA V SHIMIZU",
+        "occurrence": 1,
+        "start_utc": 1789095600,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 32.007,
+        "game_id": "pm:atp:994731",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 36,
+        "name": "MAESTRE V KASNIKO",
+        "occurrence": 1,
+        "start_utc": 1789110000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 32.007,
+        "game_id": "pm:atp:994736",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 37,
+        "name": "KUZMANO V MAYOT",
+        "occurrence": 1,
+        "start_utc": 1789110000,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 33.007,
+        "game_id": "pm:atp:994729",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 38,
+        "name": "KOLAR V BARRENA",
+        "occurrence": 1,
+        "start_utc": 1789113600,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 33.007,
+        "game_id": "pm:atp:994733",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 39,
+        "name": "SOTO V SACHKO",
+        "occurrence": 1,
+        "start_utc": 1789113600,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 33.007,
+        "game_id": "pm:wta:994556",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 40,
+        "name": "ZANTEDE V IBRAGIM",
+        "occurrence": 1,
+        "start_utc": 1789113600,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 33.007,
+        "game_id": "pm:wta:994557",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 41,
+        "name": "ESCORIH V YANEVA",
+        "occurrence": 1,
+        "start_utc": 1789113600,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 33.007,
+        "game_id": "pm:wta:996215",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "wta",
+        "n": 42,
+        "name": "SOBOLIE V AKUGUE",
+        "occurrence": 1,
+        "start_utc": 1789113600,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 34.007,
+        "game_id": "pm:atp:994738",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 43,
+        "name": "DROGUET V GLINKA",
+        "occurrence": 1,
+        "start_utc": 1789117200,
+        "state": "pre"
+      },
+      {
+        "classification": "KALSHI_VENUE_ABSENCE",
+        "delta_h": 34.007,
+        "game_id": "pm:atp:994739",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "atp",
+        "n": 44,
+        "name": "BLANCHE V MASUR",
+        "occurrence": 1,
+        "start_utc": 1789117200,
+        "state": "pre"
+      },
+      {
+        "classification": "SETTLEMENT_EVIDENCE_AND_ZERO_CAP_BLOCKED",
+        "delta_h": 43.757,
+        "game_id": "espn:bel1:401878996",
+        "gate": [
+          "SETTLEMENT:EVIDENCE_UNMEASURED",
+          "ZERO_RISK_CAP"
+        ],
+        "immediate": false,
+        "league": "bel1",
+        "n": 45,
+        "name": "AND @ KVM",
+        "occurrence": 1,
+        "start_utc": 1789152300,
+        "state": "pre"
+      },
+      {
+        "classification": "SETTLEMENT_EVIDENCE_AND_ZERO_CAP_BLOCKED",
+        "delta_h": 43.757,
+        "game_id": "espn:fl1:401876459",
+        "gate": [
+          "SETTLEMENT:EVIDENCE_UNMEASURED",
+          "ZERO_RISK_CAP"
+        ],
+        "immediate": false,
+        "league": "fl1",
+        "n": 46,
+        "name": "OLM @ REN",
+        "occurrence": 1,
+        "start_utc": 1789152300,
+        "state": "pre"
+      },
+      {
+        "classification": "SCHEDULE_REFERENCE_CONFLICT_BLOCKED",
+        "delta_h": 44.007,
+        "game_id": "espn:lal:401882878",
+        "gate": [
+          "UNPAIRED:kalshi=missing,polymarket=found"
+        ],
+        "immediate": false,
+        "league": "lal",
+        "n": 47,
+        "name": "VAL @ SEV",
+        "occurrence": 1,
+        "start_utc": 1789153200,
+        "state": "pre"
+      }
+    ],
+    "classification_counts": {
+      "KALSHI_ABSENT_AND_PM_SELECTOR_DISAGREEMENT": 1,
+      "KALSHI_NOT_CURRENTLY_EXECUTABLE": 2,
+      "KALSHI_VENUE_ABSENCE": 30,
+      "LOCAL_DUPLICATE_SCHEDULE_REPRESENTATION_FIXED": 2,
+      "LOCAL_IDENTITY_DEFECT_FIXED": 7,
+      "LOCAL_TOKEN_BINDING_DEFECT_FIXED": 1,
+      "SCHEDULE_REFERENCE_CONFLICT_BLOCKED": 1,
+      "SETTLEMENT_EVIDENCE_AND_ZERO_CAP_BLOCKED": 3
+    },
+    "counts": {
+      "blocked": 47,
+      "discovery_ready": 248,
+      "scheduled": 295,
+      "slate": 251
+    },
+    "default_enabled": [
+      "mlb",
+      "nfl",
+      "epl",
+      "ucl",
+      "lal",
+      "bun",
+      "mls",
+      "cfb",
+      "elc",
+      "el1",
+      "ita",
+      "ere",
+      "atp",
+      "wta",
+      "itf"
+    ],
+    "note": "47 rows are 46 unique ids because pm:itf:995780 appeared twice on the old schedule path. immediate=true names the five ATP live/near misses.",
+    "per_league_counts": {
+      "atp": {
+        "blocked_or_unpaired": 24,
+        "kalshi_matched": 20,
+        "live_or_6h": 10,
+        "pm_matched": 43,
+        "ready": 20,
+        "scheduled": 44
+      },
+      "bel1": {
+        "blocked_or_unpaired": 1,
+        "enablement": [
+          "EVIDENCE_UNMEASURED:soccer.bel1.cancelled_rate",
+          "EVIDENCE_UNMEASURED:soccer.bel1.postponed_gt48h_rate"
+        ],
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 0,
+        "scheduled": 1
+      },
+      "bun": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 1,
+        "scheduled": 1
+      },
+      "cfb": {
+        "blocked_or_unpaired": 1,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 0,
+        "scheduled": 1
+      },
+      "el1": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 1,
+        "scheduled": 1
+      },
+      "elc": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 1,
+        "scheduled": 1
+      },
+      "epl": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 0,
+        "ready": 0,
+        "scheduled": 0
+      },
+      "ere": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 1,
+        "scheduled": 1
+      },
+      "fl1": {
+        "blocked_or_unpaired": 1,
+        "enablement": [
+          "EVIDENCE_UNMEASURED:soccer.fl1.cancelled_rate",
+          "EVIDENCE_UNMEASURED:soccer.fl1.postponed_gt48h_rate"
+        ],
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 0,
+        "scheduled": 1
+      },
+      "ita": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 1,
+        "scheduled": 1
+      },
+      "itf": {
+        "blocked_or_unpaired": 5,
+        "kalshi_matched": 184,
+        "live_or_6h": 48,
+        "pm_matched": 191,
+        "ready": 172,
+        "scheduled": 177
+      },
+      "lal": {
+        "blocked_or_unpaired": 1,
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 1,
+        "ready": 0,
+        "scheduled": 1
+      },
+      "mlb": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 19,
+        "live_or_6h": 11,
+        "pm_matched": 19,
+        "ready": 19,
+        "scheduled": 19
+      },
+      "mls": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 14,
+        "live_or_6h": 14,
+        "pm_matched": 14,
+        "ready": 14,
+        "scheduled": 14
+      },
+      "nba": {
+        "blocked_or_unpaired": 0,
+        "enablement": [
+          "NO_KALSHI_TEMPLATE",
+          "NO_POLYMARKET_TEMPLATE"
+        ],
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 0,
+        "ready": 0,
+        "scheduled": 0
+      },
+      "nfl": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 2,
+        "live_or_6h": 1,
+        "pm_matched": 2,
+        "ready": 2,
+        "scheduled": 2
+      },
+      "nhl": {
+        "blocked_or_unpaired": 0,
+        "enablement": [
+          "NO_KALSHI_TEMPLATE",
+          "NO_POLYMARKET_TEMPLATE"
+        ],
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 0,
+        "ready": 0,
+        "scheduled": 0
+      },
+      "por": {
+        "blocked_or_unpaired": 1,
+        "enablement": [
+          "EVIDENCE_UNMEASURED:soccer.por.cancelled_rate",
+          "EVIDENCE_UNMEASURED:soccer.por.postponed_gt48h_rate"
+        ],
+        "kalshi_matched": 1,
+        "live_or_6h": 0,
+        "pm_matched": 2,
+        "ready": 0,
+        "scheduled": 1
+      },
+      "scop": {
+        "blocked_or_unpaired": 0,
+        "enablement": [
+          "EVIDENCE_UNMEASURED:soccer.scop.cancelled_rate",
+          "EVIDENCE_UNMEASURED:soccer.scop.postponed_gt48h_rate"
+        ],
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 0,
+        "ready": 0,
+        "scheduled": 0
+      },
+      "ucl": {
+        "blocked_or_unpaired": 0,
+        "kalshi_matched": 6,
+        "live_or_6h": 0,
+        "pm_matched": 6,
+        "ready": 6,
+        "scheduled": 6
+      },
+      "wnba": {
+        "blocked_or_unpaired": 0,
+        "enablement": [
+          "NO_KALSHI_TEMPLATE",
+          "NO_POLYMARKET_TEMPLATE"
+        ],
+        "kalshi_matched": 0,
+        "live_or_6h": 0,
+        "pm_matched": 0,
+        "ready": 0,
+        "scheduled": 0
+      },
+      "wta": {
+        "blocked_or_unpaired": 13,
+        "kalshi_matched": 10,
+        "live_or_6h": 6,
+        "pm_matched": 23,
+        "ready": 10,
+        "scheduled": 23
+      }
+    },
+    "timestamp_utc": "2026-09-09T22:59:33.088225+00:00"
+  },
+  "scope": "Public unauthenticated diagnostics only; no live box, accounts, orders, balances, executable prices, tradeability, or profit claims.",
+  "unregistered_loose_candidates_48h": {
+    "candidate_mapping_count": 44,
+    "candidate_row_count": 203,
+    "immediate_candidate_mapping_count": 8,
+    "immediate_candidate_row_count": 14,
+    "immediate_candidate_rows": [
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXCS2GAME-26SEP091330LPHKSM",
+        "kalshi_series": "KXCS2GAME",
+        "participants": [
+          "LPH Gaming",
+          "KUUSAMO.gg"
+        ],
+        "pm_event": "cs2-ksm-lph-2026-09-09",
+        "pm_sport": "cs2",
+        "start_utc": 1788989400.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXCS2GAME-26SEP091330OLDNAVIJ",
+        "kalshi_series": "KXCS2GAME",
+        "participants": [
+          "OLDBOYS-",
+          "NAVI Junior"
+        ],
+        "pm_event": "cs2-navij1-old-2026-09-09",
+        "pm_sport": "cs2",
+        "start_utc": 1788989400.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXCONMEBOLLIBGAME-26SEP09PALLDU",
+        "kalshi_series": "KXCONMEBOLLIBGAME",
+        "participants": [
+          "Palmeiras",
+          "LDU Quito"
+        ],
+        "pm_event": "lib-pal-lqu-2026-09-09",
+        "pm_sport": "lib",
+        "start_utc": 1789002000.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXCONMEBOLSUDGAME-26SEP09SANATL",
+        "kalshi_series": "KXCONMEBOLSUDGAME",
+        "participants": [
+          "Santos",
+          "Atletico Mineiro"
+        ],
+        "pm_event": "sud-san-cam-2026-09-09",
+        "pm_sport": "sud",
+        "start_utc": 1789002000.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXLOLGAME-26SEP091700NRGMVU",
+        "kalshi_series": "KXLOLGAME",
+        "participants": [
+          "NRG Esports",
+          "Maryville University"
+        ],
+        "pm_event": "lol-mvu-nrg-2026-09-09",
+        "pm_sport": "lol",
+        "start_utc": 1789002000.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXVALORANTGAME-26SEP091700SPIFLYR",
+        "kalshi_series": "KXVALORANTGAME",
+        "participants": [
+          "The Spiders",
+          "FlyQuest RED"
+        ],
+        "pm_event": "val-flyr-spi1-2026-09-09",
+        "pm_sport": "val",
+        "start_utc": 1789002000.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXR6GAME-26SEP091800C9100T",
+        "kalshi_series": "KXR6GAME",
+        "participants": [
+          "Cloud9",
+          "100 Thieves"
+        ],
+        "pm_event": "r6siege-100t-c9-2026-09-09",
+        "pm_sport": "r6siege",
+        "start_utc": 1789005600.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXCANPLGAME-26SEP09INTPAC",
+        "kalshi_series": "KXCANPLGAME",
+        "participants": [
+          "Pacific",
+          "Inter Toronto"
+        ],
+        "pm_event": "canpl-int-pac-2026-09-09",
+        "pm_sport": "canpl",
+        "start_utc": 1789007400.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXCPLMATCH-26SEP091900STLGAW",
+        "kalshi_series": "KXCPLMATCH",
+        "participants": [
+          "St. Lucia Kings",
+          "Guyana Amazon Warriors"
+        ],
+        "pm_event": "criccpl-guy-stl-2026-09-09",
+        "pm_sport": "criccpl",
+        "start_utc": 1789009200.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXCS2GAME-26SEP091900BACPAIN",
+        "kalshi_series": "KXCS2GAME",
+        "participants": [
+          "paiN",
+          "Back to Back"
+        ],
+        "pm_event": "cs2-pain-backto-2026-09-09",
+        "pm_sport": "cs2",
+        "start_utc": 1789009200.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXCS2GAME-26SEP091900VILVOC",
+        "kalshi_series": "KXCS2GAME",
+        "participants": [
+          "Voca",
+          "Villainous"
+        ],
+        "pm_event": "cs2-voc-vil1-2026-09-09",
+        "pm_sport": "cs2",
+        "start_utc": 1789009200.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXCS2GAME-26SEP091900WITNRG",
+        "kalshi_series": "KXCS2GAME",
+        "participants": [
+          "Without a Roof",
+          "NRG"
+        ],
+        "pm_event": "cs2-nrg-withou-2026-09-09",
+        "pm_sport": "cs2",
+        "start_utc": 1789009200.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXVALORANTGAME-26SEP091900TLMIBRF",
+        "kalshi_series": "KXVALORANTGAME",
+        "participants": [
+          "Team Liquid Brazil",
+          "MIBR Female"
+        ],
+        "pm_event": "val-mibrf-tl-2026-09-09",
+        "pm_sport": "val",
+        "start_utc": 1789009200.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      },
+      {
+        "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+        "date": "2026-09-09",
+        "kalshi_event": "KXCONMEBOLLIBGAME-26SEP09ELPCOR",
+        "kalshi_series": "KXCONMEBOLLIBGAME",
+        "participants": [
+          "Estudiantes La Plata",
+          "Corinthians"
+        ],
+        "pm_event": "lib-est-cor-2026-09-09",
+        "pm_sport": "lib",
+        "start_utc": 1789011000.0,
+        "status": "UNVERIFIED_COVERAGE_CANDIDATE"
+      }
+    ],
+    "interpretation": "The 203 rows and 44 mapping buckets are loose-join candidate counts, not event coverage counts. At least four rows in three mappings are proven false cross-sport/title collisions; every remaining row still requires sport/competition identity, canonical schedule, outcome, settlement, fee, token, executable-book, and risk verification.",
+    "known_false_cross_sport_collisions": [
+      {
+        "kalshi_event": "KXNCAAWVMATCH-26SEP111330GASTMTSU",
+        "kalshi_series": "KXNCAAWVMATCH",
+        "pm_event": "cfb-tenn-gtech-2026-09-12",
+        "pm_sport": "cfb",
+        "reason": "cross-sport: women college volleyball versus college football"
+      },
+      {
+        "kalshi_event": "KXNCAAWVMATCH-26SEP111600SIUMOST",
+        "kalshi_series": "KXNCAAWVMATCH",
+        "pm_event": "cfb-semst-sill-2026-09-12",
+        "pm_sport": "cfb",
+        "reason": "cross-sport: women college volleyball versus college football"
+      },
+      {
+        "kalshi_event": "KXVALORANTGAME-26SEP111100TSECGN",
+        "kalshi_series": "KXVALORANTGAME",
+        "pm_event": "mlbb-oe-twph-2026-09-11",
+        "pm_sport": "mlbb",
+        "reason": "cross-title esport: Valorant versus Mobile Legends: Bang Bang"
+      },
+      {
+        "kalshi_event": "KXLIGUE2GAME-26SEP12DUNSTE",
+        "kalshi_series": "KXLIGUE2GAME",
+        "pm_event": "hblnh-sra-dun-2026-09-11",
+        "pm_sport": "hblnh",
+        "reason": "cross-sport: association football Ligue 2 versus handball LNH Division 1"
+      }
+    ],
+    "mapping_candidate_counts": [
+      {
+        "candidate_rows": 63,
+        "kalshi_series": "KXCS2GAME",
+        "pm_sport": "cs2"
+      },
+      {
+        "candidate_rows": 18,
+        "kalshi_series": "KXR6GAME",
+        "pm_sport": "r6siege"
+      },
+      {
+        "candidate_rows": 14,
+        "kalshi_series": "KXLOLGAME",
+        "pm_sport": "lol"
+      },
+      {
+        "candidate_rows": 8,
+        "kalshi_series": "KXEERSTEDIVGAME",
+        "pm_sport": "ned2"
+      },
+      {
+        "candidate_rows": 8,
+        "kalshi_series": "KXKHLGAME",
+        "pm_sport": "khl"
+      },
+      {
+        "candidate_rows": 8,
+        "kalshi_series": "KXNPBGAME",
+        "pm_sport": "npb"
+      },
+      {
+        "candidate_rows": 6,
+        "kalshi_series": "KXRUGBYESLMATCH",
+        "pm_sport": "rlsuper"
+      },
+      {
+        "candidate_rows": 6,
+        "kalshi_series": "KXUAEPLGAME",
+        "pm_sport": "uae1"
+      },
+      {
+        "candidate_rows": 5,
+        "kalshi_series": "KXLIGUE2GAME",
+        "pm_sport": "fr2"
+      },
+      {
+        "candidate_rows": 5,
+        "kalshi_series": "KXT20MATCH",
+        "pm_sport": "crint"
+      },
+      {
+        "candidate_rows": 5,
+        "kalshi_series": "KXVALORANTGAME",
+        "pm_sport": "val"
+      },
+      {
+        "candidate_rows": 4,
+        "kalshi_series": "KXWFIBAGAME",
+        "pm_sport": "bkfibaw"
+      },
+      {
+        "candidate_rows": 3,
+        "kalshi_series": "KXCONMEBOLLIBGAME",
+        "pm_sport": "lib"
+      },
+      {
+        "candidate_rows": 3,
+        "kalshi_series": "KXCPLMATCH",
+        "pm_sport": "criccpl"
+      },
+      {
+        "candidate_rows": 3,
+        "kalshi_series": "KXSERIEBGAME",
+        "pm_sport": "itsb"
+      },
+      {
+        "candidate_rows": 3,
+        "kalshi_series": "KXT20MATCH",
+        "pm_sport": "cricetpl"
+      },
+      {
+        "candidate_rows": 3,
+        "kalshi_series": "KXWT20MATCH",
+        "pm_sport": "crint"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXARGPREMDIVGAME",
+        "pm_sport": "arg"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXBUNDESLIGA2GAME",
+        "pm_sport": "bl2"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXCONMEBOLSUDGAME",
+        "pm_sport": "sud"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXEKSTRAKLASAGAME",
+        "pm_sport": "pol"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXKBOGAME",
+        "pm_sport": "kbo"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXLVAVIRGAME",
+        "pm_sport": "lva1"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXNCAAWVMATCH",
+        "pm_sport": "cfb"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXODIMATCH",
+        "pm_sport": "crint"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXSAUDIPLGAME",
+        "pm_sport": "spl"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXSRBSLGAME",
+        "pm_sport": "srb"
+      },
+      {
+        "candidate_rows": 2,
+        "kalshi_series": "KXT20MATCH",
+        "pm_sport": "cricsherepunjab"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXAFLGAME",
+        "pm_sport": "afl"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXALLSVENSKANGAME",
+        "pm_sport": "swe"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXCANPLGAME",
+        "pm_sport": "canpl"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXENGNLGAME",
+        "pm_sport": "enl"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXIDNSLGAME",
+        "pm_sport": "idn1"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXJLEAGUEGAME",
+        "pm_sport": "jap"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXLALIGA2GAME",
+        "pm_sport": "es2"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXLIGUE2GAME",
+        "pm_sport": "hblnh"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXLMBGAME",
+        "pm_sport": "lmb"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXNWSLGAME",
+        "pm_sport": "nwsl"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXRUGBYNRLMATCH",
+        "pm_sport": "rlnrl"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXSCOCUPGAME",
+        "pm_sport": "sclc"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXSLGREECEGAME",
+        "pm_sport": "gre1"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXSUPERLIGGAME",
+        "pm_sport": "tur"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXSVNPLGAME",
+        "pm_sport": "slo"
+      },
+      {
+        "candidate_rows": 1,
+        "kalshi_series": "KXVALORANTGAME",
+        "pm_sport": "mlbb"
+      }
+    ],
+    "timestamp_utc": "2026-09-09T23:01:46.514235+00:00"
+  }
+}

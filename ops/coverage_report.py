@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Both venues list it; did the lane pair it? The census's independent join (nodes/discovery/census,
-daily) gives every event both venues list in the next 48 h; the lane's events table gives what it
-paired and, since 2026-09-07, why not (`UNPAIRED:kalshi=…,polymarket=…`, `SPAWN:…`). The difference,
-per event with the lane's reason, is this report and the watchdog's COVERAGE_GAP.
+"""Compare the census's candidate venue joins with the lane's exact registered-league matches.
+
+The census join (nodes/discovery/census, daily) is deliberately loose and may collide across
+sports or competitions.  For a registered series the lane's canonical schedule join supplies the
+authoritative decision and reason (`UNPAIRED:kalshi=…,polymarket=…`, `SPAWN:…`).  Unregistered
+census rows have no such verification: this report retains them as research-only
+`UNVERIFIED_COVERAGE_CANDIDATE` rows and never emits an operational alert for them.
 
     python3 ops/coverage_report.py [--db PATH] [--census PATH] [--all-leagues]
 
@@ -58,9 +61,33 @@ def report(db: Path, census: Path | None, *, now: float | None = None, enabled_o
         "WHERE t.phase LIKE '%:co_listed' AND e.kalshi_event IS NOT NULL"
     ))
     rows = []
+    unregistered = []
+    unregistered_seen: set[tuple[str, str, str, str]] = set()
+    discarded_unregistered = 0
     for pr in pairs:
         league = league_for_series(pr.get("kalshi_series") or "")
         if league is None:
+            # This is not a canonical pair. Retain only complete, exactly de-duplicated raw
+            # candidate identities so research counts cannot inflate on repeated census rows.
+            ident = tuple(str(pr.get(key) or "") for key in
+                          ("kalshi_series", "pm_sport", "kalshi_event", "pm_event"))
+            if not all(ident) or ident in unregistered_seen:
+                discarded_unregistered += 1
+                continue
+            unregistered_seen.add(ident)
+            unregistered.append({
+                "league": None,
+                "kalshi_series": pr.get("kalshi_series"),
+                "pm_sport": pr.get("pm_sport"),
+                "kalshi_event": pr.get("kalshi_event"),
+                "pm_event": pr.get("pm_event"),
+                "date": pr.get("date"),
+                "start_utc": pr.get("start_utc"),
+                "participants": pr.get("participants") or [],
+                "status": "UNVERIFIED_COVERAGE_CANDIDATE",
+                "operational": False,
+                "basis": "LOOSE_PARTICIPANT_DATE_JOIN",
+            })
             continue
         if enabled is not None and league not in enabled:
             continue
@@ -92,13 +119,26 @@ def report(db: Path, census: Path | None, *, now: float | None = None, enabled_o
     for r in rows:
         b = by_league.setdefault(r["league"], {"covered": 0, "gap": 0})
         b[r["lane"]] += 1
-    return {"census": str(census), "run": res.get("run"), "now": t, "rows": rows, "by_league": by_league}
+    candidate_counts: dict[tuple[str, str], int] = {}
+    for candidate in unregistered:
+        key = (candidate["kalshi_series"], candidate["pm_sport"])
+        candidate_counts[key] = candidate_counts.get(key, 0) + 1
+    return {"census": str(census), "run": res.get("run") or res.get("run_utc"), "now": t,
+            "rows": rows, "by_league": by_league,
+            "unverified_coverage_candidates_48h": unregistered,
+            "unverified_candidate_summary": {
+                "candidate_rows": len(unregistered),
+                "discarded_malformed_or_duplicate_rows": discarded_unregistered,
+                "mapping_candidates": [
+                    {"kalshi_series": series, "pm_sport": sport, "candidate_rows": count}
+                    for (series, sport), count in sorted(candidate_counts.items())
+                ],
+            }}
 
 
 def coverage_alerts(db: Path, census: Path | None, *, now: float | None = None, back_s: float = 3 * 3600,
                     ahead_s: float = 6 * 3600) -> list[str]:
-    """Watchdog-shaped: a co-listed event in an enabled league whose start is inside the lane's
-    window and which the lane did not pair."""
+    """Registered-league candidate gaps only; unverified/unregistered rows are research-only."""
     t = now or time.time()
     r = report(db, census, now=t)
     out = []
@@ -128,6 +168,16 @@ def main() -> int:
             when = datetime.fromtimestamp(row["start_utc"], timezone.utc).strftime("%m-%d %H:%MZ") if row.get("start_utc") else row.get("date")
             print(f"  GAP {row['league']} {when} {row['kalshi_event']} <> {row['pm_event']} :: {row.get('lane_reason')}"
                   + (f" [{row.get('lane_short')}]" if row.get("lane_short") else ""))
+    unregistered = r.get("unverified_coverage_candidates_48h") or []
+    if unregistered:
+        print(f"  UNVERIFIED research candidates {len(unregistered)} "
+              "(loose participant/date joins; not co-listed or tradeable assertions)")
+        by_mapping: dict[tuple[str, str], int] = {}
+        for row in unregistered:
+            key = (row.get("kalshi_series") or "?", row.get("pm_sport") or "?")
+            by_mapping[key] = by_mapping.get(key, 0) + 1
+        for (series, sport), count in sorted(by_mapping.items(), key=lambda item: (-item[1], item[0])):
+            print(f"    {series} <> {sport}: {count} candidate rows")
     return 0
 
 

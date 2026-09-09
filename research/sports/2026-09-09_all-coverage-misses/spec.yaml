@@ -1,0 +1,49 @@
+ledger_row: L59
+registered_date: 2026-09-09
+track: sports/coverage
+kind: descriptive defect audit and repair
+status_at_registration: PENDING
+question: >-
+  After the UCL repair, which currently live or near-start cross-venue sports events remain absent
+  from Janus, at which exact pipeline gate are they lost, and can generic implementation defects
+  be repaired without weakening identity, settlement, execution, or risk controls?
+known_before_registration:
+  - L57 repairs UCL locally and its public probe has six of six co-listed games fully paired.
+  - The pre-L57 census exposed one Eredivisie identity gap and several unpaired tennis matches.
+  - A registered or discovered event is not necessarily tradeable: venue coverage, exact schedule
+    identity, outcome completeness, rules templates, measured settlement population, token/fee
+    metadata, executable books, and positive risk allowance are independent gates.
+  - The running LIMITED_LIVE lane remains on its prior commit and must not be stopped, restarted,
+    signalled, redeployed, rearmed, or otherwise interrupted by this work.
+scope:
+  - Public unauthenticated venue and external-schedule reads, local code, frozen fixtures, tests,
+    coverage reporting, registry data, and documentation for every registered competition.
+  - Classify every current schedule event and venue event at one exact gate; retain genuine
+    one-venue-only listings and unsupported settlement populations as visible non-code blocks.
+  - Repair only deterministic general defects with hard-negative regressions and fail-closed
+    behavior; exact audited aliases or xrefs are permitted when public stable identities prove them.
+prohibited:
+  - No live-box, account, credential, order, fill, balance, database, kill-file, override, service,
+    deployment, restart, signal, or cap mutation.
+  - No fuzzy/title-only pairing, widened time tolerance, outcome-cardinality relaxation,
+    derivative inclusion, rules-template bypass, cross-population settlement transfer, assumed
+    zero basis, or one-legged trade.
+  - No profit or missed-profit claim from merely listed or paired events.
+success_criteria:
+  - Produce a current, timestamped all-league census with counts and event-level reason codes for
+    scheduled, paired, unmatched-by-venue, identity/schedule incomplete, settlement-blocked,
+    fee/token-blocked, and zero-risk-cap events.
+  - Reconcile census enumeration with the live discovery path so a selector failure, empty/malformed
+    page, pagination exhaustion, registry omission, or enabled-but-zero-cap league is visible.
+  - Every repaired generic cause has a minimal reproduction plus hard-negative tests; genuine
+    venue absence and unsupported settlement phases remain blocked by name.
+  - Frozen and public probes demonstrate the corrected events reach exact schedule-anchored,
+    settlement-certified slate specs without changing risk or execution thresholds.
+  - Focused tests, the full suite, watchdog selftest, meta/layering checks and diff checks pass.
+  - Independent review finds no false pair, cross-league collision, silent omission, settlement
+    bypass, or live-runtime mutation.
+expected_ev_effect: >-
+  Coverage only. More valid two-leg candidates can improve opportunity count, but no profitability
+  is claimed until executable depth, fees, fills and realized results are observed forward.
+holdout_touched: false
+test_look_spent: false

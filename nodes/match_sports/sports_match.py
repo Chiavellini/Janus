@@ -70,9 +70,10 @@ DRAW_ENTITY = "draw"
 
 def _fullgame_slug(league: str) -> re.Pattern[str]:
     prefix = LEAGUES[league].pm_prefix if league in LEAGUES else league
-    # team abbreviations run 2-4 characters; a player's slug piece runs up to 8 ("siegemu", "samsono")
-    # up to 9: college football's collision-broken pieces carry a hash ("mhud34ce7", "csuece6b3", 2026-09-08)
-    return re.compile(rf"^{re.escape(prefix)}-[a-z0-9]{{2,9}}-[a-z0-9]{{2,9}}-\d{{4}}-\d{{2}}-\d{{2}}$")
+    # Exact segment count distinguishes the parent game from derivative/doubles suffixes. Venue
+    # abbreviations are opaque identifiers, not a 2-9 character schema: one-character and longer
+    # collision-broken pieces are both legitimate and must not become silent coverage limits.
+    return re.compile(rf"^{re.escape(prefix)}-[a-z0-9]+-[a-z0-9]+-\d{{4}}-\d{{2}}-\d{{2}}$")
 
 
 @dataclass(frozen=True)
@@ -87,6 +88,10 @@ class VenueMarket:
     period: str              # "game" -- kernel/schema.PERIODS vocabulary, as rules_exhaustive keys it
     start_utc: int
     label: str               # the venue's own text, kept for auditing
+    #: Exact primary-outcome label proven to identify this entity. Kept separate because PM's
+    #: structured participant name is used for schedule/settlement and may only suffix-match a
+    #: tennis outcome; it is not by itself proof that the outcome token belongs to this side.
+    token_label: str = ""
     #: The venue's settlement text, raw, for nodes/settle_wedge. Price-free, like everything here.
     rules: dict = field(default_factory=dict)
     #: The kernel's canonical identity: league + SORTED ESPN participant ids + external start +
@@ -132,7 +137,9 @@ def venue_structured_game(cands, ymd) -> tuple:
 def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) -> list[VenueMarket]:
     lo, hi = window
     out: list[VenueMarket] = []
-    for ev in pull_kalshi(league, _client("kalshi")):
+    events = pull_kalshi(league, _client("kalshi"))
+    stats.setdefault("enumeration", {})["kalshi"] = getattr(events, "diagnostics", {})
+    for ev in events:
         tick = ev.get("event_ticker", "")
         three_way = LEAGUES[league].outcomes == 3 if league in LEAGUES else False
         mkts = [m for m in (ev.get("markets") or [])
@@ -230,15 +237,13 @@ def seed_live_players(league: str, r: Resolver, events: list[dict]) -> int:
     return len(seeded)
 
 
-_LOOSE_SLUG: dict[str, re.Pattern] = {}
-
-
 def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss, *, events=None) -> list[VenueMarket]:
     lo, hi = window
     out: list[VenueMarket] = []
     prefix = LEAGUES[league].pm_prefix if league in LEAGUES else league
-    loose = _LOOSE_SLUG.setdefault(league, re.compile(rf"^{re.escape(prefix)}-[a-z0-9]+-[a-z0-9]+-\d{{4}}-\d{{2}}-\d{{2}}$"))
-    for ev in (events if events is not None else pull_pm(league, _client("polymarket"))):
+    pulled = events if events is not None else pull_pm(league, _client("polymarket"))
+    stats.setdefault("enumeration", {})["polymarket"] = getattr(pulled, "diagnostics", {})
+    for ev in pulled:
         slug = ev.get("slug", "")
         teams = ev.get("teams") or []
         if len(teams) != 2:
@@ -254,31 +259,17 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss, *, e
                 _reason(stats["p_reason"], "other_league_under_shared_tag")
             elif "doubles" in slug:
                 _reason(stats["p_reason"], "doubles")
-            elif loose.match(slug):
-                _reason(stats["p_reason"], "slug_piece_too_long")
-                near_miss.append({"venue": "polymarket", "id": slug, "reason": "slug_piece_too_long",
-                                  "labels": [t.get("name") or "" for t in teams]})
             else:
                 _reason(stats["p_reason"], "derivative_event_not_full_game_moneyline")
             continue
         # College football on Polymarket names `teams` by nickname alone ("Wildcats", "Demons") while
-        # the moneyline's `outcomes` carry the schools; the outcome label is the fallback, in order.
+        # the moneyline's `outcomes` carry the schools. Gamma does not promise that these two arrays
+        # share order, so resolve each source independently before binding a token label.
         labels = _pm_outcome_labels(ev, slug)
         ents = []
-        for i, t in enumerate(teams):
+        for t in teams:
             res = r.resolve(league, text=t.get("name"), venue="polymarket",
                             venue_team_id=str(t.get("id") or ""))
-            if not res.ok and i < len(labels):
-                # School plus nickname first ("Troy Trojans": the display name, unique where the school
-                # alone is not -- Troy also has a junior college), then the school alone, then the
-                # school narrowed to the schedule (2026-09-08).
-                for text in (f"{labels[i]} {t.get('name') or ''}".strip(), labels[i]):
-                    res = r.resolve(league, text=text, venue="polymarket")
-                    if not res.ok:
-                        res = r.narrow(res, espn_ids=_schedule_ids(by_pair))
-                    if res.ok:
-                        t = {**t, "name": labels[i]}
-                        break
             if res.ok:
                 ents.append((t, res.entity_id))
         if len({e for _, e in ents}) != 2:
@@ -286,6 +277,41 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss, *, e
             near_miss.append({"venue": "polymarket", "id": slug, "reason": "entity_resolution",
                               "labels": [t.get("name") or "" for t in teams], "resolved": [e for _, e in ents]})
             continue
+        participant_entities = {eid for _, eid in ents}
+        resolved_labels: list[tuple[str, str, str]] = []
+        for label in labels:
+            label_res = r.resolve(league, text=label, venue="polymarket")
+            if not label_res.ok:
+                label_res = r.narrow(label_res, espn_ids=_schedule_ids(by_pair))
+            if label_res.ok and label_res.entity_id in participant_entities:
+                resolved_labels.append((normalize(label), label, label_res.entity_id))
+        # Both directions must be one-to-one. Duplicate/ambiguous labels or two labels resolving
+        # to one participant are unbound, causing the later exact token lookup to block safely.
+        label_counts = Counter(n for n, _, _ in resolved_labels)
+        entity_counts = Counter(eid for _, _, eid in resolved_labels)
+        label_by_entity = {eid: label for norm, label, eid in resolved_labels
+                           if label_counts[norm] == 1 and entity_counts[eid] == 1}
+        # Three-way soccer has no primary market at the event slug. Each participant instead owns
+        # one Yes/No moneyline market at exactly `{event_slug}-{teams[].abbreviation}`. That stable
+        # structural link is independent of array order and proves which structured team label
+        # owns the market's YES token later returned by pm_outcome_tokens.
+        if league in LEAGUES and LEAGUES[league].outcomes == 3:
+            structural: list[tuple[str, str, str, str]] = []
+            for t, eid in ents:
+                abbreviation = str(t.get("abbreviation") or "").lower()
+                market_slug = f"{slug}-{abbreviation}" if abbreviation else ""
+                hits = [market for market in ev.get("markets") or []
+                        if market_slug and str(market.get("slug") or "") == market_slug
+                        and market.get("sportsMarketType") == "moneyline"]
+                name = str(t.get("name") or "")
+                if len(hits) == 1 and name:
+                    structural.append((market_slug, normalize(name), name, eid))
+            market_counts = Counter(market_slug for market_slug, _, _, _ in structural)
+            name_counts = Counter(name for _, name, _, _ in structural)
+            entity_counts = Counter(eid for _, _, _, eid in structural)
+            label_by_entity.update({eid: label for market_slug, name, label, eid in structural
+                                    if market_counts[market_slug] == 1 and name_counts[name] == 1
+                                    and entity_counts[eid] == 1})
         st = _pm_start(ev)
         if st is None:
             _reason(stats["p_reason"], "no_start_time")
@@ -314,7 +340,8 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss, *, e
         for t, eid in ents:
             out.append(VenueMarket("polymarket", slug, f"{slug}:{t.get('abbreviation')}",
                                    g.game_id, eid, "moneyline", "game", g.start_utc,
-                                   t.get("name") or "", rules=pm_rules,
+                                   t.get("name") or "", token_label=label_by_entity.get(eid, ""),
+                                   rules=pm_rules,
                                    key=canonical_key(g, league), key_provenance=KeyProvenance.API_STRUCTURED))
         if league in LEAGUES and LEAGUES[league].outcomes == 3:
             if not any(str(x.get("slug", "")) == f"{slug}-draw" for x in ev.get("markets") or []):
@@ -324,7 +351,8 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss, *, e
                 stats["p_games"].discard(g.game_id)
                 continue
             out.append(VenueMarket("polymarket", slug, f"{slug}:draw", g.game_id, DRAW_ENTITY, "moneyline", "game",
-                                   g.start_utc, "Draw", rules=pm_rules, key=canonical_key(g, league),
+                                   g.start_utc, "Draw", token_label="Draw", rules=pm_rules,
+                                   key=canonical_key(g, league),
                                    key_provenance=KeyProvenance.API_STRUCTURED))
     return out
 
@@ -382,6 +410,7 @@ def pair(kalshi: list[VenueMarket], pm: list[VenueMarket]) -> list[dict]:
                           "kalshi_event": k.venue_id, "kalshi_outcome": k.outcome_id,
                           "pm_event": p.venue_id, "pm_outcome": p.outcome_id,
                           "kalshi_label": k.label, "pm_label": p.label,
+                          "pm_token_label": p.token_label,
                           "kalshi_rules": dict(k.rules), "pm_rules": dict(p.rules),
                           "canonical_key": {**asdict(k.key), "participants": list(k.key.participants)},
                           "key_provenance": {"kalshi": k.key_provenance.value,

@@ -163,7 +163,8 @@ def test_the_registry_carries_l26_and_mlb_certifies_from_it():
     assert all(e.research_ref == "research/sports/2026-09-09_eredivisie-interval-bounds/spec.yaml"
                for k, e in EVIDENCE.items() if k.startswith("soccer.ere."))
     assert EVIDENCE["tennis.walkover_rate"].research_ref.startswith("research/sports/2026-09-04_tennis-settlement-wedge-rates")
-    assert {k.split(".")[0] for k in EVIDENCE} == {"mlb", "nfl", "soccer", "cfb", "tennis"}
+    assert {k.split(".")[0] for k in EVIDENCE} == {"mlb", "nfl", "soccer", "tennis"}
+    assert not any(k.startswith("cfb.") for k in EVIDENCE), "L32 is quarantined pending L60"
     # F4 (2026-09-05): the delay rate is the forward row's UPPER BOUND, never a point estimate below n = 300
     d = EVIDENCE["tennis.delayed_gt7d_rate"]
     assert d.research_ref == "research/sports/2026-09-04_tennis-delay-forward/spec.yaml" and "UPPER BOUND" in d.note

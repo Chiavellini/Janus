@@ -121,9 +121,12 @@ def certify(rec_a: RulesRecord, rec_b: RulesRecord, *, league: str, market_type:
     # The round is stripped from template identity because it varies by game, but it still
     # selects an evidence population. L46 excludes qualifying; L47 measures it separately.
     qualifying = league == "itf" and any(re.search(r"\bqualifying\b", rec.text, re.I) for rec in (rec_a, rec_b))
-    if league in {"mls", "ere", "ucl"}:
-        # L43/L50 measured their own regular seasons only. Reviewed venue wording alone cannot
-        # distinguish postseason; the external schedule classification must survive discovery.
+    if league in {"cfb", "mls", "ere", "ucl"}:
+        # L32/L43/L50/L58 measured explicit schedule populations only. Reviewed venue wording
+        # alone cannot distinguish postseason; the external schedule classification must survive
+        # discovery. CFB's L32 declares bowls, conference championships and FCS playoffs out of
+        # population. ESPN marks some conference-title/FCS-playoff games ``regular-season`` too,
+        # so this is the minimum enforceable fence, not proof of that finer classification.
         p = population if isinstance(population, Mapping) else {}
         required_population = "league-phase" if league == "ucl" else "regular-season"
         if (p.get("source") != "espn" or p.get("league") != league
@@ -157,8 +160,9 @@ def certify(rec_a: RulesRecord, rec_b: RulesRecord, *, league: str, market_type:
     return SettlementEquivalence(league, market_type, period, rec_a.venue, rec_b.venue, ta.template_id,
                                  tb.template_id, rec_a.rules_hash, rec_b.rules_hash, tuple(verdicts),
                                  used, evidence_population=("league-phase" if league == "ucl" else
-                                      "regular-season" if league in {"mls", "ere"} else None),
-                                 schedule_game_id=str(population["game_id"]) if league in {"mls", "ere", "ucl"} else None,
+                                      "regular-season" if league in {"cfb", "mls", "ere"} else None),
+                                 schedule_game_id=str(population["game_id"])
+                                 if league in {"cfb", "mls", "ere", "ucl"} else None,
                                  _mint=_MINT)
 
 

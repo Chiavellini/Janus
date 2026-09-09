@@ -415,7 +415,8 @@ def selftest() -> None:
         assert any("ORPHAN_FILL" in a and "k-777" in a for a in got) and any("PROTECT_FAILED" in a and "789ad9b2" in a for a in got), got
         assert not any("POSITION_MISMATCH" in a for a in got), "a flag never raised stays quiet"
 
-        # COVERAGE_GAP — the census says both venues list it inside the lane's window, the lane did not pair it
+        # COVERAGE_GAP — a registered-series census candidate is inside the lane window but the
+        # lane did not pair it. Unregistered loose joins are research-only and never alert.
         from ops.coverage_report import coverage_alerts
         from nodes.store_tuples.store import TupleStore as _TS
         cdb = Path(d) / "cov.sqlite"
@@ -434,9 +435,12 @@ def selftest() -> None:
             {"kalshi_event": "KXMLBGAME-SEALAD", "pm_event": "mlb-sea-lad", "kalshi_series": "KXMLBGAME", "pm_sport": "mlb",
              "date": "2027-01-15", "start_utc": NOW + 600, "participants": ["Seattle Mariners", "Los Angeles Dodgers"]},
             {"kalshi_event": "KXMLBGAME-FAR", "pm_event": "mlb-far", "kalshi_series": "KXMLBGAME", "pm_sport": "mlb",
-             "date": "2027-01-20", "start_utc": NOW + 5 * 86400, "participants": ["A", "B"]}]}))
+             "date": "2027-01-20", "start_utc": NOW + 5 * 86400, "participants": ["A", "B"]},
+            {"kalshi_event": "KXCS2GAME-AB", "pm_event": "cs2-a-b", "kalshi_series": "KXCS2GAME", "pm_sport": "cs2",
+             "date": "2027-01-15", "start_utc": NOW + 900, "participants": ["A", "B"]}]}))
         cov = coverage_alerts(cdb, census, now=NOW)
         assert len(cov) == 1 and "COVERAGE_GAP" in cov[0] and "KXMLBGAME-NYYBOS" in cov[0] and "polymarket=found" in cov[0], cov
+        assert not any("KXCS2GAME" in alert for alert in cov), "unverified research candidates do not alert"
         assert coverage_alerts(cdb, None, now=NOW) == [], "no census: silent"
 
         # the box's SLA set drops the Mac-only daily jobs (JANUS_HOST=box); the Mac keeps them

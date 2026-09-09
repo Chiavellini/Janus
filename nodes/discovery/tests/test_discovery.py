@@ -44,10 +44,10 @@ def _discovery(*, pm_fee=True, k_fee=True, token_for_both=True) -> Discovery:
                "resolutionSource": "https://www.mlb.com/"}
     rows = [{"game_id": g.game_id, "entity_id": nyy, "market_type": "moneyline", "period": "game",
              "start_utc": NOW, "kalshi_event": "KXMLBGAME-26SEP02BOSNYY", "kalshi_outcome": "KXMLBGAME-26SEP02BOSNYY-NYY",
-             "pm_event": slug, "pm_outcome": "New York Yankees", "kalshi_label": "New York", "pm_label": "New York Yankees", "kalshi_rules": k_rules, "pm_rules": p_rules},
+             "pm_event": slug, "pm_outcome": "New York Yankees", "kalshi_label": "New York", "pm_label": "New York Yankees", "pm_token_label": "New York Yankees", "kalshi_rules": k_rules, "pm_rules": p_rules},
             {"game_id": g.game_id, "entity_id": bos, "market_type": "moneyline", "period": "game",
              "start_utc": NOW, "kalshi_event": "KXMLBGAME-26SEP02BOSNYY", "kalshi_outcome": "KXMLBGAME-26SEP02BOSNYY-BOS",
-             "pm_event": slug, "pm_outcome": "Boston Red Sox", "kalshi_label": "Boston", "pm_label": "Boston Red Sox", "kalshi_rules": k_rules, "pm_rules": p_rules}]
+             "pm_event": slug, "pm_outcome": "Boston Red Sox", "kalshi_label": "Boston", "pm_label": "Boston Red Sox", "pm_token_label": "Boston Red Sox", "kalshi_rules": k_rules, "pm_rules": p_rules}]
     names = {"New York Yankees": "tok-nyy"}
     if token_for_both:
         names["Boston Red Sox"] = "tok-bos"
@@ -84,6 +84,96 @@ def test_an_unresolved_pm_outcome_blocks_with_a_name():
     slate, blocked = co_listed(_discovery(token_for_both=False))
     assert slate == {} and blocked == {"espn:mlb:7": "PM_TOKEN_RESOLUTION"}
 
+
+def test_unknown_outcome_label_never_directly_owns_a_token():
+    d = _discovery()
+    slug = next(iter(d.tokens))
+    row = d.per_league["mlb"][0][0]
+    old_label = row["pm_token_label"]
+    row["pm_label"] = "Schedule-qualified side (FL)"
+    row["pm_token_label"] = ""
+    names, event = d.tokens[slug]
+    names[row["pm_label"]] = names.pop(old_label)
+    assert not d.per_league["mlb"][2].resolve("mlb", text=row["pm_label"], venue="polymarket").ok
+
+    slate, blocked = co_listed(d)
+    assert slate == {}
+    assert blocked == {"espn:mlb:7": "PM_TOKEN_RESOLUTION"}
+
+
+def test_tennis_structured_full_name_keeps_exact_surname_token_fallback():
+    from nodes.entities.resolve import Team, build_alias_index
+
+    teams = {
+        "wta:laura-siegemund": Team("wta:laura-siegemund", "wta", "p1", "LSI",
+                                     "Laura", "Siegemund", "Laura Siegemund"),
+        "wta:ludmila-samsonova": Team("wta:ludmila-samsonova", "wta", "p2", "LSA",
+                                      "Ludmila", "Samsonova", "Ludmila Samsonova"),
+    }
+    aliases = build_alias_index([
+        {"league": "wta", "alias": team.display_name, "entity_id": eid}
+        for eid, team in teams.items()])
+    resolver = Resolver(teams, aliases, {})
+    game = ScheduledGame("pm:wta:one", "wta", NOW, "p1", "p2", "Laura Siegemund",
+                         "Ludmila Samsonova", "in", False, True, False, "us-open",
+                         "Siegemund v Samsonova", "x")
+    slug = "wta-siegemu-samsono-2026-09-02"
+    rows = []
+    for entity, structured in (("wta:laura-siegemund", "Laura Siegemund"),
+                               ("wta:ludmila-samsonova", "Ludmila Samsonova")):
+        rows.append({"game_id": game.game_id, "entity_id": entity, "market_type": "moneyline",
+                     "period": "game", "start_utc": NOW, "kalshi_event": "KXWTA",
+                     "kalshi_outcome": "KXWTA-" + entity.rsplit("-", 1)[-1],
+                     "pm_event": slug, "pm_outcome": slug + ":" + entity,
+                     "kalshi_label": structured, "pm_label": structured,
+                     "pm_token_label": "", "kalshi_rules": {}, "pm_rules": {}})
+    tokens = {"Siegemund": "tok-siegemund", "Samsonova": "tok-samsonova"}
+    d = Discovery(NOW, [game], {}, {"wta": (rows, {}, resolver)},
+                  {slug: (tokens, {"markets": [{"slug": slug}]})}, {})
+    slate, blocked = co_listed(d)
+    assert blocked == {}
+    assert {entity: outcome["polymarket"] for entity, outcome in
+            slate[game.game_id]["outcomes"].items()} == {
+                "wta:laura-siegemund": "tok-siegemund",
+                "wta:ludmila-samsonova": "tok-samsonova"}
+
+
+def test_token_binding_never_leaks_from_another_event_or_picks_a_conflict():
+    d = _discovery(token_for_both=False)
+    slug = next(iter(d.tokens))
+    missing = d.per_league["mlb"][0][1]
+    # An exact label on another event is not evidence for this event.
+    d.tokens["mlb-other-game-2026-09-02"] = ({missing["pm_label"]: "wrong-game-token"}, {"markets": []})
+    slate, blocked = co_listed(d)
+    assert slate == {} and blocked == {"espn:mlb:7": "PM_TOKEN_RESOLUTION"}
+
+    # Two different token ids for labels that normalise identically are ambiguous and fail closed.
+    d = _discovery()
+    slug = next(iter(d.tokens))
+    names, _event = d.tokens[slug]
+    names["New   York Yankees"] = "conflicting-token"
+    slate, blocked = co_listed(d)
+    assert slate == {} and blocked == {"espn:mlb:7": "PM_TOKEN_RESOLUTION"}
+
+
+def test_duplicate_or_mixed_event_representations_fail_closed():
+    d = _discovery()
+    rows = d.per_league["mlb"][0]
+    rows.append(dict(rows[0]))
+    slate, blocked = co_listed(d)
+    assert "espn:mlb:7" in slate and blocked == {}, "an identical repeated representation is harmless"
+
+    d = _discovery()
+    rows = d.per_league["mlb"][0]
+    rows.append({**rows[0], "pm_event": "mlb-other-game-2026-09-02"})
+    slate, blocked = co_listed(d)
+    assert slate == {} and blocked == {"espn:mlb:7": "AMBIGUOUS_DUPLICATE_OUTCOME_MATCH"}
+
+    d = _discovery()
+    rows = d.per_league["mlb"][0]
+    rows[1] = {**rows[1], "pm_event": "mlb-other-game-2026-09-02"}
+    slate, blocked = co_listed(d)
+    assert slate == {} and blocked == {"espn:mlb:7": "MIXED_EVENT_REPRESENTATION"}
 
 def test_events_table_is_change_gated(tmp_path: Path):
     d = _discovery()
@@ -185,7 +275,8 @@ def _three_way_fixture():
     def row(ent, k_out, p_out, k_label, p_label):
         return {"game_id": g.game_id, "entity_id": ent, "market_type": "moneyline", "period": "game", "start_utc": NOW,
                 "kalshi_event": "KXEPLGAME-26SEP14CHEARS", "kalshi_outcome": k_out, "pm_event": slug, "pm_outcome": p_out,
-                "kalshi_label": k_label, "pm_label": p_label, "kalshi_rules": k_rules, "pm_rules": p_rules}
+                "kalshi_label": k_label, "pm_label": p_label, "pm_token_label": p_label,
+                "kalshi_rules": k_rules, "pm_rules": p_rules}
     rows = [row(DRAW_ENTITY, "KXEPLGAME-26SEP14CHEARS-TIE", slug + ":draw", "Tie", "Draw"),
             row(ars, "KXEPLGAME-26SEP14CHEARS-ARS", slug + ":ars", "Arsenal", "Arsenal FC"),
             row(che, "KXEPLGAME-26SEP14CHEARS-CHE", slug + ":che", "Chelsea", "Chelsea FC")]
@@ -196,6 +287,52 @@ def _three_way_fixture():
                        "feeSchedule": {"rate": 0.05}},
                       {"slug": slug + "-draw", "sportsMarketType": "moneyline"}, {"slug": slug + "-che", "sportsMarketType": "moneyline"}]}
     return g, r, rows, names, ev, ars, che, slug
+
+
+def test_real_matcher_to_discovery_derives_three_way_team_tokens_without_array_order():
+    """The real EPL shape has no market at the event slug: team YES tokens live at `slug-abbrev`.
+    Reversing teams[] must not change which entity owns Arsenal/Chelsea's token."""
+    import copy
+    import json
+    from collections import Counter
+    from datetime import datetime, timezone
+    from nodes.match_sports.sports_match import (VenueMarket, canonical_key, pair,
+                                                  pm_markets)
+    from nodes.venue_polymarket.books import pm_outcome_tokens
+
+    g, r, legacy_rows, _names, ev, ars, che, slug = _three_way_fixture()
+    ev = copy.deepcopy(ev)
+    ev["teams"] = list(reversed(ev["teams"]))
+    start = datetime.fromtimestamp(NOW, timezone.utc).strftime("%Y-%m-%d %H:%M:%S+00")
+    for market in ev["markets"]:
+        suffix = market["slug"].rsplit("-", 1)[-1]
+        market["gameStartTime"] = start
+        market["clobTokenIds"] = json.dumps([f"tok-{suffix}", f"tok-{suffix}-no"])
+    # The first team market supplies the settlement text for the event, exactly as production's
+    # pm_primary_market fallback does for three-way soccer.
+    ev["markets"][0].update(legacy_rows[1]["pm_rules"])
+
+    stats = Counter(p_reason=Counter(), k_reason=Counter())
+    by_pair = {(tuple(sorted(g.participants_espn))): [g]}
+    pms = pm_markets("epl", r, by_pair, (NOW - 1, NOW + 1), stats, [], events=[ev])
+    assert {market.entity_id: market.token_label for market in pms} == {
+        ars: "Arsenal FC", che: "Chelsea FC", "draw": "Draw"}
+    key = canonical_key(g, "epl")
+    kms = [VenueMarket("kalshi", row["kalshi_event"], row["kalshi_outcome"], g.game_id,
+                       row["entity_id"], "moneyline", "game", NOW, row["kalshi_label"],
+                       rules=row["kalshi_rules"], key=key)
+           for row in legacy_rows]
+    matches = pair(kms, pms)
+    names = pm_outcome_tokens(ev, slug)
+    d = Discovery(NOW, [g], {}, {"epl": (matches, stats, r)}, {slug: (names, ev)}, {},
+                  fee_params={"kalshi": {"epl": {"fee_type": "quadratic_with_maker_fees",
+                                                   "fee_multiplier": 1.0}},
+                              "polymarket": {slug: {"fee_rate": 0.05}}})
+    slate, blocked = co_listed(d)
+    assert blocked == {}
+    assert {entity: outcome["polymarket"] for entity, outcome in
+            slate[g.game_id]["outcomes"].items()} == {
+                ars: "tok-ars", che: "tok-che", "draw": "tok-draw"}
 
 
 def test_a_three_way_soccer_game_carries_six_ids_and_blocks_without_its_draw_token():
@@ -244,6 +381,44 @@ def test_a_three_way_spec_carries_the_no_token_of_each_team_market():
     assert spec["outcomes"][ars] == {"kalshi": "KXEPLGAME-26SEP14CHEARS-ARS", "polymarket": "tok-ars", "polymarket_no": "tok-ars-no"}
     assert spec["outcomes"][che]["polymarket_no"] == "tok-che-no"
     assert "polymarket_no" not in spec["outcomes"][DRAW_ENTITY]
+    assert spec["coverage_warnings"] == []
+
+
+def test_missing_soccer_team_no_token_is_named_as_degraded_not_silently_lost():
+    import json
+    g, r, rows, names, ev, ars, che, slug = _three_way_fixture()
+    for m in ev["markets"]:
+        suffix = m["slug"].rsplit("-", 1)[-1]
+        m["clobTokenIds"] = json.dumps([f"tok-{suffix}", f"tok-{suffix}-no"])
+    # One team market loses its NO token. The three YES partition and the reverse Kalshi-NO /
+    # PM-YES two-leg direction remain usable, but the missing direction is explicit in the spec.
+    ev["markets"][-1]["clobTokenIds"] = json.dumps(["tok-che"])
+    d = Discovery(NOW, [g], {}, {"epl": (rows, {}, r)}, {slug: (names, ev)}, {},
+                  fee_params={"kalshi": {"epl": {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 1.0}},
+                              "polymarket": {slug: {"fee_rate": 0.05}}})
+    slate, blocked = co_listed(d)
+    assert blocked == {}
+    assert slate[g.game_id]["coverage_warnings"] == [f"PM_NO_TOKEN_MISSING:{che}"]
+
+
+def test_soccer_no_token_binding_preserves_the_exact_matcher_label():
+    import json
+    g, r, rows, names, ev, ars, che, slug = _three_way_fixture()
+    strange = "Schedule-qualified Club 1907"
+    for row in rows:
+        if row["entity_id"] == che:
+            row["pm_label"] = strange
+    assert not r.resolve("epl", text=strange, venue="polymarket").ok
+    for m in ev["markets"]:
+        suffix = m["slug"].rsplit("-", 1)[-1]
+        m["clobTokenIds"] = json.dumps([f"tok-{suffix}", f"tok-{suffix}-no"])
+    d = Discovery(NOW, [g], {}, {"epl": (rows, {}, r)}, {slug: (names, ev)}, {},
+                  fee_params={"kalshi": {"epl": {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 1.0}},
+                              "polymarket": {slug: {"fee_rate": 0.05}}})
+    slate, blocked = co_listed(d)
+    assert blocked == {}
+    assert slate[g.game_id]["outcomes"][che]["polymarket_no"] == "tok-che-no"
+    assert slate[g.game_id]["coverage_warnings"] == []
 
 
 def test_a_game_neither_venue_paired_is_named_unpaired_with_the_missing_side(tmp_path: Path):

@@ -2,7 +2,9 @@
 """The venue schedule for tennis: Polymarket's game events become the spine, players become entities."""
 from __future__ import annotations
 
-from nodes.discovery.venue_schedule import pm_players, schedule_from_events
+import pytest
+
+from nodes.discovery.venue_schedule import pm_game_events, pm_players, schedule_from_events
 
 NOW = 1_788_449_600.0   # 2026-09-03T15:33Z
 
@@ -35,3 +37,66 @@ def test_pm_players_are_distinct_per_tour():
               ev("atp-d-e-2026-09-03", "Dan D", "Ed E", "2026-09-03 14:00:00+00", ids=(4, 5))]
     got = pm_players("wta", "wta", events)
     assert [(p["id"], p["name"], p["abbreviation"]) for p in got] == [("1", "Ann A", "a"), ("2", "Bea B", "b"), ("3", "Cat C", "c")]
+
+
+def test_schedule_deduplicates_the_same_pm_event_id_but_preserves_distinct_matches():
+    one = ev("itf-nuudi1-kmieci1-2026-09-10", "Maileen Nuudi", "Anna Kmiecik",
+             "2026-09-10 08:00:00+00", ids=(101, 102))
+    one["id"] = 995780
+    distinct = ev("itf-nuudi1-kmieci1-2026-09-11", "Maileen Nuudi", "Anna Kmiecik",
+                  "2026-09-11 08:00:00+00", ids=(101, 102))
+    distinct["id"] = 995781
+    got = schedule_from_events("itf", "itf", [one, dict(one), distinct], NOW)
+    assert [g.game_id for g in got] == ["pm:itf:995780", "pm:itf:995781"]
+
+
+def test_schedule_merges_sparse_same_id_representations_and_rejects_conflicts():
+    whole = ev("itf-a-b-2026-09-10", "Ann A", "Bea B", "2026-09-10 08:00:00+00", ids=(1, 2))
+    whole["id"] = 77
+    sparse_teams = {"id": 77, "slug": whole["slug"], "title": whole["title"], "teams": whole["teams"], "markets": []}
+    sparse_market = {"id": 77, "slug": whole["slug"], "title": whole["title"], "teams": [], "markets": whole["markets"]}
+    got = schedule_from_events("itf", "itf", [sparse_teams, sparse_market], NOW)
+    assert [g.game_id for g in got] == ["pm:itf:77"]
+
+    conflicting = {**whole, "teams": [dict(whole["teams"][0]), dict(whole["teams"][1])]}
+    conflicting["teams"][0]["name"] = "Different Player"
+    with pytest.raises(ValueError, match="conflicting duplicate PM schedule event"):
+        schedule_from_events("itf", "itf", [whole, conflicting], NOW)
+
+    different_participant = {**whole, "teams": [dict(whole["teams"][0]), dict(whole["teams"][1])]}
+    different_participant["teams"][0]["id"] = 999
+    with pytest.raises(ValueError, match="teams.ids"):
+        schedule_from_events("itf", "itf", [whole, different_participant], NOW)
+
+    same_slug_other_id = {**whole, "id": 78}
+    with pytest.raises(ValueError, match="slug .* maps to multiple ids"):
+        schedule_from_events("itf", "itf", [whole, same_slug_other_id], NOW)
+
+
+class _Pages:
+    def __init__(self, values):
+        self.values = iter(values)
+
+    def get_json(self, *args, **kwargs):
+        value = next(self.values)
+        if isinstance(value, Exception):
+            raise value
+        return value
+
+
+def test_pm_schedule_enumeration_requires_well_formed_terminal_short_page():
+    full = [{"id": i} for i in range(100)]
+    assert pm_game_events("tennis", _Pages([full, []]), pages=2) == full
+
+    with pytest.raises(ValueError, match="expected list, got dict"):
+        pm_game_events("tennis", _Pages([{"events": full}]))
+    with pytest.raises(ValueError, match="event is not an identified object"):
+        pm_game_events("tennis", _Pages([[{"id": 1}, "bad"]]))
+    with pytest.raises(ValueError, match="event is not an identified object"):
+        pm_game_events("tennis", _Pages([[{"teams": []}]]))
+    with pytest.raises(RuntimeError, match="page 1 failed"):
+        pm_game_events("tennis", _Pages([full, OSError("network")]), pages=2)
+    with pytest.raises(RuntimeError, match="2 full pages without terminal short page"):
+        pm_game_events("tennis", _Pages([full, full]), pages=2)
+    with pytest.raises(ValueError, match="pages must be positive"):
+        pm_game_events("tennis", _Pages([]), pages=0)

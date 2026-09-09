@@ -1,0 +1,12 @@
+{
+  "retrieved_utc": "2026-09-09T23:11:07Z",
+  "source": "ESPN group 80 public scoreboard",
+  "classification_rule": "season.type=2, season.slug=regular-season, week=2, competition.type.abbreviation=STD, and no event notes",
+  "events": [
+    {"game_id": "espn:cfb:401858213", "name": "Florida A&M Rattlers at Miami Hurricanes", "start_utc": "2026-09-11T00:00:00Z", "classification": "ordinary_regular_season"},
+    {"game_id": "espn:cfb:401858215", "name": "Villanova Wildcats at Louisville Cardinals", "start_utc": "2026-09-11T23:00:00Z", "classification": "ordinary_regular_season"},
+    {"game_id": "espn:cfb:401858220", "name": "Norfolk State Spartans at Virginia Cavaliers", "start_utc": "2026-09-11T23:00:00Z", "classification": "ordinary_regular_season"},
+    {"game_id": "espn:cfb:401858222", "name": "Richmond Spiders at NC State Wolfpack", "start_utc": "2026-09-11T23:00:00Z", "classification": "ordinary_regular_season"}
+  ],
+  "note": "Classification establishes scope for these games only; it does not repair L32 numerator completeness or authorize a settlement rate."
+}

@@ -1,0 +1,25 @@
+{
+  "audit_only": true,
+  "frozen_response_bytes_preserved": false,
+  "note": "L60 stopped before measurement because complete authoritative original schedules are absent. Public response hashes document the two diagnostic reads but are not a replay corpus.",
+  "public_diagnostics": [
+    {
+      "bytes": 147062,
+      "sha256": "7f66b447ee176e95d72816d72f09ac44669ba3aee2b08194046eaea0a3e58b95",
+      "url": "https://site.web.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=20251205-20251207&groups=80&limit=1000"
+    },
+    {
+      "bytes": 1570533,
+      "sha256": "8f287be54d9f9e9b1f02f0770adc61e7a07394b01be13e51d44e9280cf089e2f",
+      "url": "https://site.web.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=20260910-20260912&groups=80&limit=1000"
+    }
+  ],
+  "l32_artifacts": {
+    "events.csv": "b5fb25dc651e51a9b73f2cc56beec379079a9964d324098425549ee792115c11",
+    "measure.py": "d4de777c3c2bfaa069b7b3832021c17bd1cd5dd1fd9e7233b69b27c471ae59f1",
+    "report.md": "30a654d8c3974ff1d1c147eacfb29fb595dcfdd988a20f3a8c12e7cfa562b848",
+    "results.json": "63d2a95a048a66b08942376eaf30397da1d12e7efbeb0b57963a97e9232bc6b6",
+    "spec.yaml": "38502df87370d537a773f9c9d4546b65efd3a89a65e36d8aad7821eef683513b",
+    "verdict.md": "7c05b9190d0c0951b7ff443569b8aeb002edc09dedc7f78b392289a8799d7287"
+  }
+}

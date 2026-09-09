@@ -56,25 +56,24 @@ KALSHI_GAME_SERIES = kalshi_series()
 #: Polymarket tag slug per league.
 PM_TAG = pm_tags()
 
-KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
-PM_GAMMA = "https://gamma-api.polymarket.com"
-
-
 def _slugify(s: str) -> str:
     return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", normalize(s))).strip("-")
 
 
 # ── teams + aliases from ESPN ────────────────────────────────────────────────
 
-def _seed_players(lg: str, client) -> tuple[list[Team], list[dict]]:
+def _seed_players(lg: str, client, *, diagnostics: dict | None = None) -> tuple[list[Team], list[dict]]:
     """A venue-structured league (tennis): the participants are the players Polymarket lists, keyed
     by Polymarket's stable id (carried in the `espn_id` column: the schedule source's id)."""
-    from nodes.discovery.venue_schedule import pm_game_events, pm_players
+    from nodes.discovery.venue_schedule import pm_players
+    from nodes.match_sports.stage1_checkpoint import pull_pm
     league = LEAGUES[lg]
-    tag = league.pm_tag_id if league.pm_tag_id is not None else league.pm_tag
     cl = client or Client("polymarket", rate=4.0, burst=8.0)
     teams, aliases = [], []
-    for pl in pm_players(lg, league.pm_prefix, pm_game_events(tag, cl)):
+    events = pull_pm(lg, cl)
+    if diagnostics is not None:
+        diagnostics[lg] = dict(events.diagnostics)
+    for pl in pm_players(lg, league.pm_prefix, events):
         name = pl["name"]
         surname = name.split()[-1] if " " in name else name
         eid = f"{lg}:{_slugify(name)}"
@@ -86,8 +85,8 @@ def _seed_players(lg: str, client) -> tuple[list[Team], list[dict]]:
     return teams, aliases
 
 
-def seed_teams(leagues=SEED_LEAGUES, *, client=None,
-               existing_teams=None) -> tuple[list[Team], list[dict]]:
+def seed_teams(leagues=SEED_LEAGUES, *, client=None, existing_teams=None,
+               pm_diagnostics: dict | None = None) -> tuple[list[Team], list[dict]]:
     """Seed competition aliases against stable identities, reusing exact ESPN soccer ids.
 
     Existing club ids are immutable even when their old prefix names a domestic competition.
@@ -110,7 +109,37 @@ def seed_teams(leagues=SEED_LEAGUES, *, client=None,
         clubs[team.espn_id] = team
     for lg in leagues:
         if lg in LEAGUES and LEAGUES[lg].anchor == "venue_structured":
-            t_, a_ = _seed_players(lg, client)
+            t_, a_ = _seed_players(lg, client, diagnostics=pm_diagnostics)
+            # Venue-structured schedules expose only currently open events. Stable identities
+            # are append-only: deleting yesterday's player would leave an audited manual xref
+            # dangling merely because the event closed.
+            kept = {team.entity_id: team for team in existing.values() if team.league == lg}
+            by_stable_id: dict[str, Team] = {}
+            for team in kept.values():
+                prior = by_stable_id.get(team.espn_id)
+                if prior is not None and prior.entity_id != team.entity_id:
+                    raise ValueError(f"{lg} stable player id collision: {team.espn_id}: "
+                                     f"{prior.entity_id} / {team.entity_id}")
+                by_stable_id[team.espn_id] = team
+            remap: dict[str, str] = {}
+            for team in sorted(t_, key=lambda row: (row.espn_id, row.entity_id)):
+                owner = kept.get(team.entity_id)
+                if owner is not None and owner.espn_id != team.espn_id:
+                    raise ValueError(f"{lg} player identity changed: {team.entity_id}: "
+                                     f"{owner.espn_id} / {team.espn_id}")
+                canonical = by_stable_id.get(team.espn_id)
+                if canonical is None:
+                    canonical = owner or team
+                    by_stable_id[team.espn_id] = canonical
+                    kept[canonical.entity_id] = canonical
+                prior_target = remap.get(team.entity_id)
+                if prior_target is not None and prior_target != canonical.entity_id:
+                    raise ValueError(f"{lg} generated player identity collision: {team.entity_id}: "
+                                     f"{prior_target} / {canonical.entity_id}")
+                remap[team.entity_id] = canonical.entity_id
+            a_ = [{**alias, "entity_id": remap.get(alias["entity_id"], alias["entity_id"])}
+                  for alias in a_]
+            t_ = list(kept.values())
             teams += t_; aliases += a_
             continue
         raw = espn.fetch_teams(lg, client=client)
@@ -150,33 +179,35 @@ def seed_teams(leagues=SEED_LEAGUES, *, client=None,
 
 # ── xrefs ────────────────────────────────────────────────────────────────────
 
-def _kalshi_markets(series: str, client: Client) -> list[dict]:
-    out = []
-    for status in ("open", "unopened"):
-        try:
-            d = client.get_json(f"{KALSHI_BASE}/events",
-                                params={"series_ticker": series, "status": status,
-                                        "limit": 200, "with_nested_markets": "true"})
-        except Exception:  # noqa: BLE001 — a league with no open events is not an error
-            continue
-        for e in d.get("events") or []:
-            for m in e.get("markets") or []:
-                out.append(m)
-    return out
+def _kalshi_markets(league: str, client: Client, *, diagnostics: dict | None = None) -> list[dict]:
+    """Flatten the same complete, schema-validated enumeration used by live matching.
+
+    An empty terminal page is a valid league/status with no events. A failed or malformed page is
+    not equivalent to that state and must abort the reseed before any generated file is touched.
+    """
+    from nodes.match_sports.stage1_checkpoint import VenuePullError, pull_kalshi
+    try:
+        events = pull_kalshi(league, client)
+    except VenuePullError as exc:
+        if diagnostics is not None:
+            diagnostics[league] = dict(exc.diagnostics)
+        raise
+    if diagnostics is not None:
+        diagnostics[league] = dict(events.diagnostics)
+    return [market for event in events for market in event["markets"]]
 
 
 def seed_kalshi_xrefs(resolver: Resolver, leagues=SEED_LEAGUES, *,
-                      client=None) -> tuple[list[dict], list[dict]]:
+                      client=None, diagnostics: dict | None = None) -> tuple[list[dict], list[dict]]:
     """Kalshi UUID -> entity_id, accepted only when abbreviation and location AGREE."""
     cl = client or Client("kalshi", rate=4.0, burst=8.0)
     rows, conflicts = [], []
     for lg in leagues:
-        series = KALSHI_GAME_SERIES.get(lg)
-        if not series:
+        if lg not in LEAGUES or not LEAGUES[lg].kalshi_series_all:
             continue
         seen: dict[str, set[str]] = defaultdict(set)
         labels: dict[str, tuple[str, str]] = {}
-        for m in _kalshi_markets(series, cl):
+        for m in _kalshi_markets(lg, cl, diagnostics=diagnostics):
             cs = m.get("custom_strike") or {}
             uuid = next((v for v in cs.values() if isinstance(v, str) and len(v) >= 32), None)
             if not uuid:
@@ -211,35 +242,26 @@ def seed_kalshi_xrefs(resolver: Resolver, leagues=SEED_LEAGUES, *,
     return rows, conflicts
 
 
-def _pm_events(tag: str, client: Client) -> list[dict]:
-    out = []
-    for off in range(0, 1500, 100):
-        try:
-            d = client.get_json(f"{PM_GAMMA}/events",
-                                params={("tag_id" if isinstance(tag, int) else "tag_slug"): tag, "closed": "false",
-                                        "limit": 100, "offset": off})
-        except Exception:  # noqa: BLE001
-            break
-        if not d:
-            break
-        out += d
-        if len(d) < 100:
-            break
-    return out
+def _pm_events(league: str, client: Client, *, diagnostics: dict | None = None) -> list[dict]:
+    """The same complete, dual-selector enumeration used by live matching."""
+    from nodes.match_sports.stage1_checkpoint import pull_pm
+    events = pull_pm(league, client)
+    if diagnostics is not None:
+        diagnostics[league] = dict(events.diagnostics)
+    return events
 
 
-def seed_pm_xrefs(resolver: Resolver, leagues=SEED_LEAGUES, *,
-                  client=None) -> tuple[list[dict], list[dict]]:
+def seed_pm_xrefs(resolver: Resolver, leagues=SEED_LEAGUES, *, client=None,
+                  diagnostics: dict | None = None) -> tuple[list[dict], list[dict]]:
     cl = client or Client("polymarket", rate=4.0, burst=8.0)
     rows, conflicts = [], []
     for lg in leagues:
-        tag = PM_TAG.get(lg)
-        if not tag:
+        if lg not in LEAGUES:
             continue
         seen: dict[str, set[str]] = defaultdict(set)
         labels: dict[str, str] = {}
         prefix = LEAGUES[lg].pm_prefix if lg in LEAGUES else None
-        for e in _pm_events(tag, cl):
+        for e in _pm_events(lg, cl, diagnostics=diagnostics):
             # Both tours share Polymarket's `tennis` tag: keep to this league's own events, or an
             # ATP player's id lands on a WTA row through a shared surname (measured 2026-09-03).
             if lg in LEAGUES and LEAGUES[lg].anchor == "venue_structured" and prefix \
@@ -314,7 +336,8 @@ def main(leagues=SEED_LEAGUES) -> dict:
     stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     print(f"seeding entities for {leagues} at {stamp}")
 
-    teams, aliases = seed_teams(leagues)
+    pm_team_diagnostics: dict = {}
+    teams, aliases = seed_teams(leagues, pm_diagnostics=pm_team_diagnostics)
     print(f"  ESPN: {len(teams)} teams, {len(aliases)} raw aliases")
 
     # Merge the hand-curated overlay BEFORE building the index, so xref seeding benefits from it
@@ -337,7 +360,6 @@ def main(leagues=SEED_LEAGUES) -> dict:
     for k, v in sorted(ambiguous.items())[:15]:
         print(f"     AMBIGUOUS {k[0]}/{k[1]!r} -> {v}")
 
-    n_t = _write_teams(teams)
     # Only the GENERATED rows go back to aliases.csv. Writing the manual overlay in here too
     # would duplicate it on every run and, worse, make the hand-curated file look redundant.
     seen_alias = set()
@@ -351,13 +373,24 @@ def main(leagues=SEED_LEAGUES) -> dict:
         if k not in seen_alias:
             seen_alias.add(k)
             dedup.append(a)
-    n_a = _write(ALIASES_CSV, ["league", "alias", "entity_id", "source"], dedup, leagues=leagues)
-
+    # Gather every remote-dependent result before the first generated table is touched. A venue
+    # selector/page/schema conflict therefore aborts the scoped reseed with byte-identical files,
+    # instead of refreshing teams/aliases and leaving xrefs from the previous generation.
     resolver = Resolver({t.entity_id: t for t in teams}, idx, {})
-    k_rows, k_conf = seed_kalshi_xrefs(resolver, leagues)
-    p_rows, p_conf = seed_pm_xrefs(resolver, leagues)
+    kalshi_xref_diagnostics: dict = {}
+    k_rows, k_conf = seed_kalshi_xrefs(resolver, leagues, diagnostics=kalshi_xref_diagnostics)
+    pm_xref_diagnostics: dict = {}
+    p_rows, p_conf = seed_pm_xrefs(resolver, leagues, diagnostics=pm_xref_diagnostics)
     print(f"  kalshi xrefs: {len(k_rows)} ({len(k_conf)} conflicts)")
     print(f"  pm xrefs:     {len(p_rows)} ({len(p_conf)} conflicts)")
+    for phase, diagnostics in (("teams", pm_team_diagnostics), ("xrefs", pm_xref_diagnostics)):
+        for league, detail in sorted(diagnostics.items()):
+            print(f"  PM enumeration {phase}/{league}: {json.dumps(detail, sort_keys=True)}")
+    for league, detail in sorted(kalshi_xref_diagnostics.items()):
+        print(f"  Kalshi enumeration xrefs/{league}: {json.dumps(detail, sort_keys=True)}")
+
+    n_t = _write_teams(teams)
+    n_a = _write(ALIASES_CSV, ["league", "alias", "entity_id", "source"], dedup, leagues=leagues)
     n_x = _write(XREFS_CSV, ["venue", "league", "venue_team_id", "entity_id", "source", "label"],
                  k_rows + p_rows, leagues=leagues)
     n_u = _write(UNRESOLVED_CSV.with_name("xref_conflicts.csv"),
@@ -368,7 +401,9 @@ def main(leagues=SEED_LEAGUES) -> dict:
     summary = {"generated_utc": stamp, "leagues": leagues, "teams": n_t, "alias_rows": n_a,
                "alias_keys": len(idx), "ambiguous_alias_keys": len(ambiguous),
                "xrefs": n_x, "xref_conflicts": n_u,
-               "kalshi_xrefs": len(k_rows), "pm_xrefs": len(p_rows)}
+               "kalshi_xrefs": len(k_rows), "pm_xrefs": len(p_rows),
+               "kalshi_enumeration": {"xrefs": kalshi_xref_diagnostics},
+               "pm_enumeration": {"teams": pm_team_diagnostics, "xrefs": pm_xref_diagnostics}}
     print(json.dumps(summary, indent=1))
     return summary
 

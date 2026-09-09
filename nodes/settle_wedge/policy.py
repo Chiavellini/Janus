@@ -418,6 +418,26 @@ POLYMARKET_CFB_GAME_V1 = Template(
               retirement_policy=None, revision_policy=None, dispute_mechanism="uma", settle_lag_h_p50=None,
               terms_url="https://www.ncaa.com/", provenance="api_field"))
 
+POLYMARKET_CFB_GAME_V2 = Template(
+    "polymarket_cfb_game_v2", "polymarket", frozenset({"cfb"}), "2026-09-09",
+    # cfb-flam-mia-2026-09-10, market.description. All four current Sep 10/11 games carry this
+    # exact template hash (a85d52e70c02f6cd) after participant/date normalization. Compared
+    # sentence-by-sentence with V1: winner and postponement/cancellation payouts are unchanged;
+    # the tie clause is split into its own sentence and overtime inclusion is now explicit.
+    "In the upcoming college football game between Florida A&M and Miami (FL), scheduled for "
+    "September 10 at 8:00PM ET:\n"
+    "This market will resolve to \"Florida A&M\" if Florida A&M win the game.\n"
+    "This market will resolve to \"Miami (FL)\" if Miami (FL) win the game.\n"
+    "Overtime is included if played.\n"
+    "If the game ends in a tie, this market will resolve 50-50.\n"
+    "If the game is postponed, this market will remain open until the game has been completed.\n"
+    "If the game is canceled entirely, with no make-up game, this market will resolve 50-50.",
+    ("Florida A&M", "Miami (FL)"),
+    SettleRef(source_agency="NCAA", oracle="uma", void_policy=VoidPolicy.RESOLVE_FIFTY,
+              tie_policy=TiePolicy.RESOLVE_FIFTY, ot_included=True, dnp_policy=VoidPolicy.UNKNOWN,
+              retirement_policy=None, revision_policy=None, dispute_mechanism="uma", settle_lag_h_p50=None,
+              terms_url="https://www.ncaa.com/", provenance="api_field"))
+
 _CFB_K_PM = (
     Verdict("official_source", "SAME", "both settle on the official final result (Kalshi: the NCAA / ESPN; "
             "Polymarket: ncaa.com)."),
@@ -773,7 +793,8 @@ _SOCCER_KALSHI = {"epl": KALSHI_EPL_GAME_V1, "lal": KALSHI_LAL_GAME_V1, "bun": K
 TEMPLATES: dict[str, Template] = {t.template_hash: t for t in (KALSHI_MLB_GAME_V1, POLYMARKET_MLB_GAME_V1,
                                                               KALSHI_NFL_GAME_V1, POLYMARKET_NFL_GAME_V1,
                                                               *_SOCCER_PM, *_SOCCER_KALSHI.values(),
-                                                              KALSHI_CFB_GAME_V1, KALSHI_CFB_GAME_V2, POLYMARKET_CFB_GAME_V1,
+                                                              KALSHI_CFB_GAME_V1, KALSHI_CFB_GAME_V2,
+                                                              POLYMARKET_CFB_GAME_V1, POLYMARKET_CFB_GAME_V2,
                                                               KALSHI_TENNIS_MATCH_V1, POLYMARKET_TENNIS_MATCH_V1,
                                                               POLYMARKET_TENNIS_MATCH_V2,
                                                               KALSHI_ITF_MATCH_V1)}
@@ -849,6 +870,8 @@ PAIR_POLICY: dict[tuple[str, str], tuple[Verdict, ...]] = {
     ("kalshi_nfl_game_v1", "polymarket_nfl_game_v1"): _NFL_K_PM,
     ("kalshi_cfb_game_v1", "polymarket_cfb_game_v1"): _CFB_K_PM,
     ("kalshi_cfb_game_v2", "polymarket_cfb_game_v1"): _CFB_K_PM,
+    ("kalshi_cfb_game_v1", "polymarket_cfb_game_v2"): _CFB_K_PM,
+    ("kalshi_cfb_game_v2", "polymarket_cfb_game_v2"): _CFB_K_PM,
     ("kalshi_tennis_match_v1", "polymarket_tennis_match_v1"): _TENNIS_K_PM,
     ("kalshi_tennis_match_v1", "polymarket_tennis_match_v2"): _TENNIS_K_PM,
     ("kalshi_itf_match_v1", "polymarket_tennis_match_v2"): _ITF_K_PM,

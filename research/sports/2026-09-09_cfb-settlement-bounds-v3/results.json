@@ -1,0 +1,21 @@
+{
+  "status": "STOP",
+  "rates_registered": {},
+  "current_games_classified": 4,
+  "gates": {
+    "deterministic_phase_exclusion": "FAIL_L32_REPLAY",
+    "complete_authoritative_original_schedule": "MISSING",
+    "complete_original_to_terminal_join": "MISSING",
+    "numerator_completeness": "FAIL_PRESS_FLOOR",
+    "one_sided_exact_upper_bounds": "FAIL_L32_POINT_ESTIMATE",
+    "current_slate_exact_classification": "PASS"
+  },
+  "blocking_reasons": [
+    "L32 measure.py includes every ESPN season.type=2 final through December 15; diagnostic replay proves that includes declared-out-of-population conference championships and FCS playoffs.",
+    "L32's 28-row events.csv is a press-compiled exception table and its report explicitly estimates only 70-80 percent FCS coverage, so it cannot establish a complete numerator.",
+    "No complete authoritative original kickoff corpus exists in the preserved L32 artifacts; final ESPN dates cannot reveal all moves.",
+    "L32 registered raw event-count ratios, not the L60-required one-sided exact 95-percent upper bounds."
+  ],
+  "required_to_resume": "Obtain and freeze complete authoritative original schedules for every included FBS/FCS fixture, join every one to terminal records after deterministic phase exclusion, reconcile every exception, and replay exact upper bounds.",
+  "active_code_effect": "cfb.cancelled_rate and cfb.postponed_gt48h_rate are withheld from the active evidence registry; enablement(cfb) names both EVIDENCE_UNMEASURED blocks."
+}

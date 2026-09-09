@@ -1,0 +1,19 @@
+{
+  "diagnostic_date_window": "2025-12-05..2025-12-07",
+  "espn_season_metadata": {"slug": "regular-season", "type": 2, "week": 15},
+  "finding": "ESPN regular-season/type-2 is not a sufficient phase classifier.",
+  "events_that_the_l32_code_included_but_the_l32_spec_excludes": [
+    "401777324 North Texas at Tulane — American Championship",
+    "401777352 Troy at James Madison — Sun Belt Championship",
+    "401777325 Kennesaw State at Jacksonville State — Conference USA Championship",
+    "401777326 UNLV at Boise State — Mountain West Championship",
+    "401777353 Indiana at Ohio State — Big Ten Championship",
+    "401777351 Georgia at Alabama — SEC Championship",
+    "401777327 BYU at Texas Tech — Big 12 Championship",
+    "401777328 Duke at Virginia — ACC Championship",
+    "401777329 Miami (OH) at Western Michigan — MAC Championship",
+    "401836198 Illinois State at North Dakota State — FCS Championship - Second Round"
+  ],
+  "classification_fields": "competitions[0].notes[].headline; ACC also carried competition.type.abbreviation=Conference Championship",
+  "measurement_status": "STOP"
+}

@@ -160,6 +160,7 @@ cfb,Louisiana-Monroe,cfb:ul-monroe-warhawks,near_miss_2026-09-08,Kalshi/Polymark
 cfb,Louisiana Monroe,cfb:ul-monroe-warhawks,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
 cfb,Mississippi,cfb:ole-miss-rebels,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
 cfb,Texas Christian,cfb:tcu-horned-frogs,near_miss_2026-09-08,Kalshi/Polymarket college label seen in the lane's near-miss lines
+cfb,Miami (FL),cfb:miami-hurricanes,current_slate_2026-09-09,"Polymarket primary moneyline outcome label for team id 118247; distinguishes ESPN Miami Hurricanes from Miami (OH)"
 atp,Gabi Adrian Boitan,atp:gabi-boitan,near_miss_2026-09-09,"Kalshi KXATPCHALLENGERMATCH-26SEP09BOIMAY; Polymarket player id 3269868 names the same participant Gabi Boitan"
 wta,Tessa Johanna Brockmann,wta:tessa-brockmann,near_miss_2026-09-09,"Kalshi KXWTACHALLENGERMATCH-26SEP09BROBUR; Polymarket player id 3270416 names the same participant Tessa Brockmann"
 wta,Miriam Bianca Bulgaru,wta:miriam-bulgaru,near_miss_2026-09-09,"Kalshi KXWTACHALLENGERMATCH-26SEP09BURBUL; Polymarket player id 229717 names the same participant Miriam Bulgaru"
@@ -186,3 +187,10 @@ ucl,ŠK Slovan Bratislava,soccer:espn-521,manual_2026-09-09,"L57 frozen fixture 
 ucl,Galatasaray SK,soccer:espn-432,manual_2026-09-09,"L57 frozen fixture ucl-spo-gal-2026-09-09: Polymarket team 147383; ESPN UCL game 401915447 away team 432 Galatasaray"
 ucl,SSC Napoli,ita:ita.napoli,manual_2026-09-09,"L57 frozen fixture ucl-nap-ars-2026-09-09: Polymarket team 147424; ESPN UCL game 401915423 home team 114 Napoli"
 ucl,Club Atlético de Madrid,lal:esp.atletico_madrid,manual_2026-09-09,"L57 frozen fixture ucl-liv-atm-2026-09-09: Polymarket team 147351; ESPN UCL game 401915446 away team 1068 Atletico Madrid"
+atp,Kenta Miyoshi (b. 2004),atp:kenta-miyoshi,current_slate_2026-09-09,"Kalshi KXATPCHALLENGERMATCH-26SEP09MIYPEL UUID 6dbbd191-4ec7-4747-b092-ee632f87c06e; same event PM 987757 player 3281694 Kenta Miyoshi"
+atp,Tai Leonard Sach,atp:tai-sach,current_slate_2026-09-09,"Kalshi KXATPCHALLENGERMATCH-26SEP09SATWEB UUID f8a58f4e-e8dc-4614-8323-a775822f888b; same event PM 987758 player 3270406 Tai Sach"
+atp,Jay Friend,atp:jay-dylan-friend,current_slate_2026-09-09,"Kalshi KXATPCHALLENGERMATCH-26SEP10HAMHAR UUID c5814da0-419c-44de-b791-26f2c50e44d4; same event PM 987748 player 3265229 Jay Dylan Friend"
+atp,Yanis Ghazouani Durand,atp:yanis-durand,current_slate_2026-09-09,"Kalshi KXATPCHALLENGERMATCH-26SEP10BUDGHA UUID 3c20f904-f07e-4d78-a5b5-ff5fa2c59ac3; same event PM 989093 player 3289713 Yanis Durand"
+atp,Joao Lucas Reis Da Silva,atp:joao-lucas-da-silva,current_slate_2026-09-09,"Kalshi KXATPCHALLENGERMATCH-26SEP10REIMON UUID dd7994f2-9995-4f47-bbe7-b430e85b354e; same event PM 989095 player 229608 Joao Lucas Da Silva"
+wta,Lucija Ciric-Bagaric,wta:lucija-bagaric,current_slate_2026-09-09,"Kalshi KXWTACHALLENGERMATCH-26SEP10CIRHAV UUID 93e92d4e-cb05-4168-9a0e-fe906bc6887c; same event PM 988868 player 3267774 Lucija Bagaric"
+wta,Maria Carle,wta:maria-lourdes-carle,current_slate_2026-09-09,"Kalshi KXWTACHALLENGERMATCH-26SEP10CARVED UUID 8da0dea9-d3f0-4597-9cc4-9fc972607d6c; same event PM 988866 player 229684 Maria Lourdes Carle"

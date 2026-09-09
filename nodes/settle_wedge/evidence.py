@@ -180,18 +180,11 @@ EVIDENCE: dict[str, Evidence] = {
         "openfootball La Liga season files 2021-22..2024-25: scheduled N(N-1) minus played", "2026-09-03", _L33,
         "0 of 1520: every season parsed to exactly N(N-1) matches. Registered verbatim; the rule-of-three bound at "
         "this n is ~0.002 and a re-measurement over more seasons is the honest way to raise it."),
-    "cfb.postponed_gt48h_rate": Evidence(
-        "cfb.postponed_gt48h_rate", 0.000630, 9529,
-        "ESPN college-football scoreboard, FBS + FCS, seasons 2019 and 2021-2025 (denominator) + cited "
-        "schedule-change table (numerator); 2020 excluded by the same decision as the NFL row", "2026-09-03", _L32,
-        "6 of 9529 games started more than 48 h late (FBS 3, FCS 3: hurricanes Ida, Ian, Helene, a snowstorm, "
-        "two deaths in a program). FLOOR for FCS: the table rests on press coverage and FCS moves are poorly indexed; "
-        "FBS is near-complete (FBS-only rate 0.000552)."),
-    "cfb.cancelled_rate": Evidence(
-        "cfb.cancelled_rate", 0.001784, 9529,
-        "ESPN college-football scoreboard, FBS + FCS, seasons 2019 and 2021-2025 + cited schedule-change table", "2026-09-03", _L32,
-        "17 of 9529: 13 FCS and 4 FBS games cancelled, forfeited or ruled no contest (hurricanes, two campus "
-        "shootings, a player's death, a lightning no-contest). FLOOR for FCS for the same reason as above."),
+    # CFB deliberately absent (L60, 2026-09-09). L32's denominator included conference-title and
+    # FCS-playoff games that its immutable spec excludes, its press-indexed FCS numerator is an
+    # acknowledged FLOOR, and it registered raw point estimates rather than conservative exact
+    # upper bounds. The historical values remain in L32's immutable results; they cannot mint a
+    # settlement proof. L60 must complete before these keys may return.
     "soccer.el1.postponed_gt48h_rate": Evidence(
         "soccer.el1.postponed_gt48h_rate", 0.083333, 2208,
         "openfootball EFL League One season files 2021-22..2024-25 (frozen under the row), round-window proxy", "2026-09-03", _L35,

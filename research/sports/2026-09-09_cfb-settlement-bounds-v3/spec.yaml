@@ -1,0 +1,65 @@
+row: L60
+registered: 2026-09-09
+kind: descriptive
+title: CFB regular-season settlement bounds correction
+known_before_registration:
+  - L32 declares Division-I FBS/FCS regular-season games only and excludes bowls, conference championships, and FCS playoffs.
+  - L32 measure.py actually accepted every ESPN season.type 2 event through December 15; ESPN labels conference championships and FCS playoff games season.type 2 and season.slug regular-season.
+  - L32 registered raw point rates, while its own report states that press-indexed FCS numerator coverage is only a FLOOR.
+  - The current September 10/11 slate contains four ordinary Division-I regular-season games and Polymarket serves a new, semantically reviewed rules template with hash a85d52e70c02f6cd.
+  - These defects were discovered before this row and no corrected rate has been computed.
+population:
+  competition: NCAA Division-I college football
+  divisions: [FBS, FCS]
+  phase: ordinary regular season only
+  candidate_seasons: [2019, 2021, 2022, 2023, 2024, 2025]
+  exclusions:
+    - 2020 pandemic season
+    - bowls and College Football Playoff
+    - conference championship games
+    - FCS playoff and championship games
+    - Division II/III, NAIA and junior college games
+sources:
+  denominator: >-
+    Complete frozen ESPN group 80 and 81 schedule payloads, retaining event id, teams, original
+    kickoff, season type/slug, week, competition type and every notes headline.
+  phase_classification: >-
+    Deterministic pre-outcome fields only. Exclude an event when its frozen pregame competition
+    metadata or notes identify a conference championship, bowl, CFP, playoff, semifinal,
+    quarterfinal, round, or championship. An ambiguous event blocks the measurement; final score,
+    winner, price and market outcome may not classify phase.
+  original_schedule: >-
+    A complete authoritative preseason or week-by-week schedule publication for every included
+    fixture, frozen with URL, retrieval/publication time and SHA256. A final ESPN date alone cannot
+    establish the originally scheduled kickoff.
+  terminal: >-
+    Complete authoritative final/cancellation records for every original fixture, with actual
+    start/completion and unique identity. Every schedule-date change, suspension, cancellation,
+    forfeit and no-contest must reconcile to an authoritative source.
+method:
+  identity: Canonical unordered stable team ids plus season, with original date used only after identity; repeated matchups must resolve uniquely.
+  postponed_gt48h: Actual start more than 48 elapsed hours after the authoritative original kickoff; an uncertain boundary is adverse.
+  cancellation: An included original fixture never played and was cancelled, forfeited, ruled no contest, or abandoned without completion.
+  estimator: Separate one-sided exact 95-percent Clopper-Pearson upper bounds for cancellation and postponement; zero observations produces a positive bound.
+  freeze: Every consumed source response and metadata sidecar is hash-bound in an exact manifest and the calculation replays offline byte-identically.
+success_criteria:
+  - The phase classifier excludes all known 2019/2021-2025 conference championships and FCS playoff games before any terminal outcome is read, and hard-negative ordinary week games remain included.
+  - Every included fixture has one authoritative original kickoff and exactly one terminal completion/cancellation record; missing, ambiguous, or many-to-one joins leave both rates unregistered.
+  - Numerator completeness is established from the complete original-to-terminal fixture join, not search-engine or press coverage; a known FLOOR is a failure.
+  - FBS and FCS per-season fixture counts reconcile independently and every exclusion is emitted with its source fields and reason.
+  - Both registered values, if any, are conservative one-sided exact 95-percent upper bounds and reproduce from the frozen manifest.
+  - Each of the four current games is independently classified from its exact ESPN game id as included ordinary regular season, with no title similarity or venue-to-venue identity.
+  - Certification binds source=espn, league=cfb, exact espn:cfb game id, and the supported population classification. Unknown, postseason, conference-title, playoff and bowl phases block.
+  - If authoritative original-schedule or numerator completeness cannot be proven, remove/withhold CFB evidence enablement and report the exact missing source; do not substitute L32 point rates.
+outputs:
+  - source_manifest.json
+  - phase_exclusions.json
+  - current_slate_classification.json
+  - results.json
+  - verdict.md
+evidence_keys:
+  - cfb.cancelled_rate
+  - cfb.postponed_gt48h_rate
+claims: >-
+  This row measures settlement reserves only. It does not establish executable arbitrage,
+  profitability, fill probability, or permission for any live/account/deployment action.
