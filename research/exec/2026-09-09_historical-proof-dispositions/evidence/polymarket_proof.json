@@ -1,0 +1,103 @@
+{
+  "venue": "polymarket",
+  "slug": "mlb-wsh-lad-2026-09-06",
+  "outcome": "Los Angeles Dodgers",
+  "token": "101279472385609715829438473394947480656628050512671135483131814465078673073731",
+  "ticker": null,
+  "fees": {
+    "fee_rate": 0.05,
+    "fee_exponent": 1.0,
+    "taker_only": true,
+    "rebate_rate": 0.15
+  },
+  "contracts": 5.0,
+  "won_when": "Los Angeles Dodgers",
+  "started_utc": "2026-09-07T04:42:37.865727+00:00",
+  "balance_before": 95.597463,
+  "reservation_id": "aaf9113232344d0bac065aaef0f50f8d",
+  "runner_sha": "a81b69f8476a3c3716af6faa2449ae637f8843a3",
+  "override_sha": "5d5d20f68111da4e",
+  "steps": [
+    {
+      "resting": {
+        "venue": "polymarket",
+        "client_order_id": "0f7b4e03f94f434daa7e22ce83ff48fd",
+        "venue_order_id": "0x3927bb5dddb346eff5d7f9937dd00ca23f800d9bdf26c04035508cbee61367fa",
+        "state": "UNFILLED",
+        "filled_contracts": 0.0,
+        "avg_price": null,
+        "fee_usd": null,
+        "raw_status": "live",
+        "received_utc": 1788756158.720594,
+        "open": true,
+        "settlement_pending": false,
+        "detail": ""
+      },
+      "after_cancel": {
+        "venue": "polymarket",
+        "client_order_id": "0f7b4e03f94f434daa7e22ce83ff48fd",
+        "venue_order_id": "0x3927bb5dddb346eff5d7f9937dd00ca23f800d9bdf26c04035508cbee61367fa",
+        "state": "UNFILLED",
+        "filled_contracts": 0.0,
+        "avg_price": 0.29,
+        "fee_usd": null,
+        "raw_status": "canceled",
+        "received_utc": 1788756162.948309,
+        "open": false,
+        "settlement_pending": false,
+        "detail": "",
+        "final": true
+      }
+    },
+    {
+      "ioc": {
+        "venue": "polymarket",
+        "client_order_id": "51dd680753c44776a4ed69e5de39bd02",
+        "venue_order_id": "0x086de0e64c39f93ad9ee40147a140cf66b56450e35b4668cf66d995c7db27b4a",
+        "state": "FILLED",
+        "filled_contracts": 5.0,
+        "avg_price": 0.39,
+        "fee_usd": null,
+        "raw_status": "matched",
+        "received_utc": 1788756163.4953978,
+        "open": false,
+        "settlement_pending": true,
+        "detail": ""
+      },
+      "status": {
+        "venue": "polymarket",
+        "client_order_id": "51dd680753c44776a4ed69e5de39bd02",
+        "venue_order_id": "0x086de0e64c39f93ad9ee40147a140cf66b56450e35b4668cf66d995c7db27b4a",
+        "state": "FILLED",
+        "filled_contracts": 5.131577,
+        "avg_price": 0.39,
+        "fee_usd": null,
+        "raw_status": "matched",
+        "received_utc": 1788756163.4956968,
+        "open": false,
+        "settlement_pending": true,
+        "detail": "",
+        "final": true
+      },
+      "fills": [
+        {
+          "fill_id": "0af879c6-ca18-4f6f-8853-f2139e0fce92",
+          "contracts": 5.131577,
+          "price": 0.38,
+          "charged": 0.0,
+          "pinned": 0.0604,
+          "excess": 0.0,
+          "taker": true,
+          "confirmed": true
+        }
+      ],
+      "balance_after": 93.587024
+    }
+  ],
+  "settled": {
+    "result": "Los Angeles Dodgers",
+    "venue_result": "Los Angeles Dodgers",
+    "realized_usd": 3.18157774,
+    "at": "2026-09-07T05:53:38.907672+00:00"
+  }
+}

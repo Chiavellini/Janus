@@ -1,0 +1,109 @@
+{
+  "venue": "kalshi",
+  "ticker": "KXMLBGAME-26SEP062210WSHLAD-LAD",
+  "series": "KXMLBGAME",
+  "fees": {
+    "fee_type": "quadratic_with_maker_fees",
+    "fee_multiplier": 0.5
+  },
+  "contracts": 2.0,
+  "won_when": "yes",
+  "started_utc": "2026-09-07T02:56:21.948564+00:00",
+  "balance_before": 63.2593,
+  "reservation_id": "c3b0ebbdcc844ff4a909e4f7c5281df9",
+  "runner_sha": "a9d56cbff7c2c9bd4bb8d370caa752a655feef4a",
+  "override_sha": "b71f4d5fce39e40d",
+  "steps": [
+    {
+      "resting": {
+        "venue": "kalshi",
+        "client_order_id": "692d99a8f6f343c692983ca6a08deee7",
+        "venue_order_id": "01a079cb-9bf0-7ea0-9d85-a21e8c1dbc61",
+        "state": "UNFILLED",
+        "filled_contracts": 0.0,
+        "avg_price": null,
+        "fee_usd": null,
+        "raw_status": "created",
+        "received_utc": 1788749782.224745,
+        "open": true,
+        "settlement_pending": false,
+        "detail": ""
+      },
+      "after_cancel": {
+        "venue": "kalshi",
+        "client_order_id": "692d99a8f6f343c692983ca6a08deee7",
+        "venue_order_id": "01a079cb-9bf0-7ea0-9d85-a21e8c1dbc61",
+        "state": "UNFILLED",
+        "filled_contracts": 0.0,
+        "avg_price": null,
+        "fee_usd": null,
+        "raw_status": "canceled",
+        "received_utc": 1788760403.34038,
+        "open": false,
+        "settlement_pending": false,
+        "detail": "",
+        "final": true,
+        "note": "re-read at settle: was 'resting' right after the cancel"
+      }
+    },
+    {
+      "ioc": {
+        "venue": "kalshi",
+        "client_order_id": "1eef7c5f3c164de9a6822a5004c85de2",
+        "venue_order_id": "01a079cb-ab90-78fa-9cc4-5fce528cb193",
+        "state": "FILLED",
+        "filled_contracts": 2.0,
+        "avg_price": 0.78,
+        "fee_usd": 0.024,
+        "raw_status": "created",
+        "received_utc": 1788749785.945407,
+        "open": false,
+        "settlement_pending": false,
+        "detail": ""
+      },
+      "status": {
+        "venue": "kalshi",
+        "client_order_id": "1eef7c5f3c164de9a6822a5004c85de2",
+        "venue_order_id": "01a079cb-ab90-78fa-9cc4-5fce528cb193",
+        "state": "FILLED",
+        "filled_contracts": 2.0,
+        "avg_price": 0.78,
+        "fee_usd": 0.0241,
+        "raw_status": "executed",
+        "received_utc": 1788749786.6168609,
+        "open": false,
+        "settlement_pending": false,
+        "detail": "",
+        "final": true
+      },
+      "fills": [
+        {
+          "fill_id": "07219ee5-e841-9ed8-e082-b8b97ae0c1dc",
+          "contracts": 2.0,
+          "price": 0.78,
+          "charged": 0.0241,
+          "pinned": 0.0241,
+          "excess": 0.0,
+          "taker": true
+        }
+      ],
+      "balance_after": 61.6752
+    }
+  ],
+  "settled": {
+    "result": "yes",
+    "realized_usd": 0.41589999999999994,
+    "fills": [
+      {
+        "fill_id": "07219ee5-e841-9ed8-e082-b8b97ae0c1dc",
+        "contracts": 2.0,
+        "price": 0.78,
+        "charged": 0.0241,
+        "pinned": 0.0241,
+        "excess": 0.0,
+        "taker": true
+      }
+    ],
+    "at": "2026-09-07T05:53:23.930299+00:00"
+  }
+}
