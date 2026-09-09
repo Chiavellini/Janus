@@ -17,7 +17,7 @@ stored about 4.226 cents too high. `kill/live` is deliberately latched. The old 
 remain active, but no new first leg may clear; do not clear the kill. F17 produced no evaluation and
 is superseded before start. The local F18 candidate restores only a post-only GTC maker-first
 Polymarket BUY route; immediate, FAK/FOK and non-post-only BUYs remain blocked. It is fully tested and
-reviewed and is being staged for deployment. Its share cap relies on Polymarket's documented
+reviewed and staged on the Mexico box. Its share cap relies on Polymarket's documented
 post-only maker guarantee; the unsigned operator instruction is an explicit venue trust boundary.
 
 L56 preserves the historical execution records while providing append-only, source/hash/operator-
@@ -91,12 +91,11 @@ Capture gzip level 3 used about 58% less compression CPU with exact frame/timest
 
 ## Immediate next step
 
-Keep `kill/live` latched while the reviewed tree is staged and the append-only historical manifests
-are explicitly confirmed. With the observer stopped, run one authenticated 72-hour guard and require
-the exact historical flags to resolve, zero current flight/material imbalance/economic exposure,
-zero unresolved post-only admission or persistence error, and a clean watchdog apart from the
-intentional stopped-lane/kill state. The operator then uses the repository's daily release paste to
-re-sign the unchanged arm, verifies fresh streams/clocks, and clears only the reviewed live latch.
+The append-only historical manifests are confirmed and the authenticated stopped-lane 72-hour guard
+resolved their exact IDs with zero orphan, mismatch, protection need, open order, unreleased capital
+or current economic exposure. Keep `kill/live` latched until the operator uses the repository's daily
+release paste to re-sign the unchanged arm. Then verify fresh Kalshi, Polymarket market and PM user
+streams/clocks before clearing only the reviewed live latch.
 The first three covers require hand reconciliation before the fourth. Stop on any cent
 discrepancy, non-maker fill, cap breach, late cancel dispatch, protection delay beyond 30 seconds,
 orphan, mismatch, missing reservation, post-submit store error, fee above pin, breaker, or stream
