@@ -58,3 +58,11 @@ def test_cloud_init_installs_every_interpreter_the_units_need_and_the_v2_venue_c
     assert "py-clob-client-v2" in pip and "py-clob-client=" not in pip and " py-clob-client " not in pip + " "
     lane = (box / "systemd" / "janus-live-stream.service").read_text()
     assert "--mode PAPER_EXECUTION" in lane and "--leagues enabled" in lane
+
+
+def test_release_preflight_uses_the_registered_protection_dust_threshold():
+    """A fractional PM price-improvement remainder below venue minimum is not an unhedged STOP."""
+    from pathlib import Path
+    release = (Path(__file__).resolve().parents[1] / "release.sh").read_text()
+    assert "load_limits().protect.protect_dust_contracts" in release
+    assert "ABS(unhedged) > ?" in release

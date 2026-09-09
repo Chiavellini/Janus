@@ -28,14 +28,17 @@ if [ $NOW = 0 ]; then
   # rarely empty, and "no game in play" would have meant "never"). --now skips both.
   read -r -d '' PROBE <<'EOS' || true
 sudo -u janus /opt/janus/.venv/bin/python3 - <<'PY'
-import sqlite3, time
+import sqlite3, sys, time
+sys.path.insert(0, "/opt/janus")
+from nodes.risk.limits import load_limits
 c = sqlite3.connect('file:/srv/janus/tuples/tuples.sqlite?mode=ro', uri=True)
 now = time.time()
 games = c.execute("SELECT COUNT(*) FROM events WHERE phase='in:co_listed' AND last_seen_ts > ?", (now - 900,)).fetchone()[0]
 try:
     flight = c.execute("SELECT COUNT(*) FROM executions WHERE last_utc > ? AND state IN ('DETECTED','VALIDATED','CAPITAL_RESERVED',"
                        "'LEG_A_SUBMITTED','LEG_A_FILLED','LEG_A_PARTIAL','LEG_B_SUBMITTED','LEG_B_PARTIAL')", (now - 120,)).fetchone()[0]
-    unhedged = c.execute("SELECT COUNT(*) FROM executions WHERE unhedged > 0 AND released = 0").fetchone()[0]
+    dust = load_limits().protect.protect_dust_contracts
+    unhedged = c.execute("SELECT COUNT(*) FROM executions WHERE ABS(unhedged) > ? AND released = 0", (dust,)).fetchone()[0]
 except sqlite3.OperationalError:
     flight, unhedged = 0, 0
 print(f"games={games} flight={flight} unhedged={unhedged}")
