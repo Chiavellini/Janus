@@ -1,0 +1,16 @@
+id: L52-followup
+registered_date: 2026-09-09
+kind: descriptive_offline_regression
+prior_information:
+  - Review found later cash-reader failure overwrites previously authoritative fill cash.
+  - Review found missing-cash REST fallback uses first-maker top-level price instead of VWAP or conservative ceiling.
+scope: Local PM fills/parser tests and documentation only; no venue reads or live mutations.
+success_criteria:
+  - Authoritative cash survives later timeout, absent reader, empty/ambiguous/malformed activity and adapter recreation.
+  - Prior model-final rows without cash provenance are not promoted to authoritative cash.
+  - A new unambiguous authoritative cash correction preserves prior raw source and appends a new source audit.
+  - Missing-cash fresh fills use maker-leg VWAP when provable, otherwise journal BUY ceiling, never the first-maker top price.
+  - Confirmed quantity remains known while fresh unproven cash is nonfinal.
+  - Regression demonstrates no guard/order/settlement finality regression after a cash-reader failure.
+  - Existing quantity-protection tests pass; no guard sizing/state changes are made by this follow-up.
+expected_ev_effect: No EV claim; prevent false cost understatement and loss of proved accounting facts.

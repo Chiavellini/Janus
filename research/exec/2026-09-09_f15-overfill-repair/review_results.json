@@ -1,0 +1,19 @@
+{
+  "row": "L53",
+  "verdict": "PARTIAL_FIFO_REVIEW_REPAIR_PASS_LIVE_BUY_BLOCKED",
+  "supersedes_local_completeness_claim": "results.json and verdict.md; retained unchanged",
+  "known_authoritative_contracts": "10.166667",
+  "partial_fifo_contracts": "6",
+  "repaired_order_contracts_after_partial_sync": "10.166667",
+  "partial_cash_finality": "pending even when every available partial fill is final",
+  "reversal_semantics": "No inferred reversal; only a separate explicit authoritative journal correction may reduce the order total. This repair does not introduce automatic reversal authorization.",
+  "test_look_spent": false,
+  "live_mutations": false,
+  "validation": {
+    "command": "python3 -m pytest nodes/exec_polymarket/tests nodes/execute/tests nodes/account_ledger/tests nodes/reconcile/tests nodes/risk/tests -o addopts='' -q",
+    "passed": 194,
+    "failed": 0,
+    "duration_s": 1.72,
+    "diff_check": "PASS"
+  }
+}

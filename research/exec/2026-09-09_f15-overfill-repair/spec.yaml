@@ -1,0 +1,25 @@
+id: L53
+date: 2026-09-09
+track: execution_repair
+status: PENDING
+kind: descriptive_repair
+holdout_touched: false
+test_look_spent: false
+known_before_registration:
+  - F15 execution ceba2013c79e4334b8406ad315b9e78e requested 10 PM shares at 0.36.
+  - Authoritative PM GET order reports original_size 10 and size_matched 10.166667 for FAK; Kalshi hedge was 10.17.
+  - Signed max_contracts is 10 and live kill is latched.
+scope:
+  - Read local code, installed SDK, captured request and venue statement fixtures; read official wire semantics if required.
+  - Bounded offline frozen-fixture tests only; no venue mutation or new live experiment.
+success_criteria:
+  - Explain the distinction between original_size, signed maker/taker amounts, and actual shares filled with source evidence.
+  - Reject before wire any immediate BUY shape whose maximum share fill cannot be proven at or below requested quantity.
+  - Preserve authoritative excess fills without clamping and latch future live entries when an overfill is detected.
+  - Hedge sizing must not round above the observed held quantity or requested authorized cap; retain and report any residual.
+  - Frozen fixtures reproduce the observed overfill and cover precision boundaries, authoritative status, and hedge sizing.
+  - Relevant local tests pass; no claimed new profitability or live validation.
+forbidden:
+  - Orders, cancels, deployment, restart, arming, cap changes, kill clearing, live mutations.
+  - Outcome or holdout scoring, changing prior registered criteria or rows.
+expected_ev_effect: Prevent unapproved directional exposure and excess hedge spend; no measured positive EV claim.

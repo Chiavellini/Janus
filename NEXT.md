@@ -4,17 +4,19 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-09 09:18 UTC from the F15 box diagnosis and the reviewed F17 coverage/performance pass.
+Updated 2026-09-09 10:07 UTC from the F15 STOP, live kill latch, and local L52/L53 repairs.
 CHECKLIST.md is the state list; CHANGELOG.md and the F rows in `snooping_ledger.md` are the
 append-only history.
 
 ## Where it stands
 
-**F15 remains LIMITED_LIVE on the Mexico box** (`i-0a8c073c72dcdae11`, `mx-central-1a`) on
-executable commit `64f54c7`, code tree `0fd7f6eae72cfb98`. The process is active and observing the
-current slate, but the watchdog is **ALERT**: the Kalshi socket is flapping with 13 keepalive-timeout
-errors across nearly every recent health row. F17 must not be released until this is green. The local
-reviewed F17 tree is not deployed and has not changed the arm, submitted an order, or mutated box state.
+**F15 is STOPPED on the Mexico box** (`i-0a8c073c72dcdae11`, `mx-central-1a`). At 09:33:10Z the
+operator-side audit confirmed that a nominal 10-share Polymarket BUY returned 10.166667 shares and
+the coordinator hedged 10.17, violating the signed 10-contract cap. The same Maximus execution was
+stored about 4.226 cents too high. `kill/live` is deliberately latched. The old `64f54c7` observer may
+remain active, but no new first leg may clear; do not clear the kill. F17 produced no evaluation and
+is superseded before start. There is currently no release candidate: the local L52/L53 repair blocks
+all real Polymarket BUY entry until a transport with a proved maximum received-share bound exists.
 
 The arm remains **$12 combined stake, 10 contracts per leg, $250 committed daily notional, $25
 realized-loss breaker, $0.10 minimum net profit, 1% locked return, $1 maximum protection loss,
@@ -22,14 +24,16 @@ realized-loss breaker, $0.10 minimum net profit, 1% locked return, $1 maximum pr
 settlement evidence removes false blocks but supplies no evidence that larger orders preserve EV or
 fill quality.
 
-The cent-exact two-screenshot baseline is **+$10.39 realized trading P&L**. It excludes the
-**+$205.35 external deposit** and keeps the still-open **-$3.72 Maximus Jones** position separate;
-including that open cash outflow gives **+$6.67 visible trading cash flow**. These values are now
-explicit ledger acceptance tests. They are a verified historical baseline, not a claim about the
-account after later F12-F15 executions. The previous +$8.20515/+7.94929 figures in this file are
-retired because they did not reconcile the operator's screenshots. F16 requires venue-authoritative
-statements and a hand reconciliation of its first three covers; any discrepancy of at least one
-cent is a STOP.
+The cent-exact two-screenshot baseline remains **+$10.39 realized trading P&L** and **+$6.67 visible
+trading cash flow at that screenshot cutoff**, excluding the +$205.35 external deposit. It is an
+acceptance fixture, not a current account total, because the screenshot boundary is not source-bound.
+Maximus is no longer open: venue-authoritative cash and settlement prove exact P&L **-$0.318760**
+(-$0.32 presentation), versus stored -$0.2765. L52 cash-controls complete Polymarket activity exactly,
+separating $407.031089 net funding from -$95.424133 trading cash to authenticated cash $311.606956;
+it observes no economically open PM position and no Kalshi position. The source-complete
+2026-09-07-to-snapshot subtotal is **+$11.167973**, but it must not be added to the screenshot figure.
+The current/lifetime total is withheld until the screenshot boundary and older Kalshi settlement or
+disposition history are complete. Any unexplained discrepancy of at least one cent remains a STOP.
 
 ## Coverage prepared locally
 
@@ -77,12 +81,16 @@ Capture gzip level 3 used about 58% less compression CPU with exact frame/timest
 
 ## Immediate next step
 
-The candidate is fully tested locally and F17 is preregistered. Wait for a clean Kalshi socket and
-fully green guard/watchdog, verify zero flight/imbalance/unhedged exposure, then release the exact
-committed tree with a matching re-signed arm. Hand-reconcile the first three valid F17 covers before
-the fourth. Stop on a cent discrepancy, protection delay beyond 30 seconds, orphan, mismatch,
-missing reservation, store error after submission, fee above pin, breaker, or socket alarm.
+Keep `kill/live` latched. Design and independently prove a Polymarket entry transport whose wire
+semantics impose a maximum received-share quantity; a minimum-received collateral BUY is not
+acceptable. Then preregister a fresh forward row, run the full green suite and independent review,
+verify zero flight/imbalance/unhedged exposure and healthy streams/clocks/guard/watchdog, commit and
+release the exact tree with a matching re-signed arm. The first three covers still require hand
+reconciliation before the fourth. Stop on any cent discrepancy, cap breach, protection delay beyond
+30 seconds, orphan, mismatch, missing reservation, post-submit store error, fee above pin, breaker,
+or stream alarm.
 
 The next profit-relevant evidence is per-league executable fill rate and realized net EV under the
-unchanged small arm. Coverage itself is not profit evidence; caps may rise only after forward fills
-show that depth, hedge latency, slippage, and settlement reserves preserve positive net EV.
+unchanged small arm. Coverage creates access, not evidence of profit. Do not raise caps until forward
+fills show that executable depth, hedge latency, slippage, and settlement reserves preserve positive
+net EV and per-trade Sharpe.

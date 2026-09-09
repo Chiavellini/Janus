@@ -1,0 +1,15 @@
+{
+  "row": "L53",
+  "verdict": "OFFLINE_PROOF_REPAIRED_PRODUCTION_BUY_BLOCK_UNCHANGED",
+  "scope": "ops/tests/test_pm_proof.py and append-only research records only",
+  "test_look_spent": false,
+  "live_mutations": false,
+  "production_changes_in_followup": false,
+  "validation": {
+    "command": "nice -n 19 python3 -m pytest ops/tests/test_pm_proof.py nodes/exec_polymarket/tests/test_quantity_cap.py nodes/execute/tests/test_quantity_caps.py nodes/execute/tests/test_guard_quantity_coverage.py -o addopts='' -q",
+    "passed": 38,
+    "failed": 0,
+    "duration_s": 14.02,
+    "diff_check": "PASS"
+  }
+}

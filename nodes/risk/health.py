@@ -128,6 +128,7 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
             # The position guard's and the protection layer's flags (2026-09-08): each repeats for a
             # day; the row-based UNHEDGED_POSITION below says the same from the executions table.
             for flag, what in (("ORPHAN_FILL", "a venue fill no order row explains; the live kill was latched"),
+                               ("ORDER_OVERFILL", "venue quantity exceeded the order request; live entry stopped; authoritative quantity retained"),
                                ("POSITION_MISMATCH", "a venue position the fills since start do not explain"),
                                ("PROTECT_FAILED", "the protection layer could neither hedge nor unwind inside the cap; the live kill was latched"),
                                ("EXEC_CRASHED", "the execution machine raised outside its own failure recording")):

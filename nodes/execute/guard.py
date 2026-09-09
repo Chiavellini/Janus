@@ -168,6 +168,9 @@ class PositionGuard:
     def apply(self, snap: GuardSnapshot) -> GuardReport:
         rep = GuardReport()
         self.passes += 1
+        # Preserve/alarm the venue's order-level fact before a partial trade FIFO is
+        # considered. The second pass below also catches newly adopted late fills.
+        self._detect_order_overfills(snap, rep)
         for k, e in snap.errors.items():
             rep.findings.append(f"{k}: {e}")
         for cid, vid in snap.adopted:
@@ -217,6 +220,7 @@ class PositionGuard:
         self._held = self._holdings(snap)
         for exid, pairs in by_exec.items():
             self._reconcile_execution(exid, pairs, snap, rep)
+        self._detect_order_overfills(snap, rep)
         self._scan_naked(snap, rep, skip=set(by_exec))
         self._compare_positions(snap, rep)
         revised = refresh_settlement_accounting(self.store, now=snap.now, log=self.log)
@@ -233,6 +237,36 @@ class PositionGuard:
         rep.fills_today = self.fills_today(snap.now)
         self.cursor_utc = snap.now - ADOPT_WINDOW_S
         return rep
+
+    def _detect_order_overfills(self, snap: GuardSnapshot, rep: GuardReport) -> None:
+        """Catch authoritative late fills even when the coordinator's poll saw zero/partial.
+
+        Dust is a protection threshold, never permission to exceed a requested order.
+        Read the durable totals after sync/adoption, without changing the reported fill.
+        """
+        rows = self.journal.store.con.execute(
+            "SELECT client_order_id,venue,contracts,filled_contracts,mode FROM orders "
+            "WHERE filled_contracts > contracts + 0.000000001"
+        ).fetchall()
+        for cid, venue, requested, filled, mode in rows:
+            if mode not in _REAL_MODES:
+                continue
+            key = f"overfill:{cid}:{filled}"
+            if key in self.said:
+                continue
+            detail = f"{venue} {cid}: requested {requested:g}, venue filled {filled:g}"
+            rep.findings.append(f"ORDER_OVERFILL {detail}")
+            # Latch first: failure to write an audit flag must not permit another entry.
+            if self.kill is not None:
+                try:
+                    self.kill.latch("live", f"guard: ORDER_OVERFILL {detail}")
+                except Exception as exc:  # noqa: BLE001
+                    rep.findings.append(f"kill latch failed: {type(exc).__name__}")
+                else:
+                    self.said.add(key)
+            else:
+                self.said.add(key)
+            self._flag("ORDER_OVERFILL", detail, snap.now)
 
     def _close_final_zero_fills(self, snap: GuardSnapshot, rep: GuardReport) -> None:
         """Release an ambiguous execution once the venue finally proves zero fill.
@@ -346,29 +380,49 @@ class PositionGuard:
         """Make the order row carry every durable fill for its venue order id.
 
         A later `get_order -> not_found` used to overwrite a real Polymarket fill with zero. The
-        trade FIFO is the durable venue fact; aggregate it because one order may have many fills.
+        FIFO can lag an authoritative order total. Missing fills never imply a reversal;
+        only an explicit venue reversal already journaled may lower the order's quantity.
         """
         vid = row.get("venue_order_id")
         if not vid:
             return
         agg = self.journal.store.con.execute(
             "SELECT COALESCE(SUM(contracts),0),COALESCE(SUM(contracts*price),0),"
-            "COALESCE(SUM(fee_usd),0) FROM venue_fills WHERE venue_order_id=?", (vid,)
+            "COALESCE(SUM(fee_usd),0),MIN(final) FROM venue_fills WHERE venue_order_id=?", (vid,)
         ).fetchone()
         qty = float(agg[0] or 0.0)
+        known_qty = float(row.get("filled_contracts") or 0.0)
+        if qty < known_qty - 1e-9:
+            # Every available fill may be cash-final while part of the order is still
+            # absent. Its partial average/fee cannot price the full known position.
+            detail = (f"incomplete venue fill coverage: {qty:g}/{known_qty:g}; authoritative "
+                      "order quantity and cost retained; explicit reversal required to reduce")
+            if (row.get("raw_status") != "guard_fill_coverage_pending" or row.get("detail") != detail
+                    or not bool(row.get("settlement_pending"))):
+                self.journal.record(
+                    Ack(row["venue"], row["client_order_id"], vid, FillState(row["state"]),
+                        known_qty, row.get("avg_price"), row.get("fee_usd"),
+                        "guard_fill_coverage_pending", self.clock(), open=bool(row.get("open")),
+                        settlement_pending=True, detail=detail),
+                    kind="guard_fill_coverage", raw={"fifo_contracts": qty, "authoritative_contracts": known_qty},
+                )
+            return
         if qty <= 1e-9:
             return
         avg = float(agg[1]) / qty
         fee = float(agg[2] or 0.0)
+        settlement_pending = not bool(agg[3])
         state = FillState.FILLED if qty >= float(row["contracts"]) - 1e-6 else FillState.PARTIAL
         if (row["state"] == state.value
                 and abs(float(row.get("filled_contracts") or 0.0) - qty) <= 1e-6
                 and abs(float(row.get("avg_price") or 0.0) - avg) <= 1e-9
-                and abs(float(row.get("fee_usd") or 0.0) - fee) <= 1e-9):
+                and abs(float(row.get("fee_usd") or 0.0) - fee) <= 1e-9
+                and bool(row.get("settlement_pending")) == settlement_pending):
             return
         self.journal.record(
             Ack(row["venue"], row["client_order_id"], vid, state, qty, avg, fee,
-                "guard_fills", self.clock(), detail="venue fill FIFO overrides order lookup"),
+                "guard_fills", self.clock(), settlement_pending=settlement_pending,
+                detail="venue fill FIFO overrides order lookup"),
             kind="guard_fill",
         )
 
@@ -402,6 +456,7 @@ class PositionGuard:
             return
         sums = {"first_buy": 0.0, "first_sell": 0.0, "hedge_buy": 0.0, "hedge_sell": 0.0}
         cost = {"first_buy": 0.0, "first_sell": 0.0, "hedge_buy": 0.0, "hedge_sell": 0.0}
+        cash_final = True
         first_ids = {ex.first_client_id} if ex.first_client_id else set()
         hedge_ids = set(ex.hedge_client_ids)
         unwind_ids = set(ex.unwind_client_ids)
@@ -414,6 +469,7 @@ class PositionGuard:
             qty = float(row.get("filled_contracts") or 0.0)
             if qty <= 1e-9:
                 continue
+            cash_final = cash_final and not bool(row.get("settlement_pending"))
             if cid in first_ids:
                 leg, kind = "first", "buy"
             elif cid in hedge_ids:
@@ -435,9 +491,16 @@ class PositionGuard:
             changed.append(f"first_unwound {ex.first_unwound:g}->{sums['first_sell']:g}")
         if abs(sums["hedge_sell"] - ex.hedge_unwound) > 1e-6:
             changed.append(f"hedge_unwound {ex.hedge_unwound:g}->{sums['hedge_sell']:g}")
+        quantity_changed = bool(changed)
+        if cash_final:
+            for key, old in (("first_buy", ex.first_avg_price), ("hedge_buy", ex.hedge_avg_price),
+                             ("first_sell", ex.first_unwind_avg), ("hedge_sell", ex.hedge_unwind_avg)):
+                price = avg(key)
+                if price is not None and (old is None or abs(price - old) > 1e-9):
+                    changed.append(f"{key}_avg {old}->{price:.12g} (authoritative cash)")
         if changed:
             note = "venue fills: " + ", ".join(changed)
-            if ex.state.is_terminal and ex.released and (sums["first_buy"] > 1e-9 or sums["hedge_buy"] > 1e-9):
+            if quantity_changed and ex.state.is_terminal and ex.released and (sums["first_buy"] > 1e-9 or sums["hedge_buy"] > 1e-9):
                 if self.ledger is not None and ex.reservation_id:
                     self.ledger.reopen(ex.reservation_id, reason=f"guard found a fill on {exid[:8]}", now=snap.now)
                 self.records.reopen(ex, note=note, now=snap.now)

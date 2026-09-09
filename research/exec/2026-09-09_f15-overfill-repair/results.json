@@ -1,0 +1,46 @@
+{
+  "row": "L53",
+  "verdict": "LOCAL_REPAIR_PASS_LIVE_BUY_BLOCKED",
+  "test_look_spent": false,
+  "holdout_touched": false,
+  "live_mutations": false,
+  "execution_id": "ceba2013c79e4334b8406ad315b9e78e",
+  "requested_contracts": "10",
+  "requested_limit": "0.36",
+  "reported_original_size": "10",
+  "authoritative_filled_contracts": "10.166667",
+  "historical_kalshi_hedge": "10.17",
+  "sdk": {
+    "distribution": "py-clob-client-v2",
+    "installed_version": "1.1.0",
+    "builder_source_sha256": "cb5d2499da246ec713840ac0c490b5d7cf80e6bef68ff51e6f43fe8e1f231e82",
+    "offline_reconstructed_maker_amount": 3600000,
+    "offline_reconstructed_taker_amount": 10000000,
+    "original_signed_request_captured": false
+  },
+  "venue_source": {
+    "journal_path": "/Volumes/Kilos/janus/accounting/L52/20260909T094147Z_maximus_journal/journal.json",
+    "journal_sha256": "f74d9949cfe9d44b305c78fa02db9b2148c3f80d2ccf20a53a8e39b1304c658f",
+    "historical_order_event_id": 739,
+    "trade_path": "/Volumes/Kilos/janus/accounting/L52/20260909T093018Z_pm_clob_trades/0000.json",
+    "trade_sha256": "f79f86a47cb9e215e80078721058621eaa20667a9157765e008d7d87038df58c",
+    "trade_id": "a9bfe2a5-470d-4c59-96df-2460af495118",
+    "fresh_order_lookup": "null; historical event739 supplies original_size and size_matched"
+  },
+  "exchange_source_commit": "ccc0596074f4dfd62c944fbca4de252893b82b4b",
+  "fixture": "nodes/exec_polymarket/tests/fixtures/f15_overfill.json",
+  "fixture_sha256": "20ede2bab75f96573cd8954306526b08958690c89da11fcdf6dfa6ddbab05c21",
+  "validation": {
+    "command": "python3 -m pytest nodes/exec_polymarket/tests nodes/execute/tests nodes/risk/tests/test_overfill_health.py -o addopts='' -q",
+    "passed": 124,
+    "failed": 0,
+    "duration_s": 2.52,
+    "diff_check": "PASS"
+  },
+  "limitations": [
+    "No executable immediate BUY route with an enforceable received-share maximum has been established.",
+    "The local fix blocks real BUY signing/posting; there is no live validation or release.",
+    "Nominal signed amounts were reproduced from installed SDK code, not recovered from a captured original request.",
+    "The frozen trade proves maker-leg cash excluding fees; account-wide cash/VWAP and fee reconciliation belong to L52."
+  ]
+}

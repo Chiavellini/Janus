@@ -1,0 +1,43 @@
+id: L52
+registered_date: 2026-09-09
+track: accounting
+kind: descriptive
+holdout_touched: false
+test_look_spent: false
+purpose: Reconcile the current post-F15 account from venue-authoritative records to the cent.
+prior_information:
+  historical_screenshot_1_realized_usd: '11.26'
+  historical_screenshot_2_realized_usd: '-0.87'
+  historical_total_realized_usd: '10.39'
+  historical_open_maximus_jones_cash_flow_usd: '-3.72'
+  historical_external_deposit_excluded_usd: '205.35'
+  historical_visible_trading_cash_flow_usd: '6.67'
+  limitation: Historical screenshot totals do not establish the account after later executions.
+scope:
+  - Read-only Kalshi fills, settlements, positions, cash and available transaction history.
+  - Read-only Polymarket authenticated trades, public account activity, closed/open positions and cash.
+  - Existing Janus credentials and Mexico box transport; no secrets printed or copied to artifacts.
+  - Local execution records may identify orders but cannot substitute for authoritative fee/cash records.
+  - Small local parser/importer and tests only if verified against archived authoritative payloads.
+forbidden:
+  - Orders, cancels, redemptions, transfers, funding, deployment, arming, restart, kill changes or live-state writes.
+  - P&L inferred from balances, model fees substituted for paid fees, deposits included in trading P&L.
+  - Filling missing statement rows with estimates or treating missing records as zero.
+source_integrity:
+  - Archive unmodified response bodies with request metadata, retrieval time and SHA256 on the external data volume.
+  - Require pagination to explicit termination and preserve all errors and coverage bounds.
+  - Use immutable venue source identities; reject duplicate or conflicting financial lines.
+  - Preserve all source decimal precision; round only presentation totals to cents with an explicit rule.
+success_criteria:
+  - Every included fill, fee, payout and adjustment is venue-authoritative and its scope is complete.
+  - Realized trading cash flow, open-position cost/cash flow, and external funding remain separate.
+  - Explain historical-to-current scope/time boundary; never append a new total onto an ambiguous screenshot window.
+  - Reconcile trade/settlement inventory to positions and cash activity independently; balances alone are not evidence of profit.
+  - Independent replay of archived inputs reproduces every reported total exactly before cent presentation.
+stop_conditions:
+  - Any unexplained discrepancy of at least USD 0.01.
+  - Missing/unavailable/ambiguous source completeness or paid-fee authority blocks a current total.
+expected_ev_effect: No change to executable EV or trading behavior; accurate measurement prevents false profit attribution.
+artifacts:
+  archive_root: /Volumes/Kilos/janus/accounting/L52
+  verdict: research/accounting/2026-09-09_current-post-f15-reconciliation/verdict.md

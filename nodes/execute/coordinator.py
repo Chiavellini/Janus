@@ -25,6 +25,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
+from decimal import Decimal, ROUND_DOWN
 from typing import Callable, Mapping
 
 from kernel.execution_protocol import Ack, ExecutionVenue, OrderRequest
@@ -33,6 +34,7 @@ from nodes.execute.plan import LegPlan, Plan
 from nodes.execute.protect import protect
 from nodes.execute.records import Execution, ExecutionRecords
 from nodes.risk.clearance import RiskClearance
+from nodes.risk.flags import raise_flag
 
 _TERMINAL_FILL = {FillState.FILLED, FillState.PARTIAL, FillState.UNFILLED, FillState.REJECTED}
 
@@ -64,6 +66,7 @@ class Coordinator:
     executions: dict[str, Execution] = field(default_factory=dict)
     opp_refusals: dict[str, int] = field(default_factory=dict)
     _t0: dict[str, float] = field(default_factory=dict)      # execution_id -> mono at entry (stage stamps)
+    _quantity_stop: str | None = field(default=None, init=False)
 
     # ── the machine ──────────────────────────────────────────────────────
     def execute(self, plan: Plan, clearance: RiskClearance, *, offers_books: dict | None = None,
@@ -103,6 +106,8 @@ class Coordinator:
             return ex
 
     def _run(self, ex: Execution, plan: Plan, clearance: RiskClearance, *, venues_connected) -> Execution:
+        if self.mode.risks_capital and self._quantity_stop:
+            return self._fail(ex, X.ORDER_REJECTED, self._quantity_stop, release=True)
         # VALIDATED: the clearance is for this plan and still live; both venues present and connected.
         if clearance.opportunity_id != plan.opportunity_id or not clearance.valid(self.mono()):
             return self._fail(ex, X.ORDER_REJECTED, "clearance does not cover this plan or has expired", release=True)
@@ -144,6 +149,7 @@ class Coordinator:
             tif = "FAK" if plan.first.time_in_force == "ioc" else plan.first.time_in_force.upper()
             return self._fail(ex, X.ORDER_REJECTED, f"leg A unfilled ({tif}): no position", release=True)
         ex.first_filled, ex.first_avg_price = ack.filled_contracts, ack.avg_price
+        self._check_overfill(ex, req_a, ack)
         self._move(ex, X.LEG_A_FILLED if ack.state is FillState.FILLED else X.LEG_A_PARTIAL,
                    detail=f"filled {ack.filled_contracts} @ {ack.avg_price}")
         if ack.state is FillState.PARTIAL:
@@ -175,10 +181,36 @@ class Coordinator:
             return ex
 
     # ── pieces ───────────────────────────────────────────────────────────
+    def _check_overfill(self, ex: Execution, req: OrderRequest, ack: Ack) -> None:
+        """Preserve venue quantity and stop later entries before protecting the held position."""
+        if ack.filled_contracts <= req.contracts + 1e-9:
+            return
+        detail = (f"ORDER_OVERFILL {ack.venue} {req.client_order_id}: requested {req.contracts:g}, "
+                  f"venue filled {ack.filled_contracts:g}")
+        ex.protect.setdefault("quantity_violations", []).append({
+            "client_order_id": req.client_order_id, "venue": ack.venue,
+            "requested": req.contracts, "filled": ack.filled_contracts,
+        })
+        if self.mode.risks_capital:
+            self._quantity_stop = detail  # In-process fail-closed even if the kill filesystem fails.
+            # Alarm failures cannot hide the held fill or prevent its protective hedge.
+            if self.kill is not None:
+                try:
+                    self.kill.latch("live", detail)
+                except Exception as exc:  # noqa: BLE001
+                    ex.protect["overfill_latch_error"] = f"{type(exc).__name__}: {exc}"
+            try:
+                raise_flag(self.records.store, "ORDER_OVERFILL", detail, now=self.clock())
+            except Exception as exc:  # noqa: BLE001
+                ex.protect["overfill_flag_error"] = f"{type(exc).__name__}: {exc}"
+
     def _request(self, plan: Plan, leg: LegPlan, contracts: float, limit: float, *, hedge: bool,
                  side: str | None = None) -> OrderRequest:
+        # Never round a protective buy above the held quantity (10.166667 -> 10.16,
+        # not 10.17), or a sell above the held tokens. Precision dust remains visible.
+        quantity = float(Decimal(str(contracts)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
         return OrderRequest(leg.venue, leg.market_id, leg.outcome_id, side or leg.side, round(min(max(limit, 0.01), 0.99), 4),
-                            round(contracts, 2), leg.time_in_force, uuid.uuid4().hex, plan.opportunity_id,
+                            quantity, leg.time_in_force, uuid.uuid4().hex, plan.opportunity_id,
                             hedge=hedge, tick=leg.tick)
 
     def _settle_ack(self, venue: str, ack: Ack, *, deadline_mono: float,

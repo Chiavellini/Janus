@@ -1,0 +1,13 @@
+id: L52-atomic-activity-batch
+registered_date: 2026-09-09
+kind: descriptive_offline_regression
+prior_information:
+  - Review found direct indexing retains earlier valid activity rows after a later batch failure.
+  - Known reproductions are a list containing valid activity, null, duplicate valid activity and a generator yielding valid activity then raising.
+scope: Local PM activity-batch indexing and focused tests only; no guard edits, venue reads or live mutations.
+success_criteria:
+  - Any read, indexing or iteration exception discards the entire fresh activity batch.
+  - Both registered reproductions leave a fresh fill accounting-nonfinal and create no fresh cash authority or cash audit.
+  - Both registered reproductions preserve previously proved SHA-backed cash through the durable fallback without appending fresh source authority.
+  - Existing valid complete activity batches still finalize and existing accounting/quantity regressions pass.
+expected_ev_effect: No EV claim; prevent false accounting finality from incomplete source evidence.

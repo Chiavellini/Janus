@@ -1,0 +1,20 @@
+row: L53
+kind: descriptive_local_repair_followup
+date: 2026-09-09
+known_before_registration:
+  - The full repository suite reports four offline Polymarket proof failures after the production received-share-cap refusal.
+  - The proof FakeTransport has no explicit bounded-BUY contract and no matching authoritative cash activity fixture.
+scope:
+  - Change only the offline proof test harness, its tests, and append-only research records.
+  - Designate the in-memory FakeTransport as test-only share-bounded because it executes exactly the requested size.
+  - Supply matching synthetic trade and cash activity identities from the same scripted execution debit.
+  - Preserve production PyClobTransport BUY refusal and all live safety state.
+success_criteria:
+  - Existing rest/cancel/FOK/finality success, failed-trade stop, excessive-fee latch, and settled arithmetic tests pass.
+  - A focused refusal regression shows an unproven transport cannot reach the offline fake post operation.
+  - Ops proof tests and PM/coordinator/guard quantity-cap regression suites pass together.
+  - Diff check passes; no production cap bypass or live mutations are introduced.
+expected_ev_effect: No change to production EV or eligibility; restores offline proof coverage while BUY entry remains blocked.
+prohibited:
+  - Venue reads or writes, live orders, deployment, restart, arming, cap changes, or kill clearing.
+  - Weakening production quantity-cap enforcement to accommodate tests.

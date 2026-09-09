@@ -1,0 +1,16 @@
+row: L53
+date: 2026-09-09
+kind: offline_review_repair
+known_before_run:
+  - Independent review found guard FIFO sync can reduce authoritative 10.166667 shares to partial FIFO 6 before overfill detection.
+success_criteria:
+  - Existing authoritative overfill latches before FIFO sync can run.
+  - Incomplete FIFO quantity, price and fee never replace the larger authoritative order total.
+  - Incomplete FIFO marks cash settlement pending even if every available partial fill is final.
+  - Later full FIFO completion may update average, fee and finality without shrinking quantity.
+  - Missing or lower FIFO evidence is not interpreted as a reversal; an explicit audited authoritative reversal is required before a reduced order total can be accepted.
+  - The exact reviewer fixture and combined execution, accounting and relevant risk tests pass.
+forbidden:
+  - Live mutation, orders, deploy, restart, arming, cap changes, kill clearing.
+  - Editing the original L53 criteria or earlier result artifacts.
+expected_ev_effect: Preserve known exposure and prevent understated hedge/accounting quantities; no measured EV claim.

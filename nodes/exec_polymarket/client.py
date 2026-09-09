@@ -25,6 +25,7 @@ an EC2 instance without a KMS, and it is read by the transport only.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import math
 import os
@@ -39,6 +40,7 @@ from kernel.redact import brief_error
 from kernel.schema import Book, FillState, Mode
 from nodes.execution.gate import admit
 from nodes.execution.journal import Journal
+from nodes.exec_polymarket.quantity import BUY_CAP_UNPROVEN, taker_trade_vwap
 
 ORDER_TYPE = {"fok": "FOK", "ioc": "FAK", "gtc": "GTC"}
 FINAL_TRADE = {"CONFIRMED"}
@@ -48,6 +50,15 @@ DEAD_TRADE = {"FAILED"}
 # until both endpoints have disagreed for this long; the reservation stays held meanwhile.
 NOT_FOUND_GRACE_S = 120.0
 TRADE_CHECK_INTERVAL_S = 1.0
+
+# Append-only source authority, separate from the mutable execution projection. Orphan fills
+# need this too: they may acquire an order/client id only on a later guard adoption pass.
+PM_CASH_SOURCES_DDL = """
+CREATE TABLE IF NOT EXISTS pm_cash_sources(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, fill_id TEXT NOT NULL, source_sha256 TEXT NOT NULL,
+  source_json TEXT NOT NULL, observed_utc REAL NOT NULL);
+CREATE INDEX IF NOT EXISTS pm_cash_sources_fill ON pm_cash_sources(fill_id, id);
+"""
 
 
 class TransportUnavailable(RuntimeError):
@@ -112,7 +123,7 @@ class PolymarketUserStream:
                     tid = str(payload.get("id") or "")
                     taker = str(self._get(payload, "taker_order_id", "takerOrderId", "") or "")
                     if taker and tid:
-                        self._trades.setdefault(taker, {})[tid] = dict(payload)
+                        self._trades.setdefault(taker, {})[tid] = {**payload, "_janus_trade_role": "taker"}
                     for maker in self._get(payload, "maker_orders", "makerOrders", ()) or ():
                         oid = str(self._get(maker, "order_id", "orderId", "") or "")
                         if oid and tid:
@@ -120,6 +131,7 @@ class PolymarketUserStream:
                             row["id"] = tid
                             row["status"] = payload.get("status")
                             row["size"] = self._get(maker, "matched_amount", "matchedAmount", 0)
+                            row["_janus_trade_role"] = "maker"
                             self._trades.setdefault(oid, {})[tid] = row
                     if taker or self._get(payload, "maker_orders", "makerOrders"):
                         kinds.append("trade")
@@ -139,9 +151,12 @@ class PolymarketUserStream:
         good = [t for t in trades if str(t.get("status", "")).upper().replace("TRADE_STATUS_", "") not in DEAD_TRADE]
         if good:
             qty = sum(_f(self._get(t, "size", "matchedAmount")) for t in good)
-            cost = sum(_f(self._get(t, "size", "matchedAmount")) * _f(t.get("price")) for t in good)
+            prices = [(taker_trade_vwap(t) if t.get("_janus_trade_role") == "taker"
+                       else _f(t.get("price"), None)) for t in good]
+            cost = (sum(_f(self._get(t, "size", "matchedAmount")) * price
+                        for t, price in zip(good, prices)) if all(p is not None for p in prices) else None)
             return {"id": order_id, "status": "MATCHED", "size_matched": qty,
-                    "price": (cost / qty if qty else None), "user_stream": True}
+                    "price": (cost / qty if cost is not None and qty else None), "user_stream": True}
         matched = _f(self._get(order, "size_matched", "sizeMatched"))
         if matched > 0:
             return {"id": order_id, "status": str(order.get("status") or "MATCHED"),
@@ -199,6 +214,7 @@ class PolymarketUserStream:
 
 
 class ClobTransport(Protocol):
+    def buy_contract_cap_error(self) -> str | None: ...
     def post_order(self, *, token_id: str, price: float, size: float, order_type: str,
                    side: str = "BUY", tick: float | None = None) -> dict: ...
     def get_order(self, order_id: str) -> dict: ...
@@ -246,13 +262,14 @@ class PyClobTransport:
 
     @staticmethod
     def _cent_exact_buy(*, size: float, price: float, tick: float | None) -> tuple[float, float] | None:
-        """Nearest share-sized order inside the request whose maker collateral is whole cents.
+        """Nominal SDK size/price with whole-cent collateral; NOT a received-share cap.
 
         CLOB V2's marketable BUY validator accepts two maker decimals, while the SDK's ordinary
         limit builder otherwise follows the market tick.  A collateral-sized market BUY fixes
         that precision but lets price improvement increase shares (F14: 5 became 7.769231). Search
         the finite size/tick grid instead. Preserve the limit first (fill probability), then take
-        the largest valid share size; neither dimension can exceed the coordinator request.
+        the largest valid nominal size. L53 proved the exchange can still return excess shares,
+        so this precision helper cannot authorize a BUY and the real transport refuses it.
         """
         size_d = Decimal(str(size)).quantize(Decimal("0.01"), rounding=ROUND_DOWN)
         price_d = Decimal(str(price))
@@ -283,11 +300,21 @@ class PyClobTransport:
             return float(candidate_price), float(Decimal(n) / 100)
         return None
 
+    @staticmethod
+    def buy_contract_cap_error() -> str:
+        # There is no max-received-share field in the installed V2 wire. GTC also
+        # crosses as taker unless post-only, which this execution route does not use.
+        # This is deliberately not an environment flag or operator-configurable bypass.
+        return BUY_CAP_UNPROVEN
+
     def post_order(self, *, token_id: str, price: float, size: float, order_type: str,
                    side: str = "BUY", tick: float | None = None) -> dict:
+        # Defence at the actual signing boundary, including callers outside submit().
+        if side != "SELL":
+            return {"success": False, "status": "rejected", "errorMsg": BUY_CAP_UNPROVEN,
+                    "prewire": True, "code": "QUANTITY_CAP_UNPROVEN"}
         # side "SELL" (2026-09-08): the protection layer sells held shares back and the market
-        # builder's amount is already share-sized. Immediate BUYs use a share-sized limit order
-        # submitted with FAK/FOK after moving size/price only downward to a cent-exact maker amount.
+        # builder's maker amount is share-sized, limiting how many held tokens can be sold.
         typ = getattr(self._T.OrderType, order_type)
         if order_type in ("FAK", "FOK") and side == "SELL":
             amount = Decimal(str(size))
@@ -295,14 +322,6 @@ class PyClobTransport:
             args = self._T.MarketOrderArgsV2(token_id=token_id, amount=amount, price=price,
                                              side=side, order_type=typ)
             signed = self._c.create_market_order(args)
-        elif order_type in ("FAK", "FOK"):
-            exact = self._cent_exact_buy(size=size, price=price, tick=tick)
-            if exact is None:
-                return {"success": False, "status": "rejected",
-                        "errorMsg": "no cent-exact share-sized BUY inside requested size/price and $1 minimum"}
-            exact_price, exact_size = exact
-            args = self._T.OrderArgsV2(token_id=token_id, price=exact_price, size=exact_size, side=side)
-            signed = self._c.create_order(args)
         else:
             args = self._T.OrderArgsV2(token_id=token_id, price=price, size=size, side=side)
             signed = self._c.create_order(args)
@@ -322,6 +341,34 @@ class PyClobTransport:
 
     def trades(self, *, after_ts: float) -> list[dict]:
         return list(self._c.get_trades(self._T.TradeParams(after=int(after_ts))))
+
+    def trade_activity(self, *, after_ts: float) -> list[dict]:
+        """Authoritative cash movements, kept as decimals and joined by transaction/token/side.
+
+        CLOB V2's top-level trade price can describe only the first maker, and fee_rate_bps
+        can be zero despite a charged fee. Data API activity supplies actual cash including
+        fees. This is a read-side call; never used while encoding or posting an order.
+        """
+        from urllib.parse import urlencode
+        from urllib.request import Request, urlopen
+        funder = os.environ.get("JANUS_PM_FUNDER")
+        if not funder:
+            raise ValueError("cash activity requires JANUS_PM_FUNDER")
+        rows, offset = [], 0
+        while offset <= 5000:
+            params = {"user": funder, "type": "TRADE", "start": max(1, int(after_ts) - 120),
+                      "sortBy": "TIMESTAMP", "sortDirection": "ASC", "limit": 500, "offset": offset}
+            request = Request(f"{PM_DATA_API}/activity?{urlencode(params)}", method="GET",
+                              headers={"Accept": "application/json", "User-Agent": "Janus-accounting"})
+            with urlopen(request, timeout=5) as response:
+                page = json.loads(response.read(), parse_float=Decimal)
+            if not isinstance(page, list):
+                raise ValueError("cash activity response is not a list")
+            if not page:
+                return rows
+            rows.extend(page)
+            offset += len(page)
+        raise ValueError("cash activity pagination incomplete")
 
     def balance_usd(self) -> float | None:
         """The account's collateral (pUSD since 2026-04-28), in dollars. The error is kept, never
@@ -377,6 +424,39 @@ def _f(v, default=0.0) -> float:
         return default
 
 
+def _activity_key(row: dict, *, trade: bool) -> tuple[str, str, str]:
+    return (str(row.get("transaction_hash" if trade else "transactionHash") or "").lower(),
+            str(row.get("asset_id" if trade else "asset") or ""), str(row.get("side") or "").upper())
+
+
+def authoritative_cash_fill(trade: dict, activity: dict) -> tuple[float, float]:
+    """Return source VWAP and cash-derived fee for an exact one-trade activity match.
+
+    Do not reconstruct cash from a CLOB top-level price or a model fee. Data API price is
+    its volume-weighted notional price; usdcSize is actual cash including paid fees. Its
+    decimal price can be rounded, so fee is the residual that preserves exact total cash.
+    """
+    if not all(_activity_key(trade, trade=True)) or _activity_key(trade, trade=True) != _activity_key(activity, trade=False):
+        raise ValueError("cash activity identity does not match trade")
+    if activity.get("type") != "TRADE" or activity.get("side") not in {"BUY", "SELL"}:
+        raise ValueError("cash activity is not a trade")
+    size = Decimal(str(trade.get("size")))
+    activity_size = Decimal(str(activity.get("size")))
+    price = Decimal(str(activity.get("price")))
+    cash = Decimal(str(activity.get("usdcSize")))
+    if not all(x.is_finite() for x in (size, activity_size, price, cash)):
+        raise ValueError("nonfinite cash activity")
+    if size != activity_size or size <= 0 or not 0 < price < 1 or cash < 0:
+        raise ValueError("cash activity quantity/price is inconsistent")
+    notional = size * price
+    fee = cash - notional if activity["side"] == "BUY" else notional - cash
+    # A ten-decimal reported VWAP may create a sub-micro-dollar negative residual at zero
+    # fee. Keep its precision; a larger credit is a different activity requiring review.
+    if fee < Decimal('-0.000001'):
+        raise ValueError("cash activity implies an unexplained credit")
+    return float(price), float(fee)
+
+
 @dataclass
 class PolymarketExecution:
     transport: ClobTransport
@@ -408,6 +488,9 @@ class PolymarketExecution:
     _sell_ok: set = field(default_factory=set)
     _last_trade_check: dict[str, float] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        self.journal.store.ensure_ddl(PM_CASH_SOURCES_DDL)
+
     def submit(self, req: OrderRequest, clearance) -> Ack:
         t = self.clock()
         refused = admit(req, clearance, venue=self.venue, mode=self.mode, needs=Mode.LIMITED_LIVE, now=t,
@@ -418,6 +501,15 @@ class PolymarketExecution:
             return Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None, "SIDE", t,
                        detail="Polymarket outcomes are separate tokens: pass the outcome's token id as "
                               "market_id with side buy_yes (or sell_yes to reduce a held position)")
+        if not req.is_sell:
+            cap_check = getattr(self.transport, "buy_contract_cap_error", None)
+            cap_error = cap_check() if cap_check is not None else BUY_CAP_UNPROVEN
+            if cap_error is not None:
+                self.journal.pending(req, mode=self.mode.value, now=t)
+                ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None,
+                          "QUANTITY_CAP_UNPROVEN", t, detail=cap_error)
+                self.journal.record(ack, kind="reject", raw={"prewire": True})
+                return ack
         if req.is_sell and req.market_id not in self._sell_ok:
             # The exchange must be approved on the conditional token before a SELL (2026-09-08).
             # Best effort and remembered: a refused approval shows up as the venue's own rejection.
@@ -587,6 +679,7 @@ class PolymarketExecution:
         live = status == "LIVE"
         return OrderState(self.venue, cid, o.get("id"), state, matched, price, None, status.lower(), t,
                           open=live, settlement_pending=matched > 0,
+                          detail="order price provisional; cash accounting pending" if matched > 0 else "",
                           final=status in ("MATCHED", "CANCELED", "CANCELLED", "UNMATCHED"))
 
     def cancel(self, client_order_id: str) -> Ack:
@@ -607,27 +700,132 @@ class PolymarketExecution:
         return st
 
     def fills(self, *, since_utc: float) -> Sequence[FillRecord]:
+        trades = list(self.transport.trades(after_ts=since_utc))
+        cash_reader = getattr(self.transport, "trade_activity", None)
+        activities: dict[tuple, list[dict]] = {}
+        trade_counts: dict[tuple, int] = {}
+        for tr in trades:
+            if str(tr.get("status", "")).upper() not in DEAD_TRADE:
+                key = _activity_key(tr, trade=True)
+                trade_counts[key] = trade_counts.get(key, 0) + 1
+        confirmed = [tr for tr in trades if str(tr.get("status", "")).upper() in FINAL_TRADE]
+        if callable(cash_reader) and confirmed:
+            try:
+                # Publish the fresh index only after the entire read/iteration succeeds.
+                # Keeping a valid prefix after a malformed row or lazy-reader exception
+                # could hide a later duplicate and manufacture unambiguous cash authority.
+                complete_batch: dict[tuple, list[dict]] = {}
+                earliest = min(_f(tr.get("match_time"), since_utc) for tr in confirmed)
+                for activity in cash_reader(after_ts=earliest):
+                    key = _activity_key(activity, trade=False)
+                    complete_batch.setdefault(key, []).append(activity)
+                activities = complete_batch
+            except Exception as exc:  # noqa: BLE001 -- fills remain known; cash finality does not
+                activities = {}  # Durable prior source remains allowed; no fresh prefix does.
+                self.last_error = "CASH_ACTIVITY_PENDING: " + brief_error(exc)
         out = []
-        for tr in self.transport.trades(after_ts=since_utc):
+        for tr in trades:
             status = str(tr.get("status", "")).upper()
             if status in DEAD_TRADE:
                 continue                     # a reversal: reconcile handles it, never a fill here
-            size, price = _f(tr.get("size")), _f(tr.get("price"))
+            size = _f(tr.get("size"))
+            order_id = str(tr.get("taker_order_id") or tr.get("order_id") or "")
+            order = self.journal.store.con.execute(
+                "SELECT client_order_id,price FROM orders WHERE venue_order_id=?", (order_id,)).fetchone()
             taker = str(tr.get("trader_side", "TAKER")).upper() == "TAKER"
+            price = taker_trade_vwap(tr) if taker else None
+            if price is None:
+                # No cash and no maker-leg VWAP: the top-level price is NOT an average.
+                # Use the durable request ceiling for a BUY. An orphan BUY without a
+                # request uses the binary payout bound; SELL proceeds use a zero floor.
+                price = float(order[1]) if order else (0.0 if str(tr.get("side", "")).upper() == "SELL" else 1.0)
             fee = size * price * _f(tr.get("fee_rate_bps")) / 10_000.0
             fee_source = "venue"
             market_id = str(tr.get("asset_id") or "")
             fee_params = self.fee_params_by_market.get(market_id) or self.fee_params
             if fee <= 0 and taker and fee_params and size > 0:
                 fee, fee_source = self._pinned_fee(tr, size, price, fee_params), "pinned (venue reported none)"
-            rec = FillRecord(self.venue, str(tr.get("taker_order_id") or tr.get("order_id") or ""),
-                             str(tr.get("id")), size, price, fee, taker, _f(tr.get("match_time"), since_utc), status in FINAL_TRADE,
+            cash_final = False
+            activity = None
+            key = _activity_key(tr, trade=True)
+            candidates = activities.get(key, [])
+            try:
+                if trade_counts.get(key) != 1 or len(candidates) != 1:
+                    raise ValueError("cash activity absent or ambiguous")
+                candidate = candidates[0]
+                price, fee = authoritative_cash_fill(tr, candidate)
+                activity = candidate  # Do not audit an invalid candidate as source authority.
+                cash_final, fee_source = True, "venue activity cash"
+            except (ValueError, ArithmeticError) as exc:
+                self.last_error = "CASH_ACTIVITY_PENDING: " + str(exc)
+                fee_source = "provisional; authoritative cash pending"
+            rec = FillRecord(self.venue, order_id,
+                             str(tr.get("id")), size, price, fee, taker, _f(tr.get("match_time"), since_utc), status in FINAL_TRADE and cash_final,
                              market_id=market_id,
                              side="sell_yes" if str(tr.get("side", "")).upper() == "SELL" else "buy_yes")
+            prior = self._durable_cash_fill(rec.fill_id, current_trade=tr)
+            if cash_final:
+                # Cash read succeeded. An explicit changed authoritative source may revise
+                # price/fee/quantity; a stale chain status alone cannot undo confirmation.
+                if prior is not None and prior.final and prior.contracts == rec.contracts:
+                    rec = replace(rec, final=True)
+                self._remember_cash_source(tr, activity)
+            elif prior is not None:
+                rec = prior
+                fee_source = "venue activity cash (durable; reread unavailable)"
             self.journal.record_fill(rec)
+            if cash_final and activity is not None:
+                # Preserve source evidence append-only. A corrected cash line appends a new
+                # event; it never edits the historical response or invents a replacement id.
+                source = {"fill_id": rec.fill_id, "endpoint": "data-api.polymarket.com/activity",
+                          "activity": json.loads(json.dumps(activity, default=str))}
+                raw = json.dumps(source)
+                if order and not self.journal.store.con.execute(
+                        "SELECT 1 FROM order_events WHERE client_order_id=? AND kind='authoritative_cash' AND raw_json=?",
+                        (order[0], raw)).fetchone():
+                    self.journal._event(order[0], "authoritative_cash", None, source, self.clock())
+                    self.journal.store.con.commit()
             self.last_fee_source = fee_source
             out.append(rec)
         return out
+
+    def _durable_cash_fill(self, fill_id: str, *, current_trade: dict) -> FillRecord | None:
+        """Only source-proved cash is durable; a legacy final bit/model fee is not proof."""
+        row = self.journal.store.con.execute(
+            "SELECT source_json,source_sha256 FROM pm_cash_sources WHERE fill_id=? ORDER BY id DESC LIMIT 1",
+            (fill_id,)).fetchone()
+        if row is None:
+            return None
+        if hashlib.sha256(row[0].encode()).hexdigest() != row[1]:
+            raise ValueError("durable cash source SHA256 mismatch")
+        source = json.loads(row[0], parse_float=Decimal)
+        tr, activity = source['trade'], source['activity']
+        price, fee = authoritative_cash_fill(tr, activity)
+        order_id = str(tr.get('taker_order_id') or tr.get('order_id') or '')
+        previous = self.journal.store.con.execute(
+            "SELECT final,contracts,venue_order_id FROM venue_fills WHERE fill_id=?", (fill_id,)).fetchone()
+        was_final = bool(previous and previous[0] and previous[1] == float(tr['size']) and previous[2] == order_id)
+        same_match = (_activity_key(current_trade, trade=True) == _activity_key(tr, trade=True)
+                      and str(current_trade.get('size')) == str(tr.get('size'))
+                      and str(current_trade.get('taker_order_id') or current_trade.get('order_id') or '') == order_id)
+        now_confirmed = same_match and str(current_trade.get('status', '')).upper() in FINAL_TRADE
+        return FillRecord(self.venue, order_id, fill_id,
+                          float(tr['size']), price, fee, str(tr.get('trader_side', 'TAKER')).upper() == 'TAKER',
+                          _f(tr.get('match_time')), was_final or now_confirmed or str(tr.get('status', '')).upper() in FINAL_TRADE,
+                          market_id=str(tr.get('asset_id') or ''),
+                          side='sell_yes' if str(tr.get('side', '')).upper() == 'SELL' else 'buy_yes')
+
+    def _remember_cash_source(self, trade: dict, activity: dict) -> None:
+        source = json.dumps({'trade': trade, 'activity': activity}, default=str, sort_keys=True, separators=(',', ':'))
+        digest = hashlib.sha256(source.encode()).hexdigest()
+        previous = self.journal.store.con.execute(
+            "SELECT source_sha256 FROM pm_cash_sources WHERE fill_id=? ORDER BY id DESC LIMIT 1",
+            (str(trade['id']),)).fetchone()
+        if previous is None or previous[0] != digest:
+            self.journal.store.con.execute(
+                "INSERT INTO pm_cash_sources(fill_id,source_sha256,source_json,observed_utc) VALUES(?,?,?,?)",
+                (str(trade['id']), digest, source, self.clock()))
+            self.journal.store.con.commit()
 
     def _pinned_fee(self, tr: dict, size: float, price: float, fee_params: Any) -> float:
         from nodes.fees.models import Fill

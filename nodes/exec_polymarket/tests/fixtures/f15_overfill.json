@@ -1,0 +1,47 @@
+{
+  "provenance": {
+    "trade_source": "/Volumes/Kilos/janus/accounting/L52/20260909T093018Z_pm_clob_trades/0000.json",
+    "trade_source_sha256": "f79f86a47cb9e215e80078721058621eaa20667a9157765e008d7d87038df58c",
+    "trade_selection": "data[0], exact projection of identity and execution fields; account addresses omitted",
+    "request_source": "/Volumes/Kilos/janus/accounting/L52/20260909T094147Z_maximus_journal/journal.json",
+    "request_source_sha256": "f74d9949cfe9d44b305c78fa02db9b2148c3f80d2ccf20a53a8e39b1304c658f",
+    "request_selection": "orders[0] and events row id739 raw_json; exact field projection, account addresses omitted",
+    "order_source_note": "Original signed HTTP request was not captured. Historical journal raw GET order is below. Later L52 GET order 20260909T093216Z returned null."
+  },
+  "request": {"contracts": 10.0, "price": 0.36, "order_type": "FAK"},
+  "execution_id": "ceba2013c79e4334b8406ad315b9e78e",
+  "order": {
+    "id": "0x8b43f15c3eb76e3e5a08e625015d2e8093cc0184885ba00d143cd6b4461e959a",
+    "status": "MATCHED",
+    "original_size": "10",
+    "size_matched": "10.166667",
+    "price": "0.36",
+    "order_type": "FAK",
+    "associate_trades": ["a9bfe2a5-470d-4c59-96df-2460af495118"]
+  },
+  "trade": {
+    "id": "a9bfe2a5-470d-4c59-96df-2460af495118",
+    "taker_order_id": "0x8b43f15c3eb76e3e5a08e625015d2e8093cc0184885ba00d143cd6b4461e959a",
+    "size": "10.166667",
+    "price": "0.35",
+    "asset_id": "22365084490966707252101015936389490534266716679018845032329737758423702381578",
+    "side": "BUY",
+    "status": "CONFIRMED",
+    "maker_orders": [
+      {
+        "order_id": "0xd0e53947f39b577cbc48ecafb35233e5404f5b3f7f5db87654b7454687bb526f",
+        "matched_amount": "6",
+        "price": "0.65",
+        "asset_id": "87779554018068503672107143499768664555211995190362679139807627470550504934074",
+        "side": "BUY"
+      },
+      {
+        "order_id": "0xe00ed5fd101eb417c9f08b7486357e89d71cc3a588a63f33523ad833e7a906c8",
+        "matched_amount": "4.166667",
+        "price": "0.3599999712000023",
+        "asset_id": "22365084490966707252101015936389490534266716679018845032329737758423702381578",
+        "side": "SELL"
+      }
+    ]
+  }
+}

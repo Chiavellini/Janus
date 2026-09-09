@@ -5,10 +5,12 @@ from __future__ import annotations
 
 import json
 import types
+from decimal import Decimal
 
 import pytest
 
-from kernel.schema import Mode
+from kernel.execution_protocol import OrderRequest
+from kernel.schema import FillState, Mode
 from nodes.exec_polymarket.client import PolymarketExecution
 from nodes.execution.journal import Journal
 from nodes.fees.models import Fill
@@ -34,10 +36,19 @@ def pinned(shares, price):
 
 
 class FakeTransport:
-    """A CLOB that rests the GTC, matches the FOK, and confirms (or fails) the trade on-chain."""
+    """Offline exact-share simulator; not a claim about the real CLOB's BUY contract.
+
+    This fake never signs or sends anything. Its matching branch executes exactly ``size``,
+    while the real PyClobTransport continues to refuse every unbounded BUY before signing.
+    """
+    @staticmethod
+    def buy_contract_cap_error():
+        return None  # Test-only: the matching branch below cannot receive surplus shares.
+
     def __init__(self, *, fee_bps: float, confirm=True, balance=25.0):
         self.fee_bps, self.confirm, self.bal = fee_bps, confirm, balance
         self.orders, self.calls, self.n = {}, [], 0
+        self.activities = []
 
     def post_order(self, *, token_id, price, size, order_type, side="BUY", tick=None):
         self.n += 1
@@ -46,8 +57,16 @@ class FakeTransport:
         if order_type == "GTC":
             self.orders[oid] = {"id": oid, "status": "LIVE", "size_matched": "0", "price": str(price), "size": size}
             return {"success": True, "orderID": oid, "status": "live"}
-        self.orders[oid] = {"id": oid, "status": "MATCHED", "size_matched": str(size), "price": str(price), "size": size}
-        self.bal -= size * price * (1 + self.fee_bps / 10_000.0 * (1 - price))
+        self.orders[oid] = {"id": oid, "status": "MATCHED", "size_matched": str(size), "price": str(price), "size": size,
+                            "asset_id": token_id, "side": side, "transaction_hash": f"offline-tx-{oid}"}
+        quantity, executed_price = Decimal(str(size)), Decimal(str(price))
+        cash = quantity * executed_price * (1 + Decimal(str(self.fee_bps)) / 10_000 * (1 - executed_price))
+        self.bal -= float(cash)
+        # Independent scripted cash evidence: the actual debit used by this in-memory venue,
+        # not a model fee promoted to final by the execution adapter.
+        self.activities.append({"type": "TRADE", "asset": token_id, "side": side,
+                                "transactionHash": f"offline-tx-{oid}", "size": quantity,
+                                "price": executed_price, "usdcSize": cash})
         return {"success": True, "orderID": oid, "status": "matched", "tradeIDs": ["t1"]}
 
     def get_order(self, order_id):
@@ -65,8 +84,12 @@ class FakeTransport:
                 size, price = float(o["size"]), float(o["price"])
                 out.append({"id": f"tr-{oid}", "taker_order_id": oid, "size": size, "price": price,
                             "fee_rate_bps": self.fee_bps * (1 - price) * 1.0, "trader_side": "TAKER", "match_time": T,
+                            "asset_id": o["asset_id"], "transaction_hash": o["transaction_hash"], "side": o["side"],
                             "status": "CONFIRMED" if self.confirm else "FAILED"})
         return out
+
+    def trade_activity(self, *, after_ts):
+        return list(self.activities) if self.confirm else []
 
     def balance_usd(self):
         return self.bal
@@ -100,6 +123,19 @@ def run(tmp_path, tr, store=None):
 def fee_bps_at_pin():
     # the adapter computes fee = size * price * fee_rate_bps / 10_000; the pin is rate * p * (1-p) * size
     return 0.05 * 10_000.0
+
+
+def test_the_proof_fake_without_a_cap_contract_still_refuses_before_posting(tmp_path):
+    tr = FakeTransport(fee_bps=fee_bps_at_pin())
+    unproven = types.SimpleNamespace(post_order=tr.post_order)
+    _, clearance, _ = cleared(tmp_path)
+    journal = Journal(TupleStore(tmp_path / "unproven.sqlite", enforce_volume=False))
+    venue = PolymarketExecution(unproven, journal, Mode.LIMITED_LIVE, clock=lambda: T)
+    req = OrderRequest("polymarket", TOKEN, TOKEN, "buy_yes", ASK, 5, "fok", "offline-proof", "proof:pm1")
+    ack = venue.submit(req, clearance)
+    assert ack.state is FillState.REJECTED and ack.raw_status == "QUANTITY_CAP_UNPROVEN"
+    assert ack.venue_order_id is None and tr.calls == [] and venue.submits == 0
+    assert journal.get(req.client_order_id)["raw_status"] == "QUANTITY_CAP_UNPROVEN"
 
 
 def test_the_flow_rests_cancels_matches_and_confirms_at_the_pinned_fee(tmp_path):

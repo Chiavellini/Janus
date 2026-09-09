@@ -173,6 +173,13 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
     for phase in ("walked", "budget", "loss_cap"):
         phase_attempts = 0
         while ex.unhedged > dust and attempts < chase_cap and rejected is None:
+            # The authorized plan caps aggregate hedge buys, including retries and
+            # guard reruns. An excess first-leg fill never authorizes a larger second leg.
+            qty = min(ex.unhedged, max(0.0, hedge.contracts - ex.hedge_filled))
+            if qty < 0.01:
+                ex.protect["quantity_cap_residual"] = ex.unhedged
+                rejected = "HEDGE_QUANTITY_CAP: remaining exposure exceeds authorized hedge size"
+                break
             t = co.mono()
             if phase == "walked":
                 if t >= t_hedge or phase1 >= clearance.max_hedge_submits:
@@ -199,7 +206,7 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
             # Defence in depth: no protection request reaches a venue off tick even if a future
             # ceiling or book adapter introduces a continuous price again.
             limit = tick_floor(clamp(max(limit, 0.01)), tick)
-            req = co._request(plan, hedge, ex.unhedged, limit, hedge=True)
+            req = co._request(plan, hedge, qty, limit, hedge=True)
             ex.hedge_client_ids.append(req.client_order_id)
             co._move(ex, X.LEG_B_SUBMITTED, detail=f"attempt {attempts} limit {limit:.4f} budget {budget:.4f}"
                                                    + ("" if phase == "walked" else f" phase {phase} ceiling {ceiling:.4f}"))
@@ -207,9 +214,11 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
             hb = venues[hedge.venue].submit(req, clearance)
             co._stamp(ex, "b_ack_ms")
             hb = co._settle_ack(hedge.venue, hb, deadline_mono=deadline, ex=ex, key="b")
+            co._check_overfill(ex, req, hb)
             co._stamp(ex, "b_settled_ms")
             ex.stages["b_attempts"] = attempts
-            log(kind="hedge", phase=phase, limit=limit, ceiling=round(ceiling, 4), qty=round(ex.unhedged, 4),
+            log(kind="hedge", phase=phase, limit=limit, ceiling=round(ceiling, 4), qty=req.contracts,
+                held_unhedged=ex.unhedged,
                 state=hb.state.value, filled=hb.filled_contracts, avg=hb.avg_price)
             if hb.state is FillState.UNCONFIRMED:
                 return fail_unprotected(X.UNKNOWN_PROVIDER_STATE, f"hedge unconfirmed: {hb.detail}")
@@ -254,6 +263,7 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
             co._stamp(ex, "u_submit_ms")
             ack = venues[leg.venue].submit(req, clearance)
             hb = co._settle_ack(leg.venue, ack, deadline_mono=deadline, ex=ex, key="u")
+            co._check_overfill(ex, req, hb)
             co._stamp(ex, "u_settled_ms")
             log(kind="unwind", leg=which, floor=floor, best_bid=bb, qty=round(qty, 4), state=hb.state.value,
                 filled=hb.filled_contracts, avg=hb.avg_price)
@@ -306,6 +316,8 @@ def _hedged(co, ex, plan, paid: float, budget: float, *, protected: bool = False
     elif avg > budget + 1e-9:
         label = f" ABOVE_BUDGET {budget:.4f}: below the hurdle, still a cover"
     detail = f"{ex.hedge_filled} hedged @ {ex.hedge_avg_price}" + label
+    if ex.protect.get("quantity_violations"):
+        detail += f"; ORDER_OVERFILL stop retained; residual {ex.unhedged:g} first / {ex.overhedged:g} hedge"
     if protected:
         detail = (f"PROTECTED: {min(ex.net_first, ex.net_hedge):g} pairs kept, {ex.first_unwound:g} first sold @ {ex.first_unwind_avg}, "
                   f"{ex.hedge_unwound:g} hedge sold @ {ex.hedge_unwind_avg}; " + detail)

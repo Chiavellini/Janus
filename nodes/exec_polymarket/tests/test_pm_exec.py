@@ -18,6 +18,10 @@ T = 1000.0
 
 
 class FakeTransport:
+    def buy_contract_cap_error(self):
+        # Scripted offline transport: permits exercising historical response handling.
+        # The real PyClobTransport always refuses the unbounded BUY wire.
+        return None
     def __init__(self, posts=(), orders=(), trades=(), user_orders=()):
         self.posts, self.orders, self.tr = list(posts), list(orders), list(trades)
         self.user_orders = list(user_orders)
@@ -93,12 +97,14 @@ def test_a_taker_fill_the_venue_reports_without_a_fee_carries_the_pinned_fee(tmp
     (2026-09-07: balance moved by fills + exactly the pinned 0.0604). With fee params known, the fill
     carries the pinned fee, labelled; without them it stays 0."""
     tr = FakeTransport(trades=[{"id": "t1", "taker_order_id": "0xabc", "size": "5.131577", "price": "0.38",
-                                "fee_rate_bps": "0", "trader_side": "TAKER", "match_time": T, "status": "CONFIRMED"}])
+                                "fee_rate_bps": "0", "trader_side": "TAKER", "match_time": T, "status": "CONFIRMED",
+                                "side": "BUY", "asset_id": "tok-1", "maker_orders": [
+                                    {"asset_id": "tok-1", "side": "SELL", "price": "0.38", "matched_amount": "5.131577"}]}])
     v, j = venue(tmp_path, tr)
-    assert v.fills(since_utc=0)[0].fee_usd == 0.0 and v.last_fee_source == "venue"
+    assert v.fills(since_utc=0)[0].fee_usd == 0.0 and "provisional" in v.last_fee_source
     v.fee_params = {"fee_rate": 0.05, "fee_exponent": 1.0, "taker_only": True, "rebate_rate": 0.15}
     f = v.fills(since_utc=0)[0]
-    assert f.fee_usd > 0 and v.last_fee_source.startswith("pinned")
+    assert f.fee_usd > 0 and not f.final and "provisional" in v.last_fee_source
 
 
 def test_live_fee_params_are_keyed_by_market_not_the_last_pollers_schedule(tmp_path):
@@ -109,6 +115,9 @@ def test_live_fee_params_are_keyed_by_market_not_the_last_pollers_schedule(tmp_p
         {"id": "t2", "taker_order_id": "o2", "asset_id": "tok-seven", "size": "10", "price": "0.31",
          "fee_rate_bps": "0", "trader_side": "TAKER", "match_time": T, "status": "CONFIRMED"},
     ])
+    for trade in tr.tr:
+        trade.update(side="BUY", maker_orders=[{"asset_id": trade["asset_id"], "side": "SELL",
+                                               "price": "0.31", "matched_amount": "10"}])
     v, _ = venue(tmp_path, tr)
     v.fee_params = {"fee_rate": 0.04}
     v.fee_params_by_market = {
@@ -148,8 +157,9 @@ def test_only_confirmed_trades_are_final_and_failed_ones_are_not_fills(tmp_path)
                                 "status": "FAILED", "trader_side": "TAKER", "match_time": "999"}])
     v, j = venue(tmp_path, tr)
     fs = v.fills(since_utc=0)
-    assert [(f.fill_id, f.final) for f in fs] == [("t1", False), ("t2", True)]
-    assert fs[1].fee_usd == pytest.approx(10 * 0.44 * 0.05)
+    assert [(f.fill_id, f.final) for f in fs] == [("t1", False), ("t2", False)], "CONFIRMED without cash is not accounting-final"
+    assert fs[1].price == 1 and fs[1].fee_usd == pytest.approx(10 * 1 * 0.05), \
+        "without maker legs or a journal ceiling, BUY cost uses the binary bound, not top-level .44"
     assert v.balance().available_usd == 123.0
 
 
@@ -168,8 +178,8 @@ def test_the_mode_gate_and_the_optional_library(tmp_path, monkeypatch):
         PyClobTransport()
 
 
-def test_immediate_buy_preserves_share_quantity_with_a_cent_exact_limit():
-    """5 @ .481 cannot sign 2.405 maker dollars; move the limit to .480, never the size up."""
+def test_nominal_cent_exact_size_does_not_authorize_any_real_buy():
+    """The old test checked SDK args only. No BUY may reach signing or posting."""
     class Client:
         def __init__(self): self.market = []; self.limit = []; self.posts = []
         def create_market_order(self, args): self.market.append(args); return "signed-market"
@@ -182,12 +192,11 @@ def test_immediate_buy_preserves_share_quantity_with_a_cent_exact_limit():
     tr._c = Client()
     tr._T = SimpleNamespace(OrderType=SimpleNamespace(FAK="FAK", FOK="FOK", GTC="GTC"),
                             MarketOrderArgsV2=Args, OrderArgsV2=Args)
-    tr.post_order(token_id="tok", price=.481, size=5.0, order_type="FAK", side="BUY", tick=.001)
-    assert not tr._c.market and len(tr._c.limit) == 1
-    assert tr._c.limit[0].size == 5.0 and tr._c.limit[0].price == .480
-    assert tr._c.posts == [("signed-limit", "FAK", True)]
-    tr.post_order(token_id="tok", price=.481, size=5.0, order_type="GTC", side="BUY")
-    assert len(tr._c.limit) == 2, "resting limits retain share-size semantics"
+    for order_type in ("FAK", "FOK", "GTC"):
+        result = tr.post_order(token_id="tok", price=.481, size=5.0, order_type=order_type,
+                               side="BUY", tick=.001)
+        assert result["code"] == "QUANTITY_CAP_UNPROVEN" and result["prewire"]
+    assert not tr._c.market and not tr._c.limit and not tr._c.posts
 
 
 def test_cent_exact_buy_never_increases_size_or_price_and_can_reduce_fractional_size():
@@ -255,7 +264,8 @@ def test_a_not_found_order_is_filled_when_the_trade_feed_proves_it(tmp_path):
     v, j = venue(tmp_path, tr)
     assert v.submit(req(time_in_force="ioc"), cl(tmp_path)).state is FillState.UNCONFIRMED
     st = v.status("c1")
-    assert st.state is FillState.FILLED and st.filled_contracts == 10.15625 and st.avg_price == 0.63 and st.final
+    assert st.state is FillState.FILLED and st.filled_contracts == 10.15625 and st.avg_price == 0.44
+    assert not st.final and st.settlement_pending, "fill quantity is proven but cash authority is missing"
     assert j.get("c1")["state"] == "FILLED" and j.get("c1")["filled_contracts"] == 10.15625
 
 
@@ -264,7 +274,8 @@ def test_the_authenticated_user_stream_proves_a_match_before_rest(tmp_path):
     assert feed.handle({"event_type": "trade", "id": "t1", "taker_order_id": "0xabc", "size": "10.15625",
                         "price": "0.63", "status": "MATCHED", "asset_id": "tok-1", "side": "BUY"}) == ["trade"]
     seen = feed.order("0xabc")
-    assert seen["status"] == "MATCHED" and seen["size_matched"] == 10.15625 and seen["price"] == 0.63
+    assert seen["status"] == "MATCHED" and seen["size_matched"] == 10.15625
+    assert seen["price"] is None, "without maker legs the top-level trade price is not a proven VWAP"
 
     tr = FakeTransport(posts=[{"success": True, "orderID": "0xabc", "status": "delayed"}],
                        orders=[None], user_orders=[seen])
