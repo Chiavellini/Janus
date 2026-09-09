@@ -1,0 +1,2 @@
+venue,league,venue_team_id,entity_id,source,label,note
+kalshi,ucl,7e273345-6669-4db7-8a38-7f3ccb608937,epl:eng.man_utd,manual_2026-09-09,Manchester United,"L57 public UCL Sep 10 slate: custom_strike UUID and full participant label Manchester United identify ESPN soccer 360; ticker MUN conflicts with ESPN Bayern Munich 132 abbreviation MUN. Exact UUID exception only; no MUN alias and no generated conflict suppression."

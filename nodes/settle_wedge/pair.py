@@ -38,7 +38,7 @@ def certify_from_spec(spec: Mapping, league: str, *,
     recs = records_from_spec(spec, league)
     if recs is None:
         return NotEquivalent("RULES_MISSING", "the slate spec carries no rules text for one or both venues")
-    if league in {"mls", "ere"}:
+    if league in {"mls", "ere", "ucl"}:
         population = spec.get("schedule_population")
         if not isinstance(population, Mapping) or population.get("game_id") != spec.get("game_id"):
             return NotEquivalent("EVIDENCE_POPULATION_MISMATCH",

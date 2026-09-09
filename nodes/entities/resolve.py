@@ -52,6 +52,8 @@ ALIASES_CSV = HERE / "aliases.csv"
 #: date and the reason it was needed.
 ALIASES_MANUAL_CSV = HERE / "aliases_manual.csv"
 XREFS_CSV = HERE / "xrefs.csv"
+#: Audited stable-id exceptions survive generated reseeds; never override a conflicting row.
+XREFS_MANUAL_CSV = HERE / "xrefs_manual.csv"
 UNRESOLVED_CSV = HERE / "unresolved.csv"
 
 #: Tokens stripped during normalization. Kept SHORT and deliberately conservative — every entry is
@@ -80,8 +82,8 @@ def normalize(text: str) -> str:
 
 @dataclass(frozen=True)
 class Team:
-    entity_id: str          # "mlb:st-louis-cardinals" — stable, human-readable, league-prefixed
-    league: str
+    entity_id: str          # Stable opaque identity; legacy competition prefixes are preserved.
+    league: str             # Identity scope/original league, not current competition membership.
     espn_id: str
     abbrev: str
     location: str           # "St. Louis"
@@ -128,21 +130,24 @@ def load_alias_rows(path: Path = ALIASES_CSV,
     return rows
 
 
-def load_xrefs(path: Path = XREFS_CSV) -> dict[tuple[str, str], str]:
+def load_xrefs(path: Path = XREFS_CSV,
+               manual: Path | None = XREFS_MANUAL_CSV) -> dict[tuple[str, str], str]:
     """(venue, venue_team_id) -> entity_id. Venue ids are globally unique per venue, so the
-    league is not part of the key — but a collision across leagues is asserted against."""
-    if not path.exists():
-        return {}
+    league is not part of the key. The audited overlay is additive, never last-writer-wins:
+    every collision within or between the two files raises, including across competitions."""
     out: dict[tuple[str, str], str] = {}
-    with path.open(newline="", encoding="utf-8") as fh:
-        for r in csv.DictReader(fh):
-            k = (r["venue"], r["venue_team_id"])
-            prev = out.get(k)
-            if prev is not None and prev != r["entity_id"]:
-                raise ValueError(
-                    f"xref collision: {k} maps to both {prev!r} and {r['entity_id']!r}. "
-                    "A venue team id must identify exactly one entity.")
-            out[k] = r["entity_id"]
+    for source in (path, manual):
+        if source is None or not source.exists():
+            continue
+        with source.open(newline="", encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                k = (r["venue"], r["venue_team_id"])
+                prev = out.get(k)
+                if prev is not None and prev != r["entity_id"]:
+                    raise ValueError(
+                        f"xref collision: {k} maps to both {prev!r} and {r['entity_id']!r}. "
+                        "A venue team id must identify exactly one entity.")
+                out[k] = r["entity_id"]
     return out
 
 

@@ -78,17 +78,155 @@ def pm_sports(cl: Client) -> list[dict]:
     return list(d) if isinstance(d, list) else []
 
 
-def pm_events_for_tag(tag_id: int | str, cl: Client, *, page: int = 100, max_pages: int = 30) -> list[dict]:
+def _pm_events_for_selector(selector: str, value: int | str, cl: Client, *, page: int,
+                            max_pages: int) -> tuple[list[dict], bool]:
+    """Fetch all pages for one Gamma event selector."""
     out = []
     for i in range(max_pages):
-        d = cl.get_json(f"{PM_GAMMA}/events", params={"tag_id": tag_id, "closed": "false", "limit": page,
+        d = cl.get_json(f"{PM_GAMMA}/events", params={selector: value, "closed": "false", "limit": page,
                                                      "offset": i * page}, use_cache=False)
-        if not d:
-            break
+        if not isinstance(d, list):
+            raise ValueError(f"Gamma /events {selector} page is not a list: {type(d).__name__}")
+        if d == []:
+            return out, False
         out += d
         if len(d) < page:
-            break
+            return out, False
+    # Every requested page was full; there may be more data beyond the bounded fetch.
+    return out, True
+
+
+def _is_pm_game_event(event: dict) -> bool:
+    return any(isinstance(m, dict) and m.get("sportsMarketType") == "moneyline"
+               and m.get("gameStartTime") for m in (event.get("markets") or []))
+
+
+def _pm_event_identity(event: dict) -> tuple[str, str]:
+    """The two stable Gamma identities, retained separately for cross-representation merging."""
+    slug = str(event.get("slug") or "")
+    return str(event.get("id") or ""), slug
+
+
+def _pm_event_label(event: dict) -> str:
+    ident, slug = _pm_event_identity(event)
+    return f"id:{ident}" if ident else f"slug:{slug}"
+
+
+def _merge_event_fields(left: dict, right: dict) -> dict:
+    """Union two representations, preferring the first non-empty scalar value."""
+    out = dict(left)
+    for key, value in right.items():
+        if key not in out or out[key] in (None, "", [], {}):
+            out[key] = value
+        elif isinstance(out[key], dict) and isinstance(value, dict):
+            out[key] = _merge_event_fields(out[key], value)
+        elif isinstance(out[key], list) and isinstance(value, list):
+            # Markets and teams carry ids/slugs; union records by either identity and merge
+            # overlapping records recursively. Other lists are treated as ordered sets.
+            combined = list(out[key])
+            for item in value:
+                match = next((i for i, old in enumerate(combined)
+                              if isinstance(old, dict) and isinstance(item, dict)
+                              and ((old.get("id") and old.get("id") == item.get("id"))
+                                   or (old.get("slug") and old.get("slug") == item.get("slug")))), None)
+                if match is not None:
+                    combined[match] = _merge_event_fields(combined[match], item)
+                elif item not in combined:
+                    combined.append(item)
+            out[key] = combined
     return out
+
+
+def _representation_conflicts(events: list[dict]) -> list[str]:
+    ids: dict[str, set[str]] = defaultdict(set)
+    slugs: dict[str, set[str]] = defaultdict(set)
+    for event in events:
+        ident, slug = _pm_event_identity(event)
+        if ident and slug:
+            ids[ident].add(slug)
+            slugs[slug].add(ident)
+    conflicts = [f"id:{ident}->{','.join(sorted(values))}" for ident, values in ids.items() if len(values) > 1]
+    conflicts += [f"slug:{slug}->{','.join(sorted(values))}" for slug, values in slugs.items() if len(values) > 1]
+    return sorted(conflicts)
+
+
+def pm_events_for_sport(tag_id: int | str, sport: str, cl: Client, *, page: int = 100,
+                        max_pages: int = 30) -> tuple[list[dict], dict]:
+    """Fetch a sport's events with generic primary-tag and slug selectors.
+
+    Gamma's /sports primaryTagId is not guaranteed to be the tag that contains game events.  The
+    primary query is always attempted first and the sport slug is queried independently. Results
+    are merged by stable event identity and query diagnostics are returned so a missing, broken,
+    or incomplete selector remains visible to callers.
+    """
+    primary_selector = "tag_id"
+    slug_selector = "tag_slug"
+    primary: list[dict] = []
+    diagnostics = {"primary": {"selector": primary_selector, "value": tag_id},
+                   "fallback": {"selector": slug_selector, "value": sport},
+                   "fallback_used": str(sport) != str(tag_id), "errors": {}, "pagination_exhausted": [],
+                   "only_primary": [], "only_fallback": [], "representation_conflicts": []}
+    try:
+        primary, truncated = _pm_events_for_selector(primary_selector, tag_id, cl, page=page, max_pages=max_pages)
+        if truncated:
+            diagnostics["pagination_exhausted"].append(primary_selector)
+    except Exception as exc:  # noqa: BLE001 -- preserve the error while trying the independent selector
+        diagnostics["errors"][primary_selector] = brief_error(exc)
+
+    primary_games = sum(1 for event in primary if _is_pm_game_event(event))
+    diagnostics["primary"].update({"events": len(primary), "game_events": primary_games})
+    fallback: list[dict] = []
+    if str(sport) != str(tag_id):
+        try:
+            fallback, truncated = _pm_events_for_selector(slug_selector, sport, cl, page=page, max_pages=max_pages)
+            if truncated:
+                diagnostics["pagination_exhausted"].append(slug_selector)
+        except Exception as exc:  # noqa: BLE001 -- visible in diagnostics; primary data remains usable
+            diagnostics["errors"][slug_selector] = brief_error(exc)
+    fallback_games = sum(1 for event in fallback if _is_pm_game_event(event))
+    diagnostics["fallback"].update({"events": len(fallback), "game_events": fallback_games})
+    conflicts = _representation_conflicts([*primary, *fallback])
+    diagnostics["representation_conflicts"] = conflicts
+    if conflicts:
+        diagnostics["errors"]["representation"] = "; ".join(conflicts)
+    merged: list[dict] = []
+    for event in [*primary, *fallback]:
+        ident, slug = _pm_event_identity(event)
+        matches = [i for i, old in enumerate(merged)
+                   if (ident and ident == _pm_event_identity(old)[0])
+                   or (slug and slug == _pm_event_identity(old)[1])]
+        if matches:
+            # A complete representation may bridge separate sparse ID-only and slug-only
+            # records. Collapse the whole connected component, not merely its first member.
+            first = matches[0]
+            combined = _merge_event_fields(merged[first], event)
+            for match in matches[1:]:
+                combined = _merge_event_fields(combined, merged[match])
+            merged[first] = combined
+            for match in reversed(matches[1:]):
+                del merged[match]
+            continue
+        merged.append(event)
+    def overlaps(a: dict, b: dict) -> bool:
+        ai, ass = _pm_event_identity(a); bi, bss = _pm_event_identity(b)
+        return bool((ai and ai == bi) or (ass and ass == bss))
+    diagnostics["only_primary"] = sorted(_pm_event_label(e) for e in primary
+                                          if not any(overlaps(e, f) for f in fallback))
+    diagnostics["only_fallback"] = sorted(_pm_event_label(e) for e in fallback
+                                           if not any(overlaps(e, p) for p in primary))
+    diagnostics["events"] = len(merged)
+    diagnostics["game_events"] = sum(1 for event in merged if _is_pm_game_event(event))
+    return merged, diagnostics
+
+
+def pm_events_for_tag(tag_id: int | str, cl: Client, *, tag_slug: str | None = None,
+                      page: int = 100, max_pages: int = 30) -> list[dict]:
+    """Backward-compatible raw event fetch, optionally with the sport-slug fallback."""
+    if tag_slug is None:
+        events, _ = _pm_events_for_selector("tag_id", tag_id, cl, page=page, max_pages=max_pages)
+        return events
+    events, _ = pm_events_for_sport(tag_id, tag_slug, cl, page=page, max_pages=max_pages)
+    return events
 
 
 def pm_touch(token_id: str, cl: Client, now: float) -> tuple[float | None, float | None]:
@@ -394,14 +532,18 @@ def run_census(cl_k: Client, cl_p: Client, *, now: float | None = None, pm_book_
         if not code or not tag:
             continue
         try:
-            evs = pm_events_for_tag(tag, cl_p)
+            evs, query = pm_events_for_sport(tag, str(code), cl_p)
         except Exception as exc:  # noqa: BLE001
             errors[f"polymarket:{code}"] = brief_error(exc)
             continue
         got = pm_events(str(code), evs)
+        sport_meta[str(code)] = {"name": sp.get("name"), "resolution": sp.get("resolution"), "tag_id": tag,
+                                 "open_events": len(evs), "game_events": len(got), "query": query}
+        for selector, message in query.get("errors", {}).items():
+            errors[f"polymarket:{code}:{selector}"] = message
+        for selector in query.get("pagination_exhausted", []):
+            errors[f"polymarket:{code}:{selector}:pagination"] = "page limit exhausted; census is incomplete"
         if got:
-            sport_meta[str(code)] = {"name": sp.get("name"), "resolution": sp.get("resolution"), "tag_id": tag,
-                                     "open_events": len(evs), "game_events": len(got)}
             pm += got
     log(f"[polymarket] {len(sports)} leagues in /sports, {len(sport_meta)} with game events, {len(pm)} game events")
     pairs = join(kalshi, pm)

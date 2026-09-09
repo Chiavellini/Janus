@@ -4806,6 +4806,162 @@ scop,sco.motherwell,scop:sco.motherwell,espn
 scop,sco.rangers,scop:sco.rangers,espn
 scop,sco.st_johnstone,scop:sco.st_johnstone,espn
 scop,sco.st_mirren,scop:sco.st_mirren,espn
+ucl,AEK,soccer:espn-887,espn
+ucl,AEK Athens,soccer:espn-887,espn
+ucl,AEK Athens AEK Athens,soccer:espn-887,espn
+ucl,ARS,epl:eng.arsenal,espn
+ucl,AS Roma,ita:ita.as_roma,espn
+ucl,AS Roma AS Roma,ita:ita.as_roma,espn
+ucl,ATM,lal:esp.atletico_madrid,espn
+ucl,AVL,epl:eng.aston_villa,espn
+ucl,Arsenal,epl:eng.arsenal,espn
+ucl,Arsenal Arsenal,epl:eng.arsenal,espn
+ucl,Aston Villa,epl:eng.aston_villa,espn
+ucl,Aston Villa Aston Villa,epl:eng.aston_villa,espn
+ucl,Atlético,lal:esp.atletico_madrid,espn
+ucl,Atlético Madrid,lal:esp.atletico_madrid,espn
+ucl,Atlético Madrid Atlético Madrid,lal:esp.atletico_madrid,espn
+ucl,BAR,lal:esp.barcelona,espn
+ucl,BET,lal:esp.betis_sevilla,espn
+ucl,BODO,soccer:espn-2980,espn
+ucl,BRU,bel1:bel.club_brugge,espn
+ucl,Barcelona,lal:esp.barcelona,espn
+ucl,Barcelona Barcelona,lal:esp.barcelona,espn
+ucl,Bayern,bun:ger.bayern_munich,espn
+ucl,Bayern Munich,bun:ger.bayern_munich,espn
+ucl,Bayern Munich Bayern Munich,bun:ger.bayern_munich,espn
+ucl,Betis,lal:esp.betis_sevilla,espn
+ucl,Bodo/Glimt,soccer:espn-2980,espn
+ucl,Bodo/Glimt Bodo/Glimt,soccer:espn-2980,espn
+ucl,Borussia Dortmund,bun:ger.dortmund,espn
+ucl,Borussia Dortmund Borussia Dortmund,bun:ger.dortmund,espn
+ucl,COMO,ita:ita.como,espn
+ucl,Club Brugge,bel1:bel.club_brugge,espn
+ucl,Club Brugge Club Brugge,bel1:bel.club_brugge,espn
+ucl,Como Como,ita:ita.como,espn
+ucl,DOR,bun:ger.dortmund,espn
+ucl,Dortmund,bun:ger.dortmund,espn
+ucl,FC Porto,por:por.porto,espn
+ucl,FC Porto FC Porto,por:por.porto,espn
+ucl,FCP,por:por.porto,espn
+ucl,FEN,soccer:espn-436,espn
+ucl,FEY,ere:ned.feyenoord,espn
+ucl,Fenerbahce,soccer:espn-436,espn
+ucl,Fenerbahce Fenerbahce,soccer:espn-436,espn
+ucl,Feyenoord,ere:ned.feyenoord,espn
+ucl,Feyenoord Rotterdam,ere:ned.feyenoord,espn
+ucl,Feyenoord Rotterdam Feyenoord Rotterdam,ere:ned.feyenoord,espn
+ucl,GAL,soccer:espn-432,espn
+ucl,Galatasaray,soccer:espn-432,espn
+ucl,Galatasaray Galatasaray,soccer:espn-432,espn
+ucl,INT,ita:ita.inter_milan,espn
+ucl,Inter Milan,ita:ita.inter_milan,espn
+ucl,Internazionale,ita:ita.inter_milan,espn
+ucl,Internazionale Internazionale,ita:ita.inter_milan,espn
+ucl,LAS,soccer:espn-4411,espn
+ucl,LASK Linz,soccer:espn-4411,espn
+ucl,LASK Linz LASK Linz,soccer:espn-4411,espn
+ucl,LILL,fl1:fra.lille,espn
+ucl,LIV,epl:eng.liverpool,espn
+ucl,Lens,fl1:fra.lens,espn
+ucl,Lens Lens,fl1:fra.lens,espn
+ucl,Lille,fl1:fra.lille,espn
+ucl,Lille Lille,fl1:fra.lille,espn
+ucl,Liverpool,epl:eng.liverpool,espn
+ucl,Liverpool Liverpool,epl:eng.liverpool,espn
+ucl,MAN,epl:eng.man_utd,espn
+ucl,MNC,epl:eng.man_city,espn
+ucl,MUN,bun:ger.bayern_munich,espn
+ucl,Man City,epl:eng.man_city,espn
+ucl,Man United,epl:eng.man_utd,espn
+ucl,Manchester City,epl:eng.man_city,espn
+ucl,Manchester City Manchester City,epl:eng.man_city,espn
+ucl,Manchester United,epl:eng.man_utd,espn
+ucl,Manchester United Manchester United,epl:eng.man_utd,espn
+ucl,NAP,ita:ita.napoli,espn
+ucl,Napoli,ita:ita.napoli,espn
+ucl,Napoli Napoli,ita:ita.napoli,espn
+ucl,PSG,fl1:fra.psg,espn
+ucl,PSV,ere:ned.psv,espn
+ucl,PSV Eindhoven,ere:ned.psv,espn
+ucl,PSV Eindhoven PSV Eindhoven,ere:ned.psv,espn
+ucl,Paris Saint-Germain,fl1:fra.psg,espn
+ucl,Paris Saint-Germain Paris Saint-Germain,fl1:fra.psg,espn
+ucl,RB Leipzig,bun:ger.rb_leipzig,espn
+ucl,RB Leipzig RB Leipzig,bun:ger.rb_leipzig,espn
+ucl,RBL,bun:ger.rb_leipzig,espn
+ucl,RCL,fl1:fra.lens,espn
+ucl,RMA,lal:esp.real_madrid,espn
+ucl,ROMA,ita:ita.as_roma,espn
+ucl,Real Betis,lal:esp.betis_sevilla,espn
+ucl,Real Betis Real Betis,lal:esp.betis_sevilla,espn
+ucl,Real Madrid,lal:esp.real_madrid,espn
+ucl,Real Madrid Real Madrid,lal:esp.real_madrid,espn
+ucl,S Bratislava,soccer:espn-521,espn
+ucl,SAB,soccer:espn-21922,espn
+ucl,SCP,por:por.sporting_lisbon,espn
+ucl,SHK,soccer:espn-493,espn
+ucl,SLB,soccer:espn-521,espn
+ucl,SLP,soccer:espn-494,espn
+ucl,Sabah,soccer:espn-21922,espn
+ucl,Sabah FK,soccer:espn-21922,espn
+ucl,Sabah FK Sabah FK,soccer:espn-21922,espn
+ucl,Shakhtar,soccer:espn-493,espn
+ucl,Shakhtar Donetsk,soccer:espn-493,espn
+ucl,Shakhtar Donetsk Shakhtar Donetsk,soccer:espn-493,espn
+ucl,Slavia Prague,soccer:espn-494,espn
+ucl,Slavia Prague Slavia Prague,soccer:espn-494,espn
+ucl,Slovan Bratislava,soccer:espn-521,espn
+ucl,Slovan Bratislava Slovan Bratislava,soccer:espn-521,espn
+ucl,Sporting,por:por.sporting_lisbon,espn
+ucl,Sporting CP,por:por.sporting_lisbon,espn
+ucl,Sporting CP Sporting CP,por:por.sporting_lisbon,espn
+ucl,Stuttgart,bun:ger.stuttgart,espn
+ucl,VFB,bun:ger.stuttgart,espn
+ucl,VIK,soccer:espn-510,espn
+ucl,VIL,lal:esp.villarreal,espn
+ucl,VfB Stuttgart,bun:ger.stuttgart,espn
+ucl,VfB Stuttgart VfB Stuttgart,bun:ger.stuttgart,espn
+ucl,Viking FK,soccer:espn-510,espn
+ucl,Viking FK Viking FK,soccer:espn-510,espn
+ucl,Villarreal,lal:esp.villarreal,espn
+ucl,Villarreal Villarreal,lal:esp.villarreal,espn
+ucl,aut.lask_linz,soccer:espn-4411,espn
+ucl,bel.club_brugge,bel1:bel.club_brugge,espn
+ucl,eng.arsenal,epl:eng.arsenal,espn
+ucl,eng.aston_villa,epl:eng.aston_villa,espn
+ucl,eng.liverpool,epl:eng.liverpool,espn
+ucl,eng.man_city,epl:eng.man_city,espn
+ucl,eng.man_utd,epl:eng.man_utd,espn
+ucl,esp.atletico_madrid,lal:esp.atletico_madrid,espn
+ucl,esp.barcelona,lal:esp.barcelona,espn
+ucl,esp.betis_sevilla,lal:esp.betis_sevilla,espn
+ucl,esp.real_madrid,lal:esp.real_madrid,espn
+ucl,esp.villarreal,lal:esp.villarreal,espn
+ucl,fra.lens,fl1:fra.lens,espn
+ucl,fra.lille,fl1:fra.lille,espn
+ucl,fra.psg,fl1:fra.psg,espn
+ucl,ger.bayern_munich,bun:ger.bayern_munich,espn
+ucl,ger.dortmund,bun:ger.dortmund,espn
+ucl,ger.rb_leipzig,bun:ger.rb_leipzig,espn
+ucl,ger.stuttgart,bun:ger.stuttgart,espn
+ucl,gre.aek_athens,soccer:espn-887,espn
+ucl,ita.as_roma,ita:ita.as_roma,espn
+ucl,ita.como,ita:ita.como,espn
+ucl,ita.inter_milan,ita:ita.inter_milan,espn
+ucl,ita.napoli,ita:ita.napoli,espn
+ucl,ned.feyenoord,ere:ned.feyenoord,espn
+ucl,ned.psv,ere:ned.psv,espn
+ucl,por.porto,por:por.porto,espn
+ucl,por.sporting_lisbon,por:por.sporting_lisbon,espn
+ucl,sabah_fk,soccer:espn-21922,espn
+ucl,slavia_prague,soccer:espn-494,espn
+ucl,svk.slovan_bratislava,soccer:espn-521,espn
+ucl,team.bodoglimt,soccer:espn-2980,espn
+ucl,team.viking_fk,soccer:espn-510,espn
+ucl,tur.fenerbahce,soccer:espn-436,espn
+ucl,tur.galatasaray,soccer:espn-432,espn
+ucl,ukr.shakhtar_donetsk,soccer:espn-493,espn
 wnba,ATL,wnba:atlanta-dream,espn
 wnba,Aces,wnba:las-vegas-aces,espn
 wnba,Atlanta,wnba:atlanta-dream,espn

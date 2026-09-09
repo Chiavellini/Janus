@@ -43,3 +43,12 @@ def test_other_leagues_use_the_default_feed_once():
     games = espn.fetch_range("mlb", lo, hi, client=cl)
     assert len(cl.calls) == 1 and "groups" not in cl.calls[0][1]
     assert [g.game_id for g in games] == ["espn:mlb:9"]
+
+
+def test_ucl_uses_its_external_competition_path_and_game_namespace():
+    cl = FakeClient()
+    lo, hi = datetime(2026, 9, 5, tzinfo=timezone.utc), datetime(2026, 9, 6, tzinfo=timezone.utc)
+    games = espn.fetch_range("ucl", lo, hi, client=cl)
+    assert len(cl.calls) == 1
+    assert cl.calls[0][0].endswith("/soccer/uefa.champions/scoreboard")
+    assert games[0].league == "ucl" and games[0].game_id == "espn:ucl:9"

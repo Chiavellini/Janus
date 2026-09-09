@@ -46,6 +46,7 @@ kalshi,bel1,60582c8e-196a-40f3-9df5-56688c57255b,bel1:bel.kaa_gent,custom_strike
 kalshi,bel1,a005a3d2-7a9a-46c3-ac24-6cba40e7b0ca,bel1:bel.cercle_brugge_ksv,custom_strike,CER
 kalshi,bel1,ab430872-c928-461f-97f0-b059ad4a3925,bel1:raal_la_louviere,custom_strike,RAAL
 kalshi,bel1,adf9c2ec-93b8-48a8-b80f-fa987f85e30f,bel1:bel.zulte-waregem,custom_strike,ZUL
+kalshi,bel1,cd4f6267-e0bf-4074-9c47-abb625ad14e1,bel1:bel.kv-mechelen,custom_strike,KVM
 kalshi,bel1,d1851a64-3bc3-4546-bbb3-4b0469a4020f,bel1:bel.anderlecht,custom_strike,RSC
 kalshi,bel1,d838bcaa-7ee7-4e99-9114-f259a80ea69d,bel1:bel.royal_charleroi_sc,custom_strike,RCH
 kalshi,bun,0d65d14f-6bb0-4e1f-a08e-a6135ac3b473,bun:ger.sc_paderborn_07,custom_strike,PAD
@@ -148,6 +149,7 @@ kalshi,cfb,443007f0-5854-4aee-94bd-f7c5b97739d2,cfb:duquesne-dukes,custom_strike
 kalshi,cfb,448415cd-5adf-46d9-a896-ad784c1c318b,cfb:elon-phoenix,custom_strike,ELON
 kalshi,cfb,45c13c2b-38fd-4ea8-b382-fb54069c2ecb,cfb:prairie-view-am-panthers,custom_strike,PV
 kalshi,cfb,47bd6fd0-2ab9-448b-b698-f0bb15c5f2cc,cfb:maryland-terrapins,custom_strike,MD
+kalshi,cfb,48514282-2c62-4c7a-a8c5-d66d90c4e7e3,cfb:ut-rio-grande-valley-vaqueros,custom_strike,UTRGV
 kalshi,cfb,49f26808-9595-45ec-946d-2aa58d67b782,cfb:sam-houston-bearkats,custom_strike,SHSU
 kalshi,cfb,4c159e73-9f81-4489-818e-a75b64a57cec,cfb:samford-bulldogs,custom_strike,SAM
 kalshi,cfb,4d04b3c4-de42-41ce-b7e0-a9ac9716ceb7,cfb:arizona-wildcats,custom_strike,ARIZ
@@ -230,6 +232,7 @@ kalshi,cfb,9f275cb0-9c53-4483-8856-1dc07e9d7c8f,cfb:smu-mustangs,custom_strike,S
 kalshi,cfb,9fe8d636-d8ab-403a-b0f8-6c152f1883cf,cfb:murray-state-racers,custom_strike,MURR
 kalshi,cfb,a1a9b074-3b37-4077-908a-f25a6f962a4d,cfb:auburn-tigers,custom_strike,AUB
 kalshi,cfb,a1ac24c7-0d09-4f75-a0e6-f3da3c0e72d4,cfb:michigan-state-spartans,custom_strike,MSU
+kalshi,cfb,a3484578-3134-4a25-9c98-e1a05965f9aa,cfb:troy-trojans,custom_strike,TROY
 kalshi,cfb,a3d9226b-b02b-406a-b9e0-e7deebeb2a6f,cfb:northern-iowa-panthers,custom_strike,UNI
 kalshi,cfb,a47620b5-5fac-400f-b01c-50018f17a645,cfb:akron-zips,custom_strike,AKR
 kalshi,cfb,a4a6a11a-d3fe-4a6c-9742-1cb853b47750,cfb:fresno-state-bulldogs,custom_strike,FRES
@@ -387,6 +390,7 @@ kalshi,epl,cfd4b999-b080-4c2b-8a5b-640c992aff6e,epl:eng.liverpool,custom_strike,
 kalshi,epl,f0a69f43-b3c4-4049-bf6d-4717809000a1,epl:eng.sunderland,custom_strike,SUN
 kalshi,epl,f5d3f1b2-8ff6-4165-835f-45406eae5fb6,epl:eng.man_city,custom_strike,MCI
 kalshi,ere,08a3b906-dcd8-451b-8f6d-dacfd3a967db,ere:ned.psv,custom_strike,PSV
+kalshi,ere,167b048f-0412-4626-9766-ec08603e62cc,ere:ned.az,custom_strike,AZA
 kalshi,ere,167db0d3-153f-43c1-95d8-f2346f1418ff,ere:ned.sparta,custom_strike,SPA
 kalshi,ere,23bda28e-b962-46e1-b3fd-72215b5db7da,ere:ned.fc_utrecht,custom_strike,FCU
 kalshi,ere,250b6a43-6d72-497e-bac6-813f89bce2d2,ere:ned.groningen,custom_strike,GRO
@@ -563,7 +567,9 @@ kalshi,por,9b5e7d84-3417-42dd-809e-5c73cff563bf,por:eng.fc_famalicao,custom_stri
 kalshi,por,aae4ed5f-78d2-4205-a12a-408a8d368782,por:por.porto,custom_strike,FCP
 kalshi,por,bbafe881-978e-4eaa-b6d3-21fb6537d0af,por:por.sporting_lisbon,custom_strike,SPO
 kalshi,por,c90a46e4-ea7c-426a-a9cc-4da81ed58bd9,por:por.braga,custom_strike,BRA
+kalshi,por,ca5d00cc-f18d-4802-8337-32c0e7152d64,por:estrela,custom_strike,ESA
 kalshi,por,cc07030e-0a8f-40a5-9beb-9a93a0de67f3,por:por.rio_ave,custom_strike,RAV
+kalshi,por,dca44d67-d382-4a24-b504-2839f6e59cb6,por:por.benfica,custom_strike,SLB
 kalshi,por,de99ec82-a5d1-4fdc-9da3-b2605e8e02cd,por:casa_pia,custom_strike,CAS
 kalshi,por,df62d492-8015-4f6b-b745-2693bfd8d373,por:por.cd_nacional_de_madeira,custom_strike,CDN
 kalshi,scop,25246a75-cae3-44a9-a56b-eeb03a632883,scop:sco.motherwell,custom_strike,MOT
@@ -578,6 +584,17 @@ kalshi,scop,db6f419e-d853-44ec-ac18-f7e380400add,scop:sco.st_mirren,custom_strik
 kalshi,scop,e4bda32c-b4a5-417b-93dc-64858ae7df1f,scop:sco.celtic,custom_strike,CEL
 kalshi,scop,e4d74382-289d-4e62-9f1e-8554ed89c5fa,scop:sco.kilmarnock,custom_strike,KIL
 kalshi,scop,ee7d18ea-9ba2-4242-b46f-0ef45ac392cf,scop:sco.st_johnstone,custom_strike,JOH
+kalshi,ucl,037e6593-99d0-464b-a28c-ac1211d6a6f3,fl1:fra.lens,custom_strike,RCL
+kalshi,ucl,08a3b906-dcd8-451b-8f6d-dacfd3a967db,ere:ned.psv,custom_strike,PSV
+kalshi,ucl,1aae6370-de06-45aa-990d-db2d1fee568c,soccer:espn-493,custom_strike,SHA
+kalshi,ucl,4f1baa02-f097-401c-b45b-c819adba7b93,soccer:espn-494,custom_strike,SLA
+kalshi,ucl,5cdc7d5f-0a5e-4579-9488-f95b23250c46,ita:ita.como,custom_strike,COM
+kalshi,ucl,bc9180c6-9094-4ad9-a4c9-d37ea2eb51ca,bun:ger.rb_leipzig,custom_strike,RBL
+kalshi,ucl,c57caf81-f8f2-4115-8987-077818520be5,soccer:espn-21922,custom_strike,SBH
+kalshi,ucl,c9b2a47f-17a6-4db9-83a6-3c65b5d8cbb1,ita:ita.as_roma,custom_strike,ROM
+kalshi,ucl,d443a482-af73-41ca-8d4b-f49502861dc4,bun:ger.bayern_munich,custom_strike,BMU
+kalshi,ucl,db571ce3-c7d5-4c92-8b30-45557ba8efb5,soccer:espn-436,custom_strike,FEN
+kalshi,ucl,f70ffb24-7bb8-4111-8ba6-2c222fafc3c3,soccer:espn-2980,custom_strike,BOG
 kalshi,wta,06a69884-3e1d-4b67-ab92-5b7f7917a57b,wta:francesca-jones,custom_strike,JON
 kalshi,wta,1716723d-87c5-4c73-b242-835dae00f4cd,wta:elena-rybakina,custom_strike,RYB
 kalshi,wta,17233ac0-1563-4968-89b6-92d8d64ecd5c,wta:anna-kalinskaya,custom_strike,KAL
@@ -817,9 +834,11 @@ polymarket,bel1,3282314,bel1:bel.kvc_westerlo,teams[].id,KVC Westerlo
 polymarket,bel1,3282315,bel1:team.union_st.-gilloise.betbrain,teams[].id,Union Saint-Gilloise
 polymarket,bel1,3282317,bel1:lommel_sk,teams[].id,Lommel SK
 polymarket,bel1,3282318,bel1:bel.kaa_gent,teams[].id,KAA Gent
+polymarket,bel1,3282319,bel1:bel.kv-mechelen,teams[].id,Yellow-Red KV Mechelen
 polymarket,bel1,3282320,bel1:bel.royal_charleroi_sc,teams[].id,Royal Charleroi SC
 polymarket,bel1,3282321,bel1:bel.oud-heverlee_leuven,teams[].id,Oud-Heverlee Leuven
 polymarket,bel1,3282322,bel1:bel.zulte-waregem,teams[].id,SV Zulte Waregem
+polymarket,bel1,3284406,bel1:bel.anderlecht,teams[].id,RSC Anderlecht
 polymarket,bel1,3284408,bel1:raal_la_louviere,teams[].id,RAAL La Louviere
 polymarket,bun,101129,bun:ger.bayern_munich,teams[].id,FC Bayern München
 polymarket,bun,101130,bun:ger.freiburg,teams[].id,SC Freiburg
@@ -1063,6 +1082,7 @@ polymarket,ere,115295,ere:ned.fc_zwolle,teams[].id,PEC Zwolle
 polymarket,ere,115296,ere:ned.excelsior,teams[].id,SBV Excelsior
 polymarket,ere,115298,ere:ned.cambuur_leeuwarden,teams[].id,SC Cambuur-Leeuwarden
 polymarket,ere,115300,ere:ned.heerenveen,teams[].id,SC Heerenveen
+polymarket,ere,115303,ere:ned.willem_ii,teams[].id,Willem II Tilburg
 polymarket,ere,115304,ere:ned.go_ahead_eagles,teams[].id,Go Ahead Eagles
 polymarket,ere,115305,ere:ned.sparta,teams[].id,Sparta Rotterdam
 polymarket,ere,115309,ere:ned.fortuna_sittard,teams[].id,Fortuna Sittard
@@ -1244,12 +1264,14 @@ polymarket,nhl,100643,nhl:washington-capitals,teams[].id,Capitals
 polymarket,nhl,100644,nhl:winnipeg-jets,teams[].id,Jets
 polymarket,nhl,100645,nhl:utah-mammoth,teams[].id,Mammoth
 polymarket,por,118502,por:por.porto,teams[].id,FC Porto
+polymarket,por,118503,por:por.benfica,teams[].id,Sport Lisboa e Benfica
 polymarket,por,118504,por:por.sporting_lisbon,teams[].id,Sporting CP
 polymarket,por,118505,por:por.braga,teams[].id,SC Braga
 polymarket,por,118506,por:por.guimaraes,teams[].id,Vitória SC
 polymarket,por,118507,por:por.arouca,teams[].id,FC Arouca
 polymarket,por,118508,por:por.rio_ave,teams[].id,Rio Ave FC
 polymarket,por,118513,por:alverca,teams[].id,FC Alverca
+polymarket,por,118515,por:estrela,teams[].id,CF Estrela da Amadora
 polymarket,por,118516,por:eng.fc_famalicao,teams[].id,FC Famalicão
 polymarket,por,118517,por:por.estoril,teams[].id,Estoril Praia
 polymarket,por,118518,por:por.gil_vicente,teams[].id,Gil Vicente FC
@@ -1267,6 +1289,18 @@ polymarket,scop,218338,scop:sco.dundee,teams[].id,Dundee FC
 polymarket,scop,218341,scop:sco.st_mirren,teams[].id,St Mirren FC
 polymarket,scop,218342,scop:sco.dundee_utd,teams[].id,Dundee United FC
 polymarket,scop,218343,scop:sco.falkirk,teams[].id,Falkirk FC
+polymarket,ucl,147331,epl:eng.man_utd,teams[].id,Manchester United FC
+polymarket,ucl,147338,bun:ger.bayern_munich,teams[].id,FC Bayern München
+polymarket,ucl,147347,ita:ita.as_roma,teams[].id,AS Roma
+polymarket,ucl,147370,soccer:espn-436,teams[].id,Fenerbahçe SK
+polymarket,ucl,147379,soccer:espn-493,teams[].id,FK Shakhtar Donetsk
+polymarket,ucl,147402,ere:ned.psv,teams[].id,PSV
+polymarket,ucl,147513,bun:ger.rb_leipzig,teams[].id,RB Leipzig
+polymarket,ucl,147537,soccer:espn-494,teams[].id,SK Slavia Praha
+polymarket,ucl,147576,fl1:fra.lens,teams[].id,Racing Club de Lens
+polymarket,ucl,147581,soccer:espn-2980,teams[].id,FK Bodø/Glimt
+polymarket,ucl,3280333,soccer:espn-21922,teams[].id,Sabah FK
+polymarket,ucl,3287085,ita:ita.como,teams[].id,Como 1907
 polymarket,wta,147096,wta:naomi-osaka,teams[].id,Naomi Osaka
 polymarket,wta,147102,wta:diana-shnaider,teams[].id,Diana Shnaider
 polymarket,wta,147106,wta:leylah-fernandez,teams[].id,Leylah Fernandez
@@ -1319,17 +1353,6 @@ polymarket,wta,3270979,wta:siniakova-townsend,teams[].id,Siniakova/Townsend
 polymarket,wta,3270982,wta:bucsa-melichar,teams[].id,Bucsa/Melichar
 polymarket,wta,3270986,wta:aoyama-liang,teams[].id,Aoyama/Liang
 polymarket,wta,3270987,wta:mihalikova-nicholls,teams[].id,Mihalikova/Nicholls
-kalshi,por,dca44d67-d382-4a24-b504-2839f6e59cb6,por:por.benfica,custom_strike,SLB
-polymarket,por,118503,por:por.benfica,teams[].id,Sport Lisboa e Benfica
-kalshi,por,ca5d00cc-f18d-4802-8337-32c0e7152d64,por:estrela,custom_strike,ESA
-polymarket,por,118515,por:estrela,teams[].id,CF Estrela da Amadora
-kalshi,bel1,cd4f6267-e0bf-4074-9c47-abb625ad14e1,bel1:bel.kv-mechelen,custom_strike,KVM
-polymarket,bel1,3282319,bel1:bel.kv-mechelen,teams[].id,Yellow-Red KV Mechelen
-polymarket,bel1,3284406,bel1:bel.anderlecht,teams[].id,RSC Anderlecht
-kalshi,ere,167b048f-0412-4626-9766-ec08603e62cc,ere:ned.az,custom_strike,AZA
-polymarket,ere,115303,ere:ned.willem_ii,teams[].id,Willem II Tilburg
-kalshi,cfb,a3484578-3134-4a25-9c98-e1a05965f9aa,cfb:troy-trojans,custom_strike,TROY
-kalshi,cfb,48514282-2c62-4c7a-a8c5-d66d90c4e7e3,cfb:ut-rio-grande-valley-vaqueros,custom_strike,UTRGV
 polymarket,wta,3271917,wta:maleckova-skoch,teams[].id,Maleckova/Skoch
 polymarket,wta,3271928,wta:muhammad-stollar,teams[].id,Muhammad/Stollar
 polymarket,wta,3275537,wta:pridankina-tang,teams[].id,Pridankina/Tang

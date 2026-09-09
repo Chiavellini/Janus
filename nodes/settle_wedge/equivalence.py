@@ -121,18 +121,18 @@ def certify(rec_a: RulesRecord, rec_b: RulesRecord, *, league: str, market_type:
     # The round is stripped from template identity because it varies by game, but it still
     # selects an evidence population. L46 excludes qualifying; L47 measures it separately.
     qualifying = league == "itf" and any(re.search(r"\bqualifying\b", rec.text, re.I) for rec in (rec_a, rec_b))
-    if league in {"mls", "ere"}:
+    if league in {"mls", "ere", "ucl"}:
         # L43/L50 measured their own regular seasons only. Reviewed venue wording alone cannot
         # distinguish postseason; the external schedule classification must survive discovery.
         p = population if isinstance(population, Mapping) else {}
+        required_population = "league-phase" if league == "ucl" else "regular-season"
         if (p.get("source") != "espn" or p.get("league") != league
-                or p.get("season_slug") != "regular-season"
+                or p.get("season_slug") != required_population
                 or not re.fullmatch(rf"espn:{league}:[0-9]+", str(p.get("game_id") or ""))):
             return NotEquivalent("EVIDENCE_POPULATION_MISMATCH",
-                                 f"{'L43 MLS' if league == 'mls' else 'L50 Eredivisie'} evidence requires "
-                                 "an ESPN-anchored regular-season fixture; "
-                                 "unknown, preseason and postseason populations are unmeasured",
-                                 context={"league": league, "required_population": "regular-season"})
+                                 f"{league} evidence requires an ESPN-anchored {required_population} fixture; "
+                                 "unknown and other season phases are unmeasured",
+                                 context={"league": league, "required_population": required_population})
     verdicts = verdicts_for(ta.template_id, tb.template_id, league=league, qualifying=qualifying)
     if verdicts is None:
         return NotEquivalent("PAIR_UNREVIEWED",
@@ -156,8 +156,9 @@ def certify(rec_a: RulesRecord, rec_b: RulesRecord, *, league: str, market_type:
     used = {v.evidence_key: r[v.evidence_key] for v in verdicts if v.outcome == "BOUNDED"}
     return SettlementEquivalence(league, market_type, period, rec_a.venue, rec_b.venue, ta.template_id,
                                  tb.template_id, rec_a.rules_hash, rec_b.rules_hash, tuple(verdicts),
-                                 used, evidence_population="regular-season" if league in {"mls", "ere"} else None,
-                                 schedule_game_id=str(population["game_id"]) if league in {"mls", "ere"} else None,
+                                 used, evidence_population=("league-phase" if league == "ucl" else
+                                      "regular-season" if league in {"mls", "ere"} else None),
+                                 schedule_game_id=str(population["game_id"]) if league in {"mls", "ere", "ucl"} else None,
                                  _mint=_MINT)
 
 

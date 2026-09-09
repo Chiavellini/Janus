@@ -44,9 +44,29 @@ _L43 = "research/sports/2026-09-09_mls-original-schedule/spec.yaml"
 _L46 = "research/sports/2026-09-09_itf-delay-atomic/spec.yaml"
 _L47 = "research/sports/2026-09-09_itf-qualifying-atomic/spec.yaml"
 _L50 = "research/sports/2026-09-09_eredivisie-interval-bounds/spec.yaml"
+_L58 = "research/sports/2026-09-09_ucl-settlement-bounds/spec.yaml"
 _F4_DIR = "research/sports/2026-09-04_tennis-delay-forward"
 _F4 = _F4_DIR + "/spec.yaml"
 EVIDENCE: dict[str, Evidence] = {
+    "soccer.ucl.postponed_gt48h_rate": Evidence(
+        "soccer.ucl.postponed_gt48h_rate", 0.020588792299495857, 144,
+        "Official UEFA pre-event 2024/25 league-phase calendar joined to all 144 UEFA Full Time "
+        "Reports; report publication timestamps conservatively bound actual completion", "2026-09-09", _L58,
+        "Exact one-sided 95% Clopper-Pearson UPPER BOUND, 0/144 adverse, not zero risk. "
+        "Original UTC+2 and report UTC+1 widen CET/CEST uncertainty; both 48 elapsed hours and "
+        "the second Eastern calendar date are adverse boundaries. All 36 clubs have eight "
+        "reciprocal original fixtures; every terminal report joins uniquely, no date change or "
+        "suspension flag. ESPN historical keyEvents clocks are bulk-update contaminated and "
+        "not used. League-phase only; unknown/group/qualifying/knockout populations block. "
+        "One season and separate marginal binomial bounds do not guarantee future or joint risk."),
+    "soccer.ucl.cancelled_rate": Evidence(
+        "soccer.ucl.cancelled_rate", 0.020588792299495857, 144,
+        "All 144 originally scheduled 2024/25 UEFA Champions League league-phase fixtures have "
+        "unique official UEFA Full Time Reports; frozen source hashes in L58", "2026-09-09", _L58,
+        "Exact one-sided 95% Clopper-Pearson UPPER BOUND, 0/144 cancellations, not zero risk. "
+        "Original-calendar SHA256 088885318834ac759175a4f3cbb762a35e6c61345a6ffe7938f7a0db56037ebf. "
+        "League-phase only; does not transfer to old group format, qualifying or knockout. "
+        "Historical population reserve, not a future-rate or profitability guarantee."),
     "tennis.itf.delayed_gt14d_rate": Evidence(
         "tennis.itf.delayed_gt14d_rate", 0.01768867361249885, 11370,
         "Complete fresh Polymarket Gamma tennis keyset catalog: 33,295 closed and 531 open listings; "

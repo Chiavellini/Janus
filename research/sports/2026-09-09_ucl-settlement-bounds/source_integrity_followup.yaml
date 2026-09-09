@@ -1,0 +1,11 @@
+row: L58
+date: 2026-09-09
+kind: offline source-integrity repair
+known: Independent review found that a consumed source without its metadata sidecar was omitted from manifest validation.
+required:
+  - Exactly six base sources, 144 ESPN summaries and 144 UEFA reports with one correctly bound sidecar each.
+  - Hash, size, URL, retrieval time, path, and successful response metadata must validate before consumption.
+  - Missing source/sidecar, orphan source/sidecar, duplicate paths and tampered hashes fail closed.
+  - Existing derived image/audit artifacts are excluded only by explicit filename patterns.
+  - The complete frozen population reproduces the original audit digest and rates byte-for-byte.
+scope: No new network, account, live-box, order, deployment or commit action; no criteria or prior artifact edits.

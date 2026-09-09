@@ -1,0 +1,94 @@
+{
+  "retrieved_at": "2026-09-09T22:43:00Z",
+  "sources": {
+    "espn": "https://site.web.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/scoreboard?dates=20260908-20260911&limit=1000",
+    "kalshi": "https://api.elections.kalshi.com/trade-api/v2/events?series_ticker=KXUCLGAME&limit=200&with_nested_markets=true",
+    "polymarket": "https://gamma-api.polymarket.com/events?tag_slug=ucl"
+  },
+  "games": [
+    {
+      "date": "2026-09-09",
+      "start": "2026-09-09 16:45:00+00",
+      "espn": {"id": "401915424", "home_id": "83", "away_id": "142", "home": "Barcelona", "away": "Feyenoord Rotterdam"},
+      "kalshi": {"event": "KXUCLGAME-26SEP09BARFEY", "labels": ["Barcelona", "Feyenoord"]},
+      "polymarket": {"slug": "ucl-fcb-fey-2026-09-09", "teams": [{"id": "147356", "name": "FC Barcelona", "abbreviation": "fcb"}, {"id": "147427", "name": "Feyenoord Rotterdam", "abbreviation": "fey"}]}
+    },
+    {
+      "date": "2026-09-09",
+      "start": "2026-09-09 16:45:00+00",
+      "espn": {"id": "401915448", "home_id": "134", "away_id": "510", "home": "VfB Stuttgart", "away": "Viking FK"},
+      "kalshi": {"event": "KXUCLGAME-26SEP09VFBVIK", "labels": ["Stuttgart", "Viking"]},
+      "polymarket": {"slug": "ucl-stu-vf-2026-09-09", "teams": [{"id": "147341", "name": "VfB Stuttgart", "abbreviation": "stu"}, {"id": "3285103", "name": "Viking FK", "abbreviation": "vf"}]}
+    },
+    {
+      "date": "2026-09-09",
+      "start": "2026-09-09 19:00:00+00",
+      "espn": {"id": "401915445", "home_id": "160", "away_id": "521", "home": "Paris Saint-Germain", "away": "Slovan Bratislava"},
+      "kalshi": {"event": "KXUCLGAME-26SEP09PSGSLO", "labels": ["PSG", "Slovan Bratislava"]},
+      "polymarket": {"slug": "ucl-psg-sba-2026-09-09", "teams": [{"id": "147399", "name": "Paris Saint-Germain FC", "abbreviation": "psg"}, {"id": "147497", "name": "ŠK Slovan Bratislava", "abbreviation": "sba"}]}
+    },
+    {
+      "date": "2026-09-09",
+      "start": "2026-09-09 19:00:00+00",
+      "espn": {"id": "401915447", "home_id": "2250", "away_id": "432", "home": "Sporting CP", "away": "Galatasaray"},
+      "kalshi": {"event": "KXUCLGAME-26SEP09SPOGAL", "labels": ["Sporting CP", "Galatasaray"]},
+      "polymarket": {"slug": "ucl-spo-gal-2026-09-09", "teams": [{"id": "147408", "name": "Sporting CP", "abbreviation": "spo"}, {"id": "147383", "name": "Galatasaray SK", "abbreviation": "gal"}]}
+    },
+    {
+      "date": "2026-09-09",
+      "start": "2026-09-09 19:00:00+00",
+      "espn": {"id": "401915423", "home_id": "114", "away_id": "359", "home": "Napoli", "away": "Arsenal"},
+      "kalshi": {"event": "KXUCLGAME-26SEP09NAPARS", "labels": ["Napoli", "Arsenal"]},
+      "polymarket": {"slug": "ucl-nap-ars-2026-09-09", "teams": [{"id": "147424", "name": "SSC Napoli", "abbreviation": "nap"}, {"id": "147325", "name": "Arsenal FC", "abbreviation": "ars"}]}
+    },
+    {
+      "date": "2026-09-09",
+      "start": "2026-09-09 19:00:00+00",
+      "espn": {"id": "401915446", "home_id": "364", "away_id": "1068", "home": "Liverpool", "away": "Atlético Madrid"},
+      "kalshi": {"event": "KXUCLGAME-26SEP09LFCATM", "labels": ["Liverpool", "Atletico"]},
+      "polymarket": {"slug": "ucl-liv-atm-2026-09-09", "teams": [{"id": "147329", "name": "Liverpool FC", "abbreviation": "liv"}, {"id": "147351", "name": "Club Atlético de Madrid", "abbreviation": "atm"}]}
+    },
+    {
+      "date": "2026-09-10",
+      "start": "2026-09-10 16:45:00+00",
+      "espn": {"id": "401915444", "home_id": "436", "away_id": "104", "home": "Fenerbahce", "away": "AS Roma"},
+      "kalshi": {"event": "KXUCLGAME-26SEP10FENROM", "labels": ["Fenerbahce", "Roma"], "uuids": ["db571ce3-c7d5-4c92-8b30-45557ba8efb5", "c9b2a47f-17a6-4db9-83a6-3c65b5d8cbb1"]},
+      "polymarket": {"slug": "ucl-fen-rom-2026-09-10", "teams": [{"id": "147370", "name": "Fenerbahçe SK", "abbreviation": "fen"}, {"id": "147347", "name": "AS Roma", "abbreviation": "rom"}]}
+    },
+    {
+      "date": "2026-09-10",
+      "start": "2026-09-10 16:45:00+00",
+      "espn": {"id": "401915422", "home_id": "148", "away_id": "493", "home": "PSV Eindhoven", "away": "Shakhtar Donetsk"},
+      "kalshi": {"event": "KXUCLGAME-26SEP10PSVSHA", "labels": ["Eindhoven", "Shakhtar"], "uuids": ["08a3b906-dcd8-451b-8f6d-dacfd3a967db", "1aae6370-de06-45aa-990d-db2d1fee568c"]},
+      "polymarket": {"slug": "ucl-psv-shd-2026-09-10", "teams": [{"id": "147402", "name": "PSV", "abbreviation": "psv"}, {"id": "147379", "name": "FK Shakhtar Donetsk", "abbreviation": "shd"}]}
+    },
+    {
+      "date": "2026-09-10",
+      "start": "2026-09-10 19:00:00+00",
+      "espn": {"id": "401915441", "home_id": "2572", "away_id": "11420", "home": "Como", "away": "RB Leipzig"},
+      "kalshi": {"event": "KXUCLGAME-26SEP10COMRBL", "labels": ["Como", "Leipzig"], "uuids": ["5cdc7d5f-0a5e-4579-9488-f95b23250c46", "bc9180c6-9094-4ad9-a4c9-d37ea2eb51ca"]},
+      "polymarket": {"slug": "ucl-com-rbl-2026-09-10", "teams": [{"id": "3287085", "name": "Como 1907", "abbreviation": "com"}, {"id": "147513", "name": "RB Leipzig", "abbreviation": "rbl"}]}
+    },
+    {
+      "date": "2026-09-10",
+      "start": "2026-09-10 19:00:00+00",
+      "espn": {"id": "401915440", "home_id": "494", "away_id": "175", "home": "Slavia Prague", "away": "Lens"},
+      "kalshi": {"event": "KXUCLGAME-26SEP10SLARCL", "labels": ["Slavia Prague", "Lens"], "uuids": ["4f1baa02-f097-401c-b45b-c819adba7b93", "037e6593-99d0-464b-a28c-ac1211d6a6f3"]},
+      "polymarket": {"slug": "ucl-slp-rcl-2026-09-10", "teams": [{"id": "147537", "name": "SK Slavia Praha", "abbreviation": "slp"}, {"id": "147576", "name": "Racing Club de Lens", "abbreviation": "rcl"}]}
+    },
+    {
+      "date": "2026-09-10",
+      "start": "2026-09-10 19:00:00+00",
+      "espn": {"id": "401915443", "home_id": "132", "away_id": "2980", "home": "Bayern Munich", "away": "Bodo/Glimt"},
+      "kalshi": {"event": "KXUCLGAME-26SEP10BMUBOG", "labels": ["Bayern Munich", "Bodoe/Glimt"], "uuids": ["d443a482-af73-41ca-8d4b-f49502861dc4", "f70ffb24-7bb8-4111-8ba6-2c222fafc3c3"]},
+      "polymarket": {"slug": "ucl-bay-bog-2026-09-10", "teams": [{"id": "147338", "name": "FC Bayern München", "abbreviation": "bay"}, {"id": "147581", "name": "FK Bodø/Glimt", "abbreviation": "bog"}]}
+    },
+    {
+      "date": "2026-09-10",
+      "start": "2026-09-10 19:00:00+00",
+      "espn": {"id": "401915442", "home_id": "360", "away_id": "21922", "home": "Manchester United", "away": "Sabah FK"},
+      "kalshi": {"event": "KXUCLGAME-26SEP10MUNSBH", "labels": ["Manchester United", "Sabah Masazir"], "uuids": ["7e273345-6669-4db7-8a38-7f3ccb608937", "c57caf81-f8f2-4115-8987-077818520be5"]},
+      "polymarket": {"slug": "ucl-mnu-sf-2026-09-10", "teams": [{"id": "147331", "name": "Manchester United FC", "abbreviation": "mnu"}, {"id": "3280333", "name": "Sabah FK", "abbreviation": "sf"}]}
+    }
+  ]
+}

@@ -46,6 +46,7 @@ kalshi,por,ca5d00cc-f18d-4802-8337-32c0e7152d64,ESA,Estrela Amadora,,,no_agreeme
 kalshi,por,dca44d67-d382-4a24-b504-2839f6e59cb6,BEN,SL Benfica,,,no_agreement
 kalshi,por,dca44d67-d382-4a24-b504-2839f6e59cb6,BEN,SL Benfica,,,no_agreement
 kalshi,por,f7ef567e-a7c4-4ae3-9709-9e2e2628be40,CSM,Madeira,,,no_agreement
+kalshi,ucl,7e273345-6669-4db7-8a38-7f3ccb608937,MUN,Manchester United,bun:ger.bayern_munich,epl:eng.man_utd,disagree
 kalshi,wta,3887631b-0004-412f-bfc0-7579bd31467c,SWI,Iga Swiatek,,,no_agreement
 kalshi,wta,506b703b-96e5-41b1-aede-2a3b34e04741,MER,Elise Mertens,,,no_agreement
 kalshi,wta,663e59a7-9691-4949-8dd2-4306dda8c1ec,STA,Yuliia Starodubtseva,,,no_agreement
@@ -548,3 +549,6 @@ polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
 polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
 polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
 polymarket,por,3283092,csm,CS Marítimo,,,no_agreement
+polymarket,ucl,147397,oly,Olympiakós SFP,,,no_agreement
+polymarket,ucl,3281854,agf,Aarhus GF,,,no_agreement
+polymarket,ucl,3284064,nec,NEC,,,no_agreement

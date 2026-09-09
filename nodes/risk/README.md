@@ -36,7 +36,9 @@ answer; nothing is partially reserved.
 
 `limits.toml`, checked in. Absent is zero, never unlimited. LIMITED_LIVE caps come from the
 signed override and may only be lower. The sha of the loaded bytes is pinned into every
-clearance and must match the override's pin.
+clearance and must match the override's pin. Enabled competitions therefore require an explicit
+positive league allowance as well as settlement certification; the watchdog refuses a silently
+zero-capped league as an operational configuration defect.
 
 ## Kill switches
 

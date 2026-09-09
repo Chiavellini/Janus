@@ -164,7 +164,7 @@ def kalshi_markets(league: str, r: Resolver, by_pair, window, stats, near_miss) 
             continue
         rules = (mkts[0].get("rules_primary") or "") + " " + (mkts[0].get("rules_secondary") or "")
         espn_ids = tuple(sorted(r.teams[e].espn_id for _, e in sides if e in r.teams))
-        cands = by_pair.get(espn_ids, [])
+        cands = [g for g in by_pair.get(espn_ids, []) if g.league == league]
         st = kalshi_start_from_rules(rules)
         if league in LEAGUES and LEAGUES[league].anchor == "venue_structured":
             # No date in the rules text (tennis names the tournament and round instead): the
@@ -291,7 +291,7 @@ def pm_markets(league: str, r: Resolver, by_pair, window, stats, near_miss, *, e
             _reason(stats["p_reason"], "no_start_time")
             continue
         espn_ids = tuple(sorted(r.teams[e].espn_id for _, e in ents if e in r.teams))
-        cands = by_pair.get(espn_ids, [])
+        cands = [g for g in by_pair.get(espn_ids, []) if g.league == league]
         g = espn.nearest_game(cands, st)
         if g is None:
             # The same split as the Kalshi side: a pair with no game in the universe at all is
@@ -458,7 +458,9 @@ def run(league: str, days: int, out_dir: Path) -> dict:
     matched = defaultdict(set)
     for p in pairs:
         matched[p["game_id"]].add(p["entity_id"])
-    complete = {g for g, ents in matched.items() if len(ents) == 2}   # BOTH sides paired
+    expected_outcomes = LEAGUES[league].outcomes
+    # Every registered outcome must pair, including the draw in three-way soccer.
+    complete = {g for g, ents in matched.items() if len(ents) == expected_outcomes}
     coverage = round(len(complete) / len(eligible), 4) if eligible else None
 
     for g in sorted(eligible - complete):

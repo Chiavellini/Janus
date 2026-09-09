@@ -37,7 +37,7 @@ from pathlib import Path
 
 from nodes.entities.resolve import (
     ALIASES_CSV, ALIASES_MANUAL_CSV, TEAMS_CSV, UNRESOLVED_CSV, XREFS_CSV,
-    Resolver, Team, build_alias_index, load_alias_rows, normalize,
+    Resolver, Team, build_alias_index, load_alias_rows, load_teams, normalize,
 )
 
 #: Labels that are a legitimate market OUTCOME but not a team. A three-way soccer market prices
@@ -47,7 +47,7 @@ NON_TEAM_OUTCOMES = {"tie", "draw", "no winner"}
 from kernel.fetch import Client
 from nodes.schedule_espn import espn
 
-from nodes.entities.leagues import LEAGUES, kalshi_series, pm_tags
+from nodes.entities.leagues import LEAGUES, entity_scope, kalshi_series, pm_tags
 
 #: Every registered league (nodes/entities/leagues.py is the one table; these names are views).
 SEED_LEAGUES = list(LEAGUES)
@@ -86,9 +86,28 @@ def _seed_players(lg: str, client) -> tuple[list[Team], list[dict]]:
     return teams, aliases
 
 
-def seed_teams(leagues=SEED_LEAGUES, *, client=None) -> tuple[list[Team], list[dict]]:
+def seed_teams(leagues=SEED_LEAGUES, *, client=None,
+               existing_teams=None) -> tuple[list[Team], list[dict]]:
+    """Seed competition aliases against stable identities, reusing exact ESPN soccer ids.
+
+    Existing club ids are immutable even when their old prefix names a domestic competition.
+    New clubs use a competition-independent id. Conflicting pre-existing identities stop the
+    seed: neither venue labels nor iteration order may choose which entity owns an ESPN id.
+    """
     teams: list[Team] = []
     aliases: list[dict] = []
+    existing = load_teams() if existing_teams is None else dict(existing_teams)
+    clubs: dict[str, Team] = {}
+    for team in existing.values():
+        if entity_scope(team.league) != "soccer":
+            continue
+        if not team.espn_id:
+            raise ValueError(f"soccer entity lacks ESPN id: {team.entity_id}")
+        previous = clubs.get(team.espn_id)
+        if previous is not None and previous.entity_id != team.entity_id:
+            raise ValueError(f"soccer ESPN id collision: {team.espn_id}: "
+                             f"{previous.entity_id} / {team.entity_id}")
+        clubs[team.espn_id] = team
     for lg in leagues:
         if lg in LEAGUES and LEAGUES[lg].anchor == "venue_structured":
             t_, a_ = _seed_players(lg, client)
@@ -104,10 +123,19 @@ def seed_teams(leagues=SEED_LEAGUES, *, client=None) -> tuple[list[Team], list[d
             display = t.get("displayName", "") or ""
             location = t.get("location", "") or ""
             nickname = t.get("name", "") or t.get("shortDisplayName", "") or ""
-            eid = f"{lg}:{t.get('slug') or _slugify(display)}"
-            teams.append(Team(entity_id=eid, league=lg, espn_id=str(t["id"]),
-                              abbrev=(t.get("abbreviation") or "").upper(),
-                              location=location, nickname=nickname, display_name=display))
+            espn_id = str(t.get("id") or "")
+            if not espn_id:
+                raise ValueError(f"{lg} team lacks ESPN id: {display}")
+            scope = entity_scope(lg)
+            known = clubs.get(espn_id) if scope == "soccer" else None
+            eid = (known.entity_id if known else f"soccer:espn-{espn_id}" if scope == "soccer"
+                   else f"{lg}:{t.get('slug') or _slugify(display)}")
+            team = known or Team(entity_id=eid, league=scope, espn_id=espn_id,
+                                 abbrev=(t.get("abbreviation") or "").upper(),
+                                 location=location, nickname=nickname, display_name=display)
+            if scope == "soccer":
+                clubs[espn_id] = team
+            teams.append(team)
             cands = {display, location, nickname, t.get("shortDisplayName", ""),
                      t.get("abbreviation", ""), (t.get("slug") or "").replace("-", " ")}
             # location+nickname is how most books render a team; include it explicitly in case
@@ -117,7 +145,7 @@ def seed_teams(leagues=SEED_LEAGUES, *, client=None) -> tuple[list[Team], list[d
             for a in cands:
                 if a and normalize(a):
                     aliases.append({"league": lg, "alias": a, "entity_id": eid, "source": "espn"})
-    return teams, aliases
+    return list({t.entity_id: t for t in teams}.values()), aliases
 
 
 # ── xrefs ────────────────────────────────────────────────────────────────────
@@ -264,6 +292,24 @@ def _write(path: Path, fields: list[str], rows: list[dict], *, leagues=None) -> 
     return len(rows)
 
 
+def _write_teams(teams: list[Team], path: Path = TEAMS_CSV) -> int:
+    """Upsert stable identities: a roster refresh must not orphan another competition's aliases.
+
+    Alias/xref membership is still refreshed only for the explicitly selected competitions.
+    An absent club is not deleted from the identity directory merely because it was relegated
+    or has no fixture in the current continental tournament.
+    """
+    merged = load_teams(path)
+    for team in teams:
+        prior = merged.get(team.entity_id)
+        if prior is not None and (entity_scope(prior.league), prior.espn_id) != (
+                entity_scope(team.league), team.espn_id):
+            raise ValueError(f"entity identity changed: {team.entity_id}")
+        merged[team.entity_id] = team
+    return _write(path, ["entity_id", "league", "espn_id", "abbrev", "location", "nickname",
+                         "display_name"], [t.__dict__ for t in merged.values()])
+
+
 def main(leagues=SEED_LEAGUES) -> dict:
     stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     print(f"seeding entities for {leagues} at {stamp}")
@@ -291,8 +337,7 @@ def main(leagues=SEED_LEAGUES) -> dict:
     for k, v in sorted(ambiguous.items())[:15]:
         print(f"     AMBIGUOUS {k[0]}/{k[1]!r} -> {v}")
 
-    n_t = _write(TEAMS_CSV, ["entity_id", "league", "espn_id", "abbrev", "location",
-                             "nickname", "display_name"], [t.__dict__ for t in teams], leagues=leagues)
+    n_t = _write_teams(teams)
     # Only the GENERATED rows go back to aliases.csv. Writing the manual overlay in here too
     # would duplicate it on every run and, worse, make the hand-curated file look redundant.
     seen_alias = set()

@@ -336,8 +336,8 @@ _SOCCER_PM = (POLYMARKET_SOCCER_GAME_V1, POLYMARKET_SOCCER_GAME_V2, POLYMARKET_S
 
 def _soccer_verdicts(code: str) -> tuple[Verdict, ...]:
     """The Kalshi <competition> game vs Polymarket soccer game pair. Per-competition evidence keys:
-    postponement and cancellation rates differ by league and climate, and none is measured yet, so
-    every soccer pair blocks at EVIDENCE_UNMEASURED until its row is registered and run."""
+    postponement and cancellation rates differ by league and climate, so every soccer pair blocks
+    at EVIDENCE_UNMEASURED until its own row is registered and run."""
     return (
         Verdict("official_source", "SAME", "both settle on the official final result (Kalshi: ESPN/Fox, or MLS for "
                 "KXMLSGAME; Polymarket: the governing body's official statistics). For a completed match the same fact."),

@@ -1,0 +1,31 @@
+{
+  "row": "L58",
+  "verdict": "REGISTERED",
+  "population": "2024-25 UCL league-phase only",
+  "original_n": 144,
+  "joined_terminal_reports": 144,
+  "clubs": 36,
+  "matches_per_club": 8,
+  "cancellations": 0,
+  "conservative_completion_delays": 0,
+  "date_changes": 0,
+  "suspended_flags": 0,
+  "confidence_method": "Separate exact one-sided 95% Clopper-Pearson upper bounds",
+  "rates": {
+    "soccer.ucl.cancelled_rate": 0.020588792299495857,
+    "soccer.ucl.postponed_gt48h_rate": 0.020588792299495857
+  },
+  "source_count": 294,
+  "audit_path": "/Volumes/Kilos/janus/research/ucl-settlement-bounds/audit-9d711e9ef9d93ae65315e53677c558e2fb612bc42158837371375ea9cd3a3367.json",
+  "audit_sha256": "9d711e9ef9d93ae65315e53677c558e2fb612bc42158837371375ea9cd3a3367",
+  "original_calendar_sha256": "088885318834ac759175a4f3cbb762a35e6c61345a6ffe7938f7a0db56037ebf",
+  "completion_interpretation": "Official full-time report publication timestamp is an upper bound on completion, never an exact final-whistle claim. Earliest plausible CET/CEST original and latest plausible report timezone widen the interval.",
+  "excluded_source": "All 144 ESPN keyEvents wallclock histories are frozen but unused as completion evidence; many are bulk update times. ESPN supplies only final fixture identity, league-phase classification and suspension flags.",
+  "limitations": [
+    "One completed season; no pooling with old group format or another competition.",
+    "Separate marginal bounds are not a joint 95% guarantee.",
+    "Binomial interval assumes an exchangeable population; correlated shocks and future regime shifts are not guaranteed bounded.",
+    "Source timestamps and pre-event provenance rely on official UEFA publication metadata, not an external timestamp authority.",
+    "No realized EV, executable depth, fee, fill-quality or profit inference."
+  ]
+}

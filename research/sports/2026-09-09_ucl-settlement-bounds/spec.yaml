@@ -1,0 +1,35 @@
+row: L58
+registered: 2026-09-09
+kind: descriptive
+title: UCL original-schedule settlement bounds
+population:
+  competition: UEFA Champions League
+  phase: full-game 90-minute league/group-stage matches only
+  candidate_seasons: [2024-25, 2023-24]
+  selection: Attempt 2024-25 first; 2023-24 is a separately reported fallback only if the first population cannot be reconstructed.
+  exclusions: qualifying, knockout, extra-time, youth, women, other competitions
+sources:
+  original: Official UEFA pre-event complete dated fixture schedule with provenance proving publication before first match.
+  completion: Official UEFA results or ESPN event final-whistle records, with unique fixture identity and actual completion dates.
+  exceptions: Official UEFA or participant-club notices for every schedule change, cancellation, suspension, or ambiguous completion.
+  freeze: Archive original response bytes under data/research/ucl-settlement-bounds with SHA256, URL, retrieval time, and reproducible offline measurement.
+success_criteria:
+  - A complete original fixture population must exist; final results alone cannot establish originally scheduled dates.
+  - Every original fixture has exactly one terminal outcome or explicit cancellation; unknown and missing outcomes block registration.
+  - Actual completion is measured; original kickoff, last update, and nominal matchday cannot substitute for completion.
+  - Every date change or suspension has an explicit source review; a late or ambiguous completion is conservatively adverse.
+  - Delay counts completion beyond 48 elapsed hours or reaching the second Eastern calendar date after original kickoff, whichever occurs first.
+  - Register only population-specific one-sided exact 95-percent Clopper-Pearson upper bounds for cancellation and delay, including strictly positive bounds after zero observations.
+  - Every numeric result replays from frozen hash-bound source bytes and deterministic code, with the entire population uniquely joined.
+  - Current certification must bind an exact supported schedule-source league/group-stage population; unknown and knockout phases remain blocked.
+  - If any source-completeness, temporal-provenance, identity, completion, or replay gate fails, leave evidence absent and UCL blocked.
+tests:
+  - No other soccer league evidence may satisfy UCL evidence keys.
+  - Unknown or unsupported phase cannot acquire UCL settlement proof.
+  - Missing rates remain EVIDENCE_UNMEASURED.
+  - Successful measurement, if any, has positive zero-event bound and conservative boundary tests.
+limitations:
+  - Historical frequencies are reserve estimates, not guarantees against regime shifts or correlated disruptions.
+  - Group and league formats must remain separately identified; no unreviewed population transfer.
+  - No order, account, live-box, deployment, restart, capital, or live-gate action.
+expected_ev_effect: A defensible reserve prices UCL residual settlement loss; absent evidence leaves expected trading EV unclaimed and coverage blocked.

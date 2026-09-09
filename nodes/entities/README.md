@@ -28,6 +28,13 @@ resolved. A verified venue spelling difference belongs in `aliases_manual.csv`, 
 identifiers and the observed date in its note; do not replace that audit trail with a fuzzy
 middle-name rule.
 
+An audited venue UUID exception belongs in `xrefs_manual.csv`, with the observed date, exact
+venue identifier, ESPN club identity and reason. `load_xrefs()` merges this overlay with generated
+`xrefs.csv` and rejects every disagreement; manual rows never override generated identities.
+Scoped seeding writes only the generated file, preserving the overlay and retaining the underlying
+label disagreement in `xref_conflicts.csv`. For example, Kalshi's Manchester United UUID is exact
+even though its `MUN` ticker abbreviation is ESPN's Bayern Munich abbreviation in UCL.
+
 ## Failure modes
 
 **`resolve()` signals failure by RETURNING `Resolution(entity_id=None)`. It does not raise.**
@@ -36,6 +43,16 @@ A `try/except` around it catches nothing. Wrapping this misunderstanding is what
 reached `sorted()` in a key function several frames away. Always check `.ok`.
 
 Ambiguity resolves to unresolved, never to a pick: "New York" → `Yankees|Mets` is a BLOCK.
+
+Soccer club identity is independent of competition: seeding reuses the existing entity for the
+exact ESPN soccer team ID, preserving audited historical IDs such as `epl:eng.arsenal`. New clubs
+use `soccer:espn-<id>`. `Team.league` is the identity's scope/original league, not a membership
+claim. Aliases remain competition-scoped, and game keys still include the competition. Thus an
+Arsenal UCL alias and domestic alias point to the same club, while their matches remain distinct.
+Conflicting existing identities for one ESPN soccer ID stop seeding; global venue xref collisions
+still stop loading. A roster refresh upserts identities without deleting shared clubs, and replaces
+only the selected competitions' generated aliases/xrefs. UCL registration cannot bypass settlement
+certification: L58 evidence applies only when the exact ESPN schedule population is `league-phase`.
 
 `seed.NON_TEAM_OUTCOMES = {tie, draw, no winner}` deliberately drops the draw leg. That is correct
 here and **dangerous downstream** — see `nodes/cover` and `nodes/rules_exhaustive` (not yet built).

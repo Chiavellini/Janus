@@ -56,6 +56,7 @@ LEAGUES: dict[str, League] = {
     "wnba": League("wnba", "WNBA", "KXWNBAGAME", "wnba", "wnba", ("basketball", "wnba")),
     "nhl":  League("nhl", "NHL", "KXNHLGAME", "nhl", "nhl", ("hockey", "nhl")),
     "epl":  League("epl", "Premier League", "KXEPLGAME", "epl", "epl", ("soccer", "eng.1"), outcomes=3),
+    "ucl":  League("ucl", "UEFA Champions League", "KXUCLGAME", "ucl", "ucl", ("soccer", "uefa.champions"), outcomes=3),
     # Three-way soccer, added 2026-09-03 from the L28 census (La Liga ranked first in the window).
     "lal":  League("lal", "La Liga", "KXLALIGAGAME", "la-liga", "lal", ("soccer", "esp.1"), outcomes=3),
     "bun":  League("bun", "Bundesliga", "KXBUNDESLIGAGAME", "bundesliga", "bun", ("soccer", "ger.1"), outcomes=3),
@@ -105,12 +106,18 @@ LEAGUES: dict[str, League] = {
                    template_scrub=(r"in the \d{4} .*? (?=after a ball has been played)",
                                    r"in the [MW]\d{2} [^,]*?, (?:Qualifying|Main Draw|Round of \d+|Quarterfinals?|Semifinals?|Finals?)[^,]*?,",
                                    r"official information from (?:the )?International Tennis Federation \(ITF\)\.")),
-    # Not yet: UCL. Entities are keyed per league (lal:esp.real_madrid) and a club plays in its domestic
-    # league AND the Champions League, so its one Kalshi team id would map to two entities and the
-    # xref table refuses the collision. A club must become one entity across competitions first.
 }
 
 SOCCER = tuple(c for c, l in LEAGUES.items() if l.outcomes == 3)
+
+
+def entity_scope(code: str) -> str:
+    """ESPN soccer clubs share identity across competitions; other sports retain their scope.
+
+    This scopes only the stable ESPN team id, never aliases or canonical game keys. ``soccer``
+    is also the scope stored on newly discovered clubs; legacy entity ids remain unchanged.
+    """
+    return "soccer" if code in SOCCER or code == "soccer" else code
 
 
 def league_for_series(series_ticker: str) -> str | None:

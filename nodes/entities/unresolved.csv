@@ -81,6 +81,7 @@ cfb,text,ambiguous,Panthers,12
 cfb,text,ambiguous,Aggies,10
 cfb,text,ambiguous,Lions,9
 cfb,text,ambiguous,Owls,9
+ucl,text,unknown,sf,9
 bel1,text,unknown,KRC Genk,8
 bel1,text,unknown,SV Zulte Waregem,8
 bel1,text,unknown,St. Truidense VV,8
@@ -99,6 +100,15 @@ por,text,unknown,csm,8
 por,text,unknown,gui,8
 por,text,unknown,rio,8
 por,text,unknown,spo,8
+ucl,text,unknown,Fenerbahçe SK,8
+ucl,text,unknown,Racing Club de Lens,8
+ucl,text,unknown,SK Slavia Praha,8
+ucl,text,unknown,bay,8
+ucl,text,unknown,bog,8
+ucl,text,unknown,com,8
+ucl,text,unknown,mnu,8
+ucl,text,unknown,rom,8
+ucl,text,unknown,shd,8
 bel1,text,unknown,Royal Antwerp FC,7
 bel1,text,unknown,SK Beveren,7
 bel1,text,unknown,Yellow-Red KV Mechelen,7
@@ -613,6 +623,21 @@ por,text,unknown,Vicente Barcelos,1
 scop,text,ambiguous,DUN,1
 scop,text,unknown,DUU,1
 scop,text,unknown,FAL,1
+ucl,text,unknown,Aarhus GF,1
+ucl,text,unknown,BMU,1
+ucl,text,unknown,BOG,1
+ucl,text,unknown,COM,1
+ucl,text,unknown,Eindhoven,1
+ucl,text,unknown,Leipzig,1
+ucl,text,unknown,NEC,1
+ucl,text,unknown,Olympiakós SFP,1
+ucl,text,unknown,ROM,1
+ucl,text,unknown,SBH,1
+ucl,text,unknown,SHA,1
+ucl,text,unknown,SLA,1
+ucl,text,unknown,agf,1
+ucl,text,unknown,nec,1
+ucl,text,unknown,oly,1
 wta,text,unknown,ALE,1
 wta,text,unknown,AND,1
 wta,text,unknown,ANI,1

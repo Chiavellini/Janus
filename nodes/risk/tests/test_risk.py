@@ -398,6 +398,7 @@ def test_every_default_enabled_league_has_a_positive_risk_allowance():
 
     assert {code: LIMITS.league_cap(code) for code in default_leagues() if LIMITS.league_cap(code) <= 0.0} == {}
     assert LIMITS.league_cap("ere") == 200.0
+    assert LIMITS.league_cap("ucl") == 200.0
 
 
 def test_override_state_is_what_the_report_tick_and_the_watchdog_read(tmp_path):

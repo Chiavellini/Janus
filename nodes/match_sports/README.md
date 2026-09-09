@@ -24,6 +24,8 @@ never as proof.
 
 `kalshi_markets(...)`, `pm_markets(...)`, `pair(...)`. Both venues resolve onto ESPN
 **independently**, then join on an exact index key — no similarity score, no threshold.
+Schedule candidates must belong to the requested competition even if another competition has
+the same two ESPN soccer club IDs at the same time. Sharing a club never shares a fixture.
 
 ## Failure modes
 

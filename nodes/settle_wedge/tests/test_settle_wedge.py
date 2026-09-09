@@ -157,7 +157,7 @@ def test_the_registry_carries_l26_and_mlb_certifies_from_it():
                for k, e in EVIDENCE.items() if k.startswith("nfl."))
     assert all(e.research_ref.startswith("research/sports/2026-09-03_soccer-settlement-wedge-rates")
                for k, e in EVIDENCE.items() if k.startswith("soccer.")
-               and not k.startswith(("soccer.mls.", "soccer.ere.")))
+               and not k.startswith(("soccer.mls.", "soccer.ere.", "soccer.ucl.")))
     assert all(e.research_ref == "research/sports/2026-09-09_mls-original-schedule/spec.yaml"
                for k, e in EVIDENCE.items() if k.startswith("soccer.mls."))
     assert all(e.research_ref == "research/sports/2026-09-09_eredivisie-interval-bounds/spec.yaml"
@@ -173,7 +173,7 @@ def test_the_registry_carries_l26_and_mlb_certifies_from_it():
     assert d.n >= 42 and d.value <= round(3 / 42, 6) + 1e-9 and d.value >= 0.0   # the bound shrinks as n grows
     assert all(e.research_ref.startswith("research/sports/2026-09-03_cfb-settlement-wedge-rates") for k, e in EVIDENCE.items() if k.startswith("cfb."))
     assert all("FLOOR" in e.note for k, e in EVIDENCE.items()
-               if k.startswith("soccer.") and not k.startswith(("soccer.mls.", "soccer.ere."))
+               if k.startswith("soccer.") and not k.startswith(("soccer.mls.", "soccer.ere.", "soccer.ucl."))
                and k.endswith("postponed_gt48h_rate"))
     k, p = records()
     eq = certify(k, p, league="mlb")

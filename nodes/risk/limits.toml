@@ -28,6 +28,9 @@ cfb = 200.0
 epl = 200.0
 lal = 200.0
 bun = 200.0
+# L58 UEFA Champions League league-phase settlement evidence; PAPER/DEMO allowance only.
+# Other UCL phases remain fail-closed at the settlement population guard. Live outer caps bind.
+ucl = 200.0
 # L50 regular-season evidence; PAPER/DEMO allowance only. Live outer caps still bind;
 # deployment requires a fresh signed override with this limits SHA and the GATE sequence.
 ere = 200.0

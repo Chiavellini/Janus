@@ -124,10 +124,10 @@ audit. In census order (`research/sports/2026-09-03_co-listing-census/`, ledger 
    the pair blocks at `EVIDENCE_UNMEASURED` and `nodes/entities/leagues.enablement()` says so.
 5. **Certify on a fixture pair** in tests, then the league runs unasked (`default_leagues()`).
 
-By the evening of 2026-09-03: MLB, NFL (L30), EPL / La Liga / Bundesliga (L33, a proxy labelled
-FLOOR) and college football (L32, FLOOR for FCS) pass step 5 and run unasked. MLS sits at step 4
-(no round structure, no original-date source). NBA/WNBA/NHL sit at step 3. UCL and every
-competition ESPN does not schedule as team games sit at step 1.
+By the evening of 2026-09-09: MLB, NFL (L30), EPL / La Liga / Bundesliga (L33, a proxy labelled
+FLOOR), college football (L32, FLOOR for FCS), MLS (L43), Eredivisie (L50), and UCL league-phase
+games (L58) pass step 5 and run unasked. NBA/WNBA/NHL sit at step 3. Other registered soccer
+competitions without their own measured rates remain at step 4.
 
 **MLS evidence added 2026-09-09 (L43).** The official preseason 2025 MLS record book supplies the
 original schedule that was missing on September 3. All 510 regular-season fixtures join uniquely
@@ -156,3 +156,14 @@ No other league's rates transfer. L50 itself changed no cap. The later F17 opera
 adds a checked-in `$200` PAPER/DEMO Eredivisie allowance so an evidence-enabled game is not refused
 at zero; signed LIMITED_LIVE event/day/contract caps and economic hurdles remain unchanged. See
 `research/sports/2026-09-09_eredivisie-interval-bounds/verdict.md` for sources and reproduction.
+
+**UCL league-phase evidence added 2026-09-09 (L58).** The pre-event official UEFA 2024/25
+league-phase calendar contains 144 reciprocal fixtures for 36 clubs. Every fixture joins uniquely
+to an official UEFA Full Time Report and an ESPN league-phase event; there were zero cancellations,
+date changes, suspension flags, or conservative report-publication delays. Separate exact
+one-sided 95% upper bounds register `0.020588792299495857` for each bounded dimension, not zero.
+At a $0.50 Polymarket fill they reserve 2.05887923 cents together. Certification requires an exact
+matching `espn:ucl:<id>` slate population tagged `league-phase`; group-stage, qualifying, knockout,
+extra-time, missing, and foreign populations remain blocked. The 294 hash-bound sources and the
+144-row audit replay byte-identically from the external data volume. See
+`research/sports/2026-09-09_ucl-settlement-bounds/verdict.md` for provenance and limitations.

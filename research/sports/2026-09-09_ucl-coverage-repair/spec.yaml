@@ -1,0 +1,42 @@
+ledger_row: L57
+registered_date: 2026-09-09
+track: sports/coverage
+kind: descriptive defect repair
+status_at_registration: PENDING
+question: >-
+  Can Janus represent a soccer club once across domestic and UCL competitions, enumerate UCL
+  game events from both venues without a silent Polymarket tag omission, and produce the same
+  exact schedule-anchored, settlement-certified slate contract used by existing leagues?
+known_before_registration:
+  - The running F18 lane is healthy and must not be stopped, restarted, deployed over, signalled, or otherwise interrupted by this repair.
+  - The 2026-09-09 lane has zero UCL event rows. Kalshi and Polymarket public APIs both list six full-game three-way UCL moneylines dated 2026-09-09 and six dated 2026-09-10.
+  - nodes/entities/leagues.py intentionally omits UCL because venue team ids are global while entity ids and aliases are league-scoped; the same club appearing domestically and in UCL can create an xref collision.
+  - UCL already has the exhaustive three-way rule and reviewed settlement template policy; no settlement criterion may be weakened or borrowed from an unrelated league.
+  - Polymarket /sports reports UCL primaryTagId 1234, but the observed numeric-tag event query omitted UCL games while tag_slug=ucl returned them. The daily census therefore reported twelve unmatched Kalshi UCL events and zero UCL Polymarket events.
+  - The 2026-09-09 census has one separate enabled-league coverage gap, KXEREDIVISIEGAME-26SEP09TWETEL versus ere-twe-tel-2026-09-09.
+scope:
+  - Local code, frozen fixtures, and public unauthenticated schedule/venue reads only.
+  - Entity identity, league registry, ESPN schedule adapter, exact venue-to-schedule matching, discovery, census enumeration, watchdog coverage visibility, documentation, and tests needed for UCL.
+  - Existing registered leagues and historical entity ids remain backwards compatible unless an explicit deterministic alias layer maps them to one competition-independent club identity.
+  - No outcome scoring, realized-return analysis, holdout access, order submission, account read, cap change, or trading-strategy threshold change.
+prohibited:
+  - No live-box deployment, checkout, restart, signal, service change, kill-file change, override change, credential access, order/cancel, database mutation, or competing second live lane.
+  - No title-similarity pairing, fuzzy identity fallback, widened start tolerance, settlement-template bypass, assumed zero settlement basis, or class-wide alias guessing.
+  - No claim that a covered fixture contained an executable arbitrage or would have produced profit.
+success_criteria:
+  - A club that appears in a domestic league and UCL resolves to one stable club identity by exact venue xref or audited alias, while competition remains a separate CanonicalKey field; ambiguous labels still fail closed.
+  - UCL is a registered three-outcome league with Kalshi series KXUCLGAME, Polymarket prefix/tag ucl, and an external schedule anchor; every enablement prerequisite is explicit and none is bypassed.
+  - Frozen tests cover all six 2026-09-09 and all six 2026-09-10 UCL fixtures, including cross-competition clubs, venue name/abbreviation differences, draw markets, exact schedule identity, derivative rejection, and one deliberate ambiguity/no-schedule hard negative.
+  - Both venues independently resolve onto the same external scheduled game before pairing; no title-only or venue-to-venue comparison is introduced.
+  - Current UCL rules text must hash to reviewed templates and every BOUNDED settlement dimension must have its own registered UCL evidence; otherwise UCL remains blocked with an exact reason.
+  - Census event enumeration checks both the venue-reported numeric tag and stable sport slug when available, deterministically deduplicates event ids/slugs, preserves complete pagination, and records a visible disagreement/error instead of silently accepting an empty or incomplete source.
+  - The existing Eredivisie gap remains visible and is not masked by UCL work.
+  - Focused tests, the full repository suite, watchdog selftest, layering/import checks, and diff checks pass on the exact candidate tree.
+  - An independent reviewer finds no false-pair, cross-competition collision, settlement bypass, silent census omission, or live-runtime mutation.
+expected_ev_effect: >-
+  Coverage only: adds access to correctly certified UCL opportunities and makes missed-league
+  detection observable. No positive EV is claimed until forward executable fills under the
+  unchanged arm establish realized EV per trade and Sharpe; false-pair avoidance has priority
+  over volume.
+holdout_touched: false
+test_look_spent: false
