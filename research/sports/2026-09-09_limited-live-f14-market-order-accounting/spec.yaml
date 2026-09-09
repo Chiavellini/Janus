@@ -1,0 +1,53 @@
+experiment_id: "janus-sports-limited-live-f14-market-order-accounting-2026-09-09"
+date_registered: "2026-09-09"
+track: "sports/execution"
+row_kind: "F (forward operational evaluation; no test look spent)"
+status_at_registration: PENDING
+ledger_ref: "snooping_ledger.md row F14"
+test_looks_spent: 0
+supersedes: "F13, closed by operator repair after one paired live cover"
+
+# IMMUTABLE ONCE THE FIRST LIMITED_LIVE LINE AFTER THIS REGISTRATION IS WRITTEN.
+purpose: >
+  Prove that immediate Polymarket BUYs are encoded with the venue-required cent-exact collateral
+  amount, that authoritative fill cost grows the durable capital reservation, and that later fee
+  corrections revise settled P&L and the loss-breaker feed without changing selection economics.
+
+known_before_start:
+  - "F12 had one Polymarket HTTP 400: 5 contracts at 0.481 signed as 2.405 maker dollars; the CLOB requires at most two maker decimals and five taker decimals."
+  - "The installed V2 SDK exposes MarketOrderArgsV2 specifically for immediate FAK/FOK orders; BUY amount is collateral and price remains the ceiling."
+  - "F13 paired STL-SF: Polymarket 5.241936 at 0.62, Kalshi 5.24 at 0.40, leaving 0.001936 share below the registered 1-contract protection dust threshold."
+  - "That cover locks at least a 0.25585 USD cash loss after exact fees; the protection path stayed inside the existing 1 USD loss cap."
+  - "The original KC reservation remained 9.50 USD although authoritative filled capital including fees is 10.88815 USD."
+  - "Historical settled rows overstated P&L until the guard propagated backfilled Polymarket fees into settlement accounting."
+
+arm: >
+  janus-live-stream.service on the Mexico box in LIMITED_LIVE under unchanged limits: $12 combined
+  stake per cover, 10 contracts per leg, $250 committed daily notional, $25 realized-loss breaker,
+  $0.10 minimum net profit, 1% minimum locked return, max protection loss $1 per execution and
+  $0.10 per contract. protect_auto=true; unwind_enabled=false. Runtime, credentials, data, streams,
+  guard, kill sync, restart and watchdog remain box-local.
+
+window:
+  start: "the first LIMITED_LIVE entry evaluation after this registration, a green full suite, zero material unhedged exposure, clean guard, green watchdog and matching unchanged arm"
+  end: "37 cleared covers, the first STOP, breaker, or operator closure"
+
+criteria:
+  - "No threshold, cap, league, settlement rule or definition moves after start."
+  - "Every immediate Polymarket BUY uses MarketOrderArgsV2 with collateral floored to cents and the registered limit as its ceiling; it never increases requested spend or price."
+  - "Price improvement and venue quantity precision are reconciled from authoritative fills; sub-minimum remainder is recorded as dust, not silently rounded away."
+  - "A reservation grows, never shrinks, to at least authoritative buy cost plus fees while open; released zero-fills spend zero daily notional."
+  - "A corrected authoritative fee revises an existing settlement row once, writes an append-only revision record, and immediately reaches the real-money loss-breaker feed."
+  - "A true venue rejection, unconfirmed answer or exhausted protection window still fails closed and is never blindly retried."
+  - "STOP on any venue fill not protected within 30 seconds above the registered dust, store error after submission, orphan, missing reservation, unresolved position mismatch, fee above pin, or breaker."
+  - "F13's authenticated account-stream, tick-valid protection, exact-client-id, lifetime-fill, settlement and laptop-independence criteria remain in force."
+  - "The first three valid F14 covers are hand-reconciled before the fourth; paper and live fill rates remain separate."
+
+outputs:
+  registration: "snooping_ledger.md F14 with append-only results"
+  records: "box logs, executions, exact order events/fills, reservation events, settlement revisions, per-venue balances, flags, systemd and watchdog"
+
+what_this_does_not_establish:
+  - "Permission to raise a cap, exceed the protection loss allowance, enable unwind, or weaken an economic/settlement hurdle."
+  - "That a paper fill predicts a live fill or that an immediate order is guaranteed to match."
+  - "That venue or AWS connectivity cannot fail; those failures must fail closed and recover locally."
