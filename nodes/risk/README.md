@@ -59,10 +59,12 @@ single-flight per event survives a restart. The watchdog alarms when one stays o
 ## The mode gate
 
 `resolve_mode()` decides once. `LIVE=1` in the environment of a non-live mode refuses to start;
-`all` refuses anything ≥ PAPER; `live` refuses anything that risks capital; real-order modes need
-credentials; capital-risking modes need `kill/arming_override.json` with the verbatim operator
-statement, `signed_by`, the mode, the runner and limits shas, positive caps and an unexpired
-`expires_utc`. No mode ever escalates.
+`all` refuses anything ≥ PAPER. A `live` latch permits the already-authorized process to start so
+its guard can reconcile and protect held positions after systemd or a box reboot, but `clear()`
+still refuses every new entry under it; only `clear_protect()` may mint a hedge-only clearance.
+Real-order modes need credentials; capital-risking modes need `kill/arming_override.json` with the
+verbatim operator statement, `signed_by`, the mode, the runner and limits shas, positive caps and
+an unexpired `expires_utc`. No mode ever escalates.
 
 ## Tests
 

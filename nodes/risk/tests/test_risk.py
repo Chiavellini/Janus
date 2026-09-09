@@ -217,7 +217,7 @@ def test_kill_switches_and_credentials_gate_the_start(kill, tmp_path):
                         credentials_present={}, override_path=tmp_path / "x").code == "UNKNOWN_MODE"
 
 
-def test_a_live_mode_needs_a_complete_matching_unexpired_override(kill, tmp_path):
+def test_a_live_mode_needs_a_complete_matching_unexpired_override(kill, breaker, tmp_path):
     ov = tmp_path / "arming_override.json"
     creds = {"kalshi": True, "polymarket": True}
     args = dict(env={}, kill=kill, limits=LIMITS, runner_sha="deadbeef", code_sha="c0detree0000abcd",
@@ -246,7 +246,12 @@ def test_a_live_mode_needs_a_complete_matching_unexpired_override(kill, tmp_path
     r = resolve_mode("LIMITED_LIVE", **args)
     assert r.mode is Mode.LIMITED_LIVE and r.caps == {"stake_usd": 5.0, "day_notional_usd": 20.0} and r.override_sha
     kill.latch("live", "breaker")
-    assert resolve_mode("LIMITED_LIVE", **args).code == "KILL_LIVE"
+    r = resolve_mode("LIMITED_LIVE", **args)
+    assert r.mode is Mode.LIMITED_LIVE, "the guard/protection process must survive a live latch"
+    blocked = clear(cand(), **ok_env(mode=Mode.LIMITED_LIVE, kill=kill, breaker=breaker,
+                                     ledger=ExposureLedger()),
+                    caps={"stake_usd": 100.0, "max_contracts": 100.0, "day_notional_usd": 250.0})
+    assert blocked.code == "KILL_SWITCH", "starting the guard must not admit a new first leg"
 
 
 def test_a_proof_clearance_needs_a_live_mode_an_override_cap_and_bounds_the_stake(kill, breaker):

@@ -115,6 +115,12 @@ registered before the repaired process may resume new entries. The F12 position 
 hedged, unwound under separately enabled authority, or resolved; the kill remains latched until
 the account is flat or exactly paired.
 
+The live latch also no longer prevents the authorized service process itself from starting. New
+entries are still refused by the clearance gate before reservation, while `clear_protect()` alone
+ignores the live scope for an already-held execution. This makes automatic reconciliation and
+bounded re-protection survive systemd restart, deployment and box reboot instead of depending on
+an operator connection to start the guard after a protection failure.
+
 ## 2026-09-02 — foundation
 
 Seven commits, `bd00b85` → `5eac384`. The repo went from unversioned, unmonitored and

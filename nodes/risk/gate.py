@@ -4,8 +4,11 @@
 Inputs are the operator's `--mode`, the environment, the kill switches, which credentials are
 present, and -- for any mode that risks capital -- the signed arming override (GATE_TO_LIVE step
 9: verbatim operator statement, sha pins of the code tree and the limits, hard caps, an expiry).
-Any inconsistency refuses to start. A `LIVE=1` in the environment of a non-live mode refuses to
-start too (GATE step 7): the shadow arm must be STRUCTURALLY unable to post.
+Any inconsistency refuses to start. The global `all` kill refuses execution processes; `live`
+does not prevent the already-authorized live process from starting because the guard must be able
+to protect a held leg after a restart. It still blocks every new entry in `clear()`; only
+`clear_protect()` can mint a hedge-only clearance under it. A `LIVE=1` in the environment of a
+non-live mode refuses to start too (GATE step 7): the shadow arm must be STRUCTURALLY unable to post.
 
 Since 2026-09-07 the override pins `code_sha` (kernel/code_sha: nodes, grids, kernel, the runner,
 the box units) rather than the whole checkout's HEAD; `runner_sha` is still written and logged,
@@ -109,8 +112,9 @@ def resolve_mode(requested: str, *, env: Mapping[str, str], kill: KillSwitches, 
                        "structurally unable to post -- unset it")
     if mode.rank >= Mode.PAPER_EXECUTION.rank and kill.active():
         return Refused("KILL_ALL", "the `all` switch is present")
-    if mode.risks_capital and kill.active(live=True):
-        return Refused("KILL_LIVE", "the `live` switch is present (latched by the breaker or a human)")
+    # Deliberately do not refuse process startup on kill/live. The entry gate (`clear`) checks it
+    # before reserving or minting a first-leg clearance, while `clear_protect` ignores only this
+    # scope so a naked position can still be hedged after systemd, a deploy, or a box reboot.
     if mode.sends_real_orders:
         missing = [v for v, ok in credentials_present.items() if not ok]
         if missing:

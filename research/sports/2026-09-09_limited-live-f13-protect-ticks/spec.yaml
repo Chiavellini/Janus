@@ -36,6 +36,7 @@ criteria:
   - "Every submitted limit is a valid venue tick; a protective buy price is floored and never rounded above its economic ceiling."
   - "After valid walked-limit zero-fills, protection proceeds through the valid budget and loss-cap phases within the one 30-second window and existing submit cap."
   - "A true venue rejection, unconfirmed answer or exhausted protection window still fails closed; it is never blindly retried."
+  - "A live kill blocks every new entry but does not prevent the armed service from restarting to reconcile and protect an already-held execution."
   - "STOP on any venue fill not protected within 30 seconds, store error after submission, orphan, missing reservation, unresolved position mismatch, fee above pin, or breaker."
   - "Polymarket zero-reported fees use the event's own pinned schedule keyed by market token; exact balance deltas are reported separately from model PnL."
   - "F12's authenticated account-stream, exact-client-id, lifetime-fill, committed-notional, settlement and laptop-independence criteria remain in force."
