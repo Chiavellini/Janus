@@ -20,8 +20,8 @@ in real-order modes:
      handed back for protection (`to_protect`; acted on when `protect_auto` is on);
   4. the venues' positions are compared with the net of the fills seen on each market: a
      mismatch is flagged (alarm-only in this version);
-  5. `fills_today` for the loss breaker: today's settlement rows plus every young UNCONFIRMED
-     order as UNCONFIRMED (PNL_UNKNOWN refuses covers until the guard resolves it).
+  5. `fills_today` for the loss breaker: today's settlement rows plus every UNCONFIRMED order
+     submitted today (PNL_UNKNOWN refuses covers until the guard resolves it).
 
 Two halves, like discovery: `fetch()` does the network in a worker thread and touches only the
 venue clients (whose journal lives on the worker's own store connection); `apply()` runs on the
@@ -37,7 +37,7 @@ from typing import Callable, Mapping, Sequence
 
 from kernel.execution_protocol import Ack, FillRecord, Position
 from kernel.schema import ExecutionState as X, FillState, Mode
-from nodes.reconcile.reconcile import ingest_fills, resolve_unconfirmed
+from nodes.reconcile.reconcile import check_fees, ingest_fills, resolve_unconfirmed
 from nodes.reconcile.settle_executions import refresh_settlement_accounting
 from nodes.risk.breaker import RealizedFill, day_of
 from nodes.risk.flags import raise_flag, resolve_flag
@@ -45,9 +45,6 @@ from nodes.risk.flags import raise_flag, resolve_flag
 #: A trade this close in time to an UNCONFIRMED order on the same asset, with no other claimant,
 #: is that order's fill (a FAK/IOC never rests; its fill is within seconds of its submit).
 ADOPT_WINDOW_S = 120.0
-#: An UNCONFIRMED order counts against the day's PnL as unknown for this long; older ones are the
-#: reconcile script's business, not a reason to freeze the lane for good.
-UNCONFIRMED_PNL_UNKNOWN_S = 30 * 60.0
 #: A machine that moved this recently is still working the execution: not the guard's to protect.
 IN_FLIGHT_GRACE_S = 60.0
 #: The states in which nothing more is owed on the position.
@@ -64,6 +61,7 @@ class GuardSnapshot:
     positions: dict[str, Sequence[Position] | None] = field(default_factory=dict)
     balances: dict[str, float] = field(default_factory=dict)
     adopted: list[tuple[str, str]] = field(default_factory=list)      # (client_order_id, venue_order_id)
+    fee_findings: list = field(default_factory=list)
     errors: dict[str, str] = field(default_factory=dict)
 
 
@@ -89,14 +87,34 @@ class PositionGuard:
     # ── the network half (a worker thread) ─────────────────────────────
     def fetch(self) -> GuardSnapshot:
         snap = GuardSnapshot(now=self.clock())
+        # Never advance the trade cursor past an unresolved order. A process can be down longer
+        # than ADOPT_WINDOW_S after POST-before-ack; on restart the only recoverable venue order
+        # id may be in that older trade row.
+        unresolved = self.journal.store.con.execute(
+            "SELECT MIN(submitted_utc) FROM orders WHERE state=? OR open=1",
+            (FillState.UNCONFIRMED.value,),
+        ).fetchone()
+        fill_since = self.cursor_utc
+        if unresolved and unresolved[0] is not None:
+            fill_since = min(fill_since, max(0.0, float(unresolved[0]) - 1.0))
         try:
             snap.unconfirmed = resolve_unconfirmed(self.journal, self.venues)
         except Exception as exc:  # noqa: BLE001
             snap.errors["unconfirmed"] = f"{type(exc).__name__}: {exc}"
         try:
-            snap.fills = list(ingest_fills(self.journal, self.venues, since_utc=self.cursor_utc))
+            snap.fills = list(ingest_fills(self.journal, self.venues, since_utc=fill_since))
         except Exception as exc:  # noqa: BLE001
             snap.errors["fills"] = f"{type(exc).__name__}: {exc}"
+        for fill in snap.fills:
+            venue = self.venues.get(fill.venue)
+            per_market = getattr(venue, "fee_params_by_market", {}) or {}
+            params = per_market.get(fill.market_id) or getattr(venue, "fee_params", None)
+            if not params:
+                continue
+            try:
+                snap.fee_findings.extend(check_fees(self.journal, [fill], {fill.venue: params}))
+            except Exception as exc:  # noqa: BLE001 -- missing proof is visible, never a free fee
+                snap.errors[f"fee:{fill.fill_id}"] = f"{type(exc).__name__}: {exc}"
         for v, venue in self.venues.items():
             try:
                 snap.positions[v] = venue.positions() if hasattr(venue, "positions") else None
@@ -154,6 +172,23 @@ class PositionGuard:
             rep.findings.append(f"{k}: {e}")
         for cid, vid in snap.adopted:
             rep.findings.append(f"adopted {cid[:8]} <- venue order {vid[:12]}")
+        for finding in snap.fee_findings:
+            if not finding.stop:
+                continue
+            key = f"fee:{finding.venue}:{finding.order_client_id}:{finding.charged_usd:.8f}"
+            if key in self.said:
+                continue
+            self.said.add(key)
+            detail = (f"{finding.venue} order {finding.order_client_id[:12] or 'unattributed'} charged "
+                      f"${finding.charged_usd:.6f}; pinned ${finding.pinned_usd:.6f}; "
+                      f"excess ${finding.excess_usd:.6f}")
+            rep.findings.append(f"FEE_ABOVE_PIN {detail}")
+            self._flag("FEE_ABOVE_PIN", detail, snap.now)
+            if self.kill is not None:
+                try:
+                    self.kill.latch("live", f"guard: fee above pin {detail[:180]}")
+                except Exception as exc:  # noqa: BLE001
+                    rep.findings.append(f"kill latch failed: {type(exc).__name__}")
         by_exec: dict[str, list[tuple[dict, FillRecord]]] = {}
         for f in snap.fills:
             row = self._row_for(f)
@@ -572,8 +607,9 @@ class PositionGuard:
         except Exception:  # noqa: BLE001 -- an unreadable table is PNL_UNKNOWN below, not a crash
             out.append(RealizedFill("settlements-unreadable", FillState.UNCONFIRMED, 0.0, day))
         jcon = self.journal.store.con
+        day_start = t - (t % 86400.0)
         for cid, sub in jcon.execute("SELECT client_order_id, submitted_utc FROM orders WHERE state=? AND submitted_utc >= ?",
-                                     (FillState.UNCONFIRMED.value, t - UNCONFIRMED_PNL_UNKNOWN_S)):
+                                     (FillState.UNCONFIRMED.value, day_start)):
             if day_of(sub) == day:
                 out.append(RealizedFill(cid, FillState.UNCONFIRMED, 0.0, day))
         return tuple(out)

@@ -301,6 +301,14 @@ def test_the_day_notional_survives_a_release_when_the_ledger_is_durable(tmp_path
     assert L.day_notional_usd(86400.0 + 1.0) == 0.0, "yesterday's rows do not count"
 
 
+def test_overnight_open_reservation_counts_against_todays_cap(tmp_path):
+    st = TupleStore(tmp_path / "risk.sqlite", enforce_volume=False)
+    L = ExposureLedger(st)
+    L.reserve(event_id="e", league="mlb", per_venue_usd={"kalshi": 9}, limits=LIMITS,
+              opportunity_id="o", now=86400.0 - 1)
+    assert L.day_notional_usd(86400.0 + 1) == 9.0
+
+
 def test_a_durable_zero_fill_does_not_spend_the_day_notional(tmp_path):
     store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
     L = ExposureLedger(store)

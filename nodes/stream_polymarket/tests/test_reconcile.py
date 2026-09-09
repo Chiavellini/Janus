@@ -99,3 +99,33 @@ def test_run_fetches_off_the_loop_and_applies_on_it():
     assert threads["fetch"] != main, "the network half runs in a worker"
     assert threads["apply"] == main, "the state half runs on the loop"
     assert rc.reconciles == 1
+
+
+def test_a_ws_update_while_rest_is_in_flight_wins_over_the_old_response():
+    s, reps = stream_with("a")
+    seen = []
+    s.regs["a"][0].on_update = lambda *_: seen.append("rest")
+    rc = Reconciler(s, lambda _aid: ([(0.10, 10)], [(0.90, 10)]))
+
+    targets = rc.prepare(T + 20)
+    books = rc.fetch_due(targets, now=T + 21, mono=6.0)
+    reps["a"].delta_in([("ask", 0.45, 0), ("ask", 0.46, 10)], now=T + 20.5, mono=5.5)
+
+    assert rc.apply(books, now=T + 21) == []
+    assert reps["a"].snapshot(T + 21).best_ask.price == 0.46
+    assert rc.superseded == 1 and rc.reconciles == 0 and seen == []
+
+
+def test_each_rest_book_is_stamped_when_its_response_arrives():
+    s, reps = stream_with("a", "b")
+    clock = iter((T + 21, T + 22))
+    import nodes.stream_polymarket.reconcile as module
+    original = module.time.time
+    module.time.time = lambda: next(clock)
+    try:
+        rc = Reconciler(s, lambda _aid: ([(0.40, 10)], [(0.45, 10)]))
+        books = rc.fetch_due(rc.prepare(T + 20))
+    finally:
+        module.time.time = original
+    assert books["a"].received_utc == T + 21
+    assert books["b"].received_utc == T + 22

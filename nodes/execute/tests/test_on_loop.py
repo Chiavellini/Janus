@@ -60,6 +60,23 @@ def test_a_nowait_method_is_queued_in_order_and_its_exception_is_said_not_raised
     asyncio.run(main())
 
 
+def test_nowait_finalizer_runs_after_success_and_failure_without_escaping_the_loop():
+    async def main():
+        loop = asyncio.get_running_loop()
+        st = Store()
+        finished = []
+        errors = []
+        px = OnLoop(st, loop, nowait={"write", "boom"}, after_call=finished.append,
+                    on_error=errors.append)
+        await asyncio.to_thread(px.write, 2)
+        await asyncio.to_thread(px.boom)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        assert finished[0] is None and isinstance(finished[1], ValueError)
+        assert len(errors) == 1 and isinstance(errors[0], ValueError)
+    asyncio.run(main())
+
+
 def test_without_a_loop_every_call_is_direct():
     st = Store()
     px = OnLoop(st)

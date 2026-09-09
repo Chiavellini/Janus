@@ -91,6 +91,49 @@ def test_discovery_is_split_into_a_network_half_and_a_state_half(monkeypatch, tm
     assert sup.fetch_watch() is None and sup.apply_watch(None) == (0, 0)
 
 
+def test_transient_schedule_failure_keeps_streams_warm_but_suspends_evaluation(monkeypatch, tmp_path: Path):
+    from datetime import datetime, timezone
+    from types import SimpleNamespace
+    import grids.live_stream.grid as G
+
+    sup, live = _supervisor(tmp_path)
+    spec = {"league": "mlb", "short_name": "SF @ PIT", "state": "in", "tier": "live",
+            "outcomes": {}, "fee_params": FEES, "rules": {}, "settlement": {}}
+    sup.last_specs["g1"] = dict(spec)
+    live.execution_spec = G._execution_spec(spec)
+    d = SimpleNamespace(games=[], schedule_failures={"mlb": "ESPN HTTP 503"},
+                        fee_errors={}, per_league={})
+    monkeypatch.setattr(G, "co_listed", lambda *_a, **_k: ({}, {}))
+    monkeypatch.setattr(G, "record_events", lambda *_a, **_k: None)
+
+    held = sup.apply_discovery(datetime.fromtimestamp(T, timezone.utc), d)
+    assert held["g1"]["_discovery_block"].startswith("SCHEDULE_FETCH:")
+    sup.reconcile(held)
+    before = live.evaluations
+    sup._on_update("g1")("K_H", T)
+    assert live.evaluations == before and live.discovery_block
+
+    sup.reconcile({"g1": spec})
+    assert live.discovery_block is None, "a healthy pass resumes the already-warm actor"
+
+
+def test_execution_fingerprint_changes_for_fees_tokens_limits_and_rules():
+    import grids.live_stream.grid as G
+    base = {"league": "mlb", "outcomes": {"home": {"polymarket": "p1", "kalshi": "k1"}},
+            "fee_params": FEES, "pm_limits": {"min_order_contracts": 5, "tick": .01},
+            "rules": {"polymarket": {"market": {"rules": "v1"}}}}
+    original = G._execution_spec(base)
+    for changed in (
+        {**base, "fee_params": {**FEES, "polymarket": {"fee_rate": .07}}},
+        {**base, "outcomes": {"home": {"polymarket": "p2", "kalshi": "k1"}}},
+        {**base, "pm_limits": {"min_order_contracts": 10, "tick": .01}},
+        {**base, "rules": {"polymarket": {"market": {"rules": "v2"}}}},
+    ):
+        assert G._execution_spec(changed) != original
+    stamped = {**base, "rules": {"retrieved_at": T, **base["rules"]}}
+    assert G._execution_spec(stamped) == original, "a retrieval timestamp must not churn every actor"
+
+
 def test_the_report_tick_names_a_stall_apart_from_a_clock_fault(tmp_path: Path, capsys):
     """Both halt pricing; only one is a clock finding. The loop probe decides which."""
     from nodes.stream_kalshi.stream import KalshiStream

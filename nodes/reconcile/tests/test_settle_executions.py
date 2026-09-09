@@ -141,6 +141,48 @@ def test_the_other_result_and_an_open_venue(tmp_path):
     assert st.con.execute("SELECT realized_usd FROM execution_settlements").fetchone()[0] == 5.0
 
 
+def test_results_persist_across_alternating_venue_outages(tmp_path):
+    st, ledger, opps, _ = _hedged(tmp_path)
+    items = pending(st, now=T)
+    first = {"x1": {"kalshi": "K-LAD", "polymarket": None}}
+    assert apply_settlements(st, ledger, None, opps, items, first, now=T, log=lambda *_: None)["waiting"] == 1
+    second = {"x1": {"kalshi": None, "polymarket": LAD}}
+    out = apply_settlements(st, ledger, None, opps, pending(st, now=T + 1), second,
+                            now=T + 1, log=lambda *_: None)
+    assert out == {"settled": 1, "waiting": 0, "unreleasable": 0}
+    assert st.con.execute("SELECT COUNT(*) FROM execution_venue_results").fetchone() == (2,)
+
+
+def test_provisional_polymarket_fill_cannot_release_capital(tmp_path):
+    st, ledger, opps, rid = _hedged(tmp_path)
+    st.con.execute("UPDATE orders SET settlement_pending=1 WHERE client_order_id='a'")
+    st.con.commit()
+    both = {"x1": {"kalshi": "K-STL", "polymarket": STL}}
+    out = apply_settlements(st, ledger, None, opps, pending(st, now=T), both,
+                            now=T, log=lambda *_: None)
+    assert out == {"settled": 0, "waiting": 0, "unreleasable": 1}
+    assert st.con.execute("SELECT state,released FROM executions").fetchone() == ("SETTLED", 0)
+    assert st.con.execute("SELECT released_utc FROM capital_reservations WHERE reservation_id=?", (rid,)).fetchone() == (None,)
+
+    st.con.execute("UPDATE orders SET settlement_pending=0 WHERE client_order_id='a'")
+    st.con.commit()
+    out = apply_settlements(st, ledger, None, opps, pending(st, now=T + 1), both,
+                            now=T + 1, log=lambda *_: None)
+    assert out == {"settled": 1, "waiting": 0, "unreleasable": 0}
+    assert st.con.execute("SELECT state,released FROM executions").fetchone() == ("RECONCILED", 1)
+    assert opps.live[OID].status is S.RECONCILED
+
+
+def test_retry_after_release_commit_is_idempotently_reconciled(tmp_path):
+    st, ledger, opps, rid = _hedged(tmp_path)
+    assert ledger.release(rid, reason="simulated crash after release", now=T)
+    both = {"x1": {"kalshi": "K-STL", "polymarket": STL}}
+    out = apply_settlements(st, ledger, None, opps, pending(st, now=T + 1), both,
+                            now=T + 1, log=lambda *_: None)
+    assert out == {"settled": 1, "waiting": 0, "unreleasable": 0}
+    assert st.con.execute("SELECT state,released FROM executions").fetchone() == ("RECONCILED", 1)
+
+
 def test_one_venue_result_survives_the_other_venues_transport_error(tmp_path):
     st, *_ = _hedged(tmp_path)
     items = pending(st, now=T)

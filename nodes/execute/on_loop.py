@@ -31,7 +31,7 @@ class OnLoop:
     """A proxy: attribute reads pass through; a method called off the loop thread runs ON it."""
 
     def __init__(self, target: Any, loop: asyncio.AbstractEventLoop | None = None, *,
-                 nowait: frozenset[str] | set[str] = frozenset(), on_error=None):
+                 nowait: frozenset[str] | set[str] = frozenset(), on_error=None, after_call=None):
         object.__setattr__(self, "_target", target)
         object.__setattr__(self, "loop", loop)
         #: Methods queued to the loop WITHOUT waiting (their result is not needed; they must not
@@ -39,10 +39,11 @@ class OnLoop:
         #: exception goes to `on_error(exc)` (default: printed once per type) instead of the loop.
         object.__setattr__(self, "nowait", frozenset(nowait))
         object.__setattr__(self, "on_error", on_error)
+        object.__setattr__(self, "after_call", after_call)
         object.__setattr__(self, "_said", set())
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if name in ("loop", "nowait", "on_error"):
+        if name in ("loop", "nowait", "on_error", "after_call"):
             object.__setattr__(self, name, value)
         else:
             setattr(self._target, name, value)
@@ -58,14 +59,26 @@ class OnLoop:
                 return attr(*args, **kwargs)
             if name in self.nowait:
                 def run_nowait() -> None:
+                    failed = None
                     try:
                         attr(*args, **kwargs)
                     except Exception as exc:  # noqa: BLE001 -- the record must not break the loop; said once per type
+                        failed = exc
                         if self.on_error is not None:
                             self.on_error(exc)
                         elif type(exc).__name__ not in self._said:
                             self._said.add(type(exc).__name__)
                             print(f"  [exec] {name} refused off the loop: {type(exc).__name__}: {exc}", flush=True)
+                    finally:
+                        if self.after_call is not None:
+                            try:
+                                self.after_call(failed)
+                            except Exception as exc:  # noqa: BLE001 -- same containment boundary as the call
+                                if self.on_error is not None:
+                                    self.on_error(exc)
+                                elif type(exc).__name__ not in self._said:
+                                    self._said.add(type(exc).__name__)
+                                    print(f"  [exec] {name} finalizer failed: {type(exc).__name__}: {exc}", flush=True)
                 loop.call_soon_threadsafe(run_nowait)
                 return None
             fut: concurrent.futures.Future = concurrent.futures.Future()

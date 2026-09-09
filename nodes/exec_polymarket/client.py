@@ -484,7 +484,11 @@ class PolymarketExecution:
             return Ack(self.venue, req.client_order_id, oid, FillState.UNCONFIRMED, 0.0, None, None, status, t,
                        settlement_pending=True, detail="matched; size via status()")
         if status == "live":
-            return Ack(self.venue, req.client_order_id, oid, FillState.UNFILLED, 0.0, None, None, status, t, open=True)
+            # An immediate order is not allowed to rest, but the venue has explicitly said this one
+            # is live.  It is therefore unresolved exposure, never an authoritative zero-fill.  The
+            # coordinator will poll and cancel it before deciding whether anything filled.
+            return Ack(self.venue, req.client_order_id, oid, FillState.UNCONFIRMED, 0.0, None, None,
+                       status, t, open=True, detail="unexpected open immediate order; poll and cancel")
         # delayed / unmatched / anything else: the venue has the order and has not said what happened
         return Ack(self.venue, req.client_order_id, oid, FillState.UNCONFIRMED, 0.0, None, None, status or "unknown", t,
                    open=True, detail="placed; outcome not yet reported")

@@ -229,7 +229,9 @@ class ExposureLedger:
         """
         t = now or time.time()
         midnight = t - (t % 86400.0)
-        total = sum(r.total_usd for r in self.open.values() if r.created_utc >= midnight)
+        # A reservation opened yesterday is still capital committed today until it is released.
+        # Filtering open rows by creation date let overnight exposure vanish from the signed cap.
+        total = sum(r.total_usd for r in self.open.values())
         if self.store is not None:
             rows = self.store.con.execute(
                 "SELECT reservation_id,per_venue_json,release_reason FROM capital_reservations "

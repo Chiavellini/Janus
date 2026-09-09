@@ -32,7 +32,13 @@ from typing import Mapping, Sequence
 
 from kernel.schema import Book
 from nodes.cover.cover import Cover, Leg
-from nodes.opportunity.thresholds import EXECUTION_MIN_LOCKED_RETURN, STRATEGY_VERSION
+from nodes.fees.models import Fill
+from nodes.fees.registry import model_for, params_for
+from nodes.opportunity.thresholds import (
+    EXECUTION_MIN_LOCKED_RETURN,
+    EXECUTION_MIN_NET_PROFIT_USD,
+    STRATEGY_VERSION,
+)
 
 FIRST_VENUE, HEDGE_VENUE = "polymarket", "kalshi"
 
@@ -126,7 +132,8 @@ def _leg_side(leg: Leg) -> tuple[str, str]:
 
 
 def plan_from_cover(*, opportunity_id: str, event_id: str, league: str, cov: Cover,
-                    offers: Mapping[str, Sequence[Leg]], hurdle: float = EXECUTION_MIN_LOCKED_RETURN) -> Plan | None:
+                    offers: Mapping[str, Sequence[Leg]], hurdle: float = EXECUTION_MIN_LOCKED_RETURN,
+                    min_net_profit_usd: float = EXECUTION_MIN_NET_PROFIT_USD) -> Plan | None:
     """None when the cover is not a two-venue, two-leg cover with a Polymarket leg to lead."""
     if not cov.ok or len(cov.legs) != 2 or cov.single_venue:
         return None
@@ -145,7 +152,12 @@ def plan_from_cover(*, opportunity_id: str, event_id: str, league: str, cov: Cov
         market_id, side = _leg_side(leg)
         plans[venue] = LegPlan(venue, market_id, lc.outcome_id, side, limit, cov.contracts,
                                "ioc", vwap=float(lc.vwap), tick=float(leg.tick or 0.01))
-    max_cost = 1.0 / (1.0 + hurdle)
+    # Both registered economics are hard ceilings.  The percentage hurdle alone leaves more room
+    # than the dollar floor at the live q=5/q=10 sizes: spending a one-cent entry pad can turn a
+    # $0.12 candidate into a $0.07 trade while the original evaluation still clears risk.  Carry
+    # the tighter ceiling through the plan so every later hedge budget preserves both promises.
+    profit_cost = 1.0 - max(0.0, float(min_net_profit_usd)) / float(cov.contracts)
+    max_cost = min(1.0 / (1.0 + hurdle), profit_cost)
     fee = float(cov.fee_per_contract or 0.0)
     settlement = float(cov.settlement_buffer_per_contract or 0.0)
     first, hedge = plans[FIRST_VENUE], plans[HEDGE_VENUE]
@@ -157,11 +169,39 @@ def plan_from_cover(*, opportunity_id: str, event_id: str, league: str, cov: Cov
     # (a partial first leg is hedged for exactly what filled, LEG_A_PARTIAL); the pad buys the
     # step. The hedge limit tightens by whatever the first leg pays above its VWAP, so the pad
     # never buys a cover below the hurdle.
-    room = max_cost - hedge.vwap - fee - settlement - first.limit_price
-    if room >= first.tick - 1e-9:
+    padded_price = round(first.limit_price + first.tick, 4)
+    padded_fee = fee
+    # The venue fee can move with probability (Polymarket uses p*(1-p)).  Reprice the padded first
+    # leg at its worst fill price and preserve every other fee already in the cover.  A failed fee
+    # reprice removes the optional pad; it never creates free room.
+    try:
+        source_leg = legs_by_id[(first.venue, first.outcome_id)]
+        need = first.contracts
+        original_fills = []
+        for quote in source_leg.book.asks:
+            if need <= 1e-9:
+                break
+            take = min(need, quote.size)
+            original_fills.append(Fill(first.venue, first.market_id, first.outcome_id, "yes",
+                                       quote.price, take, "taker", 0))
+            need -= take
+        original_leg_fee = model_for(first.venue).entry_cost(
+            original_fills, params_for(first.venue, source_leg.fee_overrides)
+        )
+        worst_fee = model_for(first.venue).entry_cost(
+            [Fill(first.venue, first.market_id, first.outcome_id, "yes", padded_price,
+                  first.contracts, "taker", 0)],
+            params_for(first.venue, source_leg.fee_overrides),
+        )
+        padded_fee += max(0.0, float(worst_fee) - float(original_leg_fee)) / float(cov.contracts)
+    except Exception:  # noqa: BLE001 -- an optional price pad is refused when its fee is not provable
+        padded_price = first.limit_price
+    room = max_cost - hedge.vwap - padded_fee - settlement - padded_price
+    if padded_price > first.limit_price and room >= -1e-9:
         first = LegPlan(first.venue, first.market_id, first.outcome_id, first.side,
-                        round(first.limit_price + first.tick, 4), first.contracts, first.time_in_force,
+                        padded_price, first.contracts, first.time_in_force,
                         vwap=first.vwap, tick=first.tick)
+        fee = padded_fee
     return Plan(opportunity_id, event_id, league, cov.contracts, first, hedge,
                 max_cost_per_contract=max_cost, fee_per_contract=fee,
                 settlement_buffer_per_contract=settlement)

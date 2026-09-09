@@ -61,7 +61,10 @@ def check_proof(proof: dict, *, reservation_row: Callable[[str], dict | None] | 
         ack, cx = s1.get("resting", {}), s1.get("after_cancel", {})
         st = str(cx.get("state", ""))
         filled = _f(cx.get("filled_contracts"))
-        if st == "UNCONFIRMED" or str(ack.get("state", "")) == "UNCONFIRMED":
+        # A venue saying the just-submitted order is LIVE is unresolved until the cancel. The
+        # proof is complete when the post-cancel state is terminal; the initial ack must not be
+        # treated as an authoritative zero-fill merely to make this check pass.
+        if st == "UNCONFIRMED":
             out.append(Finding("resting_cancelled", False,
                                f"resting order state is UNCONFIRMED (ack {ack.get('raw_status')!r}, "
                                f"after cancel {cx.get('raw_status')!r}); reconcile before anything else"))

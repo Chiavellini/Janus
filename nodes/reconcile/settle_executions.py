@@ -179,7 +179,7 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
             continue
         marks = ",".join("?" * len(client_ids))
         order_rows = store.con.execute(
-            "SELECT venue, client_order_id, outcome_id, side, filled_contracts, avg_price, fee_usd, state "
+            "SELECT venue, client_order_id, outcome_id, side, filled_contracts, avg_price, fee_usd, state, settlement_pending "
             f"FROM orders WHERE client_order_id IN ({marks})", client_ids,
         ).fetchall()
         venues_needed = {r[0] for r in order_rows}
@@ -196,16 +196,28 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
                     (it["execution_id"], venue, str(w[venue]), t),
                 )
         store.con.commit()
+        # Venue endpoints can finalize on different passes and can later become temporarily
+        # unavailable. Durable results are evidence; merge them before the completeness check.
+        for venue, winner in store.con.execute(
+                "SELECT venue,winner FROM execution_venue_results WHERE execution_id=?",
+                (it["execution_id"],)).fetchall():
+            if w.get(venue) is None:
+                w[venue] = winner
         if any(w.get(v) is None for v in venues_needed):
             out["waiting"] += 1
             continue
         legs = [{"venue": r[0], "client_order_id": r[1], "outcome_id": r[2], "side": r[3], "contracts": float(r[4] or 0.0),
-                 "price": float(r[5] or 0.0), "fee_usd": float(r[6] or 0.0), "state": r[7], "final": True}
+                 "price": float(r[5] or 0.0), "fee_usd": float(r[6] or 0.0), "state": r[7],
+                 "final": not bool(r[8])}
                 for r in order_rows]
         realized = settle(legs=legs, winners={v: w[v] for v in venues_needed}, now=t)
         pnl = sum(x.realized_usd for x in realized)
         ok = releasable(realized)
-        released = bool(ok and it.get("reservation_id") and ledger.release(it["reservation_id"], reason=f"settled: {w}", now=t))
+        released = bool(ok and it.get("reservation_id") and
+                        (ledger.release(it["reservation_id"], reason=f"settled: {w}", now=t) or
+                         store.con.execute(
+                             "SELECT released_utc IS NOT NULL FROM capital_reservations WHERE reservation_id=?",
+                             (it["reservation_id"],)).fetchone() == (1,)))
         split = _split(it, legs, pnl)
         store.con.execute(
             "INSERT OR REPLACE INTO execution_settlements(execution_id, opportunity_id, event_id, league, mode, settled_ts, "
@@ -224,8 +236,8 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
             opp = load(it["opportunity_id"]) if load is not None else opportunities.live.get(it["opportunity_id"])
             if opp is not None and opp.status in (S.HEDGED, S.FAILED_HEDGE):
                 opportunities.move(opp, S.SETTLED, now=t, detail=f"{pnl:+.4f}")
-                if released:
-                    opportunities.move(opp, S.RECONCILED, now=t)
+            if opp is not None and released and opp.status is S.SETTLED:
+                opportunities.move(opp, S.RECONCILED, now=t)
         out["settled" if released else "unreleasable"] += 1
         log(f"[settle ] {it['event_id']} {it['mode']} {split['kind']} realized {pnl:+.4f} USD"
             + (f" (cover {split['cover_usd']:+.4f}, directional {split['directional_usd']:+.4f} on {split['unhedged']} unhedged)"
@@ -268,7 +280,7 @@ def refresh_settlement_accounting(store, *, now: float | None = None,
             continue
         marks = ",".join("?" * len(client_ids))
         order_rows = store.con.execute(
-            "SELECT venue,client_order_id,outcome_id,side,filled_contracts,avg_price,fee_usd,state "
+            "SELECT venue,client_order_id,outcome_id,side,filled_contracts,avg_price,fee_usd,state,settlement_pending "
             f"FROM orders WHERE client_order_id IN ({marks})",
             client_ids,
         ).fetchall()
@@ -281,7 +293,7 @@ def refresh_settlement_accounting(store, *, now: float | None = None,
         legs = [
             {"venue": r[0], "client_order_id": r[1], "outcome_id": r[2], "side": r[3],
              "contracts": float(r[4] or 0.0), "price": float(r[5] or 0.0),
-             "fee_usd": float(r[6] or 0.0), "state": r[7], "final": True}
+             "fee_usd": float(r[6] or 0.0), "state": r[7], "final": not bool(r[8])}
             for r in order_rows
         ]
         realized = settle(legs=legs, winners={v: winners[v] for v in venues}, now=float(settled_ts))

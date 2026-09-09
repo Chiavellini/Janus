@@ -23,8 +23,10 @@ class Venue:
     def __init__(self, venue, fills=(), positions=None, status=None):
         self.venue, self._fills, self._positions, self._status = venue, list(fills), positions, status
         self.asked = []
+        self.asked_since = []
 
     def fills(self, *, since_utc):
+        self.asked_since.append(since_utc)
         return [f for f in self._fills if f.ts >= since_utc]
 
     def positions(self):
@@ -87,6 +89,18 @@ def test_the_gea_shape_is_adopted_corrected_flagged_and_handed_to_protection(tmp
     assert rep2.to_protect == ["789ad9b2"], "but the naked row is still handed over every pass"
 
 
+def test_restart_trade_cursor_rewinds_to_every_unresolved_order(tmp_path):
+    trade = FillRecord("polymarket", "0xorder", "old-fill", 10.175, 0.57, 0.0, True,
+                       T0 + 101, True, market_id=TOK, side="buy_yes")
+    pm = Venue("polymarket", fills=[trade], positions=[])
+    main, journal, records, g = _world(tmp_path, venues={"polymarket": pm})
+    _gea_row(journal, records)
+    g.cursor_utc = T0 + 250  # restart long after the normal rolling cursor passed the trade
+    snap = g.fetch()
+    assert pm.asked_since == [T0 + 99.1]
+    assert snap.adopted == [("a1", "0xorder")]
+
+
 def test_a_fill_no_row_claims_is_an_orphan_that_latches_the_live_kill(tmp_path):
     stray = FillRecord("kalshi", "k-777", "kf1", 5.0, 0.40, 0.01, True, T0 + 50, True, market_id="KXMLBGAME-X", side="buy_yes")
     kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
@@ -95,6 +109,25 @@ def test_a_fill_no_row_claims_is_an_orphan_that_latches_the_live_kill(tmp_path):
     assert rep.orphans == [stray] and any(x.startswith("ORPHAN_FILL") for x in rep.findings)
     assert kill.active(live=True) == ["live"]
     assert recent_flags(tmp_path / "t.sqlite", "ORPHAN_FILL", now=T0 + 300)
+
+
+def test_a_venue_fee_above_the_pinned_schedule_latches_the_live_kill(tmp_path):
+    from kernel.execution_protocol import Ack, OrderRequest
+    fill = FillRecord("polymarket", "pm-order", "fee-high", 5.0, 0.50, 1.00, True,
+                      T0 + 100, True, market_id=TOK, side="buy_yes")
+    pm = Venue("polymarket", fills=[fill], positions=[])
+    pm.fee_params_by_market = {TOK: {"fee_rate": 0.05}}
+    kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    main, journal, records, g = _world(tmp_path, venues={"polymarket": pm}, kill=kill)
+    journal.pending(OrderRequest("polymarket", TOK, TOK, "buy_yes", .50, 5, "ioc", "cid", "o"),
+                    mode="LIMITED_LIVE", now=T0 + 99)
+    journal.record(Ack("polymarket", "cid", "pm-order", FillState.FILLED, 5, .50, 1.00,
+                       "confirmed", T0 + 100), kind="ack")
+    snap = g.fetch()
+    assert len(snap.fee_findings) == 1 and snap.fee_findings[0].stop
+    rep = g.apply(snap)
+    assert any(x.startswith("FEE_ABOVE_PIN") for x in rep.findings)
+    assert kill.active(live=True) == ["live"]
 
 
 def test_a_hedged_execution_whose_fills_match_is_quiet(tmp_path):
@@ -162,7 +195,7 @@ def test_a_released_rejection_the_venue_contradicts_is_reopened(tmp_path):
     assert any(d.startswith("guard reopen") for d in tr) and any(d.startswith("guard: venue fills") for d in tr)
 
 
-def test_fills_today_carries_settlements_and_young_unconfirmed_orders(tmp_path):
+def test_fills_today_carries_settlements_and_every_same_day_unconfirmed_order(tmp_path):
     from kernel.execution_protocol import OrderRequest
     main, journal, records, g = _world(tmp_path, venues={})
     ex = Execution("s1", "o", "e", "mlb", "LIMITED_LIVE", 5.0, T0 + 100)
@@ -175,7 +208,8 @@ def test_fills_today_carries_settlements_and_young_unconfirmed_orders(tmp_path):
     journal.pending(OrderRequest("kalshi", "K", "K", "buy_yes", 0.4, 1.0, "ioc", "old", "o"), mode="LIMITED_LIVE", now=T0 - 5000)
     fills = g.fills_today(T0 + 300)
     states = {f.fill_id: f.state for f in fills}
-    assert states["s1"] is FillState.FILLED and states["young"] is FillState.UNCONFIRMED and "old" not in states and "p1" not in states
+    assert states["s1"] is FillState.FILLED and states["young"] is FillState.UNCONFIRMED
+    assert states["old"] is FillState.UNCONFIRMED and "p1" not in states
     assert sum(f.realized_usd for f in fills) == -0.42
     from nodes.risk.breaker import LossBreaker
     b = LossBreaker(path=tmp_path / "breaker.json", enforce_volume=False)

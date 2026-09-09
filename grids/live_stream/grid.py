@@ -32,7 +32,7 @@ import signal
 import sys
 import time
 import traceback
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -101,6 +101,8 @@ class Supervised:
     kalshi_tickers: tuple[str, ...] = ()
     pm_assets: tuple[str, ...] = ()
     fee_params: dict = field(default_factory=dict)
+    execution_spec: str = ""
+    discovery_block: str | None = None
     evaluations: int = 0
     written: int = 0
 
@@ -142,6 +144,9 @@ class Supervisor:
     spawned: int = 0
     reaped: int = 0
     blocked: dict[str, str] = field(default_factory=dict)
+    #: Last fully built executable specs. A transient schedule failure keeps socket actors warm
+    #: but suspends evaluation; it never trades stale state or pays a five-minute cold start.
+    last_specs: dict[str, dict] = field(default_factory=dict)
     #: (game_id, exception class) -> count of evaluations whose record raised; see _on_update.
     record_errors: dict[tuple[str, str], int] = field(default_factory=dict)
     #: Event-loop stall since the last report tick: the worst overshoot of a 250 ms sleep, and the
@@ -232,6 +237,16 @@ class Supervisor:
                 self.blocked[f"fees:{venue}:{key}"] = f"FEE_SCHEDULE: {err}"
         if self.store is not None:
             record_events(self.store, d, slate, {**dict(blocked), **kept})
+        for gid, spec in slate.items():
+            self.last_specs[gid] = dict(spec)
+        failed_leagues = set(getattr(d, "schedule_failures", {}) or {})
+        for gid in self.live:
+            old = self.last_specs.get(gid)
+            if gid in slate or old is None or old.get("league") not in failed_leagues:
+                continue
+            held = dict(old)
+            held["_discovery_block"] = f"SCHEDULE_FETCH: {d.schedule_failures[old['league']]}"
+            slate[gid] = held
         # Every game in the window that did not pair is said ONCE per reason, by name, with the
         # venue side that was missing; every venue market that failed to pair is said once with
         # the venue's own labels and the matcher's reason. A league with games and no pair keeps
@@ -263,6 +278,8 @@ class Supervisor:
                   f"kalshi markets={stats.get('kalshi_markets', 0)} reasons={reasons.get('kalshi') or {}}; "
                   f"polymarket markets={stats.get('polymarket_markets', 0)} reasons={reasons.get('polymarket') or {}}",
                   flush=True)
+        if self.store is not None and self.store.con.in_transaction:
+            self.store.commit()
         return slate
 
     def sync_watch(self) -> tuple[int, int]:
@@ -289,6 +306,8 @@ class Supervisor:
         if self.store is not None and p_events:
             # First-seen starts for the settlement-timing collector (nodes/watch_settle, ledger F4).
             self.watch_rows = record_watch(self.store, p_events, now=time.time())
+            if self.store.con.in_transaction:
+                self.store.commit()
         return added, removed
 
     # ── lifecycle ───────────────────────────────────────────────────────
@@ -299,8 +318,22 @@ class Supervisor:
                 # The evaluation window follows the slate tier (2026-09-08): a game that moved from
                 # newborn to live prices on every frame from this pass on; the replay harness reads
                 # the same change from the tier timeline the discovery pass recorded.
-                self.live[gid].poller.min_eval_interval_s = eval_interval_for(spec.get("tier"), default=EVAL_INTERVAL_S)
-                continue
+                current = self.live[gid]
+                current.discovery_block = spec.get("_discovery_block")
+                fingerprint = _execution_spec(spec)
+                if current.execution_spec == fingerprint:
+                    current.poller.min_eval_interval_s = eval_interval_for(spec.get("tier"), default=EVAL_INTERVAL_S)
+                    continue
+                # Fees, token ids, order minima and settlement proof are executable state, not
+                # display metadata.  A discovery refresh that changes any of them replaces the
+                # actor before another frame can be priced from the obsolete specification.
+                current.poller.drain()
+                for ticker in current.kalshi_tickers:
+                    self.ks.unregister(ticker)
+                for asset in current.pm_assets:
+                    self.ps.unregister(asset)
+                self.live.pop(gid, None)
+                print(f"[refresh] {current.short_name}: executable slate specification changed", flush=True)
             eq = certify_from_spec(spec, spec["league"])
             # The window per tier is nodes/game_poller/poller.EVAL_INTERVAL_BY_TIER, mirrored in
             # nodes/replay/replay.py: replay must coalesce exactly as the lane did or the rows differ.
@@ -325,7 +358,7 @@ class Supervisor:
                 continue
             sup = Supervised(p, spec["short_name"], time.time(),
                              tuple(p.market_ids("kalshi")), tuple(p.market_ids("polymarket")),
-                             fee_params=dict(spec["fee_params"]))
+                             fee_params=dict(spec["fee_params"]), execution_spec=_execution_spec(spec))
             cb = self._on_update(gid)
             for venue, market_id, side, rep in p.registrations():
                 if venue == "kalshi":
@@ -345,6 +378,7 @@ class Supervisor:
             for a in sup.pm_assets:
                 self.ps.unregister(a)
             self.reaped += 1
+            self.last_specs.pop(gid, None)
             st = sup.poller.stats()
             print(f"[reap ] {sup.short_name} after {(time.time()-sup.started_utc)/60:.0f}m — "
                   f"{st['evaluations']} evals, {sup.written} rows, {st['opportunities']} opps",
@@ -355,12 +389,16 @@ class Supervisor:
             sup = self.live.get(gid)
             if sup is None:
                 return
-            before = sup.written
+            if sup.discovery_block:
+                return
+            failed = False
+            written_before = sup.written
             for ev in sup.poller.on_event("stream", _market_id, now=now):
                 sup.evaluations += 1
                 try:
                     self._record(sup, ev)
                 except Exception as exc:  # noqa: BLE001 -- a record bug must never reach the socket loop
+                    failed = True
                     # The callback runs inside the venue socket's receive loop. An exception here
                     # was caught by the transport's blanket handler, which tore the socket down,
                     # resubscribed, and raised again on the first frame: 5-20 reconnects a minute
@@ -370,15 +408,24 @@ class Supervisor:
                     self.record_errors[key] = self.record_errors.get(key, 0) + 1
                     if self.record_errors[key] == 1:
                         print(f"  [record] {sup.short_name} {brief_error(exc)}", flush=True)
-            if sup.written != before and self.store is not None:
+            if self.store is not None and self.store.con.in_transaction:
                 # Commit per frame, not per report tick (30 s): the loop's implicit transaction held
                 # the file's write lock for up to 30 s, and the execution worker's journal write
                 # behind it hit the 30 s busy timeout with leg A already out (GEA V ZANDSCH,
                 # 2026-09-08 01:40Z: filled on Polymarket, hedge never sent). A WAL commit here is
                 # an append, not an fsync (synchronous=NORMAL).
                 try:
-                    self.store.commit()
+                    if failed:
+                        self.store.con.rollback()
+                        sup.written = written_before
+                    else:
+                        self.store.commit()
                 except Exception as exc:  # noqa: BLE001
+                    try:
+                        self.store.con.rollback()
+                    except Exception:  # noqa: BLE001 -- preserve the original commit failure
+                        pass
+                    sup.written = written_before
                     key = (gid, "commit:" + type(exc).__name__)
                     self.record_errors[key] = self.record_errors.get(key, 0) + 1
                     if self.record_errors[key] == 1:
@@ -498,7 +545,8 @@ class Supervisor:
                "eval_to_exec_ms": round(max(0.0, time.time() - ev.evaluated_utc) * 1000.0, 2)}
         offers = {o: list(v) for o, v in ev.offers.items()}
         plan = plan_from_cover(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
-                               league=sup.poller.league, cov=cov, offers=offers, hurdle=MIN_RETURN)
+                               league=sup.poller.league, cov=cov, offers=offers, hurdle=MIN_RETURN,
+                               min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0))
         if plan is None:
             return
         # Paper venues fill against the books the cover was priced from -- the same instant.
@@ -515,10 +563,14 @@ class Supervisor:
                         side = "buy_no" if (l.venue == "kalshi" and l.outcome_id.endswith(":NO")) else "buy_yes"
                         v.books[(l.market_id, side)] = l.book
         max_age = max((ev.evaluated_utc - l.book.fetched_utc) for legs in offers.values() for l in legs)
+        planned_cost = plan.first.limit_price + plan.hedge.vwap + plan.fee_per_contract + plan.settlement_buffer_per_contract
+        planned_profit = plan.quantity * (1.0 - planned_cost)
+        planned_capital = plan.quantity * planned_cost
         cand = Candidate(plan.opportunity_id, ev.game_id, sup.poller.league,
                          ((plan.first.venue, plan.first.contracts, plan.first.limit_price),
                           (plan.hedge.venue, plan.hedge.contracts, plan.hedge.limit_price)),
-                         rec.net_profit_usd or 0.0, rec.locked_return or 0.0, STRATEGY_VERSION, max_age)
+                         planned_profit, (planned_profit / planned_capital if planned_capital > 0 else 0.0),
+                         STRATEGY_VERSION, max_age)
         # The cheap refusals BEFORE any round trip (2026-09-07, LAA @ BOS in play on the box): every
         # profitable print at q=25 and q=100 fetched both venues' balances -- two round trips on
         # the event loop -- only to be refused CAP_STAKE by the override. Dozens a minute stalled
@@ -587,7 +639,9 @@ class Supervisor:
                 task.add_done_callback(self.exec_tasks.discard)
                 return
         balances = self._balances(pre) if self.mode.sends_real_orders else None
-        clearance = self._clear(sup, cand, balances, pre)
+        aged = (replace(cand, max_book_age_s=cand.max_book_age_s + max(0.0, time.monotonic() - m_entry))
+                if isinstance(cand, Candidate) else cand)
+        clearance = self._clear(sup, aged, balances, pre)
         if clearance is None:
             return
         pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
@@ -671,7 +725,9 @@ class Supervisor:
             balances = self._cached_balances(pre)
             if balances is None:
                 balances = await asyncio.to_thread(self._balances, pre)
-            clearance = self._clear(sup, cand, balances, pre)
+            aged = (replace(cand, max_book_age_s=cand.max_book_age_s + max(0.0, time.monotonic() - m_entry))
+                    if isinstance(cand, Candidate) else cand)
+            clearance = self._clear(sup, aged, balances, pre)
             if clearance is None:
                 return
             pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
@@ -951,6 +1007,27 @@ def _runner_sha() -> tuple[str, str]:
     return code_tree_sha(ROOT), runner_head_sha(ROOT)
 
 
+def _execution_spec(spec: dict) -> str:
+    """Stable fingerprint of every discovery field that can alter execution semantics."""
+    keys = (
+        "league", "outcomes", "fee_params", "rules", "settlement", "settlement_proof",
+        "pm_slug", "kalshi_event", "polymarket", "kalshi", "pm_limits", "order_limits",
+        "tokens", "market_ids",
+    )
+
+    def normal(value):
+        if isinstance(value, dict):
+            return {str(k): normal(v) for k, v in sorted(value.items(), key=lambda item: str(item[0]))
+                    if str(k) not in {"retrieved_at", "retrieved_utc", "fetched_utc"}}
+        if isinstance(value, (set, frozenset)):
+            return sorted(normal(v) for v in value)
+        if isinstance(value, (list, tuple)):
+            return [normal(v) for v in value]
+        return value
+
+    return json.dumps({k: normal(spec.get(k)) for k in keys}, sort_keys=True, separators=(",", ":"), default=str)
+
+
 def _leagues_arg(text: str) -> list[str]:
     """'enabled' -> every registered league that lacks nothing today; otherwise the list as given."""
     if text.strip() == "enabled":
@@ -1052,7 +1129,16 @@ def main() -> int:
         # The opportunity record's in-memory state belongs to the loop (record_evaluation mutates it
         # on every frame): the machine's status moves are queued to the loop, never waited for.
         # Records and the journal write through the worker's own connection (2026-09-08).
-        opps = OnLoop(sup.opportunities, nowait={"move"})
+        def finish_opportunity_write(exc: Exception | None) -> None:
+            """Close the main-store transaction opened by every queued status move."""
+            if sup.store is None or not sup.store.con.in_transaction:
+                return
+            if exc is None:
+                sup.store.commit()
+            else:
+                sup.store.con.rollback()
+
+        opps = OnLoop(sup.opportunities, nowait={"move"}, after_call=finish_opportunity_write)
         sup.on_loop.append(opps)
         records = ExecutionRecords(sup.worker_store)
         sup.coordinator = Coordinator(sup.venues, records, sup.mode,
