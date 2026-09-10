@@ -38,9 +38,12 @@ The local operator release provisions the builder credential into SSM if and onl
 set is absent; partial credentials fail closed and secrets are never printed.
 
 The first candidate's operator paste stopped before checkout because the laptop's selected Python
-did not contain `boto3`. L66 removes that undeclared dependency: provisioning now uses the existing
-AWS CLI, with SecureString JSON passed through stdin so values never appear in argv or output. The
-replacement candidate has a fresh full-suite pass; production was untouched by the failed paste.
+did not contain `boto3`. L66 removed that dependency, but the installed AWS CLI rejected loading
+whole input JSON from `/dev/stdin`, so the second paste also stopped before checkout. L67 uses a
+mode-600 named pipe, verified against this actual AWS CLI; secret bytes remain only in process/pipe
+memory and only the pipe path appears in argv. Read-only SSM inspection confirms all three source
+fields and zero of three builder fields, so no partial write exists. Production was untouched by
+both failed pastes.
 
 The arm remains **$12 combined stake, 10 contracts per leg requested, $250 committed daily
 notional, $25 realized-loss breaker, $0.10 minimum net profit, 1% locked return, $1 maximum

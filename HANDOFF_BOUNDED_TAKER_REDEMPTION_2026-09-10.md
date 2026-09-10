@@ -51,6 +51,10 @@ automatic, and the box be restarted through the normal operator release boundary
 8. After the first candidate stopped at release step zero because local Python lacked `boto3`, L66
    replaced that undeclared dependency with a minimal AWS CLI SSM adapter. SecureString JSON enters
    through stdin, not argv or output. The failed paste performed no checkout, restart, or clear.
+9. The installed CLI rejected whole JSON from `/dev/stdin`; the second paste also stopped before
+   checkout. L67 now streams JSON twice through a short-lived mode-600 FIFO, matching the actual
+   CLI's observed parser behavior without a regular file or secret-bearing argv. Benign local parser
+   validation passes and read-only SSM inspection confirms source 3/3, builder 0/3.
 
 Expected EV effect: immediate entry should recover executable first-leg fills lost to the recent
 short-lived maker policy, at the known cost of taker fees. The magnitude is deliberately unclaimed
@@ -114,6 +118,8 @@ until F20 produces prospective fills. Redemption improves collateral availabilit
 - `research/sports/2026-09-10_limited-live-f20-bounded-taker/spec.yaml` — pending forward cohort.
 - `research/exec/2026-09-10_redemption-provision-cli/spec.yaml`, `verdict.md` — immutable L66 local
   release-compatibility repair and passing verdict.
+- `research/exec/2026-09-10_redemption-provision-pipe/spec.yaml`, `verdict.md` — immutable L67
+  pipe-transport repair and actual installed-CLI passing verdict.
 - `HANDOFF_BOUNDED_TAKER_REDEMPTION_2026-09-10.md` — this continuation record.
 
 ## Files intentionally left untouched

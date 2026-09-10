@@ -1,0 +1,31 @@
+row: L67
+date: 2026-09-10
+kind: release_compatibility_repair
+status_at_registration: PENDING
+observed_failure: >-
+  The operator's 8f5afd4 release again stopped at step zero before checkout. The local CLOB client
+  emitted a recoverable API-key-create 400, then produced a complete builder credential, but the
+  installed AWS CLI exited 252 while loading --cli-input-json from /dev/stdin. No box release,
+  restart, kill clear, order, or redemption occurred. The first SSM put failed.
+immutable_change:
+  - Preserve AWS CLI provisioning but replace the unsupported /dev/stdin file loader with a
+    short-lived mode-600 named OS pipe whose pathname, never payload, appears in argv.
+  - The builder credential may exist only in process memory and pipe buffers until encrypted SSM
+    accepts it. Never write credential bytes to a regular file, argv, stdout, stderr, or exception.
+  - Preflight the actual installed AWS CLI's pipe JSON parser with a non-secret local skeleton
+    validation before the next operator release.
+  - Preserve all-or-none SSM inspection, partial-set refusal, Overwrite=false, region and builder
+    key creation. If a partial set exists after any failure, stop and name only the missing fields.
+validation:
+  - Unit tests prove the pipe is mode 600, not a regular file, contains the JSON only through the
+    writer, is removed afterward, and argv/output exclude the secret.
+  - Actual local AWS CLI skeleton validation reads a benign payload through the same pipe.
+  - A read-only SSM presence check confirms either zero or all three builder fields before release.
+  - Full repository suite, compile, shell syntax and diff checks pass before a replacement SHA.
+expected_ev_effect: >-
+  None directly. This repairs the operator delivery path for the already-authorized taker and
+  redemption release without changing strategy, caps, hurdles, kill logic, or account state.
+prohibited:
+  - A regular temporary secret file, secret-bearing argv/environment/log/error, or implicit
+    overwrite of a partial credential set.
+  - Any box/account mutation during local parser validation and read-only preflight.

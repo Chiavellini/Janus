@@ -11,6 +11,9 @@ import argparse
 import json
 import os
 import subprocess
+import tempfile
+import threading
+from pathlib import Path
 
 
 BUILDER_NAMES = {
@@ -28,17 +31,46 @@ SOURCE_NAMES = (
 class AwsCliSsm:
     """Minimal boto3-compatible SSM surface using the operator's existing AWS CLI.
 
-    SecureString values enter ``aws`` through /dev/stdin, never argv.  The deliberately generic
-    failure text also prevents an external CLI error from reflecting input material into logs.
+    SecureString values enter ``aws`` through a mode-600 named pipe, never argv or a regular file.
+    The deliberately generic failure text also prevents an external CLI error from reflecting
+    input material into logs.
     """
     def __init__(self, region: str, *, runner=subprocess.run):
         self.region, self.runner = region, runner
 
-    def _run(self, args: list[str], *, stdin: str | None = None) -> dict:
-        result = self.runner(
-            ["aws", "ssm", *args, "--region", self.region, "--output", "json"],
-            input=stdin, text=True, capture_output=True, check=False,
-        )
+    def _run(self, args: list[str], *, secret_json: str | None = None) -> dict:
+        argv = ["aws", "ssm", *args, "--region", self.region, "--output", "json"]
+        pipe_dir = pipe_path = feeder = None
+        if secret_json is not None:
+            # This AWS CLI rejects file:///dev/stdin for --cli-input-json and reads a named input
+            # twice while resolving parameters. A FIFO satisfies that contract without ever
+            # persisting secret bytes or putting them in argv/environment.
+            pipe_dir = Path(tempfile.mkdtemp(prefix="janus-ssm-pipe-"))
+            pipe_path = pipe_dir / "input.json"
+            os.mkfifo(pipe_path, 0o600)
+
+            def feed() -> None:
+                try:
+                    for _ in range(2):
+                        with pipe_path.open("w") as stream:
+                            stream.write(secret_json)
+                except (BrokenPipeError, FileNotFoundError):
+                    pass
+
+            feeder = threading.Thread(target=feed, name="janus-ssm-secret-pipe", daemon=True)
+            feeder.start()
+            argv.extend(["--cli-input-json", f"file://{pipe_path}"])
+        try:
+            result = self.runner(
+                argv, input=None, text=True, capture_output=True, check=False, timeout=60,
+            )
+        finally:
+            if pipe_path is not None:
+                pipe_path.unlink(missing_ok=True)
+            if pipe_dir is not None:
+                pipe_dir.rmdir()
+            if feeder is not None:
+                feeder.join(timeout=0.2)
         if result.returncode:
             raise RuntimeError(f"aws ssm command failed (rc={result.returncode})")
         try:
@@ -58,8 +90,8 @@ class AwsCliSsm:
         if kwargs.get("Type") != "SecureString" or kwargs.get("Overwrite") is not False:
             raise RuntimeError("credential writes must be new SecureStrings")
         payload = {key: kwargs[key] for key in ("Name", "Type", "Value", "Overwrite")}
-        return self._run(["put-parameter", "--cli-input-json", "file:///dev/stdin"],
-                         stdin=json.dumps(payload, separators=(",", ":")))
+        return self._run(["put-parameter"],
+                         secret_json=json.dumps(payload, separators=(",", ":")))
 
 
 def get_values(ssm, names) -> dict[str, str]:

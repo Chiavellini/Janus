@@ -75,19 +75,32 @@ def test_redemption_builder_provision_is_complete_and_idempotent():
 
 def test_redemption_builder_cli_keeps_secure_value_off_argv():
     import json
+    import os
+    import stat
     import subprocess
     calls = []
     def runner(argv, **kwargs):
-        calls.append((argv, kwargs))
+        pipe_arg = next(value for value in argv if value.startswith("file://"))
+        pipe_path = pipe_arg.removeprefix("file://")
+        mode = os.stat(pipe_path).st_mode
+        payloads = []
+        for _ in range(2):
+            with open(pipe_path) as stream:
+                payloads.append(stream.read())
+        calls.append((argv, kwargs, mode, payloads))
         return subprocess.CompletedProcess(argv, 0, stdout='{"Version":1}', stderr="")
     ssm = provision_redemption.AwsCliSsm("mx-central-1", runner=runner)
     secret = "secret-never-in-process-list"
     ssm.put_parameter(Name="/janus/test", Type="SecureString", Value=secret, Overwrite=False)
-    argv, kwargs = calls[0]
+    argv, kwargs, mode, payloads = calls[0]
     assert secret not in " ".join(argv)
-    assert argv[-4:] == ["--region", "mx-central-1", "--output", "json"]
-    assert json.loads(kwargs["input"])["Value"] == secret
-    assert "file:///dev/stdin" in argv and kwargs["capture_output"] is True
+    assert argv[argv.index("--region"):argv.index("--region") + 2] == ["--region", "mx-central-1"]
+    assert argv[argv.index("--output"):argv.index("--output") + 2] == ["--output", "json"]
+    assert stat.S_ISFIFO(mode) and stat.S_IMODE(mode) == 0o600
+    assert all(json.loads(payload)["Value"] == secret for payload in payloads)
+    assert kwargs["input"] is None and kwargs["capture_output"] is True
+    assert not os.path.exists(next(value.removeprefix("file://") for value in argv
+                                   if value.startswith("file://")))
 
 
 def test_redemption_builder_cli_parses_decrypted_parameter_response():

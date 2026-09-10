@@ -1186,3 +1186,12 @@ lacked `boto3`. The redemption provisioner now uses the AWS CLI already required
 SSM reads are parsed from JSON and new SecureString payloads enter the CLI through `/dev/stdin`, so
 credential values never appear in process arguments or output. The all-or-none and no-overwrite
 rules are unchanged. Full and focused suites pass; the failed invocation made no box/account change.
+
+### L67 installed-CLI pipe follow-up
+
+The installed AWS CLI rejected whole `--cli-input-json` loaded from `/dev/stdin` with rc252. It was
+then verified locally, without a service call, to accept the same JSON through a named FIFO and to
+open that source twice. The provisioner now serves both reads through a short-lived mode-600 FIFO;
+only its path is in argv and the bytes never enter a regular file, environment, output or exception.
+Read-only SSM inspection found source credentials 3/3 and builder credentials 0/3, proving the
+failed attempt left no partial set. Full and focused suites pass; production remains unchanged.
