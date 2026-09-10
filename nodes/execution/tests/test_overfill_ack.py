@@ -78,6 +78,39 @@ def test_exact_confirmation_preserves_all_accounting_and_only_resolves_approved_
     assert con.execute("SELECT COUNT(*) FROM lane_flags WHERE flag='ORDER_OVERFILL'").fetchone()[0] == 1
 
 
+def test_additive_order_ownership_migration_does_not_invalidate_version_one_evidence(tmp_path):
+    _, journal, _, _, manifest = world(tmp_path)
+    confirm(tmp_path, journal, manifest)
+    con = journal.store.con
+    before = settled_snapshot(con, 'a1')
+    assert 'execution_id' not in before['order']
+    con.execute("UPDATE orders SET execution_id='789ad9b2' WHERE client_order_id='a1'")
+    con.commit()
+    assert settled_snapshot(con, 'a1') == before
+    assert match_overfill_ack(con, 'a1')['id'] == 1
+
+
+def test_additive_order_owner_conflict_invalidates_version_one_evidence(tmp_path):
+    _, journal, _, _, manifest = world(tmp_path)
+    confirm(tmp_path, journal, manifest)
+    con = journal.store.con
+    con.execute("UPDATE orders SET execution_id='a-different-execution' WHERE client_order_id='a1'")
+    con.commit()
+    with pytest.raises(ValueError, match='owner contradicts'):
+        match_overfill_ack(con, 'a1')
+
+
+def test_additive_reverse_owner_conflict_invalidates_version_one_evidence(tmp_path):
+    _, journal, _, _, manifest = world(tmp_path)
+    confirm(tmp_path, journal, manifest)
+    con = journal.store.con
+    journal.pending(OrderRequest('kalshi', 'extra', 'extra', 'buy_yes', .4, 1, 'ioc', 'extra',
+                                 manifest['acknowledgements'][0]['snapshot']['execution']['opportunity_id'],
+                                 execution_id='789ad9b2'), mode='LIMITED_LIVE', now=T0 + 290)
+    with pytest.raises(ValueError, match='claims order absent'):
+        match_overfill_ack(con, 'a1')
+
+
 @pytest.mark.parametrize('change', [
     "UPDATE orders SET filled_contracts=10.2", "UPDATE orders SET contracts=10.2",
     "UPDATE orders SET open=1", "UPDATE orders SET settlement_pending=1",

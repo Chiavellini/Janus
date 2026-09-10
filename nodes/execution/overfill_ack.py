@@ -38,6 +38,43 @@ OR (NEW.supersedes_id IS NOT NULL AND NOT EXISTS(
 BEGIN SELECT RAISE(ABORT,'acknowledgement must supersede exact latest row'); END;
 """
 
+# The acknowledgement predates `orders.execution_id`.  Its immutable evidence already binds every
+# order to exactly one execution through that execution's first/hedge/unwind client-ID lists.  Keep
+# this projection explicit so a later additive journal migration cannot invalidate a historical
+# operator attestation without any economic fact changing.  New mutable/audit columns must earn a
+# separate evidence version; they must not silently enter version 1 through SELECT *.
+ORDER_EVIDENCE_COLUMNS = (
+    'client_order_id', 'venue', 'mode', 'market_id', 'outcome_id', 'side', 'price', 'contracts',
+    'time_in_force', 'opportunity_id', 'state', 'venue_order_id', 'filled_contracts', 'avg_price',
+    'fee_usd', 'open', 'settlement_pending', 'raw_status', 'submitted_utc', 'last_utc', 'detail',
+)
+
+
+def _order_rows(con, where, params=()):
+    columns = ','.join(ORDER_EVIDENCE_COLUMNS)
+    return _rows(con, f'SELECT {columns} FROM orders WHERE {where}', params)
+
+
+def _validate_journal_owner(con, cids, execution_id):
+    """The additive owner is outside v1's immutable bytes, but may never contradict them."""
+    if 'execution_id' not in {row[1] for row in con.execute('PRAGMA table_info(orders)')}:
+        return
+    legacy_owned = set(cids)
+    for cid in cids:
+        rows = con.execute('SELECT execution_id FROM orders WHERE client_order_id=?', (cid,)).fetchall()
+        if len(rows) != 1:
+            raise ValueError('owned leg missing while validating journal execution owner')
+        owner = rows[0][0]
+        if owner is not None and owner != execution_id:
+            raise ValueError('journal execution owner contradicts immutable legacy ownership')
+    # Validate the reverse relation too. Recovery prefers this new column and would otherwise
+    # adopt an extra order into the execution even though the operator-bound v1 client-ID lists do
+    # not contain it.
+    claimers = {row[0] for row in con.execute(
+        'SELECT client_order_id FROM orders WHERE execution_id=?', (execution_id,)).fetchall()}
+    if not claimers <= legacy_owned:
+        raise ValueError('journal execution owner claims order absent from immutable legacy ownership')
+
 
 def _rows(con, query, params=()):
     cursor = con.execute(query, params)
@@ -78,7 +115,7 @@ def _owned_ids(execution):
 
 
 def settled_snapshot(con, cid):
-    orders = _rows(con, 'SELECT * FROM orders WHERE client_order_id=?', (cid,))
+    orders = _order_rows(con, 'client_order_id=?', (cid,))
     if len(orders) != 1:
         raise ValueError('exact order absent')
     order = orders[0]
@@ -99,6 +136,7 @@ def settled_snapshot(con, cid):
     owned = _owned_ids(execution)
     if not owned or not execution['reservation_id']:
         raise ValueError('selected execution has no owned orders or reservation')
+    _validate_journal_owner(con, owned, execution['execution_id'])
     reservations = _rows(con, 'SELECT * FROM capital_reservations WHERE reservation_id=?', (execution['reservation_id'],))
     if len(reservations) != 1 or reservations[0]['released_utc'] is None:
         raise ValueError('exact released reservation absent')
@@ -107,7 +145,7 @@ def settled_snapshot(con, cid):
             raise ValueError('reservation/execution identity mismatch')
     all_orders = []
     for owned_cid in sorted(owned):
-        candidates = _rows(con, 'SELECT * FROM orders WHERE client_order_id=?', (owned_cid,))
+        candidates = _order_rows(con, 'client_order_id=?', (owned_cid,))
         if len(candidates) != 1 or candidates[0]['open'] != 0 or candidates[0]['settlement_pending'] != 0:
             raise ValueError('owned leg missing, open or accounting pending')
         if any(candidates[0][key] != execution[key] for key in ('opportunity_id', 'mode')):
