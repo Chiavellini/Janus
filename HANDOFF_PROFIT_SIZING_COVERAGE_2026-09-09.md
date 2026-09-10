@@ -75,6 +75,8 @@ bash ops/box/run.sh '<read-only command>'
 The implementation requested by this handoff is complete in the isolated worktree and has passed
 the full local release gate plus three independent reviews. It has **not** been deployed, restarted,
 re-signed, or used to clear a kill; those remain the operator-only final paste described below.
+The exact reviewed runtime/research implementation is commit
+`d174f24103b2a444070930e3810da085ea3c70be` (`Maximize safe maker cover profit`).
 
 ### Profit-maximizing, cap-aware sizing
 
@@ -571,8 +573,9 @@ Created `HANDOFF_PROFIT_SIZING_COVERAGE_2026-09-09.md`. It has no runtime effect
 
 ## Current project state
 
-- Isolated branch coverage and execution changes are implemented, fully green, independently
-  reviewed, and ready to commit/push as one release candidate; they remain undeployed.
+- Isolated branch coverage and execution changes are implemented, committed, fully green, and
+  independently reviewed; they remain undeployed until the branch is pushed and the operator paste
+  is run.
 - Production continues to run the older `76a68da` code and is presently blocked from new entry by a
   persistent live kill latch, although the service is active and ingestion continues.
 - Profit-maximizing conditional-fill sizing, continuously revalidated maker-rest authorization,
