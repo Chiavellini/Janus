@@ -231,10 +231,20 @@ def _migration_source_id(detail):
     return value if value > 0 and detail == f'{_MIGRATION_FALSE_ALARM_PREFIX}{value}{_MIGRATION_FALSE_ALARM_SUFFIX}' else None
 
 
+def _empty_admission_state(rows):
+    required = {'slot', 'client_order_id', 'claimed_utc'}
+    if len(rows) != 1 or not required <= set(rows[0]):
+        return False
+    row = rows[0]
+    if row['slot'] != 1 or row['client_order_id'] is not None:
+        return False
+    return row['claimed_utc'] is None or _decimal(row['claimed_utc']) > 0
+
+
 def _settled_current_database(con):
     """Current risk must be empty; terminal maker history is allowed after the original L56 pass."""
     admission = _rows(con, 'SELECT * FROM pm_post_only_admission')
-    return (admission == [{'slot': 1, 'client_order_id': None, 'claimed_utc': None}]
+    return (_empty_admission_state(admission)
             and not con.execute("SELECT 1 FROM pm_post_only_orders WHERE terminal_proved IS NOT 1 OR violated IS NOT 0 LIMIT 1").fetchone()
             and not con.execute("SELECT 1 FROM orders WHERE open IS NOT 0 OR settlement_pending IS NOT 0 OR state='UNCONFIRMED' LIMIT 1").fetchone()
             and not con.execute('SELECT 1 FROM executions WHERE released IS NOT 1 LIMIT 1').fetchone()

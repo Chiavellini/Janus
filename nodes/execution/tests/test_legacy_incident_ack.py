@@ -12,7 +12,8 @@ from nodes.exec_polymarket.position_evidence import capture, sha
 from kernel.execution_protocol import Position
 from nodes.execution.dispositions import canonical, digest, source_from_git
 from nodes.execution.legacy_incident_ack import (DDL, FLAG, TABLE, append_confirmed, confirmation_plan,
-    incident_snapshot, main, match_incident, prepare_manifest, prepare_from_database, resolve_idle_incidents)
+    _empty_admission_state, incident_snapshot, main, match_incident, prepare_manifest,
+    prepare_from_database, resolve_idle_incidents)
 from nodes.execution.tests.test_overfill_ack import world as overfill_world, confirm as overfill_confirm, complete_snapshot as base_snapshot, T0
 from nodes.risk.flags import unresolved_flag_rows, recent_flags
 
@@ -80,6 +81,7 @@ def test_resolved_ack_closes_only_exact_migration_false_alarms_after_terminal_ma
     guard._resolve_legacy_incidents(complete_snapshot(), GuardReport())
     con = store.con
     con.execute("INSERT INTO pm_post_only_orders(client_order_id,maker_amount,taker_amount,wire_json,terminal_proved,violated) VALUES('later','1','1','{}',1,0)")
+    con.execute('UPDATE pm_post_only_admission SET claimed_utc=? WHERE slot=1', (T0 + 299,))
     detail = 'LEGACY_INCIDENT_ACK_INVALID flag=211: ValueError: acknowledged incident state changed'
     con.execute('INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?,?,?)', (T0 + 301, FLAG, detail))
     con.execute('INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?,?,?)', (T0 + 302, FLAG, detail))
@@ -88,6 +90,18 @@ def test_resolved_ack_closes_only_exact_migration_false_alarms_after_terminal_ma
     guard._resolve_legacy_incidents(complete_snapshot(), report)
     assert any('migration false alarms' in finding for finding in report.findings)
     assert not unresolved_flag_rows(con, FLAG)
+
+
+def test_current_empty_admission_requires_every_named_field_and_a_valid_retained_timestamp():
+    assert _empty_admission_state([{'slot': 1, 'client_order_id': None, 'claimed_utc': T0}])
+    assert _empty_admission_state([{'slot': 1, 'client_order_id': None, 'claimed_utc': None}])
+    for row in ({'slot': 1, 'claimed_utc': T0}, {'slot': 1, 'client_order_id': None},
+                {'client_order_id': None, 'claimed_utc': T0},
+                {'slot': 1, 'client_order_id': 'owned', 'claimed_utc': T0},
+                {'slot': 2, 'client_order_id': None, 'claimed_utc': T0}):
+        assert not _empty_admission_state([row])
+    with pytest.raises(ValueError):
+        _empty_admission_state([{'slot': 1, 'client_order_id': None, 'claimed_utc': float('nan')}])
 
 
 def test_migration_false_alarm_does_not_repeat_the_original_one_time_terminal_zero_proof(tmp_path, proof):
