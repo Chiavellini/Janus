@@ -223,6 +223,26 @@ Four adversarial regressions were added. The full repository suite and 105 focus
 compile/diff checks passed; independent fail-open/race review returned `CLEAN`. This exact-resolution
 commit requires one final operator release before the warm-up/kill-clear gate.
 
+The next release resolved all 280 overfill duplicates, but the 28 legacy duplicates remained because
+the caller placed their compatibility-only resolver behind the original L56 one-time terminal-zero
+position proof. The currently authenticated Polymarket position response no longer satisfies that
+historical interpretation, although both position feeds are present, the ordinary guard reports no
+orphan or mismatch, the original acknowledgement remains valid/resolved, and every current local
+money/admission/order check is zero/terminal. Repeating the original proof is unnecessary for rows
+whose only fact is that the faulty process rejected the immutable snapshot after adding a nullable
+column.
+
+Commit `976d925eeac32bacdbd7daf72fa97bf17023da12` moves only the exact migration-derived cleanup
+ahead of that historical-only interpretation. It still requires complete authenticated fills, both
+position reads, no errors/orphans/mismatches or blocking finding, a valid and already-resolved source
+acknowledgement, the canonical generated error strings, terminal/nonviolating maker history, empty
+admission, no open/unconfirmed orders, no unreleased execution/reservation, and the writer-locked
+exact-set recheck. A current position cannot validate a new incident; any ordinary position mismatch
+or changed flag still blocks. The original incident-resolution path retains its terminal-zero proof.
+
+One adversarial regression was added. The full suite and 109 focused tests passed; compilation/diff
+checks passed; independent fail-open/race review returned `CLEAN`.
+
 ## Initial project state encountered in this sweep
 
 - The live box ran `76a68da`, while the isolated coverage branch contained two undeployed code
@@ -625,8 +645,8 @@ Created `HANDOFF_PROFIT_SIZING_COVERAGE_2026-09-09.md`. It has no runtime effect
 - Isolated branch coverage and execution changes are implemented, committed, fully green, and
   independently reviewed; they remain undeployed until the branch is pushed and the operator paste
   is run.
-- Production now runs the compatibility release `95d5983`; it is blocked from new entry by the
-  retained live kill while the exact duplicate-resolution commit awaits its final operator release.
+- Production now runs exact-resolution release `d0443c9`; it is blocked from new entry by the
+  retained live kill while the legacy migration caller-order fix awaits its final operator release.
   The service is active and ingestion continues.
 - Profit-maximizing conditional-fill sizing, continuously revalidated maker-rest authorization,
   immediate partial-fill delta hedging, and exact restart ownership are implemented locally.
