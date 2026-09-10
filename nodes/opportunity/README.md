@@ -1,8 +1,8 @@
 # opportunity
 
-**Kind:** `pure` (plus three tables on the Janus volume)
+**Kind:** `pure` (plus four tables on the Janus volume)
 **Implements:** `status.py` (the classifier), `thresholds.py` (the two thresholds as importable
-constants), `opportunity.py` (the record, its allowed transitions, the persisted frontier and
+constants), `opportunity.py` (the record, its allowed transitions, the persisted frontier, sizing decision and
 books), `record.py` (the one write path the supervisor and the replay share)
 
 One evaluation → one `kernel.schema.OpportunityStatus`. Every writer uses it; no grid computes a
@@ -48,7 +48,11 @@ One `Opportunity` per (event, quantity), created when an evaluation first reache
 or `PROFITABLE_UNEXECUTED`, then carried through every status by `transition()`, which enforces
 the machine (no DISCOVERED → HEDGED; terminals are terminal). `thresholds.py` holds the two
 thresholds: discovery is gross edge > 0; execution is locked return ≥ 1% **and** net profit ≥
-$0.50 — a cover that clears the return hurdle but not the dollar floor is `DISCOVERED`. Tables:
+$0.10 — a cover that clears the return hurdle but not the dollar floor is `DISCOVERED`. Tables:
 `opportunities` (the latest state, with `books_json`, the exact ladders the edge was priced from,
 kept when the edge goes away), `opportunity_transitions` (append-on-change), `frontiers` (every
-solved size curve: `n_max`, `n_star`, the rungs, the cost-model labels).
+solved size curve: `n_max`, `n_star`, the rungs, the cost-model labels), and `sizing_decisions`
+(one append-only conditional-fill choice per event and executable-book content hash, including
+all candidate refusals, caps, balances, limits pin, N* and Nmax). Consecutive identical complete
+inputs deduplicate; a real transition A→B→A receives a new per-event occurrence and may be sized
+again.

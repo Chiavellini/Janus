@@ -294,7 +294,8 @@ def price_combination(legs: Sequence[Leg], contracts: float, *, now_utc: float,
 
 def best_cover(offers: Mapping[str, Sequence[Leg]], contracts: float, *, now_utc: float,
                max_leg_age_s: float = 30.0, proof: CoverProof | None = None,
-               top_k: int = 8) -> Cover:
+               top_k: int = 8, required_venues: frozenset[str] | None = None,
+               leg_count: int | None = None) -> Cover:
     """Cheapest fee-net cover over `offers` = {outcome_id: [Leg, ...]}.
 
     TWO PHASES, deliberately.
@@ -347,6 +348,10 @@ def best_cover(offers: Mapping[str, Sequence[Leg]], contracts: float, *, now_utc
             if not cov.ok:
                 if not best.ok and best.reject_reason in (REJECT_NO_DEPTH, None):
                     best = cov          # keep the most informative rejection
+                continue
+            if required_venues is not None and {leg.venue for leg in combo} != set(required_venues):
+                continue
+            if leg_count is not None and len(combo) != leg_count:
                 continue
             if not best.ok or cov.cost_per_contract < best.cost_per_contract:
                 best = cov

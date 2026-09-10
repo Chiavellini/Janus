@@ -1,5 +1,7 @@
 import asyncio
+import concurrent.futures
 import threading
+import time
 
 from nodes.execute.on_loop import OnLoop, on_loop_thread
 
@@ -81,3 +83,21 @@ def test_without_a_loop_every_call_is_direct():
     st = Store()
     px = OnLoop(st)
     assert px.write(4) == 4 and st.threads == [threading.get_ident()]
+
+
+def test_worker_wait_for_a_stalled_loop_is_deadline_bounded():
+    async def main():
+        px = OnLoop(Store(), asyncio.get_running_loop())
+        result = []
+        def worker():
+            try:
+                px.write(1, _timeout_s=0.01)
+            except Exception as exc:  # expected boundary
+                result.append(exc)
+        thread = threading.Thread(target=worker)
+        thread.start()
+        time.sleep(0.05)  # deliberately stall the event loop past the worker's authority
+        thread.join()
+        await asyncio.sleep(0)
+        assert len(result) == 1 and isinstance(result[0], concurrent.futures.TimeoutError)
+    asyncio.run(main())

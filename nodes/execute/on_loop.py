@@ -54,6 +54,7 @@ class OnLoop:
             return attr
 
         def call(*args, **kwargs):
+            timeout_s = kwargs.pop("_timeout_s", None)
             loop = self.loop
             if on_loop_thread(loop):
                 return attr(*args, **kwargs)
@@ -90,6 +91,6 @@ class OnLoop:
                     fut.set_exception(exc)
 
             loop.call_soon_threadsafe(run)
-            return fut.result()
+            return fut.result(timeout=timeout_s)
 
         return call

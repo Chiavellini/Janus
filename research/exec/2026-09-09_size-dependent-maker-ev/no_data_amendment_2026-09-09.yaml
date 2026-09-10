@@ -1,0 +1,51 @@
+id: L63-A1
+parent: L63
+registered_at: 2026-09-09
+status_at_registration: PENDING
+kind: no-data-seen deterministic clarification
+reason: >-
+  Independent preregistration review found a maker-deadline taxonomy ambiguity, an aggregation
+  ambiguity, and an overbroad realized-EV label. No production database read, historical replay,
+  live observation, admitted forward row, deployment, order, result, or cohort-start boundary
+  exists for L63 at this amendment's registration. Synthetic implementation tests contain no
+  empirical fill observations and are excluded.
+
+deadline_taxonomy:
+  accepted_full_maker_fill: >-
+    Authoritative cumulative maker fill reaches N at or before the immutable maker deadline.
+  accepted_partial_maker_fill: >-
+    Authoritative cumulative maker fill is strictly between zero and N at the immutable deadline
+    and never reaches N in later terminal evidence.
+  accepted_zero_fill_cancelled: >-
+    Authoritative cumulative maker fill is zero at the immutable deadline and remains zero in
+    terminal evidence after cancellation.
+  accepted_late_fill_after_deadline: >-
+    Any authoritative increase after the immutable deadline, including a late full fill. This is
+    a separate STOP taxonomy bucket, has full-fill indicator zero, and is never recast as on-time
+    full, partial, or zero fill.
+
+aggregation:
+  primary_per_attempt_value: >-
+    indicator(full N by deadline) * locked_profit_for_that_attempt(N) -
+    hedge_tail_cost_for_that_attempt.
+  estimator: >-
+    The registered full-fill-policy EV proxy is the arithmetic mean of primary_per_attempt_value
+    within the exact-N and preregistered queue cell. Do not multiply an aggregate fill probability
+    by an unweighted aggregate locked-profit mean when locked profit varies. The fill probability,
+    conditional mean locked profit among full fills, covariance term, and mean tail cost are
+    reported beside the direct per-attempt mean so the identity is auditable.
+
+labels_and_partial_value:
+  registered_formula_label: full-fill-policy EV proxy
+  prohibition: >-
+    Do not call the registered formula complete realized EV. Partial-fill protected profit is
+    reported separately exactly as required by spec.yaml and is not silently inserted into the
+    registered formula.
+  additional_descriptive_metric: >-
+    Separately report mean observed protected-attempt value, defined as terminal reconciled profit
+    on the quantity actually protected minus all hedge-tail, chase, dust, and unwind cost. It is
+    descriptive only and cannot choose size or change policy.
+
+immutability: >-
+  This file supplements but does not alter spec.yaml or its success criteria. It is immutable
+  before cohort accrual and resolves only no-data-seen ambiguities.

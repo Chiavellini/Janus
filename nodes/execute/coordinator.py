@@ -31,6 +31,7 @@ from typing import Callable, Mapping
 from kernel.execution_protocol import Ack, ExecutionVenue, OrderRequest
 from kernel.schema import ExecutionState as X, FillState, Mode, OpportunityStatus as S
 from nodes.execute.plan import LegPlan, Plan
+from nodes.execute.maker import MakerFillSession, MakerRestAuthorization
 from nodes.execute.protect import protect
 from nodes.execute.records import Execution, ExecutionRecords
 from nodes.risk.clearance import RiskClearance
@@ -71,7 +72,8 @@ class Coordinator:
     # ── the machine ──────────────────────────────────────────────────────
     def execute(self, plan: Plan, clearance: RiskClearance, *, offers_books: dict | None = None,
                 venues_connected: Mapping[str, bool] | None = None,
-                pre_stages: Mapping[str, float] | None = None) -> Execution:
+                pre_stages: Mapping[str, float] | None = None,
+                maker_guard: Callable[[float], str | None] | None = None) -> Execution:
         t = self.clock()
         ex = Execution(uuid.uuid4().hex, plan.opportunity_id, plan.event_id, plan.league, self.mode.value,
                        plan.quantity, t, reservation_id=clearance.reservation.reservation_id)
@@ -83,11 +85,13 @@ class Coordinator:
         self._timed(ex, self.records.start, ex, plan={"first": plan.first.__dict__, "hedge": plan.hedge.__dict__,
                                                       "max_cost": plan.max_cost_per_contract, "fee": plan.fee_per_contract,
                                                       "settlement_buffer": plan.settlement_buffer_per_contract,
-                                                      "quote_expires_utc": plan.quote_expires_utc},
+                                                      "quote_expires_utc": plan.quote_expires_utc,
+                                                      "sizing": dict(plan.sizing or {})},
                     books=offers_books or {})
         self._opp(ex, S.EXECUTION_PENDING, t)
         try:
-            return self._run(ex, plan, clearance, venues_connected=venues_connected)
+            return self._run(ex, plan, clearance, venues_connected=venues_connected,
+                             maker_guard=maker_guard)
         except Exception as exc:  # noqa: BLE001 -- a machine error after leg A is out is a position of unknown state
             # 2026-09-08 01:17Z: the worker's journal write raised after the leg A POST and the
             # execution stayed LEG_A_SUBMITTED with nothing alarming on it. Recorded here as the
@@ -106,7 +110,8 @@ class Coordinator:
             ex.machine_error = exc
             return ex
 
-    def _run(self, ex: Execution, plan: Plan, clearance: RiskClearance, *, venues_connected) -> Execution:
+    def _run(self, ex: Execution, plan: Plan, clearance: RiskClearance, *, venues_connected,
+             maker_guard=None) -> Execution:
         if self.mode.risks_capital and self._quantity_stop:
             return self._fail(ex, X.ORDER_REJECTED, self._quantity_stop, release=True)
         # VALIDATED: the clearance is for this plan and still live; both venues present and connected.
@@ -136,7 +141,13 @@ class Coordinator:
 
         # LEG A: Polymarket, FAK (`ioc` in the internal protocol). Ambiguity here costs nothing;
         # that is why it goes first.
-        req_a = self._request(plan, plan.first, plan.first.contracts, plan.first.limit_price, hedge=False)
+        req_a = self._request(plan, plan.first, plan.first.contracts, plan.first.limit_price, hedge=False,
+                              execution_id=ex.execution_id)
+        rest_deadline = None
+        if req_a.post_only:
+            rest_deadline = min(self.mono() + min(2.0, self.leg_a_settle_s),
+                                self.mono() + max(0.0, plan.quote_expires_utc - self.clock()))
+            clearance.authorize_maker_rest(rest_deadline, now_mono=self.mono())
         if req_a.post_only and hasattr(self.venues[plan.first.venue], "kill"):
             self.venues[plan.first.venue].kill = self.kill
         ex.first_client_id = req_a.client_order_id
@@ -145,8 +156,9 @@ class Coordinator:
         ack = self.venues[plan.first.venue].submit(req_a, clearance)
         self._stamp(ex, "a_ack_ms")
         if req_a.post_only:
-            rest_deadline = min(clearance.expires_mono, self.mono() + max(0.0, plan.quote_expires_utc - self.clock()))
-            ack = self._settle_maker_ack(plan.first.venue, ack, ex=ex, rest_deadline_mono=rest_deadline)
+            ack = self._settle_maker_ack(plan.first.venue, ack, ex=ex, plan=plan,
+                                         clearance=clearance, rest_deadline_mono=rest_deadline,
+                                         maker_guard=maker_guard)
         else:
             ack = self._settle_ack(plan.first.venue, ack, deadline_mono=self.mono() + self.leg_a_settle_s, ex=ex, key="a")
         self._stamp(ex, "a_settled_ms")
@@ -156,13 +168,17 @@ class Coordinator:
             return self._fail(ex, X.ORDER_REJECTED, f"leg A rejected: {ack.raw_status} {ack.detail}", release=True)
         if ack.state is FillState.UNFILLED:
             tif = "FAK" if plan.first.time_in_force == "ioc" else plan.first.time_in_force.upper()
-            return self._fail(ex, X.ORDER_REJECTED, f"leg A unfilled ({tif}): no position", release=True)
+            return self._fail(ex, X.ORDER_UNFILLED, f"leg A unfilled ({tif}): no position", release=True)
         ex.first_filled, ex.first_avg_price = ack.filled_contracts, ack.avg_price
         self._check_overfill(ex, req_a, ack)
-        self._move(ex, X.LEG_A_FILLED if ack.state is FillState.FILLED else X.LEG_A_PARTIAL,
-                   detail=f"filled {ack.filled_contracts} @ {ack.avg_price}")
+        self._move_after_fill(ex, X.LEG_A_FILLED if ack.state is FillState.FILLED else X.LEG_A_PARTIAL,
+                              detail=f"filled {ack.filled_contracts} @ {ack.avg_price}")
         if ack.state is FillState.PARTIAL:
             self._opp(ex, S.PARTIALLY_FILLED, self.clock())
+
+        if ex.protect.get("maker_delta_unconfirmed"):
+            return self._fail(ex, X.UNKNOWN_PROVIDER_STATE,
+                              str(ex.protect["maker_delta_unconfirmed"]), release=False)
 
         # LEG B and everything after it: the protection layer (nodes/execute/protect.py, 2026-09-08).
         # The hedge at the walked limit as before, then the chase to the budget and to the loss cap,
@@ -214,16 +230,72 @@ class Coordinator:
                 ex.protect["overfill_flag_error"] = f"{type(exc).__name__}: {exc}"
 
     def _request(self, plan: Plan, leg: LegPlan, contracts: float, limit: float, *, hedge: bool,
-                 side: str | None = None) -> OrderRequest:
+                 side: str | None = None, execution_id: str = "", client_order_id: str | None = None) -> OrderRequest:
         # Never round a protective buy above the held quantity (10.166667 -> 10.16,
         # not 10.17), or a sell above the held tokens. Precision dust remains visible.
         quantity = float(Decimal(str(contracts)).quantize(Decimal("0.01"), rounding=ROUND_DOWN))
         return OrderRequest(leg.venue, leg.market_id, leg.outcome_id, side or leg.side, round(min(max(limit, 0.01), 0.99), 4),
-                            quantity, leg.time_in_force, uuid.uuid4().hex, plan.opportunity_id,
+                            quantity, leg.time_in_force, client_order_id or uuid.uuid4().hex, plan.opportunity_id,
                             hedge=hedge, tick=leg.tick, post_only=leg.post_only and not hedge,
-                            entry_expires_utc=plan.quote_expires_utc if leg.post_only and not hedge else None)
+                            entry_expires_utc=plan.quote_expires_utc if leg.post_only and not hedge else None,
+                            execution_id=execution_id)
 
-    def _settle_maker_ack(self, venue, ack, *, ex, rest_deadline_mono=None):
+    @staticmethod
+    def _newer(known, observed):
+        return observed if observed is not None and observed.filled_contracts >= known.filled_contracts else known
+
+    def _hedge_maker_high_water(self, plan, clearance, ex, known) -> None:
+        """Protect a socket-confirmed maker delta after cancel dispatch, before slow REST finality."""
+        auth = MakerRestAuthorization(
+            authorization_id=str(getattr(getattr(clearance, "reservation", None), "reservation_id", "session")),
+            maker_client_order_id=str(ex.first_client_id or "maker"),
+            authorized_contracts=str(plan.hedge.contracts),
+            deadline_mono=float(clearance.maker_rest_deadline_mono or self.mono()),
+            hard_hedge_limit=str(plan.hedge.limit_price),
+            max_hedge_book_age_s=5.0,
+        )
+        delta = MakerFillSession(auth, confirmed_fill_high_water=str(ex.first_filled),
+                                 hedged_high_water=str(ex.hedge_filled)).observe_fill(
+                                     str(known.filled_contracts)).plan_hedge_delta()
+        quantity = float(delta.delta_contracts)
+        if delta.overfill_contracts:
+            ex.protect["maker_overfill_contracts"] = str(delta.overfill_contracts)
+        if delta.unhedgeable_dust:
+            ex.protect["maker_unhedgeable_dust"] = str(delta.unhedgeable_dust)
+        ex.first_filled = max(ex.first_filled, float(known.filled_contracts))
+        ex.first_avg_price = known.avg_price or ex.first_avg_price or plan.first.limit_price
+        if quantity < 0.01:
+            self._sync_after_fill(ex)
+            return
+        deadline = clearance.arm_hedge(self.mono())
+        limit = plan.hedge_limit(ex.first_avg_price)
+        target = format(Decimal(str(known.filled_contracts)).normalize(), "f")
+        cid = uuid.uuid5(uuid.NAMESPACE_URL, f"janus:{ex.execution_id}:maker-hedge:{target}").hex
+        req = self._request(plan, plan.hedge, quantity, limit, hedge=True,
+                            execution_id=ex.execution_id, client_order_id=cid)
+        ex.hedge_client_ids.append(req.client_order_id)
+        # Persist ownership before the venue adapter journals/posts. A crash after the wire must
+        # leave the guard an exact execution↔client-id join, never an orphan hedge it might buy again.
+        self._sync_after_fill(ex)
+        hb = self.venues[plan.hedge.venue].submit(req, clearance)
+        hb = self._settle_ack(plan.hedge.venue, hb, deadline_mono=deadline, ex=ex, key="maker_delta")
+        self._check_overfill(ex, req, hb)
+        ex.protect.setdefault("maker_fill_deltas", []).append({
+            "confirmed_high_water": float(known.filled_contracts), "requested": quantity,
+            "state": hb.state.value, "filled": hb.filled_contracts, "avg": hb.avg_price,
+        })
+        if hb.state is FillState.UNCONFIRMED:
+            ex.protect["maker_delta_unconfirmed"] = (
+                f"maker fill hedge unconfirmed: {req.client_order_id} {hb.raw_status} {hb.detail}")
+        elif hb.filled_contracts > 0:
+            prev = ex.hedge_filled
+            ex.hedge_filled += hb.filled_contracts
+            ex.hedge_avg_price = (((ex.hedge_avg_price or 0.0) * prev
+                                   + (hb.avg_price or 0.0) * hb.filled_contracts) / ex.hedge_filled)
+        self._sync_after_fill(ex)
+
+    def _settle_maker_ack(self, venue, ack, *, ex, plan=None, clearance=None,
+                          rest_deadline_mono=None, maker_guard=None):
         """Wait briefly for maker liquidity, then cancel and reconcile; never replace.
 
         Known quantity is retained on cancel/GET failure and hedged even if the residual
@@ -237,14 +309,37 @@ class Coordinator:
         ex.stages["maker_rest_remaining_ms"] = max(0, (wait_until - self.mono()) * 1000)
         known = ack
         polls = 0
-        # No synchronous venue reads may begin while deliberately resting: a slow GET
-        # could otherwise postpone cancel beyond the economic proof. Cancel is the
-        # first network request after POST, even when no early fill was observed.
+        # Only authenticated socket/durable high-water reads occur while resting. A blocking
+        # venue GET cannot postpone cancel beyond the immutable deadline.
         while self.mono() < wait_until:
-            self.sleep(max(0, wait_until - self.mono()))
+            observe = getattr(adapter, "observed", None)
+            if observe is not None:
+                try:
+                    known = self._newer(known, observe(ack.client_order_id))
+                except Exception:
+                    pass
+            if known.filled_contracts > 0:
+                ex.stages["maker_fill_observed_ms"] = round((self.mono() - self._t0.get(ex.execution_id, self.mono())) * 1000, 2)
+                break
+            if maker_guard is not None:
+                try:
+                    remaining = max(0.0, float(getattr(plan, "quantity", 0.0)) - known.filled_contracts)
+                    try:
+                        reason = maker_guard(remaining, timeout_s=max(0.001, wait_until - self.mono()))
+                    except TypeError as exc:
+                        if "unexpected keyword argument 'timeout_s'" not in str(exc):
+                            raise
+                        reason = maker_guard(remaining)  # compatibility for pure/test guards
+                except Exception as exc:  # noqa: BLE001 -- failed proof means cancel, never a resting order
+                    reason = f"MAKER_GUARD_ERROR:{type(exc).__name__}"
+                if reason:
+                    ex.protect["maker_rest_block"] = reason
+                    break
+            self.sleep(min(self.poll_interval_s, max(0.0, wait_until - self.mono())))
         deadline = self.mono() + self.leg_a_settle_s
         try:
-            canceled = adapter.cancel(ack.client_order_id)
+            cancel_only = getattr(adapter, "cancel_only", None)
+            canceled = cancel_only(ack.client_order_id) if cancel_only is not None else adapter.cancel(ack.client_order_id)
             if canceled.filled_contracts >= known.filled_contracts:
                 known = canceled
             if getattr(canceled, "final", False) and not canceled.open and canceled.filled_contracts >= known.filled_contracts:
@@ -252,6 +347,8 @@ class Coordinator:
                 return known
         except Exception:
             pass  # Known holdings still require protection if cancel cannot be proved.
+        if known.filled_contracts > 0 and plan is not None and clearance is not None:
+            self._hedge_maker_high_water(plan, clearance, ex, known)
         while self.mono() < deadline:
             if polls:
                 self.sleep(min(self.poll_interval_s, max(0, deadline - self.mono())))
@@ -264,6 +361,9 @@ class Coordinator:
                 continue
             if st.filled_contracts >= known.filled_contracts:
                 known = st
+                if (st.filled_contracts > ex.first_filled and plan is not None and clearance is not None
+                        and not ex.protect.get("maker_delta_unconfirmed")):
+                    self._hedge_maker_high_water(plan, clearance, ex, known)
             if st.final and not st.open and st.filled_contracts >= known.filled_contracts:
                 ex.stages["a_poll_count"] = polls
                 return known
@@ -324,6 +424,36 @@ class Coordinator:
 
     def _move(self, ex: Execution, to: X, *, detail: str = "") -> None:
         self._timed(ex, self.records.move, ex, to, now=self.clock(), detail=detail)
+
+    def _storage_failure_after_fill(self, ex: Execution, exc: Exception) -> None:
+        """A main execution-row failure must never suppress a known position's protective wire."""
+        detail = f"execution persistence failed after confirmed fill: {type(exc).__name__}: {str(exc)[:120]}"
+        ex.protect["post_fill_storage_error"] = detail
+        self._quantity_stop = detail
+        if self.mode.risks_capital and self.kill is not None:
+            try:
+                self.kill.latch("live", detail)
+            except Exception:
+                pass
+
+    def _sync_after_fill(self, ex: Execution) -> bool:
+        try:
+            self._timed(ex, self.records.sync, ex, now=self.clock())
+            return True
+        except Exception as exc:  # noqa: BLE001 -- protection takes precedence over this audit write
+            self._storage_failure_after_fill(ex, exc)
+            return False
+
+    def _move_after_fill(self, ex: Execution, to: X, *, detail: str = "") -> bool:
+        try:
+            self._move(ex, to, detail=detail)
+            return True
+        except Exception as exc:  # noqa: BLE001 -- keep the in-memory state and protect immediately
+            old = ex.state
+            ex.history.append((self.clock(), old, to, detail + "; persistence failed"))
+            ex.state, ex.detail = to, detail
+            self._storage_failure_after_fill(ex, exc)
+            return False
 
     def _fail(self, ex: Execution, state: X, detail: str, *, release: bool) -> Execution:
         t = self.clock()

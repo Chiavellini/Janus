@@ -1,0 +1,34 @@
+id: L62-A1
+parent: L62
+registered_at: 2026-09-09
+status_at_registration: PENDING
+kind: no-data-seen deterministic clarification
+reason: >-
+  Independent preregistration review found that the immutable L62 spec did not fully determine
+  how cancellations enter the delay denominator or how boundary and missing completion cases are
+  treated. No source collector, network request, terminal inventory, outcome, result, or archive
+  exists for L62 at this amendment's registration.
+
+rules:
+  population_denominator: >-
+    Both marginal rates use the same frozen denominator of all 306 regular-season fixtures.
+    No terminal disposition is removed from either denominator.
+  cancelled_or_uncompleted: >-
+    A cancellation, abandonment without authoritative completion, or terminal disposition that
+    establishes the fixture did not complete counts adverse for cancellation and adverse for the
+    greater-than-48-hour completion-delay dimension.
+  awarded_result: >-
+    An awarded result without an authoritative completed full-time wallclock counts adverse for
+    the delay dimension. Its cancellation classification follows the frozen official disposition
+    rule in L62 and must be individually reviewed.
+  exact_boundary_or_dst_uncertainty: >-
+    A completion that cannot be proven strictly at or below 48 elapsed hours because of exact-
+    boundary precision or DST ambiguity counts adverse for the delay dimension.
+  missing_or_unbounded_authority: >-
+    A missing, contradictory, or unbounded original lower date, completion authority, or terminal
+    disposition is STOP_SOURCE_OR_TERMINAL_INCOMPLETE. It is never resolved after looking at the
+    aggregate rate and no evidence key is registered.
+
+immutability: >-
+  This file supplements but does not alter spec.yaml or its success criteria. It is immutable
+  before data and may only make the treatment more deterministic and conservative.

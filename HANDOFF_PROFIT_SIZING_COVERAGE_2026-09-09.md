@@ -70,6 +70,108 @@ JANUS_BOX_ID=i-0a8c073c72dcdae11 \
 bash ops/box/run.sh '<read-only command>'
 ```
 
+## Continuation outcome — completed 2026-09-09
+
+The implementation requested by this handoff is complete in the isolated worktree and has passed
+the full local release gate plus three independent reviews. It has **not** been deployed, restarted,
+re-signed, or used to clear a kill; those remain the operator-only final paste described below.
+
+### Profit-maximizing, cap-aware sizing
+
+- `nodes/execute/sizing.py` exhaustively evaluates every integer equal-payout quantity from the
+  joint venue minimum through the signed maximum, rather than selecting the first profitable rung.
+- Every candidate is repriced against the same frozen executable books and is checked against
+  walked depth, exact fees, settlement reserve, minimum profit/return, combined-stake and contract
+  caps, remaining daily notional, venue balances, event/league/venue/total exposure, unresolved
+  exposure, and maximum unhedged exposure.
+- The selected `N_star_feasible` maximizes conservative locked dollars conditional on both legs
+  completing. `N_max_feasible`, the full frontier, binding constraints, and audit inputs are
+  persisted. Passive maker improvement is deliberately not credited before it exists.
+- Live selection always performs this exhaustive pass. It does not silently fall back to the old
+  fixed-rung/first-profitable behavior.
+
+Expected EV effect: higher locked dollars per completed cover when deeper size remains profitable,
+without admitting quantity whose second leg, capital, or risk constraints cannot support. This is
+not yet a claim about realized EV because size-dependent maker fill probability and hedge-tail cost
+remain prospectively unmeasured under L63.
+
+### Maker rest, immediate delta hedge, and restart safety
+
+- A one-shot entry clearance now arms a separate immutable maker-rest deadline. While the order
+  rests, the system continuously revalidates the complementary hedge, fees, settlement proof,
+  caps, clock/socket health, and kill/breaker state.
+- Real-capital maker entry requires the authenticated Polymarket user stream; paper modes remain
+  permissive. Guard callbacks are time-bounded and any timeout/error cancels the maker remainder.
+- Cancel dispatch occurs before potentially slow terminal REST reconciliation. `UNFILLED` is now
+  recorded truthfully as `ORDER_UNFILLED`, distinct from a venue rejection.
+- Authenticated cumulative maker fills are a high-water mark. Each new delta is hedged immediately
+  and idempotently (for example, 2 then 5 hedges 2 then 3), without waiting for maker terminality.
+- Every protective order now carries the exact execution ID in the durable journal. Restart recovery
+  uses that ownership and refuses a new protective submit while any owned order is open, unconfirmed,
+  or incompletely evidenced.
+- A confirmed fill can no longer be stranded by failure of the main execution-row write: storage
+  failure latches entry but the protective wire continues. The same guarantee covers unwind fills
+  and the final unprotected page/latch path.
+
+Expected EV effect: the maker gets the intended bounded queue exposure rather than 0–273 ms, while
+first-fill-to-hedge delay and naked-tail risk fall materially. No taker fallback or larger outer cap
+was introduced.
+
+### Event-loop, book-frame, and opportunity correctness
+
+- Synchronous callbacks have an enforced timeout so a stalled guard cannot starve the async loop.
+- A Kalshi websocket frame updates all registered YES/NO projections before any callback, preventing
+  one callback from sizing against mixed old/new projections of the same frame.
+- The live economic fingerprint excludes receive-time noise, but repeated economic states are
+  occurrence-aware: consecutive `A, A` is suppressed and `A, B, A` is a valid third occurrence.
+- Maker currentness uses the book's verified/fetched timestamp projected to monotonic time, rather
+  than requiring a price mutation to prove the unchanged book is current.
+
+### Coverage continuation
+
+- L62/L63 were preregistered before empirical work and appended to `snooping_ledger.md`; their
+  criteria and ledger entries were not edited after observation.
+- The intended Ligue 1 source archive was absent, so no acquisition or measurement was run and L62
+  remains `PENDING`. Separate conservative no-data amendments L62-A1/L63-A1 preserve that fact.
+- `research/sports/2026-09-09_ligue1-original-schedule/manifest.py` provides the strict offline
+  firewall for a future archive: exact source hashes/URLs, canonical bound, 306 unique fixtures,
+  18 clubs with 17 home/17 away, regular-season identity, complete official membership plus
+  original-schedule lineage, and earliest published Paris-local date at midnight UTC. Invalid input
+  makes zero terminal transport calls.
+
+### Verification and independent review
+
+- Full repository suite: passed at 100% after the final protection changes.
+- Broad focused execution/opportunity/stream/risk/cover/L62 suite: passed at 100%.
+- Hedge protection suite: 12/12 passed, including both post-fill database-failure regressions.
+- Watchdog self-test: all 8 job, 7 risk, registry, and 4 socket branches fired; healthy cases quiet.
+- `compileall`, four YAML parses, and `git diff --check`: passed.
+- Independent maker/race review: `CLEAN` (271 focused tests in the review).
+- Independent sizing/cap/recovery review: `CLEAN` after the two final persistence-path fixes.
+- Independent Ligue 1 firewall review: `CLEAN` (29/29 focused tests); no L62 archive existed and no
+  terminal acquisition occurred.
+
+### Fresh exact live preflight
+
+A new read-only box snapshot immediately before committing this continuation proved:
+
+- active service, PID `59799`, still running `76a68da88164047ba630c74c49cb30c8c33ccefd`;
+- exact kill SHA256 `0ea1acaa68c747fdaa4c54c8c05039ce11f69459dd639e89b8b80a7295fdc36b`, containing only the
+  JSON latch for Polymarket CID `5a162878dc8842d09e42b797475b81e9`;
+- unique owning execution `13feaaad71f547428ba70b45b0d9bd49`, event
+  `espn:mlb:401816880`, `RECONCILED`, released, first/hedge `10/10`, unhedged `0`;
+- PM CID `5a162…` and Kalshi CID `170c2…` both `FILLED`, closed, settlement not pending;
+- settlement kind `COVER`, realized/cover P&L `+$0.7798`, directional P&L `$0`;
+- exact reservation `eb9f1b31…` released; maker marker `terminal_proved=1, violated=0`; singleton
+  maker admission empty;
+- global current counts: flight `0`, unreleased-unhedged `0`, open/unconfirmed orders `0`, and
+  unresolved/violating maker markers `0`.
+
+This distinguishes the present latch from the older, separately acknowledged CID `40797…`
+database-lock incident. The targeted historical repair did not and should not silently clear this
+later TEX–SEA latch. The evidence above makes the latter eligible for the exact, recoverable
+operator clear after the new release is warmed and rechecked; it does not authorize a blanket reset.
+
 ## Initial project state encountered in this sweep
 
 - The live box ran `76a68da`, while the isolated coverage branch contained two undeployed code
@@ -418,6 +520,31 @@ all artifacts in `research/sports/2026-09-09_all-coverage-misses/`; and all arti
 
 Created `HANDOFF_PROFIT_SIZING_COVERAGE_2026-09-09.md`. It has no runtime effect.
 
+### Continuation implementation — modified
+
+- Grid/runtime: `grids/live_stream/grid.py`, its README and callback tests;
+  `kernel/execution_protocol.py`; `kernel/schema.py`.
+- Cover/settlement: `nodes/cover/cover.py`, its README/tests; and
+  `nodes/settle_wedge/equivalence.py`.
+- Execution: `nodes/exec_polymarket/client.py` and lifecycle tests;
+  `nodes/execute/coordinator.py`, `guard.py`, `on_loop.py`, `plan.py`, `protect.py`, the execution
+  README and their coordinator/guard/maker/on-loop/protect tests; and
+  `nodes/execution/journal.py`.
+- Opportunity/risk/stream: `nodes/opportunity/opportunity.py`, README and tests;
+  `nodes/risk/clearance.py`, `ledger.py`, README and tests; and
+  `nodes/stream_kalshi/stream.py` plus tests.
+- Operations/research: `ops/reconcile_stuck_execution.py` plus tests;
+  `snooping_ledger.md`; and this handoff.
+
+### Continuation implementation — created
+
+- `nodes/execute/maker.py` and `nodes/execute/sizing.py`.
+- `nodes/execute/tests/test_maker_session.py` and `nodes/execute/tests/test_sizing.py`.
+- L63 spec and no-data amendment under
+  `research/exec/2026-09-09_size-dependent-maker-ev/`.
+- L62 spec, no-data amendment, strict manifest firewall, and 29-test suite under
+  `research/sports/2026-09-09_ligue1-original-schedule/`.
+
 ## Important files intentionally left untouched
 
 - Main checkout user changes:
@@ -444,15 +571,18 @@ Created `HANDOFF_PROFIT_SIZING_COVERAGE_2026-09-09.md`. It has no runtime effect
 
 ## Current project state
 
-- Isolated branch runtime coverage changes are reviewed and committed but undeployed.
+- Isolated branch coverage and execution changes are implemented, fully green, independently
+  reviewed, and ready to commit/push as one release candidate; they remain undeployed.
 - Production continues to run the older `76a68da` code and is presently blocked from new entry by a
-  persistent live kill latch, although the service is active.
-- No profit-maximizing live sizing, continuously revalidated maker-rest authorization, or immediate
-  partial-fill delta hedging change has yet been implemented.
+  persistent live kill latch, although the service is active and ingestion continues.
+- Profit-maximizing conditional-fill sizing, continuously revalidated maker-rest authorization,
+  immediate partial-fill delta hedging, and exact restart ownership are implemented locally.
 - No cap increase has been made or justified.
 - Coverage beyond the repaired registered universe remains blocked by explicit venue absence,
   settlement evidence, caps, or unverified identity—not merely by a missing boolean switch.
 
-The next agent should begin with a fresh `git status`, preserve this clean isolated branch, write the
-required preregistration before any empirical evaluation, and divide implementation/review work into
-bounded subagents if useful. Keep all live actions until the single final release gate.
+The only remaining actions are to commit and push the exact reviewed tree, run the operator-only
+daily release paste at the unchanged `12 / 10 / 250 / 168h` arm, verify the new process and all three
+streams while the kill remains, then perform the recoverable exact-file clear in the L56 operator
+runbook using the reviewed kill SHA only after the same quiet-state facts still hold. Keep the first
+three post-release covers behind their existing hand-reconciliation boundary.

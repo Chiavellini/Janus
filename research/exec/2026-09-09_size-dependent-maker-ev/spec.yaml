@@ -1,0 +1,273 @@
+id: L63
+registered_at: 2026-09-09
+track: execution/maker-sizing
+kind: forward descriptive evaluation
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L63
+title: Size-dependent maker fill probability and realized-EV characterization
+
+# IMMUTABLE AFTER REGISTRATION. This file and the L63 PENDING ledger row precede every eligible
+# observation, historical incident replay, or live evaluation admitted to this row.
+question: >-
+  Under the unchanged small-arm limits and the maker-first route, how do requested quantity and
+  queue/book state relate to authoritative first-leg maker fills, fill latency, immediate hedge
+  cost, and realized EV? This is prospective characterization, not trading authority.
+
+estimand:
+  formula: >-
+    realized_EV(N, queue_state) = P(first_leg_fill | N, queue_state)
+    * locked_profit(N) - hedge_tail_cost(N, queue_state)
+  first_leg_fill: >-
+    One only when authenticated cumulative Polymarket maker fill reaches the full requested N by
+    the immutable maker deadline. A partial fill below N is recorded separately and is zero for
+    this full-fill indicator; it is not relabelled as a zero-fill.
+  locked_profit: >-
+    Conservative dollar profit conditional on completing equal payout quantity N, calculated at
+    decision time from one frozen pair of executable books using full ladder walks, exact fees,
+    the registered settlement reserve, and the unchanged economic hurdles. It is a conditional-
+    fill quantity, not realized profit and not a midpoint score.
+  hedge_tail_cost: >-
+    The unconditional per-attempt signed incremental all-in cost of protecting every confirmed
+    first-leg fill delta relative to that delta's frozen planned hedge cost. Include actual hedge
+    prices, exact fees, depth deterioration, protection/chase cost, dust and any realized unwind;
+    a price improvement may be negative. Unresolved or unreconciled cost is UNKNOWN and blocks
+    scoring rather than being imputed as zero.
+  partial_fill_reporting: >-
+    Separately report cumulative filled quantity/N, profit protected on the filled quantity, and
+    its hedge-tail cost. Do not multiply full-N locked profit by an any-fill probability or treat
+    the unfilled remainder as executed.
+
+known_at_registration:
+  - >-
+    Current live selection historically dispatched the first qualifying ascending rung. The
+    handoff directs a cap-aware conditional-fill policy choosing feasible N_star as the quantity
+    that maximizes conservative locked dollar profit over the same frozen books.
+  - >-
+    Conditional-fill N_star is implementation policy only. It does not maximize realized EV
+    without a prospective size- and queue-dependent maker fill model and hedge-tail measurement.
+  - >-
+    N_max, the largest feasible positive quantity, can differ from N_star, and neither is an
+    empirical fill-probability or Kelly model.
+  - >-
+    L61 reconciled four accepted-live maker orders that Janus cancelled at zero fill after only
+    0-273 milliseconds post-ack rest, plus one completed cover. Those incidents motivated this
+    row but are excluded from its forward sample and may not be replayed into it.
+  - >-
+    No size-dependent maker-fill probability, quantity-dependent queue model, or hedge-tail-cost
+    curve has been registered or fitted. No result from this row is known at registration.
+
+authority_and_limits:
+  observational_only: >-
+    L63 submits, cancels, replaces, hedges, unwinds, deploys, restarts, rearms, clears no kill,
+    changes no account, and authorizes no live evaluation. It may observe only executions made
+    under a separately valid operator authorization and forward F-row after L63 instrumentation
+    is deployed and its start boundary is recorded.
+  immutable_outer_caps:
+    combined_planned_stake_usd: 12.0
+    max_contracts_per_leg: 10
+    committed_daily_notional_usd: 250.0
+  unchanged_controls:
+    max_daily_realized_loss_usd: 25.0
+    min_net_profit_usd: 0.10
+    min_locked_return: 0.01
+    max_protection_loss_usd: 1.0
+    protect_auto: true
+    unwind_enabled: false
+  prohibition: >-
+    No L63 observation or result may raise or weaken a cap, loss limit, hurdle, settlement proof,
+    freshness rule, maker-role requirement, equal-payout constraint, or protection rule. A cap
+    change requires new explicit operator authority and a new preregistration after L63 closes.
+
+forward_window:
+  start: >-
+    The first eligible maker decision whose decision UTC is strictly after both the committed L63
+    registration and deployment of complete L63 instrumentation, and that belongs to a separately
+    authorized forward execution row. Record the exact start UTC, runner/code/limits SHA, and
+    arming statement identity before admitting the first row.
+  end: >-
+    Open until the minimum analysis sample is reached, a STOP occurs, instrumentation changes,
+    the maker/sizing policy changes, any listed cap or hurdle changes, the operator closes the
+    row, or 90 calendar days elapse. Any such boundary closes this cohort; continuation requires
+    a successor registration and a fresh clock.
+  excluded:
+    - every execution, incident, evaluation, book, or fill before the recorded L63 start
+    - historical replay and backfilled candidate reconstruction
+    - PAPER or simulated fills as evidence of live maker fill probability
+    - non-post-only, taker, FAK, FOK, immediate, or otherwise unreviewed Polymarket BUY entry
+    - attempts under a different cap, hurdle, maker-rest policy, sizing policy, or executable tree
+    - unidentified, stale, incomplete, corrupt, or non-replayable book epochs
+
+unit_of_observation:
+  decision: >-
+    One event and one frozen dual-book epoch at which the lane has complete fees, settlement proof,
+    freshness, balance/exposure state, outer-cap state, and a generated size frontier. Repeated
+    evaluations of unchanged content share one book_epoch_id and cannot inflate the sample.
+  candidate: >-
+    One exact integer equal-payout N generated for that decision from venue minima, all relevant
+    depth breakpoints, and every integer through the 10-contract outer cap needed to prove the
+    optimum. Persist eligible and ineligible candidates with reasons; never retain only the winner.
+  attempt: >-
+    At most one selected Polymarket maker order for an admitted decision epoch. Candidate rows for
+    quantities not selected are counterfactual price/frontier observations only and contribute no
+    fill outcome or fill-probability denominator.
+
+required_decision_and_candidate_log:
+  identity_and_lineage:
+    - observation id, execution/opportunity/event id, league, UTC and monotonic decision times
+    - runner HEAD, executable-tree SHA, limits SHA, sizing-policy version, maker-policy version
+    - mode, forward-row id, arm identity and the exact active outer-cap values
+    - book_epoch_id derived from immutable content/sequence identities for both venue books
+  every_generated_quantity:
+    - exact N, q_min and whether N is integer/equal-payout compatible
+    - eligibility and every binding/refusal reason, including venue minimum and available depth
+    - walked quantities and per-level prices on both legs, VWAPs, exact per-level fees
+    - registered settlement reserve, combined stake, daily notional consumption and balances
+    - event, league, venue, total and unresolved exposure headroom
+    - locked dollar profit, locked return, N_max_feasible and N_star_feasible
+    - selected boolean and deterministic reason selected or not selected
+  queue_and_market_state:
+    - PM token/side, post-only maker price, best bid, best ask and spread
+    - displayed size at better prices and at the intended maker price as a visible queue-ahead proxy
+    - requested N, visible-queue-to-N ratio, price-level age when available
+    - PM book sequence/content hash, exchange timestamp, receipt timestamp and book age
+    - Kalshi complementary side, hard hedge limit, full-N walked depth/cost and reserve margin
+    - Kalshi book sequence/content hash, exchange timestamp, receipt timestamp and book age
+    - seconds to scheduled start, pregame/in-play state, socket and clock health
+  queue_state_note: >-
+    Displayed size is not true exchange queue position. Label it queue_ahead_visible and never
+    claim time priority or hidden-liquidity rank from it. Raw values are primary; no post-hoc queue
+    bins may be chosen to make a result favorable.
+
+required_attempt_and_outcome_log:
+  submission:
+    - selected N and frozen plan identity
+    - durable client/order identity and prewire journal timestamp
+    - POST dispatch, provider acknowledgement and absolute maker-deadline timestamps
+    - accepted-live versus provider rejection versus local/risk refusal versus unknown-provider-state
+    - authoritative maker/taker role evidence; any taker or conflicting role is a STOP, not a fill datum
+  cumulative_fill_path:
+    - every authenticated account-stream and REST observation with source sequence/time
+    - monotone cumulative filled quantity high-water, fill deltas, exact prices, fees and cash
+    - first-any-fill, full-N-fill and each incremental-fill latency from POST and acknowledgement
+    - out-of-order, duplicate, malformed, contradictory and late-after-cancel observations
+  cancel_and_terminality:
+    - cancel trigger/reason, dispatch time, deadline relation, acknowledgement and terminal proof
+    - open remainder at cancel, fills before/during/after cancel, and final authoritative quantity
+    - replacement count; ordinary replacement is zero unless separately registered and authorized
+  hedge_and_reconciliation:
+    - one record per confirmed PM fill delta and its idempotency identity
+    - detection-to-hedge-submit, first-fill-to-first-hedge and delta-to-protection latencies
+    - planned and actual Kalshi quantities, prices, depth, fees, cash and all-in cost
+    - hedge attempts, protection/chase/unwind actions, dust, overhedge and unhedged duration
+    - terminal venue-authoritative quantities/cash on both legs and exact reconciliation status
+    - locked profit on completed filled quantity, realized cash PnL when terminal, and hedge_tail_cost
+
+immutable_outcome_taxonomy:
+  accepted_full_maker_fill: accepted live, authoritative maker role, cumulative fill exactly N
+  accepted_partial_maker_fill: accepted live, authoritative maker role, cumulative fill in (0,N)
+  accepted_zero_fill_cancelled: accepted live, cancellation dispatched, terminal cumulative fill zero
+  accepted_zero_fill_expired: accepted live, venue-terminal expiry, cumulative fill zero
+  provider_rejected: venue refused the order before live acceptance
+  local_or_risk_refused: no provider order because Janus refused before wire
+  unknown_provider_state: submission may have reached venue but authority cannot prove acceptance or terminal zero
+  role_violation: any authoritative taker fill or conflicting maker/taker evidence
+  persistence_or_reconciliation_failure: required durable evidence is absent, corrupt or contradictory
+  rules:
+    - Zero-fill, partial-fill, provider-rejected, local/risk-refused and unknown are never combined.
+    - ORDER_REJECTED is not an analysis category; classify from authoritative lifecycle evidence.
+    - Only accepted-live orders with terminal authoritative state enter the accepted-attempt denominator.
+    - Unknown, role violation, cap breach, overfill, overhedge or persistence failure is a STOP.
+    - A cancel acknowledgement is not terminal-zero proof when late fills remain possible.
+
+prespecified_analysis:
+  quantity_scope: >-
+    Analyze exact requested integer N only. Do not interpolate, extrapolate, merge adjacent sizes,
+    select favorable cut points, or infer outcomes for unselected candidate quantities.
+  primary_probability: >-
+    For each eligible exact N, full-N maker fills divided by accepted-live terminal attempts at N,
+    reported with a two-sided exact 95-percent Clopper-Pearson interval. Also report partial and
+    confirmed-zero proportions separately with exact intervals.
+  latency_and_fill_fraction: >-
+    For each eligible N, report count, median, p90 and maximum for acknowledgement latency,
+    first-any-fill latency, full-fill latency, cancel-dispatch lateness, hedge-submit latency and
+    fill fraction. Never coerce missing/unknown latency to zero or the maker deadline.
+  profit_and_tail_cost: >-
+    For each eligible N, report the distribution and arithmetic mean of conditional locked_profit,
+    protected filled-quantity profit and signed hedge_tail_cost. Preserve loss observations and
+    unresolved rows; no winsorizing, outlier deletion or post-hoc fee/slippage replacement.
+  realized_ev: >-
+    For each eligible N and each queue state with sufficient support, apply the registered formula
+    using that cell's full-fill probability, mean conditional locked_profit and unconditional mean
+    hedge_tail_cost. Report all components beside the result. Because selection is observational,
+    do not interpret differences between N values as causal.
+  queue_state: >-
+    Primary reporting preserves raw queue/book covariates. The only preregistered coarse visible-
+    queue ratio bands are [0,1), [1,3), [3,10), and [10,infinity), crossed only with pregame versus
+    in-play. Spread, league and time-to-start remain displayed covariates, not analyst-selected
+    stratification rules. A sparse cell is reported as insufficient and is not merged.
+  uncertainty: >-
+    Fill probabilities use exact binomial intervals. Monetary and latency summaries include a
+    deterministic 10,000-resample percentile interval clustered by event_id with seed 63009;
+    intervals are descriptive and do not create a significance or optimal-size claim.
+
+minimum_analysis_sample:
+  cohort_total: >-
+    At least 200 accepted-live, terminal, authoritative-maker attempts across at least 50 distinct
+    events, five league-local calendar days, and three leagues. Until all four totals are met the
+    row may publish operational accrual counts only and its verdict remains INSUFFICIENT_SAMPLE.
+  exact_quantity: >-
+    An exact N is analysis-eligible only with at least 50 accepted-live terminal attempts, at
+    least 10 full-N maker fills, at least 10 confirmed zero fills, at least 20 distinct events,
+    and at least five league-local calendar days at that N. Partial fills count toward attempts
+    but satisfy neither the full-fill nor zero-fill minimum.
+  hedge_cost: >-
+    Quantity-specific hedge-tail cost additionally requires at least 10 authoritative full or
+    partial maker fills with every fill delta protected and exact two-venue cash/fill
+    reconciliation. Otherwise hedge_tail_cost and realized_EV for N are withheld.
+  queue_cell: >-
+    A queue-state cell additionally requires 30 terminal accepted attempts, five full fills, five
+    confirmed zero fills, ten distinct events and three league-local days. Sparse cells remain
+    visible but unscored.
+  no_optional_stopping: >-
+    Checkpoint cadence is every 50 new terminal accepted attempts or seven calendar days,
+    whichever is later. Do not stop or extend because estimates look favorable or unfavorable.
+
+success_criteria:
+  - Every admitted decision persists every generated quantity and its full frozen arithmetic, including unselected and ineligible candidates.
+  - Every selected attempt has one book epoch, one frozen plan, one durable lifecycle, and authoritative role/quantity/cash lineage.
+  - Every cumulative fill delta is logged monotonically and connected to immediate idempotent hedge evidence without overhedge.
+  - Every terminal attempt is classified into exactly one immutable taxonomy bucket; zero-fill and rejection remain separate.
+  - Candidate, order, fill, cancel, hedge and reconciliation timestamps permit all registered latencies to be reproduced.
+  - Replaying the same immutable sources reproduces candidate selection, lifecycle classification, quantities, costs and metrics byte-identically.
+  - The minimum cohort and exact-N thresholds are enforced before any realized-EV or size-comparison output.
+  - Any STOP condition closes the cohort without reinterpreting or dropping the triggering row.
+
+stop_conditions:
+  - missing candidate quantity, selected-reason, book epoch, queue snapshot or code/limits lineage
+  - provider submission without a durable prewire identity or immutable maker deadline
+  - taker-role evidence, role contradiction, signed/filled quantity above 10, or any active-cap breach
+  - cumulative fill decrease without explicit source-attributed reversal authority
+  - known fill delta not hedged immediately and idempotently, overhedge, or unexplained imbalance
+  - cancellation dispatched after its registered deadline because of a blocking status/read path
+  - unresolved provider state, lifecycle persistence failure, incomplete cash/fill reconciliation or unknown tail cost
+  - instrumentation, sizing policy, maker-rest policy, cap, hurdle or settlement-rule change inside the cohort
+
+outputs:
+  raw: >-
+    Durable append-only decision/candidate, queue/book, order lifecycle, cumulative fill, cancel,
+    hedge and reconciliation records in the Janus data store, with schemas/version hashes named in
+    the first checkpoint.
+  checkpoints: research/exec/2026-09-09_size-dependent-maker-ev/results_<utc>.json
+  verdict: research/exec/2026-09-09_size-dependent-maker-ev/verdict.md
+  replay: research/exec/2026-09-09_size-dependent-maker-ev/independent_replay_<utc>.json
+
+claims_and_decision_boundary: >-
+  L63 is descriptive and spends no hypothesis-test look. It may characterize only quantities and
+  queue states meeting the immutable support gates. Current conditional-fill N_star remains the
+  implementation policy during this cohort and is not called realized-EV-optimal. No L63 result,
+  including a positive point estimate, authorizes selecting a new size, randomizing order size,
+  changing a cap, crossing the spread, deploying code, restarting a service, clearing a kill, or
+  placing an order. Any size-policy or cap decision requires a successor preregistration, explicit
+  operator authority where applicable, and the full live gate. The expected information effect is
+  to replace an unknown size/fill assumption with measured forward inputs; it may favor smaller
+  size, current N_star, or no trade and therefore does not presume positive EV or Sharpe.

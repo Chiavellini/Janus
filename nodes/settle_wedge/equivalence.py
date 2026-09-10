@@ -183,6 +183,18 @@ class CoverProof:
         # team markets resolve No). Conservative by construction; named here, not refined.
         return self.equivalence.settlement_buffer(legs)
 
+    def as_record(self) -> dict:
+        """Stable audit form for decision-input fingerprints and sizing records."""
+        return {
+            "exhaustive": {
+                "league": self.exhaustive.league,
+                "market_type": self.exhaustive.market_type,
+                "period": self.exhaustive.period,
+                "outcome_ids": list(self.exhaustive.outcome_ids),
+            },
+            "equivalence": self.equivalence.as_record(),
+        }
+
     @property
     def outcome_ids(self) -> tuple[str, ...]:
         """The proven outcome set, sorted at mint; what a cover's legs must partition."""

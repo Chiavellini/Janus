@@ -27,10 +27,15 @@ health: kill-file-present / breaker-latched / unreconciled-too-long ──▶ op
 
 MODE (below PAPER executes nothing) → KILL_SWITCH (all / live / venue / event / strategy) →
 BREAKER (latched, breached now, or PnL unknown because a fill is UNCONFIRMED) → CLOCK_UNHEALTHY →
-FEE_SCHEDULE → VENUE_DISCONNECTED → STALE_BOOK → MIN_PROFIT → MIN_RETURN → BALANCE (real-order
-modes only; unconfirmed is a refusal) → the ledger's caps (single-flight per event, simultaneous
-events, per-event notional, per-league, per-venue, total, unresolved). The first failure is the
-answer; nothing is partially reserved.
+FEE_SCHEDULE → VENUE_DISCONNECTED → STALE_BOOK → MIN_PROFIT → MIN_RETURN → signed stake/quantity/day
+caps → BALANCE (real-order modes only; unconfirmed is a refusal) → the ledger's caps (single-flight
+per event, simultaneous events, per-event notional, per-league, per-venue, total, unresolved) →
+MAX_UNHEDGED. `ledger.assess()` is the non-mutating mirror used by live sizing; `clear()` repeats
+it and alone reserves. The first failure is the answer; nothing is partially reserved.
+
+A post-only first leg receives a second, absolute rest deadline before its one-shot clearance is
+consumed. This authority cannot change or extend. The protection deadline is likewise armed once
+on the first known fill; later observations cannot slide it.
 
 ## Limits
 

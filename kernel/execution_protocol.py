@@ -48,6 +48,8 @@ class OrderRequest:
     #: A venue-enforced maker-only instruction, never an exemption from quantity limits.
     post_only: bool = False
     entry_expires_utc: float | None = None
+    #: Exact execution ownership for restart reconciliation. Opportunity ids are reused.
+    execution_id: str = ""
 
     @property
     def is_sell(self) -> bool:

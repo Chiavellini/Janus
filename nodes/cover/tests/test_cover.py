@@ -216,3 +216,16 @@ def test_a_polymarket_leg_under_one_dollar_of_notional_is_not_a_cover_at_that_si
     assert not c5.ok and c5.reject_reason == REJECT_BELOW_MIN_ORDER
     c10 = best_cover(offs, 10.0, now_utc=1000.0, proof=proof)
     assert c10.ok or c10.reject_reason != REJECT_BELOW_MIN_ORDER
+
+
+def test_required_venues_selects_the_best_exact_two_leg_cross_venue_cover():
+    offers = {
+        "A": [C.Leg("polymarket", "pm_clob", "a-pm", "pa", _bk([(0.40, 100)]), {"fee_rate": 0.0}),
+              C.Leg("kalshi", "kalshi_clob", "a-k", "ka", _bk([(0.45, 100)]), {"fee_multiplier": 0.0})],
+        "B": [C.Leg("polymarket", "pm_clob", "b-pm", "pb", _bk([(0.40, 100)]), {"fee_rate": 0.0}),
+              C.Leg("kalshi", "kalshi_clob", "b-k", "kb", _bk([(0.45, 100)]), {"fee_multiplier": 0.0})],
+    }
+    assert C.best_cover(offers, 10, now_utc=1000.0, proof=MLB2).single_venue
+    cross = C.best_cover(offers, 10, now_utc=1000.0, proof=MLB2,
+                         required_venues=frozenset({"polymarket", "kalshi"}), leg_count=2)
+    assert cross.ok and not cross.single_venue and {leg.venue for leg in cross.legs} == {"polymarket", "kalshi"}

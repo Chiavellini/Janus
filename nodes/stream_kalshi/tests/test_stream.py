@@ -82,6 +82,18 @@ def test_both_outcomes_of_one_market_can_register_on_the_same_ticker():
     assert no.snapshot(T).best_bid.price == 0.55
 
 
+def test_all_sides_of_one_frame_update_before_the_shared_callback_runs():
+    s = KalshiStream(api_key="k", private_key=key())
+    yes, no = BookReplica("kalshi", "K1"), BookReplica("kalshi", "K1")
+    seen = []
+    callback = lambda _ticker, now: seen.append((yes.snapshot(now).best_ask.price,
+                                                 no.snapshot(now).best_ask.price))
+    s.register("K1", yes, "yes", on_update=callback)
+    s.register("K1", no, "no", on_update=callback)
+    s.handle(SNAP, now=T)
+    assert seen == [pytest.approx((0.45, 0.60))], "one atomic callback sees both projections from the same frame"
+
+
 # ── the recovery path ───────────────────────────────────────────────────
 def test_a_sequence_gap_invalidates_the_replica_and_trips_a_resubscribe():
     s, r, _ = wired()

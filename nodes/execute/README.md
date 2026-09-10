@@ -1,7 +1,7 @@
 # execute
 
 **Kind:** `pure` (plus two tables on the Janus volume)
-**Implements:** `plan.py`, `coordinator.py`, `records.py`, `venues.py`
+**Implements:** `plan.py`, `sizing.py`, `maker.py`, `coordinator.py`, `records.py`, `venues.py`
 
 The two-leg state machine (spec §10). One code path for every mode; `venues.py` is the only place
 adapters are chosen, and the coordinator never branches on mode.
@@ -15,7 +15,7 @@ risk.clear ──▶ RiskClearance ───────────────
                                    Coordinator.execute(plan, clearance)
                  DETECTED → VALIDATED → CAPITAL_RESERVED → LEG_A_SUBMITTED → LEG_A_FILLED
                           → LEG_B_SUBMITTED → LEG_B_FILLED | LEG_B_PARTIAL → HEDGED
-                 failures: ORDER_REJECTED · ORDER_TIMEOUT · UNKNOWN_PROVIDER_STATE · PARTIAL_FILL ·
+                 failures: ORDER_UNFILLED · ORDER_REJECTED · ORDER_TIMEOUT · UNKNOWN_PROVIDER_STATE · PARTIAL_FILL ·
                            HEDGE_UNAVAILABLE · HEDGE_SLIPPAGE_EXCEEDED · MARKET_SUSPENDED ·
                            VENUE_DISCONNECTED · BALANCE_CHANGED
                                                           │
@@ -26,7 +26,8 @@ risk.clear ──▶ RiskClearance ───────────────
 
 ## Leg order, fixed
 
-**Polymarket first, FOK; Kalshi hedge, IOC, for exactly what leg A filled.** Kalshi leads
+**Polymarket first; Kalshi hedge, IOC, for exactly what leg A filled.** Historical/paper entry is
+immediate. Limited-live entry uses the separately proven post-only maker route. Kalshi leads
 Polymarket by 5–10 s and a third of Polymarket reprices never happen, so the opportunity *is* a
 stale Polymarket price and Polymarket is the less reliable executor: its ambiguity must land
 where nothing is at risk. The hedge limit is the most a contract may cost for the cover still to
@@ -77,17 +78,27 @@ Historical/paper/replay `plan_from_cover` behavior is unchanged. The live grid s
 no higher than the existing executable-cover ceiling. This passive price is not represented as
 executable ask liquidity or a measured EV gain; cover/fee/risk proof remains conservative.
 
-The plan carries the oldest selected quote's freshness deadline. The coordinator bounds deliberate
-rest by that deadline and the original clearance, performs no blocking predeadline status reads,
-dispatches cancel first, and only then reconciles. A cancel/fill race or delayed partial fill is
-protected at actual known quantity using the existing recomputed hurdle and loss-cap limits;
-hedge buys cumulatively remain within the original authorization. No replacement is attempted.
+The plan carries the oldest selected quote's freshness deadline. The coordinator mints a separate,
+absolute maker-rest authority: the short first-submit clearance still gates the POST but cannot
+truncate or extend the rest window. While it rests, socket fill high-water, connections, clock,
+kill/breaker state, signed caps, balances, full Kalshi reserve, and full-remainder hedge depth are
+continuously checked. Failure or the immutable deadline dispatches cancel before blocking REST.
+
+Known fill deltas are journaled and protected after cancel dispatch, before slow terminal
+reconciliation. Cumulative observations are monotonic and cent-floored; a 2→2→5 stream hedges 2
+then only 3. No replacement is attempted; terminal zero fill is `ORDER_UNFILLED`, not rejection.
 The PM adapter owns the durable singleton, original cancel deadline, terminal/late-fill proof and
 restart cancellation. Guard cash finality does not close a maker order with a resting remainder.
 
+Every order journal row carries its exact execution id because opportunity ids are reused. If the
+execution-row write fails after a confirmed maker fill, that failure latches entry but cannot stop
+the deterministic protective hedge request; the adapter journal remains the pre-wire authority.
+On restart the guard repairs execution ownership from those exact rows and will not submit another
+hedge or unwind while any owned protective order is unresolved. Balanced recovered fills move both
+the execution and its opportunity (with a transition row) to `HEDGED`.
+
 If reconciliation is still ambiguous after its bounded attempt, new entry is latched, reservation
 and maker admission stay held, and known exposure still enters protection. Synchronous network
-calls may delay completion/protection after cancel dispatch; the route does not promise venue
-cancellation exactly at expiry. `tests/test_maker_entry.py` covers zero fill, partial/full cancel
-races, proof expiry, slow status I/O and unchanged historical plans. Local only and undeployed;
-maker fill selection, expected EV and Sharpe need a separately authorized forward evaluation.
+calls may delay terminal reconciliation after cancel dispatch; restart recovery uses the durable
+cancel intent, order journal and position guard. L63 prospectively measures maker fill selection,
+realized-EV and Sharpe inputs; conditional-fill sizing is not claimed realized-EV optimal.

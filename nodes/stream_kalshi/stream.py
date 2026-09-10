@@ -207,6 +207,7 @@ class KalshiStream:
         if p.kind == "snapshot":
             self.snapshotted[p.ticker] = p.sid
         projected: dict[str, tuple] = {}
+        callbacks = []
         for reg in self.regs.get(p.ticker, ()):
             if reg.outcome not in projected:                  # two registrations per ticker: sort once
                 projected[reg.outcome] = book.project(reg.outcome)
@@ -217,10 +218,12 @@ class KalshiStream:
             else:
                 reg.replica.project_in(bids, asks, seq=p.seq, now=t, server_utc=p.server_utc, mono=mono)
                 self.deltas += 1
-            if reg.on_update:
-                # The frame's receive time travels with the event, so a poller stamps the
-                # instant the venue's message arrived -- live and under replay alike.
-                reg.on_update(p.ticker, t)
+            if reg.on_update and all(reg.on_update is not callback for callback in callbacks):
+                callbacks.append(reg.on_update)
+        # One ticker can feed both the primary YES and complementary NO replicas for a game.
+        # Apply the complete frame to every registration before any callback may freeze/price it.
+        for callback in callbacks:
+            callback(p.ticker, t)
         return p.kind
 
     def _next_id(self) -> int:

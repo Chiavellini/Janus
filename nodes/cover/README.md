@@ -89,8 +89,9 @@ its balance stops the frontier with `balance`; absent means zero), `fixed_cost_u
 from a registered measurement of captured frames — a False label caps the mode at PAPER.
 `Leg.executable` remains a per-leg boolean for sportsbook acceptance, not per level.
 
-A cheaper same-venue cover can mask a real cross-venue one: `best_cover` returns the global
-cheapest and the caller then filters for `cross`, reporting `NO_EDGE`.
+Callers that require an execution shape pass `required_venues` and `leg_count`; filtering occurs
+inside the exact combination search, so a cheaper same-venue or three-leg cover cannot mask the
+best executable two-leg Polymarket+Kalshi alternative.
 
 ## Tests
 

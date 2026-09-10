@@ -46,7 +46,8 @@ class RiskClearance:
     """Single-use, short-lived, minted only by clear()."""
     __slots__ = ("opportunity_id", "event_id", "mode", "reservation", "limits_sha", "issued_mono",
                  "expires_mono", "hedge_deadline_mono", "hedge_window_s", "max_hedge_submits", "protect_window_s",
-                 "max_protect_submits", "_first_used", "_hedge_used", "_mint")
+                 "max_protect_submits", "maker_rest_deadline_mono", "_first_used", "_hedge_used",
+                 "_hedge_armed", "_mint")
 
     def __init__(self, *, opportunity_id: str, event_id: str, mode: Mode, reservation: Reservation | None,
                  limits_sha: str, issued_mono: float, expires_mono: float,
@@ -64,7 +65,26 @@ class RiskClearance:
         #: under -- the chase and the unwind included. Defaults to the phase-1 window (the old rule).
         self.protect_window_s = float(protect_window_s) if protect_window_s is not None else self.hedge_window_s
         self.max_protect_submits = int(max_protect_submits) if max_protect_submits is not None else max_hedge_submits
-        self._first_used, self._hedge_used = False, 0
+        self.maker_rest_deadline_mono = None
+        self._first_used, self._hedge_used, self._hedge_armed = False, 0, False
+
+    def authorize_maker_rest(self, deadline_mono: float, *, now_mono: float | None = None) -> float:
+        """Bind one absolute, non-extendable rest deadline before the first-leg submit.
+
+        The ordinary clearance TTL still gates the POST.  This separate authority controls only
+        how long an accepted post-only order may remain open after that POST.
+        """
+        t = now_mono if now_mono is not None else time.monotonic()
+        deadline = float(deadline_mono)
+        if self._first_used:
+            raise ValueError("maker rest authorization after the first leg was consumed")
+        if deadline < t:
+            raise ValueError("maker rest deadline is already past")
+        if self.maker_rest_deadline_mono is None:
+            self.maker_rest_deadline_mono = deadline
+        elif abs(self.maker_rest_deadline_mono - deadline) > 1e-9:
+            raise ValueError("maker rest deadline is immutable")
+        return self.maker_rest_deadline_mono
 
     def arm_hedge(self, now_mono: float | None = None) -> float:
         """The machine calls this the instant leg A's fill is known: the hedge window (the risk
@@ -75,7 +95,9 @@ class RiskClearance:
         t = now_mono if now_mono is not None else time.monotonic()
         if not self._first_used:
             raise ValueError("arm_hedge before the first leg was consumed")
-        self.hedge_deadline_mono = t + self.protect_window_s
+        if not self._hedge_armed:
+            self.hedge_deadline_mono = t + self.protect_window_s
+            self._hedge_armed = True
         return self.hedge_deadline_mono
 
     def valid(self, now_mono: float | None = None) -> bool:
@@ -202,6 +224,11 @@ def clear(cand: Candidate, *, mode: Mode, limits: RiskLimits, ledger: ExposureLe
         for v, usd in need.items():
             if balances.get(v, 0.0) < usd:
                 return Refused("BALANCE", f"{v}: need {usd:.2f}, have {balances.get(v, 0.0):.2f}")
+    preview = ledger.assess(event_id=cand.event_id, league=cand.league, per_venue_usd=need, limits=limits)
+    if preview:
+        return preview[0]
+    if any(c > limits.max_unhedged_contracts for _v, c, _p in cand.legs):
+        return Refused("MAX_UNHEDGED", f"first-leg quantity exceeds {limits.max_unhedged_contracts:g} contracts")
     res = ledger.reserve(event_id=cand.event_id, league=cand.league, per_venue_usd=need, limits=limits,
                          opportunity_id=cand.opportunity_id, now=now)
     if isinstance(res, Refused):

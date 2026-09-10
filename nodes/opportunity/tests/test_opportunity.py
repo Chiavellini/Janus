@@ -2,6 +2,7 @@
 """The record, its allowed moves, and what is kept beside it."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -69,6 +70,29 @@ def test_a_profitable_cover_records_its_books_transitions_and_frontier(tmp_path:
     assert tr == [(None, "PROFITABLE_UNEXECUTED"), ("PROFITABLE_UNEXECUTED", "NO_EDGE")]
     books = store.con.execute("SELECT books_json FROM opportunities").fetchone()[0]
     assert "0.44" in books
+
+
+def test_sizing_decision_is_append_only_once_per_book_epoch(tmp_path: Path):
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    opps = OpportunityStore(store)
+    decision = {"n_star_feasible": 5, "n_max_feasible": 10,
+                "binding_constraints": ["CAP_STAKE"], "candidates": [{"quantity": 5}]}
+    assert opps.record_sizing_decision(event_id="g1", book_epoch="epoch-a",
+                                       selected_opportunity_id="g1:q5", decision=decision, now=T)
+    assert not opps.record_sizing_decision(event_id="g1", book_epoch="epoch-a",
+                                           selected_opportunity_id="g1:q10", decision={"changed": True}, now=T + 1)
+    row = store.con.execute(
+        "SELECT seen_ts,selected_opportunity_id,decision_json FROM sizing_decisions"
+    ).fetchone()
+    assert row[0] == T and row[1] == "g1:q5"
+    assert json.loads(row[2]) == decision
+    assert opps.record_sizing_decision(event_id="g1", input_hash="epoch-b",
+                                       selected_opportunity_id=None, decision={"b": 1}, now=T + 2)
+    assert opps.record_sizing_decision(event_id="g1", input_hash="epoch-a",
+                                       selected_opportunity_id="g1:q5", decision=decision, now=T + 3)
+    assert store.con.execute(
+        "SELECT input_hash,occurrence FROM sizing_decisions ORDER BY id"
+    ).fetchall() == [("epoch-a", 1), ("epoch-b", 2), ("epoch-a", 3)]
 
 
 def test_an_evaluation_cannot_move_a_record_the_execution_path_owns(tmp_path: Path):

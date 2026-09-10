@@ -129,7 +129,7 @@ def test_an_unfilled_first_leg_leaves_no_position_and_releases(tmp_path):
     vs["polymarket"].books = {"P_H": bk([(0.60, 5000)])}    # the book moved past the limit: FAK fills nothing
     vs["kalshi"].books = {"K_A": offs["away"][0].book}
     ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
-    assert ex.state is X.ORDER_REJECTED and ex.released and ex.first_filled == 0.0
+    assert ex.state is X.ORDER_UNFILLED and ex.released and ex.first_filled == 0.0
     # and a book with only part of the size at the limit fills that part, hedged for exactly it (FAK, 2026-09-07)
     co2, vs2, store2, clk2, _ = harness(tmp_path / "p")
     vs2["polymarket"].books = {"P_H": bk([(0.44, 10)])}

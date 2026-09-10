@@ -1,6 +1,7 @@
 """The position guard (2026-09-08): the venue's fills are the truth, the rows are the claim."""
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 
 from kernel.execution_protocol import FillRecord, OrderState, Position
@@ -155,6 +156,106 @@ def test_a_hedged_execution_whose_fills_match_is_quiet(tmp_path):
     assert rep.corrected == [] and rep.to_protect == [] and rep.orphans == [] and rep.findings == []
 
 
+def test_late_maker_fill_after_hedged_is_corrected_and_reprotected(tmp_path):
+    from kernel.execution_protocol import Ack, OrderRequest
+    p = _plan()
+    pm_fill = FillRecord("polymarket", "pa", "late-maker", 5.0, 0.57, 0.0, False,
+                         T0 + 150, True, market_id=TOK, side="buy_yes")
+    ks_fill = FillRecord("kalshi", "kb", "early-hedge", 2.0, 0.31, 0.01, True,
+                         T0 + 102, True, market_id=p.hedge.market_id, side="buy_yes")
+    main, journal, records, g = _world(tmp_path, venues={
+        "polymarket": Venue("polymarket", [pm_fill], [Position("polymarket", TOK, "yes", 5.0, .57, T0 + 300)]),
+        "kalshi": Venue("kalshi", [ks_fill], [Position("kalshi", p.hedge.market_id, "yes", 2.0, None, T0 + 300)]),
+    })
+    ex = Execution("latefill", p.opportunity_id, p.event_id, p.league, "LIMITED_LIVE", 10, T0,
+                   state=X.HEDGED, first_client_id="a", hedge_client_ids=["b"],
+                   first_filled=2, first_avg_price=.57, hedge_filled=2, hedge_avg_price=.31)
+    records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__,
+                            "max_cost": p.max_cost_per_contract, "fee": p.fee_per_contract}, books={})
+    records.sync(ex, now=T0 + 103)
+    journal.pending(OrderRequest("polymarket", TOK, TOK, "buy_yes", .58, 10, "gtc", "a", p.opportunity_id,
+                                 post_only=True), mode="LIMITED_LIVE", now=T0 + 100)
+    journal.record(Ack("polymarket", "a", "pa", FillState.PARTIAL, 2, .57, 0, "matched", T0 + 101), kind="ack")
+    journal.pending(OrderRequest("kalshi", p.hedge.market_id, p.hedge.market_id, "buy_yes", .31, 2,
+                                 "ioc", "b", p.opportunity_id, hedge=True), mode="LIMITED_LIVE", now=T0 + 101)
+    journal.record(Ack("kalshi", "b", "kb", FillState.FILLED, 2, .31, .01, "executed", T0 + 102), kind="ack")
+    journal.record_fill(pm_fill)
+    journal.record_fill(ks_fill)
+    rep = g.apply(g.fetch())
+    got = records.load("latefill")
+    assert got.state is X.HEDGED and got.first_filled == 5 and got.hedge_filled == 2
+    assert got.unhedged == 3 and rep.to_protect == ["latefill"]
+    assert any(line.startswith("UNHEDGED_POSITION latefill") for line in rep.findings)
+
+
+def test_guard_recovers_balanced_interrupted_maker_session_to_hedged(tmp_path):
+    from kernel.execution_protocol import Ack, OrderRequest
+    from kernel.schema import OpportunityStatus as S
+    from nodes.opportunity.opportunity import OpportunityStore
+    p = _plan()
+    main, journal, records, g = _world(tmp_path, venues={})
+    opportunities = OpportunityStore(main)
+    opp = opportunities.observe(event_id=p.event_id, league=p.league, quantity=p.quantity,
+                                status=S.PROFITABLE_UNEXECUTED, now=T0 - 1, gross=.88, fees=.02,
+                                settlement_buffer=0, net_profit=1, locked_return=.1,
+                                blocked_by=None, legs=[])
+    opportunities.move(opp, S.EXECUTION_PENDING, now=T0)
+    main.commit()
+    g.opportunities = opportunities
+    p = replace(p, opportunity_id=opp.opportunity_id)
+    ex = Execution("balanced", p.opportunity_id, p.event_id, p.league, "LIMITED_LIVE", 10, T0,
+                   state=X.LEG_A_SUBMITTED, first_client_id="a", hedge_client_ids=["b"],
+                   first_filled=2, first_avg_price=.57, hedge_filled=2, hedge_avg_price=.31)
+    records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__,
+                            "max_cost": p.max_cost_per_contract, "fee": p.fee_per_contract}, books={})
+    records.sync(ex, now=T0 + 100)
+    fills = []
+    for cid, venue, market, price, vid in (("a", "polymarket", TOK, .57, "pa"),
+                                           ("b", "kalshi", p.hedge.market_id, .31, "kb")):
+        journal.pending(OrderRequest(venue, market, market, "buy_yes", price, 2, "ioc", cid,
+                                     p.opportunity_id, hedge=(venue == "kalshi")),
+                        mode="LIMITED_LIVE", now=T0 + 100)
+        journal.record(Ack(venue, cid, vid, FillState.FILLED, 2, price, 0, "filled", T0 + 101), kind="ack")
+        fill = FillRecord(venue, vid, f"fill-{cid}", 2, price, 0, False, T0 + 101, True,
+                          market_id=market, side="buy_yes")
+        journal.record_fill(fill)
+        fills.append(fill)
+    rep = g.apply(GuardSnapshot(T0 + 300, fills=fills))
+    got = records.load("balanced")
+    assert got.state is X.HEDGED and got.unhedged == 0
+    assert "balanced" in rep.corrected
+    assert any(line.startswith("RECOVERED_HEDGED balanced") for line in rep.findings)
+    assert opportunities.load(p.opportunity_id).status is S.HEDGED
+    assert main.con.execute(
+        "SELECT to_status FROM opportunity_transitions WHERE opportunity_id=? ORDER BY id DESC LIMIT 1",
+        (p.opportunity_id,),
+    ).fetchone()[0] == "HEDGED"
+
+
+def test_guard_never_resubmits_over_an_owned_unconfirmed_hedge(tmp_path):
+    from kernel.execution_protocol import Ack, OrderRequest
+    p = _plan()
+    main, journal, records, g = _world(tmp_path, venues={})
+    ex = Execution("restart", p.opportunity_id, p.event_id, p.league, "LIMITED_LIVE", 10, T0,
+                   state=X.UNKNOWN_PROVIDER_STATE, first_client_id="maker", first_filled=2,
+                   first_avg_price=.57, protect={"maker_delta_unconfirmed": "unknown hedge"})
+    records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__,
+                            "max_cost": p.max_cost_per_contract, "fee": p.fee_per_contract}, books={})
+    records.sync(ex, now=T0 + 1)
+    req = OrderRequest("kalshi", p.hedge.market_id, p.hedge.outcome_id, "buy_yes", .31, 2,
+                       "ioc", "owned-hedge", p.opportunity_id, hedge=True, execution_id=ex.execution_id)
+    journal.pending(req, mode="LIMITED_LIVE", now=T0 + 1)
+    rep = g.apply(GuardSnapshot(T0 + 300, unconfirmed={"owned-hedge": FillState.UNCONFIRMED.value}))
+    assert rep.to_protect == []
+    assert any(line.startswith("PROTECTION_ORDER_UNRESOLVED restart") for line in rep.findings)
+    got = records.load("restart")
+    assert got.hedge_client_ids == ["owned-hedge"], "exact journal ownership repairs the execution row"
+    journal.record(Ack("kalshi", "owned-hedge", "k", FillState.UNFILLED, 0, None, 0,
+                       "final", T0 + 301), kind="status")
+    rep2 = g.apply(GuardSnapshot(T0 + 302, unconfirmed={"owned-hedge": FillState.UNFILLED.value}))
+    assert rep2.to_protect == ["restart"]
+
+
 def test_a_paid_venue_leg_is_not_expected_in_open_positions_while_its_pair_resolves(tmp_path):
     """Kalshi can pay first and remove its position while Polymarket remains unresolved. The
     cover and reservation stay open, but an authoritative per-venue result explains the absence."""
@@ -272,7 +373,7 @@ def test_a_later_authoritative_zero_fill_closes_the_unknown_execution(tmp_path):
     g.ledger = ledger
     rep = g.apply(GuardSnapshot(T0 + 121, unconfirmed={"cid0": FillState.UNFILLED.value}))
     got = records.load("unknown0")
-    assert got.state is X.ORDER_REJECTED and got.released and r.reservation_id not in ledger.open
+    assert got.state is X.ORDER_UNFILLED and got.released and r.reservation_id not in ledger.open
     assert any(x.startswith("ZERO_FILL_FINAL unknown0") for x in rep.findings)
 
 

@@ -161,12 +161,17 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
 
     def fail_unprotected(state, text):
         co._stamp(ex, "done_ms")
-        co._fail(ex, state, text, release=False)
-        if on_unprotected is not None:
-            try:
-                on_unprotected(ex, text)
-            except Exception as exc:  # noqa: BLE001 -- the page must not hide the record
-                print(f"  [protect] on_unprotected failed: {type(exc).__name__}: {exc}", flush=True)
+        try:
+            co._fail(ex, state, text, release=False)
+        except Exception as exc:  # noqa: BLE001 -- a known naked position must still latch/page
+            ex.state, ex.detail = state, text
+            co._storage_failure_after_fill(ex, exc)
+        finally:
+            if on_unprotected is not None:
+                try:
+                    on_unprotected(ex, text)
+                except Exception as exc:  # noqa: BLE001 -- the page must not hide the record
+                    print(f"  [protect] on_unprotected failed: {type(exc).__name__}: {exc}", flush=True)
         return ex
 
     # ── phases 1-3: the hedge, then the chase ────────────────────────────
@@ -206,10 +211,11 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
             # Defence in depth: no protection request reaches a venue off tick even if a future
             # ceiling or book adapter introduces a continuous price again.
             limit = tick_floor(clamp(max(limit, 0.01)), tick)
-            req = co._request(plan, hedge, qty, limit, hedge=True)
+            req = co._request(plan, hedge, qty, limit, hedge=True, execution_id=ex.execution_id)
             ex.hedge_client_ids.append(req.client_order_id)
-            co._move(ex, X.LEG_B_SUBMITTED, detail=f"attempt {attempts} limit {limit:.4f} budget {budget:.4f}"
-                                                   + ("" if phase == "walked" else f" phase {phase} ceiling {ceiling:.4f}"))
+            co._move_after_fill(ex, X.LEG_B_SUBMITTED,
+                                detail=f"attempt {attempts} limit {limit:.4f} budget {budget:.4f}"
+                                + ("" if phase == "walked" else f" phase {phase} ceiling {ceiling:.4f}"))
             co._stamp(ex, "b_submit_ms")
             hb = venues[hedge.venue].submit(req, clearance)
             co._stamp(ex, "b_ack_ms")
@@ -229,10 +235,10 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                 prev = ex.hedge_filled
                 ex.hedge_filled += hb.filled_contracts
                 ex.hedge_avg_price = ((prev * (ex.hedge_avg_price or 0.0)) + hb.filled_contracts * (hb.avg_price or 0.0)) / ex.hedge_filled
-                co._move(ex, X.LEG_B_FILLED if ex.unhedged <= dust else X.LEG_B_PARTIAL,
-                         detail=f"hedge filled {hb.filled_contracts} @ {hb.avg_price}")
+                co._move_after_fill(ex, X.LEG_B_FILLED if ex.unhedged <= dust else X.LEG_B_PARTIAL,
+                                    detail=f"hedge filled {hb.filled_contracts} @ {hb.avg_price}")
             elif hb.state is FillState.UNFILLED:
-                co._timed(ex, co.records.sync, ex, now=co.clock())
+                co._sync_after_fill(ex)
                 co.sleep(co.poll_interval_s if phase == "walked" else lim.protect_resubmit_ms / 1000.0)
         if ex.unhedged <= dust or rejected is not None:
             break
@@ -257,9 +263,11 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                 co.sleep(lim.protect_resubmit_ms / 1000.0)
                 continue                                      # the book is below the floor: wait, never chase down
             attempts += 1
-            req = co._request(plan, leg, qty, floor, hedge=True, side=side)
+            req = co._request(plan, leg, qty, floor, hedge=True, side=side,
+                              execution_id=ex.execution_id)
             ex.unwind_client_ids.append(req.client_order_id)
-            co._move(ex, X.UNWIND_SUBMITTED, detail=f"sell {qty:g} {which} floor {floor:.4f} L={L:.4f} attempt {attempts}")
+            co._move_after_fill(ex, X.UNWIND_SUBMITTED,
+                                detail=f"sell {qty:g} {which} floor {floor:.4f} L={L:.4f} attempt {attempts}")
             co._stamp(ex, "u_submit_ms")
             ack = venues[leg.venue].submit(req, clearance)
             hb = co._settle_ack(leg.venue, ack, deadline_mono=deadline, ex=ex, key="u")
@@ -278,7 +286,7 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                     prev = ex.hedge_unwound
                     ex.hedge_unwound += hb.filled_contracts
                     ex.hedge_unwind_avg = ((prev * (ex.hedge_unwind_avg or 0.0)) + hb.filled_contracts * (hb.avg_price or 0.0)) / ex.hedge_unwound
-                co._timed(ex, co.records.sync, ex, now=co.clock())
+                co._sync_after_fill(ex)
             else:
                 co.sleep(lim.protect_resubmit_ms / 1000.0)
 

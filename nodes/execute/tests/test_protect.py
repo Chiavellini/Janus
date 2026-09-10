@@ -114,6 +114,31 @@ def test_cap_reached_with_the_unwind_on_sells_leg_a_back_inside_the_cap(tmp_path
     assert st == ("UNWOUND", 1)
 
 
+def test_a_database_failure_after_an_unwind_fill_cannot_abort_the_terminal_protection_path(tmp_path):
+    co, vs, store, clk, _ = harness(tmp_path)
+    co.limits = ProtectLimits(unwind_enabled=True, max_protect_loss_usd=10.0)
+    offs = offers()
+    p, _ = plan_for(offs)
+    pm_book = book2([(0.44, 5000)], [(0.44, 5000)])
+    vs["polymarket"].books = {"P_H": pm_book, ("P_H", "sell_yes"): pm_book}
+    vs["kalshi"].books = {"K_A": bk([(0.70, 5000)])}
+    real_sync = co.records.sync
+    failed = []
+
+    def fail_once_after_unwind(ex, **kw):
+        if ex.first_unwound > 0 and not failed:
+            failed.append(ex.execution_id)
+            raise OSError("terminal unwind sync unavailable")
+        return real_sync(ex, **kw)
+
+    co.records.sync = fail_once_after_unwind
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert failed == [ex.execution_id]
+    assert ex.state is X.UNWOUND and ex.released and not ex.holds_anything
+    assert "OSError" in ex.protect["post_fill_storage_error"]
+    assert "OSError" in co._quantity_stop
+
+
 def test_bids_below_the_floor_are_waited_for_and_an_unsold_position_is_held_and_paged(tmp_path):
     co, vs, store, clk, _ = harness(tmp_path)
     co.limits = ProtectLimits(unwind_enabled=True)
@@ -130,6 +155,30 @@ def test_bids_below_the_floor_are_waited_for_and_an_unsold_position_is_held_and_
     assert any(a["kind"] == "unwind_wait" for a in ex.protect["attempts"]), "the floor held; no sale below it"
     assert store.con.execute("SELECT COUNT(*) FROM orders WHERE side='sell_yes'").fetchone()[0] == 0
     assert paged and "UNPROTECTED" in paged[0]
+
+
+def test_a_terminal_database_failure_cannot_suppress_the_unprotected_page(tmp_path):
+    co, vs, store, clk, _ = harness(tmp_path)
+    co.limits = ProtectLimits(unwind_enabled=False)
+    paged = []
+    co.on_unprotected = lambda ex, text: paged.append(text)
+    offs = offers()
+    p, _ = plan_for(offs)
+    vs["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs["kalshi"].books = {"K_A": bk([(0.70, 5000)])}
+    real_move = co.records.move
+
+    def fail_terminal_move(ex, to, **kw):
+        if to is X.HEDGE_SLIPPAGE_EXCEEDED:
+            raise OSError("terminal execution row unavailable")
+        return real_move(ex, to, **kw)
+
+    co.records.move = fail_terminal_move
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.HEDGE_SLIPPAGE_EXCEEDED and not ex.released
+    assert paged and "UNPROTECTED" in paged[0]
+    assert "OSError" in ex.protect["post_fill_storage_error"]
+    assert "OSError" in co._quantity_stop
 
 
 def test_an_unconfirmed_hedge_is_unknown_provider_state_and_paged_never_resubmitted(tmp_path):

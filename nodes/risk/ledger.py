@@ -87,30 +87,40 @@ class ExposureLedger:
         return any(r.event_id == event_id for r in self.open.values())
 
     # ── reserve / release ────────────────────────────────────────────────
+    def assess(self, *, event_id: str, league: str, per_venue_usd: Mapping[str, float],
+               limits: RiskLimits) -> tuple[Refused, ...]:
+        """All numeric exposure refusals for a prospective reservation, without mutating state."""
+        add = {k: float(v) for k, v in per_venue_usd.items() if float(v) > 0}
+        if not add:
+            return (Refused("EMPTY_RESERVATION", "nothing to reserve"),)
+        total = sum(add.values())
+        out: list[Refused] = []
+        if self.has_event(event_id):
+            out.append(Refused("EVENT_IN_FLIGHT", f"{event_id} already has an open reservation (single-flight)"))
+        if len(self.events()) + 1 > limits.max_simultaneous_events:
+            out.append(Refused("MAX_EVENTS", f"{len(self.events())} events open; limit {limits.max_simultaneous_events}"))
+        if total > limits.max_event_notional_usd:
+            out.append(Refused("EVENT_NOTIONAL", f"{total:.2f} > per-event {limits.max_event_notional_usd:.2f}"))
+        if self.league_usd(league) + total > limits.league_cap(league):
+            out.append(Refused("LEAGUE_EXPOSURE", f"{league}: {self.league_usd(league):.2f} + {total:.2f} > {limits.league_cap(league):.2f}"))
+        for venue, usd in add.items():
+            if self.venue_usd(venue) + usd > limits.venue_cap(venue):
+                out.append(Refused("VENUE_CAPITAL", f"{venue}: {self.venue_usd(venue):.2f} + {usd:.2f} > {limits.venue_cap(venue):.2f}"))
+        if self.total_usd() + total > limits.max_total_usd:
+            out.append(Refused("TOTAL_CAPITAL", f"{self.total_usd():.2f} + {total:.2f} > {limits.max_total_usd:.2f}"))
+        if self.total_usd() + total > limits.max_unresolved_usd:
+            out.append(Refused("UNRESOLVED_EXPOSURE", f"{self.total_usd():.2f} + {total:.2f} > {limits.max_unresolved_usd:.2f}"))
+        return tuple(out)
+
     def reserve(self, *, event_id: str, league: str, per_venue_usd: Mapping[str, float],
                 limits: RiskLimits, opportunity_id: str | None = None,
                 now: float | None = None) -> Reservation | Refused:
         """Every limit is checked against the picture INCLUDING this request. Any breach refuses;
         nothing is partially reserved."""
         add = {k: float(v) for k, v in per_venue_usd.items() if float(v) > 0}
-        if not add:
-            return Refused("EMPTY_RESERVATION", "nothing to reserve")
-        total = sum(add.values())
-        if self.has_event(event_id):
-            return Refused("EVENT_IN_FLIGHT", f"{event_id} already has an open reservation (single-flight)")
-        if len(self.events()) + 1 > limits.max_simultaneous_events:
-            return Refused("MAX_EVENTS", f"{len(self.events())} events open; limit {limits.max_simultaneous_events}")
-        if total > limits.max_event_notional_usd:
-            return Refused("EVENT_NOTIONAL", f"{total:.2f} > per-event {limits.max_event_notional_usd:.2f}")
-        if self.league_usd(league) + total > limits.league_cap(league):
-            return Refused("LEAGUE_EXPOSURE", f"{league}: {self.league_usd(league):.2f} + {total:.2f} > {limits.league_cap(league):.2f}")
-        for v, usd in add.items():
-            if self.venue_usd(v) + usd > limits.venue_cap(v):
-                return Refused("VENUE_CAPITAL", f"{v}: {self.venue_usd(v):.2f} + {usd:.2f} > {limits.venue_cap(v):.2f}")
-        if self.total_usd() + total > limits.max_total_usd:
-            return Refused("TOTAL_CAPITAL", f"{self.total_usd():.2f} + {total:.2f} > {limits.max_total_usd:.2f}")
-        if self.total_usd() + total > limits.max_unresolved_usd:
-            return Refused("UNRESOLVED_EXPOSURE", f"{self.total_usd():.2f} + {total:.2f} > {limits.max_unresolved_usd:.2f}")
+        refusals = self.assess(event_id=event_id, league=league, per_venue_usd=add, limits=limits)
+        if refusals:
+            return refusals[0]
         r = Reservation(uuid.uuid4().hex, event_id, league, add, opportunity_id, now or time.time())
         self.open[r.reservation_id] = r
         if self.store is not None:

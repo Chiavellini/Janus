@@ -10,6 +10,7 @@ so a record cannot skip from DETECTED to HEDGED or go backwards out of a termina
 
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from dataclasses import dataclass, field
@@ -36,6 +37,11 @@ CREATE TABLE IF NOT EXISTS frontiers(
   n_max REAL, n_star REAL, best_profit REAL, best_capital REAL, limit_reason TEXT,
   slippage_per_contract REAL, slippage_modelled INTEGER, fixed_cost_usd REAL, rungs_json TEXT);
 CREATE INDEX IF NOT EXISTS frontiers_opp ON frontiers(opportunity_id, seen_ts);
+CREATE TABLE IF NOT EXISTS sizing_decisions(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, event_id TEXT NOT NULL,
+  book_epoch TEXT NOT NULL, selected_opportunity_id TEXT, decision_json TEXT NOT NULL,
+  input_hash TEXT, occurrence INTEGER);
+CREATE UNIQUE INDEX IF NOT EXISTS sizing_decisions_epoch ON sizing_decisions(event_id, book_epoch);
 """
 
 #: from -> allowed to. Terminal states allow nothing. Anything not listed is refused.
@@ -132,6 +138,11 @@ class OpportunityStore:
     def __init__(self, store):
         self.store = store
         store.ensure_ddl(OPPORTUNITY_DDL)
+        have = {r[1] for r in store.con.execute("PRAGMA table_info(sizing_decisions)").fetchall()}
+        for column, declaration in (("input_hash", "TEXT"), ("occurrence", "INTEGER")):
+            if column not in have:
+                store.con.execute(f"ALTER TABLE sizing_decisions ADD COLUMN {column} {declaration}")
+        store.con.commit()
         self.live: dict[str, Opportunity] = {}
 
     def observe(self, *, event_id: str, league: str, quantity: float, status: S, now: float,
@@ -216,6 +227,35 @@ class OpportunityStore:
              fr.best.capital if fr.best else None, fr.limit_reason, fr.slippage_per_contract,
              int(fr.slippage_modelled), fr.fixed_cost_usd,
              json.dumps([[r.contracts, round(r.cost_per_contract, 6), round(r.profit, 4)] for r in fr.rungs])))
+
+    def record_sizing_decision(self, *, event_id: str, book_epoch: str | None = None,
+                               input_hash: str | None = None,
+                               selected_opportunity_id: str | None, decision: Mapping,
+                               now: float) -> bool:
+        """Append exactly one auditable live sizing choice per frozen book epoch.
+
+        A duplicate of the immediately preceding complete input is a no-op. If inputs change
+        A→B→A, the second A gets a new occurrence: a real market transition can be retried while
+        heartbeats, bid-only updates, and byte-identical snapshots cannot mint another order.
+        """
+        ih = str(input_hash or book_epoch or "")
+        if not ih:
+            raise ValueError("input_hash is required")
+        previous = self.store.con.execute(
+            "SELECT input_hash,occurrence FROM sizing_decisions WHERE event_id=? ORDER BY id DESC LIMIT 1",
+            (event_id,),
+        ).fetchone()
+        if previous is not None and previous[0] == ih:
+            return False
+        occurrence = int(previous[1] or 0) + 1 if previous is not None else 1
+        epoch = hashlib.sha256(f"{ih}:{occurrence}".encode()).hexdigest()
+        cur = self.store.con.execute(
+            "INSERT OR IGNORE INTO sizing_decisions(seen_ts,event_id,book_epoch,selected_opportunity_id,decision_json,input_hash,occurrence) "
+            "VALUES(?,?,?,?,?,?,?)",
+            (now, event_id, epoch, selected_opportunity_id,
+             json.dumps(dict(decision), sort_keys=True, separators=(",", ":")), ih, occurrence),
+        )
+        return cur.rowcount == 1
 
     def _upsert(self, o: Opportunity) -> None:
         self.store.con.execute(

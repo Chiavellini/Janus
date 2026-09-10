@@ -101,6 +101,24 @@ def test_predeadline_status_has_no_blocking_venue_reads(tmp_path):
     assert state.open and not state.final and calls == []
 
 
+def test_observed_and_cancel_only_use_socket_high_water_without_rest(tmp_path):
+    v, j, tr = setup(tmp_path)
+    v.submit(maker_request(entry_expires_utc=1002.0), cl(tmp_path))
+    stream = PolymarketUserStream(SimpleNamespace(api_key="fake", api_secret="fake", api_passphrase="fake"))
+    stream.handle({"event_type": "trade", "id": "socket-fill", "taker_order_id": "other",
+                   "status": "MATCHED", "size": "2", "price": ".44",
+                   "maker_orders": [{"order_id": "signed-hash", "matched_amount": "2", "price": ".44"}]})
+    tr.user_order = stream.order
+    tr.get_order = lambda _oid: (_ for _ in ()).throw(AssertionError("no REST order read"))
+    tr.trades = lambda **_kw: (_ for _ in ()).throw(AssertionError("no REST trade read"))
+    assert v.observed("c1").filled_contracts == 2
+    canceled = v.cancel_only("c1")
+    assert canceled.filled_contracts == 2 and canceled.open and not canceled.final
+    assert j.store.con.execute(
+        "SELECT COUNT(*) FROM order_events WHERE kind='post_only_cancel_intent'"
+    ).fetchone()[0] == 1
+
+
 def test_socket_taker11_then_maker4_preserves_highest_quantity(tmp_path):
     v, j, tr = setup(tmp_path)
     v.submit(maker_request(), cl(tmp_path))

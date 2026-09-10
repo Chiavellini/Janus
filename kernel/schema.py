@@ -113,6 +113,7 @@ class ExecutionState(str, Enum):
     RECONCILED = "RECONCILED"
     # failure states -- each is a distinct fact about the venue, never a retry hint
     ORDER_REJECTED = "ORDER_REJECTED"
+    ORDER_UNFILLED = "ORDER_UNFILLED"    # accepted/known order, venue-authoritative zero fill
     ORDER_TIMEOUT = "ORDER_TIMEOUT"
     UNKNOWN_PROVIDER_STATE = "UNKNOWN_PROVIDER_STATE"
     PARTIAL_FILL = "PARTIAL_FILL"
@@ -146,7 +147,7 @@ _HOLDING_FAILURES = frozenset({
     ExecutionState.HEDGE_UNAVAILABLE,
 })
 _EXECUTION_FAILURES = frozenset({
-    ExecutionState.ORDER_REJECTED, ExecutionState.ORDER_TIMEOUT, ExecutionState.UNWOUND,
+    ExecutionState.ORDER_REJECTED, ExecutionState.ORDER_UNFILLED, ExecutionState.ORDER_TIMEOUT, ExecutionState.UNWOUND,
     ExecutionState.UNKNOWN_PROVIDER_STATE, ExecutionState.PARTIAL_FILL,
     ExecutionState.HEDGE_UNAVAILABLE, ExecutionState.HEDGE_SLIPPAGE_EXCEEDED,
     ExecutionState.MARKET_SUSPENDED, ExecutionState.VENUE_DISCONNECTED,

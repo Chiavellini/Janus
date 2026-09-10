@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import signal
@@ -44,6 +45,7 @@ from kernel.fetch import Client  # noqa: E402
 from kernel.redact import brief_error  # noqa: E402
 from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
 from nodes.cover.capacity import frontier, slippage_for  # noqa: E402
+from nodes.cover.cover import walk_ladder  # noqa: E402
 from nodes.risk.flags import raise_flag  # noqa: E402
 from nodes.discovery.watchlist import Watchlist, kalshi_watch, pm_watch_events  # noqa: E402
 from nodes.watch_settle.settle import record_watch  # noqa: E402
@@ -51,9 +53,12 @@ from nodes.entities.leagues import LEAGUES, default_leagues  # noqa: E402
 from nodes.discovery.discovery import co_listed, discover, first_seen, record_events, record_spawn_block  # noqa: E402
 from nodes.slate.slate import next_transition, windows_for  # noqa: E402
 from nodes.execute.coordinator import Coordinator  # noqa: E402
+from nodes.execute.maker import (HedgeLevel, MakerFillSession, MakerRestAuthorization,
+                                 MakerRestInputs, book_fingerprint)  # noqa: E402
+from nodes.execute.sizing import SizingDecision, choose_live_size  # noqa: E402
 from nodes.execute.guard import PositionGuard  # noqa: E402
 from nodes.execute.on_loop import OnLoop  # noqa: E402
-from nodes.execute.plan import plan_from_cover, maker_plan_from_cover  # noqa: E402
+from nodes.execute.plan import plan_from_cover, maker_plan_from_cover, marginal_price  # noqa: E402
 from nodes.execute.records import ExecutionRecords  # noqa: E402
 from nodes.execute.venues import build_venues  # noqa: E402
 from nodes.exec_kalshi.client import DEMO_BASE, PROD_BASE, KalshiExecution  # noqa: E402
@@ -68,7 +73,7 @@ from nodes.risk.gate import OVERRIDE_PATH, override_state, resolve_mode, stale_r
 from kernel.code_sha import code_tree_sha, runner_head_sha  # noqa: E402
 from nodes.risk.kill import KillSwitches  # noqa: E402
 from nodes.risk.ledger import ExposureLedger  # noqa: E402
-from nodes.risk.limits import load_limits  # noqa: E402
+from nodes.risk.limits import RiskLimits, load_limits  # noqa: E402
 from nodes.game_poller.poller import GamePoller, PollerState, eval_interval_for  # noqa: E402
 from nodes.settle_wedge.equivalence import SettlementEquivalence  # noqa: E402
 from nodes.settle_wedge.pair import certify_from_spec  # noqa: E402
@@ -393,10 +398,13 @@ class Supervisor:
                 return
             failed = False
             written_before = sup.written
+            evaluated = []
+            sized_live = self._live_sizing_enabled()
             for ev in sup.poller.on_event("stream", _market_id, now=now):
                 sup.evaluations += 1
                 try:
-                    self._record(sup, ev)
+                    rec = self._record(sup, ev, dispatch=not sized_live)
+                    evaluated.append((ev, rec))
                 except Exception as exc:  # noqa: BLE001 -- a record bug must never reach the socket loop
                     failed = True
                     # The callback runs inside the venue socket's receive loop. An exception here
@@ -408,6 +416,15 @@ class Supervisor:
                     self.record_errors[key] = self.record_errors.get(key, 0) + 1
                     if self.record_errors[key] == 1:
                         print(f"  [record] {sup.short_name} {brief_error(exc)}", flush=True)
+            if not failed and evaluated and sized_live and self.coordinator is not None:
+                try:
+                    self._execute_sized(sup, evaluated)
+                except Exception as exc:  # noqa: BLE001 -- selection must not tear down a socket
+                    failed = True
+                    key = (gid, "size:" + type(exc).__name__)
+                    self.record_errors[key] = self.record_errors.get(key, 0) + 1
+                    if self.record_errors[key] == 1:
+                        print(f"  [size] {sup.short_name} {brief_error(exc)}", flush=True)
             if self.store is not None and self.store.con.in_transaction:
                 # Commit per frame, not per report tick (30 s): the loop's implicit transaction held
                 # the file's write lock for up to 30 s, and the execution worker's journal write
@@ -432,8 +449,12 @@ class Supervisor:
                         print(f"  [record] {sup.short_name} commit {brief_error(exc)}", flush=True)
         return cb
 
+    def _live_sizing_enabled(self) -> bool:
+        return (self.mode.risks_capital and isinstance(self.limits, RiskLimits) and self.ledger is not None
+                and all(name in self.caps for name in ("stake_usd", "max_contracts", "day_notional_usd")))
+
     # ── persistence ─────────────────────────────────────────────────────
-    def _record(self, sup: Supervised, ev) -> None:
+    def _record(self, sup: Supervised, ev, *, dispatch: bool = True):
         rec = record_evaluation(self.store, ev, league=sup.poller.league,
                                 fee_params=sup.fee_params, hurdle=MIN_RETURN,
                                 opportunities=self.opportunities)
@@ -459,8 +480,61 @@ class Supervisor:
                 cap = f"  (capacity failed: {type(exc).__name__})"
             print(f"  *** {rec.status.value} {sup.short_name} q={ev.quantity} cost={rec.cost:.4f} "
                   f"return={rec.locked_return:+.3%}{cap}", flush=True)
-            if self.coordinator is not None:
+            if dispatch and self.coordinator is not None:
                 self._execute(sup, ev, rec)
+        return rec
+
+    def _execute_sized(self, sup: Supervised, evaluated) -> None:
+        """One cap-aware live quantity decision for one frozen book epoch."""
+        base = evaluated[0][0]
+        if not base.offers or sup.poller.proof is None or self.limits is None or self.ledger is None:
+            return
+        balances = self._cached_balances({})
+        balances = balances or {}
+        offers = {o: list(v) for o, v in base.offers.items()}
+        decision = choose_live_size(
+            offers, now_utc=base.evaluated_utc, proof=sup.poller.proof,
+            event_id=base.game_id, league=sup.poller.league, caps=self.caps,
+            limits=self.limits, ledger=self.ledger, balances=balances,
+            max_leg_age_s=self.max_book_age_s, hurdle=MIN_RETURN,
+            min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0),
+            max_quote_age_s=min(sup.poller.max_book_age_s, sup.poller.max_rest_book_age_s),
+        )
+        epoch_payload = []
+        for outcome, legs in sorted(offers.items()):
+            for leg in sorted(legs, key=lambda x: (x.venue, x.market_id, x.outcome_id)):
+                epoch_payload.append([outcome, leg.venue, leg.market_id, leg.outcome_id,
+                                      book_fingerprint(((level.price, level.size) for level in leg.book.asks),
+                                                       venue=leg.venue, market_id=leg.market_id),
+                                      leg.book.source, leg.min_order_contracts,
+                                      leg.tick, dict(leg.fee_overrides), sorted(leg.covers)])
+        epoch_payload.append(["proof", sup.poller.proof.as_record()])
+        input_hash = hashlib.sha256(json.dumps(epoch_payload, separators=(",", ":")).encode()).hexdigest()
+        selected_oid = (Opportunity.id_for(base.game_id, decision.selected.quantity)
+                        if decision.selected is not None else None)
+        if self.opportunities is not None and not self.opportunities.record_sizing_decision(
+                event_id=base.game_id, input_hash=input_hash,
+                selected_opportunity_id=selected_oid, decision=decision.audit(), now=base.evaluated_utc):
+            return
+        # The decision/outbox must be durable before any worker can reach a venue wire. If this
+        # commit fails, the callback catches it and no task is created.
+        if self.store is not None:
+            self.store.commit()
+        if decision.selected is None:
+            key = f"{sup.short_name}:SIZE:" + ",".join(decision.binding_constraints)
+            if self.said.get(key) != "said":
+                self.said[key] = "said"
+                print(f"  [size] refused {sup.short_name}: {','.join(decision.binding_constraints) or 'NO_FEASIBLE_SIZE'}", flush=True)
+            return
+        selected = decision.selected
+        ev = replace(base, quantity=float(selected.quantity), cover=selected.cover)
+        rec = next((r for old, r in evaluated if abs(old.quantity - selected.quantity) < 1e-9), None)
+        if rec is None:
+            rec = self._record(sup, ev, dispatch=False)
+        print(f"  [size] {sup.short_name} N*={decision.n_star_feasible} N_max={decision.n_max_feasible} "
+              f"profit=${selected.profit_usd:.4f} bindings={','.join(decision.binding_constraints) or 'none'} "
+              f"fill_model={decision.fill_model}", flush=True)
+        self._execute(sup, ev, rec, sizing=decision)
 
     def loop_probe_reading(self, overshoot_s: float) -> None:
         self.loop_lag_readings.append(overshoot_s)
@@ -529,7 +603,7 @@ class Supervisor:
             print(f"[clock] {why} ({changed} pollers)", flush=True)
         self.loop_lag_max_s, self.loop_lag_readings = 0.0, []
 
-    def _execute(self, sup: Supervised, ev, rec) -> None:
+    def _execute(self, sup: Supervised, ev, rec, *, sizing: SizingDecision | None = None) -> None:
         """PAPER and above: plan from the priced cover, clear it through nodes/risk, run the machine.
         Every refusal is recorded on the opportunity; nothing here raises into the socket loop."""
         if self.arm_stale:
@@ -551,6 +625,8 @@ class Supervisor:
                                min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0), **maker_options)
         if plan is None:
             return
+        if sizing is not None:
+            plan = replace(plan, sizing=sizing.audit())
         # Paper venues fill against the books the cover was priced from -- the same instant.
         for outcome, legs in offers.items():
             for l in legs:
@@ -638,7 +714,9 @@ class Supervisor:
                 # The record is the machine's from this instant, ON the loop, before any frame can
                 # move it elsewhere (the first flight off the loop, STL @ SF 2026-09-08 00:40Z:
                 # a later frame's NO_EDGE landed first and every move of the execution was refused).
-                self._own_opportunity(plan.opportunity_id, sup)
+                if not self._own_opportunity(plan.opportunity_id, sup):
+                    self.in_flight = None
+                    return
                 task = loop.create_task(self._execute_off_loop(sup, ev, plan, cand, offers, pre, m_entry))
                 self.exec_tasks.add(task)
                 task.add_done_callback(self.exec_tasks.discard)
@@ -651,21 +729,28 @@ class Supervisor:
             return
         pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
         ex = self.coordinator.execute(plan, clearance, offers_books=books_snapshot(offers),
-                                      venues_connected=self._connected(), pre_stages=pre)
+                                      venues_connected=self._connected(), pre_stages=pre,
+                                      maker_guard=(lambda remaining: self._maker_rest_refusal(sup, plan, clearance, remaining))
+                                      if plan.first.post_only and self.mode.risks_capital else None)
         self._after_execution(sup, ev, ex)
 
-    def _own_opportunity(self, opportunity_id: str, sup: Supervised) -> None:
+    def _own_opportunity(self, opportunity_id: str, sup: Supervised) -> bool:
         if self.opportunities is None:
-            return
+            return False
         try:
             opp = self.opportunities.load(opportunity_id)
-            if opp is not None:
-                self.opportunities.move(opp, OpportunityStatus.EXECUTION_PENDING, now=time.time(), detail="dispatched")
+            if opp is None:
+                return False
+            self.opportunities.move(opp, OpportunityStatus.EXECUTION_PENDING, now=time.time(), detail="dispatched")
+            if self.store is not None:
+                self.store.commit()
+            return True
         except Exception as exc:  # noqa: BLE001 -- the record must not stop the flight; said once per cause
             key = f"{sup.short_name}:own:{type(exc).__name__}"
             if self.said.get(key) != "said":
                 self.said[key] = "said"
                 print(f"  [exec] opportunity record not owned before dispatch: {brief_error(exc)}", flush=True)
+            return False
 
     def _cached_balances(self, pre: dict) -> dict | None:
         """Return a fresh guard snapshot without yielding to the worker pool.
@@ -703,7 +788,8 @@ class Supervisor:
     def _connected(self) -> dict[str, bool]:
         pm_exec = self.venues.get("polymarket")
         user_stream = getattr(getattr(pm_exec, "transport", None), "user_stream", None)
-        user_ok = user_stream is None or bool(user_stream.connected)
+        user_ok = (not self.mode.risks_capital
+                   or (user_stream is not None and bool(user_stream.connected)))
         return {"kalshi": bool(self.ks and self.ks.connected),
                 "polymarket": bool(self.ps and self.ps.connected and user_ok)}
 
@@ -730,6 +816,10 @@ class Supervisor:
             balances = self._cached_balances(pre)
             if balances is None:
                 balances = await asyncio.to_thread(self._balances, pre)
+            if (plan is not None and plan.sizing and plan.first.post_only
+                    and not self._hedge_capacity_ok(sup, plan, plan.quantity)):
+                print(f"  [risk] refused {sup.short_name}: HEDGE_DEPTH_CHANGED before entry", flush=True)
+                return
             aged = (replace(cand, max_book_age_s=cand.max_book_age_s + max(0.0, time.monotonic() - m_entry))
                     if isinstance(cand, Candidate) else cand)
             clearance = self._clear(sup, aged, balances, pre)
@@ -738,8 +828,13 @@ class Supervisor:
             pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
             books = books_snapshot(offers)
             connected = self._connected()
+            loop_proxy = OnLoop(self, asyncio.get_running_loop())
+            maker_guard = (lambda remaining, timeout_s=None: loop_proxy._maker_rest_refusal(
+                sup, plan, clearance, remaining, _timeout_s=timeout_s)) \
+                if plan.first.post_only and self.mode.risks_capital else None
             ex = await asyncio.to_thread(self.coordinator.execute, plan, clearance, offers_books=books,
-                                         venues_connected=connected, pre_stages=pre)
+                                         venues_connected=connected, pre_stages=pre,
+                                         maker_guard=maker_guard)
             self._after_execution(sup, ev, ex)
         except Exception as exc:  # noqa: BLE001 -- an execution bug must never kill the loop; it is said, counted, flagged
             # The machine itself records a machine error as an execution failure (UNKNOWN_PROVIDER_STATE
@@ -757,6 +852,92 @@ class Supervisor:
                     print(f"  [risk] flag write failed: {type(exc2).__name__}", flush=True)
         finally:
             self.in_flight = None
+
+    def _hedge_capacity_ok(self, sup: Supervised, plan, quantity: float) -> bool:
+        """Fresh loop-owned Kalshi depth for the full prospective maker fill."""
+        now = time.time()
+        for venue, market_id, side, rep in sup.poller.registrations():
+            plan_side = plan.hedge.side.removeprefix("buy_").removeprefix("sell_")
+            if venue == plan.hedge.venue and market_id == plan.hedge.market_id and side == plan_side:
+                book = rep.snapshot(now, max_age_s=sup.poller.max_book_age_s)
+                price = marginal_price(book, quantity) if book is not None else None
+                gross, full = walk_ladder(book, quantity) if book is not None else (0.0, False)
+                budget = quantity * plan.hedge_budget(plan.first.limit_price)
+                return (full and price is not None and price <= plan.hedge.limit_price + 1e-9
+                        and gross <= budget + 1e-9)
+        return False
+
+    def _maker_rest_refusal(self, sup: Supervised, plan, clearance, remaining: float) -> str | None:
+        """Continuous loop-owned proof for the unfilled maker remainder.
+
+        The worker calls this through ``OnLoop``. It reads the same replicas, kill/breaker,
+        signed caps, balance snapshot and durable reservation that admitted entry; any missing
+        component cancels the maker order immediately.
+        """
+        if remaining <= 1e-9:
+            return "MAKER_COMPLETE"
+        if self.arm_stale:
+            return "ARM_STALE"
+        connected = self._connected()
+        if self.ledger is None or not self.ledger.has_event(plan.event_id):
+            return "HEDGE_RESERVATION_MISSING"
+        reservation = next((r for r in self.ledger.open.values() if r.event_id == plan.event_id), None)
+        full_hedge_usd = plan.hedge.contracts * plan.hedge.limit_price
+        if reservation is None or float(reservation.per_venue_usd.get(plan.hedge.venue, 0.0)) + 1e-9 < full_hedge_usd:
+            return "HEDGE_RESERVATION_SHORT"
+        age = time.monotonic() - self.balance_snapshot_mono if self.balance_snapshot_mono else float("inf")
+        if age > self.balance_snapshot_ttl_s:
+            return "BALANCE_SNAPSHOT_STALE"
+        need = {plan.first.venue: plan.first.contracts * plan.first.limit_price,
+                plan.hedge.venue: full_hedge_usd}
+        if any(float(self.balance_snapshot.get(v, 0.0)) + 1e-9 < usd for v, usd in need.items()):
+            return "BALANCE_CHANGED"
+        for venue, market_id, side, rep in sup.poller.registrations():
+            plan_side = plan.hedge.side.removeprefix("buy_").removeprefix("sell_")
+            if venue == plan.hedge.venue and market_id == plan.hedge.market_id and side == plan_side:
+                book = rep.snapshot(time.time(), max_age_s=sup.poller.max_rest_book_age_s)
+                if book is None:
+                    return "HEDGE_BOOK_STALE"
+                fee_reserve = plan.quantity * (plan.fee_per_contract + plan.settlement_buffer_per_contract)
+                auth = MakerRestAuthorization(
+                    authorization_id=str(getattr(reservation, "reservation_id", "session")),
+                    maker_client_order_id=str(getattr(clearance, "opportunity_id", plan.opportunity_id)),
+                    authorized_contracts=str(plan.quantity),
+                    deadline_mono=float(getattr(clearance, "maker_rest_deadline_mono", None) or time.monotonic()),
+                    hard_hedge_limit=str(plan.hedge.limit_price),
+                    max_hedge_book_age_s=float(sup.poller.max_rest_book_age_s),
+                )
+                decision = MakerFillSession(
+                    auth, confirmed_fill_high_water=str(max(0.0, plan.quantity - remaining))
+                ).validate_rest(MakerRestInputs(
+                    now_mono=time.monotonic(),
+                    # ``fetched_utc`` is BookReplica.as_of(): mutation, verification, or heartbeat.
+                    # Project that currentness proof onto monotonic time. ``received_mono`` is
+                    # mutation-only and would cancel a quiet but continuously verified ladder.
+                    hedge_book_received_mono=float(
+                        time.monotonic() - max(0.0, time.time() - book.fetched_utc)),
+                    hedge_asks=tuple(HedgeLevel(str(q.price), str(q.size)) for q in book.asks),
+                    maker_connected=bool(connected.get(plan.first.venue, False)),
+                    hedge_connected=bool(connected.get(plan.hedge.venue, False)),
+                    clock_healthy=self.clock_ok(),
+                    kill_active=bool(self.kill is None or self.kill.active(
+                        event_id=plan.event_id, strategy=plan.strategy_version, live=True,
+                        venues=(plan.first.venue, plan.hedge.venue))),
+                    breaker_active=bool(self.breaker is None or self.breaker.evaluate(
+                        self.fills_today, max_daily_loss_usd=self.limits.max_daily_realized_loss_usd)),
+                    hedge_budget_usd=str(remaining * plan.hedge_budget(plan.first.limit_price)),
+                    session_budget_usd=str(plan.first.contracts * plan.first.limit_price
+                                           + remaining * plan.hedge_budget(plan.first.limit_price) + fee_reserve),
+                    stake_cap_usd=str(float(self.caps.get("stake_usd", 0.0)) + fee_reserve),
+                    contract_cap=str(float(self.caps.get("max_contracts", 0.0))),
+                    day_cost_used_usd=str(max(0.0, self.ledger.day_notional_usd() - reservation.total_usd)),
+                    day_cost_cap_usd=str(float(self.caps.get("day_notional_usd", 0.0)) + fee_reserve),
+                    fixed_session_cost_usd=str(plan.first.contracts * plan.first.limit_price),
+                    committed_hedge_cost_usd="0",
+                    hedge_fee_reserve_usd=str(fee_reserve),
+                ))
+                return None if decision.allowed else decision.block.value
+        return "HEDGE_BOOK_MISSING"
 
     def fresh_book(self, venue: str, market_id: str, side: str = "buy_yes"):
         """The protection layer's live book for a chase or an unwind: the venue's REST book (it runs
@@ -1152,7 +1333,8 @@ def main() -> int:
                                       fresh_book=sup.fresh_book, on_unprotected=sup.on_unprotected)
         if sup.mode.sends_real_orders:
             sup.guard = PositionGuard(venues=sup.venues, journal=journal, records=records, store=sup.store,
-                                      limits=limits.protect, started_utc=time.time(), ledger=sup.ledger, kill=kill)
+                                      limits=limits.protect, started_utc=time.time(), ledger=sup.ledger, kill=kill,
+                                      opportunities=sup.opportunities)
     print(f"[mode] {sup.mode.value}", flush=True)
     sup.ks = KalshiStream(api_key=api_key, private_key=load_private_key(key_path))
     sup.ps = PolymarketStream()

@@ -74,6 +74,9 @@ class Plan:
     settlement_buffer_per_contract: float = 0.0
     strategy_version: str = STRATEGY_VERSION
     quote_expires_utc: float | None = None
+    #: Live-only audit of the cap-aware quantity decision. Historical/paper callers leave this
+    #: empty; it never changes cover economics or grants risk authority.
+    sizing: Mapping | None = None
 
     @classmethod
     def from_dict(cls, d: Mapping, *, opportunity_id: str, event_id: str, league: str, quantity: float,
@@ -88,7 +91,8 @@ class Plan:
         return cls(opportunity_id, event_id, league, float(quantity), leg(d["first"]), leg(d["hedge"]),
                    max_cost_per_contract=float(d["max_cost"]), fee_per_contract=float(d["fee"]),
                    settlement_buffer_per_contract=float(d.get("settlement_buffer") or 0.0),
-                   strategy_version=strategy_version, quote_expires_utc=d.get("quote_expires_utc"))
+                   strategy_version=strategy_version, quote_expires_utc=d.get("quote_expires_utc"),
+                   sizing=d.get("sizing"))
 
     @property
     def holding_reserve_per_contract(self) -> float:

@@ -640,7 +640,9 @@ class PolymarketExecution:
             return ack
         # Convert the ORIGINAL monotonic clearance once, conservatively, for restart.
         # Preparation/persistence never grants another rest window.
-        cancel_deadline = t + max(0, clearance.expires_mono - self.mono())
+        rest_deadline_mono = getattr(clearance, "maker_rest_deadline_mono", None)
+        cancel_deadline = t + max(0, (rest_deadline_mono if rest_deadline_mono is not None
+                                     else clearance.expires_mono) - self.mono())
         if req.entry_expires_utc is not None:
             cancel_deadline = min(cancel_deadline, req.entry_expires_utc)
         if self.kill is None or not callable(getattr(self.transport, "prepare_post_only_buy", None)):
@@ -912,6 +914,62 @@ class PolymarketExecution:
             print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
         return st
 
+    def observed(self, client_order_id: str) -> OrderState:
+        """Return only authenticated socket/durable high-water evidence; never call REST.
+
+        The maker-rest supervisor uses this on a tight loop.  Terminality remains the job of
+        ``status()`` after cancel; a socket match is enough to protect quantity but never enough
+        to release the post-only admission lock.
+        """
+        row = self.journal.get(client_order_id)
+        t = self.clock()
+        if row is None or not row.get("venue_order_id"):
+            return OrderState(self.venue, client_order_id, None, FillState.UNCONFIRMED, 0.0,
+                              None, None, "NOT_FOUND", t, open=True, final=False)
+        cid, oid = row["client_order_id"], row["venue_order_id"]
+        marker = self.journal.store.con.execute(
+            "SELECT taker_amount,maker_amount FROM pm_post_only_orders WHERE client_order_id=?", (cid,)
+        ).fetchone()
+        if marker is None:
+            return OrderState(self.venue, cid, oid, FillState.UNCONFIRMED,
+                              float(row.get("filled_contracts") or 0.0), row.get("avg_price"),
+                              row.get("fee_usd"), "not_post_only", t, open=True, final=False)
+        known = max(Decimal(str(row.get("filled_contracts") or 0)),
+                    self._post_only_observed.get(cid, Decimal(0)))
+        raw = getattr(self.transport, "user_order", lambda _oid: None)(oid)
+        if raw:
+            try:
+                quantity = Decimal(str(raw.get("size_matched") or 0))
+                if quantity.is_finite() and quantity >= 0:
+                    known = max(known, quantity)
+                    self._post_only_observed[cid] = known
+                if "taker" in raw.get("_janus_trade_roles", ()):
+                    self._post_only_violation(cid, "POST_ONLY_ROLE_VIOLATION",
+                                              "user-stream owned taker/conflicting role: " +
+                                              json.dumps(raw.get("_janus_role_evidence", {}), sort_keys=True))
+                from nodes.exec_polymarket.post_only import check_post_only_quantity
+                check_post_only_quantity(self.journal, oid, known, now=t, kill=self.kill)
+            except Exception as exc:
+                self.last_error = brief_error(exc)
+            state = FillState.FILLED if known >= Decimal(marker[0]) / 1_000_000 else (
+                FillState.PARTIAL if known > 0 else FillState.UNCONFIRMED)
+            price = float(Decimal(marker[1]) / Decimal(marker[0])) if known else None
+            st = OrderState(self.venue, cid, oid, state, float(known), price, None,
+                            "user_stream_high_water", t, open=True, final=False,
+                            settlement_pending=known > 0,
+                            detail="socket fill high-water; maker terminality unresolved")
+            try:
+                self.journal.record(st, kind="maker_observed", raw=raw)
+            except Exception as exc:
+                self._persistence_failure(cid, exc)
+                return replace(st, detail=self.persistence_error)
+            return st
+        state = FillState.PARTIAL if known > 0 else FillState.UNCONFIRMED
+        price = float(Decimal(marker[1]) / Decimal(marker[0])) if known else None
+        return OrderState(self.venue, cid, oid, state, float(known), price, None,
+                          "maker_observed_cached", t, open=True, final=False,
+                          settlement_pending=known > 0)
+
     def _post_only_status(self, row, t):
         from nodes.exec_polymarket.post_only import check_post_only_quantity
         cid, oid, con = row["client_order_id"], row["venue_order_id"], self.journal.store.con
@@ -1091,6 +1149,22 @@ class PolymarketExecution:
             self.journal_failures = getattr(self, "journal_failures", 0) + 1
             print(f"  [polymarket] journal write failed after the wire: {type(exc).__name__}: {str(exc)[:80]}", flush=True)
         return st
+
+    def cancel_only(self, client_order_id: str) -> Ack:
+        """Durably dispatch maker cancel and return local high-water without a REST read."""
+        row = self.journal.get(client_order_id)
+        t = self.clock()
+        if row is None or not row.get("venue_order_id"):
+            return Ack(self.venue, client_order_id, None, FillState.UNCONFIRMED, 0.0,
+                       None, None, "NOT_FOUND", t, open=True)
+        if not self.journal.store.con.execute(
+                "SELECT 1 FROM pm_post_only_orders WHERE client_order_id=?", (client_order_id,)).fetchone():
+            return self.cancel(client_order_id)
+        try:
+            self._post_only_cancel_wire(row)
+        except Exception as exc:
+            self._persistence_failure(client_order_id, exc)
+        return self.observed(client_order_id)
 
     def _fill_violation(self, cid: str, code: str, detail: str) -> None:
         try:

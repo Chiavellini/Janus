@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS orders(
   time_in_force TEXT NOT NULL, opportunity_id TEXT NOT NULL, state TEXT NOT NULL,
   venue_order_id TEXT, filled_contracts REAL DEFAULT 0, avg_price REAL, fee_usd REAL,
   open INTEGER DEFAULT 0, settlement_pending INTEGER DEFAULT 0, raw_status TEXT,
-  submitted_utc REAL NOT NULL, last_utc REAL NOT NULL, detail TEXT);
+  submitted_utc REAL NOT NULL, last_utc REAL NOT NULL, detail TEXT, execution_id TEXT);
 CREATE INDEX IF NOT EXISTS orders_opp ON orders(opportunity_id);
 CREATE TABLE IF NOT EXISTS order_events(
   id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, client_order_id TEXT NOT NULL,
@@ -38,6 +38,10 @@ class Journal:
     def __init__(self, store):
         self.store = store
         store.ensure_ddl(JOURNAL_DDL)
+        have = {r[1] for r in store.con.execute("PRAGMA table_info(orders)").fetchall()}
+        if "execution_id" not in have:
+            store.con.execute("ALTER TABLE orders ADD COLUMN execution_id TEXT")
+            store.con.commit()
 
     def pending(self, req: OrderRequest, *, mode: str, now: float | None = None) -> None:
         """BEFORE the POST. An existing row with the same client id is a duplicate submit and
@@ -50,9 +54,11 @@ class Journal:
                              "reconcile it, never resubmit")
         self.store.con.execute(
             "INSERT INTO orders(client_order_id, venue, mode, market_id, outcome_id, side, price, contracts, "
-            "time_in_force, opportunity_id, state, submitted_utc, last_utc) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            "time_in_force, opportunity_id, state, submitted_utc, last_utc, execution_id) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (req.client_order_id, req.venue, mode, req.market_id, req.outcome_id, req.side, req.price,
-             req.contracts, req.time_in_force, req.opportunity_id, FillState.UNCONFIRMED.value, t, t))
+             req.contracts, req.time_in_force, req.opportunity_id, FillState.UNCONFIRMED.value, t, t,
+             req.execution_id or None))
         self._event(req.client_order_id, "pending", FillState.UNCONFIRMED, None, t)
         self.store.con.commit()
 
@@ -75,12 +81,14 @@ class Journal:
         row = self.store.con.execute(
             "SELECT client_order_id, venue, mode, market_id, outcome_id, side, price, contracts, time_in_force, "
             "opportunity_id, state, venue_order_id, filled_contracts, avg_price, fee_usd, open, settlement_pending, "
-            "raw_status, submitted_utc, last_utc, detail FROM orders WHERE client_order_id=?", (client_order_id,)).fetchone()
+            "raw_status, submitted_utc, last_utc, detail, execution_id FROM orders WHERE client_order_id=?",
+            (client_order_id,)).fetchone()
         if row is None:
             return None
         keys = ("client_order_id", "venue", "mode", "market_id", "outcome_id", "side", "price", "contracts",
                 "time_in_force", "opportunity_id", "state", "venue_order_id", "filled_contracts", "avg_price",
-                "fee_usd", "open", "settlement_pending", "raw_status", "submitted_utc", "last_utc", "detail")
+                "fee_usd", "open", "settlement_pending", "raw_status", "submitted_utc", "last_utc", "detail",
+                "execution_id")
         return dict(zip(keys, row))
 
     def unconfirmed(self) -> list[dict]:

@@ -158,10 +158,22 @@ def test_the_hedge_window_is_armed_when_the_position_exists_not_at_the_mint(kill
         c.arm_hedge(100.1)                                     # no position yet
     assert c.consume(100.1)
     assert c.arm_hedge(102.0) == pytest.approx(102.0 + LIMITS.protect.hedge_protect_window_s), "the PROTECT window is armed (2026-09-08), not phase 1's"
+    assert c.arm_hedge(105.0) == pytest.approx(102.0 + LIMITS.protect.hedge_protect_window_s), "later observations cannot slide the hedge deadline"
     pw = LIMITS.protect.hedge_protect_window_s
     assert c.consume(102.0 + w - 0.1, hedge=True), "inside phase 1 from the fill"
     assert c.consume(102.0 + pw - 0.1, hedge=True), "still inside the protect window: a chase or an unwind may go"
     assert not c.consume(102.0 + pw + 0.1, hedge=True), "past it"
+
+
+def test_maker_rest_authority_is_separate_absolute_and_nonextendable(kill, breaker):
+    c = clear(cand(), ledger=ExposureLedger(), **ok_env(kill=kill, breaker=breaker))
+    assert c.authorize_maker_rest(102.0, now_mono=100.0) == 102.0
+    assert c.authorize_maker_rest(102.0, now_mono=101.0) == 102.0
+    with pytest.raises(ValueError, match="immutable"):
+        c.authorize_maker_rest(103.0, now_mono=101.0)
+    assert c.consume(100.1)
+    with pytest.raises(ValueError, match="after the first leg"):
+        c.authorize_maker_rest(102.0, now_mono=101.0)
 
 
 def test_refusals_come_in_the_fail_closed_order(kill, breaker):

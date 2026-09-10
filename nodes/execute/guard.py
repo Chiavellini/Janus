@@ -36,7 +36,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Mapping, Sequence
 
 from kernel.execution_protocol import Ack, FillRecord, Position
-from kernel.schema import ExecutionState as X, FillState, Mode
+from kernel.schema import ExecutionState as X, FillState, Mode, OpportunityStatus as S
 from nodes.reconcile.reconcile import check_fees, ingest_fills, resolve_unconfirmed
 from nodes.reconcile.settle_executions import refresh_settlement_accounting
 from nodes.execution.dispositions import latest as latest_disposition, match_disposition
@@ -53,7 +53,7 @@ ADOPT_WINDOW_S = 120.0
 #: A machine that moved this recently is still working the execution: not the guard's to protect.
 IN_FLIGHT_GRACE_S = 60.0
 #: The states in which nothing more is owed on the position.
-_QUIET = {X.HEDGED, X.SETTLED, X.RECONCILED, X.UNWOUND}
+_QUIET = {X.SETTLED, X.RECONCILED, X.UNWOUND}
 #: Settlement rows that are money: the breaker never counts paper.
 _REAL_MODES = {m.value for m in Mode if m.sends_real_orders}
 
@@ -85,9 +85,11 @@ class GuardReport:
 
 class PositionGuard:
     def __init__(self, *, venues: Mapping[str, object], journal, records, store, limits, started_utc: float,
-                 ledger=None, kill=None, log: Callable[[str], None] = print, clock: Callable[[], float] = time.time):
+                 ledger=None, kill=None, opportunities=None,
+                 log: Callable[[str], None] = print, clock: Callable[[], float] = time.time):
         self.venues, self.journal, self.records, self.store = venues, journal, records, store
         self.limits, self.ledger, self.kill, self.log, self.clock = limits, ledger, kill, log, clock
+        self.opportunities = opportunities
         self.cursor_utc = started_utc - ADOPT_WINDOW_S
         self.said: set[str] = set()
         self.passes = 0
@@ -520,7 +522,7 @@ class PositionGuard:
             if ex.state not in (X.UNKNOWN_PROVIDER_STATE, X.LEG_A_SUBMITTED):
                 continue
             ex.released = True
-            self.records.move(ex, X.ORDER_REJECTED, now=snap.now,
+            self.records.move(ex, X.ORDER_UNFILLED, now=snap.now,
                               detail=f"guard: leg A final {state.lower()}, no position")
             if self.ledger is not None and ex.reservation_id:
                 self.ledger.release(ex.reservation_id, reason=f"nothing filled: guard final {state}", now=snap.now)
@@ -674,6 +676,9 @@ class PositionGuard:
         Kalshi leg. Exact persisted client ids are the only valid join.
         """
         cid = row["client_order_id"]
+        owner = row.get("execution_id")
+        if owner and self.records.load(str(owner)) is not None:
+            return str(owner)
         rows = self.records.store.con.execute(
             "SELECT execution_id,first_client_id,hedge_client_ids,unwind_client_ids FROM executions "
             "WHERE opportunity_id=?", (row["opportunity_id"],)
@@ -694,6 +699,7 @@ class PositionGuard:
             return
         if plan is None:
             return
+        self._recover_order_ownership(ex, plan)
         sums = {"first_buy": 0.0, "first_sell": 0.0, "hedge_buy": 0.0, "hedge_sell": 0.0}
         cost = {"first_buy": 0.0, "first_sell": 0.0, "hedge_buy": 0.0, "hedge_sell": 0.0}
         cash_final = True
@@ -759,15 +765,75 @@ class PositionGuard:
                 detail = f"{exid[:8]} {ex.event_id} {ex.state.value} unhedged {ex.unhedged:g} overhedged {ex.overhedged:g}"
                 rep.findings.append(f"UNHEDGED_POSITION {detail}")
                 self._flag("UNHEDGED_POSITION", detail, snap.now)
-            working = (snap.now - float(self._last_utc(exid) or 0.0)) < IN_FLIGHT_GRACE_S and not ex.state.holds_position
+            working = ((snap.now - float(self._last_utc(exid) or 0.0)) < IN_FLIGHT_GRACE_S
+                       and not ex.state.holds_position and ex.state is not X.HEDGED)
             gone = self._gone(ex, plan)
             if gone:
                 gk = f"gone:{exid}"
                 if gk not in self.said:
                     self.said.add(gk)
                     rep.findings.append(f"POSITION_GONE {exid[:8]} {gone}")
+            elif self._protection_order_unresolved(ex):
+                self._report_unresolved_protection(ex, rep)
             elif not working:
                 rep.to_protect.append(exid)
+        elif (not naked and not ex.released and ex.net_first > self.limits.protect_dust_contracts
+              and ex.state not in _QUIET and ex.state is not X.HEDGED and cash_final):
+            # A crash after a durable delta-hedge fill but before the coordinator's final state
+            # transition can leave a balanced execution at LEG_A_SUBMITTED. Venue truth is enough
+            # to resume it as HEDGED so settlement and reservation release can proceed.
+            self.records.move(ex, X.HEDGED, now=snap.now,
+                              detail="guard recovered balanced first/hedge fills after interrupted maker session")
+            if self.opportunities is not None:
+                opp = self.opportunities.load(ex.opportunity_id)
+                if opp is not None:
+                    self.opportunities.move(
+                        opp, S.HEDGED, now=snap.now,
+                        detail="guard recovered balanced first/hedge fills after interrupted maker session",
+                    )
+                    self.store.commit()
+            rep.corrected.append(exid)
+            rep.findings.append(f"RECOVERED_HEDGED {exid[:8]} {ex.event_id}")
+
+    def _recover_order_ownership(self, ex, plan) -> None:
+        """Repair execution client-id lists from journal rows that carry exact execution ownership."""
+        rows = self.journal.store.con.execute(
+            "SELECT client_order_id,market_id,side FROM orders WHERE execution_id=? ORDER BY submitted_utc",
+            (ex.execution_id,),
+        ).fetchall()
+        changed = False
+        for cid, market_id, side in rows:
+            if cid == ex.first_client_id:
+                continue
+            target = ex.unwind_client_ids if str(side).startswith("sell_") else ex.hedge_client_ids
+            if cid not in target:
+                target.append(cid)
+                changed = True
+        if changed:
+            self.records.sync(ex, now=self.clock())
+
+    def _protection_order_unresolved(self, ex) -> bool:
+        ids = set(ex.hedge_client_ids) | set(ex.unwind_client_ids)
+        rows = self.journal.store.con.execute(
+            "SELECT client_order_id,state,open FROM orders WHERE execution_id=?",
+            (ex.execution_id,),
+        ).fetchall()
+        ids.update(str(row[0]) for row in rows if row[0] != ex.first_client_id)
+        if ex.protect.get("maker_delta_unconfirmed") and not ids:
+            return True
+        for cid in ids:
+            row = self.journal.get(cid)
+            if row is None or row["state"] == FillState.UNCONFIRMED.value or bool(row.get("open")):
+                return True
+        return False
+
+    def _report_unresolved_protection(self, ex, rep: GuardReport) -> None:
+        key = f"protect-unresolved:{ex.execution_id}"
+        if key not in self.said:
+            self.said.add(key)
+            rep.findings.append(
+                f"PROTECTION_ORDER_UNRESOLVED {ex.execution_id[:8]} {ex.event_id}; exact order reconciliation required"
+            )
 
     def _holdings(self, snap: GuardSnapshot) -> dict[str, dict[str, float]]:
         """venue -> market -> signed contracts held, for the venues that answered this pass."""
@@ -821,14 +887,20 @@ class PositionGuard:
                 detail = f"{exid[:8]} {event_id} {st.value} unhedged {unhedged:g} overhedged {over:g}"
                 rep.findings.append(f"UNHEDGED_POSITION {detail}")
                 self._flag("UNHEDGED_POSITION", detail, snap.now)
-            working = (snap.now - float(last or 0.0)) < IN_FLIGHT_GRACE_S and not st.holds_position
+            working = ((snap.now - float(last or 0.0)) < IN_FLIGHT_GRACE_S
+                       and not st.holds_position and st is not X.HEDGED)
             ex = self.records.load(exid)
-            gone = self._gone(ex, self.records.plan_of(exid)) if ex is not None else None
+            plan = self.records.plan_of(exid) if ex is not None else None
+            if ex is not None and plan is not None:
+                self._recover_order_ownership(ex, plan)
+            gone = self._gone(ex, plan) if ex is not None else None
             if gone:
                 gk = f"gone:{exid}"
                 if gk not in self.said:
                     self.said.add(gk)
                     rep.findings.append(f"POSITION_GONE {exid[:8]} {gone}")
+            elif self._protection_order_unresolved(ex):
+                self._report_unresolved_protection(ex, rep)
             elif not working:
                 rep.to_protect.append(exid)
 

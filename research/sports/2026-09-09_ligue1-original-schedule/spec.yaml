@@ -1,0 +1,230 @@
+id: L62
+registered_at: 2026-09-09
+track: sports/settlement
+kind: descriptive
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L62
+title: Ligue 1 regular-season original-schedule settlement bounds
+
+# IMMUTABLE AFTER REGISTRATION. No source or terminal-outcome request for this row may occur
+# until this file and the L62 PENDING ledger row both exist.
+question: >-
+  Can a complete, source-hash-bound reconstruction of the first fixture-specific official
+  2025/26 Ligue 1 schedule establish conservative cancellation and greater-than-48-hour
+  completion-delay bounds for the regular season?
+
+known_at_registration:
+  - >-
+    Ligue 1 is already registered as league fl1 with Kalshi series KXLIGUE1GAME,
+    Polymarket tag/prefix fl1, ESPN path soccer/fra.1, and three full-time outcomes.
+  - >-
+    The IFAB outcome-set citation, the reviewed Kalshi Ligue 1 template, the reviewed shared
+    Polymarket soccer templates, and all twelve pair-policy dimensions already exist. The only
+    enablement failures are EVIDENCE_UNMEASURED:soccer.fl1.cancelled_rate and
+    EVIDENCE_UNMEASURED:soccer.fl1.postponed_gt48h_rate; fl1 also has no positive checked-in
+    per-league risk allowance.
+  - >-
+    L59's frozen public snapshot contains one exact three-outcome Ligue 1 pair, Lyon-Rennes,
+    blocked on settlement evidence and the absent league allowance. This is coverage evidence,
+    not a price, fill, profit, or missed-profit observation.
+  - >-
+    The official June 27, 2025 LFP announcement links a season-specific 2025/26 PDF containing
+    all 306 pairings, but it assigns nominal round days rather than fixture-specific kickoff
+    dates. The opening round is labelled Sunday August 17 although the season announcement says
+    play begins Friday August 15. The PDF can establish fixture identity and round membership,
+    not an original kickoff by itself.
+  - >-
+    No raw LFP source bytes, complete dated television-scheduling batch set, complete ESPN
+    terminal inventory, completion-time distribution, or Ligue 1 settlement rate has been
+    collected for this row. Existing MLS, Eredivisie, and round-window proxy rates do not
+    transfer to Ligue 1.
+
+population:
+  season: 2025/26
+  competition: French Ligue 1
+  phase: ordinary regular season only
+  expected_clubs: 18
+  expected_matches_per_club: 34
+  expected_fixtures: 306
+  expected_ordered_home_away_pairs: 306
+  timezone: Europe/Paris
+  excluded:
+    - Coupe de France and every other cup
+    - European competitions
+    - friendlies and preseason matches
+    - promotion/relegation playoffs or any other postseason
+    - Ligue 2 and every other domestic division
+    - abandoned populations from other seasons
+    - any fixture whose competition, season, or phase cannot be established before its outcome is read
+
+sources:
+  fixture_membership: >-
+    The official season-specific 2025/26 LFP fixture publication linked from the dated June 27,
+    2025 announcement. Preserve the announcement and PDF as raw bytes with source URL, final URL,
+    publication/retrieval UTC, HTTP status, byte length, media type, and SHA256. It establishes
+    the 306 identities and rounds only.
+  original_schedule: >-
+    The complete set of dated, official LFP fixture-specific scheduling or television-selection
+    publications that first assign a calendar date to every one of the 306 fixtures. Preserve
+    every batch, superseding notice, attachment, footnote, and explicit alternative. A mutable
+    current calendar, search snippet, aggregator, final ESPN date, nominal round day, or later
+    reschedule notice cannot establish the original schedule.
+  final_inventory: >-
+    A complete frozen ESPN soccer/fra.1 2025/26 event inventory, retaining event id, season and
+    phase metadata, participants, scheduled/start fields, status, suspension flags, and all
+    source bytes and sidecars. Official LFP completed-match inventory may independently
+    corroborate completeness but may not silently replace a missing ESPN row.
+  completion: >-
+    For each completed fixture, the frozen ESPN event summary's unique period-two
+    end-regular-time wallclock, validated against the named event and competitors. Every changed
+    date, suspension, resumption, cancellation, abandonment, award, forfeit, missing wallclock,
+    or other exception requires an individually archived official LFP or club source and an
+    explicit review disposition.
+  archive_root: /Volumes/Kilos/janus/research/ligue1-L62
+
+source_integrity:
+  - >-
+    Every consumed source has exactly one metadata sidecar binding logical label, original and
+    final URL, request start and finish UTC, publication time when available, HTTP status, byte
+    length, media type, local path, and SHA256. Failed requests are preserved and cannot count as
+    sources.
+  - >-
+    The manifest enumerates the exact expected source and sidecar sets. Missing, orphan,
+    duplicate-label, duplicate-path, path-escape, URL/domain, status, size, timestamp, or hash
+    discrepancies are a STOP before measurement.
+  - >-
+    Raw source files are write-once on the Janus data volume. A changed upstream document is
+    archived under a new label and never overwrites earlier bytes.
+
+original_freeze:
+  identity: >-
+    Canonical ordered home and away club ids plus season and competition. All 306 ordered pairs
+    must be unique; aliases, accents, sponsor names, and renamed renderings are resolved before
+    terminal data is read. Title similarity is forbidden.
+  first_specific_publication: >-
+    For each fixture, use the earliest preserved official pre-match publication that assigns
+    that exact fixture a calendar date. Later publications may add an earlier explicit candidate
+    and thereby make the bound more conservative, but may never move the frozen lower bound
+    later.
+  alternatives: >-
+    Retain every explicit candidate date and conditional scheduling footnote. The lower date is
+    the earliest auditable candidate. An alternative with no auditable lower date, or a fixture
+    with no fixture-specific dated publication, fails the source-completeness gate; it is not
+    repaired after outcomes are visible.
+  clocks: >-
+    Convert the earliest candidate calendar date to 00:00:00 Europe/Paris even when an exact
+    kickoff is published. This deliberately precedes the true kickoff and can only increase the
+    counted delay. Preserve the published clock separately for audit, including CET/CEST.
+  immutable_artifact: original_bounds.json
+  no_hindsight: >-
+    Freeze and hash all 306 original lower bounds, candidates, source histories, and phase labels
+    before making the first terminal-inventory or event-summary request. No outcome-dependent
+    source choice or later relaxation is permitted.
+
+source_completeness_stop_before_outcomes:
+  - Exactly 306 unique ordered regular-season fixtures are parsed from the official membership source.
+  - Exactly 18 clubs appear 34 times each, with 17 home and 17 away fixtures each.
+  - Every fixture has at least one fixture-specific official calendar-date publication and a finite conservative lower date.
+  - Every conditional or alternative date is preserved and resolved to the earliest auditable candidate without outcome information.
+  - The complete original-source manifest and all sidecars verify, and original_bounds.json reproduces byte-identically from them.
+  - >-
+    Failure of any item ends L62 as STOP_SOURCE_INCOMPLETE. Do not request the ESPN season
+    inventory, summaries, completion wallclocks, cancellation records, or any terminal outcome;
+    leave both evidence keys absent and Ligue 1 blocked.
+
+method:
+  final_join: >-
+    Join each frozen original fixture to exactly one ESPN regular-season event by canonical
+    ordered home/away ids and season. Repeated, reversed, missing, extra, ambiguous, competitor-
+    mismatched, or unknown-phase rows are retained as failures; none may be dropped.
+  completion_time: >-
+    Require exactly one actual period-two end-regular-time wallclock later than the event start.
+    Do not substitute scheduled kickoff, event lastUpdated, page publication time, nominal match
+    duration, final score time, or last non-final play. Detect and retain start-then-resume cases.
+  postponed_gt48h: >-
+    A fixture is adverse when authoritative completion is more than 48 elapsed hours after the
+    frozen earliest-original local midnight converted to UTC. An exact-boundary, DST ambiguity,
+    unbounded completion, or unresolved timing case is adverse or blocks registration, whichever
+    is more conservative under the frozen row logic.
+  cancellation: >-
+    A fixture is adverse when it was officially cancelled, abandoned without completion, or
+    remains without an authoritative terminal disposition. An officially awarded full-time
+    result is retained separately and may count non-adverse only after both venues' existing
+    official-result policy is shown to apply to that exact disposition.
+  exception_review: >-
+    Individually review every original-versus-final calendar-date difference, every completion
+    outside the original date, and every suspension, cancellation, abandonment, award, forfeit,
+    missing field, or source contradiction against archived official sources.
+  estimator: >-
+    Compute separate one-sided exact 95-percent Clopper-Pearson upper confidence bounds for
+    cancellation and greater-than-48-hour completion delay. Use the upper bound for every count,
+    including zero and nonzero observations; never register a raw point estimate or zero risk.
+  marginal_model: >-
+    Report the two marginal bounds separately and state that they do not establish independence
+    or a joint future-event probability. Existing settlement-buffer arithmetic charges the two
+    bounded dimensions according to the reviewed policy.
+
+success_criteria:
+  - The source-completeness gate passes before any terminal source request, with proof of acquisition chronology.
+  - The frozen original population is exactly 306 regular-season fixtures and all club/home/away counts reconcile.
+  - Every original fixture has exactly one authoritative terminal record; extras and excluded phases are fully enumerated.
+  - Every completed fixture has one validated actual full-time completion wallclock, including resumed matches.
+  - Every exception has a complete official-source review; no unresolved, silent exclusion, or many-to-one join remains.
+  - Both reported values are always one-sided exact 95-percent upper bounds and reproduce from integer counts.
+  - A separate offline implementation rebuilds the source set, originals, joins, classifications, counts, and bounds byte-identically with zero network access.
+  - An independent reviewer verifies source provenance, no-hindsight chronology, code, phase fencing, exception dispositions, statistical calculation, and exact artifacts before any evidence registration.
+  - >-
+    Any failed criterion yields STOP with both soccer.fl1 evidence keys absent. A partial season,
+    plausible source, point estimate, another league's value, or manually omitted exception is
+    never promoted.
+
+independent_review_and_replay:
+  replay_inputs: >-
+    Only frozen raw bytes, metadata sidecars, original_bounds.json, explicit review decisions,
+    and the preregistered code/artifacts. Network access and mutable caches are forbidden.
+  replay_checks:
+    - exact expected raw/sidecar population and every SHA256
+    - all 306 membership and original-source histories
+    - acquisition chronology proving originals were frozen before terminal reads
+    - canonical identity and exact one-to-one final joins
+    - phase exclusions and all exception classifications
+    - integer adverse counts and exact upper-bound values
+    - byte-identical full row output and registered-result candidate
+  independence: >-
+    The reviewer must not rely only on the measurement implementation's helpers or assertions;
+    independently parse or cross-check the critical source, join, and bound invariants.
+
+outputs:
+  required:
+    - source_manifest.json
+    - original_bounds.json
+    - final_inventory.json
+    - official_review.json
+    - results.json
+    - independent_replay.json
+    - verdict.md
+  evidence_keys_if_and_only_if_all_gates_pass:
+    - soccer.fl1.cancelled_rate
+    - soccer.fl1.postponed_gt48h_rate
+
+implementation_boundary_if_pass:
+  - >-
+    Evidence registration must cite this row and preserve n, source provenance, exact upper-bound
+    value, supported season/phase, and limitations.
+  - >-
+    Before any proof can consume the rates, settlement certification must require source=espn,
+    league=fl1, an exact espn:fl1:<numeric-id>, and an externally preserved regular-season
+    classification for that same slate game. Missing, preseason, postseason, cup, foreign,
+    unknown, or mismatched populations block even when rates are injected.
+  - >-
+    This row does not add or authorize a checked-in league cap, signed live cap, deployment,
+    service restart, order, or account action. Any later PAPER/DEMO allowance is a separately
+    reviewed code/configuration change after the evidence and population guard pass; live outer
+    caps and the full GATE_TO_LIVE sequence remain authoritative.
+
+claims_and_expected_ev_effect: >-
+  L62 reads no order book, executable price, fill, outcome PnL, holdout, or profit signal. A pass
+  only supplies conservative settlement-reserve inputs and may expand the set of candidates that
+  can be evaluated; the reserve can lower or eliminate their locked EV. Coverage is access, not
+  evidence of positive EV, realized profit, fill probability, or Sharpe. A STOP leaves behavior
+  unchanged and Ligue 1 blocked. No live mutation or cap change is permitted by this row.

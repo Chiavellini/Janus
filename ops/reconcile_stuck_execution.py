@@ -68,14 +68,14 @@ def main() -> int:
     if hits:
         print(f"  {len(hits)} trades on this order's asset: a position; reconcile that first (nodes/reconcile)"); return 4
     if not a.confirm:
-        print("no trade on the order's asset. Re-run with --confirm to write ORDER_REJECTED (released), UNFILLED, release the reservation.")
+        print("no trade on the order's asset. Re-run with --confirm to write ORDER_UNFILLED (released), UNFILLED, release the reservation.")
         return 0
     now = time.time()
     detail = (f"manual reconcile {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(now))}: no terminal state after "
               f"{state.value}; venue shows no trade on the asset since start ({len(trades)} trades total); nothing filled; released")
     c.execute("INSERT INTO execution_transitions(seen_ts, execution_id, from_state, to_state, detail) VALUES(?,?,?,?,?)",
-              (now, ex["execution_id"], state.value, ExecutionState.ORDER_REJECTED.value, detail))
-    sets = {"state": ExecutionState.ORDER_REJECTED.value, "last_utc": now, "released": 1}
+              (now, ex["execution_id"], state.value, ExecutionState.ORDER_UNFILLED.value, detail))
+    sets = {"state": ExecutionState.ORDER_UNFILLED.value, "last_utc": now, "released": 1}
     if "detail" in cols:
         sets["detail"] = detail
     c.execute("UPDATE executions SET " + ", ".join(f"{k}=?" for k in sets) + " WHERE execution_id=?", (*sets.values(), ex["execution_id"]))

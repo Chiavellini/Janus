@@ -37,6 +37,102 @@ def test_a_profitable_evaluation_is_sized_on_its_own_books(tmp_path: Path, capsy
     assert s.evaluations == 2 and s.written == 2, "the venues' smallest size (3) and the 100 rung, both written"
 
 
+def test_live_book_epoch_dispatches_exactly_one_profit_maximizing_quantity(tmp_path: Path, monkeypatch):
+    import time
+    from kernel.schema import Mode
+    from nodes.risk.breaker import LossBreaker
+    from nodes.risk.kill import KillSwitches
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+
+    sup, s = _supervisor(tmp_path)
+    s.poller.quantities = (5.0, 10.0)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.limits = load_limits()
+    sup.ledger = ExposureLedger()
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.breaker = LossBreaker(kill=sup.kill)
+    sup.caps = {"stake_usd": 12.0, "max_contracts": 10.0, "day_notional_usd": 250.0}
+    sup.balance_snapshot = {"kalshi": 100.0, "polymarket": 100.0}
+    sup.balance_snapshot_mono = time.monotonic()
+    sup.coordinator = object()
+    calls = []
+    monkeypatch.setattr(sup, "_execute", lambda _s, ev, rec, sizing=None: calls.append((ev, rec, sizing)))
+    sync_all(s.poller, kh=0.44, ka=0.99, ph=0.99, pa=0.44)
+
+    sup._on_update("g1")("K_H", T)
+
+    assert len(calls) == 1
+    ev, rec, decision = calls[0]
+    assert ev.quantity == 10.0 == decision.n_star_feasible == decision.n_max_feasible
+    assert rec.net_profit_usd > 0 and decision.selected.profit_usd > 0
+    assert decision.fill_model == "UNMEASURED_SIZE_DEPENDENT_MAKER_FILL"
+    for replica in s.poller.replicas.values():
+        replica.received_mono = (replica.received_mono or 0.0) + 100.0
+    sup._on_update("g1")("K_H", T + 1)
+    assert len(calls) == 1, "identical decision inputs with new receive stamps are one epoch"
+
+
+def test_live_selector_runs_even_when_every_legacy_fixed_rung_misses(tmp_path: Path, monkeypatch):
+    """An intermediate integer may clear the dollar floor when q_min/5 are too small and 10 has
+    crossed a depth/fee step. Fixed-rung profitability must not gate exhaustive live sizing."""
+    import time
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.cover.cover import best_cover
+    from nodes.risk.breaker import LossBreaker
+    from nodes.risk.kill import KillSwitches
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+
+    sup, s = _supervisor(tmp_path)
+    s.poller.quantities = (5.0, 10.0)
+    sup.mode, sup.limits, sup.ledger = Mode.LIMITED_LIVE, load_limits(), ExposureLedger()
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.breaker = LossBreaker(kill=sup.kill)
+    sup.caps = {"stake_usd": 12.0, "max_contracts": 10.0, "day_notional_usd": 250.0}
+    sup.balance_snapshot = {"kalshi": 100.0, "polymarket": 100.0}
+    sup.balance_snapshot_mono = time.monotonic()
+    sup.coordinator = object()
+    calls = []
+    monkeypatch.setattr(sup, "_execute", lambda _s, ev, rec, sizing=None: calls.append(ev.quantity))
+
+    def intermediate(offers, **kwargs):
+        cov = best_cover(offers, 7, now_utc=T, proof=s.poller.proof,
+                         required_venues=frozenset({"polymarket", "kalshi"}), leg_count=2)
+        selected = SimpleNamespace(quantity=7, cover=cov, profit_usd=.105)
+        return SimpleNamespace(selected=selected, n_star_feasible=7, n_max_feasible=7,
+                               binding_constraints=("MIN_PROFIT", "CAP_CONTRACTS"),
+                               fill_model="UNMEASURED_SIZE_DEPENDENT_MAKER_FILL",
+                               audit=lambda: {"n_star_feasible": 7})
+
+    monkeypatch.setattr("grids.live_stream.grid.choose_live_size", intermediate)
+    sync_all(s.poller, kh=.50, ka=.99, ph=.99, pa=.50)
+    sup._on_update("g1")("K_H", T)
+    assert calls == [7]
+
+
+def test_live_hedge_capacity_maps_plan_buy_side_to_replica_side(tmp_path: Path, monkeypatch):
+    import time
+    from kernel.schema import Mode
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+    from nodes.execute.sizing import choose_live_size
+
+    sup, s = _supervisor(tmp_path)
+    sup.mode, sup.limits, sup.ledger = Mode.LIMITED_LIVE, load_limits(), ExposureLedger()
+    sup.caps = {"stake_usd": 12.0, "max_contracts": 10.0, "day_notional_usd": 250.0}
+    sync_all(s.poller, kh=.44, ka=.99, ph=.99, pa=.44)
+    base = s.poller.on_event("stream", "K_H", now=T)[0]
+    decision = choose_live_size({o: list(v) for o, v in base.offers.items()}, now_utc=T,
+                                proof=s.poller.proof, event_id="g1", league="mlb", caps=sup.caps,
+                                limits=sup.limits, ledger=sup.ledger,
+                                balances={"kalshi": 100, "polymarket": 100})
+    monkeypatch.setattr("grids.live_stream.grid.time.time", lambda: T)
+    assert decision.selected is not None
+    assert sup._hedge_capacity_ok(s, decision.selected.plan, decision.selected.quantity)
+
+
 def test_a_record_failure_is_counted_and_never_reaches_the_socket(tmp_path: Path, capsys, monkeypatch):
     """The callback runs inside the venue socket's receive loop. On 2026-09-03 an IllegalTransition
     from the record layer tore both sockets down 5-20 times a minute; the transport's blanket
@@ -383,13 +479,55 @@ def test_the_guard_pass_feeds_the_breaker_and_holds_the_flight_slot(tmp_path: Pa
 def test_real_entry_requires_the_authenticated_polymarket_account_stream(tmp_path: Path):
     """Market data alone is insufficient: without account events a delayed fill can go naked."""
     from types import SimpleNamespace
+    from kernel.schema import Mode
     sup, _ = _supervisor(tmp_path)
-    sup.ks = sup.ps = SimpleNamespace(connected=True)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.ks = sup.ps = SimpleNamespace(connected=True, clock=SimpleNamespace(healthy=True))
+    sup.venues = {"polymarket": SimpleNamespace(transport=SimpleNamespace())}
+    assert sup._connected() == {"kalshi": True, "polymarket": False}
     user_stream = SimpleNamespace(connected=False)
     sup.venues = {"polymarket": SimpleNamespace(transport=SimpleNamespace(user_stream=user_stream))}
     assert sup._connected() == {"kalshi": True, "polymarket": False}
     user_stream.connected = True
     assert sup._connected() == {"kalshi": True, "polymarket": True}
+
+
+def test_maker_rest_uses_replica_currentness_not_last_mutation_time(tmp_path: Path, monkeypatch):
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.execute.sizing import choose_live_size
+    from nodes.risk.ledger import ExposureLedger, Reservation
+    from nodes.risk.limits import load_limits
+    sup, s = _supervisor(tmp_path)
+    sup.mode, sup.limits = Mode.LIMITED_LIVE, load_limits()
+    sup.caps = {"stake_usd": 12.0, "max_contracts": 10.0, "day_notional_usd": 250.0}
+    sup.ks = sup.ps = SimpleNamespace(connected=True, clock=SimpleNamespace(healthy=True))
+    sup.venues = {"polymarket": SimpleNamespace(
+        transport=SimpleNamespace(user_stream=SimpleNamespace(connected=True)))}
+    sup.kill = SimpleNamespace(active=lambda **_kw: [])
+    sup.breaker = SimpleNamespace(evaluate=lambda *_a, **_kw: None)
+    sync_all(s.poller, kh=.44, ka=.99, ph=.99, pa=.44, now=T)
+    for replica in s.poller.replicas.values():
+        replica.received_mono = 10.0       # ladder has been quiet for a long time
+        replica.heartbeat_utc = T + 100.0  # but the sequence-checked socket is current
+        replica.verified_utc = T + 100.0
+    base = s.poller.on_event("stream", "K_H", now=T + 100.0)[0]
+    decision = choose_live_size({o: list(v) for o, v in base.offers.items()}, now_utc=T + 100.0,
+                                proof=s.poller.proof, event_id="g1", league="mlb", caps=sup.caps,
+                                limits=sup.limits, ledger=ExposureLedger(),
+                                balances={"kalshi": 100, "polymarket": 100})
+    plan = decision.selected.plan
+    reservation = Reservation("r", "g1", "mlb",
+                              {plan.first.venue: plan.first.contracts * plan.first.limit_price,
+                               plan.hedge.venue: plan.hedge.contracts * plan.hedge.limit_price},
+                              plan.opportunity_id, T)
+    sup.ledger = ExposureLedger(open={"r": reservation})
+    sup.balance_snapshot = {"kalshi": 100, "polymarket": 100}
+    sup.balance_snapshot_mono = 500.0
+    monkeypatch.setattr("grids.live_stream.grid.time.time", lambda: T + 100.0)
+    monkeypatch.setattr("grids.live_stream.grid.time.monotonic", lambda: 500.0)
+    clearance = SimpleNamespace(opportunity_id=plan.opportunity_id, maker_rest_deadline_mono=502.0)
+    assert sup._maker_rest_refusal(s, plan, clearance, plan.quantity) is None
 
 
 def test_report_tick_persists_authenticated_account_stream_health(tmp_path: Path):

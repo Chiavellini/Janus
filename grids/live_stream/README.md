@@ -51,9 +51,23 @@ recorded 162 priced rows alongside `HASH_MISMATCH` (Polymarket drift, correctly 
 fine-grained reason: `BLOCKED_STALE`, `BLOCKED_DEPTH`, `BLOCKED_FEES`, `BLOCKED_RULES`, `NO_EDGE`,
 `DISCOVERED` (positive but under the hurdle) and `PROFITABLE_UNEXECUTED` are never collapsed.
 
-When a cover is `PROFITABLE_UNEXECUTED`, the size frontier is solved **on the same books that
-produced the edge** — computing it from the replicas a moment later would price a different instant, because the
-books move in milliseconds.
+When a cover is `PROFITABLE_UNEXECUTED`, observational fixed-rung rows are still written on the
+same books. In limited live, the callback then makes exactly one cap-aware decision for the complete
+book epoch: every integer through the signed 10-contract cap is repriced from the frozen ladders,
+filtered through exact two-leg PM+Kalshi structure, fees, settlement reserve, hurdles, balances,
+signed caps and exposure headroom. The feasible quantity with maximum locked dollar profit is
+selected. The full decision is append-only; an unchanged book cannot dispatch twice. This N* is
+conditional on completion; L63 measures the missing maker-fill and hedge-tail terms.
+
+The epoch is the hash of complete economic inputs plus a per-event transition occurrence. An
+identical heartbeat/snapshot remains the same epoch, while A→B→A is a new occurrence. Kalshi
+projects every registration for one ticker (including complementary YES/NO replicas) before it
+notifies a game once, so a sizing snapshot cannot mix two sides of one venue frame.
+
+Immediately before clearance, full Kalshi depth is re-walked at the frozen hard limit. While the
+PM maker order rests, the loop-owned replicas and operational/risk state are revalidated on every
+poll. Replica currentness includes authenticated heartbeat/verification, not just last mutation;
+a missing account stream, proof error, or deadline-bounded loop callback cancels immediately.
 
 ## Refusals inherited from the nodes
 

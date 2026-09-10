@@ -62,11 +62,11 @@ def test_the_dry_run_writes_nothing_and_confirm_closes_every_row(tmp_path, monke
 
     assert _run(monkeypatch, db, "--confirm") == 0
     out = capsys.readouterr().out
-    assert "reservation released: True" in out and "written: ('ORDER_REJECTED', 1)" in out, out
+    assert "reservation released: True" in out and "written: ('ORDER_UNFILLED', 1)" in out, out
     con = sqlite3.connect(db)
-    assert con.execute("SELECT state, released FROM executions WHERE execution_id=?", (EXEC_ID,)).fetchone() == ("ORDER_REJECTED", 1)
+    assert con.execute("SELECT state, released FROM executions WHERE execution_id=?", (EXEC_ID,)).fetchone() == ("ORDER_UNFILLED", 1)
     assert con.execute("SELECT from_state, to_state FROM execution_transitions WHERE execution_id=?", (EXEC_ID,)).fetchall() == \
-        [("LEG_A_SUBMITTED", "ORDER_REJECTED")]
+        [("LEG_A_SUBMITTED", "ORDER_UNFILLED")]
     assert con.execute("SELECT state FROM orders WHERE client_order_id='cid-a'").fetchone() == ("UNFILLED",)
     ev = con.execute("SELECT kind, state, raw_json FROM order_events WHERE client_order_id='cid-a'").fetchall()
     assert len(ev) == 1 and ev[0][0] == "manual" and ev[0][1] == "UNFILLED", ev
