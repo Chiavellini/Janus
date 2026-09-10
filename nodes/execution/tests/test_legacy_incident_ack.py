@@ -74,6 +74,33 @@ def test_exact_guard_resolution_preserves_every_source_row_and_kill(tmp_path, pr
     assert later.findings == []  # Empty-maker gate applies to resolution, not later valid trading.
 
 
+def test_resolved_ack_closes_only_exact_migration_false_alarms_after_terminal_maker_history(tmp_path, proof):
+    store, _, guard, _, manifest, _ = world(tmp_path, proof)
+    confirm(tmp_path, store, manifest)
+    guard._resolve_legacy_incidents(complete_snapshot(), GuardReport())
+    con = store.con
+    con.execute("INSERT INTO pm_post_only_orders(client_order_id,maker_amount,taker_amount,wire_json,terminal_proved,violated) VALUES('later','1','1','{}',1,0)")
+    detail = 'LEGACY_INCIDENT_ACK_INVALID flag=211: ValueError: acknowledged incident state changed'
+    con.execute('INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?,?,?)', (T0 + 301, FLAG, detail))
+    con.execute('INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?,?,?)', (T0 + 302, FLAG, detail))
+    con.commit()
+    report = GuardReport()
+    guard._resolve_legacy_incidents(complete_snapshot(), report)
+    assert any('migration false alarms' in finding for finding in report.findings)
+    assert not unresolved_flag_rows(con, FLAG)
+
+
+def test_resolved_ack_never_closes_a_different_later_persistence_finding(tmp_path, proof):
+    store, _, guard, _, manifest, _ = world(tmp_path, proof)
+    confirm(tmp_path, store, manifest)
+    guard._resolve_legacy_incidents(complete_snapshot(), GuardReport())
+    store.con.execute('INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?,?,?)',
+                      (T0 + 301, FLAG, 'LEGACY_INCIDENT_ACK_INVALID flag=211: ValueError: another change'))
+    store.con.commit()
+    guard._resolve_legacy_incidents(complete_snapshot(), GuardReport())
+    assert unresolved_flag_rows(store.con, FLAG)
+
+
 @pytest.mark.parametrize('change', [
     "UPDATE lane_flags SET detail='changed' WHERE id=211",
     "UPDATE pm_post_only_violations SET detail='changed' WHERE id=1",

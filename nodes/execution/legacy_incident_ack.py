@@ -216,6 +216,66 @@ def resolve_idle_incidents(store, *, now, verify_pass, position_evidence=None):
         now=now, verify=verify)
 
 
+_MIGRATION_FALSE_ALARM_PREFIX = 'LEGACY_INCIDENT_ACK_INVALID flag='
+_MIGRATION_FALSE_ALARM_SUFFIX = ': ValueError: acknowledged incident state changed'
+
+
+def _migration_source_id(detail):
+    if not isinstance(detail, str) or not detail.startswith(_MIGRATION_FALSE_ALARM_PREFIX) or not detail.endswith(_MIGRATION_FALSE_ALARM_SUFFIX):
+        return None
+    raw = detail[len(_MIGRATION_FALSE_ALARM_PREFIX):-len(_MIGRATION_FALSE_ALARM_SUFFIX)]
+    try:
+        value = int(raw)
+    except ValueError:
+        return None
+    return value if value > 0 and detail == f'{_MIGRATION_FALSE_ALARM_PREFIX}{value}{_MIGRATION_FALSE_ALARM_SUFFIX}' else None
+
+
+def _settled_current_database(con):
+    """Current risk must be empty; terminal maker history is allowed after the original L56 pass."""
+    admission = _rows(con, 'SELECT * FROM pm_post_only_admission')
+    return (admission == [{'slot': 1, 'client_order_id': None, 'claimed_utc': None}]
+            and not con.execute("SELECT 1 FROM pm_post_only_orders WHERE terminal_proved IS NOT 1 OR violated IS NOT 0 LIMIT 1").fetchone()
+            and not con.execute("SELECT 1 FROM orders WHERE open IS NOT 0 OR settlement_pending IS NOT 0 OR state='UNCONFIRMED' LIMIT 1").fetchone()
+            and not con.execute('SELECT 1 FROM executions WHERE released IS NOT 1 LIMIT 1').fetchone()
+            and not con.execute('SELECT 1 FROM capital_reservations WHERE released_utc IS NULL LIMIT 1').fetchone())
+
+
+def resolve_migration_false_alarms(store, *, now, verify_pass):
+    """Close only exact false alarms emitted by the v1 SELECT-* compatibility regression.
+
+    The source acknowledgement must validate now, its original flag must already be resolved, and
+    every current row must have the one exact error string the faulty release emitted. No kill or
+    source row is changed.
+    """
+    evidence = []
+
+    def verify():
+        if not verify_pass() or not _settled_current_database(store.con):
+            return False
+        current_rows = unresolved_flag_rows(store.con, FLAG)
+        current_ids = {row[0] for row in current_rows}
+        current = []
+        for row in current_rows:
+            source_id = _migration_source_id(row[3])
+            if source_id is None or source_id in current_ids:
+                return False
+            try:
+                if match_incident(store.con, source_id, require_idle=False) is None:
+                    return False
+            except (ValueError, TypeError, KeyError, IndexError, ArithmeticError, sqlite3.Error):
+                return False
+            current.append(flag_snapshot(row))
+        return bool(current) and (not evidence or current == evidence)
+
+    if not verify():
+        return False
+    evidence.extend(flag_snapshot(row) for row in unresolved_flag_rows(store.con, FLAG))
+    return resolve_exact_flags(store, FLAG, evidence,
+        'Fresh complete guard; exact false alarms from additive orders.execution_id v1 snapshot migration; original acknowledgement valid; kill unchanged',
+        now=now, verify=verify)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--db', type=Path, required=True)

@@ -78,6 +78,31 @@ def test_exact_confirmation_preserves_all_accounting_and_only_resolves_approved_
     assert con.execute("SELECT COUNT(*) FROM lane_flags WHERE flag='ORDER_OVERFILL'").fetchone()[0] == 1
 
 
+def test_exact_ack_closes_only_later_duplicate_findings_with_the_same_economic_identity(tmp_path):
+    store, journal, guard, _, manifest = world(tmp_path)
+    confirm(tmp_path, journal, manifest)
+    guard.apply(complete_snapshot())
+    con = store.con
+    detail = manifest['acknowledgements'][0]['flag_evidence'][0]['detail']
+    con.execute("INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?, 'ORDER_OVERFILL', ?)", (T0 + 301, detail))
+    con.execute("INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?, 'ORDER_OVERFILL', ?)", (T0 + 302, detail))
+    con.commit()
+    report = guard.apply(complete_snapshot())
+    assert any('ORDER_OVERFILL_RESOLVED' in finding for finding in report.findings)
+    assert not unresolved_flag_rows(con, 'ORDER_OVERFILL')
+
+
+def test_exact_ack_never_closes_a_later_different_overfill_finding(tmp_path):
+    store, journal, guard, _, manifest = world(tmp_path)
+    confirm(tmp_path, journal, manifest)
+    guard.apply(complete_snapshot())
+    store.con.execute("INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?, 'ORDER_OVERFILL', ?)",
+                      (T0 + 301, 'polymarket a1: requested 10, venue filled 10.2'))
+    store.con.commit()
+    guard._resolve_acknowledged_overfills(complete_snapshot(), GuardReport())
+    assert unresolved_flag_rows(store.con, 'ORDER_OVERFILL')
+
+
 def test_additive_order_ownership_migration_does_not_invalidate_version_one_evidence(tmp_path):
     _, journal, _, _, manifest = world(tmp_path)
     confirm(tmp_path, journal, manifest)

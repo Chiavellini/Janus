@@ -41,11 +41,11 @@ from nodes.reconcile.reconcile import check_fees, ingest_fills, resolve_unconfir
 from nodes.reconcile.settle_executions import refresh_settlement_accounting
 from nodes.execution.dispositions import latest as latest_disposition, match_disposition
 from nodes.execution.overfill_ack import match_overfill_ack
-from nodes.execution.legacy_incident_ack import resolve_idle_incidents
+from nodes.execution.legacy_incident_ack import resolve_idle_incidents, resolve_migration_false_alarms
 from nodes.execution.legacy_incident_ack import match_incident
 from nodes.exec_polymarket.position_evidence import terminal_zero_positions
 from nodes.risk.breaker import RealizedFill, day_of
-from nodes.risk.flags import raise_flag, resolve_flag, resolve_exact_flags
+from nodes.risk.flags import flag_snapshot, raise_flag, resolve_flag, resolve_exact_flags, unresolved_flag_rows
 
 #: A trade this close in time to an UNCONFIRMED order on the same asset, with no other claimant,
 #: is that order's fill (a FAK/IOC never rests; its fill is within seconds of its submit).
@@ -350,7 +350,9 @@ class PositionGuard:
                 rep.findings.append('LEGACY_POSITION_EVIDENCE_BLOCKED: ' + position_error[0])
             return
         try:
-            if resolve_idle_incidents(self.store, now=snap.now, verify_pass=complete_safe_pass, position_evidence=position_proof):
+            if resolve_migration_false_alarms(self.store, now=snap.now, verify_pass=complete_safe_pass):
+                rep.findings.append('POST_ONLY_PERSISTENCE_FAILED_RESOLVED_EXACT: additive journal migration false alarms; kill unchanged')
+            elif resolve_idle_incidents(self.store, now=snap.now, verify_pass=complete_safe_pass, position_evidence=position_proof):
                 rep.findings.append('POST_ONLY_PERSISTENCE_FAILED_RESOLVED_EXACT: confirmed historical legacy label; kill unchanged')
         except Exception as exc:
             rep.findings.append(f'LEGACY_INCIDENT_RESOLUTION_BLOCKED: {type(exc).__name__}: {exc}')
@@ -477,23 +479,32 @@ class PositionGuard:
                 or any(snap.positions.get(v) is None for v in self.venues)):
             return
         evidence = []
+        def current_evidence():
+            allowed = set()
+            for cid, *_ in self._overfill_candidates():
+                ack = match_overfill_ack(self.journal.store.con, cid)
+                if ack is None:
+                    return None
+                allowed.update((flag['flag'], flag['detail']) for flag in ack['flag_evidence'])
+            current = [flag_snapshot(row) for row in unresolved_flag_rows(
+                self.journal.store.con, 'ORDER_OVERFILL')]
+            # A valid immutable acknowledgement may close a later duplicate emitted for the same
+            # terminal order and exact quantity. It may never close a new/different finding.
+            if any((flag['flag'], flag['detail']) not in allowed for flag in current):
+                return None
+            return current
+
         def verify():
-            current = []
-            for cid, *_ in self._overfill_candidates():
-                ack = match_overfill_ack(self.journal.store.con, cid)
-                if ack is None:
-                    return False
-                current.extend(ack['flag_evidence'])
-            return current == evidence
+            current = current_evidence()
+            return current is not None and current == evidence
         try:
-            for cid, *_ in self._overfill_candidates():
-                ack = match_overfill_ack(self.journal.store.con, cid)
-                if ack is None:
-                    self._detect_order_overfills(snap, rep)
-                    return
-                evidence.extend(ack['flag_evidence'])
+            current = current_evidence()
+            if current is None:
+                self._detect_order_overfills(snap, rep)
+                return
+            evidence.extend(current)
             if evidence and resolve_exact_flags(self.journal.store, 'ORDER_OVERFILL', evidence,
-                    'complete guard pass: exact source-confirmed settled historical overfills; kill unchanged',
+                    'complete guard pass: exact source-confirmed settled historical overfills and identical duplicate findings; kill unchanged',
                     now=snap.now, verify=verify):
                 rep.findings.append('ORDER_OVERFILL_RESOLVED exact acknowledged historical incident IDs; kill unchanged')
         except Exception as exc:
