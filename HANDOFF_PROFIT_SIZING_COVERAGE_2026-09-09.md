@@ -174,6 +174,31 @@ database-lock incident. The targeted historical repair did not and should not si
 later TEX–SEA latch. The evidence above makes the latter eligible for the exact, recoverable
 operator clear after the new release is warmed and rechecked; it does not authorize a blanket reset.
 
+### First release feedback and compatibility repair
+
+The operator released `7e87dd9d5e808e3cb791a5d30cd134e7118ba613` at 02:39Z. Checkout,
+override re-signing, and LIMITED_LIVE restart succeeded under the unchanged caps; the retained
+`kill/live` correctly prevented a new order. The post-restart watchdog then exposed a release
+blocker before the kill was cleared: adding nullable `orders.execution_id` changed the dictionaries
+produced by two immutable L56 version-1 evidence snapshots because they used `SELECT *`. Every
+production comparison showed exactly one added key, `execution_id`, and no changed or removed
+economic/accounting field. This made the older acknowledgements invalid and re-raised their flags;
+it did not reveal a changed fill, position, or P&L.
+
+Commit `472dcc2c1a396132ad784d95f30537d4ab5dec1e` repairs the migration boundary:
+
+- version-1 order evidence now has an explicit frozen projection, so an additive nullable journal
+  column cannot rewrite historical operator-attested bytes;
+- the new ownership column is still checked bidirectionally and fail-closed: every legacy-owned
+  order's non-null owner must equal the unique execution, and no extra journal order may claim that
+  execution while absent from the immutable client-ID lists;
+- null historical owner cells remain valid and all economically meaningful v1 fields remain exact.
+
+Three migration/conflict regressions were added. The final full repository suite passed, the focused
+acknowledgement/legacy/guard suite passed 101 tests, compile/diff checks passed, and the independent
+review returned `CLEAN`. A second operator release of the final handoff SHA is therefore required
+before warm-up verification and the exact recoverable kill clear.
+
 ## Initial project state encountered in this sweep
 
 - The live box ran `76a68da`, while the isolated coverage branch contained two undeployed code
@@ -576,16 +601,17 @@ Created `HANDOFF_PROFIT_SIZING_COVERAGE_2026-09-09.md`. It has no runtime effect
 - Isolated branch coverage and execution changes are implemented, committed, fully green, and
   independently reviewed; they remain undeployed until the branch is pushed and the operator paste
   is run.
-- Production continues to run the older `76a68da` code and is presently blocked from new entry by a
-  persistent live kill latch, although the service is active and ingestion continues.
+- Production now runs the first release `7e87dd9`; it is blocked from new entry by the retained live
+  kill while the L56 snapshot compatibility repair awaits its final operator release. The service is
+  active and ingestion continues.
 - Profit-maximizing conditional-fill sizing, continuously revalidated maker-rest authorization,
   immediate partial-fill delta hedging, and exact restart ownership are implemented locally.
 - No cap increase has been made or justified.
 - Coverage beyond the repaired registered universe remains blocked by explicit venue absence,
   settlement evidence, caps, or unverified identity—not merely by a missing boolean switch.
 
-The only remaining actions are to commit and push the exact reviewed tree, run the operator-only
-daily release paste at the unchanged `12 / 10 / 250 / 168h` arm, verify the new process and all three
+The only remaining actions are to push the final handoff commit, run the operator-only daily release
+paste a second time at the unchanged `12 / 10 / 250 / 168h` arm, verify the new process and all three
 streams while the kill remains, then perform the recoverable exact-file clear in the L56 operator
 runbook using the reviewed kill SHA only after the same quiet-state facts still hold. Keep the first
 three post-release covers behind their existing hand-reconciliation boundary.
