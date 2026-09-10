@@ -199,6 +199,30 @@ acknowledgement/legacy/guard suite passed 101 tests, compile/diff checks passed,
 review returned `CLEAN`. A second operator release of the final handoff SHA is therefore required
 before warm-up verification and the exact recoverable kill clear.
 
+The second release confirmed all five overfill acknowledgements and legacy flag 211 validate under
+the repaired projection. It also showed that the first faulty process had appended 280 duplicate
+`ORDER_OVERFILL` rows (56 for each of the five already-attested terminal orders) and 28 duplicate
+`POST_ONLY_PERSISTENCE_FAILED` rows before it was replaced. Their five overfill details exactly match
+the immutable acknowledged `(client ID, requested quantity, filled quantity)` fingerprints; the
+legacy detail is exactly the generated compatibility exception for flag 211. No duplicate was
+emitted after the compatibility repair, and current flight, unhedged, open/unconfirmed order,
+maker-marker, and admission counts remained zero.
+
+Commit `0edb1c3c04881e1489978a963415d67f5cb72746` adds append-only exact resolution for those rows:
+
+- later overfill rows close only if every unresolved row's exact flag/detail fingerprint exists in
+  a currently valid immutable acknowledgement; any new or changed finding blocks all resolution;
+- legacy compatibility rows close only for the one canonical generated error string, a currently
+  valid source acknowledgement whose original flag is already resolved, a complete safe venue
+  guard, terminal/nonviolating maker history, empty admission, and no open/unconfirmed orders or
+  unreleased executions/reservations;
+- both paths revalidate the identical unresolved snapshots inside `BEGIN IMMEDIATE`, append exact-ID
+  resolution markers, and leave `kill/live` unchanged.
+
+Four adversarial regressions were added. The full repository suite and 105 focused tests passed;
+compile/diff checks passed; independent fail-open/race review returned `CLEAN`. This exact-resolution
+commit requires one final operator release before the warm-up/kill-clear gate.
+
 ## Initial project state encountered in this sweep
 
 - The live box ran `76a68da`, while the isolated coverage branch contained two undeployed code
@@ -601,9 +625,9 @@ Created `HANDOFF_PROFIT_SIZING_COVERAGE_2026-09-09.md`. It has no runtime effect
 - Isolated branch coverage and execution changes are implemented, committed, fully green, and
   independently reviewed; they remain undeployed until the branch is pushed and the operator paste
   is run.
-- Production now runs the first release `7e87dd9`; it is blocked from new entry by the retained live
-  kill while the L56 snapshot compatibility repair awaits its final operator release. The service is
-  active and ingestion continues.
+- Production now runs the compatibility release `95d5983`; it is blocked from new entry by the
+  retained live kill while the exact duplicate-resolution commit awaits its final operator release.
+  The service is active and ingestion continues.
 - Profit-maximizing conditional-fill sizing, continuously revalidated maker-rest authorization,
   immediate partial-fill delta hedging, and exact restart ownership are implemented locally.
 - No cap increase has been made or justified.
@@ -611,7 +635,7 @@ Created `HANDOFF_PROFIT_SIZING_COVERAGE_2026-09-09.md`. It has no runtime effect
   settlement evidence, caps, or unverified identity—not merely by a missing boolean switch.
 
 The only remaining actions are to push the final handoff commit, run the operator-only daily release
-paste a second time at the unchanged `12 / 10 / 250 / 168h` arm, verify the new process and all three
+paste once more at the unchanged `12 / 10 / 250 / 168h` arm, verify the new process and all three
 streams while the kill remains, then perform the recoverable exact-file clear in the L56 operator
 runbook using the reviewed kill SHA only after the same quiet-state facts still hold. Keep the first
 three post-release covers behind their existing hand-reconciliation boundary.
