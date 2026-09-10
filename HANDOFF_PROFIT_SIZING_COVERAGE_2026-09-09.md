@@ -243,6 +243,19 @@ or changed flag still blocks. The original incident-resolution path retains its 
 One adversarial regression was added. The full suite and 109 focused tests passed; compilation/diff
 checks passed; independent fail-open/race review returned `CLEAN`.
 
+Production then exposed the final exact shape of an empty released maker admission:
+`slot=1, client_order_id=NULL, claimed_utc=1788992773.297811`. The ownership slot is empty, while
+`claimed_utc` intentionally retains the prior claim's audit time. The compatibility resolver had
+incorrectly required both owner and audit time to be null. Commit
+`cbb3995db00dc76c5684dab33972192fd5de305a` accepts the retained timestamp only when the row has all
+three required fields, slot is exactly 1, owner is explicitly null, and the timestamp is null or a
+positive finite number. Missing schema fields, a live owner, wrong slot, or malformed time remain a
+block; additive columns remain allowed. The predicate is rechecked inside the same writer lock.
+
+The exact production-shape regression plus missing-field/owned/wrong-slot/nonfinite cases were added.
+The full suite and 110 focused tests passed; compilation/diff checks passed; independent review
+returned `CLEAN`.
+
 ## Initial project state encountered in this sweep
 
 - The live box ran `76a68da`, while the isolated coverage branch contained two undeployed code
@@ -645,8 +658,8 @@ Created `HANDOFF_PROFIT_SIZING_COVERAGE_2026-09-09.md`. It has no runtime effect
 - Isolated branch coverage and execution changes are implemented, committed, fully green, and
   independently reviewed; they remain undeployed until the branch is pushed and the operator paste
   is run.
-- Production now runs exact-resolution release `d0443c9`; it is blocked from new entry by the
-  retained live kill while the legacy migration caller-order fix awaits its final operator release.
+- Production now runs caller-order release `31f7454`; it is blocked from new entry by the retained
+  live kill while the released-admission timestamp fix awaits its final operator release.
   The service is active and ingestion continues.
 - Profit-maximizing conditional-fill sizing, continuously revalidated maker-rest authorization,
   immediate partial-fill delta hedging, and exact restart ownership are implemented locally.
