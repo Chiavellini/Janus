@@ -5,6 +5,40 @@ Prepared from branch: `codex/ucl-coverage`
 Worktree: `/Users/bernardodelrio/Code/Janus/.codex/worktrees/ucl-coverage`  
 HEAD before this handoff file: `2e9620aaf0106af812761541211b72019bd14c2a`
 
+## Final operational outcome — supersedes the historical status below
+
+At the final read-only verification on **2026-09-10T05:03:23Z**, the requested sweep was complete
+and the Mexico box was fully enabled for small live trading:
+
+- Production runs exact runner `6c694f1320459b590809f4de7496415d0a748d0e` under
+  `janus-live-stream`, `LIMITED_LIVE`.
+- The signed override matches that runner and the reviewed code/limits identities
+  `f6ae23763f79b0f8` / `3b97a98f881fad41`, with unchanged outer caps of `$12` combined stake,
+  `10` contracts per leg, and `$250` daily committed notional. It expires
+  `2026-09-17T04:13:22Z`.
+- The exact reviewed local `kill/live` (SHA256
+  `9e93a8664fe457a85b63ea69625688126389889a345cdf0a4f445f44d442c649`) was recoverably moved by
+  the operator to
+  `/srv/janus/release-audit/L56/live-cleared-6c694f1320459b590809f4de7496415d0a748d0e.json`.
+  No local kill file remains, the cross-host `/janus/kill/live` parameter was absent, and direct
+  watchdog output contained no alert.
+- Kalshi market, Polymarket market, and authenticated Polymarket user streams were connected and
+  fresh. Both market clocks were healthy and the event-loop lag was below the live threshold.
+- Current risk was empty: zero open/unconfirmed/cash-pending orders, unreleased executions,
+  unreleased reservations, material unhedged executions, unresolved post-only markers, or active
+  execution/risk flags. The post-only admission singleton was empty.
+- The lane was actively evaluating the live universe. Its post-clear decisions were sizing
+  refusals at the registered contract/profit/return/minimum-order boundaries, not a kill-switch
+  refusal. No new order had been submitted in the first verified post-clear window.
+- The five maker orders preceding the historical latch are fully accounted for: four were terminal
+  zero-fill cancellations; the TEX–SEA maker filled 10, the Kalshi hedge filled 10, and the cover
+  settled at `+$0.7798`.
+
+No further release is required for this sweep. Later documentation commits must not be mistaken for
+a new runtime candidate: the deployed and signed production runner remains `6c694f1`. The F18 gate
+still requires authoritative cash/fill reconciliation of its first three covers before a fourth;
+live enablement does not waive that evidence boundary.
+
 ## The operator's next objective
 
 Implement, test, independently review, and ultimately deploy the following as one controlled release:
@@ -35,7 +69,7 @@ must be measured prospectively rather than invented.
 Use this isolated worktree. The main checkout at `/Users/bernardodelrio/Code/Janus` is old and dirty.
 Do not copy files from it and do not clean or overwrite its changes.
 
-## Current live-box state — important correction
+## Initial live-box state — historical, superseded by the final outcome above
 
 A fresh read-only SSM snapshot at **2026-09-10T00:21:40Z** established:
 
@@ -72,9 +106,10 @@ bash ops/box/run.sh '<read-only command>'
 
 ## Continuation outcome — completed 2026-09-09
 
-The implementation requested by this handoff is complete in the isolated worktree and has passed
-the full local release gate plus three independent reviews. It has **not** been deployed, restarted,
-re-signed, or used to clear a kill; those remain the operator-only final paste described below.
+The implementation requested by this handoff was complete in the isolated worktree and had passed
+the full local release gate plus three independent reviews at this point in the session. It had
+**not yet** been deployed, restarted, re-signed, or used to clear a kill; the final operational
+outcome above records the later completed operator actions.
 The exact reviewed runtime/research implementation is commit
 `d174f24103b2a444070930e3810da085ea3c70be` (`Maximize safe maker cover profit`).
 
@@ -512,7 +547,7 @@ independent reviewer specifically to race safety, quantity conservation, and cap
 deploy code merely because unit tests pass; inspect a deterministic replay of the exact four zero-fill
 incidents and the TEX–SEA delayed-hedge incident.
 
-## One-release deployment sequence
+## One-release deployment sequence — completed, retained for audit history
 
 The operator wants one final stop/restart, not iterative live restarts.
 
@@ -545,7 +580,8 @@ JANUS_ARM_CAPS='12 10 250 168' \
 bash ops/box/release.sh <final-commit-sha>
 ```
 
-Do not run it until the full sweep and incident preflight are complete.
+This sequence was completed. Do not run it again merely because the handoff receives a later
+documentation-only commit.
 
 ## Files changed by completed commits
 
@@ -635,7 +671,10 @@ Created `HANDOFF_PROFIT_SIZING_COVERAGE_2026-09-09.md`. It has no runtime effect
   - `research/sports/2026-09-03_co-listing-census/verdict.md`
   - `research/sports/2026-09-04_tennis-delay-forward/verdict.md`
   - associated untracked result files, `.codex/`, and `outputs/`
-- Live box code, service, database, positions, balances, orders, kill files, arming override, and caps.
+- Production accounting, order, position, balance, acknowledgement, and historical incident rows
+  were not manually edited or deleted. The operator changed only the reviewed deployment state:
+  checkout/override/service through `release.sh`, followed by the exact recoverable `kill/live`
+  archive described above. Caps were not raised.
 - `NEXT.md` in the old main checkout: it contains stale status and was not treated as authoritative
   over direct git/database/service evidence.
 - Historical ledger rows: corrections were appended; no row was rewritten in place.
@@ -655,20 +694,23 @@ Created `HANDOFF_PROFIT_SIZING_COVERAGE_2026-09-09.md`. It has no runtime effect
 
 ## Current project state
 
-- Isolated branch coverage and execution changes are implemented, committed, fully green, and
-  independently reviewed; they remain undeployed until the branch is pushed and the operator paste
-  is run.
-- Production now runs caller-order release `31f7454`; it is blocked from new entry by the retained
-  live kill while the released-admission timestamp fix awaits its final operator release.
-  The service is active and ingestion continues.
+- Isolated branch coverage and execution changes are implemented, committed, pushed, fully green,
+  independently reviewed, and deployed through runtime commit `6c694f1`.
+- Production is active in `LIMITED_LIVE`, has no live kill, and is eligible to send an order only
+  when the executable two-leg economics, exact settlement proof, live caps, authenticated streams,
+  clock health, balances, and exposure checks all pass.
 - Profit-maximizing conditional-fill sizing, continuously revalidated maker-rest authorization,
-  immediate partial-fill delta hedging, and exact restart ownership are implemented locally.
+  immediate partial-fill delta hedging, and exact restart ownership are active in production.
 - No cap increase has been made or justified.
 - Coverage beyond the repaired registered universe remains blocked by explicit venue absence,
   settlement evidence, caps, or unverified identity—not merely by a missing boolean switch.
 
-The only remaining actions are to push the final handoff commit, run the operator-only daily release
-paste once more at the unchanged `12 / 10 / 250 / 168h` arm, verify the new process and all three
-streams while the kill remains, then perform the recoverable exact-file clear in the L56 operator
-runbook using the reviewed kill SHA only after the same quiet-state facts still hold. Keep the first
-three post-release covers behind their existing hand-reconciliation boundary.
+## Immediate next steps
+
+1. Do **not** release or clear anything again for this completed sweep.
+2. Reconcile each of the first three F18 covers against authoritative venue fills, fees, positions,
+   and cash before permitting a fourth, exactly as required by `GATE_TO_LIVE.md`.
+3. Treat any new local kill, unresolved order, unhedged quantity, persistence flag, disconnected
+   authenticated stream, or unhealthy market clock as a fresh incident. Do not repeatedly clear it.
+4. Evaluate sizing results by locked EV dollars and per-trade Sharpe under the unchanged pilot caps;
+   refusal volume or raw coverage is not itself a reason to loosen a hurdle.
