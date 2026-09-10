@@ -326,13 +326,28 @@ class PositionGuard:
             return
         position_proof = {}
         position_error = []
-        def complete_safe_pass():
-            eligible = (snap.fills_read_complete and not snap.errors and not rep.orphans and not rep.mismatches
+        def base_safe_pass():
+            return (snap.fills_read_complete and not snap.errors and not rep.orphans and not rep.mismatches
                     and all(venue in self.venues for venue in ('kalshi', 'polymarket'))
-                    and snap.positions.get('kalshi') == []
+                    and all(snap.positions.get(venue) is not None for venue in ('kalshi', 'polymarket'))
                     and not any(any(word in finding for word in ('INVALID', 'FAILED', 'BLOCKED', 'ORDER_OVERFILL ', 'FEE_ABOVE_PIN '))
                                 for finding in rep.findings))
-            if not eligible:
+
+        # These rows are not a new historical incident: they are the exact error emitted when an
+        # additive nullable journal column changed SELECT-* v1 bytes. The original incident already
+        # has a valid acknowledgement and exact resolution. Resolve the derived rows after a fresh
+        # complete guard and terminal database check; do not require the original one-time
+        # terminal-zero position proof again.
+        try:
+            if resolve_migration_false_alarms(self.store, now=snap.now, verify_pass=base_safe_pass):
+                rep.findings.append('POST_ONLY_PERSISTENCE_FAILED_RESOLVED_EXACT: additive journal migration false alarms; kill unchanged')
+                return
+        except Exception as exc:
+            rep.findings.append(f'LEGACY_MIGRATION_RESOLUTION_BLOCKED: {type(exc).__name__}: {exc}')
+            return
+
+        def complete_safe_pass():
+            if not base_safe_pass() or snap.positions.get('kalshi') != []:
                 return False
             try:
                 current = terminal_zero_positions(snap.positions.get('polymarket'), snap.position_evidence.get('polymarket'),
@@ -350,9 +365,7 @@ class PositionGuard:
                 rep.findings.append('LEGACY_POSITION_EVIDENCE_BLOCKED: ' + position_error[0])
             return
         try:
-            if resolve_migration_false_alarms(self.store, now=snap.now, verify_pass=complete_safe_pass):
-                rep.findings.append('POST_ONLY_PERSISTENCE_FAILED_RESOLVED_EXACT: additive journal migration false alarms; kill unchanged')
-            elif resolve_idle_incidents(self.store, now=snap.now, verify_pass=complete_safe_pass, position_evidence=position_proof):
+            if resolve_idle_incidents(self.store, now=snap.now, verify_pass=complete_safe_pass, position_evidence=position_proof):
                 rep.findings.append('POST_ONLY_PERSISTENCE_FAILED_RESOLVED_EXACT: confirmed historical legacy label; kill unchanged')
         except Exception as exc:
             rep.findings.append(f'LEGACY_INCIDENT_RESOLUTION_BLOCKED: {type(exc).__name__}: {exc}')

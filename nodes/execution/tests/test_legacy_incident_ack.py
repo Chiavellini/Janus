@@ -90,6 +90,22 @@ def test_resolved_ack_closes_only_exact_migration_false_alarms_after_terminal_ma
     assert not unresolved_flag_rows(con, FLAG)
 
 
+def test_migration_false_alarm_does_not_repeat_the_original_one_time_terminal_zero_proof(tmp_path, proof):
+    store, _, guard, _, manifest, _ = world(tmp_path, proof)
+    confirm(tmp_path, store, manifest)
+    guard._resolve_legacy_incidents(complete_snapshot(), GuardReport())
+    detail = 'LEGACY_INCIDENT_ACK_INVALID flag=211: ValueError: acknowledged incident state changed'
+    store.con.execute('INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?,?,?)', (T0 + 301, FLAG, detail))
+    store.con.commit()
+    snap = complete_snapshot()
+    snap.positions['polymarket'] = [object()]  # terminal-zero proof is deliberately unavailable
+    snap.position_evidence.clear()
+    report = GuardReport()
+    guard._resolve_legacy_incidents(snap, report)
+    assert any('migration false alarms' in finding for finding in report.findings)
+    assert not unresolved_flag_rows(store.con, FLAG)
+
+
 def test_resolved_ack_never_closes_a_different_later_persistence_finding(tmp_path, proof):
     store, _, guard, _, manifest, _ = world(tmp_path, proof)
     confirm(tmp_path, store, manifest)
