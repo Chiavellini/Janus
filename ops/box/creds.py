@@ -29,8 +29,16 @@ LAYOUT = {
     "/janus/polymarket/wallet_key": ("pm_wallet.key", "JANUS_PM_WALLET_KEY_PATH"),
     "/janus/polymarket/funder": (None, "JANUS_PM_FUNDER"),
     "/janus/polymarket/signature_type": (None, "JANUS_PM_SIGNATURE_TYPE"),
+    "/janus/polymarket/builder_api_key": (None, "JANUS_PM_BUILDER_API_KEY"),
+    "/janus/polymarket/builder_secret": (None, "JANUS_PM_BUILDER_SECRET"),
+    "/janus/polymarket/builder_passphrase": (None, "JANUS_PM_BUILDER_PASSPHRASE"),
 }
-OPTIONAL = {"/janus/polymarket/wallet_key", "/janus/polymarket/funder", "/janus/polymarket/signature_type"}
+BUILDER_GROUP = {
+    "/janus/polymarket/builder_api_key", "/janus/polymarket/builder_secret",
+    "/janus/polymarket/builder_passphrase",
+}
+OPTIONAL = {"/janus/polymarket/wallet_key", "/janus/polymarket/funder",
+            "/janus/polymarket/signature_type", *BUILDER_GROUP}
 
 
 def fetch(names, *, region: str = "us-east-1") -> dict[str, str]:
@@ -62,6 +70,9 @@ def materialise(values: dict[str, str], into: Path, *, layout=LAYOUT, optional=O
             env_lines.append(f"{var}={p}")
         else:
             env_lines.append(f"{var}={values[name].strip()}")
+    builder_present = {name for name in BUILDER_GROUP if str(values.get(name, "")).strip()}
+    if builder_present and builder_present != BUILDER_GROUP:
+        missing.extend(sorted(BUILDER_GROUP - builder_present))
     env = into / "janus.env"
     env.write_text("# materialised from SSM at boot; tmpfs; never copy elsewhere\n" + "\n".join(env_lines) + "\n")
     os.chmod(env, 0o600)

@@ -38,7 +38,7 @@ def test_selects_profit_maximum_not_first_or_largest_profitable_quantity():
     assert d.n_max_feasible == 10
     assert d.selected.quantity == 5
     assert d.selected.profit_usd > next(c.profit_usd for c in d.candidates if c.quantity == 10)
-    assert d.fill_model == "UNMEASURED_SIZE_DEPENDENT_MAKER_FILL"
+    assert d.fill_model == "BOUNDED_TAKER_V1"
 
 
 def test_objective_uses_final_maker_plan_fee_not_pre_plan_cover_fee():

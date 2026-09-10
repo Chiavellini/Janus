@@ -9,15 +9,15 @@ import pytest
 from kernel.execution_protocol import Ack
 from kernel.schema import FillState, Mode
 from nodes.exec_polymarket.client import PolymarketUserStream, PyClobTransport
+from nodes.exec_polymarket.quantity import BUY_CAP_UNPROVEN
 from nodes.exec_polymarket.quantity import taker_trade_vwap
 from nodes.exec_polymarket.tests.test_pm_exec import T, cl, req, venue
 
 FIXTURE = json.loads((Path(__file__).parent / "fixtures/f15_overfill.json").read_text())
 
 
-@pytest.mark.parametrize("tif", ["ioc", "fok", "gtc"])
-@pytest.mark.parametrize("price,size", [(.36, 10), (.481, 5), (.01, 10), (.001, 1000)])
-def test_real_adapter_refuses_uncapped_buys_before_signing(tmp_path, tif, price, size):
+@pytest.mark.parametrize("tif,price,size", [("gtc", .36, 10), ("fok", .99, 13), ("ioc", .5, 10.01)])
+def test_real_adapter_refuses_buys_outside_dedicated_taker_envelope(tmp_path, tif, price, size):
     # No client, signing key, or SDK is constructed. Any attempt to touch it fails.
     transport = PyClobTransport.__new__(PyClobTransport)
     v, journal = venue(tmp_path, transport)
@@ -25,6 +25,20 @@ def test_real_adapter_refuses_uncapped_buys_before_signing(tmp_path, tif, price,
     assert ack.state is FillState.REJECTED and ack.raw_status == "QUANTITY_CAP_UNPROVEN"
     assert ack.venue_order_id is None and v.submits == 0
     assert journal.get("c1")["contracts"] == size
+
+
+def test_bounded_taker_authorization_is_durable_before_wire(tmp_path):
+    class Transport:
+        def buy_contract_cap_error(self): return BUY_CAP_UNPROVEN
+        def post_bounded_taker_buy(self, **kwargs):
+            row = journal.store.con.execute(
+                "SELECT max_requested_contracts,max_collateral_usd,max_accepted_excess "
+                "FROM pm_bounded_taker_orders WHERE client_order_id='c1'").fetchone()
+            assert row == ("10", "12", "1")
+            return {"success": False, "errorMsg": "no match"}
+    v, journal = venue(tmp_path, Transport())
+    ack = v.submit(req(price=.36, contracts=10, time_in_force="ioc"), cl(tmp_path))
+    assert ack.state is FillState.REJECTED
 
 
 def test_unknown_transport_cannot_silently_bypass_share_cap(tmp_path):

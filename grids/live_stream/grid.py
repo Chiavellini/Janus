@@ -58,7 +58,7 @@ from nodes.execute.maker import (HedgeLevel, MakerFillSession, MakerRestAuthoriz
 from nodes.execute.sizing import SizingDecision, choose_live_size  # noqa: E402
 from nodes.execute.guard import PositionGuard  # noqa: E402
 from nodes.execute.on_loop import OnLoop  # noqa: E402
-from nodes.execute.plan import plan_from_cover, maker_plan_from_cover, marginal_price  # noqa: E402
+from nodes.execute.plan import plan_from_cover, marginal_price  # noqa: E402
 from nodes.execute.records import ExecutionRecords  # noqa: E402
 from nodes.execute.venues import build_venues  # noqa: E402
 from nodes.exec_kalshi.client import DEMO_BASE, PROD_BASE, KalshiExecution  # noqa: E402
@@ -618,11 +618,9 @@ class Supervisor:
         pre = {"frame_to_eval_ms": round(float(getattr(ev, "latency_ms", 0.0) or 0.0), 2),
                "eval_to_exec_ms": round(max(0.0, time.time() - ev.evaluated_utc) * 1000.0, 2)}
         offers = {o: list(v) for o, v in ev.offers.items()}
-        planner = maker_plan_from_cover if self.mode.risks_capital else plan_from_cover
-        maker_options = {"max_quote_age_s": min(sup.poller.max_book_age_s, sup.poller.max_rest_book_age_s)} if self.mode.risks_capital else {}
-        plan = planner(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
+        plan = plan_from_cover(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
                                league=sup.poller.league, cov=cov, offers=offers, hurdle=MIN_RETURN,
-                               min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0), **maker_options)
+                               min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0))
         if plan is None:
             return
         if sizing is not None:

@@ -199,6 +199,26 @@ def test_nominal_cent_exact_size_does_not_authorize_any_real_buy():
     assert not tr._c.market and not tr._c.limit and not tr._c.posts
 
 
+def test_dedicated_bounded_taker_signer_accepts_only_small_cent_exact_fak():
+    class Args:
+        def __init__(self, **kwargs): self.__dict__.update(kwargs)
+    class Client:
+        def __init__(self): self.args = None; self.posts = []
+        def create_market_order(self, args): self.args = args; return "signed"
+        def post_order(self, signed, typ, defer_exec):
+            self.posts.append((signed, typ, defer_exec)); return {"status": "matched"}
+    tr = PyClobTransport.__new__(PyClobTransport)
+    tr._c = Client()
+    tr._T = SimpleNamespace(OrderType=SimpleNamespace(FAK="FAK", FOK="FOK", GTC="GTC"),
+                            MarketOrderArgsV2=Args)
+    out = tr.post_bounded_taker_buy(token_id="tok", price=.36, size=10, order_type="FAK")
+    assert out["status"] == "matched" and tr._c.args.amount == 3.6 and tr._c.args.side == "BUY"
+    assert tr.post_bounded_taker_buy(token_id="tok", price=.36, size=10.01,
+                                     order_type="FAK")["code"] == "BOUNDED_TAKER_CAP"
+    assert tr.post_bounded_taker_buy(token_id="tok", price=.36, size=10,
+                                     order_type="GTC")["code"] == "BOUNDED_TAKER_CAP"
+
+
 def test_cent_exact_buy_never_increases_size_or_price_and_can_reduce_fractional_size():
     assert PyClobTransport._cent_exact_buy(size=5.0, price=.202, tick=.001) == (.202, 5.0)
     assert PyClobTransport._cent_exact_buy(size=5.24, price=.62, tick=.01) == (.62, 5.0)

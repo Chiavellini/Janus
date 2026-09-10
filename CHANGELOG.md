@@ -1145,3 +1145,36 @@ outcome labels then resolve them. Twelve manual alias rows for the labels the ru
 (University at Albany, North Carolina St., Appalachian St., Southeastern Louisiana, Texas
 Christian, Mississippi...). Two programmes have no ESPN row in the roster the entities were built
 from (Chicago State, UT Rio Grande Valley) and stay unmatched until they do.
+
+## 2026-09-10 — F20 bounded taker restoration and automatic PM redemption
+
+F18's post-only maker route produced no fills in thirteen current-day attempts and a canceled
+zero-fill order latched `kill/live` roughly 0.05 seconds before its already-observed stable terminal
+fingerprint became old enough to prove. At the operator's explicit direction, F19's proposed longer
+maker rest closed unrun and F20 returns live planning to the immediately executable taker cover.
+
+The generic Polymarket BUY signer remains blocked. A dedicated FAK/FOK wire is hard-limited to ten
+requested contracts and twelve dollars collateral regardless of later override changes, and its
+authorization is durable before submission. Actual received quantity is never clamped. A
+price-improvement excess below one contract is preserved, hedged and audited; an excess of at least
+one contract retains the existing overfill stop. All fee, executable-depth, settlement, freshness,
+balance, reservation, hurdle, breaker, protection and daily-notional gates remain.
+
+The coordinator now allows the adapter's declared stable-terminal proof grace after maker cancel,
+without delaying cancel or weakening genuinely unknown-state latching. The operator release path
+can recover only the exact false maker latch whose digest it captured: while the lane is stopped it
+requires the named order's clean terminal-zero marker, released zero-fill execution, and global
+absence of open PM orders, unresolved markers, active unreleased executions and material unhedged
+exposure. The proof and original kill are archived before removal. Failed restart/stream validation
+restores the kill and restarts the lane.
+
+A separate ten-minute systemd job now redeems positive-value Polymarket positions marked
+redeemable. It uses the official `polymarket-client==0.9.0` in an isolated venv and a durable
+PREPARED→SUBMITTED→CONFIRMED_PENDING→COMPLETE journal. Exact relayer metadata recovers a crash after
+wire acceptance, and fresh disappearance of positive redeemable value is required for completion.
+Zero-value remnants are ignored. Builder credentials are provisioned all-or-none into encrypted
+SSM and materialized only into box tmpfs; redemption failures alert without stopping trading.
+
+The complete repository suite and focused execution/redemption/release suites pass, as do watchdog
+self-test, shell syntax, YAML parsing, compilation and diff checks. F20 remains prospective until
+the operator releases the exact committed SHA; no live taker fill or realized-EV claim is included.

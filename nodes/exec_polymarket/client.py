@@ -67,6 +67,18 @@ CREATE TABLE IF NOT EXISTS pm_cash_sources(
 CREATE INDEX IF NOT EXISTS pm_cash_sources_fill ON pm_cash_sources(fill_id, id);
 """
 
+# L65/F20: operator-accepted immediate entry is deliberately narrower than the signed arm.  These
+# constants remain hard even if a future override grows; the generic BUY signer stays blocked.
+BOUNDED_TAKER_MAX_CONTRACTS = Decimal("10")
+BOUNDED_TAKER_MAX_COLLATERAL_USD = Decimal("12")
+BOUNDED_TAKER_MAX_ACCEPTED_EXCESS = Decimal("1")
+BOUNDED_TAKER_DDL = """
+CREATE TABLE IF NOT EXISTS pm_bounded_taker_orders(
+  client_order_id TEXT PRIMARY KEY, requested_contracts TEXT NOT NULL,
+  max_requested_contracts TEXT NOT NULL, max_collateral_usd TEXT NOT NULL,
+  max_accepted_excess TEXT NOT NULL, authorized_utc REAL NOT NULL);
+"""
+
 
 class TransportUnavailable(RuntimeError):
     pass
@@ -361,6 +373,23 @@ class PyClobTransport:
         # CONFIRMED trades later (2026-09-07).
         return self._c.post_order(signed, typ, defer_exec=True)
 
+    def post_bounded_taker_buy(self, *, token_id: str, price: float, size: float,
+                              order_type: str, tick: float | None = None) -> dict:
+        """The only immediate BUY signer: a fixed small collateral envelope, never generic."""
+        typ = getattr(self._T.OrderType, order_type)
+        q, px = Decimal(str(size)), Decimal(str(price))
+        collateral = q * px
+        if (order_type not in ("FAK", "FOK") or not q.is_finite() or not px.is_finite()
+                or q <= 0 or q > BOUNDED_TAKER_MAX_CONTRACTS
+                or collateral > BOUNDED_TAKER_MAX_COLLATERAL_USD
+                or collateral != collateral.quantize(Decimal("0.01"))):
+            return {"success": False, "status": "rejected", "prewire": True,
+                    "code": "BOUNDED_TAKER_CAP", "errorMsg": "bounded taker envelope/precision refused"}
+        args = self._T.MarketOrderArgsV2(token_id=token_id, amount=float(collateral), price=float(px),
+                                         side="BUY", order_type=typ)
+        signed = self._c.create_market_order(args)
+        return self._c.post_order(signed, typ, defer_exec=True)
+
     def get_order(self, order_id: str) -> dict:
         return self._c.get_order(order_id)
 
@@ -543,6 +572,9 @@ class PolymarketExecution:
     clock: Callable[[], float] = time.time
     mono: Callable[[], float] = time.monotonic
     venue: str = "polymarket"
+    #: Coordinator-visible part of this adapter's terminality contract. Cancel is still dispatched
+    #: at the maker deadline; this only lets two stable terminal GETs mature before a false latch.
+    terminal_proof_grace_s: float = POST_ONLY_TERMINAL_GRACE_S
     #: The market's fee params (Gamma feeSchedule) for the pinned fee. CLOB V2 charges the taker
     #: fee against collateral but reports fee_rate_bps 0 on the trade record (2026-09-07: balance
     #: moved by fills + exactly the pinned 0.0604 while the trade said 0). When the venue reports
@@ -578,6 +610,7 @@ class PolymarketExecution:
 
     def __post_init__(self) -> None:
         self.journal.store.ensure_ddl(PM_CASH_SOURCES_DDL)
+        self.journal.store.ensure_ddl(BOUNDED_TAKER_DDL)
         ensure_post_only_tables(self.journal)
 
     def _post_only_violation(self, cid, code, detail):
@@ -746,10 +779,16 @@ class PolymarketExecution:
                               "market_id with side buy_yes (or sell_yes to reduce a held position)")
         if req.post_only:
             return self._submit_post_only(req, t, clearance)
+        bounded_post = None
         if not req.is_sell:
+            bounded_post = getattr(self.transport, "post_bounded_taker_buy", None)
             cap_check = getattr(self.transport, "buy_contract_cap_error", None)
             cap_error = cap_check() if cap_check is not None else BUY_CAP_UNPROVEN
-            if cap_error is not None:
+            q, collateral = Decimal(str(req.contracts)), Decimal(str(req.contracts)) * Decimal(str(req.price))
+            bounded = (callable(bounded_post) and req.time_in_force in ("ioc", "fok")
+                       and q <= BOUNDED_TAKER_MAX_CONTRACTS
+                       and collateral <= BOUNDED_TAKER_MAX_COLLATERAL_USD)
+            if not bounded and cap_error is not None:
                 self.journal.pending(req, mode=self.mode.value, now=t)
                 ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None,
                           "QUANTITY_CAP_UNPROVEN", t, detail=cap_error)
@@ -773,12 +812,22 @@ class PolymarketExecution:
             exact_price, exact_size = exact
             req = replace(req, price=exact_price, contracts=exact_size)
         self.journal.pending(req, mode=self.mode.value, now=t)       # BEFORE the POST
+        if bounded_post is not None and not req.is_sell:
+            self.journal.store.con.execute(
+                "INSERT INTO pm_bounded_taker_orders VALUES(?,?,?,?,?,?)",
+                (req.client_order_id, str(req.contracts), str(BOUNDED_TAKER_MAX_CONTRACTS),
+                 str(BOUNDED_TAKER_MAX_COLLATERAL_USD), str(BOUNDED_TAKER_MAX_ACCEPTED_EXCESS), t))
+            self.journal.store.con.commit()                         # authorization BEFORE the wire
         self._requests[req.client_order_id] = req
         self.submits += 1
         try:
-            d = self.transport.post_order(token_id=req.market_id, price=req.price, size=req.contracts,
-                                          order_type=ORDER_TYPE[req.time_in_force],
-                                          side="SELL" if req.is_sell else "BUY", tick=req.tick)
+            if bounded_post is not None and not req.is_sell:
+                d = bounded_post(token_id=req.market_id, price=req.price, size=req.contracts,
+                                 order_type=ORDER_TYPE[req.time_in_force], tick=req.tick)
+            else:
+                d = self.transport.post_order(token_id=req.market_id, price=req.price, size=req.contracts,
+                                              order_type=ORDER_TYPE[req.time_in_force],
+                                              side="SELL" if req.is_sell else "BUY", tick=req.tick)
         except Exception as exc:  # noqa: BLE001 -- ambiguous unless the venue itself answered
             self.last_error = brief_error(exc)
             code = getattr(exc, "status_code", None)

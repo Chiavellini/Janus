@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Mapping, Sequence
 
 from nodes.cover.cover import Cover, Leg, best_cover
-from nodes.execute.plan import Plan, maker_plan_from_cover
+from nodes.execute.plan import Plan, plan_from_cover
 from nodes.risk.limits import RiskLimits
 from nodes.settle_wedge.equivalence import CoverProof
 
@@ -42,7 +42,7 @@ class SizingDecision:
     n_star_feasible: int
     binding_constraints: tuple[str, ...]
     risk_context: Mapping[str, object]
-    fill_model: str = "UNMEASURED_SIZE_DEPENDENT_MAKER_FILL"
+    fill_model: str = "BOUNDED_TAKER_V1"
 
     def audit(self) -> dict:
         selected = self.selected
@@ -159,16 +159,13 @@ def choose_live_size(offers: Mapping[str, Sequence[Leg]], *, now_utc: float, pro
         elif cov.single_venue or len(cov.legs) != 2:
             refusals.append("NOT_TWO_VENUE")
         else:
-            # Size on the exact maker Plan that will be persisted and executed.  The optional
-            # maker pad can change the conservative fee at a fee-cent breakpoint, so the cover's
-            # pre-plan totals are not a valid objective for choosing between quantities.
-            plan = maker_plan_from_cover(
+            # Size on the same executable-price taker Plan persisted and executed by the live grid.
+            plan = plan_from_cover(
                 opportunity_id=f"{event_id}:sizing:{q}", event_id=event_id, league=league,
                 cov=cov, offers=offers, hurdle=hurdle, min_net_profit_usd=min_net_profit_usd,
-                max_quote_age_s=max_quote_age_s,
             )
             if plan is None:
-                refusals.append("NO_MAKER_PLAN")
+                refusals.append("NO_TAKER_PLAN")
             else:
                 # Do not credit the passive maker improvement before it fills. The crossed
                 # cover's walked gross is the conservative economic basis; replace only its fee

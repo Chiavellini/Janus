@@ -1,0 +1,45 @@
+row: L65
+date: 2026-09-10
+kind: operator_directed_execution_policy_change
+status_at_registration: PENDING
+operator_instruction: >-
+  "switch back to taker; with the small caps we are currently taking we would not suffer from
+  what i described."
+known_before_registration:
+  - The F15 request for 10 shares returned 10.166667 because the V2 immediate BUY wire caps
+    collateral and minimum received shares, not maximum received shares.
+  - The unchanged signed envelope is 12 USD combined planned stake, 10 requested contracts per
+    leg and 250 USD committed daily notional. It bounds dollars at risk but does not prove an
+    exact 10-share maximum after price improvement.
+  - F18 maker entry removed that overfill ambiguity but ten recent accepted orders had zero fills
+    after only 1.2-1.75 seconds and two post-only orders crossed and were rejected.
+immutable_change:
+  - In capital-risking live mode, select the executable taker Plan and submit Polymarket first as
+    FAK/FOK at the already walked ask ceiling. No passive maker order or taker fallback sequence.
+  - The dedicated immediate-BUY wire is hard-limited in code to at most 10 requested shares and
+    12 USD collateral, independently of any later override increase. Existing risk clearance,
+    balance, freshness, fee, settlement, hurdle, breaker and daily-notional checks remain.
+  - Persist a bounded-taker authorization before the wire. Preserve actual authoritative received
+    quantity and VWAP; never clamp it to the request.
+  - Price-improvement excess strictly below the registered 1-contract protection dust is recorded
+    as an operator-accepted bounded-taker residual and does not itself latch kill/live. Excess at
+    or above 1 contract, any unresolved wire, protection failure, or other genuine risk still
+    latches under existing rules.
+  - The L64 false-terminal reconciliation and independent idempotent redemption service remain;
+    its proposed 15-second maker-rest policy is superseded and will not be deployed.
+validation:
+  - Offline wire tests prove the generic BUY method remains blocked and only the dedicated FAK/FOK
+    path accepts requests inside both fixed bounds.
+  - Coordinator and guard tests prove sub-dust excess is retained/audited without a kill, while
+    at-or-above-dust excess and genuinely unresolved state still stop.
+  - Live sizing and grid tests prove capital modes choose taker Plans and retain executable-price
+    economics and unchanged external caps.
+  - Full repository tests, watchdog selftest, compileall, shell syntax and diff check pass.
+expected_ev_effect: >-
+  Immediate execution should increase first-leg fills relative to the observed short-rest maker
+  cohort, at the cost of taker fees and accepted sub-contract quantity residuals. No realized-EV
+  magnitude is claimed before the F20 cohort.
+prohibited:
+  - Editing these criteria after tests or live results are observed.
+  - Raising the 12 USD/10 requested-contract/250 USD limits or lowering profit/return hurdles.
+  - Suppressing a one-contract-or-larger excess, unknown order, failed hedge or unexplained cash.

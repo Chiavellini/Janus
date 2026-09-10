@@ -33,7 +33,7 @@ if [ -n "${DEV:-}" ]; then
   mountpoint -q "$DATA" || mount "$DATA"
 fi
 id janus >/dev/null 2>&1 || useradd -r -m -d /home/janus -s /bin/bash janus
-mkdir -p "$DATA"/{tuples,kill,frames,proofs,runs,logs,catalog} && chown -R janus:janus "$DATA" && chmod 700 "$DATA"
+mkdir -p "$DATA"/{tuples,kill,frames,proofs,runs,logs,catalog,redemptions,release-audit/L64} && chown -R janus:janus "$DATA" && chmod 700 "$DATA"
 
 # the repo, at the pinned sha
 P() { aws ssm get-parameter --region $REGION --name "$1" --with-decryption --query Parameter.Value --output text 2>>/var/log/janus-bootstrap.log || true; }
@@ -55,12 +55,16 @@ sudo -u janus "$JROOT/.venv/bin/pip" install -q --upgrade pip
 # py-clob-client-v2, not py-clob-client: Polymarket replaced its exchange on 2026-04-28 (CLOB V2, pUSD);
 # the V1 client reads a balance of 0.00 and its orders are refused (CHANGELOG 2026-09-07).
 sudo -u janus "$JROOT/.venv/bin/pip" install -q cryptography websockets numpy pandas boto3 httpx eth-account py-clob-client-v2 pytest
+# Redemption uses the reviewed official unified SDK without perturbing the trading venv.
+sudo -u janus python3 -m venv "$JROOT/.redeem-venv"
+sudo -u janus "$JROOT/.redeem-venv/bin/pip" install -q --upgrade pip
+sudo -u janus "$JROOT/.redeem-venv/bin/pip" install -q 'polymarket-client==0.9.0'
 
 # systemd units from the repo
 install -m 644 "$JROOT"/ops/box/systemd/*.service "$JROOT"/ops/box/systemd/*.timer /etc/systemd/system/
 install -m 644 "$JROOT"/ops/box/systemd/janus.env /etc/janus.env
 echo "JANUS_BOX_REGION=$REGION" >> /etc/janus.env          # creds.py and kill_sync.py read the box's own region
 systemctl daemon-reload
-systemctl enable --now janus-creds.service janus-watchdog.timer janus-census.timer
+systemctl enable --now janus-creds.service janus-watchdog.timer janus-census.timer janus-pm-redeem.timer
 # the lane itself is enabled by the operator once the latency row has run: systemctl enable --now janus-live-stream
 echo "== bootstrap done $(date -u +%FT%TZ)"

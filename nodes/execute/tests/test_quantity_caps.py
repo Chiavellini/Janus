@@ -106,6 +106,31 @@ def test_in_process_overfill_stop_survives_a_failed_kill_write(tmp_path):
     assert next_ex.state is X.ORDER_REJECTED and len(pm.requests) == 1
 
 
+def test_operator_accepted_bounded_taker_residual_does_not_latch(tmp_path):
+    co, ex, pm, _, kill, store, _ = setup(tmp_path, 9.999999)
+    req0 = pm.requests[0]
+    store.ensure_ddl("CREATE TABLE IF NOT EXISTS pm_bounded_taker_orders("
+                     "client_order_id TEXT PRIMARY KEY,max_accepted_excess TEXT)")
+    store.con.execute("INSERT INTO pm_bounded_taker_orders VALUES(?,?)", (req0.client_order_id, "1"))
+    store.con.commit()
+    co._check_overfill(ex, req0, Ack("polymarket", req0.client_order_id, "v", FillState.FILLED,
+                                     10.166667, .36, 0, "matched", 1000))
+    assert not kill.active(live=True) and co._quantity_stop is None
+    assert ex.protect["bounded_taker_residual"]["contracts"] == pytest.approx(.166667)
+
+
+def test_bounded_taker_excess_at_dust_threshold_still_latches(tmp_path):
+    co, ex, pm, _, kill, store, _ = setup(tmp_path, 9.999999)
+    req0 = pm.requests[0]
+    store.ensure_ddl("CREATE TABLE IF NOT EXISTS pm_bounded_taker_orders("
+                     "client_order_id TEXT PRIMARY KEY,max_accepted_excess TEXT)")
+    store.con.execute("INSERT INTO pm_bounded_taker_orders VALUES(?,?)", (req0.client_order_id, "1"))
+    store.con.commit()
+    co._check_overfill(ex, req0, Ack("polymarket", req0.client_order_id, "v", FillState.FILLED,
+                                     11, .36, 0, "matched", 1000))
+    assert kill.active(live=True) and co._quantity_stop
+
+
 def test_guard_retries_a_failed_overfill_kill_write(tmp_path):
     class RetryKill:
         calls = 0
@@ -122,3 +147,17 @@ def test_guard_retries_a_failed_overfill_kill_write(tmp_path):
     # The post-sync scan may retry in the same pass; once it succeeds, later scans are quiet.
     guard.apply(GuardSnapshot(now=T0 + 301))
     assert kill.calls == 2
+
+
+def test_guard_recognizes_durable_bounded_taker_residual(tmp_path):
+    kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    _, journal, records, guard = _world(tmp_path, venues={}, kill=kill)
+    _gea_row(journal, records)
+    journal.store.ensure_ddl("CREATE TABLE pm_bounded_taker_orders("
+                             "client_order_id TEXT PRIMARY KEY,max_accepted_excess TEXT)")
+    journal.store.con.execute("INSERT INTO pm_bounded_taker_orders VALUES('a1','1')")
+    journal.record(Ack("polymarket", "a1", "v", FillState.FILLED, 10.166667, .36, 0,
+                       "matched", T0 + 250), kind="status")
+    report = guard.apply(GuardSnapshot(now=T0 + 300))
+    assert any(s.startswith("BOUNDED_TAKER_RESIDUAL_ACCEPTED") for s in report.findings)
+    assert not kill.active(live=True)

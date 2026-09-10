@@ -1,0 +1,10 @@
+[Unit]
+Description=Janus Polymarket redemption every 10 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

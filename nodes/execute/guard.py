@@ -455,6 +455,18 @@ class PositionGuard:
         """
         for cid, venue, requested, filled, mode in self._overfill_candidates():
             key = f"overfill:{cid}:{filled}"
+            bounded = None
+            con = self.journal.store.con
+            if con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='pm_bounded_taker_orders'").fetchone():
+                bounded = con.execute(
+                    "SELECT max_accepted_excess FROM pm_bounded_taker_orders WHERE client_order_id=?",
+                    (cid,)).fetchone()
+            if bounded is not None and venue == "polymarket" and filled - requested < float(bounded[0]) - 1e-9:
+                if key not in self.said:
+                    rep.findings.append(
+                        f"BOUNDED_TAKER_RESIDUAL_ACCEPTED {venue} {cid}: requested {requested:g}, venue filled {filled:g}")
+                    self.said.add(key)
+                continue
             try:
                 acknowledgement = match_overfill_ack(self.journal.store.con, cid)
             except Exception as exc:

@@ -216,6 +216,21 @@ class Coordinator:
             "client_order_id": req.client_order_id, "venue": ack.venue,
             "requested": req.contracts, "filled": ack.filled_contracts,
         })
+        # L65: the operator accepts only a sub-protection-dust price-improvement residual from a
+        # separately pre-authorized $12/10 immediate PM wire.  The actual quantity stays intact.
+        con = self.records.store.con
+        table = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='pm_bounded_taker_orders'").fetchone()
+        bounded = con.execute(
+            "SELECT max_accepted_excess FROM pm_bounded_taker_orders WHERE client_order_id=?",
+            (req.client_order_id,)).fetchone() if table else None
+        excess = ack.filled_contracts - req.contracts
+        if (bounded is not None and ack.venue == "polymarket" and not req.post_only
+                and excess < float(bounded[0]) - 1e-9):
+            ex.protect["bounded_taker_residual"] = {
+                "client_order_id": req.client_order_id, "contracts": excess,
+                "policy": "L65:F20:sub_protection_dust",
+            }
+            return
         if self.mode.risks_capital:
             self._quantity_stop = detail  # In-process fail-closed even if the kill filesystem fails.
             # Alarm failures cannot hide the held fill or prevent its protective hedge.
@@ -336,7 +351,12 @@ class Coordinator:
                     ex.protect["maker_rest_block"] = reason
                     break
             self.sleep(min(self.poll_interval_s, max(0.0, wait_until - self.mono())))
-        deadline = self.mono() + self.leg_a_settle_s
+        # The adapter's finality contract may deliberately require a stable terminal observation
+        # window after the venue first reports CANCELED.  That evidence can appear near the end of
+        # the ordinary response window.  Budget its declared grace plus one poll here; otherwise
+        # the coordinator can latch milliseconds before already-seen terminal proof matures.
+        terminal_grace = max(0.0, float(getattr(adapter, "terminal_proof_grace_s", 0.0)))
+        deadline = self.mono() + self.leg_a_settle_s + terminal_grace + self.poll_interval_s
         try:
             cancel_only = getattr(adapter, "cancel_only", None)
             canceled = cancel_only(ack.client_order_id) if cancel_only is not None else adapter.cancel(ack.client_order_id)

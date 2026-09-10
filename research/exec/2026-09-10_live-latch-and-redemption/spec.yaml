@@ -1,0 +1,84 @@
+row: L64
+date: 2026-09-10
+kind: operational_repair_and_account_automation
+status_at_registration: PENDING
+question: >-
+  Can the F18 post-only entry route avoid a false UNKNOWN_PROVIDER_STATE latch when an already
+  terminal zero-fill needs its registered two-second stability proof to mature, give accepted
+  maker orders a commercially meaningful but continuously hedge-gated rest, and redeem valuable
+  resolved Polymarket positions automatically without changing trading authority?
+known_before_registration:
+  - >-
+    The current live incident is a zero-fill canceled maker order. Its first stable terminal
+    fingerprint was stored at 1789023363.5557084 and kill/live latched at 1789023365.5042863,
+    about 0.05 seconds before the registered two-second stability proof matured; the guard later
+    proved terminal zero-fill and released the execution.
+  - >-
+    On the 2026-09-10 local calendar through the incident, ten accepted maker orders canceled at
+    zero fill after only 1.2-1.75 seconds of post-ack rest, two crossed-book post-only submissions
+    were rejected, one quote expired pre-wire, and one earlier cover settled +0.7798 USD.
+  - >-
+    Immediate/non-post-only Polymarket BUY cannot prove a maximum received-share quantity under
+    the V2 wire and remains blocked. Maker fill probability under a longer rest is unknown.
+  - >-
+    The account has one positive-value redeemable position and many zero-value remnants. The box
+    has no redemption service. The official polymarket-client 0.9.0 supports closed-market
+    redemption and confirmed relayer polling, but gasless Deposit Wallet transactions require a
+    builder or relayer API key.
+immutable_repairs:
+  terminal_reconciliation:
+    - Keep cancel dispatch at the immutable maker-rest deadline.
+    - Preserve the two stable terminal GET observations separated by at least two seconds.
+    - After cancel, give the venue settlement window plus the adapter-declared terminal-proof
+      grace and one poll interval before latching. A genuinely unresolved lifecycle still latches.
+    - Never automatically clear an existing kill file.
+  maker_rest:
+    - Set a 15-second maximum accepted-order rest independent of the short pre-wire quote TTL.
+    - The original quote TTL still gates signing and POST; it grants no late submission.
+    - During rest, cancel immediately when authenticated maker stream, current executable hedge
+      depth, fees, settlement proof, clocks, sockets, balances, reservation, caps, breaker, or
+      kill state fails validation.
+    - On any maker fill, cancel the remainder and hedge each authoritative fill delta immediately.
+    - No replacement, taker fallback, crossing order, cap increase, hurdle decrease, or settlement
+      relaxation is authorized.
+  redemption:
+    - Use official polymarket-client 0.9.0 in a separate box venv and systemd oneshot/timer so SDK
+      dependency or redemption failure cannot stop the trading lane.
+    - Select only positions with redeemable=true, finite positive size, finite currentValue at
+      least 0.01 pUSD, and one valid condition id. Ignore zero-value losing remnants.
+    - Persist PREPARED before submission, then transaction id/hash and terminal confirmation in a
+      separate durable SQLite journal. Recover a post-wire/pre-journal crash from exact metadata
+      in recent relayer transactions; never blindly duplicate an unknown submission.
+    - A confirmed transaction is complete only after a fresh positions read no longer reports
+      positive redeemable value for that condition. Missing or contradictory evidence remains
+      pending and alerts through the job SLA; it never changes execution state or kill files.
+    - Provision a fresh builder key only when all three encrypted SSM credential parameters are
+      absent. A partial credential set is a hard error; no secret is printed or stored outside
+      SSM and /run/janus tmpfs.
+validation:
+  - A deterministic regression reproduces terminal proof maturing just after the old deadline and
+    proves no latch; unresolved status beyond the extended bounded window still latches.
+  - Maker rest tests prove the 15-second authority is independent of pre-wire quote expiry and
+    every existing guard/cancel/fill-delta invariant remains green.
+  - Redemption tests cover filtering, idempotent journal transitions, crash recovery, confirmed
+    but Data-API-stale state, terminal failure, partial credentials, secret redaction, systemd
+    installation and watchdog SLA firing.
+  - Full repository tests, watchdog selftest, compileall and diff check pass before release.
+expected_ev_effect: >-
+  A longer continuously hedge-gated maker rest should increase first-leg fill probability and
+  completed-cover count relative to 1.2-1.75-second rests, but the magnitude is unmeasured and
+  starts a new L63 policy cohort. The terminal repair removes false persistent downtime without
+  changing true-unknown behavior. Redemption releases winning pUSD collateral sooner but does not
+  create trading profit.
+limits_unchanged:
+  combined_planned_stake_usd: 12.0
+  max_contracts_per_leg: 10
+  committed_daily_notional_usd: 250.0
+  max_daily_realized_loss_usd: 25.0
+  min_net_profit_usd: 0.10
+  min_locked_return: 0.01
+  max_protection_loss_usd: 1.0
+prohibited:
+  - Editing these criteria after tests or live results are observed.
+  - Automatic clearing of kill/live, weakening unknown-order protection, or deleting incident evidence.
+  - Immediate/taker Polymarket BUY, larger caps, lower hurdles, unbounded maker rest, or unjournaled redemption.

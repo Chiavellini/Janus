@@ -22,6 +22,54 @@ def test_maker_plan_quotes_below_ask_without_reinterpreting_old_plans():
     assert plan.fee_per_contract == historical.fee_per_contract
 
 
+def test_terminal_proof_can_mature_just_after_ordinary_settle_window(tmp_path):
+    co, _, _, clock, _ = harness(tmp_path)
+    co.mode = Mode.LIMITED_LIVE
+    co.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    co.leg_a_settle_s = .3
+    co.poll_interval_s = .1
+
+    pending = lambda: OrderState("polymarket", "cid", "order", FillState.UNCONFIRMED,
+                                 0, None, None, "post_only_pending", clock.now(), open=False, final=False)
+
+    class Maker:
+        terminal_proof_grace_s = .2
+        def cancel_only(self, _cid):
+            return pending()
+        def status(self, _cid):
+            # Old deadline: 100.3. The adapter's stable-terminal proof matures at 100.5.
+            if clock.mono() < 100.5 - 1e-9:
+                return pending()
+            return OrderState("polymarket", "cid", "order", FillState.UNFILLED,
+                              0, None, None, "post_only_terminal", clock.now(), open=False, final=True)
+
+    co.venues = {"polymarket": Maker()}
+    ex = Execution("ex", "o", "e", "mlb", co.mode.value, 10, clock.now())
+    ack = Ack("polymarket", "cid", "order", FillState.UNCONFIRMED, 0, None, None,
+              "live", clock.now(), open=True)
+    result = co._settle_maker_ack("polymarket", ack, ex=ex, rest_deadline_mono=clock.mono())
+    assert result.state is FillState.UNFILLED
+    assert clock.mono() == pytest.approx(100.5)
+    assert not co.kill.active(live=True)
+
+
+def test_genuinely_unresolved_maker_still_latches_after_terminal_grace(tmp_path):
+    co, _, _, clock, _ = harness(tmp_path)
+    co.mode = Mode.LIMITED_LIVE
+    co.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    co.leg_a_settle_s = .3
+    co.poll_interval_s = .1
+    pending = OrderState("polymarket", "cid", "order", FillState.UNCONFIRMED,
+                         0, None, None, "post_only_pending", clock.now(), open=True, final=False)
+    maker = SimpleNamespace(terminal_proof_grace_s=.2, cancel_only=lambda _cid: pending,
+                            status=lambda _cid: pending)
+    co.venues = {"polymarket": maker}
+    ex = Execution("ex", "o", "e", "mlb", co.mode.value, 10, clock.now())
+    result = co._settle_maker_ack("polymarket", pending, ex=ex, rest_deadline_mono=clock.mono())
+    assert result.state is FillState.UNCONFIRMED
+    assert co.kill.active(live=True) and ex.protect["post_only_unresolved"] == "cid"
+
+
 @pytest.mark.parametrize("late", [6, 10])
 def test_cancel_race_returns_actual_cumulative_fill_within_original_cap(tmp_path, late):
     co, _, _, clock, _ = harness(tmp_path)

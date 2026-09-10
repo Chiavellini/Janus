@@ -103,6 +103,9 @@ SLAS: dict[str, Sla] = {
     # L28, the co-listing census: one run a day at 14:00 local for seven days (com.janus.census).
     # A day and two hours of silence means the calendar job did not fire or did not finish.
     "census": Sla(kind="oneshot", max_age_s=26 * 3600),
+    # L64: winning PM positions are redeemed by an idempotent ten-minute oneshot.  Thirty minutes
+    # without a successful pass is actionable, not a manual-webapp chore.
+    "pm_redeem": Sla(kind="oneshot", max_age_s=30 * 60),
     # nodes/watch_settle's daily resolver (research/sports/2026-09-04_tennis-delay-forward), 13:30 local.
     "watch_settle": Sla(kind="oneshot", max_age_s=26 * 3600),
     # Nothing is currently scheduled except this watchdog. Every Janus collector was stopped on
@@ -134,7 +137,7 @@ DISABLED: dict[str, str] = {
 #: are Mac launchd plists. A job registered here with no rows on this host alarms NEVER_RAN forever,
 #: so each host gets its own set (JANUS_HOST from /etc/janus.env on the box; unset = the Mac).
 SLAS_BY_HOST: dict[str, dict[str, Sla]] = {
-    "box": {k: v for k, v in SLAS.items() if k in ("live_stream", "census")},
+    "box": {k: v for k, v in SLAS.items() if k in ("live_stream", "census", "pm_redeem")},
     # The Mac stopped running a lane on 2026-09-08 (see DISABLED_BY_HOST); it still runs the census
     # and the daily resolver.
     "": {k: v for k, v in SLAS.items() if k in ("census", "watch_settle")},
@@ -444,10 +447,11 @@ def selftest() -> None:
         assert coverage_alerts(cdb, None, now=NOW) == [], "no census: silent"
 
         # the box's SLA set drops the Mac-only daily jobs (JANUS_HOST=box); the Mac keeps them
-        assert set(slas_for_host("box")) == {"live_stream", "census"} and "watch_settle" in slas_for_host("")
+        assert set(slas_for_host("box")) == {"live_stream", "census", "pm_redeem"} and "watch_settle" in slas_for_host("")
         _append(fresh("bx"), {"ts": NOW - 120, "job": "live_stream", "status": "started", "pid": os.getpid()})
         _append(fresh("bx"), {"ts": NOW - 3600, "job": "census", "run_id": "c", "status": "OK", "exit": 0})
-        assert check(fresh("bx"), now=NOW, slas=slas_for_host("box"), risk={}) == [], "a fresh box with its two jobs is quiet"
+        _append(fresh("bx"), {"ts": NOW - 600, "job": "pm_redeem", "run_id": "r", "status": "OK", "exit": 0})
+        assert check(fresh("bx"), now=NOW, slas=slas_for_host("box"), risk={}) == [], "a fresh box with its three jobs is quiet"
         assert any("watch_settle: NEVER_RAN" in a for a in check(fresh("bx"), now=NOW, slas=slas_for_host(""), risk={})), "the Mac set would alarm"
 
         # UNREGISTERED

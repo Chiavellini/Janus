@@ -1,0 +1,37 @@
+id: F20
+date: 2026-09-10
+kind: forward_limited_live
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row F20
+scope: >-
+  Operator-directed return to immediate Polymarket taker-first entry under L65. Kalshi remains the
+  immediate IOC hedge. L64 terminal reconciliation and redemption remain operational repairs;
+  F19 closes without deployment or observations.
+start: >-
+  First LIMITED_LIVE line on the exact committed F20 tree after the full suite, zero flight and
+  material unhedged exposure, exact current false-latch reconciliation, matching signed override,
+  operator release/restart and exact automated clear of only the captured reviewed false latch.
+end: >-
+  37 hedged covers, the first genuine STOP, realized-loss breaker, taker/sizing/cap/hurdle change,
+  or explicit operator closure. First three covers are authoritatively reconciled before a fourth.
+policy:
+  polymarket_entry: immediate FAK/FOK taker at walked executable ceiling
+  hard_wire_max_requested_contracts: 10
+  hard_wire_max_collateral_usd: 12
+  accepted_price_improvement_residual_contracts: "strictly less than 1.0; preserved and audited"
+  maker_fallback: false
+limits:
+  combined_planned_stake_usd: 12.0
+  max_requested_contracts_per_leg: 10
+  committed_daily_notional_usd: 250.0
+  max_daily_realized_loss_usd: 25.0
+  min_net_profit_usd: 0.10
+  min_locked_return: 0.01
+  max_protection_loss_usd: 1.0
+stops:
+  - received-share excess at or above 1.0 contract
+  - unresolved provider state, overhedge, unprotected fill, persistence failure, or unexplained cash discrepancy
+  - any redemption transaction attributed to the wrong wallet or condition
+analysis_boundary: >-
+  F18/F19 maker observations cannot estimate F20 taker fill probability or realized EV. F20 is a
+  new prospective cohort, and nominal request quantity and actual received quantity are reported separately.

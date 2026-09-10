@@ -66,7 +66,7 @@ def test_live_book_epoch_dispatches_exactly_one_profit_maximizing_quantity(tmp_p
     ev, rec, decision = calls[0]
     assert ev.quantity == 10.0 == decision.n_star_feasible == decision.n_max_feasible
     assert rec.net_profit_usd > 0 and decision.selected.profit_usd > 0
-    assert decision.fill_model == "UNMEASURED_SIZE_DEPENDENT_MAKER_FILL"
+    assert decision.fill_model == "BOUNDED_TAKER_V1"
     for replica in s.poller.replicas.values():
         replica.received_mono = (replica.received_mono or 0.0) + 100.0
     sup._on_update("g1")("K_H", T + 1)

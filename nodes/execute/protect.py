@@ -324,7 +324,9 @@ def _hedged(co, ex, plan, paid: float, budget: float, *, protected: bool = False
     elif avg > budget + 1e-9:
         label = f" ABOVE_BUDGET {budget:.4f}: below the hurdle, still a cover"
     detail = f"{ex.hedge_filled} hedged @ {ex.hedge_avg_price}" + label
-    if ex.protect.get("quantity_violations"):
+    if ex.protect.get("bounded_taker_residual"):
+        detail += f"; BOUNDED_TAKER_RESIDUAL {ex.protect['bounded_taker_residual']['contracts']:.6g}"
+    elif ex.protect.get("quantity_violations"):
         detail += f"; ORDER_OVERFILL stop retained; residual {ex.unhedged:g} first / {ex.overhedged:g} hedge"
     if protected:
         detail = (f"PROTECTED: {min(ex.net_first, ex.net_hedge):g} pairs kept, {ex.first_unwound:g} first sold @ {ex.first_unwind_avg}, "

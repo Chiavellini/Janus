@@ -26,8 +26,8 @@ risk.clear ──▶ RiskClearance ───────────────
 
 ## Leg order, fixed
 
-**Polymarket first; Kalshi hedge, IOC, for exactly what leg A filled.** Historical/paper entry is
-immediate. Limited-live entry uses the separately proven post-only maker route. Kalshi leads
+**Polymarket first; Kalshi hedge, IOC, for the authorized quantity leg A filled.** Live and paper
+entry are immediate under F20. Kalshi leads
 Polymarket by 5–10 s and a third of Polymarket reprices never happen, so the opportunity *is* a
 stale Polymarket price and Polymarket is the less reliable executor: its ambiguity must land
 where nothing is at risk. The hedge limit is the most a contract may cost for the cover still to
@@ -43,14 +43,14 @@ opportunity moves to `FAILED_HEDGE`. A kill switch or a disconnect before leg A 
 releases; after leg A fills the hedge is still sent. Capital is released only by
 `nodes/reconcile`, after both venues reconcile.
 
-An authoritative order fill above its request latches live entries immediately and records
-`ORDER_OVERFILL`; the durable venue quantity is never clamped. The guard detects late overfills
-from order totals too, even below protection dust. Protective requests floor share precision
+An authoritative order fill above its request is never clamped. Under the durable L65 bounded-
+taker authorization only, price-improvement excess strictly below one contract is recorded as an
+accepted protection-dust residual without a kill. Every other overfill latches live entry and the
+guard detects it from late order totals. Protective requests floor share precision
 and aggregate hedge buys cannot exceed the original plan's hedge quantity. Any remainder is
 kept as held exposure; a request for 10 with a 10.166667 fill cannot authorize a 10.17 hedge.
-The Polymarket transport blocks immediate/non-post-only BUY entry because that wire cannot prove
-this share bound (L53); these protections also cover orders from before that repair. L54 adds a
-separate, local post-only route conditional on the documented maker-role guarantee.
+The generic Polymarket transport still blocks immediate BUY signing; only the fixed $12/10 F20
+entry method may sign one. L54's separate post-only route remains for historical reconciliation.
 
 The guard checks existing overfills before syncing its trade FIFO. Partial FIFO coverage cannot
 reduce a larger authoritative order quantity or replace its average/fee with the partial subset;
@@ -71,18 +71,14 @@ quantities/protection. Paid fees remain on the authoritative order rows; the exi
 revision path updates P&L and preserves old/new accounting. `test_guard_cash_finality.py`
 checks these paths together using the Maximus cash values.
 
-## Local maker-first entry (L54)
+## Live bounded-taker entry (L65/F20); retained maker reconciliation (L54)
 
-Historical/paper/replay `plan_from_cover` behavior is unchanged. The live grid selects the separate
-`maker_plan_from_cover`: a tick-aligned GTC post-only price strictly below the observed PM ask and
-no higher than the existing executable-cover ceiling. This passive price is not represented as
-executable ask liquidity or a measured EV gain; cover/fee/risk proof remains conservative.
+Live execution now selects `plan_from_cover` exactly like paper/replay: Polymarket first as an
+immediate FAK/FOK at the walked executable ceiling, then Kalshi as the hedge. The dedicated PM
+wire remains hard-limited to $12 collateral and 10 requested shares even if an outer arm grows.
 
-The plan carries the oldest selected quote's freshness deadline. The coordinator mints a separate,
-absolute maker-rest authority: the short first-submit clearance still gates the POST but cannot
-truncate or extend the rest window. While it rests, socket fill high-water, connections, clock,
-kill/breaker state, signed caps, balances, full Kalshi reserve, and full-remainder hedge depth are
-continuously checked. Failure or the immutable deadline dispatches cancel before blocking REST.
+The older maker route is retained for its durable journal and restart reconciliation. If used by
+historical tests/tools, its original quote deadline and cancel-first lifecycle still apply.
 
 Known fill deltas are journaled and protected after cancel dispatch, before slow terminal
 reconciliation. Cumulative observations are monotonic and cent-floored; a 2→2→5 stream hedges 2

@@ -5,18 +5,18 @@
 #   bash ops/box/release.sh <sha>          # refuses while a co-listed game is in play on the box
 #   bash ops/box/release.sh <sha> --now    # skip that check (the operator's call)
 #
-# In order: (a) ops/box/update.sh <sha> --no-restart -- the checkout moves, the lane keeps running
-# its old tree; (b) ops/box/write_override.sh -- the override is re-signed for the NEW tree, at the
-# caps in JANUS_ARM_CAPS (default $12 / 10 / $250, 168 h); from this moment the running lane refuses real orders
-# (ARM_STALE: its tree is not the one pinned) until (c) ops/box/mode.sh LIMITED_LIVE restarts it
-# under the new tree, where the gate matches again. A docs-only sha changes nothing under the pin
-# and still gets the full three steps: the paste is the same every day.
+# In order: provision the PM redemption key if absent; checkout without restart; sync the pinned
+# redemption runtime and units; re-sign the override at JANUS_ARM_CAPS (default $12 / 10 / $250,
+# 168 h); restart LIMITED_LIVE; clear only the exact maker false-latch captured at paste start after
+# stopped-lane terminal-zero/global-idle proof; verify post-start streams; run redemption now.
+# A different or changed kill is never cleared. A docs-only sha still gets the same full sequence.
 #
 # The statement is $JANUS_ARM_STATEMENT, else ops/box/arm_statement.txt (the standing one). Any
 # change to the caps or the statement is a new dated GATE_TO_LIVE row first.
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 SHA=${1:?the sha to release (git rev-parse main)}
+REGION=${JANUS_BOX_REGION:-mx-central-1}
 NOW=0; [ "${2:-}" = "--now" ] && NOW=1
 STATEMENT=${JANUS_ARM_STATEMENT:-$(cat "$HERE/arm_statement.txt")}
 if [ -z "${STATEMENT// }" ]; then echo "empty statement"; exit 2; fi
@@ -60,11 +60,30 @@ EOS
   echo "money quiet (flight=0, unhedged=0); releasing $SHA"
 fi
 
+# Snapshot the exact current local live latch before moving the tree.  The release may clear it
+# only if the new tree proves it is the reviewed false maker-terminality incident; any changed or
+# human/other-risk latch remains a hard stop.
+LIVE_KILL_SHA=$(bash "$HERE/run.sh" "if [ -f /srv/janus/kill/live ]; then sha256sum /srv/janus/kill/live | awk '{print \$1}'; else echo none; fi" | grep -E '^(none|[0-9a-f]{64})$' | tail -1)
+[ -n "$LIVE_KILL_SHA" ] || { echo "could not snapshot live kill"; exit 2; }
+
+echo "== (0) provision idempotent PM redemption authority"
+python3 "$HERE/provision_redemption.py" --region "$REGION"
+
 echo "== (a) checkout $SHA, no restart"
 bash "$HERE/update.sh" "$SHA" --no-restart
-echo "== (b) re-sign the override for the new tree"
+echo "== (b) sync pinned redemption runtime and systemd units"
+bash "$HERE/sync_runtime.sh"
+echo "== (c) re-sign the override for the new tree"
 CAPS=${JANUS_ARM_CAPS:-"12 10 250 168"}      # stake, contracts per leg, day notional, hours (GATE row 2026-09-07, the smallest executable size)
 # shellcheck disable=SC2086
 bash "$HERE/write_override.sh" "$STATEMENT" $CAPS
-echo "== (c) restart under LIMITED_LIVE"
+echo "== (d) restart under LIMITED_LIVE"
 bash "$HERE/mode.sh" LIMITED_LIVE
+if [ "$LIVE_KILL_SHA" != none ]; then
+  echo "== (e) exact recovery of reviewed false maker latch"
+  bash "$HERE/clear_false_maker_latch.sh" "$SHA" "$LIVE_KILL_SHA"
+else
+  echo "== (e) no live kill present at release start"
+fi
+echo "== (f) run automatic redemption now"
+bash "$HERE/run.sh" "set -e; systemctl start janus-pm-redeem.service || { journalctl -u janus-pm-redeem.service -n 12 --no-pager; exit 1; }; systemctl is-active janus-pm-redeem.timer; tail -1 /srv/janus/logs/pm_redeem.stdout.log"

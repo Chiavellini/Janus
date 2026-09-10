@@ -1,0 +1,12 @@
+[Unit]
+Description=Janus Polymarket winning-position redemption
+After=network-online.target janus-creds.service
+Requires=janus-creds.service
+
+[Service]
+Type=oneshot
+User=janus
+EnvironmentFile=/etc/janus.env
+Environment=JANUS_PYTHON=/opt/janus/.redeem-venv/bin/python3
+WorkingDirectory=/opt/janus
+ExecStart=/usr/bin/zsh /opt/janus/ops/run_node.sh pm_redeem -m nodes.redeem_polymarket.run

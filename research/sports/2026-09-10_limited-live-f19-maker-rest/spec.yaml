@@ -1,0 +1,38 @@
+id: F19
+date: 2026-09-10
+kind: forward_limited_live
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row F19
+scope: >-
+  Successor to F18 after the maker-rest and terminal-reconciliation policy changes in L64.
+  Polymarket remains exact-share-capped post-only maker first; Kalshi remains the immediate IOC
+  hedge for each authoritative fill delta.
+start: >-
+  The first [mode] LIMITED_LIVE line on the exact committed F19 tree after the full suite, money
+  quiet preflight, exact reconciliation of the current zero-fill incident, matching signed override,
+  operator release/restart, and exact recoverable operator clear of only the current kill/live.
+end: >-
+  37 hedged covers, the first STOP, the realized-loss breaker, a maker/rest/sizing/cap/hurdle code
+  change, or explicit operator closure. The first three F19 covers are authoritatively reconciled
+  before a fourth.
+policy:
+  maker_rest_max_s: 15.0
+  maker_rest_gate: continuous current executable full-remainder Kalshi hedge plus all existing safety checks
+  terminal_reconciliation: six-second venue window plus adapter two-second proof grace and one poll interval
+  replacement_count: 0
+  taker_fallback: false
+limits:
+  combined_planned_stake_usd: 12.0
+  max_contracts_per_leg: 10
+  committed_daily_notional_usd: 250.0
+  max_daily_realized_loss_usd: 25.0
+  min_net_profit_usd: 0.10
+  min_locked_return: 0.01
+  max_protection_loss_usd: 1.0
+stops:
+  - any maker/taker role conflict, overfill, overhedge, unprotected fill, persistence failure, or unexplained cash discrepancy
+  - genuinely unresolved provider state after the bounded reconciliation window
+  - any redemption transaction attributed to the wrong wallet or condition
+analysis_boundary: >-
+  L63's earlier rest-policy cohort closes before F19. F19 observations use a successor cohort and
+  may not be pooled with shorter-rest attempts to estimate fill probability or realized EV.

@@ -5,13 +5,15 @@
 
 The Polymarket order path, disarmed by construction like Kalshi's, with two venue facts baked in.
 
-**Immediate/non-post-only BUY submission is blocked (`QUANTITY_CAP_UNPROVEN`, L53).** The V2 signed `makerAmount`
+**Immediate/non-post-only BUY submission is permitted only by the L65/F20 bounded-taker path.** The V2 signed `makerAmount`
 caps collateral spent; `takerAmount` is the minimum received shares at full budget consumption.
 `OrderArgsV2.size=10` and REST `original_size=10` therefore do not cap the shares a taker BUY
 can receive. F15 filled 10.166667. Cent-exact nominal size/price did not fix this. The real
-ordinary transport route rejects every BUY before signing/posting, including a GTC that could cross immediately;
-the adapter also refuses transports with unknown cap semantics. There is no runtime opt-out.
-A separate local-only L54 post-only route is described below; it is not an opt-out from this block.
+generic transport route rejects every BUY before signing/posting, including a GTC that could cross immediately.
+The dedicated FAK/FOK signer is hard-limited to 10 requested shares and $12 collateral, records
+that authorization before POST, and preserves actual price-improvement quantity. Excess strictly
+below one contract is the operator-accepted protection-dust residual; larger excess still stops.
+A separate L54 post-only route remains available for historical reconciliation but is not selected live.
 Held-order reads and already-authorized SELL protection remain available.
 
 **Every outcome is its own token.** `buy_no` is refused; the coordinator passes the outcome's
@@ -40,7 +42,7 @@ gate, and the missing-library path.
 
 `tests/test_quantity_cap.py` freezes F15's historical order and trade field projections with
 source hashes, reproduces the SDK's nominal 10-share / $3.60 wire amounts without a signer,
-and tests refusal before wire. Authenticated taker VWAP uses each maker leg's token and side:
+and tests the fixed bounded-taker authorization plus refusal outside it. Authenticated taker VWAP uses each maker leg's token and side:
 an opposite-outcome maker BUY contributes `1 - maker_price`; a same-token maker SELL contributes
 its own price. Missing or inconsistent maker evidence leaves the average unknown so the
 coordinator uses the conservative planned BUY ceiling. A top-level trade price is not a VWAP.
@@ -119,7 +121,9 @@ deadline. Any unproved cancel/late-fill lifecycle latches new entry while protec
 A cancel reply alone never releases admission. Complete matching trade IDs, confirmed maker
 fills, authoritative cash, and two stable terminal order observations separated by at least two
 seconds are required. Missing answers, partial cash/FIFO, failed reads or role uncertainty stay
-pending. Later contradictory fills reopen the lifecycle and stop new entry, never clamp holdings.
+pending. The coordinator budgets this declared terminal-proof grace after its ordinary venue
+response window, preventing a latch just before already-observed terminal evidence matures; a
+genuinely unresolved lifecycle still latches. Later contradictory fills reopen the lifecycle and stop new entry, never clamp holdings.
 This is an operational evidence window, not a Byzantine or infinite-future no-fill proof.
 
 Maker fills use their owned order's quantity/token/side/price, with composite source identity
