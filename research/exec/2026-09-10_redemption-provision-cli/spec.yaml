@@ -1,0 +1,28 @@
+row: L66
+date: 2026-09-10
+kind: release_compatibility_repair
+status_at_registration: PENDING
+observed_failure: >-
+  The operator's first 7399498 release stopped at step zero before checkout because the laptop's
+  selected python3 did not have boto3. The AWS CLI used by the rest of the operator workflow is
+  available; no box checkout, restart, kill clear, order, or redemption occurred.
+immutable_change:
+  - Remove the local runtime dependency on boto3 from provision_redemption.py.
+  - Implement the injected SSM interface through the existing AWS CLI and JSON responses.
+  - Pass SecureString values to aws ssm put-parameter only through stdin, never a command-line
+    argument, stdout, log, exception text, or repository file.
+  - Preserve all-or-none idempotency, Overwrite=false, region selection, source credential checks,
+    and py-clob-client-v2 builder-key creation behavior.
+validation:
+  - Unit tests prove get parsing and that put receives the secret only in stdin and not argv.
+  - Existing provisioning, release, credential, redemption and box tests remain green.
+  - Shell syntax, compile, diff check and the full repository suite pass before a replacement SHA.
+expected_ev_effect: >-
+  None directly. The repair makes the already-authorized release and redemption installation
+  executable from the operator laptop; trading policy, caps, hurdles and venue order behavior do
+  not change.
+prohibited:
+  - Installing packages into the operator's global Python as a release prerequisite.
+  - Printing or placing a credential value in an argv vector.
+  - Changing live limits, kill eligibility, execution policy, account state, or box state while
+    developing and testing this repair.

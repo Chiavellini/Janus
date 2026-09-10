@@ -73,6 +73,33 @@ def test_redemption_builder_provision_is_complete_and_idempotent():
     assert not ssm.puts
 
 
+def test_redemption_builder_cli_keeps_secure_value_off_argv():
+    import json
+    import subprocess
+    calls = []
+    def runner(argv, **kwargs):
+        calls.append((argv, kwargs))
+        return subprocess.CompletedProcess(argv, 0, stdout='{"Version":1}', stderr="")
+    ssm = provision_redemption.AwsCliSsm("mx-central-1", runner=runner)
+    secret = "secret-never-in-process-list"
+    ssm.put_parameter(Name="/janus/test", Type="SecureString", Value=secret, Overwrite=False)
+    argv, kwargs = calls[0]
+    assert secret not in " ".join(argv)
+    assert argv[-4:] == ["--region", "mx-central-1", "--output", "json"]
+    assert json.loads(kwargs["input"])["Value"] == secret
+    assert "file:///dev/stdin" in argv and kwargs["capture_output"] is True
+
+
+def test_redemption_builder_cli_parses_decrypted_parameter_response():
+    import subprocess
+    def runner(argv, **kwargs):
+        assert "--with-decryption" in argv and kwargs["input"] is None
+        return subprocess.CompletedProcess(
+            argv, 0, stdout='{"Parameters":[{"Name":"/janus/a","Value":"v"}]}', stderr="")
+    ssm = provision_redemption.AwsCliSsm("mx-central-1", runner=runner)
+    assert provision_redemption.get_values(ssm, ["/janus/a"]) == {"/janus/a": "v"}
+
+
 def test_latency_summary_quantiles_and_statuses():
     rows = [{"connect_ms": i, "tls_ms": 2 * i, "first_byte_ms": 3 * i, "total_ms": 6 * i, "status": 200 if i % 5 else 403} for i in range(1, 101)]
     rows.append({"error": "timeout"})

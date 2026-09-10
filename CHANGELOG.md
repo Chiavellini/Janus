@@ -1178,3 +1178,11 @@ SSM and materialized only into box tmpfs; redemption failures alert without stop
 The complete repository suite and focused execution/redemption/release suites pass, as do watchdog
 self-test, shell syntax, YAML parsing, compilation and diff checks. F20 remains prospective until
 the operator releases the exact committed SHA; no live taker fill or realized-EV claim is included.
+
+### L66 release compatibility follow-up
+
+The first F20 release invocation stopped before checkout because the operator laptop's `python3`
+lacked `boto3`. The redemption provisioner now uses the AWS CLI already required by the release.
+SSM reads are parsed from JSON and new SecureString payloads enter the CLI through `/dev/stdin`, so
+credential values never appear in process arguments or output. The all-or-none and no-overwrite
+rules are unchanged. Full and focused suites pass; the failed invocation made no box/account change.

@@ -37,6 +37,11 @@ confirmation and fresh position disappearance before COMPLETE. Zero-value remnan
 The local operator release provisions the builder credential into SSM if and only if the complete
 set is absent; partial credentials fail closed and secrets are never printed.
 
+The first candidate's operator paste stopped before checkout because the laptop's selected Python
+did not contain `boto3`. L66 removes that undeclared dependency: provisioning now uses the existing
+AWS CLI, with SecureString JSON passed through stdin so values never appear in argv or output. The
+replacement candidate has a fresh full-suite pass; production was untouched by the failed paste.
+
 The arm remains **$12 combined stake, 10 contracts per leg requested, $250 committed daily
 notional, $25 realized-loss breaker, $0.10 minimum net profit, 1% locked return, $1 maximum
 protection loss, `protect_auto=true`, `unwind_enabled=false`**. This release changes execution

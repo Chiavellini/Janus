@@ -8,7 +8,9 @@ credentials are left unchanged; a partial set is a hard stop rather than an impl
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import subprocess
 
 
 BUILDER_NAMES = {
@@ -21,6 +23,43 @@ SOURCE_NAMES = (
     "/janus/polymarket/funder",
     "/janus/polymarket/signature_type",
 )
+
+
+class AwsCliSsm:
+    """Minimal boto3-compatible SSM surface using the operator's existing AWS CLI.
+
+    SecureString values enter ``aws`` through /dev/stdin, never argv.  The deliberately generic
+    failure text also prevents an external CLI error from reflecting input material into logs.
+    """
+    def __init__(self, region: str, *, runner=subprocess.run):
+        self.region, self.runner = region, runner
+
+    def _run(self, args: list[str], *, stdin: str | None = None) -> dict:
+        result = self.runner(
+            ["aws", "ssm", *args, "--region", self.region, "--output", "json"],
+            input=stdin, text=True, capture_output=True, check=False,
+        )
+        if result.returncode:
+            raise RuntimeError(f"aws ssm command failed (rc={result.returncode})")
+        try:
+            payload = json.loads(result.stdout or "{}")
+        except ValueError as exc:
+            raise RuntimeError("aws ssm returned invalid JSON") from exc
+        if not isinstance(payload, dict):
+            raise RuntimeError("aws ssm returned a non-object response")
+        return payload
+
+    def get_parameters(self, *, Names, WithDecryption):
+        if not WithDecryption:
+            raise RuntimeError("credential reads must request decryption")
+        return self._run(["get-parameters", "--names", *list(Names), "--with-decryption"])
+
+    def put_parameter(self, **kwargs):
+        if kwargs.get("Type") != "SecureString" or kwargs.get("Overwrite") is not False:
+            raise RuntimeError("credential writes must be new SecureStrings")
+        payload = {key: kwargs[key] for key in ("Name", "Type", "Value", "Overwrite")}
+        return self._run(["put-parameter", "--cli-input-json", "file:///dev/stdin"],
+                         stdin=json.dumps(payload, separators=(",", ":")))
 
 
 def get_values(ssm, names) -> dict[str, str]:
@@ -69,10 +108,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--region", default=os.environ.get("JANUS_BOX_REGION", "mx-central-1"))
     args = ap.parse_args()
-    import boto3  # type: ignore
     from py_clob_client_v2.client import ClobClient
 
-    ssm = boto3.client("ssm", region_name=args.region)
+    ssm = AwsCliSsm(args.region)
 
     def make_client(source):
         return ClobClient("https://clob.polymarket.com", 137,

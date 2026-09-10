@@ -48,6 +48,9 @@ automatic, and the box be restarted through the normal operator release boundary
    credentials fail closed; values are neither printed nor written outside SSM and box tmpfs.
 7. Preregistered L64/F19 before their tests, then L65/F20 before taker tests. F19 was closed with no
    data when the user superseded the maker-rest proposal. F20 remains the pending live cohort.
+8. After the first candidate stopped at release step zero because local Python lacked `boto3`, L66
+   replaced that undeclared dependency with a minimal AWS CLI SSM adapter. SecureString JSON enters
+   through stdin, not argv or output. The failed paste performed no checkout, restart, or clear.
 
 Expected EV effect: immediate entry should recover executable first-leg fills lost to the recent
 short-lived maker policy, at the known cost of taker fees. The magnitude is deliberately unclaimed
@@ -96,7 +99,8 @@ until F20 produces prospective fills. Redemption improves collateral availabilit
   recovery, confirmation, failure and no-blind-retry tests.
 - `ops/box/clear_false_maker_latch.py`, `clear_false_maker_latch.sh` — exact stopped-lane proof,
   recoverable archive/clear, restart and fresh-stream check.
-- `ops/box/provision_redemption.py` — local, secret-redacted builder credential provisioning.
+- `ops/box/provision_redemption.py` — local, secret-redacted builder credential provisioning using
+  the existing AWS CLI and stdin-only SecureString payloads, with no laptop `boto3` dependency.
 - `ops/box/sync_runtime.sh` — release-time pinned SDK/units/credentials/timer installation.
 - `ops/box/systemd/janus-pm-redeem.service`, `janus-pm-redeem.timer` — isolated redemption job and
   ten-minute schedule.
@@ -108,6 +112,8 @@ until F20 produces prospective fills. Redemption improves collateral availabilit
 - `research/sports/2026-09-10_limited-live-f19-maker-rest/spec.yaml`, `verdict.md` — immutable F19
   and no-data closure.
 - `research/sports/2026-09-10_limited-live-f20-bounded-taker/spec.yaml` — pending forward cohort.
+- `research/exec/2026-09-10_redemption-provision-cli/spec.yaml`, `verdict.md` — immutable L66 local
+  release-compatibility repair and passing verdict.
 - `HANDOFF_BOUNDED_TAKER_REDEMPTION_2026-09-10.md` — this continuation record.
 
 ## Files intentionally left untouched
