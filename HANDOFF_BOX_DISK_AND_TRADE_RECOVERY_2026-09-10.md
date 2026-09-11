@@ -314,3 +314,45 @@ The handoff is complete only when all of the following are true:
   capital decision.
 - Full relevant tests pass, research/ledger rules are satisfied, and any executable release uses the
   operator boundary in `GATE_TO_LIVE.md`.
+
+## Recovery record — 2026-09-11 (appended by the recovering session)
+
+Read this section before the runtime claims above; they describe 04:45Z and are superseded here.
+
+- 17:00Z read-only re-audit: unchanged since the snapshot above (0 bytes free, restart counter 738
+  → 753, redemption failed, kill files absent, override valid to 2026-09-18 pinning `11b7f0a`).
+- 17:10Z operator decisions: enlarge to 200 GB, snapshot first, stop the units now and start only
+  after verification; no prune, no cap/kill/override/mode change.
+- 17:15:55Z `systemctl stop janus-live-stream`, `systemctl stop janus-pm-redeem.timer` (and the
+  failed `.service`). No process remained; `kill/` still held only `arming_override.json`.
+- 17:16Z `create-snapshot` → `snap-0cdf81181eae376ef` (tag `janus=data-pre-resize`), completed
+  ~18:05Z. 18:07Z `modify-volume --size 200` on `vol-0551c767981c71d03` (`optimizing` at 18:07:21Z;
+  one modification per 6 h). 18:07:31Z `resize2fs /dev/nvme1n1` online: 52,428,800 blocks, dmesg
+  clean, `df` 197 GB / 47 GB used / 142 GB free, inodes 1 %.
+- 18:14Z read-only venue snapshot (scratch journal under /tmp, nothing submitted): Kalshi
+  $269.07 available (shards 0: $165.72, 3: $103.35), no resting order, no unsettled position, the
+  last twelve fills match the journal (MORIYA 10 @ 0.04, SEKULIC 10 @ 0.19, JACQUEMOT …);
+  Polymarket $313.73, no open order, the MORIYA leg (10.1075 @ 0.93) held among the account's
+  unrelated positions. `py_clob_client_v2` logged one `Could not create api key` (HTTP 400) before
+  deriving the key; reads succeeded. Kalshi's public market record: `KXATPCHALLENGERMATCH-26SEP10MORSHI-SHI`
+  finalized `yes` at 06:52:23Z, so execution `98376aa2` settles in the lane's favour (~+$0.14) once
+  its settlement poller runs. Journal: execution HEDGED, all orders terminal, reservation
+  `215f4735` still held, no settlement row yet, no in-flight execution, one open reservation total.
+- Offline size breakdown and the measured causes: see `research/infra/2026-09-11_box-disk-retention/verdict.md`
+  (L72) and `research/infra/2026-09-11_sizing-decision-gate/spec.yaml` (L74). Hedge audit: L73.
+- Code on branch `claude/handoff-box-disk-trade-recovery-47d67a` (fast-forwarded from
+  `codex/ucl-coverage`): `c245e53` L72, `68d3c65` FAK no-match taxonomy, `45c4d18` L73, `b135265`
+  L74. Full suite green. Not deployed; the release is the operator's `ops/box/release.sh` paste.
+- 18:08Z–20:16Z SQLite checks: `redemptions.sqlite` and `proofs.sqlite` `quick_check` ok.
+  `tuples.sqlite` `quick_check` (27.4 GB, IOPS-bound at ~7 MB/s while the volume optimized) was
+  killed once by SSM's one-hour limit at 90 % read, re-run detached, and was still running at
+  restart; the operator chose to start with it in the background (it is a reader; WAL mode).
+- 20:17:57Z `systemctl start janus-live-stream` (operator decision, after the checks above).
+  Active, zero restarts; `[mode] LIMITED_LIVE` accepted under the unchanged override; Kalshi,
+  Polymarket and the Polymarket user stream connected with sub-second age; guard raised and
+  resolved one POSITION_MISMATCH (Kalshi had settled MORIYA at 06:52Z); first real execution
+  DODIG V VALLE, FAK unfilled, released (operator pinged). `janus-pm-redeem.timer` started and
+  one run succeeded (eligible=0). Watchdog: only `census: STALE` (it could not run on the full
+  disk; clears at its next slot). `df`: 197 GB, 47 GB used, 142 GB free.
+- Not done here: the operator's release of the branch (retention, gate, disk alert), the offline
+  VACUUM, the census re-run, and L73's follow-up row.

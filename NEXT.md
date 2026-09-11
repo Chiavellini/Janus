@@ -2,54 +2,52 @@
 
 *An opinion, not a record. Overwrite this file; never append to it and never create a second one.*
 
-Updated 2026-09-10 for the final F20 recovery/release candidate.
+Updated 2026-09-11 20:20Z after the disk-full recovery.
 
 ## Current state
 
-Production runs `11b7f0a0c8d765e45772ad9d0f94ced0f900cd17` on the Mexico box in
-`LIMITED_LIVE`. `kill/live` is absent, the lane and redemption timer are active, all three streams
-are fresh, all material risk flags are resolved, current money state is empty, and the watchdog is
-green. Exact marker 533 closes only persistence incident 530. The single accidental F20 taker
-flight remains fully RECONCILED/released at -$0.014932; no later execution existed at final audit.
+Production runs `11b7f0a0c8d765e45772ad9d0f94ced0f900cd17` on the Mexico box in `LIMITED_LIVE`,
+restarted 2026-09-11T20:17:57Z after 15.6 hours down. The 50 GB data volume filled at 04:40Z; the
+operator authorized a snapshot (`snap-0cdf81181eae376ef`) and an enlargement to 200 GB (142 GB
+free after `resize2fs`). Nothing was pruned; `kill/live` and `kill/all` are absent; the override
+is unchanged (caps $12 / 10 / $250, expires 2026-09-18T01:20:54Z). All three streams are connected
+and fresh, the guard raised and resolved one POSITION_MISMATCH at start (Kalshi had finalized
+MORIYA V SHIMIZU `yes` at 06:52Z), the redemption timer is active with a clean run (nothing
+eligible), and the watchdog's only alert is the daily census past its SLA because it could not
+run on the full disk; it clears at its next scheduled run. A `quick_check` of `tuples.sqlite`
+(27.4 GB) was still running detached in the background at restart; `redemptions.sqlite` and
+`proofs.sqlite` pass. Execution `98376aa2` (MORIYA) is HEDGED and awaits the lane's settlement
+poller: Kalshi paid the cover, the Polymarket leg expired, ~+$0.14.
 
-The base executable repair is `42ac10cd67af9b228930481ee3fd8ea4226f72ac`. It fixes the SQLite
-writer-upgrade race, exact incident resolution, fail-closed retained-kill warm-up, SSM failure
-propagation, redemption interpreter selection/error visibility, and the redemption watchdog cadence.
-The candidate redemption SDK authenticated read-only on the box and sees two positive redeemable
-conditions. No redemption was submitted during development.
+Read `HANDOFF_BOX_DISK_AND_TRADE_RECOVERY_2026-09-10.md` (its appended recovery record) for the
+exact timeline and the venue snapshot.
 
-The d864447 release deployed that base but failed closed before lane stop or kill handling. Its
-fresh logs proved the current adapter error was gone; exact recovery was blocked only because an
-already-resolved historical checker repeated a one-time terminal-zero proof against unrelated
-shared-account positions and emitted `LEGACY_POSITION_EVIDENCE_BLOCKED`. L71 makes that checker
-quiet only when its own exact unresolved flag set is empty, after validating acknowledgements and
-migration alarms. The final `11b7f0a` release passed this boundary and safely cleared the kill.
+## Why it filled, and what is on the branch (not deployed)
 
-Automatic redemption is operational. It submitted two eligible conditions, stored transaction
-identities, observed fresh position disappearance, and marked both COMPLETE. Nothing eligible,
-pending, unknown or failed remains.
+`sizing_decisions` was 24.69 of 27.36 GB: an 11 KB candidate ladder per book epoch per poller,
+~1.95 M rows a day, 97 % for blocked or no-edge epochs. Frames were 21 GB in four days with no
+retention. Branch `claude/handoff-box-disk-trade-recovery-47d67a` (fast-forwarded from
+`codex/ucl-coverage`) carries:
 
-The system is already taker-first under F20. The observed local execution stages were fast
-(3.14 ms pre-machine, 33.22 ms database, 59.08 ms evaluation-to-execution); venue acknowledgement,
-settled quantity and five missed Kalshi hedge IOCs dominated the 4.77-second completion. A C++
-rewrite is not supported by this evidence.
+- L72 `c245e53`: `TupleStore.retain` (rowid-bounded, batched, refuses evidence tables),
+  `capture.prune_days`, `Supervisor.retain_once` every 15 min at `--retain-days 7`,
+  `watchdog.disk_alerts` (PRESSURE at 80 % or < 3 days runway, CRITICAL < 5 GiB), and
+  `DiskPressure` → exit 75 on the report tick under the runner's own floor.
+- L74 `b135265`: a sizing decision is recorded only when it selects something or ends an
+  executable run; the single-flight guard is unchanged; the table joins retention.
+- `68d3c65`: a Polymarket FAK answered HTTP 400 "no orders found to match" is an UNFILLED zero.
+- L73 `45c4d18`: descriptive hedge-slippage audit of SEKULIC and MORIYA (report only).
 
-Caps and policy remain unchanged: $12 combined stake, 10 requested contracts per leg, $250 daily
-committed notional, $25 realized-loss breaker, $0.10 minimum net profit, 1% locked return, $1 maximum
-protection loss, `protect_auto=true`, and `unwind_enabled=false`. The adverse first observation is
-not evidence to lift them.
-
-## Verification
-
-The complete repository suite, focused execution/recovery/release tests, watchdog selftest,
-compileall, YAML parsing, shell syntax and `git diff --check` pass. Actual-box read-only checks prove
-the exact incident's seven terminal owned orders, two final FIFOs, bounded PM excess, released
-settlement/reservation, current cash quiet, fresh streams, candidate unit syntax and pinned SDK.
+Full suite green. Expected steady state after release: ~1 GB/day database, ~7 GB/day frames,
+~55 GB resident at the 7-day window. Without the release the volume refills in about a week.
 
 ## Immediate next step
 
-No operational action is required. Let F20 run under the unchanged caps. Reconcile observations two
-and three before permitting the registered fourth cover, with special attention to first-fill-to-
-hedge latency, missed IOC levels, locked cover P&L and residual P&L. Do not lift caps or begin a C++
-rewrite from the first adverse observation alone. The laptop may be powered off; runtime,
-credentials, monitoring, redemption and restart behavior are box-local.
+The operator's release paste, `bash ops/box/release.sh <sha>` on this branch's head, when no
+money is in flight (the paste checks). It re-signs the standing statement at the same caps; no
+GATE row is needed because no cap, hurdle or hedge behaviour changes. After it: confirm
+`[retain]` lines appear within 15 minutes, the watchdog is quiet on disk, and `df` stops
+climbing. Then, at the operator's option, a one-off offline `VACUUM` to give back the 24 GB the
+old sizing rows occupy (the file does not shrink on its own). L73's one supported candidate, a
+one-tick-per-attempt hedge walk inside the unchanged budget and loss cap, is a separate
+pre-registered row if pursued.

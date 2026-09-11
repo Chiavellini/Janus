@@ -6,6 +6,56 @@ never edited afterward. **This is history, not status** — for current state re
 
 ---
 
+## 2026-09-11 — the box's data volume filled; recovery, retention, and the table that did it
+
+At 2026-09-11T04:40Z the 50 GB data volume on the Mexico box reached zero bytes free. The lane
+died inside a SQLite commit (`database or disk is full`), then restart-looped 753 times on the
+runner's start-time 2 GB guard, whose own ABORT line could not be written; automatic redemption
+failed the same way. `kill/live` and `kill/all` were absent throughout; the override stayed valid
+(pinning `11b7f0a`, caps $12 / 10 / $250, expiring 2026-09-18). Three executions had filled in the
+prior day: JACQUEMOT V TIKHONOVA (-$0.0149, reconciled), SEKULIC V MATSUDA (-$0.0951, reconciled)
+and MORIYA V SHIMIZU (hedged, +$0.14 worst case, awaiting settlement); the outage stopped the lane
+13.5 hours before the operator's first look.
+
+Recovery, operator-authorized at 17:10Z and done read-only-first: the two units were stopped at
+17:15:55Z so a restart could not race the money checks; EBS snapshot `snap-0cdf81181eae376ef` of
+`vol-0551c767981c71d03`; the volume enlarged 50 → 200 GB at 18:07Z and `resize2fs` grown online
+(142 GB free); bounded SQLite checks; a read-only venue snapshot (Kalshi $269.07 available, no
+resting order, no unsettled position, the last twelve fills matching the journal; Polymarket
+$313.73, no open order, the MORIYA leg held). Kalshi had finalized MORIYA V SHIMIZU `yes` at
+06:52Z, so the Kalshi cover pays and the Polymarket leg expires: the settlement poller reconciles
+it on restart. Nothing was pruned; no cap, kill file, override or mode was touched. The lane
+restarted at 20:17:57Z on the operator's word with the 27 GB `quick_check` still running as a
+background reader (the two small databases had passed): all three streams fresh, the guard's
+one POSITION_MISMATCH resolved, redemption timer active, 15.6 hours of downtime.
+
+What the volume held, measured offline (`dbstat`, 734 s): `sizing_decisions` 24.69 of 27.36 GB,
+one ~11 KB candidate ladder per book epoch per poller, ~1.95 M rows a day, 97 % of them for epochs
+that were blocked or had no edge. `stream_evaluations` was 2.3 GB with indexes; `quote_history`
+and `opportunity_history` were empty; every evidence table together was under 35 MB. Frames were
+21 GB in four days (Polymarket 96 % `price_change`; top 20 markets 82–92 % of bytes), with real
+consumers (the replay node, three research rows) and no retention.
+
+Landed on the branch, not deployed (the release is the operator's paste): L72 — `TupleStore.retain`
+ages the observation series out in short committed batches bounded by a rowid binary search (no
+scan, no VACUUM, any other table refused), `capture.prune_days` removes frame day directories by
+capture date, `Supervisor.retain_once` runs both from a worker thread every 15 minutes at a 7-day
+window (`--retain-days`, 0 disables), `watchdog.disk_alerts` reports PRESSURE at 80 % used or under
+three days of projected runway and CRITICAL under 5 GiB, and the report tick raises `DiskPressure`
+under the runner's own floor so `main()` exits 75 between records instead of dying mid-commit.
+L74 — a sizing decision is recorded only when it selects something or ends an executable run; the
+single-flight duplicate-input guard is unchanged; `sizing_decisions` joins retention. Expected
+steady state at 7 days: ~1 GB/day database, ~7 GB/day frames, ~55 GB resident.
+
+Also on the branch: the Polymarket FAK answered HTTP 400 "no orders found to match" is journaled
+as an UNFILLED zero rather than a rejection (the 2026-09-11 audit's observability debt, with a
+regression test), and L73, a descriptive audit of the SEKULIC and MORIYA hedges: the Kalshi touch
+that priced each plan was gone 0.94–1.64 s later when the first hedge IOC arrived; the venue
+answered every IOC in 80–306 ms; plan-price retries cost 1.9 s and 1.1 s for nothing, and the walk
+closed both. Kalshi-first ordering would have zero-filled both and moves the Polymarket ack
+ambiguity onto the hedge; size was not the limit; the one supported candidate is a one-tick walk
+from the second attempt inside the unchanged budget and loss cap, to be its own row.
+
 ## 2026-09-08 — F8 execution audit and F9 live-entry repair
 
 F8 closed at its registered STOP with zero hedged covers, nineteen failed executions and one
