@@ -267,3 +267,79 @@ def test_the_guard_s_rerun_protects_from_the_row(tmp_path):
     out = co.protect_existing(co.records.load("rerun01"), plan, c)
     assert out.state is X.HEDGED and out.hedge_filled == 100.0 and out.stages["guard_rerun"] == 1
     assert store.con.execute("SELECT state, hedge_filled FROM executions WHERE execution_id='rerun01'").fetchone() == ("HEDGED", 100.0)
+
+
+def _sekulic_like(p0):
+    """The 73688bf3 plan: PM 0.801 first, Kalshi walked 0.16, budget 0.1622 (floors to 0.16),
+    break-even 0.1722, loss cap 0.27 at 10 contracts under the $1 allowance."""
+    return replace(p0, quantity=10.0,
+                   first=replace(p0.first, limit_price=0.802, vwap=0.801, contracts=10.0),
+                   hedge=replace(p0.hedge, limit_price=0.16, vwap=0.16, contracts=10.0, tick=0.01),
+                   max_cost_per_contract=0.99, fee_per_contract=0.01738, settlement_buffer_per_contract=0.009437)
+
+
+def test_a_zero_fill_at_a_walked_price_the_book_has_left_advances_the_phase_after_one_send(tmp_path):
+    """L75: with a fresh book whose marginal price is above the walked ceiling, the walked phase
+    hands over after its first zero fill instead of re-sending the same price three times."""
+    co, vs, store, clk, _ = harness(tmp_path)
+    offs = offers()
+    p, _ = plan_for(offs)
+    vs["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs["kalshi"].books = {"K_A": bk([(0.46, 5000)])}
+    co.fresh_book = lambda venue, market, side: vs[venue].orderbook(market, side)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.HEDGED and ex.hedge_avg_price == pytest.approx(0.46)
+    hedge = [a for a in ex.protect["attempts"] if a["kind"] == "hedge"]
+    assert [a["phase"] for a in hedge] == ["walked", "budget"], "one walked send, then the chase"
+    assert hedge[0]["state"] == "UNFILLED" and hedge[0]["advance"] == "book_above_ceiling" and hedge[0]["book_marginal"] == 0.46
+    assert hedge[1]["state"] == "FILLED" and hedge[1]["limit"] == 0.46
+
+
+def test_the_sekulic_schedule_reaches_the_loss_cap_phase_in_two_sends_not_six(tmp_path):
+    """SEKULIC (73688bf3): budget ceiling == walked price (0.16), book at 0.19 under the 0.27 loss
+    cap. Live: six sends, filled at +3.8 s. With L75: the walked zero fill advances, the budget
+    phase skips its blind retry because the book is above 0.16, the loss-cap phase fills at 0.19."""
+    co, vs, _, _, _ = harness(tmp_path)
+    p0, _ = plan_for(offers(), q=10.0)
+    p = _sekulic_like(p0)
+    vs["polymarket"].books = {"P_H": bk([(0.801, 10)])}
+    vs["kalshi"].books = {"K_A": bk([(0.19, 5000)])}
+    co.fresh_book = lambda venue, market, side: vs[venue].orderbook(market, side)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.HEDGED and ex.hedge_avg_price == pytest.approx(0.19)
+    hedge = [a for a in ex.protect["attempts"] if a["kind"] == "hedge"]
+    assert [(a["phase"], a["limit"], a["state"]) for a in hedge] == [("walked", 0.16, "UNFILLED"), ("loss_cap", 0.19, "FILLED")]
+    assert hedge[0]["advance"] == "book_above_ceiling" and hedge[0]["left"] == "walked"
+    assert hedge[0]["skipped_phase"] == "budget" and hedge[0]["skipped_ceiling"] == 0.16 and hedge[0]["book_marginal_at_skip"] == 0.19
+    assert hedge[-1]["ceiling"] == pytest.approx(0.27, abs=0.0101)
+
+
+def test_the_moriya_schedule_reaches_the_budget_tick_in_two_sends_not_five(tmp_path):
+    """MORIYA (98376aa2): walked 0.03, book at 0.04, budget ceiling floors to 0.04."""
+    co, vs, _, _, _ = harness(tmp_path)
+    p0, _ = plan_for(offers(), q=10.0)
+    p = replace(p0, quantity=10.0,
+                first=replace(p0.first, limit_price=0.94, vwap=0.93, contracts=10.0),
+                hedge=replace(p0.hedge, limit_price=0.03, vwap=0.03, contracts=10.0, tick=0.01),
+                max_cost_per_contract=0.99, fee_per_contract=0.005295, settlement_buffer_per_contract=0.01046315)
+    vs["polymarket"].books = {"P_H": bk([(0.93, 10)])}
+    vs["kalshi"].books = {"K_A": bk([(0.04, 5000)])}
+    co.fresh_book = lambda venue, market, side: vs[venue].orderbook(market, side)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.HEDGED and ex.hedge_avg_price == pytest.approx(0.04)
+    hedge = [a for a in ex.protect["attempts"] if a["kind"] == "hedge"]
+    assert [(a["phase"], a["limit"], a["state"]) for a in hedge] == [("walked", 0.03, "UNFILLED"), ("budget", 0.04, "FILLED")]
+
+
+def test_without_a_fresh_book_the_walked_phase_still_sends_three_times(tmp_path):
+    """L75's guard: no book, no advance. The sequence is the 2026-09-08 one."""
+    co, vs, _, _, _ = harness(tmp_path)
+    p0, _ = plan_for(offers(), q=10.0)
+    p = _sekulic_like(p0)
+    vs["polymarket"].books = {"P_H": bk([(0.801, 10)])}
+    vs["kalshi"].books = {"K_A": bk([(0.19, 5000)])}
+    co.fresh_book = None
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    hedge = [a for a in ex.protect["attempts"] if a["kind"] == "hedge"]
+    assert [a["phase"] for a in hedge][:3] == ["walked"] * 3 and not any("advance" in a for a in hedge)
+    assert ex.state is X.HEDGED and ex.hedge_avg_price == pytest.approx(0.19)

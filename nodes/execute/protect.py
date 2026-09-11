@@ -203,6 +203,17 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                     # in the resubmit wait), then the next phase, or the unwind
                     if phase_attempts >= 2 or limit < ceiling - 1e-9:
                         break
+                    # L75: the retry is for a book that may have refilled; a fresh book whose
+                    # marginal price sits above this ceiling says it has not, so the budget phase
+                    # hands over now instead of spending a submit and 0.4 s on a known miss. The
+                    # loss-cap phase keeps its retries: past it there is no next ceiling, only the
+                    # unwind or a page, and a refill is the last cheap way out.
+                    want = marginal_price(book, ex.unhedged) if (book is not None and phase == "budget") else None
+                    if want is not None and want > ceiling + 1e-9:
+                        if ex.protect["attempts"]:
+                            ex.protect["attempts"][-1].update(skipped_phase=phase, skip="book_above_ceiling",
+                                                              book_marginal_at_skip=want, skipped_ceiling=round(ceiling, 4))
+                        break
                     nxt = tick_floor(ceiling, tick)
                 limit = nxt
             phase_attempts += 1
@@ -239,6 +250,19 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                                     detail=f"hedge filled {hb.filled_contracts} @ {hb.avg_price}")
             elif hb.state is FillState.UNFILLED:
                 co._sync_after_fill(ex)
+                if phase == "walked" and fresh_book is not None:
+                    # L75 (2026-09-11): the venue just answered zero at the walked price. Until now
+                    # this phase never looked at the book and re-sent that price up to three times
+                    # (SEKULIC: 0.16 x5 over 1.9 s while the touch had moved to 0.19; MORIYA: 0.03
+                    # x3 over 0.9 s). One read: if the book's marginal price for what is still
+                    # unhedged is above the walked ceiling, the next attempt belongs to the budget
+                    # phase. Nothing about the ceilings, caps, window or submit budget moves; with
+                    # no book the sequence is what it was.
+                    book = fresh_book(hedge.venue, hedge.market_id, hedge.side)
+                    want = marginal_price(book, ex.unhedged) if book is not None else None
+                    if want is not None and want > ceiling + 1e-9:
+                        ex.protect["attempts"][-1].update(advance="book_above_ceiling", book_marginal=want, left=phase)
+                        break
                 co.sleep(co.poll_interval_s if phase == "walked" else lim.protect_resubmit_ms / 1000.0)
         if ex.unhedged <= dust or rejected is not None:
             break

@@ -1,0 +1,38 @@
+row: L75
+date: 2026-09-11
+kind: descriptive_execution_repair
+status_at_registration: PENDING
+observed_failure: >-
+  L73's journals: on SEKULIC V MATSUDA (73688bf3) Kalshi answered fill_count 0.00 at the walked
+  price 0.16 and the lane re-sent 0.16 four more times over 1.9 s (three walked attempts, then two
+  budget-phase stall retries, the budget ceiling tick-flooring to the same 0.16) before the
+  loss-cap phase read the book and filled at 0.19 at +3.8 s; on MORIYA V SHIMIZU (98376aa2) 0.03
+  was sent three times over 0.94 s before the budget phase reached 0.04. The walked phase in
+  nodes/execute/protect.py never reads the live book, and the budget phase's stall retry is blind
+  to a book that has already left the ceiling. L73's "walk one tick inside the budget" candidate
+  was infeasible on SEKULIC (0.17 and 0.18 were above the budget ceiling); this row replaces it.
+immutable_success_criteria:
+  - After a zero-fill IOC in the walked phase, when fresh_book returns a book whose marginal price
+    for the remaining unhedged quantity is strictly above the walked ceiling, the next attempt is
+    the budget phase's; in the budget phase a stall retry at the ceiling is skipped when the fresh
+    book's marginal price is above that ceiling. The loss-cap phase, the unwind and the fail-closed
+    paths are unchanged.
+  - No ceiling (walked, budget, break-even, loss cap), no $1 / $0.10 loss allowance, no 30 s
+    window, no 3 s phase-1 deadline, no max_hedge_submits / max_protect_submits, no
+    inter-attempt delay and no unwind_enabled value changes; the advance can only reach a ceiling
+    the current schedule already reaches, sooner.
+  - With fresh_book absent or returning None, or a book without depth for the quantity, the
+    attempt sequence is byte-identical to today's (the existing protect and coordinator tests
+    keep passing unchanged).
+  - Tests reproduce the SEKULIC-shaped (walked 0.16, budget ceiling 0.16, book 0.19, loss cap 0.27)
+    and MORIYA-shaped (0.03 to 0.04) schedules and show the cover reached in two submits instead
+    of six and five, each attempt carrying the advance reason in protect_json.
+expected_ev_effect: >-
+  a tick or two per hedged contract on covers whose walked price is gone by the time the first
+  IOC lands (both of the last two), from reaching the same ceilings 0.7-2.4 s sooner; no change
+  to which opportunities are taken or to any cap; tail risk unchanged (the same loss cap, more of
+  the 30 s window left for the chase).
+prohibited:
+  - Raising or lowering any ceiling, allowance, window, submit budget or cap.
+  - Removing or delaying protective hedging after a first-leg fill.
+  - Deploying by any path other than the operator's release paste.

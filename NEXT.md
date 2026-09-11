@@ -43,6 +43,14 @@ Full suite green. Expected steady state after release: ~1 GB/day database, ~7 GB
 
 ## Immediate next step
 
+Two pastes, in order. First `bash ops/box/release.sh 35d1171` (disk retention, sizing gate, disk
+alert, FAK taxonomy). Second, L75 on the same branch: the hedge stops re-sending a price the
+venue has answered zero at (one fresh-book read after a walked zero fill and before a budget
+stall retry; no ceiling, cap, window or loss allowance moves; GATE_TO_LIVE 2026-09-11 row). Paste
+the branch head once both are reviewed; one paste covers both if the first has not happened yet.
+
+### Earlier note
+
 The operator's release paste, `bash ops/box/release.sh <sha>` on this branch's head, when no
 money is in flight (the paste checks). It re-signs the standing statement at the same caps; no
 GATE row is needed because no cap, hurdle or hedge behaviour changes. After it: confirm
