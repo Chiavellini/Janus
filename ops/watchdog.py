@@ -66,12 +66,14 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from kernel.paths import DATA_ROOT, LOGS  # noqa: E402
 from ops.run_index import INDEX, TERMINAL  # noqa: E402
 
 
@@ -253,10 +255,91 @@ def socket_alerts(db_path: Path | str, *, now: float | None = None, window_rows:
     return out
 
 
+#: L72 (2026-09-11): the box's 50 GB data volume filled in 3.35 days with nothing watching it; the
+#: first signal was the lane dying inside a commit. The runner's own floor (ops/run_node.sh
+#: MINFREE_KB, 2 GB) is where a start aborts, so the alert has to come days before it: at 80 %
+#: used, or when the growth measured over the last day projects less than three days of runway,
+#: and CRITICAL under 5 GB free. The root disk gets only the critical floor (the Mac's is always
+#: mostly full and never Janus data).
+DISK_PRESSURE_USED_FRACTION = 0.80
+DISK_PRESSURE_RUNWAY_DAYS = 3.0
+DISK_CRITICAL_FREE_BYTES = 5 * 2 ** 30
+DISK_SAMPLES = LOGS / "disk_samples.jsonl"
+DISK_SAMPLE_WINDOW_S = 24 * 3600
+
+
+def _gib(n: float) -> str:
+    return f"{n / 2 ** 30:.1f} GiB"
+
+
+def disk_growth_per_day(samples: Path | None, *, now: float, used: int,
+                        window_s: float = DISK_SAMPLE_WINDOW_S) -> float | None:
+    """Append (now, used) to the sample file and return the growth in bytes per day measured from
+    the oldest sample still inside `window_s`; None until two samples at least an hour apart
+    exist. A failed write (the disk being measured may be the full one) costs the projection,
+    never the alert."""
+    if samples is None:
+        return None
+    rows: list[dict] = []
+    try:
+        for line in Path(samples).read_text().splitlines():
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(r, dict) and 0 <= now - float(r.get("ts", 0)) <= window_s:
+                rows.append(r)
+    except OSError:
+        pass
+    rows.append({"ts": now, "used": int(used)})
+    try:
+        Path(samples).parent.mkdir(parents=True, exist_ok=True)
+        Path(samples).write_text("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows))
+    except OSError:
+        pass
+    span = now - float(rows[0]["ts"])
+    if span < 3600:
+        return None
+    return (int(used) - float(rows[0]["used"])) / span * 86400
+
+
+def disk_alerts(*, data_root: Path | str = DATA_ROOT, root: Path | str | None = "/",
+                now: float | None = None, samples: Path | None = DISK_SAMPLES,
+                usage=shutil.disk_usage) -> list[str]:
+    """Free space on the data volume and the root disk, with a runway projection. `usage` is
+    shutil.disk_usage or a stand-in returning (total, used, free)."""
+    now = time.time() if now is None else now
+    alerts: list[str] = []
+    try:
+        u = usage(data_root)
+    except OSError as exc:
+        return [f"disk: UNREADABLE — {data_root}: {type(exc).__name__}"]
+    rate = disk_growth_per_day(samples, now=now, used=u.used)
+    runway = (u.free / rate) if rate and rate > 0 else None
+    proj = f", growing {_gib(rate)}/day, full in {runway:.1f} days" if runway is not None else ""
+    used_frac = u.used / u.total if u.total else 0.0
+    if u.free < DISK_CRITICAL_FREE_BYTES:
+        alerts.append(f"disk: CRITICAL — {data_root} has {_gib(u.free)} free of {_gib(u.total)} "
+                      f"(the runner aborts below 2 GB){proj}")
+    elif used_frac >= DISK_PRESSURE_USED_FRACTION or (runway is not None and runway < DISK_PRESSURE_RUNWAY_DAYS):
+        alerts.append(f"disk: PRESSURE — {data_root} {used_frac:.0%} used, {_gib(u.free)} free{proj}")
+    if root is not None:
+        try:
+            r = usage(root)
+            if r.free < DISK_CRITICAL_FREE_BYTES:
+                alerts.append(f"disk: CRITICAL — {root} has {_gib(r.free)} free (the runner aborts below 2 GB)")
+        except OSError as exc:
+            alerts.append(f"disk: UNREADABLE — {root}: {type(exc).__name__}")
+    return alerts
+
+
 def check(index: Path = INDEX, *, now: float | None = None,
-          slas: dict[str, Sla] | None = None, risk: dict | None = None) -> list[str]:
+          slas: dict[str, Sla] | None = None, risk: dict | None = None,
+          disk: dict | None = None) -> list[str]:
     """`risk` is the keyword set for nodes/risk/health.risk_alerts (paths); None uses the
-    real ones, {} disables the risk checks (tests of the job branches alone)."""
+    real ones, {} disables the risk checks (tests of the job branches alone). `disk` is the
+    keyword set for disk_alerts; None measures the real disks only on a fully real run (risk
+    None), {} disables it."""
     now = time.time() if now is None else now
     slas = slas_for_host() if slas is None else slas
     rows = _rows(index)
@@ -341,6 +424,13 @@ def check(index: Path = INDEX, *, now: float | None = None,
                     alerts.extend(socket_alerts(path, now=now, max_silence_s=900.0 if lane_up else None))
             except Exception as exc:  # noqa: BLE001 -- the watchdog must report, never crash
                 alerts.append(f"registry: UNREADABLE — {type(exc).__name__}")
+    if disk is None and risk is not None:
+        disk = {}          # a test of the job or risk branches alone measures no real disk
+    if disk is None or disk:
+        try:
+            alerts.extend(disk_alerts(now=now, **(disk or {})))
+        except Exception as exc:  # noqa: BLE001 -- the watchdog must report, never crash
+            alerts.append(f"disk: UNREADABLE — {type(exc).__name__}")
     return alerts
 
 

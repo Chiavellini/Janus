@@ -676,3 +676,54 @@ def test_the_slate_tier_sets_and_moves_the_poller_s_window(tmp_path: Path):
     for gid, spec in slate.items():
         sup.live[gid].poller.min_eval_interval_s = eval_interval_for(spec.get("tier"), default=0.2)
     assert s.poller.min_eval_interval_s == 5.0
+
+
+def test_the_report_tick_stops_the_lane_under_the_disk_floor(tmp_path: Path):
+    """L72: the lane must stop between records when the data volume is under the floor, with
+    DiskPressure (main() maps it to exit 75), not die inside a commit."""
+    from collections import namedtuple
+    import pytest
+    from grids.live_stream.grid import DiskPressure
+    U = namedtuple("usage", "total used free")
+    sup, s = _supervisor(tmp_path)
+    sup.db = tmp_path / "t.sqlite"
+    sup.disk_floor_bytes = 2 * 2 ** 30
+    sup.disk_usage = lambda p: U(50 * 2 ** 30, 40 * 2 ** 30, 10 * 2 ** 30)
+    sup.on_report_tick(now=T)                                    # room: ticks as before
+    sup.disk_usage = lambda p: U(50 * 2 ** 30, 49 * 2 ** 30, 2 ** 30)
+    with pytest.raises(DiskPressure, match="DISK_PRESSURE 1.00 GiB free"):
+        sup.on_report_tick(now=T)
+
+    def unreadable(p):
+        raise OSError("gone")
+    sup.disk_usage = unreadable
+    sup.on_report_tick(now=T)                                    # unreadable is not a verdict
+
+
+def test_retain_once_ages_the_store_and_the_frame_days(tmp_path: Path):
+    """L72: one pass, on its own connection, deletes old observation rows and old frame days."""
+    from nodes.capture.capture import FrameWriter
+    sup, s = _supervisor(tmp_path)
+    sup.db = tmp_path / "t.sqlite"
+    sup.enforce_volume = False
+    sup.retain_days = 7
+    NOW = T + 30 * 86400
+    for i in range(12):
+        sup.store.quote(venue="k", market_id=f"m{i}", best_bid=0.4, best_ask=0.45, bid_depth=1.0, ask_depth=1.0,
+                        n_bid_levels=1, n_ask_levels=1, two_sided=True, seen_ts=NOW - 20 * 86400 + i)
+    sup.store.quote(venue="k", market_id="fresh", best_bid=0.4, best_ask=0.45, bid_depth=1.0, ask_depth=1.0,
+                    n_bid_levels=1, n_ask_levels=1, two_sided=True, seen_ts=NOW - 60)
+    sup.store.commit()
+
+    class Sock:
+        capture = None
+    sup.ks, sup.ps = Sock(), Sock()
+    sup.ks.capture = FrameWriter("kalshi", tmp_path / "frames", enforce_volume=False)
+    sup.ks.capture.write("old", received_utc=NOW - 20 * 86400)
+    sup.ks.capture.write("new", received_utc=NOW)
+    sup.ks.capture.close()
+    got = sup.retain_once(now=NOW)
+    assert got["quote_history"] == 12 and got["_more"] == 0
+    assert len(got["frames"]) == 1 and got["frames"][0].startswith("kalshi:")
+    assert sup.store.con.execute("SELECT count(*) FROM quote_history").fetchone()[0] == 1
+    assert len(list((tmp_path / "frames" / "kalshi").iterdir())) == 1

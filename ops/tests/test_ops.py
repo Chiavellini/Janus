@@ -106,3 +106,47 @@ def test_secret_flag_values_never_reach_the_index(index):
     row = ri.last_per_job(index)["j"]
     assert row["argv"] == ["--api-key", "<redacted>", "--once"]
     assert "sk-live-123" not in index.read_text()
+
+
+def test_watchdog_disk_alerts_fire_on_pressure_runway_and_the_critical_floor(tmp_path):
+    """L72: the volume filled with nothing watching. PRESSURE at 80 % or under three days of
+    projected runway, CRITICAL under 5 GiB, and the root disk gets only the critical floor."""
+    from collections import namedtuple
+    U = namedtuple("usage", "total used free")
+    G = 2 ** 30
+    samples = tmp_path / "disk_samples.jsonl"
+    now = 1_800_000_000.0
+
+    def usage_for(data, root=U(20 * G, 4 * G, 16 * G)):
+        return lambda p: root if str(p) == "/" else data
+    # Quiet: 40 % used, no history yet, root fine.
+    assert wd.disk_alerts(data_root=tmp_path, now=now, samples=samples, usage=usage_for(U(200 * G, 80 * G, 120 * G))) == []
+    # 12 hours later, 90 GB used: not yet 80 %, and 20 GB/day leaves 5.5 days -> quiet.
+    assert wd.disk_alerts(data_root=tmp_path, now=now + 12 * 3600, samples=samples, usage=usage_for(U(200 * G, 90 * G, 110 * G))) == []
+    # A day in, 150 GB used: 70 GB/day over the window -> 0.7 days of runway -> PRESSURE by runway.
+    a = wd.disk_alerts(data_root=tmp_path, now=now + 24 * 3600, samples=samples, usage=usage_for(U(200 * G, 150 * G, 50 * G)))
+    assert len(a) == 1 and a[0].startswith("disk: PRESSURE") and "full in 0.7 days" in a[0], a
+    # 80 % used with no growth is PRESSURE by fraction alone.
+    a = wd.disk_alerts(data_root=tmp_path, now=now, samples=None, usage=usage_for(U(100 * G, 80 * G, 20 * G)))
+    assert len(a) == 1 and "PRESSURE" in a[0] and "80% used" in a[0]
+    # Under 5 GiB free is CRITICAL, whatever the fraction says; the root disk too.
+    a = wd.disk_alerts(data_root=tmp_path, now=now, samples=None, usage=usage_for(U(100 * G, 96 * G, 4 * G), root=U(20 * G, 17 * G, 3 * G)))
+    assert [x.split(" — ")[0] for x in a] == ["disk: CRITICAL", "disk: CRITICAL"] and "/ has 3.0 GiB" in a[1]
+    # An unreadable data volume is reported, never swallowed.
+    def boom(p):
+        raise OSError("no such volume")
+    assert wd.disk_alerts(data_root=tmp_path, now=now, samples=None, usage=boom) == [f"disk: UNREADABLE — {tmp_path}: OSError"]
+    # The sample file survives a failed write (the disk it measures may be the full one).
+    assert wd.disk_growth_per_day(tmp_path / "nope" / "x" / "s.jsonl", now=now, used=1) is None
+
+
+def test_watchdog_check_measures_no_real_disk_when_the_risk_branches_are_off(index):
+    """`risk={}` is the job-branch-only mode every existing test uses; it must stay disk-free,
+    and an explicit disk keyword set is honoured."""
+    from collections import namedtuple
+    U = namedtuple("usage", "total used free")
+    ri.start("j", index=index)
+    assert wd.check(index, now=NOW, slas={"j": wd.Sla("daemon", 3600)}, risk={}) == []
+    a = wd.check(index, now=NOW, slas={"j": wd.Sla("daemon", 3600)}, risk={},
+                 disk=dict(data_root="/x", root=None, samples=None, usage=lambda p: U(10 * 2 ** 30, 9 * 2 ** 30, 2 ** 30)))
+    assert len(a) == 1 and a[0].startswith("disk: CRITICAL — /x")

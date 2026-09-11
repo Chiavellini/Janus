@@ -81,6 +81,21 @@ def _rel_change(new: float | None, old: float | None) -> float:
     return abs(new - old) / abs(old)
 
 
+#: Observation series, safe to age out: every row is a re-derivable snapshot of a book, an
+#: evaluation, a socket's health or an opportunity's history. Every table NOT named here is
+#: evidence (orders, order_events, venue_fills, executions*, execution_settlement*, settlement and
+#: equivalence records, lane_flags, capital_reservation*, pm_*, sizing_decisions, opportunities,
+#: events, acknowledgements) and retain() cannot reach it: the method only ever names these.
+#: L72 (2026-09-11): 27 GB of these four tables filled the box's 50 GB volume in 3.35 days and
+#: nothing aged anything out.
+RETENTION_TABLES: tuple[tuple[str, str], ...] = (
+    ("stream_evaluations", "seen_ts"),
+    ("quote_history", "seen_ts"),
+    ("socket_health", "seen_ts"),
+    ("opportunity_history", "seen_ts"),
+)
+
+
 class TupleStore:
     def __init__(self, path: Path | str = DEFAULT_DB, *, enforce_volume: bool = True, check_same_thread: bool = True,
                  isolation_level: str | None = "", timeout_s: float = 30.0):
@@ -341,6 +356,68 @@ CREATE INDEX IF NOT EXISTS socket_health_ts ON socket_health(venue, seen_ts);
              stats.get("agreement"), stats.get("errors"), clock.get("offset_s"),
              None if clock.get("healthy") is None else int(bool(clock["healthy"])),
              stats.get("age_s"), stats.get("last_error") or None, stats.get("loop_lag_s")))
+
+    def _last_rowid_before(self, table: str, ts_col: str, cutoff: float) -> int | None:
+        """The largest rowid whose timestamp is below `cutoff`, by binary search over rowid. Rows
+        land in time order, so rowid is monotone in the timestamp to within seconds; the DELETE
+        re-checks the timestamp, so the search only bounds its scan. O(log n) point reads instead
+        of a table scan: quote_history has no timestamp-only index and 27 GB is too much to scan
+        on a tick."""
+        lo, hi = self.con.execute(f"SELECT MIN(rowid), MAX(rowid) FROM {table}").fetchone()
+        if lo is None:
+            return None
+
+        def at(r: int):
+            return self.con.execute(f"SELECT rowid, {ts_col} FROM {table} WHERE rowid >= ? ORDER BY rowid LIMIT 1",
+                                    (r,)).fetchone()
+
+        first = at(lo)
+        if first is None or first[1] is None or first[1] >= cutoff:
+            return None
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            row = at(mid)
+            if row is None or row[1] is None or row[1] >= cutoff:
+                hi = mid - 1
+            else:
+                lo = row[0]
+        return lo
+
+    def retain(self, *, max_age_s: float, now: float | None = None, batch: int = 2000,
+               budget_s: float = 5.0, tables: tuple[tuple[str, str], ...] = RETENTION_TABLES) -> dict[str, int]:
+        """Age out observation rows older than `max_age_s` from RETENTION_TABLES only, in short
+        committed batches until `budget_s` runs out (each batch holds the write lock for
+        milliseconds, so the lane's own writes wait for a batch, never for the backlog). Returns
+        rows deleted per table plus "_more": 1 when the budget ended before the backlog did.
+        Never VACUUMs: freed pages are reused by new rows, so the file stops growing rather than
+        shrinks. A table outside RETENTION_TABLES is refused: evidence has no age."""
+        t0 = time.monotonic()
+        cutoff = (now if now is not None else time.time()) - float(max_age_s)
+        out: dict[str, int] = {}
+        more = 0
+        for table, ts_col in tables:
+            if (table, ts_col) not in RETENTION_TABLES:
+                raise ValueError(f"{table}.{ts_col} is not a retention table; evidence is never aged out")
+            n = 0
+            if not self.con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone():
+                out[table] = 0
+                continue
+            bound = self._last_rowid_before(table, ts_col, cutoff)
+            while bound is not None:
+                if time.monotonic() - t0 > budget_s:
+                    more = 1
+                    break
+                cur = self.con.execute(
+                    f"DELETE FROM {table} WHERE rowid IN (SELECT rowid FROM {table} "
+                    f"WHERE rowid <= ? AND {ts_col} < ? ORDER BY rowid LIMIT ?)",
+                    (bound, cutoff, int(batch)))
+                self.con.commit()
+                n += cur.rowcount
+                if cur.rowcount < batch:
+                    break
+            out[table] = n
+        out["_more"] = more
+        return out
 
     def commit(self) -> None:
         self.con.commit()

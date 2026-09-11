@@ -95,3 +95,24 @@ def test_a_member_cut_mid_stream_yields_what_came_before_and_stops(tmp_path: Pat
     ok = tmp_path / "kalshi" / "2026-09-05" / "04.jsonl.gz"
     ok.write_bytes(fresh)
     assert len(list(read_frames(ok))) == 3 and str(ok) not in CORRUPT_FILES
+
+
+def test_prune_days_removes_only_old_day_directories_of_that_venue(tmp_path: Path):
+    """L72: frame days age out by their capture date; today, the newest max_age_days full days,
+    non-date names and the other venue are never touched."""
+    from nodes.capture.capture import prune_days
+    NOW = T0 + 10 * 86400                     # 2027-01-25
+    for venue in ("kalshi", "polymarket"):
+        for day in ("2027-01-10", "2027-01-17", "2027-01-18", "2027-01-24", "2027-01-25"):
+            (tmp_path / venue / day).mkdir(parents=True)
+            (tmp_path / venue / day / "00.jsonl.gz").write_bytes(b"x")
+    (tmp_path / "kalshi" / "notes.txt").write_text("keep")
+    (tmp_path / "kalshi" / "archive").mkdir()
+    removed = prune_days(tmp_path, "kalshi", max_age_days=7, now=NOW)
+    assert removed == ["2027-01-10", "2027-01-17"]              # cutoff is 2027-01-18: it stays
+    assert sorted(p.name for p in (tmp_path / "kalshi").iterdir()) == ["2027-01-18", "2027-01-24", "2027-01-25", "archive", "notes.txt"]
+    assert sorted(p.name for p in (tmp_path / "polymarket").iterdir()) == ["2027-01-10", "2027-01-17", "2027-01-18", "2027-01-24", "2027-01-25"]
+    assert prune_days(tmp_path, "kalshi", max_age_days=7, now=NOW) == []
+    assert prune_days(tmp_path, "missing", max_age_days=7, now=NOW) == []
+    with pytest.raises(ValueError, match="at least 1"):
+        prune_days(tmp_path, "kalshi", max_age_days=0, now=NOW)

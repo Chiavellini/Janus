@@ -29,6 +29,7 @@ import asyncio
 import hashlib
 import json
 import os
+import shutil
 import signal
 import sys
 import time
@@ -38,12 +39,26 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+class DiskPressure(RuntimeError):
+    """The data volume is under the running floor (L72, 2026-09-11: the lane died inside a
+    commit at 0 bytes free, then restart-looped 753 times). Raised on the report tick so the
+    process stops between records, and main() exits 75 -- the runner's own df-guard code, which
+    then holds the restart until space exists."""
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.environ.get(name) or default)
+    except ValueError:
+        return default
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from kernel.fetch import Client  # noqa: E402
 from kernel.redact import brief_error  # noqa: E402
-from nodes.capture.capture import FRAMES_ROOT, FrameWriter  # noqa: E402
+from nodes.capture.capture import FRAMES_ROOT, FrameWriter, prune_days  # noqa: E402
 from nodes.cover.capacity import frontier, slippage_for  # noqa: E402
 from nodes.cover.cover import walk_ladder  # noqa: E402
 from nodes.risk.flags import raise_flag  # noqa: E402
@@ -161,6 +176,19 @@ class Supervisor:
     loop_lag_readings: list = field(default_factory=list)
     #: The bound past which the loop's own lag halts pricing, same figure as the clock's.
     max_loop_lag_s: float = 5.0
+    #: L72: the running floor, the same figure the runner enforces at start (ops/run_node.sh
+    #: MINFREE_KB). Under it the report tick raises DiskPressure and main() exits 75, between
+    #: records rather than half-way through one. `disk_usage` is injectable for tests.
+    disk_floor_bytes: int = _env_int("JANUS_MINFREE_KB", 2097152) * 1024
+    disk_usage: object = shutil.disk_usage
+    #: L72: age-based retention of the observation series (store.RETENTION_TABLES, nothing else
+    #: is reachable) and of raw frame days, from a worker thread on its own connection. 0 disables.
+    retain_days: int = 7
+    retain_period_s: float = 900.0
+    retain_budget_s: float = 10.0
+    last_retain: float = 0.0
+    #: The data-volume guard on the retention connection; tests on a tmp path turn it off.
+    enforce_volume: bool = True
     #: The last tick's verdict on the loop; what the risk gate sees between ticks.
     stalled: bool = False
     tiers: dict[str, int] = field(default_factory=dict)
@@ -565,6 +593,35 @@ class Supervisor:
         self.arm_stale = reason
         return reason
 
+    def data_free_bytes(self) -> int | None:
+        """Free bytes on the volume holding the database (the data root), None when unreadable."""
+        try:
+            return int(self.disk_usage(self.db.parent).free)
+        except OSError:
+            return None
+
+    def retain_once(self, now: float | None = None) -> dict:
+        """One retention pass (L72): age out observation rows older than retain_days from the
+        store's RETENTION_TABLES, on a connection of this thread's own, then the frame day
+        directories older than retain_days under each socket's capture root. Evidence tables are
+        structurally out of reach (store.retain refuses any other table); today's frames and the
+        newest retain_days full days always stay."""
+        t = now if now is not None else time.time()
+        out: dict = {}
+        st = TupleStore(self.db, check_same_thread=False, isolation_level="IMMEDIATE", enforce_volume=self.enforce_volume)
+        try:
+            out.update(st.retain(max_age_s=self.retain_days * 86400.0, now=t, budget_s=self.retain_budget_s))
+        finally:
+            st.close()
+        days: list[str] = []
+        for st_ in (self.ks, self.ps):
+            cap = getattr(st_, "capture", None)
+            if cap is not None:
+                days += [f"{cap.venue}:{d}" for d in prune_days(cap.root, cap.venue, max_age_days=self.retain_days, now=t)]
+        if days:
+            out["frames"] = days
+        return out
+
     def on_report_tick(self, now: float | None = None) -> None:
         """Persist socket health, and fail closed on an unhealthy clock: every freshness bound
         in the system is `now - updated_utc`, so a stepped clock makes every book fiction.
@@ -574,6 +631,10 @@ class Supervisor:
         CLOCK: a venue's stamps sit outside the bound while the loop was prompt -- a clock step
         or the venue stamping late. Both halt pricing; only the second is a clock finding."""
         t = now or time.time()
+        free = self.data_free_bytes()
+        if free is not None and free < self.disk_floor_bytes:
+            raise DiskPressure(f"DISK_PRESSURE {free / 2 ** 30:.2f} GiB free under {self.db.parent}, floor "
+                               f"{self.disk_floor_bytes / 2 ** 30:.2f} GiB (JANUS_MINFREE_KB): stopping before a commit fails")
         lag = self.loop_lag_max_s
         stalled_prev, self.stalled = self.stalled, lag > self.max_loop_lag_s
         for venue, st_ in (("kalshi", self.ks), ("polymarket", self.ps)):
@@ -1129,6 +1190,15 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
                             print(f"[settle ] {got}", flush=True)
                 except Exception as exc:  # noqa: BLE001 -- settlement must never kill the loop
                     print(f"[settle FAILED] {brief_error(exc)}", flush=True)
+            if sup.retain_days > 0 and time.time() - sup.last_retain > sup.retain_period_s:
+                # L72: retention in a worker on its own connection; the loop never waits on a DELETE.
+                sup.last_retain = time.time()
+                try:
+                    got = await asyncio.to_thread(sup.retain_once)
+                    if got.get("frames") or any(v for k, v in got.items() if k not in ("_more", "frames")):
+                        print(f"[retain] {got}", flush=True)
+                except Exception as exc:  # noqa: BLE001 -- retention must never kill the loop
+                    print(f"[retain FAILED] {brief_error(exc)}", flush=True)
             if time.time() - last_disc > discovery_period:
                 try:
                     # The network halves run in a worker so the sockets keep being read (L37);
@@ -1235,6 +1305,11 @@ def main() -> int:
     ap.add_argument("--frames-root", type=Path, default=FRAMES_ROOT,
                     help="raw frame capture root (hour-rotated gzip JSONL per venue)")
     ap.add_argument("--no-capture", action="store_true", help="do not write raw frames")
+    ap.add_argument("--retain-days", type=int, default=7,
+                    help="L72: age out stream_evaluations/quote_history/socket_health/opportunity_history rows and raw "
+                         "frame days older than this many days, from a worker thread; evidence tables are never touched; "
+                         "0 disables")
+    ap.add_argument("--retain-period", type=float, default=900.0, help="seconds between retention passes")
     ap.add_argument("--mode", default="SHADOW_LIVE",
                     help="OFFLINE_REPLAY | SHADOW_LIVE | PAPER_EXECUTION | DEMO_EXECUTION | LIMITED_LIVE | PRODUCTION; "
                          "resolved once by nodes/risk.gate and never escalated")
@@ -1349,11 +1424,19 @@ def main() -> int:
     if not a.no_capture:
         sup.ks.capture = FrameWriter("kalshi", a.frames_root)
         sup.ps.capture = FrameWriter("polymarket", a.frames_root)
+    sup.retain_days = max(0, int(a.retain_days))
+    sup.retain_period_s = float(a.retain_period)
 
     status, code = "OK", 0
     try:
         asyncio.run(run(sup, discovery_period=a.discovery_period,
                         report_period=a.report_period, once=a.once))
+    except DiskPressure as exc:
+        # 75 is TEMPFAIL, the runner's own df-guard code: systemd retries a minute later and the
+        # guard keeps the lane down until the volume has room (L72).
+        status, code = "FAILED", 75
+        print(f"[fatal] {exc}", flush=True)
+        print(f"[fatal] {type(exc).__name__}: {exc}", file=sys.stderr)
     except Exception as exc:  # noqa: BLE001
         status, code = "FAILED", 1
         print(f"[fatal] {type(exc).__name__}: {exc}", file=sys.stderr)

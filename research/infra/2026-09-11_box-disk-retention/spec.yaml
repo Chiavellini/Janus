@@ -1,0 +1,44 @@
+row: L72
+date: 2026-09-11
+kind: descriptive_storage_audit_and_retention_repair
+status_at_registration: PENDING
+observed_failure: >-
+  The box's 50 GB data volume (/srv/janus, ext4 on vol-0551c767981c71d03) filled at
+  2026-09-11T04:40Z, 3.35 days after launch: tuples.sqlite 27.36 GB, frames/polymarket ~14 GB,
+  frames/kalshi ~7 GB, growing ~15 GB/day (frames 6.5-7.6 GB/day, database ~8 GB/day). The lane died
+  inside a SQLite commit ("database or disk is full"), then restart-looped 753 times on the runner's
+  start-time 2 GB guard, whose own ABORT log line could not be written. janus-pm-redeem failed the same
+  way. No retention, rollup or size cap exists for frames/ (nodes/capture/capture.py) or for the
+  stream_evaluations, quote_history, socket_health and opportunity_history tables
+  (nodes/store_tuples/store.py); ops/watchdog.py has no disk check, so the first alert was the outage.
+  Recovery (operator-authorized 2026-09-11): stop the units, snapshot, enlarge to 200 GB, resize2fs,
+  verify money, restart. No data was pruned; caps, kill files and the override were not touched.
+immutable_success_criteria:
+  - An offline, read-only size breakdown attributes at least 90 percent of tuples.sqlite bytes to
+    named tables and records per-day growth of the database and of each venue's frames from the
+    box's actual files, before any retention constant is chosen.
+  - Retention removes only rows older than the configured age from stream_evaluations,
+    quote_history, socket_health and opportunity_history, and only frame day-directories older
+    than the configured age; every row of every evidence table (orders, order_events, venue_fills,
+    executions, execution_transitions, execution_settlements, execution_venue_results,
+    execution_settlement_revisions, settlement_records, equivalence_records, lane_flags,
+    capital_reservations, capital_reservation_events, pm_*, sizing_decisions, opportunities,
+    events, event_transitions, acknowledgements) is untouched, proven by a test that counts them
+    before and after a run over a populated fixture.
+  - The watchdog raises a disk alert on the box before the runner's 2 GB abort floor can be
+    reached, at 80 percent used or less than 3 days of projected runway, and a critical alert below
+    5 GB free; the check is registered so it can never report UNREGISTERED.
+  - When free space on the data volume falls below the floor at a report tick, the lane stops
+    admitting new entries and exits with a single clear log line and status 75 instead of failing
+    inside a SQLite commit; proven with a stubbed free-space reading.
+  - No VACUUM, no cap or hurdle change, no change to trade selection; expected EV effect is none
+    on selection.
+expected_ev_effect: >-
+  none on selection or sizing; it removes the storage outage that took all executable EV to zero
+  for 12+ hours on 2026-09-11 and would recur every ~13 days at 200 GB without retention.
+prohibited:
+  - Deleting or truncating tuples.sqlite, proofs.sqlite or redemptions.sqlite, or any evidence
+    table row.
+  - VACUUM on the production database.
+  - Changing caps, hurdles, kill files, the signed override or the lane's mode.
+  - Deploying to the box by any path other than the operator's release paste.

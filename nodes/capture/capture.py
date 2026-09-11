@@ -106,6 +106,37 @@ class FrameWriter:
 CORRUPT_FILES: dict[str, str] = {}
 
 
+def prune_days(root: Path | str, venue: str, *, max_age_days: int, now: float | None = None) -> list[str]:
+    """Delete this venue's frame DAY directories older than `max_age_days`, nothing else. Only a
+    directory named YYYY-MM-DD directly under <root>/<venue> is a candidate, and it goes only when
+    its date is before today minus `max_age_days` (UTC), so the newest `max_age_days` full days and
+    today always stay. Returns the days removed, oldest first.
+
+    L72 (2026-09-11): 21 GB of frames in four days on a 50 GB volume with no retention; the lane
+    died in a commit and restart-looped 753 times. The cutoff is by the directory's capture date,
+    never by mtime (an appended hour file has today's mtime whatever its day)."""
+    import shutil
+    if int(max_age_days) < 1:
+        raise ValueError("max_age_days must be at least 1: today's frames are never pruned")
+    t = now if now is not None else time.time()
+    keep_from = datetime.fromtimestamp(t - int(max_age_days) * 86400, timezone.utc).strftime("%Y-%m-%d")
+    base = Path(root) / venue
+    removed: list[str] = []
+    if not base.is_dir():
+        return removed
+    for d in sorted(base.iterdir()):
+        if not d.is_dir() or len(d.name) != 10:
+            continue
+        try:
+            datetime.strptime(d.name, "%Y-%m-%d")
+        except ValueError:
+            continue
+        if d.name < keep_from:
+            shutil.rmtree(d)
+            removed.append(d.name)
+    return removed
+
+
 def read_frames(path: Path | str, venue: str | None = None) -> Iterator[Frame]:
     """Frames from one capture file, in the order they were received. A file cut mid-member (the
     lane died of a SIGBUS at 03:35:05Z 2026-09-05 and launchd appended a fresh member to the same

@@ -24,7 +24,8 @@ JOB="$1"; shift
 LOGDIR="${JANUS_LOGDIR:-$DATA/logs}"
 LOG="$LOGDIR/${JOB}.stderr.log"
 MAXBYTES=33554432            # 32 MB. convergence reached 11.9 MB unrotated and nobody noticed.
-MINFREE_KB=2097152           # 2 GB on each of the root disk and the data volume, else abort loudly.
+MINFREE_KB=${JANUS_MINFREE_KB:-2097152}   # 2 GB on each of the root disk and the data volume, else abort loudly.
+                                          # The lane reads the same variable for its running floor (L72).
 
 cd "$ROOT"
 export PYTHONPATH="$ROOT"
