@@ -86,4 +86,4 @@ else
   echo "== (e) no live kill present at release start"
 fi
 echo "== (f) run automatic redemption now"
-bash "$HERE/run.sh" "set -e; systemctl start janus-pm-redeem.service || { journalctl -u janus-pm-redeem.service -n 12 --no-pager; exit 1; }; systemctl is-active janus-pm-redeem.timer; tail -1 /srv/janus/logs/pm_redeem.stdout.log"
+bash "$HERE/run.sh" "set -e; systemctl start janus-pm-redeem.service || { tail -n 30 /srv/janus/logs/pm_redeem.stderr.log >&2; journalctl -u janus-pm-redeem.service -n 12 --no-pager >&2; exit 1; }; systemctl is-active janus-pm-redeem.timer; tail -1 /srv/janus/logs/pm_redeem.stdout.log"

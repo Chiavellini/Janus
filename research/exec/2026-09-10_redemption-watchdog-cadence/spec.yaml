@@ -1,0 +1,15 @@
+row: L70
+date: 2026-09-10
+kind: operational_sla_repair
+status_at_registration: PENDING
+observed_failure: >-
+  janus-pm-redeem.timer intentionally starts a oneshot every ten minutes. The watchdog's inherited
+  max_starts_per_hour=4 reports that normal six-to-seven-start rolling cadence as CRASH_LOOP.
+immutable_success_criteria:
+  - Set an explicit start-rate allowance only for pm_redeem; do not weaken daemon or other job SLAs.
+  - Six and seven scheduled starts in a rolling hour do not report CRASH_LOOP; nine starts do.
+  - A failed latest redemption run still reports FAILED below the rate threshold, and HUNG/STALE
+    semantics remain unchanged.
+  - Keep the timer interval, redemption behavior, credentials, trading policy, caps and kill state
+    unchanged.
+expected_ev_effect: none; this removes a permanently false operational alarm without hiding failures.

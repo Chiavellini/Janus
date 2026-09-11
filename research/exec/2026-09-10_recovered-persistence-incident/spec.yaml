@@ -1,0 +1,42 @@
+row: L69
+date: 2026-09-10
+kind: exact_operational_incident_recovery
+status_at_registration: PENDING
+observed_incident: >-
+  During d3237fa's failed live-clear window, bounded Polymarket taker order
+  b80fd489eba14f05a3e6a9031e7d6a0c filled and the first persistence attempt encountered a SQLite
+  lock. ORDER_PERSISTENCE_FAILED flag 530 was appended, while replacement of the already root-owned
+  false-maker kill failed with PermissionError. Later guard passes reconstructed the order and
+  authoritative fill FIFO, attached the exact execution owner, reconciled both legs, finalized the
+  settlement and released the reservation. The generic persistence flag remains unresolved.
+immutable_success_criteria:
+  - Parse only the exact ORDER_PERSISTENCE_FAILED client-ID grammar; malformed, truncated, or
+    non-database-lock incidents are ineligible.
+  - Require one identified real terminal order with no open or cash-pending state and one unique
+    owning RECONCILED/released execution.
+  - Require every owned order to be terminal and cash-final, every positive order total to equal a
+    final authoritative venue-fill FIFO, one released final settlement covering every owned order,
+    and one released matching capital reservation.
+  - A Polymarket fill above requested quantity is eligible only when its exact durable bounded-taker
+    authorization exists and the excess is within that authorization.
+  - Resolve exact flag IDs only after a fresh complete error-free two-venue fills/positions pass
+    with no orphans, mismatches, protection work, or material risk finding; repeat the entire proof
+    under the writer lock.
+  - Add an exact append-only resolution marker; never rewrite the incident, orders, fills,
+    execution, settlement, reservation, PnL, venue state, or kill.
+  - The false-maker clear audit must refuse every unresolved material risk-flag class, including
+    ORDER_PERSISTENCE_FAILED, so a failed recovery can never be bypassed by release.
+validation:
+  - Focused tests reproduce the deployed incident and prove exact recovery only after all evidence
+    is final and mutually consistent.
+  - Negative tests cover malformed detail, missing/partial FIFO, open or cash-pending order,
+    unreleased/non-reconciled execution, missing settlement/reservation, unauthorized overfill,
+    incomplete venue reads, errors, orphans, mismatches, and writer-lock evidence change.
+  - Full repository suite, watchdog selftest, compile, shell syntax and actual-box read-only state
+    checks pass before operator release.
+expected_ev_effect: >-
+  None directly. It prevents a fully recovered persistence incident from permanently disabling
+  trading while keeping every unproved persistence failure fail-closed.
+prohibited:
+  - Clearing or replacing the live kill, submitting/canceling/redeeming an order, modifying venue
+    positions, weakening caps/hurdles/protection, or resolving a flag from textual similarity alone.

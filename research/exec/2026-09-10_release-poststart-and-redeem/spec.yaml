@@ -1,0 +1,38 @@
+row: L68
+date: 2026-09-10
+kind: deployed_release_integration_repair
+status_at_registration: PENDING
+observed_failure: >-
+  The d3237fa operator release provisioned all builder credentials, checked out and armed the new
+  tree, installed the redemption timer, and restarted LIMITED_LIVE. Exact stopped-state proof
+  passed, but sudo stripped JANUS_CLEAR_STARTED from the inline stream probe; the rollback restored
+  the original kill and restarted the lane. The redemption oneshot exited one with its underlying
+  stderr absent from the release output. The wrapper reported remote failure but release.sh
+  continued to the next step.
+immutable_repairs:
+  - Pass the captured post-start epoch explicitly through sudo to the inline stream probe and keep
+    the existing all-three-connected/fresh requirement.
+  - Make ops/box/run.sh or the release call sites propagate a failed remote command as a nonzero
+    local exit so set -e aborts; never continue release after a failed clear/restart/credential or
+    redemption step.
+  - Surface the redemption node's bounded stderr log on failure without printing credentials, then
+    diagnose and repair the exact deployed SDK/runtime error.
+  - Preserve rollback: any failed exact clear restores the captured kill and restarts the lane.
+  - Before another operator paste, validate the corrected stream-probe environment and redemption
+    service against the actual deployed box without clearing the kill, placing orders, or changing
+    account state beyond a redemption only if the already-authorized service itself reaches submit.
+validation:
+  - Shell regression proves JANUS_CLEAR_STARTED reaches the sudo child and missing/stale streams fail.
+  - Wrapper regression proves a remote nonzero produces a local nonzero and release stops.
+  - Redemption tests reproduce the exact deployed error and pass after the narrow repair.
+  - Actual box read-only state confirms kill present, zero flight/open/unresolved/material-unhedged
+    exposure, and all streams connected before any final operator action.
+  - Full repository suite, watchdog selftest, compile, shell syntax and diff checks pass.
+expected_ev_effect: >-
+  None directly. This completes delivery of the already-authorized F20 taker and redemption release;
+  strategy, caps, hurdles, settlement and protection rules do not change.
+prohibited:
+  - Clearing the live kill during development, submitting an order, weakening stream freshness,
+    hiding a redemption failure, or changing trading limits.
+  - Asking the operator to retry before the actual box integration checks identify and exercise
+    both failed paths.

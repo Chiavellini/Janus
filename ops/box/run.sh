@@ -22,3 +22,4 @@ done
 aws ssm get-command-invocation --region $REGION --command-id "$CMD" --instance-id "$ID" --query 'StandardOutputContent' --output text
 err=$(aws ssm get-command-invocation --region $REGION --command-id "$CMD" --instance-id "$ID" --query 'StandardErrorContent' --output text)
 [ -z "$err" ] || { echo "--- stderr"; echo "$err" | tail -8; }
+[ "$st" = Success ]

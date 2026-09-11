@@ -9,18 +9,28 @@ The original latch and every proof are archived before the switch is removed.
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
 import re
 import sqlite3
+import sys
 import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from nodes.risk.flags import unresolved_flag_rows
 
 
 ACTIVE_STATES = (
     "DETECTED", "VALIDATED", "CAPITAL_RESERVED", "LEG_A_SUBMITTED", "LEG_A_FILLED",
     "LEG_A_PARTIAL", "LEG_B_SUBMITTED", "LEG_B_PARTIAL",
+)
+MATERIAL_FLAGS = (
+    "ORDER_PERSISTENCE_FAILED", "POST_ONLY_PERSISTENCE_FAILED", "ORPHAN_FILL",
+    "POSITION_MISMATCH", "PROTECT_FAILED", "EXEC_CRASHED", "ORDER_OVERFILL",
+    "POST_ONLY_ROLE_VIOLATION", "UNHEDGED_POSITION", "RESERVATION_MISSING",
 )
 
 
@@ -29,7 +39,8 @@ def _sha(raw: bytes) -> str:
 
 
 def audit_and_clear(*, db_path: Path, kill_path: Path, archive_dir: Path,
-                    expected_digest: str, release_sha: str, now: float | None = None) -> Path:
+                    expected_digest: str, release_sha: str, now: float | None = None,
+                    retain_kill: bool = False) -> Path:
     raw = kill_path.read_bytes()
     actual = _sha(raw)
     if actual != expected_digest:
@@ -67,12 +78,15 @@ def audit_and_clear(*, db_path: Path, kill_path: Path, archive_dir: Path,
             ACTIVE_STATES).fetchone()[0])
         unhedged = int(con.execute(
             "SELECT COUNT(*) FROM executions WHERE ABS(COALESCE(unhedged,0)) > 0.01 AND released=0").fetchone()[0])
+        flagged = {flag: [int(row[0]) for row in unresolved_flag_rows(con, flag)]
+                   for flag in MATERIAL_FLAGS}
+        flagged = {flag: ids for flag, ids in flagged.items() if ids}
         execution = con.execute(
             "SELECT execution_id,state,first_filled,hedge_filled,unhedged,released,last_utc "
             "FROM executions WHERE first_client_id=? ORDER BY last_utc DESC LIMIT 1", (client_id,)).fetchone()
-        if unresolved or open_orders or active or unhedged:
+        if unresolved or open_orders or active or unhedged or flagged:
             raise RuntimeError(f"money/state not quiet: unresolved={unresolved} open_orders={open_orders} "
-                               f"active={active} unhedged={unhedged}")
+                               f"active={active} unhedged={unhedged} flags={flagged}")
         if (execution is None or execution["state"] != "ORDER_UNFILLED"
                 or float(execution["first_filled"] or 0) != 0
                 or float(execution["hedge_filled"] or 0) != 0
@@ -81,10 +95,11 @@ def audit_and_clear(*, db_path: Path, kill_path: Path, archive_dir: Path,
         proof = {
             "schema": "janus.live_clear.false_maker.v1", "release_sha": release_sha,
             "cleared_utc": time.time() if now is None else now, "kill_sha256": actual,
-            "kill": kill, "client_order_id": client_id, "maker_marker": dict(marker),
+            "kill": kill, "kill_raw_b64": base64.b64encode(raw).decode("ascii"),
+            "client_order_id": client_id, "maker_marker": dict(marker),
             "execution": dict(execution), "global": {"unresolved_post_only": unresolved,
                 "open_pm_orders": open_orders, "active_executions": active,
-                "unhedged_executions": unhedged},
+                "unhedged_executions": unhedged, "material_flags": flagged},
         }
     finally:
         con.close()
@@ -98,7 +113,8 @@ def audit_and_clear(*, db_path: Path, kill_path: Path, archive_dir: Path,
     tmp.write_text(json.dumps(proof, sort_keys=True, indent=2) + "\n")
     os.chmod(tmp, 0o600)
     os.replace(tmp, archive)
-    kill_path.unlink()
+    if not retain_kill:
+        kill_path.unlink()
     return archive
 
 
@@ -106,9 +122,26 @@ def restore(*, archive: Path, kill_path: Path) -> None:
     proof = json.loads(archive.read_text())
     kill_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = kill_path.with_suffix(".restore")
-    tmp.write_text(json.dumps(proof["kill"], separators=(",", ":")) + "\n")
+    encoded = proof.get("kill_raw_b64")
+    raw = base64.b64decode(encoded, validate=True) if encoded else (
+        json.dumps(proof["kill"], separators=(",", ":")) + "\n").encode()
+    tmp.write_bytes(raw)
     os.chmod(tmp, 0o600)
+    owner = kill_path.parent.stat()
+    os.chown(tmp, owner.st_uid, owner.st_gid)
     os.replace(tmp, kill_path)
+
+
+def activate(*, archive: Path, kill_path: Path, expected_digest: str) -> None:
+    """Remove the retained kill only after post-start health has been proved."""
+    raw = kill_path.read_bytes()
+    actual = _sha(raw)
+    if actual != expected_digest:
+        raise RuntimeError(f"live kill changed during warm-up ({actual[:12]} != {expected_digest[:12]})")
+    proof = json.loads(archive.read_text())
+    if proof.get("kill_sha256") != actual:
+        raise RuntimeError("archived proof does not bind the retained live kill")
+    kill_path.unlink()
 
 
 def main() -> int:
@@ -120,15 +153,24 @@ def main() -> int:
     clear.add_argument("--archive-dir", type=Path, default=Path("/srv/janus/release-audit/L64"))
     clear.add_argument("--expected-digest", required=True)
     clear.add_argument("--release-sha", required=True)
+    clear.add_argument("--retain", action="store_true")
     recover = sub.add_parser("restore")
     recover.add_argument("--archive", type=Path, required=True)
     recover.add_argument("--kill", type=Path, default=Path("/srv/janus/kill/live"))
+    live = sub.add_parser("activate")
+    live.add_argument("--archive", type=Path, required=True)
+    live.add_argument("--kill", type=Path, default=Path("/srv/janus/kill/live"))
+    live.add_argument("--expected-digest", required=True)
     args = ap.parse_args()
     if args.command == "restore":
         restore(archive=args.archive, kill_path=args.kill)
         return 0
+    if args.command == "activate":
+        activate(archive=args.archive, kill_path=args.kill, expected_digest=args.expected_digest)
+        return 0
     archive = audit_and_clear(db_path=args.db, kill_path=args.kill, archive_dir=args.archive_dir,
-                              expected_digest=args.expected_digest, release_sha=args.release_sha)
+                              expected_digest=args.expected_digest, release_sha=args.release_sha,
+                              retain_kill=args.retain)
     print(f"STOPPED_EXACT_STATE_OK archive={archive}")
     return 0
 

@@ -105,7 +105,9 @@ SLAS: dict[str, Sla] = {
     "census": Sla(kind="oneshot", max_age_s=26 * 3600),
     # L64: winning PM positions are redeemed by an idempotent ten-minute oneshot.  Thirty minutes
     # without a successful pass is actionable, not a manual-webapp chore.
-    "pm_redeem": Sla(kind="oneshot", max_age_s=30 * 60),
+    # Six scheduled starts per hour, occasionally seven at a rolling-window boundary. Nine is a
+    # genuine rate anomaly; FAILED/HUNG/STALE still inspect the latest run below this threshold.
+    "pm_redeem": Sla(kind="oneshot", max_age_s=30 * 60, max_starts_per_hour=8),
     # nodes/watch_settle's daily resolver (research/sports/2026-09-04_tennis-delay-forward), 13:30 local.
     "watch_settle": Sla(kind="oneshot", max_age_s=26 * 3600),
     # Nothing is currently scheduled except this watchdog. Every Janus collector was stopped on
@@ -453,6 +455,22 @@ def selftest() -> None:
         _append(fresh("bx"), {"ts": NOW - 600, "job": "pm_redeem", "run_id": "r", "status": "OK", "exit": 0})
         assert check(fresh("bx"), now=NOW, slas=slas_for_host("box"), risk={}) == [], "a fresh box with its three jobs is quiet"
         assert any("watch_settle: NEVER_RAN" in a for a in check(fresh("bx"), now=NOW, slas=slas_for_host(""), risk={})), "the Mac set would alarm"
+
+        # A ten-minute oneshot naturally starts six times per hour (seven across a rolling
+        # boundary). Its explicit allowance must not hide either the latest failure or a real loop.
+        cadence = fresh("redeem-cadence")
+        for i in range(7):
+            _append(cadence, {"ts": NOW - (i + 1) * 500 - 1, "job": "pm_redeem", "run_id": f"r{i}", "status": "started", "pid": dead_pid})
+            _append(cadence, {"ts": NOW - (i + 1) * 500, "job": "pm_redeem", "run_id": f"r{i}", "status": "OK", "exit": 0})
+        assert check(cadence, now=NOW, slas={"pm_redeem": SLAS["pm_redeem"]}, risk={}) == []
+        _append(cadence, {"ts": NOW - 3, "job": "pm_redeem", "run_id": "r7", "status": "started", "pid": dead_pid})
+        _append(cadence, {"ts": NOW - 2, "job": "pm_redeem", "run_id": "r7", "status": "FAILED", "exit": 1})
+        assert any("FAILED" in alert for alert in check(
+            cadence, now=NOW, slas={"pm_redeem": SLAS["pm_redeem"]}, risk={}))
+        _append(cadence, {"ts": NOW - 1, "job": "pm_redeem", "run_id": "r8", "status": "started", "pid": dead_pid})
+        _append(cadence, {"ts": NOW, "job": "pm_redeem", "run_id": "r8", "status": "OK", "exit": 0})
+        assert any("CRASH_LOOP" in alert for alert in check(
+            cadence, now=NOW, slas={"pm_redeem": SLAS["pm_redeem"]}, risk={}))
 
         # UNREGISTERED
         p = fresh("g")

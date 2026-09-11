@@ -157,3 +157,24 @@ def test_partial_builder_provision_refuses_rotation():
     one = {provision_redemption.BUILDER_NAMES["key"]: "existing"}
     with pytest.raises(RuntimeError, match="partial"):
         provision_redemption.provision(ssm=_Ssm(one), make_client=lambda _values: None)
+
+
+def test_false_latch_warms_under_kill_and_passes_epoch_through_sudo():
+    from pathlib import Path
+    script = (Path(__file__).resolve().parents[1] / "clear_false_maker_latch.sh").read_text()
+    assert "clear_false_maker_latch.py clear" in script and "--retain" in script
+    assert 'env JANUS_CLEAR_STARTED="\\$JANUS_CLEAR_STARTED"' in script
+    assert script.index("systemctl start janus-live-stream") < script.index(
+        "clear_false_maker_latch.py activate")
+    assert script.index("POST_START_STREAMS_GREEN") < script.index(
+        "clear_false_maker_latch.py activate")
+    assert script.index("PRE_CLEAR_RISK_FLAGS_QUIET") < script.index("systemctl stop janus-live-stream")
+    assert "ORDER_PERSISTENCE_FAILED" in script
+
+
+def test_redemption_unit_overrides_the_trading_interpreter_at_exec():
+    from pathlib import Path
+    unit = (Path(__file__).resolve().parents[1] / "systemd" / "janus-pm-redeem.service").read_text()
+    line = next(row for row in unit.splitlines() if row.startswith("ExecStart="))
+    assert "JANUS_PYTHON=/opt/janus/.redeem-venv/bin/python3" in line
+    assert "/opt/janus/ops/run_node.sh pm_redeem" in line

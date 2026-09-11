@@ -1,6 +1,8 @@
 """L54 offline owned-maker attribution; fixture values are synthetic, no venue access."""
 from copy import deepcopy
 from decimal import Decimal
+import threading
+import time
 
 import pytest
 
@@ -388,6 +390,46 @@ def test_later_fill_write_failure_returns_whole_prefix_nonfinal(tmp_path, monkey
     assert sources == [('first:maker:maker-order',)]
     report = guard.apply(snap)
     assert guard.records.load('execution').first_filled == 10 and 'execution' in report.to_protect
+
+
+def test_cash_bundle_waits_for_concurrent_writer_instead_of_snapshot_upgrade_lock(tmp_path):
+    """The production worker's explicit transaction must retain BEGIN IMMEDIATE semantics."""
+    path = tmp_path / 'contended.sqlite'
+    main = TupleStore(path, enforce_volume=False)
+    main.con.execute('CREATE TABLE lock_test(value INTEGER)')
+    main.con.commit()
+    worker = TupleStore(path, enforce_volume=False, check_same_thread=False,
+                        isolation_level='IMMEDIATE', timeout_s=5)
+    journal = Journal(worker)
+    transport = Transport()
+    kill = KillSwitches(tmp_path / 'kill-contended', enforce_volume=False)
+    adapter = PolymarketExecution(transport, journal, Mode.LIMITED_LIVE,
+                                  clock=lambda: 1001, kill=kill)
+    own(journal, post_only=False)
+    at_cash_read, continue_write = threading.Event(), threading.Event()
+
+    def pause_after_network_read():
+        at_cash_read.set()
+        assert continue_write.wait(5)
+
+    transport.before_cash = pause_after_network_read
+    result = {}
+
+    def fetch():
+        result['fills'] = adapter.fills(since_utc=0)
+
+    thread = threading.Thread(target=fetch)
+    thread.start()
+    assert at_cash_read.wait(5)
+    main.con.execute('INSERT INTO lock_test VALUES(1)')
+    continue_write.set()
+    time.sleep(.2)
+    main.con.commit()
+    thread.join(5)
+    assert not thread.is_alive()
+    assert [(row.contracts, row.final) for row in result['fills']] == [(6, True)]
+    assert adapter.persistence_error == '' and not kill.active(live=True)
+    assert worker.con.execute('SELECT COUNT(*) FROM pm_cash_sources').fetchone()[0] == 1
     assert journal.get('client')['settlement_pending']
 
 

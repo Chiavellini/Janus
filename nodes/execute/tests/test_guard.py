@@ -463,3 +463,25 @@ def test_a_released_historical_fill_is_not_compared_with_the_current_position(tm
     assert not recent_flags(tmp_path / "t.sqlite", "POSITION_MISMATCH", now=T0 + 301)
     flags = [r[0] for r in main.con.execute("SELECT flag FROM lane_flags ORDER BY id")]
     assert flags[-1] == "POSITION_MISMATCH_RESOLVED", "history is appended, not deleted"
+
+
+def test_complete_guard_invokes_exact_persistence_recovery_only_on_safe_pass(tmp_path, monkeypatch):
+    main, journal, records, guard = _world(tmp_path, venues={})
+    checks = []
+
+    def resolved(store, *, now, verify_pass):
+        checks.append((store is main, now, verify_pass()))
+        return True
+
+    monkeypatch.setattr("nodes.execute.guard.resolve_recovered_persistence", resolved)
+    snap = GuardSnapshot(T0 + 300, fills_read_complete=True,
+                         positions={"kalshi": [], "polymarket": []})
+    report = guard.apply(snap)
+    assert checks == [(True, T0 + 300, True)]
+    assert any(line.startswith("ORDER_PERSISTENCE_FAILED_RESOLVED_EXACT") for line in report.findings)
+
+    checks.clear()
+    bad = GuardSnapshot(T0 + 301, fills_read_complete=True,
+                        positions={"kalshi": [], "polymarket": []}, errors={"fills": "timeout"})
+    guard.apply(bad)
+    assert checks == [(True, T0 + 301, False)]

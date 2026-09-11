@@ -7,6 +7,7 @@ Requires=janus-creds.service
 Type=oneshot
 User=janus
 EnvironmentFile=/etc/janus.env
-Environment=JANUS_PYTHON=/opt/janus/.redeem-venv/bin/python3
 WorkingDirectory=/opt/janus
-ExecStart=/usr/bin/zsh /opt/janus/ops/run_node.sh pm_redeem -m nodes.redeem_polymarket.run
+# EnvironmentFile supplies the trading interpreter. Override it at the final exec boundary so the
+# redemption job cannot silently inherit /opt/janus/.venv.
+ExecStart=/usr/bin/zsh -c 'JANUS_PYTHON=/opt/janus/.redeem-venv/bin/python3 /opt/janus/ops/run_node.sh pm_redeem -m nodes.redeem_polymarket.run'

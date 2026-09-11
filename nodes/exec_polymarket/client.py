@@ -1403,7 +1403,11 @@ class PolymarketExecution:
                 # last; no failed prefix may mint fresh durable cash authority.
                 con = self.journal.store.con
                 if not con.in_transaction:
-                    con.execute('BEGIN')
+                    # The production execution store is configured for IMMEDIATE writes so a
+                    # concurrent loop transaction enters SQLite's busy handler and waits. An
+                    # explicit deferred BEGIN here bypassed that protection: after the network
+                    # reads it failed instantly while upgrading to a writer (2026-09-10 flag 530).
+                    con.execute('BEGIN IMMEDIATE')
                 if cash_final and activity is not None:
                     self._remember_cash_source(tr, activity)
                     source = {"fill_id": rec.fill_id, "endpoint": "data-api.polymarket.com/activity",

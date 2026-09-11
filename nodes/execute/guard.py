@@ -43,6 +43,7 @@ from nodes.execution.dispositions import latest as latest_disposition, match_dis
 from nodes.execution.overfill_ack import match_overfill_ack
 from nodes.execution.legacy_incident_ack import resolve_idle_incidents, resolve_migration_false_alarms
 from nodes.execution.legacy_incident_ack import match_incident
+from nodes.execution.persistence_recovery import resolve_recovered_persistence
 from nodes.exec_polymarket.position_evidence import terminal_zero_positions
 from nodes.risk.breaker import RealizedFill, day_of
 from nodes.risk.flags import flag_snapshot, raise_flag, resolve_flag, resolve_exact_flags, unresolved_flag_rows
@@ -277,8 +278,26 @@ class PositionGuard:
         self._resolve_disposed_orphan_flags(snap, rep)
         self._resolve_acknowledged_overfills(snap, rep)
         self._resolve_legacy_incidents(snap, rep)
+        self._resolve_recovered_persistence(snap, rep)
         self.cursor_utc = snap.now - ADOPT_WINDOW_S
         return rep
+
+    def _resolve_recovered_persistence(self, snap: GuardSnapshot, rep: GuardReport) -> None:
+        def complete_safe_pass():
+            if (not snap.fills_read_complete or snap.errors or rep.orphans or rep.mismatches
+                    or rep.to_protect or any(snap.positions.get(venue) is None
+                                             for venue in ("kalshi", "polymarket"))):
+                return False
+            material = ("INVALID", "FAILED", "BLOCKED", "ORPHAN_FILL ", "POSITION_MISMATCH ",
+                        "UNHEDGED_POSITION ", "PROTECT_FAILED", "ORDER_OVERFILL ", "FEE_ABOVE_PIN ")
+            return not any(any(token in finding for token in material) for finding in rep.findings)
+
+        try:
+            if resolve_recovered_persistence(self.store, now=snap.now, verify_pass=complete_safe_pass):
+                rep.findings.append(
+                    "ORDER_PERSISTENCE_FAILED_RESOLVED_EXACT: complete terminal economic record; kill unchanged")
+        except Exception as exc:  # SQLite errors remain visible and unresolved.
+            rep.findings.append(f"PERSISTENCE_RESOLUTION_BLOCKED: {type(exc).__name__}: {exc}")
 
     def _resolve_disposed_orphan_flags(self, snap: GuardSnapshot, rep: GuardReport) -> None:
         if (not snap.fills_read_complete or snap.errors or rep.orphans or not rep.dispositions
