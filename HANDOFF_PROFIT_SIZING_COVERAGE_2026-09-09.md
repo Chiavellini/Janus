@@ -5,6 +5,92 @@ Prepared from branch: `codex/ucl-coverage`
 Worktree: `/Users/bernardodelrio/Code/Janus/.codex/worktrees/ucl-coverage`  
 HEAD before this handoff file: `2e9620aaf0106af812761541211b72019bd14c2a`
 
+## Emergency release continuation — 2026-09-10
+
+This section supersedes every operational status below it. The executable repair is commit
+`42ac10cd67af9b228930481ee3fd8ea4226f72ac`; production still runs `d3237fa` until the operator
+releases the final documentation commit that contains it.
+
+### Initial state and incident
+
+The third F20 release provisioned the redemption credential and installed its runtime, but failed
+the live-clear health check because `sudo` stripped `JANUS_CLEAR_STARTED`. The remote wrapper did
+not return nonzero, so release continued and the redemption unit failed with
+`PackageNotFoundError: polymarket-client`. During the old clear script's interval with no kill,
+one bounded taker execution entered. The rollback restored the false-maker kill as root-owned;
+the fill writer then encountered a SQLite lock and could not replace it with the stronger incident.
+
+The trade is now fully final: execution `0b425cbe71cb4ca1a919fda622538a07` is RECONCILED/released,
+all orders and two positive fill FIFOs are final, settlement/reservation are released, and there is
+no current open or pending money. It realized -$0.014932: the 10-contract cover locked -$0.4775
+after five zero-fill Kalshi hedge attempts, while a 0.7632 PM residual happened to win +$0.4626.
+The box remains active for ingestion but `kill/live` is present; no later execution exists.
+
+### Work completed
+
+- The PM cash/fill transaction now uses `BEGIN IMMEDIATE`, preserving the worker store's busy-wait
+  behavior instead of failing during a deferred writer upgrade.
+- A fresh complete two-venue guard may append an exact resolution only for a strictly parsed
+  database-lock flag whose terminal order, final FIFOs, bounded overfill authorization, unique
+  released execution, settlement and reservation all agree twice, including under the writer lock.
+- The false-maker clear refuses all unresolved material risk flags, waits under the existing kill
+  for the guard's exact recovery, stops only after risk is quiet, retains/chowns the kill during
+  warm-up, checks three post-restart streams, and removes only the unchanged digest-bound kill.
+  Rollback restores its byte-identical contents with lane-writable ownership.
+- SSM remote failures now propagate locally. Redemption failure output includes its bounded stderr.
+  The redemption unit overrides `JANUS_PYTHON` at the final shell boundary, after the environment
+  file, so it uses the pinned `polymarket-client==0.9.0` environment.
+- The ten-minute redemption oneshot has an explicit eight-start watchdog allowance: seven healthy
+  starts are quiet, eight with a latest failure reports FAILED, and nine reports CRASH_LOOP.
+
+Expected direct strategy EV effect is zero. The transaction change prevents a known false stop;
+the remaining changes make release/recovery/redemption observable and fail-closed. F20's first
+observation is adverse protection/latency evidence and does not justify lifting caps.
+
+### Files changed
+
+- `nodes/exec_polymarket/client.py` and its maker-fill tests: retain IMMEDIATE transaction semantics
+  and reproduce the two-writer race.
+- `nodes/execute/guard.py` and guard tests: invoke exact recovered-persistence closure only after a
+  complete safe pass.
+- `ops/box/clear_false_maker_latch.py`, `.sh`, and tests: material-flag gate, retained-kill warm-up,
+  exact activation, byte/owner-safe restore, explicit sudo epoch, and bounded pre-clear wait.
+- `ops/box/run.sh`, `release.sh`, systemd redemption unit, and box tests: propagate SSM failure,
+  expose node stderr, and force the pinned redemption interpreter.
+- `ops/watchdog.py`: correct only the redemption timer's expected start cadence.
+- `snooping_ledger.md`: append-only L68–L70 registration/verdicts and F20 observation.
+
+### Files created
+
+- `nodes/execution/persistence_recovery.py` and its tests: exact terminal-economic-record proof and
+  append-only flag resolution.
+- `ops/box/tests/test_run_sh.py`: remote-status propagation regression.
+- `research/exec/2026-09-10_{release-poststart-and-redeem,recovered-persistence-incident,redemption-watchdog-cadence}/`:
+  immutable specs and verdicts.
+- `research/sports/2026-09-10_limited-live-f20-bounded-taker/observation_1.md`: exact first F20 result.
+
+### Source of truth and intentionally untouched areas
+
+`AGENTS.md`, `GATE_TO_LIVE.md`, the F20 spec, and L68–L70 specs govern this repair. Caps, profit and
+return hurdles, protection-loss ceiling, settlement rules, sizing, discovery/coverage, credentials,
+venue balances and existing audit/accounting rows were not changed. The production kill and
+database were read only throughout development.
+
+### Verification and immediate next steps
+
+The complete repository suite passes. Focused concurrency/recovery/clear/release tests, watchdog
+selftest, compileall, YAML parsing, shell syntax and diff checks pass. On the actual box, remote
+failure propagation, explicit sudo epoch, three connected streams, candidate systemd parsing,
+the pinned SDK's authenticated position read, and the exact incident proof all passed without
+submission or kill/database mutation.
+
+The next action is one operator release of the final pushed commit. It must show
+`PRE_CLEAR_RISK_FLAGS_QUIET`, `STOPPED_EXACT_STATE_OK`, `POST_START_STREAMS_GREEN`,
+`LIVE_CLEAR_COMPLETE`, and a successful `pm redemption ...` line. If exact persistence recovery
+does not complete, release aborts before touching the kill; do not bypass it. After release, inspect
+the box once for absent kill, resolved flag 530, active lane/timer, successful redemption state,
+fresh streams, no watchdog alerts, and no unexpected order during the transition.
+
 ## Final operational outcome — supersedes the historical status below
 
 At the final read-only verification on **2026-09-10T05:03:23Z**, the requested sweep was complete
