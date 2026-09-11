@@ -166,3 +166,38 @@ def test_move_persists_the_execution_owned_transition_and_load_rehydrates_after_
     assert fresh.load("nope") is None
     assert fresh.move(back, S.SETTLED, now=1005.0, detail="+5.0") is True
     assert st.con.execute("SELECT status FROM opportunities WHERE opportunity_id=?", (o.opportunity_id,)).fetchone()[0] == "SETTLED"
+
+
+def test_a_non_executable_epoch_is_recorded_only_as_the_exit_from_an_executable_one(tmp_path: Path):
+    """L74 (2026-09-11): 24.7 GB of sizing ladders, 97 % for epochs that selected nothing. With
+    executable=False a row lands only when the event's last recorded decision had selected
+    something; executable epochs and their duplicate-input refusal are exactly as before."""
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    opps = OpportunityStore(store)
+    blocked = {"binding_constraints": ["BLOCKED_MATCH"], "candidates": [{"quantity": 10}] * 3}
+    # Nothing executable yet: blocked epochs write nothing at all.
+    assert not opps.record_sizing_decision(event_id="g1", input_hash="e1", executable=False,
+                                           selected_opportunity_id=None, decision=blocked, now=T)
+    assert not opps.record_sizing_decision(event_id="g1", input_hash="e2", executable=False,
+                                           selected_opportunity_id=None, decision=blocked, now=T + 1)
+    assert store.con.execute("SELECT count(*) FROM sizing_decisions").fetchone()[0] == 0
+    # An executable epoch is recorded, and the same input again is refused (single flight).
+    good = {"candidates": [{"quantity": 5}], "binding_constraints": []}
+    assert opps.record_sizing_decision(event_id="g1", input_hash="e3", executable=True,
+                                       selected_opportunity_id="g1:q5", decision=good, now=T + 2)
+    assert not opps.record_sizing_decision(event_id="g1", input_hash="e3", executable=True,
+                                           selected_opportunity_id="g1:q5", decision=good, now=T + 3)
+    # The first non-executable epoch after it is the transition and is kept; the next is not.
+    assert opps.record_sizing_decision(event_id="g1", input_hash="e4", executable=False,
+                                       selected_opportunity_id=None, decision=blocked, now=T + 4)
+    assert not opps.record_sizing_decision(event_id="g1", input_hash="e5", executable=False,
+                                           selected_opportunity_id=None, decision=blocked, now=T + 5)
+    # Executable again on a new book: recorded with a fresh occurrence; another event is independent.
+    assert opps.record_sizing_decision(event_id="g1", input_hash="e6", executable=True,
+                                       selected_opportunity_id="g1:q5", decision=good, now=T + 6)
+    assert not opps.record_sizing_decision(event_id="g2", input_hash="e6", executable=False,
+                                           selected_opportunity_id=None, decision=blocked, now=T + 6)
+    assert store.con.execute("SELECT input_hash, occurrence, selected_opportunity_id FROM sizing_decisions ORDER BY id").fetchall() == \
+        [("e3", 1, "g1:q5"), ("e4", 2, None), ("e6", 3, "g1:q5")]
+    # The default keeps the old contract for callers that do not say.
+    assert opps.record_sizing_decision(event_id="g3", input_hash="x", selected_opportunity_id=None, decision=blocked, now=T)

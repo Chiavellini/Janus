@@ -93,6 +93,10 @@ RETENTION_TABLES: tuple[tuple[str, str], ...] = (
     ("quote_history", "seen_ts"),
     ("socket_health", "seen_ts"),
     ("opportunity_history", "seen_ts"),
+    # L74 (2026-09-11): the offline breakdown put 24.7 of 27.4 GB in sizing_decisions, one 11 KB
+    # candidate ladder per book epoch per poller. It is re-derivable (nodes/replay rebuilds it
+    # from frames and the runner's constants) and its orders carry their own evidence.
+    ("sizing_decisions", "seen_ts"),
 )
 
 

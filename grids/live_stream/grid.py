@@ -540,9 +540,13 @@ class Supervisor:
         input_hash = hashlib.sha256(json.dumps(epoch_payload, separators=(",", ":")).encode()).hexdigest()
         selected_oid = (Opportunity.id_for(base.game_id, decision.selected.quantity)
                         if decision.selected is not None else None)
+        # L74: an epoch that selects nothing is recorded only as the transition out of an
+        # executable state; its evaluation row already says why. An executable epoch whose input
+        # is the last recorded one is the single-flight guard firing: nothing is minted twice.
+        executable = decision.selected is not None
         if self.opportunities is not None and not self.opportunities.record_sizing_decision(
-                event_id=base.game_id, input_hash=input_hash,
-                selected_opportunity_id=selected_oid, decision=decision.audit(), now=base.evaluated_utc):
+                event_id=base.game_id, input_hash=input_hash, executable=executable,
+                selected_opportunity_id=selected_oid, decision=decision.audit(), now=base.evaluated_utc) and executable:
             return
         # The decision/outbox must be durable before any worker can reach a venue wire. If this
         # commit fails, the callback catches it and no task is created.

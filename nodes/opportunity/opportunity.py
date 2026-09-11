@@ -231,21 +231,31 @@ class OpportunityStore:
     def record_sizing_decision(self, *, event_id: str, book_epoch: str | None = None,
                                input_hash: str | None = None,
                                selected_opportunity_id: str | None, decision: Mapping,
-                               now: float) -> bool:
+                               now: float, executable: bool = True) -> bool:
         """Append exactly one auditable live sizing choice per frozen book epoch.
 
         A duplicate of the immediately preceding complete input is a no-op. If inputs change
         A→B→A, the second A gets a new occurrence: a real market transition can be retried while
         heartbeats, bid-only updates, and byte-identical snapshots cannot mint another order.
+
+        `executable=False` (L74, 2026-09-11) says this epoch selected nothing: it is recorded only
+        when the event's last recorded decision HAD selected something, so the row that explains
+        why sizing stopped exists and the ~2 M/day blocked epochs (an 11 KB candidate ladder
+        each, 24.7 GB in four days) do not. Those epochs keep their stream_evaluations row. The
+        single-flight guard above is untouched: an executable epoch is compared with the last
+        recorded input exactly as before, and every skipped epoch had a different input by
+        definition (its books differed).
         """
         ih = str(input_hash or book_epoch or "")
         if not ih:
             raise ValueError("input_hash is required")
         previous = self.store.con.execute(
-            "SELECT input_hash,occurrence FROM sizing_decisions WHERE event_id=? ORDER BY id DESC LIMIT 1",
+            "SELECT input_hash,occurrence,selected_opportunity_id FROM sizing_decisions WHERE event_id=? ORDER BY id DESC LIMIT 1",
             (event_id,),
         ).fetchone()
         if previous is not None and previous[0] == ih:
+            return False
+        if not executable and (previous is None or previous[2] is None):
             return False
         occurrence = int(previous[1] or 0) + 1 if previous is not None else 1
         epoch = hashlib.sha256(f"{ih}:{occurrence}".encode()).hexdigest()

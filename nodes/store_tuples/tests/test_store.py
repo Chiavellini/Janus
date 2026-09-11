@@ -133,6 +133,13 @@ def test_retain_ages_out_only_the_observation_series_and_leaves_evidence_untouch
         store.con.execute("INSERT INTO orders VALUES(?,?)", (f"o{i}", OLD))
         store.con.execute("INSERT INTO venue_fills VALUES(?,?)", (f"f{i}", OLD))
         store.con.execute("INSERT INTO lane_flags(seen_ts) VALUES(?)", (OLD,))
+    store.ensure_ddl("CREATE TABLE IF NOT EXISTS sizing_decisions(id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, "
+                     "event_id TEXT NOT NULL, book_epoch TEXT NOT NULL, selected_opportunity_id TEXT, decision_json TEXT NOT NULL, "
+                     "input_hash TEXT, occurrence INTEGER);")
+    for i in range(40):                                              # L74: the table that filled the box
+        store.con.execute("INSERT INTO sizing_decisions(seen_ts,event_id,book_epoch,decision_json) VALUES(?,?,?,?)",
+                          (OLD + i, "g", f"e{i}", "{}"))
+    store.con.execute("INSERT INTO sizing_decisions(seen_ts,event_id,book_epoch,decision_json) VALUES(?,?,?,?)", (NEW, "g", "new", "{}"))
     store.commit()
     names = [r[0] for r in store.con.execute("SELECT name FROM sqlite_master WHERE type='table'")]
     retained = {t for t, _ in RETENTION_TABLES}
@@ -141,6 +148,7 @@ def test_retain_ages_out_only_the_observation_series_and_leaves_evidence_untouch
     got = store.retain(max_age_s=7 * 86400, now=NOW, batch=8)
     assert got["quote_history"] == 30 and got["stream_evaluations"] == 20 and got["socket_health"] == 10
     assert got["opportunity_history"] == 0 and got["_more"] == 0
+    assert got["sizing_decisions"] == 40 and store.con.execute("SELECT count(*) FROM sizing_decisions").fetchone()[0] == 1
     assert store.con.execute("SELECT count(*) FROM quote_history").fetchone()[0] == 5
     assert store.con.execute("SELECT min(seen_ts) FROM quote_history").fetchone()[0] >= NEW
     assert store.con.execute("SELECT count(*) FROM stream_evaluations").fetchone()[0] == 1

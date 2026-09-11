@@ -1,0 +1,34 @@
+row: L74
+date: 2026-09-11
+kind: descriptive_storage_repair
+status_at_registration: PENDING
+observed_failure: >-
+  L72's offline breakdown (dbstat over the 27.36 GB tuples.sqlite, 734 s, read-only) attributed
+  24.69 GB (90 %) to sizing_decisions: ~1.95 M rows/day at ~10.8 KB each, 98 % the candidates
+  array, one row per book epoch per poller (73 pollers, 13 in play). The evaluations those rows
+  belong to are 59 % BLOCKED_MATCH, 24 % BLOCKED_STALE, 10 % NO_EDGE and 0.3 % PROFITABLE, so
+  ~97 % of the ~21 GB/day records a sizing ladder for an epoch that could not trade. L72's
+  criteria are immutable and name only stream_evaluations, quote_history, socket_health and
+  opportunity_history (the last two are empty); this row covers the table that actually filled
+  the volume. Operator decision 2026-09-11: executable-only recording, 7-day retention.
+immutable_success_criteria:
+  - An epoch whose decision selects nothing is recorded only when the event's last recorded
+    decision selected something (the transition that explains why sizing stopped); an epoch
+    whose decision selects something is recorded exactly as before, including the duplicate-input
+    refusal that keeps a byte-identical book from minting a second order. Proven by tests on
+    OpportunityStore.record_sizing_decision.
+  - Every blocked or no-edge epoch keeps its stream_evaluations row, so GATE_TO_LIVE step 4
+    (faithfulness, defined on stream_evaluations) is unchanged.
+  - sizing_decisions rows older than the retention window are aged out by the same retention
+    pass as the other series, and every evidence table is untouched (the L72 count test extended
+    to this table).
+  - No cap, hurdle, selection rule or execution path changes; expected EV effect none on
+    selection.
+expected_ev_effect: >-
+  none on selection or sizing. Removes ~95 % of database growth (~21 GB/day to ~1 GB/day), so
+  the storage outage that took executable EV to zero for 13.5 hours on 2026-09-11 does not recur
+  at 200 GB.
+prohibited:
+  - Weakening the duplicate-input single-flight guard for executable epochs.
+  - Dropping or truncating sizing_decisions, or any evidence table row.
+  - Deploying by any path other than the operator's release paste.
