@@ -17,3 +17,9 @@ the fail-closed behavior.
 Focused legacy/recovery/clear tests and the complete repository suite pass. No production database,
 kill, order, redemption or account state was changed. The failed d864447 release stopped before
 lane stop/kill handling and before automatic redemption.
+
+## Deployment outcome
+
+**LIVE PASS.** Under `11b7f0a`, the stale legacy position blocker was absent, the independent exact
+recovery resolved flag 530, and the release proceeded with an empty material risk set. Historical
+acknowledgement findings remained visible without reopening their resolved flag class.

@@ -28,3 +28,18 @@ The complete repository suite, focused release/clear/recovery/redemption tests, 
 compileall, YAML parsing, shell syntax and `git diff --check` pass. Production still runs d3237fa;
 the candidate service has not redeemed anything yet. Deployment and the service's first actual
 idempotent pass remain pending.
+
+## Deployment outcome
+
+**LIVE PASS.** Operator release `11b7f0a0c8d765e45772ad9d0f94ced0f900cd17` completed every
+stage. The exact persistence recovery made the material risk set empty; stopped-state audit archived
+the original kill at
+`/srv/janus/release-audit/L64/live-cleared-11b7f0a0c8d765e45772ad9d0f94ced0f900cd17-4a8bcb2d6261.json`;
+all three streams became fresh while the kill remained present; activation rechecked the digest and
+removed it. The lane and redemption timer are active and the signed arm matches the runner through
+2026-09-18T01:20:54Z.
+
+The first corrected redemption pass submitted both positive eligible conditions. A later pass
+confirmed fresh position disappearance and marked both durable rows COMPLETE with transaction IDs
+and hashes. Final counts are eligible=0, pending=0, unknown=0, failed=0. The box watchdog reports
+`ok — all registered jobs healthy`.

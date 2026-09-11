@@ -24,3 +24,11 @@ settlement/reservation timestamps. All negative and race regressions pass.
 No production row or kill was changed. The operator release must deploy the guard, allow it to
 append the exact resolution after its fresh venue pass, and only then may the digest-bound
 false-maker clear continue.
+
+## Deployment outcome
+
+**LIVE PASS.** The fresh guard appended marker 533,
+`ORDER_PERSISTENCE_FAILED_RESOLVED_EXACT`, naming only incident ID 530 and binding its exact row set
+to SHA256 `f900a9dd9fe06e39f265e3bafda32342b25bb6ed98f44b8a7b297aa8132eea37`. The pre-clear material
+risk set was then empty. No source order, fill, execution, settlement, reservation or P&L row was
+rewritten by the resolution path.

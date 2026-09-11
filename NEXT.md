@@ -6,11 +6,11 @@ Updated 2026-09-10 for the final F20 recovery/release candidate.
 
 ## Current state
 
-Production runs `d3237fa` on the Mexico box in `LIMITED_LIVE`, but `/srv/janus/kill/live` remains
-present and blocks new entries. The lane is active and all three streams are connected. There are
-zero open, unconfirmed or cash-pending orders, zero unreleased executions/reservations, and no
-execution after the single accidental F20 taker flight. That flight is fully RECONCILED/released at
--$0.014932. `ORDER_PERSISTENCE_FAILED` flag 530 remains unresolved until the new guard proves it.
+Production runs `11b7f0a0c8d765e45772ad9d0f94ced0f900cd17` on the Mexico box in
+`LIMITED_LIVE`. `kill/live` is absent, the lane and redemption timer are active, all three streams
+are fresh, all material risk flags are resolved, current money state is empty, and the watchdog is
+green. Exact marker 533 closes only persistence incident 530. The single accidental F20 taker
+flight remains fully RECONCILED/released at -$0.014932; no later execution existed at final audit.
 
 The base executable repair is `42ac10cd67af9b228930481ee3fd8ea4226f72ac`. It fixes the SQLite
 writer-upgrade race, exact incident resolution, fail-closed retained-kill warm-up, SSM failure
@@ -23,7 +23,11 @@ fresh logs proved the current adapter error was gone; exact recovery was blocked
 already-resolved historical checker repeated a one-time terminal-zero proof against unrelated
 shared-account positions and emitted `LEGACY_POSITION_EVIDENCE_BLOCKED`. L71 makes that checker
 quiet only when its own exact unresolved flag set is empty, after validating acknowledgements and
-migration alarms. The kill remains unchanged and the release did not reach redemption.
+migration alarms. The final `11b7f0a` release passed this boundary and safely cleared the kill.
+
+Automatic redemption is operational. It submitted two eligible conditions, stored transaction
+identities, observed fresh position disappearance, and marked both COMPLETE. Nothing eligible,
+pending, unknown or failed remains.
 
 The system is already taker-first under F20. The observed local execution stages were fast
 (3.14 ms pre-machine, 33.22 ms database, 59.08 ms evaluation-to-execution); venue acknowledgement,
@@ -44,12 +48,8 @@ settlement/reservation, current cash quiet, fresh streams, candidate unit syntax
 
 ## Immediate next step
 
-Push the final documentation commit and have the operator run exactly one release paste with that
-SHA and the existing `JANUS_ARM_CAPS='12 10 250 168'`. The release first restarts under the retained
-kill, gives the fresh guard time to resolve only flag 530, refuses to proceed if any material flag
-remains, then audits the original false-maker latch while stopped, warms all streams under that
-same kill, and removes it only after a digest recheck. It then starts automatic redemption.
-
-After the paste, verify absent kill, resolved exact persistence flag, active lane/timer, successful
-redemption result, all streams/clocks green, and no watchdog alerts. F20 observation count is one;
-reconcile observations two and three before permitting the registered fourth cover.
+No operational action is required. Let F20 run under the unchanged caps. Reconcile observations two
+and three before permitting the registered fourth cover, with special attention to first-fill-to-
+hedge latency, missed IOC levels, locked cover P&L and residual P&L. Do not lift caps or begin a C++
+rewrite from the first adverse observation alone. The laptop may be powered off; runtime,
+credentials, monitoring, redemption and restart behavior are box-local.

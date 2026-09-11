@@ -7,9 +7,23 @@ HEAD before this handoff file: `2e9620aaf0106af812761541211b72019bd14c2a`
 
 ## Emergency release continuation — 2026-09-10
 
-This section supersedes every operational status below it. The executable repair is commit
-`42ac10cd67af9b228930481ee3fd8ea4226f72ac`; production still runs `d3237fa` until the operator
-releases the final documentation commit that contains it.
+This section supersedes every operational status below it. The executable repair began at
+`42ac10cd67af9b228930481ee3fd8ea4226f72ac`; the final operational runner is
+`11b7f0a0c8d765e45772ad9d0f94ced0f900cd17`.
+
+### Final live outcome
+
+The operator release completed. The runner and signed LIMITED_LIVE arm match, with unchanged
+$12/10/$250 caps through 2026-09-18T01:20:54Z. Exact marker 533 resolves only persistence incident
+530. The original false-maker kill was archived after stopped-state proof, all three streams warmed
+fresh under the retained kill, and digest-bound activation removed `kill/live`. Current counts are
+zero open/unknown/cash-pending orders, unreleased executions and reservations; every material risk
+flag is resolved. The lane and redemption timer are active and the box watchdog is fully green.
+
+Automatic redemption submitted the two positive eligible PM conditions, recorded their transaction
+IDs/hashes, and marked both COMPLETE after fresh positions disappeared. Final redemption counts are
+eligible=0, pending=0, unknown=0 and failed=0. The laptop is not a runtime dependency and may be
+powered off.
 
 ### Initial state and incident
 
