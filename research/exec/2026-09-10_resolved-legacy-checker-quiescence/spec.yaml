@@ -1,0 +1,23 @@
+row: L71
+date: 2026-09-10
+kind: exact_recovery_integration_repair
+status_at_registration: PENDING
+observed_failure: >-
+  After d864447 restarted, fresh guard passes no longer carried the adapter persistence error, but
+  _resolve_legacy_incidents still attempted the historical terminal-zero position proof after every
+  POST_ONLY_PERSISTENCE_FAILED row had already been exactly resolved. The shared PM account has
+  unrelated positions, so it emitted LEGACY_POSITION_EVIDENCE_BLOCKED each pass. L69 intentionally
+  rejects any BLOCKED finding and therefore left ORDER_PERSISTENCE_FAILED flag 530 unresolved.
+immutable_success_criteria:
+  - Continue validating every stored historical acknowledgement and running exact migration-false-
+    alarm cleanup before considering quiescence.
+  - Skip only the old terminal-zero position proof when unresolved_flag_rows for
+    POST_ONLY_PERSISTENCE_FAILED is exactly empty.
+  - Any unresolved same-class row, invalid acknowledgement, migration alarm, guard error, orphan,
+    mismatch, protection work, or material finding retains the existing fail-closed behavior.
+  - Prove the no-row path emits no LEGACY_POSITION_EVIDENCE_BLOCKED and the unresolved-row path
+    still invokes the terminal-zero evidence gate.
+expected_ev_effect: none; this removes stale audit noise that prevents an independently proved
+  current incident from resolving.
+prohibited:
+  - Resolving a flag in this change, clearing/chowning the kill, or changing account/trading state.

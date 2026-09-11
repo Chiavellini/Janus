@@ -365,6 +365,14 @@ class PositionGuard:
             rep.findings.append(f'LEGACY_MIGRATION_RESOLUTION_BLOCKED: {type(exc).__name__}: {exc}')
             return
 
+        # The one-time terminal-zero position proof exists only to close a current acknowledged
+        # legacy flag. Once every exact same-class incident is resolved, repeating it against a
+        # shared account's unrelated positions creates permanent BLOCKED noise and can obstruct an
+        # independent recovery path. Stored acknowledgements were still validated above, and any
+        # invalid one has already appended a new unresolved flag before reaching this boundary.
+        if not unresolved_flag_rows(self.store.con, 'POST_ONLY_PERSISTENCE_FAILED'):
+            return
+
         def complete_safe_pass():
             if not base_safe_pass() or snap.positions.get('kalshi') != []:
                 return False

@@ -12,11 +12,18 @@ zero open, unconfirmed or cash-pending orders, zero unreleased executions/reserv
 execution after the single accidental F20 taker flight. That flight is fully RECONCILED/released at
 -$0.014932. `ORDER_PERSISTENCE_FAILED` flag 530 remains unresolved until the new guard proves it.
 
-The executable repair is `42ac10cd67af9b228930481ee3fd8ea4226f72ac`. It fixes the SQLite
+The base executable repair is `42ac10cd67af9b228930481ee3fd8ea4226f72ac`. It fixes the SQLite
 writer-upgrade race, exact incident resolution, fail-closed retained-kill warm-up, SSM failure
 propagation, redemption interpreter selection/error visibility, and the redemption watchdog cadence.
 The candidate redemption SDK authenticated read-only on the box and sees two positive redeemable
 conditions. No redemption was submitted during development.
+
+The d864447 release deployed that base but failed closed before lane stop or kill handling. Its
+fresh logs proved the current adapter error was gone; exact recovery was blocked only because an
+already-resolved historical checker repeated a one-time terminal-zero proof against unrelated
+shared-account positions and emitted `LEGACY_POSITION_EVIDENCE_BLOCKED`. L71 makes that checker
+quiet only when its own exact unresolved flag set is empty, after validating acknowledgements and
+migration alarms. The kill remains unchanged and the release did not reach redemption.
 
 The system is already taker-first under F20. The observed local execution stages were fast
 (3.14 ms pre-machine, 33.22 ms database, 59.08 ms evaluation-to-execution); venue acknowledgement,

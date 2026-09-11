@@ -84,7 +84,14 @@ failure propagation, explicit sudo epoch, three connected streams, candidate sys
 the pinned SDK's authenticated position read, and the exact incident proof all passed without
 submission or kill/database mutation.
 
-The next action is one operator release of the final pushed commit. It must show
+The first operator release of this continuation (`d864447`) failed closed before stopping the lane:
+fresh guard passes were economically clean, but the already-resolved historical persistence checker
+still emitted `LEGACY_POSITION_EVIDENCE_BLOCKED` against unrelated shared-account positions. L69's
+strict safe-pass predicate therefore refused flag 530. L71 removes only that stale proof attempt
+when its exact flag class is empty, after acknowledgement validation and migration cleanup; active
+or invalid incidents remain fail-closed. The kill was unchanged and redemption was not reached.
+
+The next action is one operator release of the final pushed follow-up. It must show
 `PRE_CLEAR_RISK_FLAGS_QUIET`, `STOPPED_EXACT_STATE_OK`, `POST_START_STREAMS_GREEN`,
 `LIVE_CLEAR_COMPLETE`, and a successful `pm redemption ...` line. If exact persistence recovery
 does not complete, release aborts before touching the kill; do not bypass it. After release, inspect

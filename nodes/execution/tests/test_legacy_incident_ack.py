@@ -74,6 +74,13 @@ def test_exact_guard_resolution_preserves_every_source_row_and_kill(tmp_path, pr
     guard._resolve_legacy_incidents(complete_snapshot(), later)
     assert later.findings == []  # Empty-maker gate applies to resolution, not later valid trading.
 
+    shared = complete_snapshot()
+    shared.positions['polymarket'] = [object()]
+    shared.position_evidence.clear()
+    after = GuardReport()
+    guard._resolve_legacy_incidents(shared, after)
+    assert after.findings == [], "resolved legacy incidents do not demand a one-time position proof forever"
+
 
 def test_resolved_ack_closes_only_exact_migration_false_alarms_after_terminal_maker_history(tmp_path, proof):
     store, _, guard, _, manifest, _ = world(tmp_path, proof)
