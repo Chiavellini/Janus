@@ -1,0 +1,94 @@
+======== 73688bf3 pm:atp:987759 RECONCILED started 02:46:40.207 qty 10.0 first 10.012485 0.8009999515604768 hedge 10.0 0.19 unhedged 0.012484999999999857 released 1
+detail: settled -0.0951 USD (PARTIAL)
+plan_json 12639 chars: {"first": {"venue": "polymarket", "market_id": "61626157277164849706878735144520069914007661982533925197847012235874601600407", "outcome_id": "61626157277164849706878735144520069914007661982533925197847012235874601600407", "side": "buy_yes", "limit_price": 0.802, "contracts": 10.0, "time_in_force": "ioc", "vwap": 0.8009999999999999, "tick": 0.001, "post_only": false}, "hedge": {"venue": "kalshi", "market_id": "KXATPCHALLENGERMATCH-26SEP09SEKMAT-MAT", "outcome_id": "KXATPCHALLENGERMATCH-26SEP09SEKMAT-MAT", "side": "buy_yes", "limit_price": 0.16000000000000003, "contracts": 10.0, "time_in_force": "ioc", "vwap": 0.16000000000000003, "tick": 0.01, "post_only": false}, "max_cost": 0.99, "fee": 0.017379949999999998, "settlement_buffer": 0.009436955, "quote_expires_utc": null, "sizing": {"objective": "MAX_LOCKED_PROFIT_CONDITIONAL_ON_COMPLETION", "selection_rule": "max profit_usd; ties lower ca
+books_json 3008 chars: {"atp:koki-matsuda": [{"venue": "kalshi", "market_id": "KXATPCHALLENGERMATCH-26SEP09SEKMAT-MAT", "outcome_id": "KXATPCHALLENGERMATCH-26SEP09SEKMAT-MAT", "source": "ws", "fetched_utc": 1789094799.5344126, "asks": [[0.16, 56.66], [0.17, 40.0], [0.18, 102.09], [0.19, 10.01], [0.2, 0.01], [0.21, 33.83], [0.22, 10.01], [0.23, 42.01], [0.24, 159.01], [0.25, 380.11], [0.26, 0.01], [0.27, 0.01], [0.28, 0.01], [0.29, 0.01], [0.3, 200.01], [0.31, 8218.01], [0.32, 17400.01], [0.33, 7400.01], [0.34, 9544.01], [0.35, 15450.01], [0.36, 7404.01], [0.37, 5759.01], [0.38, 2000.01], [0.39, 2000.01], [0.4, 7000.01]]}, {"venue": "polymarket", "market_id": "82008508427874729690555404971377858710498174421952299014586186018507282315104", "outcome_id": "82008508427874729690555404971377858710498174421952299014586186018507282315104", "source": "ws", "fetched_utc": 1789094799.1004267, "asks": [[0.202, 13.07], [0.2
+stages_json 365 chars: {"a_ack_ms": 622.94, "a_polls": 1, "a_settled_ms": 962.73, "a_submit_ms": 41.69, "b_ack_ms": 3816.35, "b_attempts": 6, "b_polls": 0, "b_settled_ms": 3816.37, "b_submit_ms": 3697.41, "balance_cache_age_ms": 27808.1, "balances_ms": 0.0, "clear_ms": 2.1, "db_ms": 96.61, "done_ms": 3816.61, "eval_to_exec_ms": 29.08, "frame_to_eval_ms": 1.74, "pre_machine_ms": 640.55}
+protect_json 1414 chars: {"attempts": [{"avg": null, "ceiling": 0.16, "filled": 0.0, "held_unhedged": 10.012485, "kind": "hedge", "limit": 0.16, "phase": "walked", "qty": 10.0, "state": "UNFILLED", "t": 0.191}, {"avg": null, "ceiling": 0.16, "filled": 0.0, "held_unhedged": 10.012485, "kind": "hedge", "limit": 0.16, "phase": "walked", "qty": 10.0, "state": "UNFILLED", "t": 0.534}, {"avg": null, "ceiling": 0.16, "filled": 0.0, "held_unhedged": 10.012485, "kind": "hedge", "limit": 0.16, "phase": "walked", "qty": 10.0, "state": "UNFILLED", "t": 0.853}, {"avg": null, "ceiling": 0.16, "filled": 0.0, "held_unhedged": 10.012485, "kind": "hedge", "limit": 0.16, "phase": "budget", "qty": 10.0, "state": "UNFILLED", "t": 1.301}, {"avg": null, "ceiling": 0.16, "filled": 0.0, "held_unhedged": 10.012485, "kind": "hedge", "limit": 0.16, "phase": "budget", "qty": 10.0, "state": "UNFILLED", "t": 2.09}, {"avg": 0.19, "ceiling": 0.
+-- transitions
+  +  0.000s 02:46:40.207 None->DETECTED detected
+  +  0.001s 02:46:40.208 DETECTED->VALIDATED 
+  +  0.001s 02:46:40.208 VALIDATED->CAPITAL_RESERVED 
+  +  0.002s 02:46:40.210 CAPITAL_RESERVED->LEG_A_SUBMITTED 
+  +  0.963s 02:46:41.170 LEG_A_SUBMITTED->LEG_A_FILLED filled 10.012485 @ 0.8009999515604768
+  +  0.963s 02:46:41.171 LEG_A_FILLED->LEG_B_SUBMITTED attempt 1 limit 0.1600 budget 0.1622
+  +  1.259s 02:46:41.466 LEG_B_SUBMITTED->LEG_B_SUBMITTED attempt 2 limit 0.1600 budget 0.1622
+  +  1.598s 02:46:41.805 LEG_B_SUBMITTED->LEG_B_SUBMITTED attempt 3 limit 0.1600 budget 0.1622
+  +  2.036s 02:46:42.244 LEG_B_SUBMITTED->LEG_B_SUBMITTED attempt 4 limit 0.1600 budget 0.1622 phase budget ceiling 0.1600
+  +  2.782s 02:46:42.990 LEG_B_SUBMITTED->LEG_B_SUBMITTED attempt 5 limit 0.1600 budget 0.1622 phase budget ceiling 0.1600
+  +  3.691s 02:46:43.898 LEG_B_SUBMITTED->LEG_B_SUBMITTED attempt 6 limit 0.2100 budget 0.1622 phase loss_cap ceiling 0.2700
+  +  3.816s 02:46:44.024 LEG_B_SUBMITTED->LEG_B_FILLED hedge filled 10.0 @ 0.19
+  +  3.817s 02:46:44.024 LEG_B_FILLED->HEDGED 10.0 hedged @ 0.19 ABOVE_BREAK_EVEN 0.1722: a locked loss inside the cap, still a cover; BOUNDED_TAKER_RESIDUAL 0.012485
+  +2442.515s 03:27:22.723 HEDGED->RECONCILED -0.0951
+-- orders
+  221d6cbab5 polymarket buy_yes px=0.802 q=10.0 ioc FILLED      filled=10.012485 avg=0.8009999515999999 fee=0.079789999604274 raw=guard_fills sub=+0.042 last=+33.231 venue fill FIFO overrides order lookup
+      +  0.042s pending            UNCONFIRMED  
+      +  0.616s ack                UNCONFIRMED  {"errorMsg": "", "orderID": "0xb09481…", "takingAmount": "", "makingAmount": "", "status": "d
+      +  0.623s status_trade       FILLED       
+      + 32.558s authoritative_cash              {"fill_id": "05dc2e0f-40b8-4379-a4c9-5e37b91868d4", "endpoint": "data-api.polymarket.com/activity", "activity": {"proxyWallet": "0x5d6e88…
+      + 33.231s guard_fill         FILLED       
+      fill 10.012485 @ 0.8009999516 fee=0.079789999604274 taker=1 ts=+-0.208 final=1
+  ac26d691eb kalshi     buy_yes px=0.16 q=10.0 ioc UNFILLED    filled=0.0 avg=None fee=None raw=created sub=+0.965 last=+1.146 
+      +  0.965s pending            UNCONFIRMED  
+      +  1.146s ack                UNFILLED     {"client_order_id": "ac26d691eb86476d85de9bcd2b6b4230", "fill_count": "0.00", "order_id": "01a08e5c-2e68-778e-96f8-277ce50b3522", "remaining_count": "
+  b5370f6a64 kalshi     buy_yes px=0.16 q=10.0 ioc UNFILLED    filled=0.0 avg=None fee=None raw=created sub=+1.259 last=+1.497 
+      +  1.259s pending            UNCONFIRMED  
+      +  1.497s ack                UNFILLED     {"client_order_id": "b5370f6a64cd48baae261e226928fb77", "fill_count": "0.00", "order_id": "01a08e5c-2e68-7dbb-9d94-550ffd9a8e1b", "remaining_count": "
+  1d45236707 kalshi     buy_yes px=0.16 q=10.0 ioc UNFILLED    filled=0.0 avg=None fee=None raw=created sub=+1.598 last=+1.816 
+      +  1.598s pending            UNCONFIRMED  
+      +  1.816s ack                UNFILLED     {"client_order_id": "1d45236707684e9a95747f755c44e750", "fill_count": "0.00", "order_id": "01a08e5c-2e68-7f8e-8635-ea6828859982", "remaining_count": "
+  7ec7af6d7c kalshi     buy_yes px=0.16 q=10.0 ioc UNFILLED    filled=0.0 avg=None fee=None raw=created sub=+2.037 last=+2.264 
+      +  2.037s pending            UNCONFIRMED  
+      +  2.264s ack                UNFILLED     {"client_order_id": "7ec7af6d7c4d44208aa988d71c31064b", "fill_count": "0.00", "order_id": "01a08e5c-3250-765f-bfb8-2a4aa8fe52d3", "remaining_count": "
+  de6cc7e656 kalshi     buy_yes px=0.16 q=10.0 ioc UNFILLED    filled=0.0 avg=None fee=None raw=created sub=+2.823 last=+3.053 
+      +  2.823s pending            UNCONFIRMED  
+      +  3.053s ack                UNFILLED     {"client_order_id": "de6cc7e656d544b1a283b420e4de02a8", "fill_count": "0.00", "order_id": "01a08e5c-3638-75be-b1a8-ef8cceb1312f", "remaining_count": "
+  f66671cab9 kalshi     buy_yes px=0.21 q=10.0 ioc FILLED      filled=10.0 avg=0.19 fee=0.1078 raw=guard_fills sub=+3.697 last=+33.231 venue fill FIFO overrides order lookup
+      +  3.697s pending            UNCONFIRMED  
+      +  3.816s ack                FILLED       {"average_fee_paid": "0.0107", "average_fill_price": "0.1900", "client_order_id": "f66671cab93643aea32fb588494cc049", "fill_count": "10.00", "order_id
+      + 33.231s guard_fill         FILLED       
+      fill 10.0 @ 0.19 fee=0.1078 taker=1 ts=+2.792 final=1
+======== 98376aa2 pm:atp:993325 HEDGED started 04:22:31.615 qty 10.0 first 10.107514 0.9299999980212741 hedge 10.0 0.04 unhedged 0.10751400000000011 released 0
+detail: 10.0 hedged @ 0.04; BOUNDED_TAKER_RESIDUAL 0.107514
+plan_json 12784 chars: {"first": {"venue": "polymarket", "market_id": "59221251114832311658619840473654159323114843367368554826614836450596445395518", "outcome_id": "59221251114832311658619840473654159323114843367368554826614836450596445395518", "side": "buy_yes", "limit_price": 0.94, "contracts": 10.0, "time_in_force": "ioc", "vwap": 0.93, "tick": 0.01, "post_only": false}, "hedge": {"venue": "kalshi", "market_id": "KXATPCHALLENGERMATCH-26SEP10MORSHI-SHI", "outcome_id": "KXATPCHALLENGERMATCH-26SEP10MORSHI-SHI", "side": "buy_yes", "limit_price": 0.030000000000000027, "contracts": 10.0, "time_in_force": "ioc", "vwap": 0.030000000000000027, "tick": 0.01, "post_only": false}, "max_cost": 0.99, "fee": 0.0052949999999999985, "settlement_buffer": 0.010463150000000001, "quote_expires_utc": null, "sizing": {"objective": "MAX_LOCKED_PROFIT_CONDITIONAL_ON_COMPLETION", "selection_rule": "max profit_usd; ties lower capita
+books_json 2748 chars: {"atp:hiroki-moriya": [{"venue": "kalshi", "market_id": "KXATPCHALLENGERMATCH-26SEP10MORSHI-MOR", "outcome_id": "KXATPCHALLENGERMATCH-26SEP10MORSHI-MOR", "source": "ws", "fetched_utc": 1789100551.2422314, "asks": [[0.96, 587.0], [0.97, 824.16], [0.98, 372.12], [0.99, 10706.73]]}, {"venue": "polymarket", "market_id": "59221251114832311658619840473654159323114843367368554826614836450596445395518", "outcome_id": "59221251114832311658619840473654159323114843367368554826614836450596445395518", "source": "ws", "fetched_utc": 1789100551.010576, "asks": [[0.93, 80.28], [0.94, 250.0], [0.95, 300.0], [0.96, 375.0], [0.97, 1094.0], [0.98, 1336.55], [0.99, 1754.0]]}, {"venue": "kalshi", "market_id": "KXATPCHALLENGERMATCH-26SEP10MORSHI-SHI", "outcome_id": "KXATPCHALLENGERMATCH-26SEP10MORSHI-SHI:NO", "source": "ws", "fetched_utc": 1789100551.2422314, "asks": [[0.98, 1586.02], [0.99, 9073.8]]}], "atp:y
+stages_json 364 chars: {"a_ack_ms": 213.13, "a_polls": 1, "a_settled_ms": 556.52, "a_submit_ms": 7.35, "b_ack_ms": 2510.45, "b_attempts": 5, "b_polls": 0, "b_settled_ms": 2510.46, "b_submit_ms": 2301.01, "balance_cache_age_ms": 370.24, "balances_ms": 0.0, "clear_ms": 2.66, "db_ms": 39.22, "done_ms": 2510.72, "eval_to_exec_ms": 21.41, "frame_to_eval_ms": 1.63, "pre_machine_ms": 351.25}
+protect_json 1240 chars: {"attempts": [{"avg": null, "ceiling": 0.03, "filled": 0.0, "held_unhedged": 10.107514, "kind": "hedge", "limit": 0.03, "phase": "walked", "qty": 10.0, "state": "UNFILLED", "t": 0.329}, {"avg": null, "ceiling": 0.03, "filled": 0.0, "held_unhedged": 10.107514, "kind": "hedge", "limit": 0.03, "phase": "walked", "qty": 10.0, "state": "UNFILLED", "t": 0.645}, {"avg": null, "ceiling": 0.03, "filled": 0.0, "held_unhedged": 10.107514, "kind": "hedge", "limit": 0.03, "phase": "walked", "qty": 10.0, "state": "UNFILLED", "t": 0.944}, {"avg": null, "ceiling": 0.04, "filled": 0.0, "held_unhedged": 10.107514, "kind": "hedge", "limit": 0.04, "phase": "budget", "qty": 10.0, "state": "UNFILLED", "t": 1.222}, {"avg": 0.04, "ceiling": 0.04, "filled": 10.0, "held_unhedged": 10.107514, "kind": "hedge", "limit": 0.04, "phase": "budget", "qty": 10.0, "state": "FILLED", "t": 1.944}], "bounded_taker_residual": 
+-- transitions
+  +  0.000s 04:22:31.615 None->DETECTED detected
+  +  0.001s 04:22:31.615 DETECTED->VALIDATED 
+  +  0.007s 04:22:31.622 VALIDATED->CAPITAL_RESERVED 
+  +  0.007s 04:22:31.622 CAPITAL_RESERVED->LEG_A_SUBMITTED 
+  +  0.557s 04:22:32.171 LEG_A_SUBMITTED->LEG_A_FILLED filled 10.107514 @ 0.9299999980212741
+  +  0.567s 04:22:32.182 LEG_A_FILLED->LEG_B_SUBMITTED attempt 1 limit 0.0300 budget 0.0442
+  +  0.999s 04:22:32.614 LEG_B_SUBMITTED->LEG_B_SUBMITTED attempt 2 limit 0.0300 budget 0.0442
+  +  1.313s 04:22:32.927 LEG_B_SUBMITTED->LEG_B_SUBMITTED attempt 3 limit 0.0300 budget 0.0442
+  +  1.699s 04:22:33.314 LEG_B_SUBMITTED->LEG_B_SUBMITTED attempt 4 limit 0.0400 budget 0.0442 phase budget ceiling 0.0400
+  +  2.281s 04:22:33.896 LEG_B_SUBMITTED->LEG_B_SUBMITTED attempt 5 limit 0.0400 budget 0.0442 phase budget ceiling 0.0400
+  +  2.511s 04:22:34.125 LEG_B_SUBMITTED->LEG_B_FILLED hedge filled 10.0 @ 0.04
+  +  2.511s 04:22:34.125 LEG_B_FILLED->HEDGED 10.0 hedged @ 0.04; BOUNDED_TAKER_RESIDUAL 0.107514
+-- orders
+  9aaeedd016 polymarket buy_yes px=0.94 q=10.0 ioc FILLED      filled=10.107514 avg=0.929999998 fee=0.032890000215028 raw=guard_fills sub=+0.007 last=+30.723 venue fill FIFO overrides order lookup
+      +  0.007s pending            UNCONFIRMED  
+      +  0.213s ack                UNCONFIRMED  {"errorMsg": "", "orderID": "0x7ccd8a…", "takingAmount": "", "makingAmount": "", "status": "d
+      +  0.213s status_trade       FILLED       
+      + 29.592s authoritative_cash              {"fill_id": "0892538f-2d35-4cfd-9120-7a036711d1d5", "endpoint": "data-api.polymarket.com/activity", "activity": {"proxyWallet": "0x5d6e88…
+      + 30.723s guard_fill         FILLED       
+      fill 10.107514 @ 0.929999998 fee=0.032890000215028 taker=1 ts=+-0.615 final=1
+  6b8d6dcf47 kalshi     buy_yes px=0.03 q=10.0 ioc UNFILLED    filled=0.0 avg=None fee=None raw=created sub=+0.567 last=+0.873 
+      +  0.567s pending            UNCONFIRMED  
+      +  0.873s ack                UNFILLED     {"client_order_id": "6b8d6dcf47ef4a5ea50cba4d44188e84", "fill_count": "0.00", "order_id": "01a08eb3-ef40-7458-b65d-fd260e3edbf7", "remaining_count": "
+  823721b573 kalshi     buy_yes px=0.03 q=10.0 ioc UNFILLED    filled=0.0 avg=None fee=None raw=created sub=+0.999 last=+1.212 
+      +  0.999s pending            UNCONFIRMED  
+      +  1.212s ack                UNFILLED     {"client_order_id": "823721b573ee4d6884e682d865222da0", "fill_count": "0.00", "order_id": "01a08eb3-ef40-7940-ab52-04598cb5a5a3", "remaining_count": "
+  61b33825b6 kalshi     buy_yes px=0.03 q=10.0 ioc UNFILLED    filled=0.0 avg=None fee=None raw=created sub=+1.313 last=+1.511 
+      +  1.313s pending            UNCONFIRMED  
+      +  1.511s ack                UNFILLED     {"client_order_id": "61b33825b6984019b8b48407091cdea7", "fill_count": "0.00", "order_id": "01a08eb3-f328-7719-9996-3a54236a562f", "remaining_count": "
+  b24b0e276a kalshi     buy_yes px=0.04 q=10.0 ioc UNFILLED    filled=0.0 avg=None fee=None raw=created sub=+1.699 last=+1.779 
+      +  1.699s pending            UNCONFIRMED  
+      +  1.779s ack                UNFILLED     {"client_order_id": "b24b0e276a5e4c279fdeafd465966d98", "fill_count": "0.00", "order_id": "01a08eb3-f328-7241-932f-af186aafffe7", "remaining_count": "
+  36c0b0bc70 kalshi     buy_yes px=0.04 q=10.0 ioc FILLED      filled=10.0 avg=0.04 fee=0.0269 raw=guard_fills sub=+2.301 last=+30.723 venue fill FIFO overrides order lookup
+      +  2.301s pending            UNCONFIRMED  
+      +  2.510s ack                FILLED       {"average_fee_paid": "0.0026", "average_fill_price": "0.0400", "client_order_id": "36c0b0bc70954c849e091715531fc73f", "fill_count": "10.00", "order_id
+      + 30.723s guard_fill         FILLED       
+      fill 10.0 @ 0.04 fee=0.0269 taker=1 ts=+2.385 final=1
+

@@ -1,0 +1,35 @@
+row: L73
+date: 2026-09-11
+kind: descriptive_hedge_slippage_audit
+status_at_registration: PENDING
+observed_failure: >-
+  Under F20 (bounded immediate taker entry), SEKULIC V MATSUDA (73688bf3) filled its Polymarket
+  first leg 10.012485 @ 0.801, then five Kalshi hedge attempts at 0.16 filled zero and protection
+  filled 10 @ 0.19: cover -$0.0975, total -$0.095105, a locked loss on an opportunity that was
+  profitable at the frozen books. MORIYA V SHIMIZU (98376aa2) filled 10.107514 @ 0.93 on
+  Polymarket, then three Kalshi attempts at 0.03 and one at 0.04 filled zero before the next
+  0.04 attempt filled all 10 (+$0.14 worst case). Nobody has read the two timelines side by side:
+  first-leg acknowledgement, hedge quote age at each IOC, each acknowledgement, and the walk.
+immutable_success_criteria:
+  - For each execution, a timeline from the journal (executions, execution_transitions, orders,
+    order_events, venue_fills) with the frozen-book plan, the first-leg submit and settled-ack
+    instants, every hedge submission's price, quantity, submit and ack instants and venue answer,
+    and the protective walk, all read-only from the box's database.
+  - The hedge quote age at each IOC submission (seconds from the plan's books_json stamp or the
+    last Kalshi book update the journal carries) and the ask the venue actually filled at, so
+    the slippage is attributed to book movement between plan and first-leg fill, or between
+    hedge attempts, or to the venue's FIFO at an unchanged touch.
+  - A verdict on whether first-leg venue ordering, a smaller initial quantity, or a different
+    bounded hedge schedule would have changed the realized result of THESE two executions, stated
+    with the expected EV and tail-risk effect of each; no change is proposed that removes or
+    delays protective hedging once a first leg is filled.
+  - No profitability gate, cap, hurdle or hedge schedule is changed by this row; any candidate
+    change is a separate pre-registered row.
+expected_ev_effect: >-
+  none from this row; it is a description. A later schedule change may reduce realized hedge
+  slippage on the ~10 % of attempts that fill the first leg; it cannot lower the two-leg
+  requirement.
+prohibited:
+  - Any write to the production database or journal.
+  - Removing, weakening or delaying protective hedging after a first-leg fill.
+  - Reinterpreting a venue zero-fill or a locked loss as anything else.
