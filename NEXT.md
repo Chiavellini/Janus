@@ -2,9 +2,23 @@
 
 *An opinion, not a record. Overwrite this file; never append to it and never create a second one.*
 
-Updated 2026-09-11 20:20Z after the disk-full recovery.
+Updated 2026-09-11 21:40Z after the F21 release.
 
 ## Current state
+
+**F21 is live.** The operator pasted `release.sh 3a05bc1` at 21:29Z: the box runs `3a05bc1`, the
+override is re-signed at 25 contracts / $30 per order / $500 a day (expires 2026-09-18T21:29Z), the
+taker wire's ceiling is 25 / $30, all three sockets connected, 35 pollers. First three F21 covers
+are reconciled to venue cash before a fourth; the row closes at ten covers or the first STOP.
+
+**Box CPU is the next constraint, not new.** The c7g.medium (1 vCPU) runs the lane at ~80 % CPU
+in busy hours; `socket_health.loop_lag_s` averaged 2–4 s with spikes to 10–30 s through Sep 9–10
+and HALT STALL (> 5 s) fires and recovers on its own (twice in the 21:00Z hour today). Each stall
+is pricing time lost. Every SSM diagnostic adds load on that one core, so box reads should be
+sparse while games are in play. A larger instance (c7g.large, 2 vCPU, ~2× the hourly price) is a
+billable operator decision, and the L37/L51 CPU-health rows are the prior work.
+
+### Earlier state (20:20Z)
 
 Production runs `11b7f0a0c8d765e45772ad9d0f94ced0f900cd17` on the Mexico box in `LIMITED_LIVE`,
 restarted 2026-09-11T20:17:57Z after 15.6 hours down. The 50 GB data volume filled at 04:40Z; the
