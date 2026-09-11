@@ -359,3 +359,23 @@ def test_fills_carry_the_asset_and_the_direction(tmp_path):
     v, _ = venue(tmp_path, FakeTransport(trades=trades))
     fs = v.fills(since_utc=1000.0)
     assert [(f.market_id, f.side, f.contracts) for f in fs] == [("tok-1", "buy_yes", 10.175), ("tok-1", "sell_yes", 10.0)]
+
+
+def test_an_immediate_order_the_engine_could_not_match_is_an_unfilled_zero_not_a_rejection(tmp_path):
+    """2026-09-11 audit: two FAK submissions answered HTTP 400 "no orders found to match" sat in
+    the journal as ORDER_REJECTED beside 18 economically identical ORDER_UNFILLED rows. The engine
+    said nothing matched a well-formed immediate order: an authoritative zero fill. Any other 400,
+    and the same text on a resting order, stay rejections."""
+    class PolyApiException(Exception):
+        def __init__(self, code, msg):
+            super().__init__(f"PolyApiException[status_code={code}, error_message={msg!r}]")
+            self.status_code = code
+    v, j = venue(tmp_path, FakeTransport(posts=[PolyApiException(400, {"error": "no orders found to match"})]))
+    ack = v.submit(req(time_in_force="ioc"), cl(tmp_path))
+    assert ack.state is FillState.UNFILLED and ack.raw_status == "HTTP_400_NO_MATCH" and ack.filled_contracts == 0.0
+    assert j.get("c1")["state"] == "UNFILLED" and v.unconfirmed == 0 and v.rejected_http == 1
+    v2, j2 = venue(tmp_path / "b", FakeTransport(posts=[PolyApiException(400, {"error": "no orders found to match"})]))
+    ack2 = v2.submit(req(time_in_force="gtc"), cl(tmp_path / "b"))
+    assert ack2.state is FillState.REJECTED and ack2.raw_status == "HTTP_400", "a resting order is not a FAK zero fill"
+    v3, j3 = venue(tmp_path / "c", FakeTransport(posts=[PolyApiException(400, {"error": "invalid amounts"})]))
+    assert v3.submit(req(time_in_force="ioc"), cl(tmp_path / "c")).state is FillState.REJECTED

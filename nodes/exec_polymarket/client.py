@@ -838,6 +838,16 @@ class PolymarketExecution:
                 self.rejected_http += 1
                 if code == 403 and "region" in self.last_error.lower():
                     self.geoblocked = self.last_error
+                if code == 400 and req.time_in_force in ("ioc", "fok") and "no orders found to match" in self.last_error.lower():
+                    # The matching engine answered an immediate order with "nothing to match": a
+                    # definite ZERO FILL of a well-formed order, not a refusal of its form. The
+                    # 2026-09-11 audit found two such answers journaled as ORDER_REJECTED beside 18
+                    # economically identical ORDER_UNFILLED rows. Same release, same terminal proof;
+                    # only the label the audit reads changes.
+                    ack = Ack(self.venue, req.client_order_id, None, FillState.UNFILLED, 0.0, None, None,
+                              f"HTTP_{code}_NO_MATCH", self.clock(), detail=self.last_error)
+                    self.journal.record(ack, kind="unfilled", raw={"error": self.last_error, "status_code": code})
+                    return ack
                 ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None,
                           f"HTTP_{code}", self.clock(), detail=self.last_error)
                 self.journal.record(ack, kind="reject", raw={"error": self.last_error, "status_code": code})
