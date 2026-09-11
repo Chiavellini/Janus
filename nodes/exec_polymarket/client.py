@@ -69,8 +69,10 @@ CREATE INDEX IF NOT EXISTS pm_cash_sources_fill ON pm_cash_sources(fill_id, id);
 
 # L65/F20: operator-accepted immediate entry is deliberately narrower than the signed arm.  These
 # constants remain hard even if a future override grows; the generic BUY signer stays blocked.
-BOUNDED_TAKER_MAX_CONTRACTS = Decimal("10")
-BOUNDED_TAKER_MAX_COLLATERAL_USD = Decimal("12")
+#: F21 (GATE_TO_LIVE 2026-09-11): one rung up from the smallest size. The override arms the caps;
+#: this is the wire's own ceiling, so a larger override alone can never send more than this.
+BOUNDED_TAKER_MAX_CONTRACTS = Decimal("25")
+BOUNDED_TAKER_MAX_COLLATERAL_USD = Decimal("30")
 BOUNDED_TAKER_MAX_ACCEPTED_EXCESS = Decimal("1")
 BOUNDED_TAKER_DDL = """
 CREATE TABLE IF NOT EXISTS pm_bounded_taker_orders(

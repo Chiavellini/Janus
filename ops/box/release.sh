@@ -6,7 +6,7 @@
 #   bash ops/box/release.sh <sha> --now    # skip that check (the operator's call)
 #
 # In order: provision the PM redemption key if absent; checkout without restart; sync the pinned
-# redemption runtime and units; re-sign the override at JANUS_ARM_CAPS (default $12 / 10 / $250,
+# redemption runtime and units; re-sign the override at JANUS_ARM_CAPS (default $30 / 25 / $500,
 # 168 h); restart LIMITED_LIVE; clear only the exact maker false-latch captured at paste start after
 # stopped-lane terminal-zero/global-idle proof; verify post-start streams; run redemption now.
 # A different or changed kill is never cleared. A docs-only sha still gets the same full sequence.
@@ -74,7 +74,7 @@ bash "$HERE/update.sh" "$SHA" --no-restart
 echo "== (b) sync pinned redemption runtime and systemd units"
 bash "$HERE/sync_runtime.sh"
 echo "== (c) re-sign the override for the new tree"
-CAPS=${JANUS_ARM_CAPS:-"12 10 250 168"}      # stake, contracts per leg, day notional, hours (GATE row 2026-09-07, the smallest executable size)
+CAPS=${JANUS_ARM_CAPS:-"30 25 500 168"}      # stake, contracts per leg, day notional, hours (GATE row 2026-09-11, F21: one rung up from the smallest size)
 # shellcheck disable=SC2086
 bash "$HERE/write_override.sh" "$STATEMENT" $CAPS
 echo "== (d) restart under LIMITED_LIVE"

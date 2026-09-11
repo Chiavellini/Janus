@@ -16,7 +16,7 @@ from nodes.exec_polymarket.tests.test_pm_exec import T, cl, req, venue
 FIXTURE = json.loads((Path(__file__).parent / "fixtures/f15_overfill.json").read_text())
 
 
-@pytest.mark.parametrize("tif,price,size", [("gtc", .36, 10), ("fok", .99, 13), ("ioc", .5, 10.01)])
+@pytest.mark.parametrize("tif,price,size", [("gtc", .36, 10), ("fok", .99, 26), ("ioc", .5, 25.01)])
 def test_real_adapter_refuses_buys_outside_dedicated_taker_envelope(tmp_path, tif, price, size):
     # No client, signing key, or SDK is constructed. Any attempt to touch it fails.
     transport = PyClobTransport.__new__(PyClobTransport)
@@ -34,11 +34,28 @@ def test_bounded_taker_authorization_is_durable_before_wire(tmp_path):
             row = journal.store.con.execute(
                 "SELECT max_requested_contracts,max_collateral_usd,max_accepted_excess "
                 "FROM pm_bounded_taker_orders WHERE client_order_id='c1'").fetchone()
-            assert row == ("10", "12", "1")
+            assert row == ("25", "30", "1")
             return {"success": False, "errorMsg": "no match"}
     v, journal = venue(tmp_path, Transport())
     ack = v.submit(req(price=.36, contracts=10, time_in_force="ioc"), cl(tmp_path))
     assert ack.state is FillState.REJECTED
+
+
+def test_the_f21_envelope_admits_twenty_five_and_refuses_twenty_six(tmp_path):
+    """F21 (2026-09-11): 25 contracts at any price is inside $30 collateral; 26 is refused before
+    the wire, whatever the override says."""
+    class Transport:
+        def buy_contract_cap_error(self): return BUY_CAP_UNPROVEN
+        def post_bounded_taker_buy(self, **kwargs):
+            seen.append((kwargs["size"], kwargs["price"]))
+            return {"success": False, "errorMsg": "no match"}
+    seen = []
+    v, journal = venue(tmp_path, Transport())
+    assert v.submit(req(price=.99, contracts=25, time_in_force="ioc"), cl(tmp_path)).raw_status != "QUANTITY_CAP_UNPROVEN"
+    assert seen == [(25.0, .99)]
+    v2, _ = venue(tmp_path / "b", Transport())
+    assert v2.submit(req(price=.36, contracts=26, time_in_force="ioc"), cl(tmp_path / "b")).raw_status == "QUANTITY_CAP_UNPROVEN"
+    assert seen == [(25.0, .99)]
 
 
 def test_unknown_transport_cannot_silently_bypass_share_cap(tmp_path):

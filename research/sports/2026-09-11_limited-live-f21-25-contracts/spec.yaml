@@ -1,0 +1,49 @@
+id: F21
+date: 2026-09-11
+kind: forward_limited_live
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row F21
+scope: >-
+  Operator-directed size step under the F20 taker-first policy and L75's book-aware hedge advance:
+  25 contracts per leg, $30 per order, $500 committed daily notional. Same venues, same entry and
+  hedge mechanics, same hurdles and breaker. A new prospective cohort; F20's 10-contract covers
+  are not pooled with it.
+start: >-
+  First LIMITED_LIVE line on the exact committed F21 tree after the full suite, zero flight and
+  material unhedged exposure, the operator's re-signed override at 30 / 25 / 500 pinning that tree,
+  and the operator's release/restart.
+end: >-
+  The first ten hedged covers reconciled, the first genuine STOP, the realized-loss breaker, any
+  cap/hurdle/policy change, or explicit operator closure. The first three covers are
+  authoritatively reconciled to venue cash and fills before a fourth is admitted.
+policy:
+  polymarket_entry: immediate FAK/FOK taker at walked executable ceiling (F20)
+  hedge: Kalshi immediate IOC with the L75 book-aware phase advance
+  hard_wire_max_requested_contracts: 25
+  hard_wire_max_collateral_usd: 30
+  accepted_price_improvement_residual_contracts: "strictly less than 1.0; preserved and audited"
+  maker_fallback: false
+limits:
+  combined_planned_stake_usd: 30.0
+  max_requested_contracts_per_leg: 25
+  committed_daily_notional_usd: 500.0
+  max_daily_realized_loss_usd: 25.0
+  min_net_profit_usd: 0.10
+  min_locked_return: 0.01
+  max_protection_loss_usd: 1.0
+  max_protection_loss_per_contract_usd: 0.10
+  per_event_notional_usd: 200.0
+stops:
+  - received-share excess at or above 1.0 contract
+  - unresolved provider state, overhedge, unprotected fill, persistence failure, or unexplained cash discrepancy
+  - any hedge whose protection cost reaches the $1 execution allowance (four Kalshi ticks at 25)
+  - any redemption transaction attributed to the wrong wallet or condition
+what_changes_with_size: >-
+  The $1 protection allowance is $0.04 a contract at 25 (four Kalshi ticks) against $0.10 at 10;
+  a walked price that has moved four ticks by the time the first IOC lands becomes an unprotected
+  page rather than a locked small loss. The lane already prices the 25 rung; refusals at 10 that
+  named CAP_CONTRACTS together with MIN_PROFIT are admitted when the 25 rung clears the $0.10
+  floor. The $250 per-venue capital limit admits at most eight simultaneous $30 legs.
+analysis_boundary: >-
+  Fill probability and realized EV at 25 are unknown; F20's 10-contract cohort is not evidence
+  for them. Nominal request quantity and actual received quantity are reported separately.
