@@ -401,6 +401,32 @@ def test_missing_soccer_team_no_token_is_named_as_degraded_not_silently_lost():
     assert slate[g.game_id]["coverage_warnings"] == [f"PM_NO_TOKEN_MISSING:{che}"]
 
 
+def test_one_no_token_claimed_by_two_teams_binds_to_neither():
+    """L94: the ambiguity guard refused ONE ENTITY holding TWO tokens and not the other direction.
+    Two independent writers feed the NO candidates -- the entity resolver, and the exact
+    token-label match -- so one token can end up claimed by two entities while each holds exactly
+    one. That direction is worse: a leg bound to the wrong entity is a different INSTRUMENT, and
+    Kalshi YES B + PM NO A pays $2 if B wins, $1 on the draw and $0 if A wins, which prices like a
+    40-50 % edge. Neither team may keep it."""
+    import json
+    g, r, rows, names, ev, ars, che, slug = _three_way_fixture()
+    for m in ev["markets"]:
+        suffix = m["slug"].rsplit("-", 1)[-1]
+        m["clobTokenIds"] = json.dumps([f"tok-{suffix}", f"tok-{suffix}-no"])
+    # Both team markets hand back the SAME no token: one instrument, two claimants.
+    for m in ev["markets"]:
+        if m["slug"].rsplit("-", 1)[-1] in ("ars", "che"):
+            m["clobTokenIds"] = json.dumps([f"tok-{m['slug'].rsplit('-', 1)[-1]}", "tok-shared-no"])
+    d = Discovery(NOW, [g], {}, {"epl": (rows, {}, r)}, {slug: (names, ev)}, {},
+                  fee_params={"kalshi": {"epl": {"fee_type": "quadratic_with_maker_fees", "fee_multiplier": 1.0}},
+                              "polymarket": {slug: {"fee_rate": 0.05}}})
+    slate, blocked = co_listed(d)
+    assert blocked == {}
+    outs = slate[g.game_id]["outcomes"]
+    assert "polymarket_no" not in outs[ars] and "polymarket_no" not in outs[che], "contested: neither"
+    assert sorted(slate[g.game_id]["coverage_warnings"]) == [f"PM_NO_TOKEN_MISSING:{','.join(sorted([ars, che]))}"]
+
+
 def test_soccer_no_token_binding_preserves_the_exact_matcher_label():
     import json
     g, r, rows, names, ev, ars, che, slug = _three_way_fixture()

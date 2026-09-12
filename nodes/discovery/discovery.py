@@ -288,6 +288,19 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
                     add_token(slug, m["entity_id"], token)
         ambiguous_tokens = {key for key, tokens in tok_candidates.items() if len(tokens) != 1}
         tok_by = {key: next(iter(tokens)) for key, tokens in tok_candidates.items() if len(tokens) == 1}
+        # L94 (2026-09-12): the line above refuses ONE ENTITY holding TWO tokens. This refuses the
+        # other direction -- one TOKEN claimed by TWO entities in the same event -- which the two
+        # independent writers feeding `add_token` can produce between them. That direction is worse:
+        # a leg bound to the wrong entity is not a mis-labelled leg, it is a different instrument,
+        # and the cover it forms is a naked directional bet that prices like a large edge. Ambiguous
+        # is not usable in either direction.
+        _owners: dict[tuple[str, str], set[str]] = {}
+        for (_slug, _entity), _token in tok_by.items():
+            _owners.setdefault((_slug, _token), set()).add(_entity)
+        for (_slug, _entity), _token in list(tok_by.items()):
+            if len(_owners[(_slug, _token)]) > 1:
+                ambiguous_tokens.add((_slug, _entity))
+                del tok_by[(_slug, _entity)]
         by_game: dict[str, dict[str, list[dict]]] = {}
         for m in matches:
             by_game.setdefault(m["game_id"], {}).setdefault(m["entity_id"], []).append(m)
@@ -339,6 +352,16 @@ def co_listed(d: Discovery, *, first_seen: Mapping[str, float] | None = None,
                         add_no(entity, tok_no)
             no_by_ent = {entity: next(iter(tokens)) for entity, tokens in no_candidates.items()
                          if len(tokens) == 1}
+            # L94: and the same both-directions rule for the NO tokens. The resolver and the
+            # token-label match above write into `no_candidates` independently, so one NO token can
+            # end up claimed by two entities while each entity holds exactly one. A soccer cover of
+            # Kalshi YES B + PM NO A pays $2 if B wins, $1 on the draw and $0 if A wins -- a naked
+            # directional bet wearing a 40-50 % edge. The existing PM_NO_TOKEN_MISSING warning below
+            # then reports the dropped leg.
+            _no_owners: dict[str, set[str]] = {}
+            for _entity, _token in no_by_ent.items():
+                _no_owners.setdefault(_token, set()).add(_entity)
+            no_by_ent = {e: t for e, t in no_by_ent.items() if len(_no_owners[t]) == 1}
             coverage_warnings = []
             if n_out == 3:
                 missing_no = sorted(set(rows) - {DRAW_ENTITY} - set(no_by_ent))
