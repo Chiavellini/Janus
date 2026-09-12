@@ -59,7 +59,7 @@ Full suite green. Expected steady state after release: ~1 GB/day database, ~7 GB
 
 **The live board is on the branch, not deployed.** The lane writes `board/board.json` every second
 (every poller's books, last evaluation, tier, start); `janus-board.service` serves it with the
-bundles/P&L query on 127.0.0.1:8787; `bash ops/box/board.sh` opens an SSM tunnel and the page.
+bundles/P&L query on 127.0.0.1:8787; `bash ops/box/board.sh` opens an SSM tunnel (local port 8797; it refuses a busy port) and the page.
 Paste the branch head (the release installs and starts the unit), then `bash ops/box/board.sh`.
 
 Released 2026-09-12 05:20Z: `cf9770b` (L77 first-leg confirmation, L79–L81 loop waste, L83 collateral
