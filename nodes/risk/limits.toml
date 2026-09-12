@@ -56,10 +56,11 @@ max_unhedged_contracts = 100
 # max_unhedged_duration_ms removed 2026-09-08: [protect] hedge_protect_window_s is the bound on unhedged duration
 max_stale_book_age_s = 5.0
 # 0.50 -> 0.10 on 2026-09-07 for the small real-fills pilot (ledger F8): at the pilot's $12 stake a 1%
-# locked return is $0.12, and 0.50 refused every cover the caps allow. The 1% return floor below
-# is the hurdle; this is the fixed-cost floor and returns to 0.50 when stakes do.
-min_net_profit_usd = 0.10
-min_locked_return = 0.01
+# locked return is $0.12, and 0.50 refused every cover the caps allow. 0.10 -> 0.05 and 1% -> 0.5%
+# on 2026-09-12 (GATE row): at 25 contracts a 0.5% cover nets about $0.06. Both mirror
+# nodes/opportunity/thresholds.py, which labels the opportunity; this file refuses at clearance.
+min_net_profit_usd = 0.05
+min_locked_return = 0.005
 clearance_ttl_ms = 500           # a clearance is good for one submit, within this window
 
 [protect]                        # the hedge protection layer (nodes/execute/protect.py), 2026-09-08

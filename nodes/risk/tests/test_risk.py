@@ -50,7 +50,15 @@ def test_limits_load_with_a_pin_and_absent_is_zero_not_unlimited():
     assert LIMITS.sha and len(LIMITS.sha) == 16
     assert LIMITS.venue_cap("kalshi") == 250.0 and LIMITS.venue_cap("sxbet") == 0.0
     assert LIMITS.league_cap("epl") == 200.0, "paper caps for the enabled leagues, 2026-09-05"
-    assert LIMITS.league_cap("khl") == 0.0 and LIMITS.min_locked_return == 0.01, "absent is zero, not unlimited"
+    assert LIMITS.league_cap("khl") == 0.0 and LIMITS.min_locked_return == 0.005, "absent is zero, not unlimited"
+
+
+def test_the_risk_file_and_the_labelling_thresholds_agree():
+    """thresholds.py decides what is PROFITABLE_UNEXECUTED; limits.toml refuses at clearance. When the
+    two disagreed (2026-09-07/08) the stricter one silently bound. They move together, by GATE row."""
+    from nodes.opportunity.thresholds import EXECUTION_MIN_LOCKED_RETURN, EXECUTION_MIN_NET_PROFIT_USD
+    assert LIMITS.min_locked_return == EXECUTION_MIN_LOCKED_RETURN == 0.005
+    assert LIMITS.min_net_profit_usd == EXECUTION_MIN_NET_PROFIT_USD == 0.05
 
 
 # ── kill switches ────────────────────────────────────────────────────────────
@@ -190,8 +198,9 @@ def test_refusals_come_in_the_fail_closed_order(kill, breaker):
     assert clear(cand(), ledger=L, **{**env, "fee_schedules_ok": False}).code == "FEE_SCHEDULE"
     assert clear(cand(), ledger=L, **{**env, "venues_connected": {"kalshi": True}}).code == "VENUE_DISCONNECTED"
     assert clear(cand(max_book_age_s=9.0), ledger=L, **env).code == "STALE_BOOK"
-    assert clear(cand(net_profit_usd=0.05), ledger=L, **env).code == "MIN_PROFIT"     # floor 0.10 since 2026-09-07
-    assert clear(cand(locked_return=0.005), ledger=L, **env).code == "MIN_RETURN"
+    assert clear(cand(net_profit_usd=0.04), ledger=L, **env).code == "MIN_PROFIT"     # floor 0.05 since 2026-09-12 (0.10 from 2026-09-07)
+    assert clear(cand(locked_return=0.004), ledger=L, **env).code == "MIN_RETURN"     # hurdle 0.5 % since 2026-09-12
+    assert isinstance(clear(cand(net_profit_usd=0.05, locked_return=0.005), ledger=L, **env), RiskClearance), "exactly at the line clears"
     # paper mode never asks for balances; demo and above must have them
     assert isinstance(clear(cand(), ledger=ExposureLedger(), **{**env, "balances": None}), RiskClearance)
     assert clear(cand(), ledger=ExposureLedger(), **{**env, "mode": Mode.DEMO_EXECUTION, "balances": None}).code == "BALANCE_UNCONFIRMED"

@@ -55,12 +55,24 @@ def harness(tmp_path, mode=Mode.PAPER_EXECUTION, venues=None):
     return co, vs, store, clk, opps
 
 
-def plan_for(offs, q=100.0, oid="o1"):
+#: These plans (MIL @ CIN 2026-09-05 among them) are exact replays priced at the 1 % hurdle of their
+#: day; the hurdle moved to 0.5 % on 2026-09-12 and the mechanics under test do not depend on it.
+HURDLE_2026_09_05 = 0.01
+
+
+def plan_for(offs, q=100.0, oid="o1", hurdle=HURDLE_2026_09_05):
     cov = best_cover(offs, q, now_utc=T, proof=PROOF)
     assert cov.ok
-    p = plan_from_cover(opportunity_id=oid, event_id="espn:mlb:1", league="mlb", cov=cov, offers=offs)
+    p = plan_from_cover(opportunity_id=oid, event_id="espn:mlb:1", league="mlb", cov=cov, offers=offs, hurdle=hurdle)
     assert p is not None
     return p, cov
+
+
+def test_the_plan_s_default_hurdle_is_the_runner_s_constant():
+    from nodes.opportunity.thresholds import EXECUTION_MIN_LOCKED_RETURN
+    cov = best_cover(offers(), 100.0, now_utc=T, proof=PROOF)
+    p = plan_from_cover(opportunity_id="o1", event_id="espn:mlb:1", league="mlb", cov=cov, offers=offers())
+    assert p.max_cost_per_contract == pytest.approx(1 / (1 + EXECUTION_MIN_LOCKED_RETURN)) and EXECUTION_MIN_LOCKED_RETURN == 0.005
 
 
 def test_the_plan_leads_with_polymarket_and_hedges_on_kalshi_at_the_walked_limit():
@@ -86,7 +98,7 @@ def test_settlement_reserve_is_in_every_execution_budget_and_can_remove_the_entr
     assert cov.ok and cov.settlement_buffer_per_contract == 0.0
     reserved = replace(cov, cost_per_contract=cov.cost_per_contract + 0.01,
                        settlement_buffer_per_contract=0.01)
-    p = plan_from_cover(opportunity_id="o", event_id="e", league="mlb", cov=reserved, offers=offs)
+    p = plan_from_cover(opportunity_id="o", event_id="e", league="mlb", cov=reserved, offers=offs, hurdle=HURDLE_2026_09_05)
     assert p is not None and p.settlement_buffer_per_contract == 0.01
     assert p.first.limit_price == 0.45, "the one-tick pad would spend the settlement reserve"
     assert p.hedge_budget(0.45) == pytest.approx(round(1 / 1.01 - cov.fee_per_contract - 0.01 - 0.45, 4))

@@ -101,13 +101,14 @@ from nodes.stream_polymarket.reconcile import Reconciler  # noqa: E402
 from nodes.stream_polymarket.stream import PolymarketStream  # noqa: E402
 from nodes.venue_polymarket.books import PM_CLOB, pm_book  # noqa: E402
 from ops import run_index  # noqa: E402
+from nodes.opportunity.thresholds import EXECUTION_MIN_LOCKED_RETURN  # noqa: E402
 
 from kernel.paths import DATA_ROOT, DB  # noqa: E402,F401
 QUANTITIES = (5.0, 10.0, 25.0, 100.0)
 #: L79: the frontier report is solved at most once per game per period (every rung of an epoch
 #: shares it); sizing itself is gated in Supervisor._worth_sizing.
 FRONTIER_PERIOD_S = 5.0   # 10 added 2026-09-07: under a $12 per-order cap only 5 fit, and 5 nets under the floor
-MIN_RETURN = 0.01
+MIN_RETURN = EXECUTION_MIN_LOCKED_RETURN   # one source: nodes/opportunity/thresholds.py
 #: A game is priced at most this often on quiet books (nodes/game_poller coalescing); a replica
 #: state change or the 15 s heartbeat still prices immediately. 2026-09-04: from ~3,400 to a few
 #: hundred evaluations a second. Captures before the sha that introduced it replay to different rows.

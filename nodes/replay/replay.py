@@ -41,7 +41,7 @@ from nodes.execute.records import ExecutionRecords
 from nodes.execute.venues import build_venues
 from nodes.execution.journal import Journal
 from nodes.opportunity.opportunity import Opportunity, OpportunityStore, books_snapshot
-from nodes.opportunity.thresholds import STRATEGY_VERSION
+from nodes.opportunity.thresholds import EXECUTION_MIN_LOCKED_RETURN, STRATEGY_VERSION
 from nodes.risk.breaker import LossBreaker
 from nodes.risk.clearance import Candidate, clear
 from nodes.risk.kill import KillSwitches
@@ -53,7 +53,7 @@ from nodes.stream_kalshi.stream import KalshiStream
 from nodes.stream_polymarket.stream import PolymarketStream
 
 QUANTITIES = (5.0, 10.0, 25.0, 100.0)   # mirrors grids/live_stream/grid.py (parity, GATE step 4)
-MIN_RETURN = 0.01
+MIN_RETURN = EXECUTION_MIN_LOCKED_RETURN   # the runner's own constant (parity, GATE step 4)
 
 
 @dataclass

@@ -17,16 +17,23 @@ KILL_SWITCH active: live`. Every future paste re-latches until the overfill is a
 1–5; frozen venue-activity evidence committed as the source; the operator's confirm). Until then the
 message after every paste ends with the hand clear.
 
-**The board (`a65c592`, on the branch, not deployed):** one row per game (the outcome rows read as extra
-games), raw cost for three-way markets, the cover-only tiles gone. Paste, then clear the latch again.
+**On the branch, not deployed: the board (`a65c592`) and the 0.5 % hurdle (GATE row 2026-09-12, the
+operator's "agree, proceed").** One row per game (the outcome rows read as extra games), raw cost for
+three-way markets, the cover-only tiles gone. `EXECUTION_MIN_LOCKED_RETURN` and `min_locked_return`
+0.01 → 0.005, the dollar floor 0.10 → 0.05, the lane and the replay importing the one constant; the
+limits sha changes, so the paste re-signs the override. Paste the branch head, then clear the latch again.
 
 **Entry pricing, 24 h to 06:20Z:** 323,757 evaluations; raw ask sum under 1.00 in 29,918; all-in under
 1.00 in 2,377; return ≥ 1 % in 1,488 rows (38 events, 1,210 sizing selections), 0.5–1 % in 279,
 0.25–0.5 % in 159. The gap between raw and all-in is the two venues' taker fees (implied per-venue
 coefficient 6–6.7 % of p(1−p): 2.5–3 c a contract on both legs near 0.50), not the hurdle. Lowering
 `EXECUTION_MIN_LOCKED_RETURN` 1 % → 0.5 % adds about a fifth more qualifying rows and needs
-`min_net_profit_usd` 0.10 → 0.05 to matter at 25 contracts (0.5 % of ~$12 is $0.06); both are the
-operator's GATE row, neither is on the branch.
+`min_net_profit_usd` 0.10 → 0.05 to matter at 25 contracts (0.5 % of ~$12 is $0.06); staged above.
+Measured as distinct game-seconds, the excluded band was 71 (0.5–1 %) + 53 + 125 seconds in one-second
+windows (none of five seconds or more) against 313 seconds at or above 1 % (178 windows, twelve of five
+seconds or more, longest 17 s): the threshold was never the throttle, the second is. Speed work next:
+the first-leg miss rate (12 of 15 attempts unfilled in the 24 h), the 6.4 s first-leg status resolution,
+the L82 evening sample.
 
 ### Earlier state (2026-09-11 21:40Z)
 

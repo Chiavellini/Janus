@@ -6,6 +6,26 @@ never edited afterward. **This is history, not status** — for current state re
 
 ---
 
+## 2026-09-12 (06:40Z) — the board reads one row per game; the hurdle moves to 0.5 %; a restart re-latches an unacknowledged overfill
+
+The operator's paste of `6425554` at 05:52Z restarted the lane and the guard re-found the LAA @ WSH
+overfill (25 requested, 32.14 filled, execution released) two seconds later and latched `kill/live`
+again; the hand clear at 05:20Z was not an acknowledgement, and the guard's "already said" set is
+in-memory. SAITOH1 V HONG1 was selected at 25 contracts ($0.28–0.54 net) eight times and refused
+`KILL_SWITCH active: live` while the operator watched the board. Recorded in NEXT.md: every paste
+re-latches until the acknowledgement rows exist (`nodes/execution/overfill_ack.py`).
+
+Board (`a65c592`): one row per game with up to three outcome groups (the outcome rows had read as extra
+games), the raw column is the cheapest cross-venue ask sum over any number of outcomes, the cover-only
+tiles are gone.
+
+Entry pricing, measured over the 24 h to 06:20Z (GATE row of this date): after-fee positive covers
+below the 1 % line exist (249 distinct game-seconds against 313 above it) but come in one-second
+windows; the fee charged is the venue's reported schedule. `EXECUTION_MIN_LOCKED_RETURN` and
+`min_locked_return` 0.01 → 0.005, `EXECUTION_MIN_NET_PROFIT_USD` and `min_net_profit_usd` 0.10 → 0.05;
+`grids/live_stream/grid.py` and `nodes/replay/replay.py` import the constant instead of repeating it;
+`nodes/risk/tests` checks the risk file and the thresholds agree.
+
 ## 2026-09-12 — F21's first cover latched the kill; allowance, cadence, and the launchpad
 
 VARILLA V WILD (21:37Z on the 11th), the first 25-contract trade, filled 25.32 on Polymarket at 0.78 and
