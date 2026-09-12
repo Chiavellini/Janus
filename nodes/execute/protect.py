@@ -189,6 +189,27 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
             if phase == "walked":
                 if t >= t_hedge or phase1 >= clearance.max_hedge_submits:
                     break
+                # L85: the entry check (coordinator, before leg A) already walked this venue's book
+                # for this size. When it saw a marginal price above the walked ceiling, the walked
+                # send is a known miss and the budget phase -- which reads its own fresh book and
+                # prices from it -- is where this belongs. L75 learned the same thing from a zero
+                # fill, one submit and one poll interval later; this is that read, already paid for.
+                #
+                # Only a reading from THIS entry counts: `protect_existing` loads a row whose
+                # observation can be minutes old, and the cost of being wrong is paying the budget
+                # ceiling instead of the walked price (cents: both sit under break-even), so the
+                # window is deliberately short.
+                seen = ex.protect.get("hedge_leg_confirm") or {}
+                at = seen.get("at_mono")
+                was = seen.get("marginal")
+                if (phase_attempts == 0 and was is not None and at is not None
+                        and lim.entry_book_trust_s > 0.0
+                        and t - float(at) <= lim.entry_book_trust_s and float(was) > limit + 1e-9):
+                    log(kind="hedge", phase=phase, limit=limit, ceiling=limit, qty=qty,
+                        held_unhedged=ex.unhedged, state="SKIPPED", filled=0.0, avg=None,
+                        skip="entry_book_above_walked", book_marginal_at_entry=float(was),
+                        entry_book_age_s=round(t - float(at), 3))
+                    break
                 ceiling = limit
             else:
                 if t >= t_unwind:
@@ -342,6 +363,13 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
 def _hedged(co, ex, plan, paid: float, budget: float, *, protected: bool = False):
     be = plan.hedge_break_even(paid)
     avg = ex.hedge_avg_price or 0.0
+    # L86 (2026-09-12): what the hedge cost against what the cover was priced at, in cents, recorded
+    # where every other stage is. Entry charges nothing for this (see ops/slippage_report.py) and the
+    # first 48 h of real covers put it at a 5c median against ~0.5c of margin, 7 of 7 adverse. It is
+    # derivable from plan_json and hedge_avg_price; keeping it here means the number that decides
+    # whether a reserve is needed does not have to be re-derived from two JSON blobs to be read.
+    if avg > 0:
+        ex.stages["hedge_slippage_c"] = round((avg - float(plan.hedge.vwap or avg)) * 100.0, 3)
     label = ""
     if avg > be + 1e-9:
         label = f" ABOVE_BREAK_EVEN {be:.4f}: a locked loss inside the cap, still a cover"

@@ -38,6 +38,11 @@ class ProtectLimits:
     #: `protect_fast_window_s` after the failure, instead of once per guard pass. 0 disables.
     protect_retry_s: float = 3.0
     protect_fast_window_s: float = 60.0
+    #: L85 (2026-09-12): how long the entry check's hedge-book reading may still be used to skip a
+    #: walked send it says will miss. Leg A's ack and settle sit between the two (0.4-1.3 s on the
+    #: live covers), so this only has to outlast that; past it the layer reads its own book as
+    #: before. 0 disables the skip.
+    entry_book_trust_s: float = 2.0
 
 
 @dataclass(frozen=True)

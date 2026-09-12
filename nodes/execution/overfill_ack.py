@@ -228,6 +228,25 @@ def _history(con, cid):
     return con.execute('SELECT id,supersedes_id,record_json,record_sha256 FROM historical_order_overfill_acknowledgements WHERE client_order_id=? ORDER BY id', (cid,)).fetchall()
 
 
+def bounded_taker_residual(con, cid, venue, requested, filled) -> bool:
+    """True when this overfill is the operator-accepted bounded-taker residual (L65/F20/F21) that
+    the guard does not latch on.
+
+    L85 (2026-09-12): the guard exempted these and this exporter did not, so the two disagreed
+    about what an overfill IS. That cost nothing until an acknowledgement was needed: the candidate
+    rule below then demanded a manifest entry, with frozen venue evidence, for four settled
+    sub-contract residuals that never stop entry -- while the one order actually holding the live
+    kill waited behind them. One predicate, imported by both, so they cannot drift again.
+    """
+    if venue != 'polymarket':
+        return False
+    if not con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='pm_bounded_taker_orders'").fetchone():
+        return False
+    row = con.execute('SELECT max_accepted_excess FROM pm_bounded_taker_orders WHERE client_order_id=?',
+                      (cid,)).fetchone()
+    return row is not None and float(filled) - float(requested) < float(row[0]) - 1e-9
+
+
 def prepare_from_database(con, proposal, *, repo='.'):
     """Export an exact all-candidate proposal without granting acknowledgement."""
     exact_fields(proposal, {'version', 'acknowledgements'})
@@ -253,8 +272,10 @@ def prepare_from_database(con, proposal, *, repo='.'):
         entries.append(dict(client_order_id=cid, action='acknowledge_settled_overfill', snapshot=settled_snapshot(con, cid),
                             sources=request['sources'], reason=request['reason'], supersedes_id=request['supersedes_id'], flag_evidence=evidence))
         cids.add(cid)
-    candidates = {row[0] for row in con.execute('SELECT client_order_id,mode FROM orders WHERE filled_contracts>contracts+0.000000001')
-                  if Mode(row[1]).sends_real_orders}
+    candidates = {row[0] for row in con.execute(
+        'SELECT client_order_id,mode,venue,contracts,filled_contracts FROM orders '
+        'WHERE filled_contracts>contracts+0.000000001')
+        if Mode(row[1]).sends_real_orders and not bounded_taker_residual(con, row[0], row[2], row[3], row[4])}
     if cids != candidates:
         raise ValueError(f'exact overfill candidate set differs: unexpected={sorted(candidates-cids)}, absent={sorted(cids-candidates)}')
     if any(row[0] not in bound_flags for row in unresolved_flag_rows(con, 'ORDER_OVERFILL')):

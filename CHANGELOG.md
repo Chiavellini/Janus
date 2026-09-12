@@ -6,6 +6,54 @@ never edited afterward. **This is history, not status** — for current state re
 
 ---
 
+## 2026-09-12 (~20:00Z) — the hedge leg gets its own pre-send check; hedge slippage is measured and it is ten times the margin
+
+The operator cleared `kill/live` at 18:47Z, the lane traded for sixteen minutes, and two of its
+three covers lost money. Both are the same defect, and it is not the one anyone was looking for.
+
+**L85 — nothing checked the hedge book before committing leg A.** L77 (2026-09-12) confirms the
+price the lane is about to *pay*; nothing confirmed the price it relies on to get *out*. The
+precheck that would have caught it, `grid._hedge_capacity_ok`, is gated behind `plan.first.post_only`
+and the maker path is not live, so on the taker path it never ran. `64d6925e` (ATP Challenger,
+18:58Z, the first cover after the clear): plan Polymarket 0.54 + Kalshi 0.41, a 0.95 all-in against
+`max_cost` 0.995 and a planned +1.35 %. The Kalshi NO side was at 0.51 when the hedge fired 0.2 s
+later; break-even was 0.4233; the protection layer paid 0.51 because a capped loss beats a naked
+leg — `25.0 hedged @ 0.51 ABOVE_BREAK_EVEN 0.4233`, settled **realized −1.9979 USD**, 87 % of the
+$2.50 per-execution allowance. Entry now walks the hedge book for the authorized size and declines
+`BOOK_MOVED` above **break-even**, which is the only threshold that refuses nothing profitable: the
+walked limit and the hurdle budget both refuse covers that make money (MORIYA `98376aa2` hedged 0.04
+against a 0.0342 budget and a 0.0442 break-even, for +1.44 %). VWAP against VWAP, short depth
+declines, a failed read is not a verdict. The layer also stops spending a walked send the entry
+reading has already proved dead, bounded by `entry_book_trust_s` so a guard re-run never skips on a
+stale row: `64d6925e`'s `[walked UNFILLED, loss_cap FILLED]` becomes one send, ~355 ms.
+
+**L86 — the measurement that should have existed first.** Entry charges nothing for the hedge
+moving: `Plan.holding_reserve_per_contract` is fee + settlement buffer only, and the reserve that
+exists is both zero and inert — `44045ff` states in its own message that `slippage_for` "never gated
+an order", and the only production caller is `grid.py:535`, into `frontier()` for reporting. Seven
+days, 15 real covers: hedge slippage min −15.0c, p50 5.0c, max 15.75c, mean 3.47c, adverse 11 of 15;
+pooled P&L −$0.28 with 8 of 15 losing money. The covers' own entry margin on the losers was 0.05,
+0.11, 0.22, 0.26, 0.33 and 0.46 cents. **Half a cent of booked edge against ±15 cents of movement**
+— flat only because the two sides cancel, which is the finding and not a result. It is
+league-dependent: `mlb` is +$0.92 on 1.89c median margin *despite* 11c median slippage, `atp` is
+−$3.29 and 5 of 5 adverse on 0.46c. `ops/slippage_report.py` reports it read-only and refuses a
+per-league reserve under `--min-samples`; no league reaches 20 covers yet, so all five are printed
+UNMEASURED rather than given a number. Charging a reserve at entry is a dated GATE row, not this one.
+
+An earlier 48-hour read of the same data said "7 of 7 adverse, −$3.42, adverse selection". The
+seven-day window corrects it: slippage is two-sided and the pooled result is flat. The design defect
+is larger than that read and the urgency lower.
+
+**L87 — the overfill latch stops shouting.** The guard exempts a sub-contract Polymarket residual as
+`BOUNDED_TAKER_RESIDUAL_ACCEPTED` and does not latch; the acknowledgement exporter had no such
+exemption, so a proposal demanded frozen venue evidence for four settled residuals that never stop
+entry while the one order actually holding the kill waited behind them. One predicate now serves
+both, and the candidate set is what actually latches: one order. Separately, an acknowledgement that
+fails validation used to discard the dedupe key on every pass, re-latching on each of three
+detections per 30 s pass — **280 of the 291 `ORDER_OVERFILL` rows on record came from one such day**
+(2026-09-10, the journal migration). It surfaces once per change now. No latch condition is
+narrowed: `test_no_blanket_released_skip` and the sixteen mutation cases stay green, untouched.
+
 ## 2026-09-12 (06:40Z) — the board reads one row per game; the hurdle moves to 0.5 %; a restart re-latches an unacknowledged overfill
 
 The operator's paste of `6425554` at 05:52Z restarted the lane and the guard re-found the LAA @ WSH

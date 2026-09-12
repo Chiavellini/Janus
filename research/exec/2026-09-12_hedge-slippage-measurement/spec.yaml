@@ -1,0 +1,40 @@
+row: L86
+date: 2026-09-12
+kind: descriptive_measurement
+status_at_registration: PENDING
+observed_failure: >-
+  Entry prices a cover at the hedge's CURRENT vwap and charges nothing for that price moving.
+  Plan.holding_reserve_per_contract is fee + settlement buffer only, and the reserve that exists is
+  both zero and inert: nodes/cover/capacity.SLIPPAGE_PER_CONTRACT = 0.0 with SLIPPAGE_MODELLED =
+  False since 44045ff (2026-09-08, 4.0c -> 0), whose own message records that "this constant never
+  gated an order: slippage_for is read only by frontier(), for the reported N_max/N*, and never by
+  best_cover / plan_from_cover / clear". Verified: the only production caller is
+  grids/live_stream/grid.py:535, into frontier() for reporting.
+  Measured over the 7 days to 2026-09-12 (15 real covers with a hedge fill): hedge slippage min
+  -15.0c, p50 5.0c, max 15.75c, mean 3.47c, adverse 11 of 15; pooled P&L -0.28 USD with 8 of 15
+  losing money. The cover's own cushion over the same covers (max_cost less planned all-in) runs
+  0.05-13.3c, with the losers at 0.05, 0.11, 0.22, 0.26, 0.33 and 0.46c. The strategy books about
+  half a cent of expected edge per contract and accepts ten to fifteen cents of hedge-price
+  movement. It is league-dependent: mlb is +0.92 USD on 1.89c median margin despite 11c median
+  slippage, atp is -3.29 USD and 5 of 5 adverse on 0.46c median margin.
+immutable_success_criteria:
+  - ops/slippage_report.py reports, read-only and per league, realised hedge slippage in cents
+    (planned hedge vwap from plan_json against hedge_avg_price), the cover's entry margin, planned
+    versus realised return, and P&L; real-order modes only, paper excluded.
+  - It refuses to propose a reserve for a league with fewer than --min-samples covers and prints
+    those leagues as UNMEASURED, keeping nodes/cover/capacity's own rule that an unmeasured league is
+    labelled unmodelled and never assumed zero. No league reaches 20 covers at registration.
+  - Each completed hedge records stages_json hedge_slippage_c so the number does not have to be
+    re-derived from two JSON blobs.
+  - Outcome to evaluate once any league reaches 20 covers: that league's slippage p50/p90 and the
+    margin distribution beside it, as the evidence for or against a reserve.
+expected_ev_effect: >-
+  none. This row measures and reports; it changes no price, size, cap, hurdle or gate. Charging a
+  measured reserve at entry would change what trades and is a dated GATE_TO_LIVE row, not this row.
+prohibited:
+  - Wiring any number this report produces into SLIPPAGE_BY_LEAGUE, or into the plan's required
+    margin, without a dated GATE_TO_LIVE row quoting the operator.
+  - Proposing a per-league reserve from fewer than --min-samples covers, or substituting the pooled
+    number for a league that has not been measured.
+  - Reading the 7-day pooled P&L of -0.28 USD as evidence the strategy is sound: it is flat because
+    two-sided slippage of +-15c dominates half a cent of edge, which is the finding, not a result.

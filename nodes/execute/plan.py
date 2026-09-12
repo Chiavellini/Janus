@@ -31,7 +31,7 @@ from dataclasses import dataclass, replace
 from typing import Mapping, Sequence
 
 from kernel.schema import Book
-from nodes.cover.cover import Cover, Leg
+from nodes.cover.cover import Cover, Leg, walk_ladder
 from nodes.fees.models import Fill
 from nodes.fees.registry import model_for, params_for
 from nodes.opportunity.thresholds import (
@@ -125,6 +125,17 @@ def marginal_price(book: Book, contracts: float) -> float | None:
         if cum >= contracts - 1e-9:
             return q.price
     return None
+
+
+def vwap_for_size(book: Book, contracts: float) -> float | None:
+    """The average price of buying `contracts` off `book`, or None when the depth is short.
+
+    `marginal_price` is the WORST level the walk touches; the budgets in `hedge_budget` and
+    `hedge_break_even` are averages. Comparing a marginal price to either of them refuses covers
+    whose average is inside the budget, so a check that means to test the economics must walk.
+    """
+    gross, full = walk_ladder(book, contracts)
+    return round(gross / contracts, 6) if full and contracts > 0 else None
 
 
 def maker_plan_from_cover(*, max_quote_age_s: float = 3.0, **kwargs) -> Plan | None:

@@ -559,3 +559,77 @@ def test_the_first_leg_carries_a_collateral_ceiling_from_the_venue_s_ask(tmp_pat
     vs2["polymarket"].submit = lambda r, c: (sent2.append(r), real2(r, c))[1]
     assert co2.execute(p, clearance_for(tmp_path / "b", now_mono=100.0)).state is X.HEDGED
     assert sent2[0].max_collateral_usd is None
+
+
+def test_the_hedge_leg_is_confirmed_against_its_own_book_before_leg_a_is_sent(tmp_path):
+    """L85 (2026-09-12): L77 confirmed the price about to be PAID; nothing confirmed the price
+    relied on to get out, so the lane could open a position against a hedge that had walked away.
+    The read is a VWAP against break-even: above it nothing is sent and the reservation goes back;
+    at or under it -- including above the hurdle budget, which still makes money -- the send goes
+    out; depth short of the authorized size is a decline; no book sends as before."""
+    offs = offers()
+    p, _ = plan_for(offs)
+    be = p.hedge_break_even(p.first.limit_price)
+    budget = p.hedge_budget(p.first.limit_price)
+    assert budget < be, "the budget is the hurdle, break-even is zero profit"
+
+    # above break-even: nothing sent at all, not even leg A
+    co, vs, store, _, _ = harness(tmp_path)
+    vs["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs["kalshi"].books = {"K_A": bk([(be + 0.02, 5000)])}
+    co.fresh_book = lambda venue, market, side: vs[venue].books.get(market)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.BOOK_MOVED and ex.released and ex.state.is_terminal and not ex.state.holds_position
+    assert store.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0, "leg A was never sent"
+    assert "b_confirm_ms" in ex.stages and "nothing sent" in ex.detail and "break-even" in ex.detail
+    confirm = ex.protect["hedge_leg_confirm"]
+    assert confirm["vwap"] == pytest.approx(be + 0.02) and confirm["break_even"] == pytest.approx(be)
+    assert confirm["contracts"] == p.hedge.contracts
+
+    # between the budget and break-even: a profit under the hurdle is still a profit -- it trades
+    co2, vs2, _, _, _ = harness(tmp_path / "b")
+    vs2["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs2["kalshi"].books = {"K_A": bk([(round((budget + be) / 2.0, 4), 5000)])}
+    co2.fresh_book = lambda venue, market, side: vs2[venue].books.get(market)
+    ex2 = co2.execute(p, clearance_for(tmp_path / "b", now_mono=100.0))
+    assert ex2.state is X.HEDGED, "gating on the budget would have refused this"
+
+    # depth short of the authorized size: the naked-residual failure, declined before entry
+    co3, vs3, store3, _, _ = harness(tmp_path / "c")
+    vs3["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs3["kalshi"].books = {"K_A": bk([(0.44, p.hedge.contracts - 1)])}
+    co3.fresh_book = lambda venue, market, side: vs3[venue].books.get(market)
+    ex3 = co3.execute(p, clearance_for(tmp_path / "c", now_mono=100.0))
+    assert ex3.state is X.BOOK_MOVED and "no depth" in ex3.detail
+    assert store3.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0
+
+    # no reader: the pre-L85 path, untouched
+    co4, vs4, _, _, _ = harness(tmp_path / "d")
+    vs4["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs4["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    ex4 = co4.execute(p, clearance_for(tmp_path / "d", now_mono=100.0))
+    assert ex4.state is X.HEDGED and "b_confirm_ms" not in ex4.stages
+
+
+def test_the_64d6925e_shape_is_declined_instead_of_locking_a_loss(tmp_path):
+    """The first cover after the 2026-09-12 18:47Z kill clear: planned PM 0.54 / Kalshi 0.41, the
+    Kalshi NO side at 0.51 when the hedge fired 0.2 s later, break-even 0.4233. The layer paid it
+    because a capped loss beats a naked leg and the cover locked -$2.17 of a $2.50 allowance. With
+    L85 the entry is declined and no position is opened."""
+    co, vs, store, _, _ = harness(tmp_path)
+    offs = offers()
+    p0, _ = plan_for(offs, q=25.0)
+    p = replace(p0, quantity=25.0,
+                first=replace(p0.first, limit_price=0.54, vwap=0.54, contracts=25.0),
+                hedge=replace(p0.hedge, limit_price=0.41, vwap=0.41, contracts=25.0, tick=0.01),
+                max_cost_per_contract=0.9950248756218907,
+                fee_per_contract=0.029356, settlement_buffer_per_contract=0.0073607)
+    assert p.hedge_break_even(0.54) == pytest.approx(0.4233, abs=0.0001), "the live break-even"
+    vs["polymarket"].books = {"P_H": bk([(0.54, 5000)])}
+    vs["kalshi"].books = {"K_A": bk([(0.51, 5000)])}
+    co.fresh_book = lambda venue, market, side: vs[venue].books.get(market)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.BOOK_MOVED and ex.released
+    assert store.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0
+    assert ex.first_filled == 0.0 and ex.unhedged == 0.0, "no position, so nothing to protect"
+    assert ex.protect["hedge_leg_confirm"]["vwap"] == pytest.approx(0.51)

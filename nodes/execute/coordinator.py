@@ -30,7 +30,7 @@ from typing import Callable, Mapping
 
 from kernel.execution_protocol import Ack, ExecutionVenue, OrderRequest
 from kernel.schema import ExecutionState as X, FillState, Mode, OpportunityStatus as S
-from nodes.execute.plan import LegPlan, Plan, marginal_price
+from nodes.execute.plan import LegPlan, Plan, marginal_price, vwap_for_size
 from nodes.execute.maker import MakerFillSession, MakerRestAuthorization
 from nodes.execute.protect import protect
 from nodes.execute.records import Execution, ExecutionRecords
@@ -165,6 +165,52 @@ class Coordinator:
                     return self._fail(ex, X.BOOK_MOVED,
                                       f"first leg: {plan.first.venue} book offers {plan.first.contracts:g} at "
                                       f"{('%.4f' % want) if want is not None else 'no depth'} vs limit {plan.first.limit_price:.4f}; nothing sent",
+                                      release=True)
+
+        # L85 (2026-09-12): the same read for the leg we RELY on to get out. L77 confirmed only the
+        # price about to be paid, so the lane could commit leg A against a hedge price minutes stale
+        # and discover the gap with a position already open -- 64d6925e (ATP, 19:0xZ): planned PM
+        # 0.54 / Kalshi 0.41, the Kalshi NO side was at 0.51 when the hedge fired 0.2 s later, the
+        # protection layer paid it because a capped loss beats a naked leg, and the cover locked
+        # -$2.17 of a $2.50 allowance. The hedge-capacity precheck that would have caught it
+        # (`grid._hedge_capacity_ok`) is gated behind post_only, and the maker path is not live.
+        #
+        # The test is BREAK-EVEN, not the walked limit and not the budget. The walked limit is only
+        # the ladder's first rung; the budget is the hurdle, and gating there would refuse covers
+        # that still MAKE money -- MORIYA (98376aa2) hedged at 0.04 against a 0.0342 budget and a
+        # 0.0442 break-even, a real profit below the hurdle. With no position open yet the only
+        # thing worth refusing is a cover we can already see is a LOSS. Above break-even the layer
+        # would be buying into the loss cap on purpose, which is what 64d6925e did.
+        #
+        # It is a VWAP against a VWAP break-even: `marginal_price` is the worst level the walk
+        # touches, so comparing it here would refuse an average that is inside break-even. Short
+        # depth for the authorized size is also a decline -- a hedge that cannot be filled whole is
+        # the naked-residual failure (LAA @ WSH sat 38 min with no depth under the cap). A failed
+        # read is not a verdict, exactly as in L77 above.
+        if (not plan.first.post_only and self.fresh_book is not None and self.mode.executes):
+            m1 = self.mono()
+            try:
+                hb = self.fresh_book(plan.hedge.venue, plan.hedge.market_id, plan.hedge.side)
+            except Exception:  # noqa: BLE001 -- a failed read is not a verdict
+                hb = None
+            ex.stages["b_confirm_ms"] = round((self.mono() - m1) * 1000.0, 2)
+            if hb is not None:
+                paid_est = plan.first.limit_price
+                vwap = vwap_for_size(hb, plan.hedge.contracts)
+                break_even = plan.hedge_break_even(paid_est)
+                ex.protect["hedge_leg_confirm"] = {
+                    "limit": plan.hedge.limit_price, "vwap": vwap,
+                    "marginal": marginal_price(hb, plan.hedge.contracts),
+                    "budget": plan.hedge_budget(paid_est), "break_even": break_even,
+                    "contracts": plan.hedge.contracts, "first_paid_assumed": paid_est,
+                    # Stamped so the layer can tell a reading from this entry apart from one left on
+                    # the row by an earlier entry (the guard's re-run loads it minutes later).
+                    "at_mono": round(self.mono(), 6)}
+                if vwap is None or vwap > break_even + 1e-9:
+                    return self._fail(ex, X.BOOK_MOVED,
+                                      f"hedge leg: {plan.hedge.venue} book covers {plan.hedge.contracts:g} at "
+                                      f"{('%.4f' % vwap) if vwap is not None else 'no depth'} vs break-even "
+                                      f"{break_even:.4f}; nothing sent",
                                       release=True)
 
         # LEG A: Polymarket, FAK (`ioc` in the internal protocol). Ambiguity here costs nothing;

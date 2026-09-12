@@ -40,7 +40,7 @@ from kernel.schema import ExecutionState as X, FillState, Mode, OpportunityStatu
 from nodes.reconcile.reconcile import check_fees, ingest_fills, resolve_unconfirmed
 from nodes.reconcile.settle_executions import refresh_settlement_accounting
 from nodes.execution.dispositions import latest as latest_disposition, match_disposition
-from nodes.execution.overfill_ack import match_overfill_ack
+from nodes.execution.overfill_ack import bounded_taker_residual, match_overfill_ack
 from nodes.execution.legacy_incident_ack import resolve_idle_incidents, resolve_migration_false_alarms
 from nodes.execution.legacy_incident_ack import match_incident
 from nodes.execution.persistence_recovery import resolve_recovered_persistence
@@ -93,6 +93,9 @@ class PositionGuard:
         self.opportunities = opportunities
         self.cursor_utc = started_utc - ADOPT_WINDOW_S
         self.said: set[str] = set()
+        #: Overfill keys whose acknowledgement was found invalid and already re-surfaced. Keeps the
+        #: re-latch to once per change instead of once per detection (L85).
+        self._ack_invalid: set[str] = set()
         self.passes = 0
 
     # ── the network half (a worker thread) ─────────────────────────────
@@ -482,13 +485,8 @@ class PositionGuard:
         """
         for cid, venue, requested, filled, mode in self._overfill_candidates():
             key = f"overfill:{cid}:{filled}"
-            bounded = None
             con = self.journal.store.con
-            if con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='pm_bounded_taker_orders'").fetchone():
-                bounded = con.execute(
-                    "SELECT max_accepted_excess FROM pm_bounded_taker_orders WHERE client_order_id=?",
-                    (cid,)).fetchone()
-            if bounded is not None and venue == "polymarket" and filled - requested < float(bounded[0]) - 1e-9:
+            if bounded_taker_residual(con, cid, venue, requested, filled):
                 if key not in self.said:
                     rep.findings.append(
                         f"BOUNDED_TAKER_RESIDUAL_ACCEPTED {venue} {cid}: requested {requested:g}, venue filled {filled:g}")
@@ -498,9 +496,21 @@ class PositionGuard:
                 acknowledgement = match_overfill_ack(self.journal.store.con, cid)
             except Exception as exc:
                 acknowledgement = None
-                rep.findings.append(f"OVERFILL_ACK_INVALID {cid}: {type(exc).__name__}: {exc}")
-                self.said.discard(key)
+                invalid = f"OVERFILL_ACK_INVALID {cid}: {type(exc).__name__}: {exc}"
+                if invalid not in rep.findings:
+                    rep.findings.append(invalid)
+                # An invalid acknowledgement must re-surface: drop the "already said" key so the
+                # incident latches again below. L85 (2026-09-12): dropping it on EVERY pass meant
+                # the dedupe never held, so one stale acknowledgement re-latched and wrote a fresh
+                # flag row on each of the three detections in each 30 s pass -- 280 of the 291
+                # ORDER_OVERFILL rows on record came from one such day (2026-09-10, the journal
+                # migration). It has to surface once per change, not once per look; the latch
+                # itself is unchanged, and a kill already latched stays latched regardless.
+                if key not in self._ack_invalid:
+                    self._ack_invalid.add(key)
+                    self.said.discard(key)
             if acknowledgement is not None:
+                self._ack_invalid.discard(key)
                 self.said.discard(key)
                 finding = f"HISTORICAL_OVERFILL_ACKNOWLEDGED {cid}: row={acknowledgement['id']} snapshot={acknowledgement['snapshot_sha256']}"
                 if finding not in rep.findings:
