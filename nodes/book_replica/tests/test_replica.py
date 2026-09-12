@@ -239,3 +239,14 @@ def test_the_clock_window_forgets_and_re_arms():
     # a median, not a mean: one late frame in a prompt window does not move the verdict
     c.observe(1103.0, 1103.0 - 40.0)
     assert c.healthy and c.stats()["offset_s"] == pytest.approx(0.05)
+
+
+def test_a_checked_snapshot_skips_the_second_gate_but_never_the_first():
+    """L79: the poller runs check() to name the fault, then snapshot(); the gate ran twice per
+    replica per evaluation. `checked=True` trusts the caller's check of an instant ago; without
+    it the gate still runs."""
+    from nodes.book_replica.replica import BookReplica
+    r = BookReplica(venue="kalshi", market_id="m", verification="stream")
+    r.connecting(T); r.subscribed(T); r.snapshot_in([(0.4, 10)], [(0.5, 10)], seq=1, now=T)
+    assert r.check(T) is None and r.snapshot(T, checked=True) is not None
+    assert r.snapshot(T + 100) is None, "stale: the gate still refuses when not pre-checked"

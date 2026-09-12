@@ -1,0 +1,32 @@
+row: L79
+date: 2026-09-12
+kind: descriptive_cpu_repair
+status_at_registration: PENDING
+observed_failure: >-
+  L78's live sample (2026-09-12 01:57Z, 60 s at 100 Hz, 34 pollers, loop lag 1.8 s): the sizing
+  sweep in Supervisor._execute_sized was 54.9 percent of the loop thread's samples
+  (choose_live_size 48.7, of which _risk_refusals/day_notional_usd 11.6, book_fingerprint 4.5,
+  audit/record 1.1). It ran on every priced epoch, enumerating q = 1..cap with a full cover each,
+  reading day_notional_usd from SQLite once per candidate plus once for the context, fingerprinting
+  every ask level in Decimal, and building the 9 KB audit ladder, although ~97 percent of epochs
+  select nothing (the L74 gate sat last). The frontier report (up to 80 covers, ~40 ms) was solved
+  on every profitable rung, on the dispatch path. The poller ran the replica gate twice per book.
+immutable_success_criteria:
+  - The sizing sweep runs only for an epoch that can select something; an epoch whose cheapest
+    priced cover has gross at or above 1.0 (no whole quantity can lock a profit) or with no priced
+    cover is skipped and counted; an epoch after an executable one is sized once so L74 records the
+    exit; every other epoch is sized exactly as before (the existing fixed-rung-miss test holds with
+    its book below gross 1.0).
+  - day_notional_usd is read once per decision; fingerprints, the sha and the audit ladder are
+    built only when a row will be recorded; the frontier report is solved at most once per game per
+    5 s (every rung of one epoch shares it); the replica gate runs once per usable book.
+  - Selection, plan prices, caps, hurdles, the recorded stream_evaluations rows and the set of
+    epochs that select a quantity are unchanged: the offline full-pipeline replay (L78 measure.py)
+    on the L51 10k-frame prefix produces identical evaluation rows and identical selections before
+    and after, and the paired CPU seconds fall.
+expected_ev_effect: >-
+  none on selection or sizing; the loop thread spends its time on frames and the epochs that can
+  trade, so the plan-to-send stage (pre_machine_ms, 4-885 ms on 2026-09-11) and loop lag fall.
+prohibited:
+  - Skipping any epoch that could select a quantity.
+  - Changing any cap, hurdle, fee model or plan price.

@@ -103,7 +103,10 @@ from nodes.venue_polymarket.books import PM_CLOB, pm_book  # noqa: E402
 from ops import run_index  # noqa: E402
 
 from kernel.paths import DB  # noqa: E402,F401
-QUANTITIES = (5.0, 10.0, 25.0, 100.0)   # 10 added 2026-09-07: under a $12 per-order cap only 5 fit, and 5 nets under the floor
+QUANTITIES = (5.0, 10.0, 25.0, 100.0)
+#: L79: the frontier report is solved at most once per game per period (every rung of an epoch
+#: shares it); sizing itself is gated in Supervisor._worth_sizing.
+FRONTIER_PERIOD_S = 5.0   # 10 added 2026-09-07: under a $12 per-order cap only 5 fit, and 5 nets under the floor
 MIN_RETURN = 0.01
 #: A game is priced at most this often on quiet books (nodes/game_poller coalescing); a replica
 #: state change or the 15 s heartbeat still prices immediately. 2026-09-04: from ~3,400 to a few
@@ -125,6 +128,12 @@ class Supervised:
     discovery_block: str | None = None
     evaluations: int = 0
     written: int = 0
+    #: L79 (L78 profile: the sizing sweep was 55 % of the loop, on epochs that could select
+    #: nothing). Whether the event's last recorded sizing decision selected something (the
+    #: L74 exit is still recorded), when the frontier was last solved, and epochs not sized.
+    last_sizing_executable: bool | None = None
+    last_frontier_utc: float = 0.0
+    sizing_skipped: int = 0
 
 
 @dataclass
@@ -450,6 +459,10 @@ class Supervisor:
                     if self.record_errors[key] == 1:
                         print(f"  [record] {sup.short_name} {brief_error(exc)}", flush=True)
             if not failed and evaluated and sized_live and self.coordinator is not None:
+                if not self._worth_sizing(sup, evaluated):
+                    sup.sizing_skipped += 1
+                    sized_live = False
+            if not failed and evaluated and sized_live and self.coordinator is not None:
                 try:
                     self._execute_sized(sup, evaluated)
                 except Exception as exc:  # noqa: BLE001 -- selection must not tear down a socket
@@ -497,7 +510,12 @@ class Supervisor:
             # replicas afterwards would price a different instant -- the books move in milliseconds.
             cap = ""
             try:
-                if ev.offers and sup.poller.proof is not None:
+                # L79: the frontier (up to 80 covers, ~40 ms) is a report, solved at most once per
+                # FRONTIER_PERIOD_S per game; the sizing sweep, not this, picks the quantity.
+                # (every rung of one epoch shares the instant; the period is between epochs)
+                if ev.offers and sup.poller.proof is not None and (
+                        ev.evaluated_utc == sup.last_frontier_utc or ev.evaluated_utc - sup.last_frontier_utc >= FRONTIER_PERIOD_S):
+                    sup.last_frontier_utc = ev.evaluated_utc
                     fr = frontier({o: list(v) for o, v in ev.offers.items()},
                                   now_utc=ev.evaluated_utc, proof=sup.poller.proof,
                                   max_leg_age_s=self.max_book_age_s, hurdle=MIN_RETURN,
@@ -517,6 +535,25 @@ class Supervisor:
                 self._execute(sup, ev, rec)
         return rec
 
+    def _worth_sizing(self, sup: Supervised, evaluated) -> bool:
+        """L79: size only an epoch that can select something. The exhaustive sweep (q = 1..cap, a
+        full cover each) ran on every epoch and was 55 % of the loop's CPU (L78, 2026-09-12) while
+        ~97 % of epochs selected nothing. The one exact exclusion: gross at or above 1.0 on the
+        smallest priced quantity. Gross is the ladders' VWAP sum and never falls with size, so no
+        whole quantity can lock a profit; the sweep would enumerate the cap for nothing. Fee-bound
+        or below-hurdle rungs still size (a neighbouring whole quantity can clear what the fixed
+        rungs missed: fee rounding and the $0.10 floor move with q), and an event whose last
+        recorded decision was executable sizes once more so L74 records the exit."""
+        if sup.last_sizing_executable:
+            return True
+        covers = [ev.cover for ev, _ in evaluated if ev.cover is not None and ev.cover.ok]
+        if not covers:
+            return False           # nothing priced at any rung: the sweep prices the same offers, stricter
+        # best_cover takes the cheapest combination, single-venue included, so its gross is the floor
+        # for the cross-venue pair the sweep requires.
+        g = min((c.gross_per_contract for c in covers if c.gross_per_contract is not None), default=None)
+        return not (g is not None and g >= 1.0 - 1e-12)
+
     def _execute_sized(self, sup: Supervised, evaluated) -> None:
         """One cap-aware live quantity decision for one frozen book epoch."""
         base = evaluated[0][0]
@@ -533,6 +570,16 @@ class Supervisor:
             min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0),
             max_quote_age_s=min(sup.poller.max_book_age_s, sup.poller.max_rest_book_age_s),
         )
+        # L79: the fingerprints, the sha and the audit ladder exist for the recorded row; an epoch
+        # that selects nothing after an epoch that selected nothing records nothing (L74).
+        executable = decision.selected is not None
+        if not executable and not sup.last_sizing_executable:
+            sup.last_sizing_executable = False
+            key = f"{sup.short_name}:SIZE:" + ",".join(decision.binding_constraints)
+            if self.said.get(key) != "said":
+                self.said[key] = "said"
+                print(f"  [size] refused {sup.short_name}: {','.join(decision.binding_constraints) or 'NO_FEASIBLE_SIZE'}", flush=True)
+            return
         epoch_payload = []
         for outcome, legs in sorted(offers.items()):
             for leg in sorted(legs, key=lambda x: (x.venue, x.market_id, x.outcome_id)):
@@ -548,10 +595,11 @@ class Supervisor:
         # L74: an epoch that selects nothing is recorded only as the transition out of an
         # executable state; its evaluation row already says why. An executable epoch whose input
         # is the last recorded one is the single-flight guard firing: nothing is minted twice.
-        executable = decision.selected is not None
-        if self.opportunities is not None and not self.opportunities.record_sizing_decision(
-                event_id=base.game_id, input_hash=input_hash, executable=executable,
-                selected_opportunity_id=selected_oid, decision=decision.audit(), now=base.evaluated_utc) and executable:
+        recorded = self.opportunities is None or self.opportunities.record_sizing_decision(
+            event_id=base.game_id, input_hash=input_hash, executable=executable,
+            selected_opportunity_id=selected_oid, decision=decision.audit(), now=base.evaluated_utc)
+        sup.last_sizing_executable = executable
+        if not recorded and executable:
             return
         # The decision/outbox must be durable before any worker can reach a venue wire. If this
         # commit fails, the callback catches it and no task is created.

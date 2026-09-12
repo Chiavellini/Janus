@@ -325,7 +325,7 @@ class GamePoller:
         fault = rep.check(t, max_age_s=max_age)
         if fault is not None:
             return fault.value
-        book = rep.snapshot(t, max_age_s=max_age)
+        book = rep.snapshot(t, max_age_s=max_age, checked=True)
         if book is None or not book.asks:
             return "NO_ASKS"
         return book

@@ -84,3 +84,30 @@ def test_missing_outer_caps_fails_closed_before_pricing():
                          league="mlb", caps={}, limits=load_limits(), ledger=ExposureLedger(),
                          balances={"polymarket": 100, "kalshi": 100})
     assert d.selected is None and d.binding_constraints == ("NO_CAPS",)
+
+
+def test_the_day_notional_is_read_once_per_decision():
+    """L79 (L78 profile): day_notional_usd was 10 % of the loop, read once per candidate plus once
+    for the context. One read per decision; the refusal arithmetic is unchanged."""
+    from nodes.execute.sizing import _risk_refusals
+    from nodes.risk.limits import load_limits
+
+    class Ledger:
+        calls = 0
+        def day_notional_usd(self, now=None):
+            Ledger.calls += 1
+            return 240.0
+        def assess(self, **kw):
+            return ()
+    lim = load_limits()
+    caps = {"stake_usd": 30.0, "max_contracts": 25.0, "day_notional_usd": 250.0}
+    out = _risk_refusals(event_id="g", league="mlb", per_venue={"kalshi": 6.0, "polymarket": 6.0}, caps=caps,
+                         limits=lim, ledger=Ledger(), balances={"kalshi": 100, "polymarket": 100}, now=T, day_used=240.0)
+    assert "CAP_DAY_NOTIONAL" in out and Ledger.calls == 0, "a supplied reading is used as is"
+    out2 = _risk_refusals(event_id="g", league="mlb", per_venue={"kalshi": 6.0, "polymarket": 6.0}, caps=caps,
+                          limits=lim, ledger=Ledger(), balances={"kalshi": 100, "polymarket": 100}, now=T)
+    assert "CAP_DAY_NOTIONAL" in out2 and Ledger.calls == 1, "without one, the ledger is read"
+    Ledger.calls = 0
+    d = choose_live_size(offers(), now_utc=T, proof=mlb_cover_proof(["a", "b"]), event_id="g1", league="mlb",
+                         caps=caps, limits=lim, ledger=Ledger(), balances={"kalshi": 100, "polymarket": 100})
+    assert Ledger.calls == 1 and d.risk_context["day_notional_used_usd"] == 240.0, "one read for the whole q sweep"

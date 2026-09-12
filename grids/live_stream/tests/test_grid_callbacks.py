@@ -107,7 +107,9 @@ def test_live_selector_runs_even_when_every_legacy_fixed_rung_misses(tmp_path: P
                                audit=lambda: {"n_star_feasible": 7})
 
     monkeypatch.setattr("grids.live_stream.grid.choose_live_size", intermediate)
-    sync_all(s.poller, kh=.50, ka=.99, ph=.99, pa=.50)
+    # gross 0.99: the rungs miss on fees and the $0.10 floor, not on edge. (L79 skips the sweep only
+    # when the cheapest gross is 1.0 or more, where no whole quantity can lock a profit.)
+    sync_all(s.poller, kh=.50, ka=.99, ph=.99, pa=.49)
     sup._on_update("g1")("K_H", T)
     assert calls == [7]
 
@@ -789,3 +791,71 @@ def test_the_fast_reprotect_tick_retries_a_naked_position_every_few_seconds_then
         finally:
             _t.monotonic = real
     asyncio.run(main())
+
+
+def _live_sized(tmp_path, monkeypatch, caps=None):
+    import time
+    from kernel.schema import Mode
+    from nodes.risk.breaker import LossBreaker
+    from nodes.risk.kill import KillSwitches
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+    sup, s = _supervisor(tmp_path)
+    s.poller.quantities = (5.0, 10.0)
+    sup.mode, sup.limits, sup.ledger = Mode.LIMITED_LIVE, load_limits(), ExposureLedger()
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.breaker = LossBreaker(kill=sup.kill)
+    sup.caps = caps or {"stake_usd": 30.0, "max_contracts": 25.0, "day_notional_usd": 500.0}
+    sup.balance_snapshot = {"kalshi": 100.0, "polymarket": 100.0}
+    sup.balance_snapshot_mono = time.monotonic()
+    sup.coordinator = object()
+    calls = []
+    monkeypatch.setattr(sup, "_execute", lambda _s, ev, rec, sizing=None: calls.append((ev, rec, sizing)))
+    return sup, s, calls
+
+
+def test_an_epoch_with_no_edge_is_not_sized_and_one_with_edge_is(tmp_path: Path, monkeypatch):
+    """L79 (L78 profile, 2026-09-12): the q = 1..cap sweep was 55 % of the loop on epochs that could
+    select nothing. No edge (gross at or above 1): the sweep is skipped and counted; an edge: it
+    runs and dispatches exactly as before."""
+    sup, s, calls = _live_sized(tmp_path, monkeypatch)
+    sized = []
+    real = sup._execute_sized
+    monkeypatch.setattr(sup, "_execute_sized", lambda su, ev: (sized.append(1), real(su, ev)))
+    sync_all(s.poller, kh=0.60, ka=0.60, ph=0.60, pa=0.60)     # gross 1.2: NO_EDGE at every size
+    sup._on_update("g1")("K_H", T)
+    assert sized == [] and s.sizing_skipped == 1 and calls == []
+    sync_all(s.poller, kh=0.44, ka=0.99, ph=0.99, pa=0.44)     # the edge the first callback test dispatches on
+    sup._on_update("g1")("K_H", T + 1)
+    assert sized == [1] and calls and s.sizing_skipped == 1 and s.last_sizing_executable is True
+
+
+def test_the_exit_from_an_executable_epoch_is_still_sized_once_so_l74_records_it(tmp_path: Path, monkeypatch):
+    sup, s, calls = _live_sized(tmp_path, monkeypatch)
+    sync_all(s.poller, kh=0.44, ka=0.99, ph=0.99, pa=0.44)
+    sup._on_update("g1")("K_H", T)
+    assert s.last_sizing_executable is True and len(calls) == 1
+    n0 = sup.store.con.execute("SELECT count(*) FROM sizing_decisions").fetchone()[0]
+    sync_all(s.poller, kh=0.60, ka=0.60, ph=0.60, pa=0.60)     # edge gone
+    sup._on_update("g1")("K_H", T + 1)
+    assert s.last_sizing_executable is False and s.sizing_skipped == 0, "sized once more: the exit is recorded (L74)"
+    assert sup.store.con.execute("SELECT count(*) FROM sizing_decisions").fetchone()[0] == n0 + 1
+    sup._on_update("g1")("K_H", T + 2)
+    assert s.sizing_skipped == 1 and sup.store.con.execute("SELECT count(*) FROM sizing_decisions").fetchone()[0] == n0 + 1
+
+
+def test_the_frontier_report_runs_at_most_once_per_period_per_game(tmp_path: Path, monkeypatch, capsys):
+    import grids.live_stream.grid as g
+    sup, s = _supervisor(tmp_path)
+    s.poller.quantities = (5.0,)
+    n = []
+    from types import SimpleNamespace
+    def fake_frontier(*a, **k):
+        n.append(1)
+        return SimpleNamespace(actionable=False)
+    monkeypatch.setattr(g, "frontier", fake_frontier)
+    sync_all(s.poller, kh=0.44, ka=0.99, ph=0.99, pa=0.44)
+    sup._on_update("g1")("K_H", T)
+    sup._on_update("g1")("K_H", T + 1)
+    sup._on_update("g1")("K_H", T + g.FRONTIER_PERIOD_S + 1)
+    assert n == [1, 1], "solved at T and at T+5, not at T+1 (one rung per epoch here)"

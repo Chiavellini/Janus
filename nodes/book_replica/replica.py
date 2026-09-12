@@ -325,9 +325,11 @@ class BookReplica:
             return Fault.CROSSED_BOOK
         return None
 
-    def snapshot(self, now: float | None = None, *, max_age_s: float = 5.0) -> Book | None:
-        """A Book, or None. None is a BLOCK -- never substitute the last good book."""
-        if self.check(now, max_age_s=max_age_s) is not None:
+    def snapshot(self, now: float | None = None, *, max_age_s: float = 5.0, checked: bool = False) -> Book | None:
+        """A Book, or None. None is a BLOCK -- never substitute the last good book. `checked=True`
+        says the caller ran check() with the same bound an instant ago (the poller does, to name
+        the fault); the gate is not run twice (L79)."""
+        if not checked and self.check(now, max_age_s=max_age_s) is not None:
             return None
         return Book(
             bids=tuple(Quote(p, self.bids[p]) for p in sorted(self.bids, reverse=True)),

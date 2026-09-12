@@ -1,0 +1,34 @@
+row: L78
+date: 2026-09-12
+kind: descriptive_cpu_attribution
+status_at_registration: PENDING
+observed_failure: >-
+  The live lane's single asyncio thread runs at 80-98 percent of the box's one vCPU; loop lag
+  (socket_health.loop_lag_s) averages 2-4 s in busy hours with spikes to 10-30 s and HALT STALL
+  (above 5 s) fires several times an hour; the evaluation-to-send stage (pre_machine_ms) swung
+  4-885 ms across attempts on 2026-09-11. L51 (2026-09-09) profiled the reader offline without
+  callbacks or store writes and named the all-replica heartbeat sweep and ladder projection; it
+  asked for a full-pipeline attribution before any residual is blamed. Two code maps (frame path,
+  evaluation path) estimate the sizing sweep on non-executable epochs, the heartbeat sweep, ladder
+  re-sorting, the frontier solve on profitable rungs and frame decode as the main waste. Nothing
+  here changes trading; this row measures.
+immutable_success_criteria:
+  - A sampling profile of the live lane process (py-spy, 100 Hz, 60 s, two samples: one in the
+    evening slate, one in a quiet hour) attributes at least 80 percent of the loop thread's
+    self-time to named functions, grouped into five buckets: sizing/evaluation, heartbeat sweep,
+    ladder projection and replica rebuild, frontier, frame decode and capture. Overhead of the
+    sampler is under 3 percent of the process CPU for the sample's duration and it never writes
+    to or signals the lane beyond ptrace reads.
+  - An offline full-pipeline benchmark (measure.py) replays L51's copied 10k-frame prefix for each
+    venue through nodes/replay with pollers, callbacks and a scratch store, three interleaved runs,
+    and records median CPU seconds plus a replay.compare() parity result and a digest of every
+    replica's final book; this is the paired before/after instrument for L79-L81.
+  - No cap, hurdle, limit, hedge behaviour, evidence table or live state changes under this row;
+    the one box change is a scratch py-spy venv outside /opt/janus.
+expected_ev_effect: >-
+  none directly; it decides where the next three rows spend effort. Lower loop lag keeps pricing
+  live during busy slates (each HALT STALL is minutes of EV foregone) and shortens plan-to-send.
+prohibited:
+  - Attaching anything that stops or signals the lane, restarting it, or installing into
+    /opt/janus/.venv.
+  - Reading the profile as a measurement of a change that has not been made.

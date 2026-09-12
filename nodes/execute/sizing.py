@@ -89,7 +89,7 @@ class SizingDecision:
 
 def _risk_refusals(*, event_id: str, league: str, per_venue: Mapping[str, float],
                    limits: RiskLimits, ledger, balances: Mapping[str, float], caps: Mapping[str, float],
-                   now: float) -> list[str]:
+                   now: float, day_used: float | None = None) -> list[str]:
     """Read-only mirror of the numeric parts of ``nodes.risk.clearance.clear``.
 
     The real gate still runs and owns the reservation.  This mirror only prevents a quantity known
@@ -101,7 +101,8 @@ def _risk_refusals(*, event_id: str, league: str, per_venue: Mapping[str, float]
     if total > stake_cap + 1e-9:
         out.append("CAP_STAKE")
     day_cap = float(caps.get("day_notional_usd", 0.0))
-    if ledger.day_notional_usd(now) + total > day_cap + 1e-9:
+    used = float(ledger.day_notional_usd(now)) if day_used is None else float(day_used)   # L79: once per decision
+    if used + total > day_cap + 1e-9:
         out.append("CAP_DAY_NOTIONAL")
     for venue, usd in per_venue.items():
         if float(balances.get(venue, 0.0)) + 1e-9 < usd:
@@ -130,7 +131,7 @@ def choose_live_size(offers: Mapping[str, Sequence[Leg]], *, now_utc: float, pro
         "limits_sha": limits.sha,
         "caps": {k: float(v) for k, v in caps.items()},
         "balances_usd": {k: float(v) for k, v in balances.items()},
-        "day_notional_used_usd": float(ledger.day_notional_usd(now_utc)),
+        "day_notional_used_usd": float(ledger.day_notional_usd(now_utc)),   # the one read (L79)
         "max_unhedged_contracts": float(limits.max_unhedged_contracts),
         "proof": proof.as_record(),
         "required_venues": ["kalshi", "polymarket"],
@@ -189,7 +190,7 @@ def choose_live_size(offers: Mapping[str, Sequence[Leg]], *, now_utc: float, pro
                     refusals.append("MAX_UNHEDGED")
                 refusals.extend(_risk_refusals(event_id=event_id, league=league,
                                                per_venue=per_venue, limits=limits, ledger=ledger,
-                                               balances=balances, caps=caps, now=now_utc))
+                                               balances=balances, caps=caps, now=now_utc, day_used=context["day_notional_used_usd"]))
         constraints.update(refusals)
         candidates.append(SizedCandidate(q, cov if cov.ok else None, plan, profit, capital,
                                          per_venue, tuple(dict.fromkeys(refusals))))
