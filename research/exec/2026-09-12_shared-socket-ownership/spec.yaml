@@ -1,0 +1,36 @@
+row: L89
+date: 2026-09-12
+kind: descriptive_stream_repair
+status_at_registration: PENDING
+observed_failure: >-
+  Both market sockets keep `regs[market_id]` as a LIST because two owners share them: the capture
+  watchlist (nodes/discovery/watchlist.py) subscribes tennis hours before first serve, and the game
+  poller registers the same ticker when the match goes live - the overlap `register`'s own comment
+  documents, and which once cost 25,563 tennis evaluations. `unregister(ticker)` popped the whole
+  list, so a capture ticker ageing out of its window took the POLLER's registration with it. The
+  orphaned replica keeps `replica.pulse` pointing at the shared socket pulse, and `as_of()` folds
+  that pulse in, so `check()` sees age 0 and state SYNCED over a ladder frozen at that instant and
+  `snapshot()` serves it with a current `fetched_utc`. Neither the reconnect sweep nor the seq-gap
+  sweep can reach it again - both iterate `regs` - so nothing can ever invalidate it, and the board
+  shows age_s 0.0. A frozen book priced against a live one manufactures the entire apparent edge.
+  Live in production: the box runs without `--capture-series`, whose argparse default is
+  KXATPMATCH,KXWTAMATCH,KXATPCHALLENGERMATCH,KXWTACHALLENGERMATCH plus the PM tag `tennis` - the
+  leagues carrying the measured losses (atp 5 of 5 adverse, -$3.29 over the 7 days to 2026-09-12).
+immutable_success_criteria:
+  - `unregister` takes the owner's replica and removes only that registration; a market another
+    owner still holds keeps its registration, its folded book and its snapshot state.
+  - The last owner leaving still clears the registration, the book and the snapshot marker, so the
+    subscription diff and the reconnect path are unchanged.
+  - The capture watchlist keeps the replica it registered and passes it, so it can only ever drop
+    its own.
+  - Outcome to evaluate after 24 h live: no Kalshi replica priced while absent from `regs`, and the
+    per-league hedge slippage in ops/slippage_report.py for atp/wta re-measured against the
+    pre-repair 5c median.
+expected_ev_effect: >-
+  removes a source of fabricated edge concentrated on the leagues the lane trades most. It does not
+  create fills; it stops pricing against books the venue stopped updating.
+prohibited:
+  - Restoring a name-keyed unregister on a shared socket.
+  - Treating the remaining `as_of()` question as closed. Folding the shared pulse into per-market
+    freshness still makes max_book_age_s, max_rest_book_age_s and max_leg_age_s inert for streamed
+    books; that is a separate, larger row and it is still owed.

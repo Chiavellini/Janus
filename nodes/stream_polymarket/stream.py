@@ -86,7 +86,16 @@ class PolymarketStream:
         replica.pulse = self.pulse
         self.resubscribe_needed = True
 
-    def unregister(self, asset_id: str) -> None:
+    def unregister(self, asset_id: str, replica: BookReplica | None = None) -> None:
+        """Drop one owner's registration, or every one when no replica is named. See the Kalshi
+        stream's `unregister` (L89) for why the list has more than one owner. Polymarket fails
+        closed on an orphan (`verification="external"` decays to UNVERIFIED_TOO_LONG), so here the
+        cost was an outage rather than a wrong price -- but the same owner confusion."""
+        if replica is not None:
+            rest = [r for r in self.regs.get(asset_id, []) if r.replica is not replica]
+            if rest:
+                self.regs[asset_id] = rest
+                return
         self.regs.pop(asset_id, None)
         self.books.pop(asset_id, None)
         self.resubscribe_needed = True

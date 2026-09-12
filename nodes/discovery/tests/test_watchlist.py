@@ -20,14 +20,27 @@ class FakeClient:
 
 
 class FakeSocket:
+    """Registrations are a LIST per market, as the real sockets keep them: the capture watchlist and
+    a game poller both subscribe the same tennis ticker."""
+
     def __init__(self):
-        self.registered, self.unregistered = {}, []
+        self.regs, self.unregistered = {}, []
 
     def register(self, market_id, replica, *a, **kw):
-        self.registered[market_id] = replica
+        self.regs.setdefault(market_id, []).append(replica)
 
-    def unregister(self, market_id):
-        self.unregistered.append(market_id); self.registered.pop(market_id, None)
+    def unregister(self, market_id, replica=None):
+        self.unregistered.append(market_id)
+        if replica is not None:
+            rest = [r for r in self.regs.get(market_id, []) if r is not replica]
+            if rest:
+                self.regs[market_id] = rest
+                return
+        self.regs.pop(market_id, None)
+
+    @property
+    def registered(self):
+        return {m: rs[0] for m, rs in self.regs.items()}
 
 
 def test_kalshi_watch_keeps_markets_expiring_inside_the_window():
@@ -57,6 +70,30 @@ def test_sync_registers_new_unregisters_gone_and_never_prices():
     assert w.sync(ks, ps, [("K2", "KXWTAMATCH")], [("T1", "s1"), ("T2", "s2")]) == (1, 1)
     assert ks.unregistered == ["K1"] and set(ps.registered) == {"T1", "T2"}
     assert w.stats() == {"kalshi": 1, "polymarket": 2, "registered": 4, "unregistered": 1}
+
+
+def test_capture_leaving_its_window_never_unregisters_a_poller_sharing_the_ticker():
+    """L89: these sockets are shared. Tennis is capture-registered hours before first serve and a
+    game poller registers the same ticker when the match goes live. Dropping the capture ticker by
+    NAME took the poller's registration with it, and the orphaned replica -- still holding the
+    socket's shared pulse -- then reported age 0 and state SYNCED over a frozen ladder forever,
+    unreachable by the reconnect and seq-gap sweeps because both iterate the registration map."""
+    ks, ps, w = FakeSocket(), FakeSocket(), Watchlist()
+    w.sync(ks, ps, [("K1", "KXATPMATCH")], [])
+    poller_replica = object()                       # the match went live; the poller joined
+    ks.register("K1", poller_replica)
+    assert len(ks.regs["K1"]) == 2, "both owners are subscribed to the one ticker"
+
+    w.sync(ks, ps, [], [])                          # the capture window moved on
+    assert ks.regs.get("K1") == [poller_replica], "the poller still prices K1"
+    assert w.stats()["kalshi"] == 0, "capture let go of its own"
+
+
+def test_the_last_owner_leaving_really_does_drop_the_ticker():
+    ks, ps, w = FakeSocket(), FakeSocket(), Watchlist()
+    w.sync(ks, ps, [("K1", "KXATPMATCH")], [("T1", "s1")])
+    w.sync(ks, ps, [], [])
+    assert "K1" not in ks.regs and "T1" not in ps.regs
 
 
 def test_pm_watch_events_keep_the_start_and_participants_behind_the_tokens():

@@ -90,7 +90,8 @@ def load_limits(path: Path | str = LIMITS_PATH) -> RiskLimits:
         protect_dust_contracts=float(pr.get("protect_dust_contracts", 1.0)),
         guard_period_s=float(pr.get("guard_period_s", 30.0)),
         protect_retry_s=float(pr.get("protect_retry_s", 3.0)),
-        protect_fast_window_s=float(pr.get("protect_fast_window_s", 60.0)))
+        protect_fast_window_s=float(pr.get("protect_fast_window_s", 60.0)),
+        entry_book_trust_s=float(pr.get("entry_book_trust_s", 2.0)))
     return RiskLimits(
         max_total_usd=float(cap["max_total_usd"]), max_unresolved_usd=float(cap["max_unresolved_usd"]),
         per_venue_usd={k: float(v) for k, v in cap["per_venue_usd"].items()},

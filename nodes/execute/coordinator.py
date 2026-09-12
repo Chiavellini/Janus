@@ -22,6 +22,7 @@ The rules, each of which is a line below and a test beside it (spec §10):
 
 from __future__ import annotations
 
+import concurrent.futures
 import time
 import uuid
 from dataclasses import dataclass, field, replace
@@ -143,29 +144,46 @@ class Coordinator:
         # at the limit. One read of the venue's own book before the send: if it does not offer the
         # plan's size at the plan's limit, nothing is sent and the reservation goes back. No book
         # (the read failed) is not a verdict: the send goes out as before.
+        # The two reads are independent, and they run CONCURRENTLY because the clearance is only good
+        # for `clearance_ttl_ms` (500 ms) from its mint on the loop, before the worker hop. L77's read
+        # alone measured 187.7 ms on the live cover 64d6925e; doing L85's after it would routinely
+        # spend the window, the send would come back CLEARANCE_SPENT, and the grid would back the
+        # whole game off as though the venue had rejected it -- the check meant to stop bad entries
+        # would have stopped all of them. `confirm_budget_ms` records what was left of the window, so
+        # this stays measured rather than argued.
         collateral_cap = None
-        if (not plan.first.post_only and plan.first.time_in_force in ("ioc", "fok")
-                and self.fresh_book is not None and self.mode.executes):
-            m0 = self.mono()
-            try:
-                book = self.fresh_book(plan.first.venue, plan.first.market_id, plan.first.side)
-            except Exception:  # noqa: BLE001 -- a failed read is not a verdict
-                book = None
-            ex.stages["a_confirm_ms"] = round((self.mono() - m0) * 1000.0, 2)
-            if book is not None:
-                want = marginal_price(book, plan.first.contracts)
-                top = book.asks[0].price if book.asks else None
-                ex.protect["first_leg_confirm"] = {"limit": plan.first.limit_price, "marginal": want, "top": top,
-                                                   "contracts": plan.first.contracts}
-                if top is not None and 0 < top < plan.first.limit_price:
-                    # L83: spend at most contracts x the venue's own ask, whatever the limit allows.
-                    collateral_cap = round(float(plan.first.contracts) * float(top), 2)
-                    ex.protect["first_leg_confirm"]["max_collateral_usd"] = collateral_cap
-                if want is None or want > plan.first.limit_price + 1e-9:
-                    return self._fail(ex, X.BOOK_MOVED,
-                                      f"first leg: {plan.first.venue} book offers {plan.first.contracts:g} at "
-                                      f"{('%.4f' % want) if want is not None else 'no depth'} vs limit {plan.first.limit_price:.4f}; nothing sent",
-                                      release=True)
+        book = hedge_book = None
+        if not plan.first.post_only and self.fresh_book is not None and self.mode.executes:
+            def _read(leg, key):
+                m = self.mono()
+                try:
+                    out = self.fresh_book(leg.venue, leg.market_id, leg.side)
+                except Exception:  # noqa: BLE001 -- a failed read is not a verdict
+                    out = None
+                ex.stages[key] = round((self.mono() - m) * 1000.0, 2)
+                return out
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                hedge_future = pool.submit(_read, plan.hedge, "b_confirm_ms")
+                if plan.first.time_in_force in ("ioc", "fok"):
+                    book = _read(plan.first, "a_confirm_ms")
+                hedge_book = hedge_future.result()
+            ex.stages["confirm_budget_ms"] = round((clearance.expires_mono - self.mono()) * 1000.0, 2)
+
+        if book is not None:
+            want = marginal_price(book, plan.first.contracts)
+            top = book.asks[0].price if book.asks else None
+            ex.protect["first_leg_confirm"] = {"limit": plan.first.limit_price, "marginal": want, "top": top,
+                                               "contracts": plan.first.contracts}
+            if top is not None and 0 < top < plan.first.limit_price:
+                # L83: spend at most contracts x the venue's own ask, whatever the limit allows.
+                collateral_cap = round(float(plan.first.contracts) * float(top), 2)
+                ex.protect["first_leg_confirm"]["max_collateral_usd"] = collateral_cap
+            if want is None or want > plan.first.limit_price + 1e-9:
+                return self._fail(ex, X.BOOK_MOVED,
+                                  f"first leg: {plan.first.venue} book offers {plan.first.contracts:g} at "
+                                  f"{('%.4f' % want) if want is not None else 'no depth'} vs limit {plan.first.limit_price:.4f}; nothing sent",
+                                  release=True)
 
         # L85 (2026-09-12): the same read for the leg we RELY on to get out. L77 confirmed only the
         # price about to be paid, so the lane could commit leg A against a hedge price minutes stale
@@ -187,31 +205,25 @@ class Coordinator:
         # depth for the authorized size is also a decline -- a hedge that cannot be filled whole is
         # the naked-residual failure (LAA @ WSH sat 38 min with no depth under the cap). A failed
         # read is not a verdict, exactly as in L77 above.
-        if (not plan.first.post_only and self.fresh_book is not None and self.mode.executes):
-            m1 = self.mono()
-            try:
-                hb = self.fresh_book(plan.hedge.venue, plan.hedge.market_id, plan.hedge.side)
-            except Exception:  # noqa: BLE001 -- a failed read is not a verdict
-                hb = None
-            ex.stages["b_confirm_ms"] = round((self.mono() - m1) * 1000.0, 2)
-            if hb is not None:
-                paid_est = plan.first.limit_price
-                vwap = vwap_for_size(hb, plan.hedge.contracts)
-                break_even = plan.hedge_break_even(paid_est)
-                ex.protect["hedge_leg_confirm"] = {
-                    "limit": plan.hedge.limit_price, "vwap": vwap,
-                    "marginal": marginal_price(hb, plan.hedge.contracts),
-                    "budget": plan.hedge_budget(paid_est), "break_even": break_even,
-                    "contracts": plan.hedge.contracts, "first_paid_assumed": paid_est,
-                    # Stamped so the layer can tell a reading from this entry apart from one left on
-                    # the row by an earlier entry (the guard's re-run loads it minutes later).
-                    "at_mono": round(self.mono(), 6)}
-                if vwap is None or vwap > break_even + 1e-9:
-                    return self._fail(ex, X.BOOK_MOVED,
-                                      f"hedge leg: {plan.hedge.venue} book covers {plan.hedge.contracts:g} at "
-                                      f"{('%.4f' % vwap) if vwap is not None else 'no depth'} vs break-even "
-                                      f"{break_even:.4f}; nothing sent",
-                                      release=True)
+        if hedge_book is not None:
+            paid_est = plan.first.limit_price
+            vwap = vwap_for_size(hedge_book, plan.hedge.contracts)
+            break_even = plan.hedge_break_even(paid_est)
+            ex.protect["hedge_leg_confirm"] = {
+                "limit": plan.hedge.limit_price, "vwap": vwap,
+                "marginal": marginal_price(hedge_book, plan.hedge.contracts),
+                "budget": plan.hedge_budget(paid_est), "break_even": break_even,
+                "contracts": plan.hedge.contracts, "first_paid_assumed": paid_est,
+                # Stamped so the layer can tell a reading from this entry apart from one left on the
+                # row by an earlier entry (the guard's re-run loads it minutes later). Monotonic, so
+                # the layer must reject a NEGATIVE age too: a stamp written before a reboot.
+                "at_mono": round(self.mono(), 6)}
+            if vwap is None or vwap > break_even + 1e-9:
+                return self._fail(ex, X.BOOK_MOVED,
+                                  f"hedge leg: {plan.hedge.venue} book covers {plan.hedge.contracts:g} at "
+                                  f"{('%.4f' % vwap) if vwap is not None else 'no depth'} vs break-even "
+                                  f"{break_even:.4f}; nothing sent",
+                                  release=True)
 
         # LEG A: Polymarket, FAK (`ioc` in the internal protocol). Ambiguity here costs nothing;
         # that is why it goes first.

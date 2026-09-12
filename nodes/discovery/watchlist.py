@@ -74,24 +74,36 @@ class Watchlist:
     """What is subscribed for capture only. `sync` registers what is new and unregisters what is gone."""
     kalshi: dict[str, str] = field(default_factory=dict)     # ticker -> series
     pm: dict[str, str] = field(default_factory=dict)         # token -> slug
+    #: The replica THIS watchlist registered, so `sync` can drop its own and leave a poller's alone.
+    k_replicas: dict = field(default_factory=dict)
+    p_replicas: dict = field(default_factory=dict)
     registered: int = 0
     unregistered: int = 0
 
     def sync(self, ks, ps, k_now: list[tuple[str, str]], p_now: list[tuple[str, str]]) -> tuple[int, int]:
+        """L89 (2026-09-12): capture keeps the replica it registered and unregisters exactly that
+        one. These sockets are shared with the game pollers -- tennis is on this watchlist hours
+        before first serve and priced by a poller once the match starts -- and dropping a ticker by
+        name took the poller's registration with it, leaving a frozen book that reported itself
+        fresh forever."""
         added = removed = 0
         nop = lambda _market_id, _now: None  # noqa: E731 -- capture only: no pricing on update
         for ticker, series in k_now:
             if ticker not in self.kalshi:
-                ks.register(ticker, BookReplica(venue="kalshi", market_id=ticker, verification="stream"), "yes", on_update=nop)
-                self.kalshi[ticker] = series; added += 1
+                replica = BookReplica(venue="kalshi", market_id=ticker, verification="stream")
+                ks.register(ticker, replica, "yes", on_update=nop)
+                self.kalshi[ticker] = series; self.k_replicas[ticker] = replica; added += 1
         for ticker in [t for t in self.kalshi if t not in {x for x, _ in k_now}]:
-            ks.unregister(ticker); del self.kalshi[ticker]; removed += 1
+            ks.unregister(ticker, self.k_replicas.pop(ticker, None))
+            del self.kalshi[ticker]; removed += 1
         for token, slug in p_now:
             if token not in self.pm:
-                ps.register(token, BookReplica(venue="polymarket", market_id=token, verification="external"), on_update=nop)
-                self.pm[token] = slug; added += 1
+                replica = BookReplica(venue="polymarket", market_id=token, verification="external")
+                ps.register(token, replica, on_update=nop)
+                self.pm[token] = slug; self.p_replicas[token] = replica; added += 1
         for token in [t for t in self.pm if t not in {x for x, _ in p_now}]:
-            ps.unregister(token); del self.pm[token]; removed += 1
+            ps.unregister(token, self.p_replicas.pop(token, None))
+            del self.pm[token]; removed += 1
         self.registered += added; self.unregistered += removed
         return added, removed
 

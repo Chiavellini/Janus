@@ -260,7 +260,13 @@ def price_combination(legs: Sequence[Leg], contracts: float, *, now_utc: float,
             return Cover(None, contracts, (), False, REJECT_SAME_BOOK)
         seen.add(k)
 
-    ages = [now_utc - l.book.fetched_utc for l in legs if l.book.fetched_utc]
+    # L90 (2026-09-12): a leg with no timestamp is the STALEST possible leg, not an exempt one.
+    # `Book.fetched_utc` defaults to 0.0, and filtering falsy values out of the age list let a
+    # 1970-epoch book price straight through -- and report `max_leg_age_s` as 0.0, the most
+    # reassuring value there is, on the row that recorded the decision. Fail closed instead.
+    if any(not l.book.fetched_utc for l in legs):
+        return Cover(None, contracts, (), False, REJECT_STALE, None)
+    ages = [now_utc - l.book.fetched_utc for l in legs]
     max_age = max(ages) if ages else None
     if max_age is None or max_age > max_leg_age_s:
         return Cover(None, contracts, (), False, REJECT_STALE, max_age)

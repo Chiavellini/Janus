@@ -1,0 +1,33 @@
+row: L88
+date: 2026-09-12
+kind: descriptive_evaluation_repair
+status_at_registration: PENDING
+observed_failure: >-
+  `status_for` rejected a gross at or above 1.00 and had no lower bound, so a three-leg soccer/MLS
+  cover whose legs summed to 0.31 against a $1 payout was published as a 201 % locked return. Those
+  were the richest rows on the operator's board and they are not tradeable edge: a proven partition
+  of an outcome set pays exactly $1, so its legs must cost about $1. A gross far below that proves
+  the legs do not span the outcomes - a stale leg, a wrong token, or a side read as its own
+  complement. Nothing downstream objected because the exhaustiveness check is tautological in the
+  live lane: `proof.outcome_ids` is minted from the same offers keys it is checked against
+  (nodes/game_poller/poller.py:148, grids/live_sports/grid.py:214), and for all-singleton shapes
+  only the COUNT is compared, so it cannot see a wrong instrument behind a right label. Separately,
+  a leg whose `fetched_utc` was 0.0 escaped the staleness gate entirely (L90).
+immutable_success_criteria:
+  - An evaluation whose two-venue gross is below MIN_CREDIBLE_GROSS is BLOCKED_MATCH - identity not
+    proven - and never PROFITABLE_UNEXECUTED, whatever return the arithmetic implies.
+  - MIN_CREDIBLE_GROSS admits every cover this lane has actually settled. The richest was planned at
+    16.7 % (gross ~0.83, execution 0dfc6df3, realised +$0.38); 0.70 is a 43 % locked return.
+  - A cover leg carrying no timestamp fails closed as REJECT_STALE with an unknown age, never
+    priced and never recorded as age 0.0 (L90).
+  - Outcome to evaluate after 24 h: the count of BLOCKED_MATCH rows attributable to the floor, and
+    whether any of them, inspected by hand, was a genuine cover. One genuine refusal is evidence to
+    revisit the constant; zero is evidence the floor is free.
+expected_ev_effect: >-
+  none on any real cover. It removes a class of published opportunity that could never have been
+  executed profitably, so the board stops reporting 200 % returns that are data defects.
+prohibited:
+  - Treating this floor as the identity check. It is arithmetic standing in for one, and the real
+    fix - a venue-independent outcome identity on Leg, asserted against the proof - is still owed.
+  - Lowering MIN_CREDIBLE_GROSS to admit a row without first establishing by hand that the row is a
+    genuine cover.

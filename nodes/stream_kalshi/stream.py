@@ -144,7 +144,26 @@ class KalshiStream:
             replica.snapshot_in(bids, asks, seq=self.last_seq.get(self.sid), now=now or time.time())
             self.seeded += 1
 
-    def unregister(self, ticker: str) -> None:
+    def unregister(self, ticker: str, replica: BookReplica | None = None) -> None:
+        """Drop one owner's registration, or every one when no replica is named.
+
+        L89 (2026-09-12): `regs[ticker]` is a LIST because two owners share this socket -- the
+        capture watchlist (`nodes/discovery/watchlist.py`) subscribes tennis hours before first
+        serve, and the game poller registers the same ticker when the match goes live (the comment
+        in `register` above is about exactly that overlap). Popping the list dropped the POLLER's
+        registration whenever a capture ticker left its window. The orphaned replica keeps
+        `replica.pulse` pointing at this socket's shared pulse, so `as_of()` keeps advancing with
+        every frame for every other market: `check()` sees age 0 and state SYNCED, `snapshot()`
+        serves the ladder frozen at that instant, and neither the reconnect sweep nor the seq-gap
+        sweep can reach it again because both iterate `self.regs`. The board shows `age_s 0.0`.
+        That is a book that manufactures edge from nothing -- the failure `nodes/book_replica`
+        exists to prevent -- on the leagues this lane trades most.
+        """
+        if replica is not None:
+            rest = [r for r in self.regs.get(ticker, []) if r.replica is not replica]
+            if rest:
+                self.regs[ticker] = rest      # another owner still prices it; its book stays live
+                return
         self.regs.pop(ticker, None)
         self.books.pop(ticker, None)
         self.snapshotted.pop(ticker, None)

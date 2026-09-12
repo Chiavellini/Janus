@@ -266,6 +266,88 @@ def test_unwind_off_holds_and_pages_and_dust_is_a_cover(tmp_path):
     assert ex.state is X.HEDGED and ex.unhedged == pytest.approx(0.5) and not paged, "a remainder under the venue minimum is recorded, not chased"
 
 
+def _rerun(tmp_path, *, at_mono, first_filled=100.0, marginal=0.46):
+    """A guard re-run on a row carrying an L85 entry reading: the hedge book has moved to 0.46, and
+    `hedge_leg_confirm` says so. Returns the hedge attempts the layer made."""
+    from kernel.schema import Mode
+    from nodes.risk.clearance import clear_protect
+    from nodes.risk.kill import KillSwitches
+    from nodes.risk.limits import load_limits
+    co, vs, store, clk, opps = harness(tmp_path)
+    offs = offers()
+    p, _ = plan_for(offs)
+    vs["kalshi"].books = {"K_A": bk([(marginal, 5000)])}
+    ex = Execution("rerun01", p.opportunity_id, p.event_id, "mlb", "PAPER_EXECUTION", 100.0, T,
+                   first_filled=first_filled, first_avg_price=0.45, state=X.UNKNOWN_PROVIDER_STATE)
+    ex.protect["hedge_leg_confirm"] = {"marginal": marginal, "at_mono": at_mono,
+                                       "contracts": p.hedge.contracts, "vwap": marginal}
+    co.records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__,
+                               "max_cost": p.max_cost_per_contract, "fee": p.fee_per_contract}, books={})
+    co.records.sync(ex, now=T)
+    out = co.protect_existing(co.records.load("rerun01"), co.records.plan_of("rerun01"),
+                              clear_protect(opportunity_id=p.opportunity_id, event_id=p.event_id,
+                                            venues=("kalshi", "polymarket"), mode=Mode.PAPER_EXECUTION,
+                                            limits=load_limits(),
+                                            kill=KillSwitches(tmp_path / "kill", enforce_volume=False),
+                                            now_mono=100.0))
+    return [a for a in out.protect["attempts"] if a["kind"] == "hedge"]
+
+
+def test_a_reading_stamped_before_a_reboot_never_skips_a_walked_send(tmp_path):
+    """`at_mono` is a monotonic stamp persisted into protect_json. After a reboot monotonic restarts
+    near zero, so a stamp from before it is in the FUTURE and the age is negative -- which an upper
+    bound alone would accept. maker.py:258 rejects a negative book age for the same reason."""
+    hedge = _rerun(tmp_path, at_mono=1e9)          # written "before the reboot": age is negative
+    assert hedge and hedge[0]["state"] != "SKIPPED", "a negative age is not freshness"
+    assert hedge[0]["phase"] == "walked"
+
+
+def test_a_reading_from_this_entry_does_skip_the_walked_send(tmp_path):
+    """The control for the two rejections above: a fresh, full-size reading still skips."""
+    hedge = _rerun(tmp_path / "b", at_mono=100.0)  # the clearance's now_mono; age 0
+    assert hedge and hedge[0]["state"] == "SKIPPED" and hedge[0]["skip"] == "entry_book_above_walked"
+
+
+def test_a_partial_first_leg_never_skips_on_a_reading_taken_for_the_full_size(tmp_path):
+    """The entry read walked the book for the FULL planned hedge size. A padded FAK partially
+    filling is the expected case (plan.py), and the book may cover what is left at the walked price
+    even though it could not cover the whole plan -- so that reading does not describe this send."""
+    hedge = _rerun(tmp_path, at_mono=100.0, first_filled=40.0)
+    assert hedge and hedge[0]["state"] != "SKIPPED", "the reading was for 100, this send is for 40"
+
+
+def test_a_hedge_fill_with_no_reported_average_is_booked_at_the_limit_not_at_zero(tmp_path):
+    """L91: the Kalshi adapter can report filled > 0 with `avg_price` None (no
+    `average_fill_price`) or 0.0 (a missing cost field). Booking that at zero makes
+    `projected_pnl_usd` show a large fictitious profit, so `remaining_loss_usd` hands back the FULL
+    per-execution allowance however much the chase has already lost, and the loss-cap phase
+    re-authorises a fresh ceiling on the rest. The IOC limit is the worst the attempt could have
+    paid, so it is the honest fallback."""
+    from kernel.execution_protocol import Ack
+    co, vs, store, clk, _ = harness(tmp_path)
+    offs = offers()
+    p, _ = plan_for(offs)
+    vs["polymarket"].books = {"P_H": offs["home"][0].book}
+    real_k = vs["kalshi"]
+
+    class NoAverage:
+        venue, mode, journal, books = "kalshi", real_k.mode, real_k.journal, {}
+
+        def submit(self, req, clearance):
+            real_k.journal.pending(req, mode=real_k.mode.value, now=T)
+            return Ack(self.venue, req.client_order_id, "k1", FillState.FILLED,
+                       req.contracts, None, 0.0, "filled", T, detail="no average reported")
+
+        def status(self, cid):
+            raise AssertionError("a FILLED ack is terminal; nothing should poll")
+
+    vs["kalshi"] = NoAverage()
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.HEDGED and ex.hedge_filled == 100.0
+    assert ex.hedge_avg_price == pytest.approx(p.hedge_limit(ex.first_avg_price)), "the limit, not 0.0"
+    assert ex.hedge_avg_price > 0.0
+
+
 def test_the_guard_s_rerun_protects_from_the_row(tmp_path):
     """The execution the guard corrected (leg A filled, nothing hedged) is loaded from its row and
     protected under a clear_protect clearance: the hedge is sent, the record moves to HEDGED."""

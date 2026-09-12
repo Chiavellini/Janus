@@ -164,6 +164,19 @@ def test_stale_leg_is_rejected_not_discounted():
     assert not cov.ok and cov.reject_reason == C.REJECT_STALE
 
 
+def test_a_leg_with_no_timestamp_is_the_stalest_leg_not_an_exempt_one():
+    """L90: `Book.fetched_utc` defaults to 0.0, and filtering falsy values out of the age list let a
+    1970-epoch book price straight through -- while recording `max_leg_age_s` as 0.0, the most
+    reassuring value available, on the very row that proves the decision."""
+    import dataclasses
+    undated = dataclasses.replace(_bk([(0.40, 10_000)]), fetched_utc=0.0)
+    offers = {"A": [C.Leg("kalshi", "kalshi_clob", "a", "m", undated)],
+              "B": [C.Leg("polymarket", "pm_clob", "b", "m2", _bk([(0.40, 10_000)]))]}
+    cov = C.best_cover(offers, 100, now_utc=1000.0, proof=MLB2, max_leg_age_s=30)
+    assert not cov.ok and cov.reject_reason == C.REJECT_STALE
+    assert cov.max_leg_age_s is None, "no timestamp means unknown age, never 0.0"
+
+
 def test_soccer_three_way_is_not_covered_by_two_legs():
     """Exhaustiveness is sport-specific. MLB moneyline has no draw; EPL does."""
     two_of_three = {"HOME": [C.Leg("kalshi", "kalshi_clob", "h", "m", _bk([(0.40, 10_000)]))],

@@ -202,13 +202,22 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                 seen = ex.protect.get("hedge_leg_confirm") or {}
                 at = seen.get("at_mono")
                 was = seen.get("marginal")
-                if (phase_attempts == 0 and was is not None and at is not None
+                # `at_mono` is a monotonic stamp persisted into protect_json, so `protect_existing`
+                # can read one written before a reboot -- when monotonic restarts near zero the
+                # difference is NEGATIVE and would pass an upper bound alone. maker.py:258 guards the
+                # same way (`book_age < 0` is CLOCK_UNHEALTHY). And the reading measured the FULL
+                # planned hedge size; once leg A fills partially the ladder is sizing something
+                # smaller, which the book may well cover at the walked price, so the skip is only
+                # honest while what is left to hedge is still the size that was walked.
+                age = t - float(at) if at is not None else None
+                full_size = ex.unhedged >= hedge.contracts - dust
+                if (phase_attempts == 0 and was is not None and age is not None and full_size
                         and lim.entry_book_trust_s > 0.0
-                        and t - float(at) <= lim.entry_book_trust_s and float(was) > limit + 1e-9):
+                        and 0.0 <= age <= lim.entry_book_trust_s and float(was) > limit + 1e-9):
                     log(kind="hedge", phase=phase, limit=limit, ceiling=limit, qty=qty,
                         held_unhedged=ex.unhedged, state="SKIPPED", filled=0.0, avg=None,
                         skip="entry_book_above_walked", book_marginal_at_entry=float(was),
-                        entry_book_age_s=round(t - float(at), 3))
+                        entry_book_age_s=round(age, 3))
                     break
                 ceiling = limit
             else:
@@ -266,7 +275,14 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
             if hb.filled_contracts > 0:
                 prev = ex.hedge_filled
                 ex.hedge_filled += hb.filled_contracts
-                ex.hedge_avg_price = ((prev * (ex.hedge_avg_price or 0.0)) + hb.filled_contracts * (hb.avg_price or 0.0)) / ex.hedge_filled
+                # L91 (2026-09-12): a fill with no reported average is not a fill at ZERO. The Kalshi
+                # adapter can return `None`, or a 0.0 derived from a missing cost field, with
+                # filled > 0; booking that at 0.0 inflates `projected_pnl_usd`, so
+                # `remaining_loss_usd` hands back the FULL max_protect_loss_usd however much the
+                # chase has already lost and re-authorises a fresh loss-cap ceiling. The IOC limit
+                # is the worst this attempt could have paid, so it is the honest fallback.
+                paid_now = hb.avg_price if hb.avg_price else limit
+                ex.hedge_avg_price = ((prev * (ex.hedge_avg_price or 0.0)) + hb.filled_contracts * float(paid_now)) / ex.hedge_filled
                 co._move_after_fill(ex, X.LEG_B_FILLED if ex.unhedged <= dust else X.LEG_B_PARTIAL,
                                     detail=f"hedge filled {hb.filled_contracts} @ {hb.avg_price}")
             elif hb.state is FillState.UNFILLED:

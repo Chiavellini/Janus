@@ -54,3 +54,23 @@ def test_cover_rejections_map_by_name_and_unknown_is_match():
 
 def test_the_intra_venue_control_is_never_an_opportunity():
     assert ok(0.9000, 0.9200, single=True) is S.BLOCKED_MATCH
+
+
+def test_a_gross_too_low_to_be_a_cover_is_a_match_failure_not_a_200_percent_return():
+    """L88: a proven partition pays $1, so its legs cost about $1. The three-leg soccer and MLS rows
+    the board showed at 0.31 gross were reported as 201 % locked returns; a three-way partition
+    cannot sum to a third of its payout, so those legs did not span the outcomes -- a stale leg, a
+    wrong token, or a side read as its own complement. The exhaustiveness check cannot catch it
+    (it compares labels minted from the same dict it checks); the arithmetic can."""
+    from nodes.opportunity.status import MIN_CREDIBLE_GROSS
+    # the exact MLS row: kalshi 0.17 + polymarket 0.09 + kalshi 0.05
+    assert ok(0.31, 0.3316) is S.BLOCKED_MATCH
+    assert ok(0.43, 0.4552) is S.BLOCKED_MATCH, "the Atalanta-shaped three-leg row"
+    assert ok(MIN_CREDIBLE_GROSS - 0.0001, 0.72) is S.BLOCKED_MATCH
+
+
+def test_the_floor_admits_every_real_cover_this_lane_has_settled():
+    """0dfc6df3 is the richest cover on record that actually paid (+$0.38): planned 16.7 %, gross
+    ~0.83. A floor that refused it would be refusing money, so this pins the headroom."""
+    assert ok(0.83, 0.857) is S.PROFITABLE_UNEXECUTED
+    assert ok(0.9500, 0.9808) is S.PROFITABLE_UNEXECUTED, "the DJERE plan, a normal cover"

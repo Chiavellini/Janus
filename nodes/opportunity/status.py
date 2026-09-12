@@ -17,6 +17,15 @@ from __future__ import annotations
 
 from kernel.schema import OpportunityStatus as S
 
+#: L88 (2026-09-12): the lowest two-venue gross that can be a real cover rather than a data defect.
+#: A proven partition pays exactly $1, so its legs cost about $1; a gross far below that says the
+#: legs do not span the outcome set. 0.70 is a locked return of 43 %, and the richest cover this
+#: lane has ever actually settled was planned at 16.7 % (gross ~0.83, `0dfc6df3`, which paid +$0.38),
+#: so this admits every real edge on record with better than twice the headroom while refusing the
+#: 0.31-gross three-leg soccer rows that were being reported as 201 %. Raise it only with evidence
+#: of a genuine cover it refused; lowering it re-opens the phantom class.
+MIN_CREDIBLE_GROSS = 0.70
+
 #: `nodes/cover` reject reasons -> status. Anything not listed is BLOCKED_MATCH, the safe default:
 #: an unknown refusal is treated as "identity not proven", never as a price finding.
 _REJECT = {
@@ -54,6 +63,17 @@ def status_for(*, cover_ok: bool, reject_reason: str | None, blocked_by: str | N
     if single_venue:
         return S.BLOCKED_MATCH                    # the intra-venue control is not a cross-venue pair
     if gross_per_contract is None or cost_per_contract is None or cost_per_contract <= 0:
+        return S.BLOCKED_MATCH
+    if gross_per_contract < MIN_CREDIBLE_GROSS:
+        # L88 (2026-09-12): a proven partition of an outcome set pays exactly $1, so its legs must
+        # cost about $1 -- a little under when there is edge, a little over when there is not. A
+        # gross far BELOW that is not a large edge, it is proof the legs do not span the outcomes:
+        # a stale leg, a wrong token, or a side read as its own complement. The richest rows on the
+        # board were three-leg soccer covers at 0.31 gross reported as a 201 % locked return, and
+        # nothing downstream objected: the exhaustiveness check compares labels that this same code
+        # path invented (`proof.outcome_ids` is minted from the offers keys it is checked against),
+        # so it cannot see a wrong instrument behind a right label. This is the arithmetic the
+        # labels cannot fake. The identity fix is the real one and is still owed.
         return S.BLOCKED_MATCH
     if gross_per_contract >= 1.0:
         return S.NO_EDGE
