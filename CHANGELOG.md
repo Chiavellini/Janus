@@ -26,6 +26,14 @@ windows; the fee charged is the venue's reported schedule. `EXECUTION_MIN_LOCKED
 `grids/live_stream/grid.py` and `nodes/replay/replay.py` import the constant instead of repeating it;
 `nodes/risk/tests` checks the risk file and the thresholds agree.
 
+Speed, first leg (L84): the venue's POST response for a matched immediate BUY already carries the
+matched amounts (LAA @ WSH: `takingAmount 32.142858, makingAmount 4.5` at +0.30 s, exactly what cash
+confirmed) and the lane discarded them, confirming through status() first: 1–4 polls (640–1,950 ms)
+normally, and on that trade a 6.4 s trade-feed detour, UNKNOWN_PROVIDER_STATE, and a hedge 16 s late.
+`_ack_from_post` now returns FILLED/PARTIAL at the response's size and average when both amounts are
+present (BUY: taking/making, SELL: the reverse); a "matched" without amounts stays UNCONFIRMED as
+before; cash, fee and finality still arrive through status()/fills/the guard.
+
 ## 2026-09-12 — F21's first cover latched the kill; allowance, cadence, and the launchpad
 
 VARILLA V WILD (21:37Z on the 11th), the first 25-contract trade, filled 25.32 on Polymarket at 0.78 and

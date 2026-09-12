@@ -1,0 +1,35 @@
+row: L84
+date: 2026-09-12
+kind: descriptive_execution_repair
+status_at_registration: PENDING
+observed_failure: >-
+  The Polymarket POST /order response for an immediate BUY that matched carries the matched
+  amounts (takingAmount = shares, makingAmount = collateral). The lane discarded them and confirmed
+  every match through status() first. LAA @ WSH (0dfc6df3, 2026-09-12 01:19Z): the response at
+  +0.30 s said takingAmount 32.142858 / makingAmount 4.5 (32.14 @ 0.14, exactly what venue cash
+  later confirmed); status() went get_order -> not found -> trade feed and took 6.4 s, the
+  coordinator declared UNKNOWN_PROVIDER_STATE, the user stream reported MATCHED at +13.5 s, the
+  guard corrected at +16 s and the hedge then found no Kalshi depth under the loss cap (-$0.45,
+  7.14 unhedged). VARILLA V WILD (cc89056e): a DELAYED answer, status() learned 25.32 at +1.7 s.
+  In the 24 h to 06:20Z the first leg's a_settled_ms ran 640-1,950 ms with 2-4 status polls per
+  attempt; a_ack_ms (the POST itself) 207-987 ms.
+immutable_success_criteria:
+  - When the POST response says status "matched" and both amounts parse positive, the ack is
+    FILLED (shares >= requested) or PARTIAL with filled_contracts = shares and avg_price =
+    collateral / shares (BUY: taking/making; SELL: making/taking); settlement_pending stays true;
+    cash, fee and finality still come through status()/fills()/the guard, unchanged. A "matched"
+    without amounts stays UNCONFIRMED and is confirmed through status() exactly as before.
+    Proven by nodes/exec_polymarket tests (BUY full, BUY partial, SELL, matched-without-amounts).
+  - The coordinator's overfill check runs on that ack as it does on a status-confirmed one;
+    the bounded-taker residual rule and the guard's fills reconciliation are untouched.
+  - Outcome to evaluate after 20 matched first legs under this row: a_settled_ms - a_ack_ms and
+    a_polls on matched acks (expected 0 polls), b_submit_ms relative to a_ack_ms, and zero cases
+    where the ack's size differs from the guard's authoritative fill by more than 1e-6.
+expected_ev_effect: >-
+  the hedge leaves at the ack (+0.2-1.0 s after the send) instead of after 1-4 status polls or a
+  6 s trade-feed detour; on a moving Kalshi book that is the difference between the walked price
+  and the loss cap. No change to what is sent, at what size, or under which caps.
+prohibited:
+  - Believing the REQUEST size, or a response without amounts, as a fill.
+  - Skipping status()/fills()/guard reconciliation of cash, fee and finality.
+  - Any change to caps, hurdle, hedge ceilings or the protection schedule.

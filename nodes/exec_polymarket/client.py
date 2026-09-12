@@ -886,8 +886,21 @@ class PolymarketExecution:
         if status == "matched":
             # The CLOB matched it. The venue's order record says HOW MUCH: CLOB V2 fills a BUY by
             # notional, so a FOK for 5 @ 0.39 came back as 5.131577 @ 0.38 (the first real fill,
-            # 2026-09-07). Trusting the request size here would under-hedge by the improvement.
-            # Every match is confirmed through status() before it is believed.
+            # 2026-09-07). Trusting the REQUEST size would under-hedge by the improvement.
+            # L84 (2026-09-12): the POST response itself carries the matched amounts -- LAA @ WSH
+            # answered `takingAmount 32.142858, makingAmount 4.5` at +0.30 s (32.14 @ 0.14, exactly
+            # what cash later confirmed) while status() took 6.4 s and gave up; VARILLA V WILD
+            # learned its 25.32 at +1.7 s. For a BUY the taker takes shares and makes collateral;
+            # for a SELL the reverse. When both amounts are present the ack IS the venue's size and
+            # the hedge goes out on it; cash, fee and finality still arrive through status()/fills.
+            # A "matched" without amounts (a DELAYED-then-matched answer) stays UNCONFIRMED as before.
+            taking, making = _f(d.get("takingAmount")), _f(d.get("makingAmount"))
+            shares, cash = (making, taking) if req.is_sell else (taking, making)
+            if shares > 1e-9 and cash > 0:
+                state = FillState.FILLED if shares >= float(req.contracts) - 1e-6 else FillState.PARTIAL
+                return Ack(self.venue, req.client_order_id, oid, state, shares, cash / shares, None, status, t,
+                           settlement_pending=True,
+                           detail="matched; size and average from the venue's response; cash via status()")
             return Ack(self.venue, req.client_order_id, oid, FillState.UNCONFIRMED, 0.0, None, None, status, t,
                        settlement_pending=True, detail="matched; size via status()")
         if status == "live":

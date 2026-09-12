@@ -35,6 +35,18 @@ seconds or more, longest 17 s): the threshold was never the throttle, the second
 the first-leg miss rate (12 of 15 attempts unfilled in the 24 h), the 6.4 s first-leg status resolution,
 the L82 evening sample.
 
+**Speed, what the 15 attempts' stages say (24 h to 06:20Z).** frame→eval 1–4 ms, eval→exec 20–110 ms,
+pre-machine 4–609 ms (the L77 venue-book read is 190–330 ms of it on every send), the POST itself
+207–987 ms (the SDK keeps an HTTP/2 connection; that is Mexico→CLOB plus signing), then 1–4 status
+polls, 400–1,000 ms, before the hedge may go. **L84 (on the branch): the POST response already carries
+the matched amounts; the ack is now the venue's size and the hedge leaves at the ack.** LAA @ WSH would
+have hedged at +0.3 s instead of +16 s. Still open, in order of value: (1) the user stream delivered
+MATCHED 13 s after the match (subscribed, connected, late) — find out why; (2) the L77 read costs a
+round trip before every send and exists only to bound collateral against a better venue ask (L83); a
+share-sized limit FAK would make both unnecessary, but the generic BUY signer is deliberately blocked
+(L65/F20) and lifting it is the operator's row; (3) the status() not-found path calls the trade feed
+(REST) inline and can take seconds — bound it or move it off the settle loop.
+
 ### Earlier state (2026-09-11 21:40Z)
 
 **F21 is live.** The operator pasted `release.sh 3a05bc1` at 21:29Z: the box runs `3a05bc1`, the

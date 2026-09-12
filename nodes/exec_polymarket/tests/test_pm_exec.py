@@ -92,6 +92,35 @@ def test_a_fok_match_is_confirmed_through_status_at_the_venues_size(tmp_path):
     assert j.get("c1")["state"] == "FILLED"
 
 
+def test_a_match_whose_response_carries_the_amounts_is_the_venues_size_at_once(tmp_path):
+    """L84 (2026-09-12): LAA @ WSH answered `matched, takingAmount 32.142858, makingAmount 4.5`
+    in the POST response itself; status() then took 6.4 s and gave up, and the hedge went out
+    16 s later against a book that had moved. The response is the venue's size: FILLED / PARTIAL
+    with the average from the two amounts, no status round trip before the hedge."""
+    tr = FakeTransport(posts=[{"success": True, "orderID": "0xabc", "status": "matched",
+                               "takingAmount": "32.142858", "makingAmount": "4.5"}])
+    v, j = venue(tmp_path, tr)
+    ack = v.submit(req(contracts=25.0, price=0.18), cl(tmp_path))
+    assert ack.state is FillState.FILLED and ack.filled_contracts == 32.142858 and ack.avg_price == pytest.approx(0.14)
+    assert ack.settlement_pending and "venue's response" in ack.detail
+    assert not any(c[0] == "get" for c in tr.calls), "no status round trip before the hedge"
+    assert j.get("c1")["state"] == "FILLED" and j.get("c1")["filled_contracts"] == 32.142858
+    # a partial match reports the matched part; a SELL's shares are the making side
+    tr = FakeTransport(posts=[{"orderID": "0xp", "status": "matched", "takingAmount": "7.0", "makingAmount": "3.08"},
+                              {"orderID": "0xs", "status": "matched", "takingAmount": "5.5", "makingAmount": "10"}])
+    v, _ = venue(tmp_path, tr)
+    p = v.submit(req(contracts=10.0, price=0.44, client_order_id="p1"), cl(tmp_path))
+    assert p.state is FillState.PARTIAL and p.filled_contracts == 7.0 and p.avg_price == pytest.approx(0.44)
+    s = v.submit(req(side="sell_yes", price=0.55, time_in_force="ioc", client_order_id="s1", contracts=10.0), cl(tmp_path))
+    assert s.state is FillState.FILLED and s.filled_contracts == 10.0 and s.avg_price == pytest.approx(0.55)
+    # matched without amounts (a DELAYED answer that matched later) is still confirmed through status()
+    tr = FakeTransport(posts=[{"orderID": "0xd", "status": "matched", "takingAmount": "", "makingAmount": ""}],
+                       orders=[{"id": "0xd", "status": "MATCHED", "size_matched": "10", "price": "0.44"}])
+    v, _ = venue(tmp_path, tr)
+    d = v.submit(req(client_order_id="d1"), cl(tmp_path))
+    assert d.state is FillState.UNCONFIRMED and "size via status" in d.detail
+
+
 def test_a_taker_fill_the_venue_reports_without_a_fee_carries_the_pinned_fee(tmp_path):
     """The venue charged the taker fee against collateral and reported fee_rate_bps 0 on the trade
     (2026-09-07: balance moved by fills + exactly the pinned 0.0604). With fee params known, the fill
