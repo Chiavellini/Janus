@@ -1,0 +1,15 @@
+[Unit]
+Description=Janus board (read-only, loopback; reached through an SSM port-forward, ops/box/board.sh)
+After=network-online.target
+
+[Service]
+Type=simple
+User=janus
+EnvironmentFile=/etc/janus.env
+WorkingDirectory=/opt/janus
+ExecStart=/opt/janus/.venv/bin/python3 /opt/janus/ops/box/board_server.py --port 8787 --bind 127.0.0.1
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

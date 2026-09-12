@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Janus Board</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<style>
+:root{--bg:#000;--panel:#0a0b0d;--line:#1c2027;--fg:#e6e2d6;--dim:#7a8290;--amber:#ffb000;--green:#22e08a;--red:#ff4d4d;--cyan:#5fd7ff;--yellow:#ffd866;--blue:#4c9cff}
+html,body{background:var(--bg);color:var(--fg);margin:0;font:12.5px/1.35 "IBM Plex Mono","SF Mono",Menlo,monospace;font-variant-numeric:tabular-nums}
+h2,.lbl,.badge,th,.k{font-family:"IBM Plex Sans Condensed","Helvetica Neue",Arial,sans-serif;letter-spacing:.09em;text-transform:uppercase}
+.wrap{padding:8px 12px 24px}
+.top{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--amber);padding:4px 0 6px;margin-bottom:8px}
+.top h1{font:600 15px/1 "IBM Plex Sans Condensed",sans-serif;letter-spacing:.2em;color:var(--amber);margin:0;text-transform:uppercase}
+.top .clock{margin-left:auto;color:var(--dim)}
+.badge{display:inline-block;padding:1px 7px;border:1px solid var(--line);font-size:11px}
+.badge.ok{color:var(--green);border-color:#164a32}.badge.warn{color:var(--yellow);border-color:#5a4a1f}.badge.bad{color:#000;background:var(--red);border-color:var(--red)}
+.strip{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:10px}
+.cell{background:var(--panel);padding:6px 9px}.cell .k{color:var(--dim);font-size:10.5px}.cell .v{font-size:19px;font-weight:600;margin-top:1px;white-space:nowrap}.cell .v.small{font-size:14px;margin-top:5px}
+.pos{color:var(--green)}.neg{color:var(--red)}.flat{color:var(--fg)}.dim{color:var(--dim)}.amber{color:var(--amber)}.cyan{color:var(--cyan)}
+h2{font-size:11px;color:var(--amber);margin:12px 0 4px;display:flex;gap:10px;align-items:baseline}
+h2 .n{color:var(--dim);letter-spacing:0}
+table{width:100%;border-collapse:collapse}th{color:var(--dim);font-weight:500;font-size:10.5px;text-align:left;padding:3px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:2px 6px;border-bottom:1px solid #111418;white-space:nowrap;vertical-align:middle}
+td.num,th.num{text-align:right}.book{color:var(--cyan)}.book.stale{color:var(--dim)}.up{color:var(--green)}.dn{color:var(--red)}
+.st{font-size:10.5px;letter-spacing:.04em}.st.edge{color:var(--green);font-weight:600}.st.disc{color:var(--yellow)}.st.blk{color:var(--dim)}
+.scroll{overflow-x:auto}.foot{color:var(--dim);margin-top:12px;font-size:11px}
+.flash{animation:fl .8s ease-out}@keyframes fl{from{background:#1e2a1a}to{background:transparent}}
+.prob{display:inline-block;min-width:44px;text-align:right}
+</style></head><body><div class="wrap">
+<div class="top"><h1>Janus</h1><span id="mode" class="badge">…</span><span id="lag" class="badge">…</span><span id="socks" class="badge">…</span><span class="clock" id="clock">—</span></div>
+<div class="strip" id="strip"></div>
+<h2>Live <span class="n" id="n-live"></span> <span class="dim" style="letter-spacing:0;text-transform:none">implied probability = best ask · K = Kalshi · PM = Polymarket · cost = cross-venue ask sum (raw) · all-in = lane's priced cost with fees</span></h2>
+<div class="scroll"><table id="live"><thead><tr><th>game</th><th>lg</th><th>outcome</th><th class="num">K bid</th><th class="num">K ask</th><th class="num">PM bid</th><th class="num">PM ask</th><th class="num">age</th><th class="num">cost</th><th class="num">all-in</th><th>status</th><th class="num">evals</th></tr></thead><tbody></tbody></table></div>
+<h2>Upcoming <span class="n" id="n-up"></span></h2>
+<div class="scroll"><table id="up"><thead><tr><th>start</th><th>in</th><th>game</th><th>lg</th><th>tier</th><th>outcome</th><th class="num">K ask</th><th class="num">PM ask</th><th class="num">cost</th><th>status</th></tr></thead><tbody></tbody></table></div>
+<h2>Bundles · last 24 h <span class="n" id="n-b"></span> <span class="dim" style="letter-spacing:0;text-transform:none">one row per execution that filled: first leg + hedge + residual</span></h2>
+<div class="scroll"><table id="bundles"><thead><tr><th>utc</th><th>game</th><th>lg</th><th class="num">req</th><th class="num">first leg</th><th class="num">hedge</th><th class="num">unhedged</th><th class="num">hedged in</th><th>kind</th><th class="num">p&amp;l</th><th>state</th></tr></thead><tbody></tbody></table></div>
+<div class="foot" id="foot">—</div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const f2=x=>x==null?'—':(+x).toFixed(2), f3=x=>x==null?'—':(+x).toFixed(3);
+const usd=x=>x==null?'—':((x<0?'-':'+')+'$'+Math.abs(+x).toFixed(2));
+const cls=x=>x==null?'dim':(x>0.0005?'pos':x<-0.0005?'neg':'flat');
+const t=ts=>ts?new Date(ts*1000).toISOString().slice(11,19)+'Z':'—';
+const ago=s=>s==null?'—':(s<60?s.toFixed(0)+'s':s<3600?(s/60).toFixed(0)+'m':(s/3600).toFixed(1)+'h');
+const inS=(start,now)=>{if(!start)return '—';const d=start-now;if(d<=0)return 'now';return d<3600?Math.round(d/60)+'m':(d/3600).toFixed(1)+'h';};
+const stcls=s=>!s?'blk':s.startsWith('PROFITABLE')?'edge':s==='DISCOVERED'?'disc':'blk';
+let prev={};
+function outcomeRows(g,now,live){
+  const rows=[];const oc=g.outcomes||{};const names=Object.keys(oc).sort();
+  // raw cross-venue cost for 2-outcome games: min over venue combos of ask(a@v1)+ask(b@v2), v1!=v2
+  let cost=null;
+  if(names.length===2){const a=oc[names[0]],b=oc[names[1]];
+    const ka=a.kalshi?.ask,pa=a.polymarket?.ask,kb=b.kalshi?.ask,pb=b.polymarket?.ask;
+    const c=[];if(ka!=null&&pb!=null)c.push(ka+pb);if(pa!=null&&kb!=null)c.push(pa+kb);if(c.length)cost=Math.min(...c);}
+  names.forEach((o,i)=>{const v=oc[o]||{};const k=v.kalshi||{},p=v.polymarket||{};
+    const age=Math.max(k.age_s??0,p.age_s??0);const stale=age>5;
+    const key=g.game_id+'|'+o;const sig=[k.ask,p.ask,k.bid,p.bid].join(',');const changed=prev[key]&&prev[key]!==sig;prev[key]=sig;
+    const first=i===0;
+    if(live){rows.push(`<tr class="${changed?'flash':''}"><td>${first?'<b>'+g.name+'</b>':''}</td><td class="dim">${first?g.league:''}</td><td>${o}</td>
+      <td class="num book ${stale?'stale':''}"><span class="prob">${f2(k.bid)}</span></td><td class="num book ${stale?'stale':''}"><span class="prob">${f2(k.ask)}</span></td>
+      <td class="num book ${stale?'stale':''}"><span class="prob">${f3(p.bid)}</span></td><td class="num book ${stale?'stale':''}"><span class="prob">${f3(p.ask)}</span></td>
+      <td class="num dim">${ago(age)}</td><td class="num ${first&&cost!=null?(cost<1?'up':'dn'):'dim'}">${first?f3(cost):''}</td>
+      <td class="num">${first?f3(g.cost):''}</td><td class="st ${first?stcls(g.status):''}">${first?(g.status||''):''}</td><td class="num dim">${first?g.evaluations:''}</td></tr>`);}
+    else{rows.push(`<tr><td>${first?t(g.start_utc):''}</td><td class="dim">${first?inS(g.start_utc,now):''}</td><td>${first?'<b>'+g.name+'</b>':''}</td><td class="dim">${first?g.league:''}</td><td class="dim">${first?g.tier:''}</td><td>${o}</td>
+      <td class="num book ${stale?'stale':''}">${f2(k.ask)}</td><td class="num book ${stale?'stale':''}">${f3(p.ask)}</td><td class="num ${first&&cost!=null?(cost<1?'up':'dn'):'dim'}">${first?f3(cost):''}</td><td class="st ${first?stcls(g.status):''}">${first?(g.status||''):''}</td></tr>`);}
+  });
+  return rows.join('');
+}
+async function board(){
+  try{const r=await fetch('/board.json',{cache:'no-store'});if(!r.ok)throw new Error(r.status);const b=await r.json();
+    const now=b.as_of;const games=b.games||[];
+    const live=games.filter(g=>g.tier==='live'||(g.start_utc&&g.start_utc<=now)).sort((a,b)=>(a.cost??9)-(b.cost??9));
+    const up=games.filter(g=>!live.includes(g)).sort((a,b)=>(a.start_utc??9e12)-(b.start_utc??9e12));
+    $('#live tbody').innerHTML=live.map(g=>outcomeRows(g,now,true)).join('')||'<tr><td colspan="12" class="dim">nothing in play</td></tr>';
+    $('#up tbody').innerHTML=up.map(g=>outcomeRows(g,now,false)).join('')||'<tr><td colspan="10" class="dim">nothing upcoming</td></tr>';
+    $('#n-live').textContent=live.length+' games';$('#n-up').textContent=up.length+' games';
+    $('#mode').textContent=b.mode+(b.arm_stale?' · '+b.arm_stale:'');$('#mode').className='badge '+(b.mode==='LIMITED_LIVE'&&!b.arm_stale?'ok':'warn');
+    $('#lag').textContent='loop '+(b.loop_lag_s??0).toFixed(1)+'s';$('#lag').className='badge '+(b.loop_lag_s<2?'ok':b.loop_lag_s<5?'warn':'bad');
+    const s=b.sockets||{};const ok=Object.values(s).every(x=>x.connected);$('#socks').textContent='K '+(s.kalshi?.connected?'up':'DOWN')+' · PM '+(s.polymarket?.connected?'up':'DOWN');$('#socks').className='badge '+(ok?'ok':'bad');
+    $('#clock').textContent=t(now)+' · '+new Date(now*1000).toLocaleTimeString('en-US',{timeZone:'America/Mexico_City',hour12:false})+' MX · data '+((Date.now()/1000-now).toFixed(0))+'s old';
+  }catch(e){$('#clock').textContent='board unavailable: '+e.message;}
+}
+async function pnl(){
+  try{const r=await fetch('/pnl.json',{cache:'no-store'});const p=await r.json();if(p.error)throw new Error(p.error);
+    const d=p.pnl_24h||{},a=p.pnl_all_time||{},fn=p.funnel_24h||{},op=p.open||{};
+    const tiles=[['realized 24h',usd(d.realized_usd),cls(d.realized_usd)],['cover-only 24h',usd(d.cover_usd),cls(d.cover_usd)],['realized all-time',usd(a.realized_usd),cls(a.realized_usd)],['cover-only all-time',usd(a.cover_usd),cls(a.cover_usd)],
+      ['bundles 24h',fn.first_leg_fills??'—','flat'],['covers 24h',fn.covers??'—','flat'],['attempts 24h',fn.attempts??'—','flat'],['open',(op.executions??0)+' exec · '+f2(op.unhedged_contracts)+' unh',(op.unhedged_contracts>1?'neg small':'flat small')]];
+    $('#strip').innerHTML=tiles.map(([k,v,c])=>`<div class="cell"><div class="k">${k}</div><div class="v ${c}">${v}</div></div>`).join('');
+    const rows=(p.bundles||[]).map(b=>`<tr><td class="dim">${t(b.started_utc)}</td><td><b>${b.name}</b></td><td class="dim">${b.league}</td><td class="num">${b.requested}</td>
+      <td class="num">${f2(b.first.contracts)} @ ${f3(b.first.price)}</td><td class="num">${f2(b.hedge.contracts)} @ ${f3(b.hedge.price)}</td><td class="num ${b.unhedged>=1?'neg':'dim'}">${f2(b.unhedged)}</td>
+      <td class="num dim">${b.hedged_in_s==null?'—':b.hedged_in_s+'s'}</td><td class="st ${b.kind==='COVER'?'edge':b.kind==='PARTIAL'?'disc':'blk'}">${b.kind}</td><td class="num ${cls(b.pnl_usd)}">${b.pnl_usd==null?'pending':usd(b.pnl_usd)}</td><td class="st blk">${b.state}</td></tr>`);
+    $('#bundles tbody').innerHTML=rows.join('')||'<tr><td colspan="11" class="dim">no filled bundle in 24 h</td></tr>';$('#n-b').textContent=rows.length+' bundles';
+    $('#foot').textContent='all-time starts '+new Date(p.all_time_since_utc*1000).toISOString().slice(0,10)+' · attempts by state: '+Object.entries(fn.by_state||{}).map(([k,v])=>k+' '+v).join(', ');
+  }catch(e){$('#strip').innerHTML='<div class="cell"><div class="k">p&amp;l</div><div class="v neg">unavailable: '+e.message+'</div></div>';}
+}
+board();pnl();setInterval(board,1000);setInterval(pnl,5000);
+</script></body></html>

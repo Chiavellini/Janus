@@ -102,7 +102,7 @@ from nodes.stream_polymarket.stream import PolymarketStream  # noqa: E402
 from nodes.venue_polymarket.books import PM_CLOB, pm_book  # noqa: E402
 from ops import run_index  # noqa: E402
 
-from kernel.paths import DB  # noqa: E402,F401
+from kernel.paths import DATA_ROOT, DB  # noqa: E402,F401
 QUANTITIES = (5.0, 10.0, 25.0, 100.0)
 #: L79: the frontier report is solved at most once per game per period (every rung of an epoch
 #: shares it); sizing itself is gated in Supervisor._worth_sizing.
@@ -134,6 +134,14 @@ class Supervised:
     last_sizing_executable: bool | None = None
     last_frontier_utc: float = 0.0
     sizing_skipped: int = 0
+    #: The board (ops/box/board_server.py): slate tier, start time, the last evaluation's all-in
+    #: cost and status, refreshed by _on_update; written every second by write_board().
+    tier: str = ""
+    start_utc: float | None = None
+    league: str = ""
+    last_status: str = ""
+    last_cost: float | None = None
+    last_eval_utc: float = 0.0
 
 
 @dataclass
@@ -370,6 +378,7 @@ class Supervisor:
                 fingerprint = _execution_spec(spec)
                 if current.execution_spec == fingerprint:
                     current.poller.min_eval_interval_s = eval_interval_for(spec.get("tier"), default=EVAL_INTERVAL_S)
+                    current.tier = str(spec.get("tier") or "")
                     continue
                 # Fees, token ids, order minima and settlement proof are executable state, not
                 # display metadata.  A discovery refresh that changes any of them replaces the
@@ -405,7 +414,8 @@ class Supervisor:
                 continue
             sup = Supervised(p, spec["short_name"], time.time(),
                              tuple(p.market_ids("kalshi")), tuple(p.market_ids("polymarket")),
-                             fee_params=dict(spec["fee_params"]), execution_spec=_execution_spec(spec))
+                             fee_params=dict(spec["fee_params"]), execution_spec=_execution_spec(spec),
+                             tier=str(spec.get("tier") or ""), start_utc=spec.get("start_utc"), league=spec["league"])
             cb = self._on_update(gid)
             for venue, market_id, side, rep in p.registrations():
                 if venue == "kalshi":
@@ -447,6 +457,8 @@ class Supervisor:
                 try:
                     rec = self._record(sup, ev, dispatch=not sized_live)
                     evaluated.append((ev, rec))
+                    if not evaluated[:-1] or (rec.cost is not None and (sup.last_cost is None or rec.cost < sup.last_cost)):
+                        sup.last_status, sup.last_cost, sup.last_eval_utc = rec.status.value, rec.cost, ev.evaluated_utc
                 except Exception as exc:  # noqa: BLE001 -- a record bug must never reach the socket loop
                     failed = True
                     # The callback runs inside the venue socket's receive loop. An exception here
@@ -649,6 +661,53 @@ class Supervisor:
             print(f"[arm] STALE {reason}" if reason else "[arm] override matches again; real orders resume", flush=True)
         self.arm_stale = reason
         return reason
+
+    board_path: Path | None = None
+    board_written: int = 0
+
+    def board(self, now: float | None = None) -> dict:
+        """What the box is watching, this second: every poller's books (best bid/ask per outcome
+        per venue, age, replica state), the last evaluation's all-in cost and status, tier, start,
+        plus the sockets and the loop. Read by ops/box/board_server.py for the terminal page."""
+        t = time.time() if now is None else now
+        games = []
+        for gid, sup in self.live.items():
+            p = sup.poller
+            outcomes = {}
+            for (key, outcome), rep in p.replicas.items():
+                venue = {"kalshi_no": "kalshi_no", "polymarket_no": "polymarket_no"}.get(key, key)
+                bid = max(rep.bids) if rep.bids else None
+                ask = min(rep.asks) if rep.asks else None
+                outcomes.setdefault(outcome, {})[venue] = {
+                    "bid": bid, "ask": ask, "bid_size": rep.bids.get(bid) if bid is not None else None,
+                    "ask_size": rep.asks.get(ask) if ask is not None else None,
+                    "state": rep.state.value, "age_s": round(t - rep.as_of(), 1) if rep.as_of() else None, "market": rep.market_id}
+            games.append({"game_id": gid, "name": sup.short_name, "league": sup.league or p.league, "tier": sup.tier,
+                          "start_utc": sup.start_utc, "poller": p.state.value, "halt": p.halt,
+                          "status": sup.last_status, "cost": sup.last_cost, "eval_age_s": round(t - sup.last_eval_utc, 1) if sup.last_eval_utc else None,
+                          "evaluations": sup.evaluations, "outcomes": outcomes})
+        socks = {}
+        for name, st_ in (("kalshi", self.ks), ("polymarket", self.ps)):
+            if st_ is not None:
+                st = st_.stats()
+                socks[name] = {"connected": st.get("connected"), "frames": st.get("frames"), "age_s": st.get("age_s"), "errors": st.get("errors")}
+        return {"as_of": t, "mode": self.mode.value, "caps": dict(self.caps), "arm_stale": self.arm_stale,
+                "loop_lag_s": round(self.loop_lag_max_s, 3), "stalled": self.stalled, "blocked": len(self.blocked),
+                "sockets": socks, "games": games}
+
+    def write_board(self, now: float | None = None) -> None:
+        """Atomic: the reader never sees a partial file."""
+        if self.board_path is None:
+            return
+        try:
+            self.board_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = self.board_path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(self.board(now), separators=(",", ":"), default=str))
+            os.replace(tmp, self.board_path)
+            self.board_written += 1
+        except Exception as exc:  # noqa: BLE001 -- the board is a display, never a reason to stop
+            if self.board_written == 0:
+                print(f"  [board] write failed: {type(exc).__name__}: {exc}", flush=True)
 
     def data_free_bytes(self) -> int | None:
         """Free bytes on the volume holding the database (the data root), None when unreadable."""
@@ -1269,6 +1328,7 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
     guard_period = float(getattr(getattr(sup.limits, "protect", None), "guard_period_s", 30.0) or 30.0)
     try:
         while not _STOP:
+            sup.write_board()                     # the board: one small JSON a second for the terminal page
             if sup.reprotect_fast:
                 await sup.fast_reprotect_tick()       # L76: a naked position is retried in seconds
             if sup.guard is not None and time.time() - last_guard > guard_period:
@@ -1407,6 +1467,8 @@ def main() -> int:
                          "frame days older than this many days, from a worker thread; evidence tables are never touched; "
                          "0 disables")
     ap.add_argument("--retain-period", type=float, default=900.0, help="seconds between retention passes")
+    ap.add_argument("--board", type=Path, default=DATA_ROOT / "board" / "board.json",
+                    help="the one-second board snapshot for ops/box/board_server.py; '' disables")
     ap.add_argument("--mode", default="SHADOW_LIVE",
                     help="OFFLINE_REPLAY | SHADOW_LIVE | PAPER_EXECUTION | DEMO_EXECUTION | LIMITED_LIVE | PRODUCTION; "
                          "resolved once by nodes/risk.gate and never escalated")
@@ -1523,6 +1585,7 @@ def main() -> int:
         sup.ps.capture = FrameWriter("polymarket", a.frames_root)
     sup.retain_days = max(0, int(a.retain_days))
     sup.retain_period_s = float(a.retain_period)
+    sup.board_path = Path(a.board) if str(a.board) else None
 
     status, code = "OK", 0
     try:

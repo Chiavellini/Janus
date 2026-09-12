@@ -57,6 +57,11 @@ Full suite green. Expected steady state after release: ~1 GB/day database, ~7 GB
 
 ## Immediate next step
 
+**The live board is on the branch, not deployed.** The lane writes `board/board.json` every second
+(every poller's books, last evaluation, tier, start); `janus-board.service` serves it with the
+bundles/P&L query on 127.0.0.1:8787; `bash ops/box/board.sh` opens an SSM tunnel and the page.
+Paste the branch head (the release installs and starts the unit), then `bash ops/box/board.sh`.
+
 Released 2026-09-12 05:20Z: `cf9770b` (L77 first-leg confirmation, L79–L81 loop waste, L83 collateral
 ceiling; orjson installed). Latch cleared by the operator 05:20Z; lane LIMITED_LIVE at 25 / $30 / $500,
 zero refusals. First sample: 28 % CPU and 0.3 s lag vs 79 % and 1.8 s. Owed: the evening-slate sample

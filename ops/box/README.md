@@ -19,3 +19,5 @@ The box is in Mexico since 2026-09-07 (`mx-central-1`, `i-0a8c073c72dcdae11`; Po
 The contract is `ops/ASHBURN_SPORTS_RUNBOOK.md`.
 
 `python3 ops/launchpad.py` — the launchpad: one read-only snapshot (`launchpad_extract.py` sent on stdin through run.sh, compressed under SSM's 24 KB output cap) rendered as a dark single page under `data/launchpad/`; `--every 300` refreshes, `--from FILE` renders a saved snapshot.
+
+`bash ops/box/board.sh` — the board, live: an SSM port-forward to the box's loopback board service (`board_server.py`, unit `janus-board.service`, installed by the release) and the page at http://localhost:8787 — P&L strip, the games being polled with both books' best bid/ask refreshed every second, upcoming games, and one row per filled bundle.

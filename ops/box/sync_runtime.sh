@@ -20,6 +20,8 @@ chmod 700 /srv/janus/redemptions /srv/janus/release-audit/L64
 systemctl daemon-reload
 systemctl restart janus-creds.service
 systemctl enable --now janus-pm-redeem.timer
-echo "redemption_runtime=0.9.0 timer=$(systemctl is-active janus-pm-redeem.timer) creds=$(systemctl is-active janus-creds.service)"
+systemctl enable --now janus-board.service
+systemctl restart janus-board.service
+echo "redemption_runtime=0.9.0 timer=$(systemctl is-active janus-pm-redeem.timer) creds=$(systemctl is-active janus-creds.service) board=$(systemctl is-active janus-board.service)"
 EOS
 bash "$HERE/run.sh" "$REMOTE"
