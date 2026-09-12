@@ -2,9 +2,33 @@
 
 *An opinion, not a record. Overwrite this file; never append to it and never create a second one.*
 
-Updated 2026-09-11 21:40Z after the F21 release.
+Updated 2026-09-12 06:30Z after the board rework.
 
 ## Current state
+
+**kill/live is latched since 2026-09-12 05:52:54Z, two seconds after the operator's paste of `6425554`
+restarted the lane.** Not a new incident: the guard re-found the LAA @ WSH overfill (order `0429ef24…`,
+25 requested, 32.14 filled, execution released) because nothing acknowledges it, and its "already
+said" set is in-memory, so every restart latches again. The operator had cleared the same latch by hand
+at 05:20Z. While latched the lane kept selecting sizes and refusing them: SAITOH1 V HONG1 was chosen at
+25 contracts, $0.28–0.54 net, eight times between 06:00Z and 06:20Z, each `[risk] refused ...:
+KILL_SWITCH active: live`. Every future paste re-latches until the overfill is acknowledged through
+`nodes/execution/overfill_ack.py` (a proposal covering all ten real overfilled orders, five already rows
+1–5; frozen venue-activity evidence committed as the source; the operator's confirm). Until then the
+message after every paste ends with the hand clear.
+
+**The board (`a65c592`, on the branch, not deployed):** one row per game (the outcome rows read as extra
+games), raw cost for three-way markets, the cover-only tiles gone. Paste, then clear the latch again.
+
+**Entry pricing, 24 h to 06:20Z:** 323,757 evaluations; raw ask sum under 1.00 in 29,918; all-in under
+1.00 in 2,377; return ≥ 1 % in 1,488 rows (38 events, 1,210 sizing selections), 0.5–1 % in 279,
+0.25–0.5 % in 159. The gap between raw and all-in is the two venues' taker fees (implied per-venue
+coefficient 6–6.7 % of p(1−p): 2.5–3 c a contract on both legs near 0.50), not the hurdle. Lowering
+`EXECUTION_MIN_LOCKED_RETURN` 1 % → 0.5 % adds about a fifth more qualifying rows and needs
+`min_net_profit_usd` 0.10 → 0.05 to matter at 25 contracts (0.5 % of ~$12 is $0.06); both are the
+operator's GATE row, neither is on the branch.
+
+### Earlier state (2026-09-11 21:40Z)
 
 **F21 is live.** The operator pasted `release.sh 3a05bc1` at 21:29Z: the box runs `3a05bc1`, the
 override is re-signed at 25 contracts / $30 per order / $500 a day (expires 2026-09-18T21:29Z), the
