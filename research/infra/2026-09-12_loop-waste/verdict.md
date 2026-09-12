@@ -31,4 +31,18 @@ sample is still to be taken.
 `measure.py`: L51's 10k-frame prefix per venue through a real Supervisor with LIMITED_LIVE sizing on
 the 234-event slate exported from the box (`/Volumes/Kilos/janus/research/l78-slate-20260909T04`).
 Baseline (`27c4549`): median 23.079 CPU s for 20,000 frames, 11,884 evaluations, 2,234 rows,
-digests stable across runs. Used as the paired instrument by L79 (−56 %).
+digests stable across runs. Used as the paired instrument by L79–L81. Median CPU seconds for the same 20,000 frames and
+234-poller slate, evaluation rows and selections byte-identical throughout (digests
+`9f41923b8cf055a1` / `4f53cda18c2baa0c`):
+
+| tree | median CPU s | vs baseline |
+|---|---|---|
+| baseline `27c4549` | 23.079 | — |
+| + L79 (sizing gate) | 10.109 | −56 % |
+| + L81 only (ladder memo etc.; the instrument cannot see decode or capture) | 10.530 | within noise |
+| + L80 + L81 (socket pulse) | 3.798 | −84 % |
+
+A profiled offline run after L79 (`--profile`) attributed the remaining time to the heartbeat
+sweep (~30 % at this slate: `handle` self 16.7 %, `replica.heartbeat` 11.4 %, `_beat` 7.1 %), the
+Kalshi identity scan and sort (~6 %), and pricing (`price_combination`, `assert_price_range`,
+`params_for`, `_fills_for`, ~15 %). The live confirmation of each is L82.

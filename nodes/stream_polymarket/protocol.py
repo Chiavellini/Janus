@@ -44,6 +44,10 @@ class AssetBook:
     bids: dict[float, float] = field(default_factory=dict)
     asks: dict[float, float] = field(default_factory=dict)
     tick_size: float | None = None
+    #: L81: the sorted ladders, rebuilt only when a fold changed a side (L78: `ladders()` sorted both
+    #: dicts on every price_change entry, ~100/s, with no memo). Keyed by the unsorted items in
+    #: identity, like the Kalshi book, so a direct edit is observed too.
+    _ladder_cache: dict = field(default_factory=dict, init=False, repr=False, compare=False)
 
     def apply_book(self, ev: dict) -> None:
         self.bids = self._levels(ev.get("bids"))
@@ -84,9 +88,20 @@ class AssetBook:
     def best_ask(self) -> float | None:
         return min(self.asks) if self.asks else None
 
+    def _sorted(self, side: str, reverse: bool) -> tuple:
+        d = getattr(self, side)
+        items = tuple(d.items())
+        cached = self._ladder_cache.get(side)
+        if (cached is None or len(cached[0]) != len(items)
+                or any(p is not cp or s is not cs for (p, s), (cp, cs) in zip(items, cached[0]))):
+            cached = (items, tuple((p, d[p]) for p in sorted(d, reverse=reverse)))
+            self._ladder_cache[side] = cached
+        return cached[1]
+
     def ladders(self) -> tuple[list, list]:
-        return ([(p, self.bids[p]) for p in sorted(self.bids, reverse=True)],
-                [(p, self.asks[p]) for p in sorted(self.asks)])
+        """(bids desc, asks asc) as fresh lists (a consumer may mutate them); sorted only when the
+        side changed since the last call."""
+        return (list(self._sorted("bids", True)), list(self._sorted("asks", False)))
 
     def agrees_with(self, best_bid, best_ask) -> bool:
         """Does the local top of book match what the venue just claimed it is?

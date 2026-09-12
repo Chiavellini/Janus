@@ -1,0 +1,48 @@
+{
+ "label": "after_l80",
+ "capture": "/Volumes/Kilos/janus/research/l51-capture-7q8lj2ab/level-3-repeat-0",
+ "slate": "/Volumes/Kilos/janus/research/l78-slate-20260909T04/slate.sqlite",
+ "runs": [
+  {
+   "cpu_s": 3.786,
+   "wall_s": 3.808,
+   "frames": 20000,
+   "pollers": 234,
+   "evaluations": 11884,
+   "evaluation_rows": 2234,
+   "sizing_skipped": 2957,
+   "sizing_rows": 0,
+   "selections": 0,
+   "rows_digest": "9f41923b8cf055a1",
+   "selections_digest": "4f53cda18c2baa0c"
+  },
+  {
+   "cpu_s": 3.827,
+   "wall_s": 3.848,
+   "frames": 20000,
+   "pollers": 234,
+   "evaluations": 11884,
+   "evaluation_rows": 2234,
+   "sizing_skipped": 2957,
+   "sizing_rows": 0,
+   "selections": 0,
+   "rows_digest": "9f41923b8cf055a1",
+   "selections_digest": "4f53cda18c2baa0c"
+  },
+  {
+   "cpu_s": 3.798,
+   "wall_s": 3.808,
+   "frames": 20000,
+   "pollers": 234,
+   "evaluations": 11884,
+   "evaluation_rows": 2234,
+   "sizing_skipped": 2957,
+   "sizing_rows": 0,
+   "selections": 0,
+   "rows_digest": "9f41923b8cf055a1",
+   "selections_digest": "4f53cda18c2baa0c"
+  }
+ ],
+ "median_cpu_s": 3.798,
+ "digests_stable": true
+}

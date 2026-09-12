@@ -250,3 +250,57 @@ def test_a_checked_snapshot_skips_the_second_gate_but_never_the_first():
     r.connecting(T); r.subscribed(T); r.snapshot_in([(0.4, 10)], [(0.5, 10)], seq=1, now=T)
     assert r.check(T) is None and r.snapshot(T, checked=True) is not None
     assert r.snapshot(T + 100) is None, "stale: the gate still refuses when not pre-checked"
+
+
+def test_a_matching_ladder_key_keeps_the_dicts_and_any_other_writer_resets_it():
+    """L81: the Kalshi stream hands project_in the identity of the memoized ladders; the same key
+    means the same ladders, so the dicts are not rebuilt. Anything else that touches the book
+    (a snapshot, a delta, a reconcile, an invalidation) forgets the key."""
+    from nodes.book_replica.replica import BookReplica, Fault
+    r = BookReplica(venue="kalshi", market_id="m", verification="own_sequence")
+    r.connecting(T); r.subscribed(T); r.snapshot_in([(0.4, 10)], [(0.5, 10)], seq=1, now=T)
+    assert r.project_in([(0.41, 5)], [(0.6, 5)], seq=2, now=T + 1, ladder_key=("a", "b")) is None
+    b1 = r.bids
+    assert r.bids == {0.41: 5.0} and r.seq == 2
+    # same key: the dicts are the same objects, seq and time still advance
+    assert r.project_in([(0.99, 1)], [(0.99, 1)], seq=3, now=T + 2, ladder_key=("a", "b")) is None
+    assert r.bids is b1 and r.bids == {0.41: 5.0} and r.seq == 3 and r.updated_utc == T + 2
+    # a different asks identity rebuilds only the asks; the bids dict is kept (per side)
+    r.project_in([(0.42, 7)], [(0.7, 7)], seq=4, now=T + 3, ladder_key=("a", "c"))
+    assert r.bids is b1 and r.asks == {0.7: 7.0}
+    r.project_in([(0.42, 7)], [(0.7, 7)], seq=5, now=T + 3, ladder_key=("z", "c"))
+    assert r.bids == {0.42: 7.0} and r.seq == 5
+    # no key: always rebuilds and forgets
+    r.project_in([(0.43, 8)], [(0.8, 8)], seq=6, now=T + 4)
+    assert r.bids == {0.43: 8.0} and r._ladder_key is None
+    # a snapshot resets the key, so the next same-key project_in rebuilds
+    r.project_in([(0.44, 9)], [(0.9, 9)], seq=7, now=T + 5, ladder_key=("k", "k"))
+    r.snapshot_in([(0.1, 1)], [(0.2, 1)], seq=8, now=T + 6)
+    r.project_in([(0.45, 3)], [(0.55, 3)], seq=9, now=T + 7, ladder_key=("k", "k"))
+    assert r.bids == {0.45: 3.0}
+    r._invalidate(Fault.SEQ_GAP)
+    assert r._ladder_key is None
+
+
+def test_a_socket_pulse_is_every_replica_s_heartbeat_and_stops_with_the_socket():
+    """L80: the socket's last frame time, read by every replica on it, replaces the per-frame
+    sweep. A quiet book stays alive while the socket is; a socket that stops advancing lets each
+    replica time out on its own bound; a replica's own heartbeat still counts."""
+    from nodes.book_replica.replica import BookReplica, Fault, SocketPulse
+    pulse = SocketPulse()
+    a, b = BookReplica("kalshi", "A"), BookReplica("kalshi", "B")
+    a.pulse = b.pulse = pulse
+    for r in (a, b):
+        r.connecting(T); r.subscribed(T); r.snapshot_in([(0.4, 1)], [(0.5, 1)], seq=1, now=T)
+    pulse.beat(T + 29)
+    assert a.heartbeat_utc == T + 29 and b.heartbeat_utc == T + 29 and a.check(T + 29, max_age_s=60) is None
+    pulse.beat(T + 10)                                   # never goes backwards
+    assert a.heartbeat_utc == T + 29
+    a.heartbeat(T + 40)                                  # an own beat is still honoured
+    assert a.heartbeat_utc == T + 40 and b.heartbeat_utc == T + 29
+    assert b.check(T + 29 + b.heartbeat_timeout_s + 1, max_age_s=1e9) is Fault.HEARTBEAT_LOST, "the pulse stopped: the replica times out"
+    late = BookReplica("kalshi", "C"); late.pulse = pulse
+    late.connecting(T + 50); late.subscribed(T + 50)
+    assert late.heartbeat_utc == T + 50, "a replica registered later starts from its own connect time"
+    pulse.beat(T + 60)
+    assert late.heartbeat_utc == T + 60 and a.as_of() == T + 60

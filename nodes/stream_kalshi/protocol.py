@@ -59,6 +59,9 @@ class _QuotedLadder:
     levels: tuple[tuple[float, float], ...]
     bids: tuple[Quote, ...]
     asks: tuple[Quote, ...] | None = None
+    #: (price, size) pairs of `bids` / `asks`, built once per ladder (L81).
+    bid_pairs: tuple | None = None
+    ask_pairs: tuple | None = None
 
 
 @dataclass
@@ -96,17 +99,20 @@ class TickerBook:
         self.seq = seq
 
     def _quoted_side(self, side: str) -> _QuotedLadder:
-        levels = tuple(sorted(getattr(self, side).items(), reverse=True))
+        # The cache key is the ladder's items IN INSERTION ORDER, compared by identity: prices and
+        # sizes are immutable numbers, so the exact objects in the exact order mean the exact
+        # ladder, and -0.0 / 0.0 (equal, differently rendered) never alias. A direct dictionary
+        # edit, a reassignment, a partial snapshot parse: each changes an object or the order and is
+        # observed. L81 (2026-09-12): the key used to be the SORTED items, so every call sorted
+        # both ladders even on a hit (L78: `_quoted_side` alone was ~3 % of the loop); now the sort
+        # runs only when the ladder changed.
+        items = tuple(getattr(self, side).items())
         cached = self._quoted_ladders.get(side)
-        # Prices and sizes are immutable numbers. Reuse only the exact objects in
-        # the exact order, never a seq/time assumption or numeric-equality key:
-        # -0.0 and 0.0, for example, compare equal but must retain their rendering.
-        # Recomputing this key also observes direct dictionary edits and a partial
-        # snapshot parse failure, so neither can leave a stale derived ladder.
-        if (cached is None or len(cached.levels) != len(levels)
+        if (cached is None or len(cached.levels) != len(items)
                 or any(p is not old_p or s is not old_s
-                       for (p, s), (old_p, old_s) in zip(levels, cached.levels))):
-            cached = _QuotedLadder(levels, tuple(Quote(p, s) for p, s in levels))
+                       for (p, s), (old_p, old_s) in zip(items, cached.levels))):
+            levels = tuple(sorted(items, reverse=True))
+            cached = _QuotedLadder(items, tuple(Quote(p, s) for p, s in levels))
             self._quoted_ladders[side] = cached
         return cached
 
@@ -116,8 +122,17 @@ class TickerBook:
         own, other = self._quoted_side(own_side), self._quoted_side(other_side)
         if other.asks is None:
             other.asks = fold_complement_bids(other.bids)
+            other.ask_pairs = tuple((q.price, q.size) for q in other.asks)
+        if own.bid_pairs is None:
+            own.bid_pairs = tuple((q.price, q.size) for q in own.bids)
         # Never expose the memoized containers: a consumer may mutate its lists.
-        return ([(q.price, q.size) for q in own.bids], [(q.price, q.size) for q in other.asks])
+        return (list(own.bid_pairs), list(other.ask_pairs))
+
+    def ladder_key(self, outcome: str = "yes") -> tuple:
+        """Identity of the two memoized ladders behind `project(outcome)`: equal keys mean the
+        projection is byte-identical to the last one (L81: a replica may skip its rebuild)."""
+        own_side, other_side = ("yes", "no") if outcome == "yes" else ("no", "yes")
+        return (id(self._quoted_side(own_side)), id(self._quoted_side(other_side)))
 
 
 @dataclass(frozen=True)

@@ -116,3 +116,25 @@ def test_prune_days_removes_only_old_day_directories_of_that_venue(tmp_path: Pat
     assert prune_days(tmp_path, "missing", max_age_days=7, now=NOW) == []
     with pytest.raises(ValueError, match="at least 1"):
         prune_days(tmp_path, "kalshi", max_age_days=0, now=NOW)
+
+
+def test_the_writer_thread_keeps_order_rotates_and_counts_drops(tmp_path: Path):
+    """L81: write() enqueues; a thread encodes and gzips. Order, hourly rotation and the
+    round-trip are unchanged; a full queue drops and counts instead of blocking the socket."""
+    w = FrameWriter("kalshi", tmp_path, enforce_volume=False)
+    for i in range(500):
+        w.write(f'{{"i":{i}}}', received_utc=T0 + i * 10, received_mono=1.0 + i)   # crosses an hour boundary
+    w.close()
+    files = capture_files(tmp_path, "kalshi", T0, T0 + 6000)
+    assert [f.name for f in files] == ["08.jsonl.gz", "09.jsonl.gz"] and w.frames == 500 and w.dropped == 0
+    got = [f.raw for p in files for f in read_frames(p)]
+    assert got == [f'{{"i":{i}}}' for i in range(500)]
+    tiny = FrameWriter("polymarket", tmp_path, enforce_volume=False, maxsize=1, threaded=True)
+    tiny._q.put(("hold", T0, 1.0))                     # the queue holds one item the thread may not have taken yet
+    for i in range(50):
+        tiny.write("x", received_utc=T0, received_mono=1.0)
+    tiny.close()
+    assert tiny.frames + tiny.dropped == 51 and tiny.dropped >= 1
+    sync = FrameWriter("kalshi", tmp_path / "s", enforce_volume=False, threaded=False)
+    sync.write("a", received_utc=T0, received_mono=1.0); sync.close()
+    assert sync.frames == 1 and sync._q is None

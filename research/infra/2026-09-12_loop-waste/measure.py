@@ -32,6 +32,7 @@ from grids.live_stream.grid import Supervisor  # noqa: E402
 
 CAPTURE = Path("/Volumes/Kilos/janus/research/l51-capture-7q8lj2ab/level-3-repeat-0")
 SLATE = Path("/Volumes/Kilos/janus/research/l78-slate-20260909T04/slate.sqlite")
+PROFILE = False
 DAY, HOUR = "2026-09-09", "04"
 
 
@@ -80,6 +81,10 @@ def run_once(specs, timeline, kf, pf) -> dict:
         import io, contextlib
         merged = sorted(kf + pf, key=lambda f: f.received_utc)
         t0 = time.process_time(); w0 = time.perf_counter()
+        prof = None
+        if PROFILE:
+            import cProfile
+            prof = cProfile.Profile(); prof.enable()
         with contextlib.redirect_stdout(io.StringIO()):
             for fr in merged:
                 if fr.venue == "kalshi":
@@ -88,6 +93,13 @@ def run_once(specs, timeline, kf, pf) -> dict:
                     sup.ps.handle(fr.raw, now=fr.received_utc, mono=fr.received_mono)
             store.commit()
         cpu = time.process_time() - t0; wall = time.perf_counter() - w0
+        if prof is not None:
+            import pstats
+            prof.disable(); st = pstats.Stats(prof)
+            top = sorted(st.stats.items(), key=lambda kv: kv[1][2], reverse=True)[:30]
+            print("== offline self-time top 30 (of %.1f s)" % st.total_tt, file=sys.stderr)
+            for k, v in top:
+                print(f"{100 * v[2] / st.total_tt:5.1f}%  {v[1]:>8}  {Path(k[0]).name}:{k[1]}:{k[2]}", file=sys.stderr)
         rows = store.con.execute("SELECT game_id, quantity, seen_ts, status, cost, gross, fees, return_locked, blocked_by "
                                  "FROM stream_evaluations ORDER BY seen_ts, game_id, quantity").fetchall()
         norm = [tuple(round(x, 6) if isinstance(x, float) else x for x in r) for r in rows]
@@ -108,7 +120,10 @@ def main() -> int:
     ap.add_argument("--runs", type=int, default=3)
     ap.add_argument("--frames", type=int, default=10000)
     ap.add_argument("--out", type=Path, default=Path(__file__).resolve().parent)
+    ap.add_argument("--profile", action="store_true")
     a = ap.parse_args()
+    global PROFILE
+    PROFILE = a.profile
     slate = TupleStore(SLATE, enforce_volume=False)
     specs, timeline = load_specs(slate), load_tier_timeline(slate)
     slate.close()

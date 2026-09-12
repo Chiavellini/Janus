@@ -339,3 +339,30 @@ def test_a_batched_price_change_frame_is_one_clock_sample():
     ch["timestamp"] = str(int((T + 1 - 0.03) * 1000))
     s.handle(ch, now=T + 1)
     assert s.clock.stats()["samples"] == 1
+
+
+def test_ladders_memo_matches_a_fresh_sort_through_every_kind_of_mutation():
+    """L81: `ladders()` sorted both dicts on every price_change entry. The memo is keyed by the
+    dicts' items in identity, so direct edits, reassignments and folds are all observed, and the
+    caller still gets fresh lists."""
+    import random
+    from nodes.stream_polymarket.protocol import AssetBook
+    rng = random.Random(81)
+    b = AssetBook()
+    for i in range(1500):
+        side = rng.choice(("bids", "asks"))
+        price = rng.randrange(101) / 100
+        if i % 13 == 0:
+            b.apply_book({"bids": [{"price": str(rng.randrange(1, 100) / 100), "size": str(rng.randrange(1, 50))} for _ in range(5)],
+                          "asks": [{"price": str(rng.randrange(1, 100) / 100), "size": str(rng.randrange(1, 50))} for _ in range(5)]})
+        elif i % 5 == 0:
+            b.apply_change({"side": "BUY" if side == "bids" else "SELL", "price": str(price), "size": "0"})
+        elif i % 11 == 0:
+            setattr(b, side, {rng.randrange(101) / 100: float(rng.randrange(1, 100)) for _ in range(7)})
+        else:
+            getattr(b, side)[price] = float(rng.randrange(1, 1000))
+        want = ([(p, b.bids[p]) for p in sorted(b.bids, reverse=True)], [(p, b.asks[p]) for p in sorted(b.asks)])
+        got = b.ladders()
+        assert got == want
+        got[0].clear(); got[1].append((0.5, 1.0))
+        assert b.ladders() == want, "caller mutation must not poison the memo"

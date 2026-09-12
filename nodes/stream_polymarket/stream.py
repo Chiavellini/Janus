@@ -31,8 +31,9 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from kernel.redact import brief_error
+from kernel import fastjson  # noqa: E402
 from nodes.book_replica.clock import ClockMonitor
-from nodes.book_replica.replica import BookReplica, Fault
+from nodes.book_replica.replica import BookReplica, Fault, SocketPulse
 from nodes.stream_polymarket.protocol import (AssetBook, PING, PONG, events_in, operation_frame,
                                               parse_event, subscribe_frame)
 
@@ -59,6 +60,8 @@ class PolymarketStream:
     resubscribe_needed: bool = False
     #: A `nodes/capture.FrameWriter`, or None. Raw frames go here before they are parsed.
     capture: Any = None
+    #: L80: the socket's liveness, one write per frame, read by every replica registered here.
+    pulse: SocketPulse = field(default_factory=SocketPulse)
     #: Assets whose local book drifted from the venue's claimed top. The run loop unsubscribes
     #: and resubscribes each one, which is the only way this channel yields a fresh `book`.
     #: Setting `resubscribe_needed` alone did nothing here: the wanted set was unchanged, so
@@ -80,6 +83,7 @@ class PolymarketStream:
     def register(self, asset_id: str, replica: BookReplica,
                  on_update: Callable[[str, float], None] | None = None) -> None:
         self.regs.setdefault(asset_id, []).append(Registration(replica, on_update))
+        replica.pulse = self.pulse
         self.resubscribe_needed = True
 
     def unregister(self, asset_id: str) -> None:
@@ -107,7 +111,7 @@ class PolymarketStream:
                 self._beat(t)
                 return ["pong"]
             try:
-                raw = json.loads(raw)
+                raw = fastjson.loads(raw)
             except ValueError:
                 self.errors += 1
                 self.last_error = "non-JSON frame"
@@ -175,9 +179,7 @@ class PolymarketStream:
         return kinds
 
     def _beat(self, t: float) -> None:
-        for regs in self.regs.values():
-            for reg in regs:
-                reg.replica.heartbeat(t)
+        self.pulse.beat(t)                       # L80: one write per frame; replicas read it
 
     #: Filled by the supervisor when a `reconcile.Reconciler` is attached; reported in stats().
     reconciler: Any = None
@@ -195,8 +197,8 @@ class PolymarketStream:
     async def run(self, stop: asyncio.Event, *, connect=None, recv_timeout: float = 30.0,
                   on_state: Callable[[str, str], None] | None = None) -> None:
         import websockets
-        connect = connect or (lambda url: websockets.connect(url, ping_interval=None,
-                                                             max_size=2 ** 23))
+        connect = connect or (lambda url: websockets.connect(url, ping_interval=None, max_size=2 ** 23,
+                                                             compression=None, max_queue=64))   # L81
         backoff = 1.0
         while not stop.is_set():
             if not self.regs:

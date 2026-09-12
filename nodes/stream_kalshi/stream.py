@@ -35,8 +35,9 @@ from pathlib import Path
 from typing import Any, Callable
 
 from kernel.redact import brief_error
+from kernel import fastjson  # noqa: E402
 from nodes.book_replica.clock import ClockMonitor
-from nodes.book_replica.replica import BookReplica, Fault
+from nodes.book_replica.replica import BookReplica, Fault, SocketPulse
 from nodes.stream_kalshi.protocol import (TickerBook, parse, subscribe_frame,
                                           unsubscribe_frame, update_subscription_frame)
 
@@ -90,6 +91,8 @@ class KalshiStream:
     resubscribe_needed: bool = False
     #: A `nodes/capture.FrameWriter`, or None. Raw frames go here before they are parsed.
     capture: Any = None
+    #: L80: the socket's liveness, one write per frame, read by every replica registered here.
+    pulse: SocketPulse = field(default_factory=SocketPulse)
     #: Last seq seen on the subscription. Not per ticker -- see the module docstring.
     #: Last seq PER SID. A second `subscribe` on one socket opens a second subscription with
     #: its own sequence; one socket-wide counter would alias the new sid's 1,2,3 under the
@@ -120,6 +123,7 @@ class KalshiStream:
                  on_update: Callable[[str, float], None] | None = None,
                  now: float | None = None) -> None:
         self.regs.setdefault(ticker, []).append(Registration(replica, outcome, on_update))
+        replica.pulse = self.pulse
         # A slate change is a DIFF the run loop sends as update_subscription. Only a sequence
         # gap sets `resubscribe_needed`, which tears the subscription down instead.
         #
@@ -164,9 +168,7 @@ class KalshiStream:
         # quiet, not disconnected, and conflating the two is what makes a streaming collector
         # refuse to serve a perfectly good book. Liveness is per connection; freshness
         # (`updated_utc`) stays per market and is only touched by that market's own events.
-        for regs in self.regs.values():
-            for reg in regs:
-                reg.replica.heartbeat(t)
+        self.pulse.beat(t)                       # L80: one write per frame; replicas read it
 
         if p.kind == "subscribed":
             if p.sid is not None:
@@ -210,13 +212,15 @@ class KalshiStream:
         callbacks = []
         for reg in self.regs.get(p.ticker, ()):
             if reg.outcome not in projected:                  # two registrations per ticker: sort once
-                projected[reg.outcome] = book.project(reg.outcome)
-            bids, asks = projected[reg.outcome]
+                projected[reg.outcome] = (book.project(reg.outcome), book.ladder_key(reg.outcome))
+            (bids, asks), key = projected[reg.outcome]
             if p.kind == "snapshot":
                 reg.replica.snapshot_in(bids, asks, seq=p.seq, now=t, server_utc=p.server_utc, mono=mono)
                 self.snapshots += 1
             else:
-                reg.replica.project_in(bids, asks, seq=p.seq, now=t, server_utc=p.server_utc, mono=mono)
+                # L81: a delta on the other side of the book leaves this side's ladders the same
+                # objects; the replica keeps its dicts instead of rebuilding both.
+                reg.replica.project_in(bids, asks, seq=p.seq, now=t, server_utc=p.server_utc, mono=mono, ladder_key=key)
                 self.deltas += 1
             if reg.on_update and all(reg.on_update is not callback for callback in callbacks):
                 callbacks.append(reg.on_update)
@@ -247,8 +251,11 @@ class KalshiStream:
         test and is where a streaming collector actually fails.
         """
         import websockets
+        # L81: no permessage-deflate (the venue's frames are small JSON; inflating each on the loop
+        # thread bought nothing) and a deeper inbound queue so a busy burst is buffered, not
+        # back-pressured into the keepalive.
         connect = connect or (lambda url, headers: websockets.connect(
-            url, additional_headers=headers, ping_interval=20, max_size=2 ** 23))
+            url, additional_headers=headers, ping_interval=20, max_size=2 ** 23, compression=None, max_queue=64))
         backoff = 1.0
         while not stop.is_set():
             if not self.regs:
@@ -300,7 +307,7 @@ class KalshiStream:
                             # BEFORE parse: a parse bug is what you most want to replay. The
                             # same timestamp feeds handle(), so a replay reproduces the row.
                             self.capture.write(raw, received_utc=t_recv, received_mono=m_recv)
-                        self.handle(json.loads(raw), now=t_recv, mono=m_recv)
+                        self.handle(fastjson.loads(raw), now=t_recv, mono=m_recv)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001 -- reconnect is the whole job

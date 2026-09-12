@@ -191,3 +191,27 @@ def test_projection_cache_does_not_alias_equal_numbers_with_different_rendering(
     book.yes = {0.0: 1}
     for outcome in ("yes", "no"):
         assert json.dumps(book.project(outcome)) == json.dumps(_uncached_project(book, outcome))
+
+
+def test_the_ladder_key_changes_exactly_when_a_projection_changes():
+    """L81: the key is the identity of the two memoized ladders; a delta on one side changes the
+    key of both outcomes (each projection uses both ladders), and an unchanged book keeps it."""
+    books, book = snap()
+    k1 = book.ladder_key("yes"); k2 = book.ladder_key("yes")
+    assert k1 == k2 and book.project("yes") == book.project("yes")
+    parse({"type": "orderbook_delta", "seq": 2, "msg": {"market_ticker": "T", "side": "no", "price": 0.3, "delta": 5}}, books)
+    assert book.ladder_key("yes") != k1 and book.ladder_key("no") != k2
+    before = book.project("yes")
+    assert book.project("yes") == before and book.ladder_key("yes") == book.ladder_key("yes")
+
+
+def test_fastjson_decodes_the_same_frames_as_the_stdlib():
+    import json
+    from kernel import fastjson
+    frames = ['{"type":"orderbook_delta","seq":7,"msg":{"market_ticker":"T","side":"yes","price":0.3,"delta":-5}}',
+              '{"a":[1,2.5,"x",null,true],"b":{"c":-0.0,"d":1e-9},"u":"\\u00fc\\ud83d\\ude80"}', "PONG"]
+    for f in frames[:2]:
+        assert fastjson.loads(f) == json.loads(f) and json.dumps(fastjson.loads(f), sort_keys=True) == json.dumps(json.loads(f), sort_keys=True)
+    import pytest as _p
+    with _p.raises(ValueError):
+        fastjson.loads("PONG")

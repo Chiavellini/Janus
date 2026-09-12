@@ -1,0 +1,21 @@
+row: L80
+date: 2026-09-12
+kind: descriptive_cpu_repair
+status_at_registration: PENDING
+observed_failure: >-
+  Every Kalshi and Polymarket frame wrote heartbeat_utc on every replica registered on the socket
+  (L51: 9.08 M calls per 10k Kalshi frames at 454 tickers; L78 offline profile at the 234-poller
+  Sep 9 slate: replica.heartbeat 11.4 %, _beat 7.1 % and the sweep loop inside handle ~12 % of CPU;
+  live at 34 pollers only 1.1 %). The information content is one timestamp per socket.
+immutable_success_criteria:
+  - One SocketPulse per stream advances once per frame; BookReplica.heartbeat_utc reads
+    max(own, pulse) so as_of(), check()'s heartbeat timeout, quiet-book freshness, disconnect
+    time-out (the pulse simply stops), reconnect revival (the first frame advances it), mid-stream
+    registration and every explicit heartbeat() keep their exact meaning; the per-frame sweeps are
+    gone from both streams and the watchlist's nop replicas share the pulse.
+  - Existing stream, replica, poller, discovery, replay and grid suites pass unchanged (they assert
+    heartbeat_utc values after frames), plus a pulse test covering the transitions above; the
+    offline full-pipeline replay produces identical evaluation rows and selections.
+expected_ev_effect: none on selection; loop CPU per frame no longer grows with the slate size.
+prohibited:
+  - Reducing heartbeat frequency or changing heartbeat_timeout_s (that would change liveness semantics).

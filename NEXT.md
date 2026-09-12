@@ -57,7 +57,15 @@ Full suite green. Expected steady state after release: ~1 GB/day database, ~7 GB
 
 ## Immediate next step
 
-Done 2026-09-12 01:06Z: the allowance + L76 paste landed (`c03033c`) and the operator cleared the
+**L79–L81 (loop waste) are on the branch, not deployed.** L78 profiled the live loop: the sizing
+sweep was 55 %, ladder work 21 %, and the heartbeat sweep grows with the slate. Offline on the
+234-poller Sep 9 slate the full pipeline went 23.1 → 3.8 CPU s with identical evaluation rows and
+selections. One paste covers L77 (first-leg confirmation) and L79–L81; it also installs orjson
+into the lane venv: `bash ops/box/release.sh <branch head>`. Then L82: the same py-spy sample and
+loop-lag p50/p99 on the next busy slate vs the L78 baseline. The instance size question is closed
+unless L82 still shows saturation.
+
+### Earlier (2026-09-12 01:06Z): the allowance + L76 paste landed (`c03033c`) and the operator cleared the
 latch; the lane trades at 25 / $30 / $500 with a $2.50 allowance and a 3 s re-protect cadence.
 `python3 ops/launchpad.py` is the dashboard (opens locally; the agent republishes the hosted copy).
 L77 is on the branch and NOT deployed: one read of the venue's own book before a FAK send;

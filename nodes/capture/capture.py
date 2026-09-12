@@ -47,9 +47,17 @@ def _hour_key(ts: float) -> tuple[str, str]:
 
 
 class FrameWriter:
-    """Append-only, hour-rotated, gzip. One per venue socket."""
+    """Append-only, hour-rotated, gzip. One per venue socket.
 
-    def __init__(self, venue: str, root: Path | str = FRAMES_ROOT, *, enforce_volume: bool = True):
+    L81 (2026-09-12): the encode and the gzip write happen on a writer thread fed by a bounded
+    queue, so a slow disk can never sit inside the socket's `recv()`; `write()` only enqueues.
+    Order is the queue's order (one producer, one consumer); `flush()` drains the queue and flushes
+    the file, `close()` drains and closes, so what a caller sees after either is what a reader
+    sees. A full queue (`maxsize` frames, ~100 s at 1,000 frames/s) drops the frame and counts it
+    in `dropped`: the lane's pricing must never block on its own evidence trail."""
+
+    def __init__(self, venue: str, root: Path | str = FRAMES_ROOT, *, enforce_volume: bool = True,
+                 maxsize: int = 100_000, threaded: bool = True):
         self.venue = venue
         self.root = Path(root).resolve()
         if enforce_volume:
@@ -58,12 +66,34 @@ class FrameWriter:
         self._fh = None
         self.frames = 0
         self.bytes = 0
+        self.dropped = 0
+        self._q = None
+        self._thread = None
+        self._error: BaseException | None = None
+        if threaded:
+            import queue
+            import threading
+            self._q = queue.Queue(maxsize=maxsize)
+            self._thread = threading.Thread(target=self._drain, name=f"capture-{venue}", daemon=True)
+            self._thread.start()
+
+    def _drain(self) -> None:
+        while True:
+            item = self._q.get()
+            try:
+                if item is None:
+                    return
+                self._write_now(*item)
+            except BaseException as exc:  # noqa: BLE001 -- the socket must not see a disk error
+                self._error = exc
+            finally:
+                self._q.task_done()
 
     def _open_for(self, ts: float) -> None:
         key = _hour_key(ts)
         if key == self._key and self._fh is not None:
             return
-        self.close()
+        self._close_file()                      # never close(): that joins the queue this thread drains
         day, hour = key
         path = self.root / self.venue / day / f"{hour}.jsonl.gz"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -76,6 +106,15 @@ class FrameWriter:
         object (the last is serialised, but callers should pass the text)."""
         t = received_utc if received_utc is not None else time.time()
         m = received_mono if received_mono is not None else time.monotonic()
+        if self._q is None:
+            self._write_now(raw, t, m)
+            return
+        try:
+            self._q.put_nowait((raw, t, m))
+        except Exception:  # noqa: BLE001 -- queue.Full: the disk is behind; pricing goes on
+            self.dropped += 1
+
+    def _write_now(self, raw, t: float, m: float) -> None:
         if isinstance(raw, bytes):
             raw = raw.decode("utf-8", errors="replace")
         elif not isinstance(raw, str):
@@ -87,14 +126,25 @@ class FrameWriter:
         self.bytes += len(line)
 
     def flush(self) -> None:
+        if self._q is not None:
+            self._q.join()
         if self._fh is not None:
             self._fh.flush()
 
-    def close(self) -> None:
+    def _close_file(self) -> None:
         if self._fh is not None:
             self._fh.close()
             self._fh = None
             self._key = None
+
+    def close(self) -> None:
+        if self._q is not None:
+            self._q.join()
+            if self._thread is not None and self._thread.is_alive():
+                self._q.put(None)
+                self._thread.join(timeout=10.0)
+            self._q = None
+        self._close_file()
 
     def stats(self) -> dict:
         return {"venue": self.venue, "frames": self.frames, "bytes_uncompressed": self.bytes,

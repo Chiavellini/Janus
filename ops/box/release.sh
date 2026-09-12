@@ -73,6 +73,8 @@ echo "== (a) checkout $SHA, no restart"
 bash "$HERE/update.sh" "$SHA" --no-restart
 echo "== (b) sync pinned redemption runtime and systemd units"
 bash "$HERE/sync_runtime.sh"
+echo "== (b2) the fast JSON decoder for the lane venv (L81; idempotent; the lane falls back to the stdlib without it)"
+bash "$HERE/run.sh" 'sudo -u janus /opt/janus/.venv/bin/pip install -q orjson 2>&1 | tail -1; /opt/janus/.venv/bin/python3 -c "import orjson; print(\"orjson\", orjson.__version__)"'
 echo "== (c) re-sign the override for the new tree"
 CAPS=${JANUS_ARM_CAPS:-"30 25 500 168"}      # stake, contracts per leg, day notional, hours (GATE row 2026-09-11, F21: one rung up from the smallest size)
 # shellcheck disable=SC2086

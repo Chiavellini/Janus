@@ -67,6 +67,17 @@ class Fault(str, Enum):
 
 
 @dataclass
+class SocketPulse:
+    """One socket's liveness: the receive time of its last frame, whatever market it carried. Every
+    replica registered on the socket reads it through `heartbeat_utc` (L80)."""
+    utc: float = 0.0
+
+    def beat(self, t: float) -> None:
+        if t > self.utc:
+            self.utc = t
+
+
+@dataclass
 class BookReplica:
     """One venue's book for one market, plus the evidence that it is still real."""
     venue: str
@@ -103,11 +114,29 @@ class BookReplica:
     server_utc: float | None = None # the venue's own stamp on the last mutation, when it sends one
     received_mono: float | None = None  # local monotonic clock at the last mutation
     verified_utc: float = 0.0       # last snapshot or successful reconciliation
-    heartbeat_utc: float = 0.0      # last sign of life from the CONNECTION
+    #: Last sign of life from the CONNECTION: this replica's own (connect/subscribe/its own
+    #: events) or, through `pulse`, the socket's last frame of any market. L80 (2026-09-12): the
+    #: streams used to write every replica's heartbeat on every frame (O(registrations) per
+    #: frame, ~30 % of the loop at a 230-poller slate); now one SocketPulse per socket advances
+    #: once per frame and each replica reads it when asked. Same value, no sweep.
+    _heartbeat_utc: float = 0.0
+    pulse: object | None = None
+    #: L81: identity of the source ladders the last project_in applied; when the caller's
+    #: `ladder_key` matches, the dicts are not rebuilt (every other writer resets it).
+    _ladder_key: object = None
 
     resyncs: int = 0
     seq_gaps: int = 0
     applied: int = 0
+
+    @property
+    def heartbeat_utc(self) -> float:
+        p = self.pulse
+        return max(self._heartbeat_utc, p.utc) if p is not None else self._heartbeat_utc
+
+    @heartbeat_utc.setter
+    def heartbeat_utc(self, value: float) -> None:
+        self._heartbeat_utc = float(value)
 
     # ── connection lifecycle ────────────────────────────────────────────
     def connecting(self, now: float | None = None) -> None:
@@ -126,6 +155,7 @@ class BookReplica:
     def disconnected(self, now: float | None = None) -> None:
         self.state = ReplicaState.DISCONNECTED
         self.seq = None
+        self._ladder_key = None
         self.bids.clear()
         self.asks.clear()
         self.updated_utc = self.verified_utc = 0.0
@@ -167,6 +197,7 @@ class BookReplica:
         t = now or time.time()
         self.bids = {float(p): float(s) for p, s in bids if float(s) > 0}
         self.asks = {float(p): float(s) for p, s in asks if float(s) > 0}
+        self._ladder_key = None
         self._stamp("ws", server_utc, mono)
         self.seq = seq
         self.state = ReplicaState.SYNCED
@@ -194,6 +225,7 @@ class BookReplica:
                 return Fault.SEQ_GAP
 
         for side, price, size in changes:
+            self._ladder_key = None
             book = self.bids if side == "bid" else self.asks
             p, s = float(price), float(size)
             if s <= 0:
@@ -211,7 +243,7 @@ class BookReplica:
 
     def project_in(self, bids, asks, *, seq: int | None = None,
                    now: float | None = None, server_utc: float | None = None,
-                   mono: float | None = None) -> Fault | None:
+                   mono: float | None = None, ladder_key: object = None) -> Fault | None:
         """Full ladders derived from a venue delta: sequence-checked like a delta, applied whole.
 
         Kalshi needs this and `delta_in` cannot express it. Kalshi ships YES-bid and NO-bid
@@ -230,8 +262,19 @@ class BookReplica:
                 self.seq_gaps += 1
                 self._invalidate(Fault.SEQ_GAP)
                 return Fault.SEQ_GAP
-        self.bids = {float(p): float(s) for p, s in bids if float(s) > 0}
-        self.asks = {float(p): float(s) for p, s in asks if float(s) > 0}
+        # L81: `ladder_key` is (bids-ladder identity, asks-ladder identity); a delta on one side of
+        # the venue's book changes exactly one of them, so only that dict is rebuilt.
+        prev = self._ladder_key if isinstance(self._ladder_key, tuple) else (None, None)
+        if ladder_key is None or not isinstance(ladder_key, tuple) or len(ladder_key) != 2:
+            self.bids = {float(p): float(s) for p, s in bids if float(s) > 0}
+            self.asks = {float(p): float(s) for p, s in asks if float(s) > 0}
+            self._ladder_key = None
+        else:
+            if ladder_key[0] != prev[0]:
+                self.bids = {float(p): float(s) for p, s in bids if float(s) > 0}
+            if ladder_key[1] != prev[1]:
+                self.asks = {float(p): float(s) for p, s in asks if float(s) > 0}
+            self._ladder_key = ladder_key
         if seq is not None:
             self.seq = seq
         self.applied += 1
@@ -256,6 +299,7 @@ class BookReplica:
         agree = (self._close(self.bids, want_b, tolerance)
                  and self._close(self.asks, want_a, tolerance))
         self.bids, self.asks = want_b, want_a
+        self._ladder_key = None
         # Adopted from REST: the book is labelled so, and the caller holds it to the stricter
         # freshness bound a REST fallback gets (spec §8).
         self._stamp("rest", server_utc, mono)
@@ -304,6 +348,7 @@ class BookReplica:
         self.last_fault = fault
         self.resyncs += 1
         self.seq = None
+        self._ladder_key = None
         self.bids.clear()
         self.asks.clear()
 

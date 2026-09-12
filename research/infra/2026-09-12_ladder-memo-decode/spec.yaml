@@ -1,0 +1,29 @@
+row: L81
+date: 2026-09-12
+kind: descriptive_cpu_repair
+status_at_registration: PENDING
+observed_failure: >-
+  L78 live sample: ladder projection and replica rebuild 21.4 % of the loop (Kalshi _quoted_side
+  re-sorted both ladders on every call even on a memo hit, project() rebuilt two lists per call,
+  BookReplica.project_in rebuilt both dicts per registration per frame, Polymarket
+  AssetBook.ladders() sorted per price_change entry with no memo); capture 4.2 % on the loop
+  thread with a disk stall able to sit inside recv(); decode 2.5 % with permessage-deflate left on
+  and the stdlib parser.
+immutable_success_criteria:
+  - The Kalshi cache key is the ladder's items in insertion order compared by identity (the same
+    contract as before: direct edits, reassignments, partial snapshot failures and -0.0/0.0 are
+    observed; the mutation-oracle tests pass unchanged), and the sort runs only on a change;
+    project() returns fresh lists from cached pairs; ladder_key(outcome) identifies the two ladders.
+  - BookReplica.project_in rebuilds only the side whose ladder identity changed when given a
+    ladder_key; every other writer of the dicts resets it; Polymarket AssetBook.ladders() is
+    memoized the same way and still returns fresh lists.
+  - FrameWriter encodes and gzips on a writer thread fed by a bounded queue; order, format, hourly
+    rotation and the round-trip are unchanged; flush()/close() drain; a full queue drops and counts.
+  - websockets connects with compression off and a 64-frame inbound queue; frames decode through
+    kernel.fastjson (orjson when installed, stdlib otherwise, identical results on the venues'
+    frames); the paste installs orjson into the lane venv idempotently.
+  - Offline full-pipeline replay: identical evaluation rows and selections, lower CPU.
+expected_ev_effect: none on selection; less loop time per frame, fewer keepalive timeouts under bursts.
+prohibited:
+  - Any change to the capture file format or to which frames are captured.
+  - Encoding anything with orjson (journal rows and capture lines stay on the stdlib encoder).
