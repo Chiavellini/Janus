@@ -57,7 +57,16 @@ Full suite green. Expected steady state after release: ~1 GB/day database, ~7 GB
 
 ## Immediate next step
 
-**kill/live is latched again since 2026-09-12 01:19Z** (LAA @ WSH: 25 requested at 0.18, filled 32.14
+Released 2026-09-12 05:20Z: `cf9770b` (L77 first-leg confirmation, L79–L81 loop waste, L83 collateral
+ceiling; orjson installed). Latch cleared by the operator 05:20Z; lane LIMITED_LIVE at 25 / $30 / $500,
+zero refusals. First sample: 28 % CPU and 0.3 s lag vs 79 % and 1.8 s. Owed: the evening-slate sample
+(00–04Z): `/opt/pyspy/bin/py-spy record --pid <lane> --duration 60 --rate 100 --format raw --output
+/srv/janus/research/l78/sample_l82_evening.raw --nonblocking` through run.sh, bucketed like the L78
+verdict. Next rows to consider: hedge sizing to Kalshi depth (LAA @ WSH: 38 min with no depth under the
+loss cap on a thin 0.82 side) and the 6.4 s first-leg status resolution. The watchdog's ORDER_OVERFILL
+line ages out 24 h after LAA @ WSH.
+
+### Earlier (03:30Z): kill/live is latched again since 2026-09-12 01:19Z** (LAA @ WSH: 25 requested at 0.18, filled 32.14
 at 0.14 because the venue sizes an immediate BUY by collateral; 7.14 unhedgeable, -$0.45). L83 on
 the branch caps the order's collateral at contracts x the venue's own ask (from the L77 read), so a
 fill at the ask is exactly the request and a walk up under-fills. Paste the branch head, then clear

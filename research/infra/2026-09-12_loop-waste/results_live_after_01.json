@@ -1,0 +1,44 @@
+{
+ "kind": "live_pyspy_sample",
+ "when_utc": "2026-09-12T05:23:40Z",
+ "tree": "cf9770b (L77, L79-L83)",
+ "duration_s": 60,
+ "rate_hz": 100,
+ "samples_on_cpu": 1618,
+ "main_thread_samples": 1446,
+ "capture_thread_samples": 168,
+ "lane_cpu_pct": 28.1,
+ "slate": {
+  "pollers": 39,
+  "live": 4,
+  "kalshi_fps": 520,
+  "pm_fps": 125,
+  "loop_lag_s": 0.3
+ },
+ "baseline_l78": {
+  "samples_on_cpu": 5946,
+  "lane_cpu_pct": 79.0,
+  "pollers": 34,
+  "kalshi_fps": 950,
+  "pm_fps": 100,
+  "loop_lag_s": 1.8
+ },
+ "per_frame_ms_estimate": {
+  "before": 0.94,
+  "after": 0.37
+ },
+ "buckets_pct_of_busy": {
+  "ladder": 37.5,
+  "evaluation": 20.8,
+  "capture_enqueue_on_loop": 10.2,
+  "reconciler_pm": 8.6,
+  "sizing_sweep": 4.0,
+  "capture_thread": 3.4,
+  "decode": 2.0,
+  "heartbeat": 0.0,
+  "sqlite": 0.1,
+  "kalshi_handle_inclusive": 53.5,
+  "pm_handle_inclusive": 8.6
+ },
+ "note": "quieter hour than the baseline (4 live games vs an evening slate); the evening-slate sample is the one that settles the comparison"
+}

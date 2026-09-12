@@ -46,3 +46,15 @@ A profiled offline run after L79 (`--profile`) attributed the remaining time to 
 sweep (~30 % at this slate: `handle` self 16.7 %, `replica.heartbeat` 11.4 %, `_beat` 7.1 %), the
 Kalshi identity scan and sort (~6 %), and pricing (`price_combination`, `assert_price_range`,
 `params_for`, `_fills_for`, ~15 %). The live confirmation of each is L82.
+
+
+## Live after the paste (the plan's L82, instrument 1 again)
+
+`cf9770b` (L77, L79–L83) released 2026-09-12 05:20Z; sample at 05:23:40Z, 60 s at 100 Hz
+(`results_live_after_01.json`): **1,618 on-CPU samples vs 5,946** in the baseline, the lane at
+**28 % CPU vs 79 %**, loop lag **0.2–0.3 s vs 1.8 s**, 39 pollers vs 34, at about half the
+baseline's Kalshi frame rate (a quieter hour: 4 live games). Per frame ≈ 0.37 ms vs 0.94 ms. Of the
+busy time: ladder 37.5 %, evaluation 20.8 %, capture enqueue on the loop 10.2 %, Polymarket
+reconciler 8.6 %, sizing sweep 4.0 %, decode 2.0 %, heartbeat 0.0 %. The evening-slate sample
+(00–04Z) is still owed for the like-for-like comparison; the command is in NEXT.md. L78 PASS as an
+attribution; L79–L81 confirmed in direction live, magnitude pending the evening slate.
