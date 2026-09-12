@@ -122,6 +122,9 @@ class ExecutionState(str, Enum):
     MARKET_SUSPENDED = "MARKET_SUSPENDED"
     VENUE_DISCONNECTED = "VENUE_DISCONNECTED"
     BALANCE_CHANGED = "BALANCE_CHANGED"
+    #: L77 (2026-09-12): the venue's own book, read just before the first-leg send, no longer
+    #: offers the plan's size at its limit; nothing was sent, the reservation is released.
+    BOOK_MOVED = "BOOK_MOVED"
 
     @property
     def is_failure(self) -> bool:
@@ -151,7 +154,7 @@ _EXECUTION_FAILURES = frozenset({
     ExecutionState.UNKNOWN_PROVIDER_STATE, ExecutionState.PARTIAL_FILL,
     ExecutionState.HEDGE_UNAVAILABLE, ExecutionState.HEDGE_SLIPPAGE_EXCEEDED,
     ExecutionState.MARKET_SUSPENDED, ExecutionState.VENUE_DISCONNECTED,
-    ExecutionState.BALANCE_CHANGED,
+    ExecutionState.BALANCE_CHANGED, ExecutionState.BOOK_MOVED,
 })
 
 

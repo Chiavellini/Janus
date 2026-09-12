@@ -60,8 +60,11 @@ Full suite green. Expected steady state after release: ~1 GB/day database, ~7 GB
 Done 2026-09-12 01:06Z: the allowance + L76 paste landed (`c03033c`) and the operator cleared the
 latch; the lane trades at 25 / $30 / $500 with a $2.50 allowance and a 3 s re-protect cadence.
 `python3 ops/launchpad.py` is the dashboard (opens locally; the agent republishes the hosted copy).
-Next: the first-leg price confirmation row (28 of 30 taker first legs missed with the socket book
-showing size at the limit), then the instance size (c7g.large) as the operator's billable call.
+L77 is on the branch and NOT deployed: one read of the venue's own book before a FAK send;
+above the plan limit or without depth, nothing is sent (BOOK_MOVED, released). Paste
+`bash ops/box/release.sh <branch head>` when no money is in flight; evaluate after 50 attempts
+(fill rate among sends vs 2/30, BOOK_MOVED share, median a_confirm_ms). Then the instance size
+(c7g.large) as the operator's billable call.
 
 ### Earlier (01:00Z): kill/live is latched since 2026-09-11 21:37Z** (VARILLA V WILD, genuine: 39 s unprotected at 25
 contracts under a $1 allowance = four Kalshi ticks). Two changes are on the branch for one paste:

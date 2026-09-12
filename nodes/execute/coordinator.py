@@ -30,7 +30,7 @@ from typing import Callable, Mapping
 
 from kernel.execution_protocol import Ack, ExecutionVenue, OrderRequest
 from kernel.schema import ExecutionState as X, FillState, Mode, OpportunityStatus as S
-from nodes.execute.plan import LegPlan, Plan
+from nodes.execute.plan import LegPlan, Plan, marginal_price
 from nodes.execute.maker import MakerFillSession, MakerRestAuthorization
 from nodes.execute.protect import protect
 from nodes.execute.records import Execution, ExecutionRecords
@@ -138,6 +138,29 @@ class Coordinator:
             if bal is None or any(bal.get(v, 0.0) < usd for v, usd in need.items()):
                 return self._fail(ex, X.BALANCE_CHANGED, f"balances {bal} below {need}", release=True)
         self._move(ex, X.CAPITAL_RESERVED)
+
+        # L77 (2026-09-12): 28 of 30 taker first legs missed with the local socket book showing size
+        # at the limit. One read of the venue's own book before the send: if it does not offer the
+        # plan's size at the plan's limit, nothing is sent and the reservation goes back. No book
+        # (the read failed) is not a verdict: the send goes out as before.
+        if (not plan.first.post_only and plan.first.time_in_force in ("ioc", "fok")
+                and self.fresh_book is not None and self.mode.executes):
+            m0 = self.mono()
+            try:
+                book = self.fresh_book(plan.first.venue, plan.first.market_id, plan.first.side)
+            except Exception:  # noqa: BLE001 -- a failed read is not a verdict
+                book = None
+            ex.stages["a_confirm_ms"] = round((self.mono() - m0) * 1000.0, 2)
+            if book is not None:
+                want = marginal_price(book, plan.first.contracts)
+                top = book.asks[0].price if book.asks else None
+                ex.protect["first_leg_confirm"] = {"limit": plan.first.limit_price, "marginal": want, "top": top,
+                                                   "contracts": plan.first.contracts}
+                if want is None or want > plan.first.limit_price + 1e-9:
+                    return self._fail(ex, X.BOOK_MOVED,
+                                      f"first leg: {plan.first.venue} book offers {plan.first.contracts:g} at "
+                                      f"{('%.4f' % want) if want is not None else 'no depth'} vs limit {plan.first.limit_price:.4f}; nothing sent",
+                                      release=True)
 
         # LEG A: Polymarket, FAK (`ioc` in the internal protocol). Ambiguity here costs nothing;
         # that is why it goes first.

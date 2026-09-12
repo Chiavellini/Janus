@@ -1,0 +1,28 @@
+row: L77
+date: 2026-09-12
+kind: descriptive_execution_repair
+status_at_registration: PENDING
+observed_failure: >-
+  Since the taker switch (2026-09-11 03:20Z), 28 of 30 Polymarket FAK first legs filled zero while
+  the plan's book (the lane's socket replica, 0.1-2.5 s old) showed size at the limit; socket_health
+  records 400-2,200 top-of-book drift events per tick and "top-of-book drift" errors. The lane bids
+  at a touch the venue no longer shows. Each miss costs a reservation, a wire round trip and the
+  hedge opportunity of that instant.
+immutable_success_criteria:
+  - Before an immediate (ioc/fok, non-post-only) first-leg send, the coordinator reads the venue's
+    own book once through fresh_book; if the marginal price for the plan's size is above the plan's
+    limit, or the book lacks depth for the size, nothing is sent and the reservation is released
+    with the new terminal, non-holding state BOOK_MOVED; at or under the limit the send is
+    unchanged; a failed read (None) sends as before. Proven by tests on the coordinator.
+  - The read's cost is recorded per attempt as stages_json a_confirm_ms and the book's marginal and
+    top prices as protect_json first_leg_confirm, so the next descriptive row can measure it.
+  - Outcome to evaluate after 50 attempts under this row: first-leg fill rate among sends
+    (baseline 2 of 30), BOOK_MOVED share of attempts, and median a_confirm_ms; no cap, hurdle, size
+    or hedge behaviour changes.
+expected_ev_effect: >-
+  fewer wire misses per profitable print; the sends that do go out face a book the venue itself
+  reported within ~200 ms. It does not create fills where the touch is gone; it stops paying for
+  them. Selection, sizing and caps unchanged.
+prohibited:
+  - Re-pricing above the plan's limit or widening any cap or hurdle to chase the venue book.
+  - Sending on a socket-only book when the REST read failed for a reason other than transport.

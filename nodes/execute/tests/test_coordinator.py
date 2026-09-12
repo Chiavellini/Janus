@@ -476,3 +476,44 @@ def test_the_first_leg_is_fill_and_kill_one_tick_above_the_walked_level_when_the
     if cov2.ok:
         p2 = plan_from_cover(opportunity_id="o2", event_id="espn:mlb:1", league="mlb", cov=cov2, offers=offs2)
         assert p2 is None or p2.first.limit_price == pytest.approx(0.50), "no pad when it would breach the hurdle"
+
+
+def test_the_first_leg_is_confirmed_against_the_venue_book_before_the_send(tmp_path):
+    """L77 (2026-09-12): 28 of 30 taker first legs missed with the socket book showing size at the
+    limit. One read of the venue's own book before the send: above the limit or without depth for
+    the size, nothing is sent and the reservation goes back (BOOK_MOVED); at or under the limit the
+    send goes out; no book (a failed read) sends as before."""
+    # above the limit: nothing sent
+    co, vs, store, clk, _ = harness(tmp_path)
+    offs = offers()
+    p, _ = plan_for(offs)
+    vs["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    moved = {"P_H": bk([(p.first.limit_price + 0.02, 5000)])}
+    co.fresh_book = lambda venue, market, side: (moved if venue == "polymarket" else vs[venue].books).get(market)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.BOOK_MOVED and ex.released and ex.state.is_terminal and not ex.state.holds_position
+    assert store.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0, "nothing was sent"
+    assert "a_confirm_ms" in ex.stages and ex.protect["first_leg_confirm"]["marginal"] == pytest.approx(p.first.limit_price + 0.02)
+    assert "nothing sent" in ex.detail
+    # depth short of the size: nothing sent either
+    co2, vs2, store2, _, _ = harness(tmp_path / "b")
+    vs2["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs2["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    thin = {"P_H": bk([(p.first.limit_price, 3)])}
+    co2.fresh_book = lambda venue, market, side: (thin if venue == "polymarket" else vs2[venue].books).get(market)
+    ex2 = co2.execute(p, clearance_for(tmp_path / "b", now_mono=100.0))
+    assert ex2.state is X.BOOK_MOVED and "no depth" in ex2.detail and store2.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0
+    # at the limit with depth: the send goes out and the cover completes as before
+    co3, vs3, store3, _, _ = harness(tmp_path / "c")
+    vs3["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs3["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    co3.fresh_book = lambda venue, market, side: vs3[venue].books.get(market)
+    ex3 = co3.execute(p, clearance_for(tmp_path / "c", now_mono=100.0))
+    assert ex3.state is X.HEDGED and ex3.stages["a_confirm_ms"] >= 0
+    # no reader: the 2026-09-07 path, untouched
+    co4, vs4, store4, _, _ = harness(tmp_path / "d")
+    vs4["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs4["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    ex4 = co4.execute(p, clearance_for(tmp_path / "d", now_mono=100.0))
+    assert ex4.state is X.HEDGED and "a_confirm_ms" not in ex4.stages

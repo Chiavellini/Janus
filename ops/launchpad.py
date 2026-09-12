@@ -179,7 +179,7 @@ def render(snap: dict) -> str:
         st = t.get("settlement") or {}
         pnl = st.get("realized_usd")
         state = t["state"]
-        state_cls = "ok" if state in ("RECONCILED", "HEDGED", "SETTLED") else "muted" if state in ("ORDER_UNFILLED",) else "warn" if state == "ORDER_REJECTED" else "bad"
+        state_cls = "ok" if state in ("RECONCILED", "HEDGED", "SETTLED") else "muted" if state in ("ORDER_UNFILLED", "BOOK_MOVED") else "warn" if state == "ORDER_REJECTED" else "bad"
         kalshi = [o for o in t["orders"] if o["venue"] == "kalshi"]
         pm = [o for o in t["orders"] if o["venue"] == "polymarket"]
         first = f"{t['first_filled']:.2f}@{t['first_avg_price']:.3f}" if t.get("first_filled") else "0"
