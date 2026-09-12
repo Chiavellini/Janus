@@ -82,3 +82,6 @@ protect_auto = true              # R5 (2026-09-08): the guard re-protects a nake
 protect_kill_on_failure = true   # the operator's decision (2026-09-08): an unprotectable position latches kill/live
 protect_dust_contracts = 1.0     # a naked remainder below the venue minimum is recorded, not chased or killed
 guard_period_s = 30.0            # nodes/execute/guard.py cadence, real modes only
+protect_retry_s = 3.0            # 2026-09-12 (L76): a position the layer left naked is re-run every N s, not on the
+protect_fast_window_s = 60.0     # guard's 30 s cadence, for this long after the failure (VARILLA: hedged at +39 s
+                                 # because rounds two and three waited for the guard). 0 disables the fast cadence.

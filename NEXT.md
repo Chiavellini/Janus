@@ -57,7 +57,17 @@ Full suite green. Expected steady state after release: ~1 GB/day database, ~7 GB
 
 ## Immediate next step
 
-F21, the size step the operator ordered (*"do it; 25 contracts, $30 per order, $500 a day"*):
+**kill/live is latched since 2026-09-11 21:37Z** (VARILLA V WILD, genuine: 39 s unprotected at 25
+contracts under a $1 allowance = four Kalshi ticks). Two changes are on the branch for one paste:
+the allowance scales to $2.50 so $0.10 a contract binds at 25 (GATE row 2026-09-12), and L76,
+the fast re-protect cadence (3 s for 60 s instead of the 30 s guard pass). Paste
+`bash ops/box/release.sh <branch head>`, then clear the latch by hand:
+`bash ops/box/run.sh 'sudo -u janus rm /srv/janus/kill/live; ls /srv/janus/kill'`.
+Hedge-on-ack was NOT done: Polymarket acks a FAK as "delayed", so an ack proves no position.
+The `pre_machine` stage swung 4-885 ms tonight: event-loop contention on the one vCPU, the
+strongest case yet for c7g.large (operator's billable call).
+
+### Earlier: F21, the size step the operator ordered (*"do it; 25 contracts, $30 per order, $500 a day"*):
 `bash ops/box/release.sh <this branch's head>` from the operator's checkout of this branch. The
 paste's default caps are now 30 / 25 / 500 / 168 h and the standing statement carries the new
 numbers, so the re-signed override arms them; the taker wire's own ceiling moved to 25 / $30 in

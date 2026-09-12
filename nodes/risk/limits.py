@@ -34,6 +34,10 @@ class ProtectLimits:
     protect_kill_on_failure: bool = True
     protect_dust_contracts: float = 1.0
     guard_period_s: float = 30.0
+    #: L76 (2026-09-12): a position the layer left naked is re-run every `protect_retry_s` for
+    #: `protect_fast_window_s` after the failure, instead of once per guard pass. 0 disables.
+    protect_retry_s: float = 3.0
+    protect_fast_window_s: float = 60.0
 
 
 @dataclass(frozen=True)
@@ -79,7 +83,9 @@ def load_limits(path: Path | str = LIMITS_PATH) -> RiskLimits:
         protect_auto=bool(pr.get("protect_auto", False)),
         protect_kill_on_failure=bool(pr.get("protect_kill_on_failure", True)),
         protect_dust_contracts=float(pr.get("protect_dust_contracts", 1.0)),
-        guard_period_s=float(pr.get("guard_period_s", 30.0)))
+        guard_period_s=float(pr.get("guard_period_s", 30.0)),
+        protect_retry_s=float(pr.get("protect_retry_s", 3.0)),
+        protect_fast_window_s=float(pr.get("protect_fast_window_s", 60.0)))
     return RiskLimits(
         max_total_usd=float(cap["max_total_usd"]), max_unresolved_usd=float(cap["max_unresolved_usd"]),
         per_venue_usd={k: float(v) for k, v in cap["per_venue_usd"].items()},

@@ -1,0 +1,30 @@
+row: L76
+date: 2026-09-12
+kind: descriptive_execution_repair
+status_at_registration: PENDING
+observed_failure: >-
+  VARILLA V WILD (cc89056e, 2026-09-11 21:37Z): after the protection layer declared the 25.32
+  first-leg contracts unprotected at +3.7 s, the second and third protection rounds ran at +7.6 s
+  and +38.4 s, because a naked execution is handed back to the layer once per 30 s guard pass;
+  the third round hedged at 0.22. Thirty-five of the thirty-nine unprotected seconds were waiting,
+  not trading. The operator: "39 seconds unhedged is a faulty program not a faulty book".
+  Not done here, and why: hedging on the Polymarket acknowledgement instead of the settled size
+  was in the plan; the venue answers a FAK with status "delayed", not "matched", so an ack alone
+  does not prove a position and hedging on it could buy Kalshi against nothing. The settle read
+  (one REST round trip, 0.3-1.0 s) stays.
+immutable_success_criteria:
+  - After on_unprotected, the execution is re-run through the protection layer every
+    protect_retry_s (3 s) from the run loop for protect_fast_window_s (60 s), under the existing
+    clear_protect clearance, then reverts to the guard's cadence; a run that leaves it hedged,
+    released or terminal stops the retries; a flight in progress defers, never overlaps.
+  - Every re-run is bounded exactly as today (its own protect window, max_protect_submits,
+    ceilings, loss allowance); nothing in the layer's arithmetic changes.
+  - Proven by tests on the tick's scheduling and by the existing on_unprotected and hand-over
+    tests remaining green.
+expected_ev_effect: >-
+  fewer seconds naked per failed first hedge (VARILLA: ~36 s of waiting removed), so a cover that
+  the book allows within the window is taken at the book of a few seconds later, not half a
+  minute later; no change to selection, sizing or caps.
+prohibited:
+  - Hedging on an unconfirmed first-leg acknowledgement.
+  - Any change to ceilings, allowances, windows, submit budgets or the kill-on-failure rule.

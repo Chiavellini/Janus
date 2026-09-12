@@ -606,10 +606,16 @@ def test_an_unprotected_position_latches_the_live_kill_and_flags(tmp_path: Path,
     sup, s = _supervisor(tmp_path)
     sup.mode = Mode.LIMITED_LIVE
     sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
-    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_kill_on_failure=True))
+    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_kill_on_failure=True, protect_auto=True,
+                                                         protect_retry_s=3.0, protect_fast_window_s=60.0))
     ex = SimpleNamespace(execution_id="abcdef0123456789", event_id="pm:atp:1")
+    import time as _t
+    t0 = _t.monotonic()
     sup.on_unprotected(ex, "UNPROTECTED: 10 unhedged after 7 attempts; no hedge inside the loss cap")
     assert sup.kill.active(live=True) == ["live"]
+    # L76: the fast retry is registered: due in ~3 s, for ~60 s
+    due, until = sup.reprotect_fast["abcdef0123456789"]
+    assert 2.5 < due - t0 < 3.6 and 59 < until - t0 < 61
     assert recent_flags(tmp_path / "t.sqlite", "PROTECT_FAILED")
     out = capsys.readouterr().out
     assert "[PROTECT FAILED] pm:atp:1 abcdef01" in out and "kill/live latched" in out
@@ -727,3 +733,59 @@ def test_retain_once_ages_the_store_and_the_frame_days(tmp_path: Path):
     assert len(got["frames"]) == 1 and got["frames"][0].startswith("kalshi:")
     assert sup.store.con.execute("SELECT count(*) FROM quote_history").fetchone()[0] == 1
     assert len(list((tmp_path / "frames" / "kalshi").iterdir())) == 1
+
+
+def test_the_fast_reprotect_tick_retries_a_naked_position_every_few_seconds_then_hands_back_to_the_guard(tmp_path: Path):
+    """L76 (2026-09-12): VARILLA V WILD hedged at +39 s because rounds two and three waited for the
+    30 s guard pass. A naked execution is re-run from the loop every protect_retry_s inside the
+    fast window; a run that leaves it hedged drops it; the window's end drops it too."""
+    import asyncio
+    from types import SimpleNamespace
+    from kernel.schema import ExecutionState as X
+    sup, s = _supervisor(tmp_path)
+    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_auto=True, protect_retry_s=3.0,
+                                                         protect_fast_window_s=60.0, protect_dust_contracts=1.0))
+    calls = []
+    outcomes = {"e1": [X.HEDGE_SLIPPAGE_EXCEEDED, X.HEDGE_SLIPPAGE_EXCEEDED, X.HEDGED]}
+
+    async def fake_protect(exid):
+        calls.append(exid)
+        st = outcomes[exid].pop(0)
+        return SimpleNamespace(state=st, released=False, unhedged=0.0 if st is X.HEDGED else 25.0)
+    sup._protect_off_loop = fake_protect
+    T0 = 1000.0
+    sup.reprotect_fast = {"e1": (T0 + 3.0, T0 + 60.0)}
+    assert sup.fast_reprotect_due(T0 + 1.0) == []                          # not due yet
+    assert sup.fast_reprotect_due(T0 + 3.0) == ["e1"]
+
+    async def main():
+        import time as _t
+        real = _t.monotonic
+        # first tick: still naked -> rescheduled ~3 s later
+        _t.monotonic = lambda: T0 + 3.0
+        try:
+            await sup.fast_reprotect_tick()
+            assert calls == ["e1"] and 5.9 < sup.reprotect_fast["e1"][0] - T0 < 6.1
+            _t.monotonic = lambda: T0 + 4.0
+            await sup.fast_reprotect_tick()                                  # not due: no call
+            assert calls == ["e1"]
+            _t.monotonic = lambda: T0 + 6.0
+            await sup.fast_reprotect_tick()                                  # second run, still naked
+            assert calls == ["e1", "e1"]
+            _t.monotonic = lambda: T0 + 9.0
+            await sup.fast_reprotect_tick()                                  # hedged: dropped
+            assert calls == ["e1"] * 3 and "e1" not in sup.reprotect_fast
+            # the window's end drops an entry without a run
+            sup.reprotect_fast = {"e2": (T0 + 3.0, T0 + 60.0)}
+            _t.monotonic = lambda: T0 + 61.0
+            await sup.fast_reprotect_tick()
+            assert calls == ["e1"] * 3 and sup.reprotect_fast == {}
+            # a flight in progress defers the tick
+            sup.reprotect_fast = {"e3": (T0 + 3.0, T0 + 60.0)}
+            sup.in_flight = "guard"
+            _t.monotonic = lambda: T0 + 5.0
+            await sup.fast_reprotect_tick()
+            assert calls == ["e1"] * 3 and "e3" in sup.reprotect_fast
+        finally:
+            _t.monotonic = real
+    asyncio.run(main())

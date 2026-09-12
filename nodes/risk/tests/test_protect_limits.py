@@ -13,6 +13,7 @@ def test_the_checked_in_limits_carry_the_protect_section_and_the_moved_submit_bo
     p = lim.protect
     assert (p.hedge_protect_window_s, p.unwind_reserve_s, p.max_protect_loss_usd, p.max_protect_loss_per_contract_usd) == (30.0, 10.0, 2.5, 0.10)
     assert p.max_protect_submits == 12 and p.protect_resubmit_ms == 400 and p.guard_period_s == 30.0
+    assert (p.protect_retry_s, p.protect_fast_window_s) == (3.0, 60.0), "L76: a naked position is retried every 3 s for a minute"
     # R5, partially released 2026-09-08: the guard re-protects on its own, the unwind stays off
     # until the R4 proofs run against a real venue.
     assert p.unwind_enabled is False and p.protect_auto is True and p.protect_kill_on_failure is True

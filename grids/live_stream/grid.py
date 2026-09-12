@@ -213,6 +213,11 @@ class Supervisor:
     fills_today: tuple = ()
     guard_passes: int = 0
     reprotect_queue: list = field(default_factory=list)
+    #: L76 (2026-09-12): execution_id -> (next_due_mono, until_mono) for a position the layer left
+    #: naked: re-run every [protect] protect_retry_s for protect_fast_window_s, from the run loop,
+    #: instead of once per 30 s guard pass (VARILLA V WILD: hedged at +39 s, rounds two and three
+    #: having waited for the guard while 25 sat one tick above the cap).
+    reprotect_fast: dict = field(default_factory=dict)
     #: The guard confirms both venue balances every 30 s. Reuse that authoritative snapshot on
     #: the entry path instead of spending 300-400 ms on two balance round trips after an edge is
     #: seen. A missing/stale snapshot falls back to synchronous reads and remains fail-closed.
@@ -1018,6 +1023,12 @@ class Supervisor:
         continues; protective re-runs still go through clear_protect), the flag is written for the
         watchdog, and the line is said. Runs in the worker thread: files and the main-store flag only."""
         print(f"  [PROTECT FAILED] {ex.event_id} {ex.execution_id[:8]} {text}", flush=True)
+        # L76: the next re-run is seconds away, not a guard pass away. The loop's tick picks it up.
+        pr = getattr(self.limits, "protect", None)
+        retry = float(getattr(pr, "protect_retry_s", 0.0) or 0.0)
+        if retry > 0 and getattr(pr, "protect_auto", False):
+            now_m = time.monotonic()
+            self.reprotect_fast[ex.execution_id] = (now_m + retry, now_m + float(getattr(pr, "protect_fast_window_s", 60.0) or 0.0))
         try:
             if self.store is not None:
                 raise_flag(self.store, "PROTECT_FAILED", f"{ex.execution_id[:8]} {ex.event_id} {text}")
@@ -1067,7 +1078,37 @@ class Supervisor:
         if self.reprotect_queue:
             await self._protect_off_loop(self.reprotect_queue.pop(0))
 
-    async def _protect_off_loop(self, execution_id: str) -> None:
+    def fast_reprotect_due(self, now_mono: float | None = None) -> list[str]:
+        """L76: the naked executions whose fast retry is due, oldest first; entries past their
+        window are dropped here (the guard's 30 s cadence takes over)."""
+        t = time.monotonic() if now_mono is None else now_mono
+        due = []
+        for exid, (next_due, until) in list(self.reprotect_fast.items()):
+            if t > until:
+                del self.reprotect_fast[exid]
+            elif t >= next_due:
+                due.append((next_due, exid))
+        return [e for _, e in sorted(due)]
+
+    async def fast_reprotect_tick(self) -> None:
+        """One due fast re-run per loop iteration (the loop sleeps 1 s; the cadence is 3 s). A run
+        that leaves the position hedged, released or terminal drops the entry; one that leaves it
+        naked reschedules it `protect_retry_s` later inside the window."""
+        if self.in_flight is not None:
+            return
+        for exid in self.fast_reprotect_due():
+            pr = getattr(self.limits, "protect", None)
+            retry = float(getattr(pr, "protect_retry_s", 0.0) or 0.0)
+            out = await self._protect_off_loop(exid)
+            still = out is not None and out.state.holds_position and not out.released \
+                and out.unhedged > float(getattr(pr, "protect_dust_contracts", 1.0) or 1.0)
+            if still and retry > 0 and exid in self.reprotect_fast:
+                self.reprotect_fast[exid] = (time.monotonic() + retry, self.reprotect_fast[exid][1])
+            else:
+                self.reprotect_fast.pop(exid, None)
+            break
+
+    async def _protect_off_loop(self, execution_id: str):
         """The guard's hand-over (R5, 2026-09-08): the execution the venue says is naked, loaded from
         its row with its plan, given a `clear_protect` clearance on the loop, and run through the
         protection layer in the worker thread. The row's own reservation is what it holds; a
@@ -1100,10 +1141,12 @@ class Supervisor:
                   f"hedge={out.hedge_filled}@{out.hedge_avg_price} unhedged={out.unhedged} unwound={out.first_unwound} {out.detail}", flush=True)
             if out.released and self.ledger is not None and out.reservation_id:
                 self.ledger.release(out.reservation_id, reason=f"protection re-run: {out.state.value}")
+            return out
         except Exception as exc:  # noqa: BLE001
             print(f"  [protect FAILED] {short} {brief_error(exc)}", flush=True)
         finally:
             self.in_flight = None
+        return None
 
     def _after_execution(self, sup: Supervised, ev, ex) -> None:
         self.executions += 1
@@ -1178,6 +1221,8 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
     guard_period = float(getattr(getattr(sup.limits, "protect", None), "guard_period_s", 30.0) or 30.0)
     try:
         while not _STOP:
+            if sup.reprotect_fast:
+                await sup.fast_reprotect_tick()       # L76: a naked position is retried in seconds
             if sup.guard is not None and time.time() - last_guard > guard_period:
                 last_guard = time.time()
                 await sup.guard_pass()
