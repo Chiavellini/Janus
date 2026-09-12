@@ -39,9 +39,17 @@ class FeeFinding:
         return self.excess_usd > 1e-6
 
 
-def resolve_unconfirmed(journal: Journal, venues: Mapping[str, ExecutionVenue]) -> dict[str, str]:
-    """client_order_id -> resulting state. UNCONFIRMED stays UNCONFIRMED; nothing is assumed."""
-    out = {}
+def resolve_unconfirmed(journal: Journal, venues: Mapping[str, ExecutionVenue]) -> tuple[dict[str, str], set[str]]:
+    """client_order_id -> resulting state, and the ids the venue proved TERMINAL.
+
+    L92 (2026-09-12): the state is not finality, and a caller that reads `UNFILLED` as "nothing
+    filled, ever" releases the capital of a position the venue is still about to hand it. Polymarket
+    returns UNFILLED with `final=False` for a `delayed` order -- the exact case
+    `Coordinator._settle_ack` was fixed for and documents -- and Kalshi returns UNFILLED with
+    `open=True` for an order still resting. Finality is reported separately, and absent evidence the
+    id is simply not in the set: unknown is never terminal.
+    """
+    out, final = {}, set()
     for row in journal.unconfirmed():
         v = venues.get(row["venue"])
         if v is None:
@@ -49,7 +57,9 @@ def resolve_unconfirmed(journal: Journal, venues: Mapping[str, ExecutionVenue]) 
             continue
         st = v.status(row["client_order_id"])
         out[row["client_order_id"]] = st.state.value
-    return out
+        if getattr(st, "final", False) and not getattr(st, "open", False):
+            final.add(row["client_order_id"])
+    return out, final
 
 
 def ingest_fills(journal: Journal, venues: Mapping[str, ExecutionVenue], *, since_utc: float) -> list[FillRecord]:

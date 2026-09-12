@@ -90,6 +90,64 @@ def override_alerts(*, override_path: Path | str, mode_conf: Path | str = MODE_C
     return []
 
 
+#: L93 (2026-09-12): how many of the most recent real covers the P&L check looks at, and how many of
+#: them may have lost money before it says so. The lane had NO money-based alert of any kind: the
+#: ~33 watchdog conditions are all operational (CRASHED, STALE, KILL_FILE_PRESENT, COVERAGE_GAP...)
+#: and the first automatic money signal was the daily realized-loss breaker at -$25, which at about
+#: a dollar a losing cover is roughly twenty-five of them in a day. On 2026-09-12 two covers lost
+#: -$2.33 between them and nothing said a word; the operator found it by eye on the board.
+PNL_WINDOW_COVERS = 10
+PNL_MAX_LOSERS = 4
+#: A cover that settled above its own break-even is a locked loss the protection layer took on
+#: purpose. One is a fact of life; a run of them is the entry economics being wrong.
+PNL_MAX_BELOW_BREAK_EVEN = 3
+
+
+def cover_pnl_alerts(db_path: Path | str = DEFAULT_DB, *, window: int = PNL_WINDOW_COVERS,
+                     max_losers: int = PNL_MAX_LOSERS,
+                     max_below_break_even: int = PNL_MAX_BELOW_BREAK_EVEN) -> list[str]:
+    """Whether the lane is WINNING, which nothing else here asks. Read-only and silent without rows.
+
+    Reads settled real covers newest-first and reports the window's net, how many lost money, and
+    how many the lane's own detail line marked ABOVE_BREAK_EVEN -- the label `protect._hedged`
+    already writes and that nothing has ever read.
+    """
+    import sqlite3
+    out: list[str] = []
+    dbp = Path(db_path)
+    if not dbp.exists():
+        return out
+    try:
+        con = sqlite3.connect(f"file:{dbp}?mode=ro", uri=True)
+        if not con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_settlements'").fetchone():
+            return out
+        # The ABOVE_BREAK_EVEN label is written by `protect._hedged` onto the HEDGED transition;
+        # `executions.detail` is overwritten when the cover settles, so the history is where it
+        # survives. Nothing in the lane has ever read it.
+        rows = con.execute(
+            "SELECT s.realized_usd, (SELECT t.detail FROM execution_transitions t "
+            "  WHERE t.execution_id = s.execution_id AND t.to_state = 'HEDGED' "
+            "  ORDER BY t.id DESC LIMIT 1) "
+            "FROM execution_settlements s JOIN executions e ON e.execution_id = s.execution_id "
+            "WHERE e.mode IN ('LIMITED_LIVE','PRODUCTION') AND s.realized_usd IS NOT NULL "
+            "ORDER BY s.settled_ts DESC LIMIT ?", (window,)).fetchall()
+    except sqlite3.Error as exc:
+        return [f"risk: PNL_UNREADABLE — {type(exc).__name__}: {exc}"]
+    if not rows:
+        return out
+    net = sum(float(r[0] or 0.0) for r in rows)
+    losers = sum(1 for r in rows if float(r[0] or 0.0) < 0)
+    below = sum(1 for r in rows if "ABOVE_BREAK_EVEN" in (r[1] or ""))
+    if losers >= max_losers:
+        out.append(f"risk: COVERS_LOSING — {losers} of the last {len(rows)} real covers lost money, "
+                   f"net {net:+.2f} USD; entry economics, not a venue fault")
+    if below >= max_below_break_even:
+        out.append(f"risk: HEDGE_ABOVE_BREAK_EVEN — {below} of the last {len(rows)} covers settled above "
+                   f"their own break-even (a locked loss inside the cap); the hedge is costing more than "
+                   f"entry priced it at")
+    return out
+
+
 def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str = BREAKER_PATH,
                 db_path: Path | str = DEFAULT_DB, max_unreconciled_s: float = MAX_UNRECONCILED_S,
                 override_path: Path | str | None = None, mode_conf: Path | str = MODE_CONF,
@@ -98,6 +156,7 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
     t = time.time() if now is None else now
     out: list[str] = []
     out.extend(enabled_league_cap_alerts())
+    out.extend(cover_pnl_alerts(db_path))
     root = Path(kill_root)
     out.extend(override_alerts(override_path=Path(override_path) if override_path else root / "arming_override.json",
                                mode_conf=mode_conf, code_sha=code_sha, limits_sha=limits_sha, now=t))

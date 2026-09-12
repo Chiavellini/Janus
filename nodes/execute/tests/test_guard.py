@@ -371,10 +371,41 @@ def test_a_later_authoritative_zero_fill_closes_the_unknown_execution(tmp_path):
     journal.pending(OrderRequest("polymarket", TOK, TOK, "buy_yes", .58, 10, "ioc", "cid0", "o1"),
                     mode="LIMITED_LIVE", now=T0)
     g.ledger = ledger
-    rep = g.apply(GuardSnapshot(T0 + 121, unconfirmed={"cid0": FillState.UNFILLED.value}))
+    # L92: a zero-fill the venue proved TERMINAL. Without that proof nothing is released (below).
+    rep = g.apply(GuardSnapshot(T0 + 121, unconfirmed={"cid0": FillState.UNFILLED.value},
+                                unconfirmed_final={"cid0"}))
     got = records.load("unknown0")
     assert got.state is X.ORDER_UNFILLED and got.released and r.reservation_id not in ledger.open
     assert any(x.startswith("ZERO_FILL_FINAL unknown0") for x in rep.findings)
+
+
+def test_a_zero_fill_the_venue_has_not_called_final_never_releases_the_reservation(tmp_path):
+    """L92: Polymarket answers a `delayed` order UNFILLED with final=False and Kalshi answers a
+    resting order UNFILLED with open=True -- both can still fill. Releasing on the STATE alone gave
+    the capital back while a real position existed, cleared EVENT_IN_FLIGHT so a second full-size
+    execution could open on the same game, and refunded the day's notional for money already spent.
+    `Coordinator._settle_ack` was fixed for exactly this; the guard reintroduced it on the slow path."""
+    from kernel.execution_protocol import OrderRequest
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+    main, journal, records, g = _world(tmp_path, venues={})
+    ledger = ExposureLedger(main)
+    r = ledger.reserve(event_id="e1", league="mlb", per_venue_usd={"polymarket": 6.0, "kalshi": 2.0},
+                       limits=load_limits(), opportunity_id="o1", now=T0)
+    p = _plan()
+    ex = Execution("pending0", "o1", "e1", "mlb", "LIMITED_LIVE", 10, T0,
+                   state=X.UNKNOWN_PROVIDER_STATE, first_client_id="cid0", reservation_id=r.reservation_id)
+    records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__, "max_cost": p.max_cost_per_contract,
+                            "fee": p.fee_per_contract}, books={})
+    records.sync(ex, now=T0 + 6)
+    journal.pending(OrderRequest("polymarket", TOK, TOK, "buy_yes", .58, 10, "ioc", "cid0", "o1"),
+                    mode="LIMITED_LIVE", now=T0)
+    g.ledger = ledger
+    rep = g.apply(GuardSnapshot(T0 + 121, unconfirmed={"cid0": FillState.UNFILLED.value}))  # no finality
+    got = records.load("pending0")
+    assert got.state is X.UNKNOWN_PROVIDER_STATE and not got.released, "the venue may still fill it"
+    assert r.reservation_id in ledger.open, "the capital stays held"
+    assert not any(x.startswith("ZERO_FILL_FINAL") for x in rep.findings)
 
 
 def test_retried_opportunities_join_fills_by_exact_client_id(tmp_path):

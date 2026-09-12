@@ -25,8 +25,11 @@ def test_unconfirmed_orders_are_asked_about_and_an_unresolved_poll_stays_unconfi
     j = Journal(TupleStore(tmp_path / "t.sqlite", enforce_volume=False))
     for cid, venue in (("a", "kalshi"), ("b", "polymarket"), ("c", "sxbet")):
         j.pending(OrderRequest(venue, "m", "o", "buy_yes", 0.44, 10.0, "fok", cid, "opp"), mode="PAPER_EXECUTION", now=1.0)
-    got = resolve_unconfirmed(j, {"kalshi": V("kalshi", FillState.FILLED), "polymarket": V("polymarket", FillState.UNCONFIRMED)})
+    got, final = resolve_unconfirmed(j, {"kalshi": V("kalshi", FillState.FILLED), "polymarket": V("polymarket", FillState.UNCONFIRMED)})
     assert got == {"a": "FILLED", "b": "UNCONFIRMED", "c": "UNCONFIRMED"}
+    # L92: finality is reported separately, and absent evidence is never terminal -- "b" answered
+    # UNCONFIRMED (final=False) and "c" has no venue to ask, so neither can be called terminal.
+    assert final == {"a"}
 
 
 def test_a_fee_above_the_pinned_curve_is_a_stop(tmp_path: Path):

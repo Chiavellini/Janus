@@ -63,6 +63,8 @@ _REAL_MODES = {m.value for m in Mode if m.sends_real_orders}
 class GuardSnapshot:
     now: float
     unconfirmed: dict[str, str] = field(default_factory=dict)         # client_order_id -> state after the poll
+    #: L92: the ids the venue proved TERMINAL (final and not open). A state alone is not finality.
+    unconfirmed_final: set[str] = field(default_factory=set)
     fills: list[FillRecord] = field(default_factory=list)
     positions: dict[str, Sequence[Position] | None] = field(default_factory=dict)
     balances: dict[str, float] = field(default_factory=dict)
@@ -112,7 +114,7 @@ class PositionGuard:
         if unresolved and unresolved[0] is not None:
             fill_since = min(fill_since, max(0.0, float(unresolved[0]) - 1.0))
         try:
-            snap.unconfirmed = resolve_unconfirmed(self.journal, self.venues)
+            snap.unconfirmed, snap.unconfirmed_final = resolve_unconfirmed(self.journal, self.venues)
         except Exception as exc:  # noqa: BLE001
             snap.errors["unconfirmed"] = f"{type(exc).__name__}: {exc}"
         try:
@@ -586,6 +588,15 @@ class PositionGuard:
         """
         for cid, state in snap.unconfirmed.items():
             if state not in (FillState.UNFILLED.value, FillState.REJECTED.value):
+                continue
+            if cid not in snap.unconfirmed_final:
+                # L92 (2026-09-12): a zero-fill STATE is not a terminal zero fill. Polymarket answers
+                # `delayed` as UNFILLED with final=False and Kalshi answers a resting order as
+                # UNFILLED with open=True, and both can still fill. Releasing here on the state alone
+                # gave the reservation back while a real position existed, cleared EVENT_IN_FLIGHT so
+                # a SECOND full-size execution could open on the same game, and refunded the day's
+                # notional for money that had been spent. The coordinator's `_settle_ack` was fixed
+                # for exactly this and says so; the guard reintroduced it on the slower path.
                 continue
             row = self.journal.get(cid)
             exid = self._execution_for(row) if row is not None else None
