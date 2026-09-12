@@ -6,6 +6,29 @@ never edited afterward. **This is history, not status** — for current state re
 
 ---
 
+## 2026-09-12 — F21's first cover latched the kill; allowance, cadence, and the launchpad
+
+VARILLA V WILD (21:37Z on the 11th), the first 25-contract trade, filled 25.32 on Polymarket at 0.78 and
+met a Kalshi book at 0.24 with its loss-cap ceiling at 0.22: the $1 protection allowance was four ticks
+at 25. L75 advanced phases in 0.3 s as built; after three misses the lane latched `kill/live` and
+re-protected on the guard's 30 s cadence, hedging at 0.22 39 s later (-$0.447, reconciled). Entries were
+refused under the latch until the operator's paste at 01:00Z and hand clear at 01:06:50Z. Two changes
+went out in that paste: the allowance scales to $2.50 so the registered $0.10 a contract binds at 25
+(GATE row 2026-09-12), and L76, a naked position is re-run every 3 s for a minute instead of once per
+guard pass. Hedging on the Polymarket acknowledgement was considered and rejected: the venue acks a FAK
+as `delayed`, so an ack proves no position.
+
+`ops/launchpad.py` + `ops/box/launchpad_extract.py`: one read-only snapshot of the box (executions of
+the last 24 h with settlement and orders by client id, open exposure, reservations, override without
+its signature, kill files, breaker, sockets and loop lag, watchdog alerts with the disk sample write
+disabled, redemptions, disk, memory, load) compressed through SSM's 24 KB output cap and rendered as a
+self-contained dark page under `data/launchpad/`, opened locally and publishable as a private Artifact.
+The statement ledger (`ops/account_ledger.py`) is not involved: it reconciles venue statements.
+
+Observed and not yet fixed: 28 of 30 taker first legs since the 11th missed with the local Polymarket
+socket book showing size at the limit (registered next as its own row); the single-vCPU box stalls
+pricing above 5 s of loop lag several times an hour in the evening slate.
+
 ## 2026-09-11 — the box's data volume filled; recovery, retention, and the table that did it
 
 At 2026-09-11T04:40Z the 50 GB data volume on the Mexico box reached zero bytes free. The lane

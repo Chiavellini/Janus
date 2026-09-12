@@ -57,7 +57,13 @@ Full suite green. Expected steady state after release: ~1 GB/day database, ~7 GB
 
 ## Immediate next step
 
-**kill/live is latched since 2026-09-11 21:37Z** (VARILLA V WILD, genuine: 39 s unprotected at 25
+Done 2026-09-12 01:06Z: the allowance + L76 paste landed (`c03033c`) and the operator cleared the
+latch; the lane trades at 25 / $30 / $500 with a $2.50 allowance and a 3 s re-protect cadence.
+`python3 ops/launchpad.py` is the dashboard (opens locally; the agent republishes the hosted copy).
+Next: the first-leg price confirmation row (28 of 30 taker first legs missed with the socket book
+showing size at the limit), then the instance size (c7g.large) as the operator's billable call.
+
+### Earlier (01:00Z): kill/live is latched since 2026-09-11 21:37Z** (VARILLA V WILD, genuine: 39 s unprotected at 25
 contracts under a $1 allowance = four Kalshi ticks). Two changes are on the branch for one paste:
 the allowance scales to $2.50 so $0.10 a contract binds at 25 (GATE row 2026-09-12), and L76,
 the fast re-protect cadence (3 s for 60 s instead of the 30 s guard pass). Paste

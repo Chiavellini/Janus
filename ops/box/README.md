@@ -17,3 +17,5 @@ The box is in Mexico since 2026-09-07 (`mx-central-1`, `i-0a8c073c72dcdae11`; Po
 | `tests/` | The materialiser's modes and names, the latency arithmetic, the kill mirror. |
 
 The contract is `ops/ASHBURN_SPORTS_RUNBOOK.md`.
+
+`python3 ops/launchpad.py` — the launchpad: one read-only snapshot (`launchpad_extract.py` sent on stdin through run.sh, compressed under SSM's 24 KB output cap) rendered as a dark single page under `data/launchpad/`; `--every 300` refreshes, `--from FILE` renders a saved snapshot.
