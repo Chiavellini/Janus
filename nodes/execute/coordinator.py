@@ -143,6 +143,7 @@ class Coordinator:
         # at the limit. One read of the venue's own book before the send: if it does not offer the
         # plan's size at the plan's limit, nothing is sent and the reservation goes back. No book
         # (the read failed) is not a verdict: the send goes out as before.
+        collateral_cap = None
         if (not plan.first.post_only and plan.first.time_in_force in ("ioc", "fok")
                 and self.fresh_book is not None and self.mode.executes):
             m0 = self.mono()
@@ -156,6 +157,10 @@ class Coordinator:
                 top = book.asks[0].price if book.asks else None
                 ex.protect["first_leg_confirm"] = {"limit": plan.first.limit_price, "marginal": want, "top": top,
                                                    "contracts": plan.first.contracts}
+                if top is not None and 0 < top < plan.first.limit_price:
+                    # L83: spend at most contracts x the venue's own ask, whatever the limit allows.
+                    collateral_cap = round(float(plan.first.contracts) * float(top), 2)
+                    ex.protect["first_leg_confirm"]["max_collateral_usd"] = collateral_cap
                 if want is None or want > plan.first.limit_price + 1e-9:
                     return self._fail(ex, X.BOOK_MOVED,
                                       f"first leg: {plan.first.venue} book offers {plan.first.contracts:g} at "
@@ -166,6 +171,8 @@ class Coordinator:
         # that is why it goes first.
         req_a = self._request(plan, plan.first, plan.first.contracts, plan.first.limit_price, hedge=False,
                               execution_id=ex.execution_id)
+        if collateral_cap is not None and not req_a.post_only and req_a.time_in_force in ("ioc", "fok"):
+            req_a = replace(req_a, max_collateral_usd=collateral_cap)
         rest_deadline = None
         if req_a.post_only:
             rest_deadline = min(self.mono() + min(2.0, self.leg_a_settle_s),

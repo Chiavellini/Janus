@@ -517,3 +517,33 @@ def test_the_first_leg_is_confirmed_against_the_venue_book_before_the_send(tmp_p
     vs4["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
     ex4 = co4.execute(p, clearance_for(tmp_path / "d", now_mono=100.0))
     assert ex4.state is X.HEDGED and "a_confirm_ms" not in ex4.stages
+
+
+def test_the_first_leg_carries_a_collateral_ceiling_from_the_venue_s_ask(tmp_path):
+    """L83: the L77 read's best ask, when under the plan limit, becomes the order's collateral
+    ceiling (contracts x ask); at or above the limit there is none."""
+    co, vs, store, clk, _ = harness(tmp_path)
+    offs = offers()
+    p, _ = plan_for(offs)
+    vs["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    cheaper = {"P_H": bk([(p.first.limit_price - 0.03, 5000)])}
+    co.fresh_book = lambda venue, market, side: (cheaper if venue == "polymarket" else vs[venue].books).get(market)
+    sent = []
+    real = vs["polymarket"].submit
+    vs["polymarket"].submit = lambda r, c: (sent.append(r), real(r, c))[1]
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.HEDGED
+    first = sent[0]
+    assert first.max_collateral_usd == pytest.approx(round(p.first.contracts * (p.first.limit_price - 0.03), 2))
+    assert ex.protect["first_leg_confirm"]["max_collateral_usd"] == first.max_collateral_usd
+    assert all(r.max_collateral_usd is None for r in sent[1:]), "hedges carry no ceiling"
+    co2, vs2, _, _, _ = harness(tmp_path / "b")
+    vs2["polymarket"].books = {"P_H": bk([(p.first.limit_price, 5000)])}          # the ask AT the limit: no ceiling
+    vs2["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    co2.fresh_book = lambda venue, market, side: vs2[venue].books.get(market)
+    sent2 = []
+    real2 = vs2["polymarket"].submit
+    vs2["polymarket"].submit = lambda r, c: (sent2.append(r), real2(r, c))[1]
+    assert co2.execute(p, clearance_for(tmp_path / "b", now_mono=100.0)).state is X.HEDGED
+    assert sent2[0].max_collateral_usd is None

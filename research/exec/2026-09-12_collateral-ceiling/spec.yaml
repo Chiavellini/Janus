@@ -1,0 +1,29 @@
+row: L83
+date: 2026-09-12
+kind: descriptive_execution_repair
+status_at_registration: PENDING
+observed_failure: >-
+  LAA @ WSH 01:18:54Z: a Polymarket immediate BUY for 25 contracts at limit 0.18 spent 25 x 0.18 =
+  $4.50 of collateral and, filled at 0.14, delivered 32.14 shares. The venue sizes an immediate
+  BUY by collateral (F20's known limitation, dust-sized at 10 contracts); at 25 and a low price a
+  four-cent improvement is seven contracts. The hedge is capped at 25, so 7.14 contracts were
+  unhedgeable, kill/live latched (the registered rule for an excess of one contract or more), and
+  the position settled -$0.45 (cover +$0.60, the excess -$1.06). Separately the 25-contract hedge
+  found no Kalshi depth under its loss cap for 38 minutes (a_settled_ms 6,393: the first leg's
+  status took 6.4 s to resolve); that latency is not this row.
+immutable_success_criteria:
+  - OrderRequest carries max_collateral_usd; the coordinator sets it to contracts x the venue's
+    own best ask (the L77 read) when that ask is under the plan limit; the Polymarket client
+    derives the wire's nominal size from it (cent-exact, at most the request) while the journal's
+    contracts stays the requested reference size; hedges and every other order are unchanged.
+  - A fill at the venue's ask delivers exactly the requested contracts; a fill walking up to the
+    limit delivers fewer (an ordinary partial); excess can arise only from improvement below the
+    venue's own ask and remains subject to the existing one-contract stop.
+  - No cap, hurdle, limit or hedge behaviour changes; proven by client and coordinator tests.
+expected_ev_effect: >-
+  none on selection; removes the over-fill path that both turns a cover into a directional
+  position and stops the lane. Fewer received shares than requested is the new failure mode,
+  costing only the missed part of a cover.
+prohibited:
+  - Raising the hedge quantity cap to absorb an over-fill.
+  - Changing the one-contract excess stop.

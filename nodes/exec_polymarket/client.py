@@ -802,8 +802,15 @@ class PolymarketExecution:
             ok = getattr(self.transport, "ensure_sell_allowance", lambda _t: True)(req.market_id)
             if ok:
                 self._sell_ok.add(req.market_id)
+        wire_size = req.contracts
         if not req.is_sell and req.time_in_force in ("ioc", "fok"):
-            exact = PyClobTransport._cent_exact_buy(size=req.contracts, price=req.price, tick=req.tick)
+            # L83: the venue delivers collateral / fill price shares. A ceiling from the venue's own
+            # ask bounds the collateral so a fill at the ask is exactly `contracts`; the journal
+            # keeps `contracts` as the reference size (what the hedge covers, what an overfill
+            # is measured against); only the wire's nominal size shrinks.
+            if req.max_collateral_usd is not None and req.price > 0:
+                wire_size = min(float(req.contracts), float(req.max_collateral_usd) / float(req.price))
+            exact = PyClobTransport._cent_exact_buy(size=wire_size, price=req.price, tick=req.tick)
             if exact is None:
                 self.journal.pending(req, mode=self.mode.value, now=t)
                 ack = Ack(self.venue, req.client_order_id, None, FillState.REJECTED, 0.0, None, None,
@@ -812,19 +819,21 @@ class PolymarketExecution:
                 self.journal.record(ack, kind="reject", raw={"prewire": True})
                 return ack
             exact_price, exact_size = exact
-            req = replace(req, price=exact_price, contracts=exact_size)
+            wire_size = exact_size
+            req = replace(req, price=exact_price,
+                          contracts=exact_size if req.max_collateral_usd is None else req.contracts)
         self.journal.pending(req, mode=self.mode.value, now=t)       # BEFORE the POST
         if bounded_post is not None and not req.is_sell:
             self.journal.store.con.execute(
                 "INSERT INTO pm_bounded_taker_orders VALUES(?,?,?,?,?,?)",
-                (req.client_order_id, str(req.contracts), str(BOUNDED_TAKER_MAX_CONTRACTS),
+                (req.client_order_id, str(wire_size), str(BOUNDED_TAKER_MAX_CONTRACTS),
                  str(BOUNDED_TAKER_MAX_COLLATERAL_USD), str(BOUNDED_TAKER_MAX_ACCEPTED_EXCESS), t))
             self.journal.store.con.commit()                         # authorization BEFORE the wire
         self._requests[req.client_order_id] = req
         self.submits += 1
         try:
             if bounded_post is not None and not req.is_sell:
-                d = bounded_post(token_id=req.market_id, price=req.price, size=req.contracts,
+                d = bounded_post(token_id=req.market_id, price=req.price, size=wire_size,
                                  order_type=ORDER_TYPE[req.time_in_force], tick=req.tick)
             else:
                 d = self.transport.post_order(token_id=req.market_id, price=req.price, size=req.contracts,

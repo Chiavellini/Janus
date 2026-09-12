@@ -57,6 +57,14 @@ Full suite green. Expected steady state after release: ~1 GB/day database, ~7 GB
 
 ## Immediate next step
 
+**kill/live is latched again since 2026-09-12 01:19Z** (LAA @ WSH: 25 requested at 0.18, filled 32.14
+at 0.14 because the venue sizes an immediate BUY by collateral; 7.14 unhedgeable, -$0.45). L83 on
+the branch caps the order's collateral at contracts x the venue's own ask (from the L77 read), so a
+fill at the ask is exactly the request and a walk up under-fills. Paste the branch head, then clear
+the latch by hand: `bash ops/box/run.sh 'sudo -u janus rm /srv/janus/kill/live; ls /srv/janus/kill'`.
+Also observed on that trade: the first leg's status took 6.4 s to resolve and the 25-contract hedge
+found no Kalshi depth under its loss cap for 38 minutes (chased every 3 s, then every 30 s).
+
 **L79–L81 (loop waste) are on the branch, not deployed.** L78 profiled the live loop: the sizing
 sweep was 55 %, ladder work 21 %, and the heartbeat sweep grows with the slate. Offline on the
 234-poller Sep 9 slate the full pipeline went 23.1 → 3.8 CPU s with identical evaluation rows and

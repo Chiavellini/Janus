@@ -50,6 +50,13 @@ class OrderRequest:
     entry_expires_utc: float | None = None
     #: Exact execution ownership for restart reconciliation. Opportunity ids are reused.
     execution_id: str = ""
+    #: L83 (2026-09-12): the most collateral an immediate Polymarket BUY may spend. The venue sizes
+    #: such a BUY by collateral (size x price) and delivers collateral / fill price shares, so
+    #: requesting `contracts` at the limit received 32.14 for 25 when the fill came four cents
+    #: better (LAA @ WSH). With this set from the venue's own ask, a fill at the ask yields exactly
+    #: `contracts`, a walk up to the limit yields fewer, and only improvement below the venue's
+    #: ask can exceed. `contracts` stays the reference every overfill rule compares against.
+    max_collateral_usd: float | None = None
 
     @property
     def is_sell(self) -> bool:

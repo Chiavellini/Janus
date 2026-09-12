@@ -113,3 +113,28 @@ def test_historical_authoritative_status_preserves_excess_shares(tmp_path):
     assert state.filled_contracts == 10.166667 and state.state is FillState.FILLED
     assert journal.get("c1")["contracts"] == 10
     assert journal.get("c1")["filled_contracts"] == 10.166667
+
+
+def test_a_collateral_ceiling_shrinks_the_wire_size_and_keeps_the_reference_size(tmp_path):
+    """L83 (LAA @ WSH, 2026-09-12): 25 requested at limit 0.18 spent $4.50 and received 32.14 at
+    0.14. With max_collateral_usd = 25 x the venue's ask (0.14), the wire's nominal size is
+    ~19.44 (cent-exact), a fill at the ask is exactly 25, and the journal still says 25."""
+    class Transport:
+        def buy_contract_cap_error(self): return BUY_CAP_UNPROVEN
+        def post_bounded_taker_buy(self, **kwargs):
+            seen.append(kwargs)
+            return {"success": False, "errorMsg": "no match"}
+    seen = []
+    v, journal = venue(tmp_path, Transport())
+    v.submit(req(price=.18, contracts=25, time_in_force="ioc", tick=.01, max_collateral_usd=3.50), cl(tmp_path))
+    assert len(seen) == 1
+    size, price = seen[0]["size"], seen[0]["price"]
+    assert size < 25 and size * price <= 3.50 + 1e-9 and abs(size * price - round(size * price, 2)) < 1e-9, seen[0]
+    assert journal.get("c1")["contracts"] == 25, "the reference size is what the hedge covers and overfill is measured against"
+    row = journal.store.con.execute("SELECT max_requested_contracts, max_collateral_usd FROM pm_bounded_taker_orders WHERE client_order_id='c1'").fetchone()
+    assert row == ("25", "30")
+    # without a ceiling, the wire size is the request (today's path)
+    seen.clear()
+    v2, j2 = venue(tmp_path / "b", Transport())
+    v2.submit(req(price=.18, contracts=25, time_in_force="ioc", tick=.01), cl(tmp_path / "b"))
+    assert seen[0]["size"] == 25 and j2.get("c1")["contracts"] == 25
