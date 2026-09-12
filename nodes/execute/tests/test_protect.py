@@ -39,7 +39,7 @@ def test_the_arithmetic():
     ex = Execution("e", "o", "ev", "mlb", "PAPER_EXECUTION", 10.0, T, first_filled=10.0, first_avg_price=0.57,
                    first_unwound=10.0, first_unwind_avg=0.55)
     assert projected_pnl_usd(ex, p) == pytest.approx(10 * (0.55 - 0.57 - p.fee_per_contract / 2))
-    assert remaining_loss_usd(ex, p, lim) == pytest.approx(max(0.0, 1.0 - 10 * (0.02 + p.fee_per_contract / 2)))
+    assert remaining_loss_usd(ex, p, lim) == pytest.approx(max(0.0, lim.max_protect_loss_usd - 10 * (0.02 + p.fee_per_contract / 2)))
 
 
 def test_a_book_one_tick_above_the_walked_limit_fills_on_the_chase_inside_the_budget(tmp_path):

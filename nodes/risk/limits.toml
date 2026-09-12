@@ -65,7 +65,10 @@ clearance_ttl_ms = 500           # a clearance is good for one submit, within th
 [protect]                        # the hedge protection layer (nodes/execute/protect.py), 2026-09-08
 hedge_protect_window_s = 30.0    # from leg A known: chase to the budget, then to the loss cap, then unwind
 unwind_reserve_s = 10.0          # the last N s of the window belong to the unwind
-max_protect_loss_usd = 1.00      # per execution: the most a chase past break-even plus an unwind may lock in
+max_protect_loss_usd = 2.50      # per execution: the most a chase past break-even plus an unwind may lock in.
+                                 # 2026-09-12 (GATE row): 25 x $0.10 so the per-contract rule below binds at the
+                                 # F21 size exactly as it did at 10; at $1.00 the cap was four Kalshi ticks at 25
+                                 # and VARILLA V WILD sat unprotected 39 s with 25 available one tick above it.
 max_protect_loss_per_contract_usd = 0.10   # the same cap per contract; the tighter of the two binds
 max_protect_submits = 12         # hedge + unwind IOCs per execution under the protect window
 protect_resubmit_ms = 400        # between IOCs: enough for a fresh book, short enough for 12 tries

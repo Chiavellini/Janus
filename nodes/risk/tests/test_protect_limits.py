@@ -11,12 +11,24 @@ def test_the_checked_in_limits_carry_the_protect_section_and_the_moved_submit_bo
     lim = load_limits()
     assert lim.max_hedge_submits == 3 and lim.max_hedge_latency_ms == 3000
     p = lim.protect
-    assert (p.hedge_protect_window_s, p.unwind_reserve_s, p.max_protect_loss_usd, p.max_protect_loss_per_contract_usd) == (30.0, 10.0, 1.0, 0.10)
+    assert (p.hedge_protect_window_s, p.unwind_reserve_s, p.max_protect_loss_usd, p.max_protect_loss_per_contract_usd) == (30.0, 10.0, 2.5, 0.10)
     assert p.max_protect_submits == 12 and p.protect_resubmit_ms == 400 and p.guard_period_s == 30.0
     # R5, partially released 2026-09-08: the guard re-protects on its own, the unwind stays off
     # until the R4 proofs run against a real venue.
     assert p.unwind_enabled is False and p.protect_auto is True and p.protect_kill_on_failure is True
     assert not hasattr(lim, "max_unhedged_duration_ms"), "the protect window is the bound on unhedged duration now"
+
+
+def test_the_per_contract_rule_binds_at_the_f21_size():
+    """2026-09-12: at $1.00 per execution the allowance was four Kalshi ticks at 25 contracts and
+    VARILLA V WILD sat unprotected for 39 s with the book one tick above the cap. 25 x $0.10 makes
+    the registered per-contract rule the binding one at 25, as it was at 10; larger sizes still
+    tighten (100 contracts: 2.5c a contract)."""
+    from nodes.execute.protect import loss_allowance
+    p = load_limits().protect
+    assert loss_allowance(p, p.max_protect_loss_usd, 10.0) == 0.10
+    assert loss_allowance(p, p.max_protect_loss_usd, 25.0) == 0.10
+    assert loss_allowance(p, p.max_protect_loss_usd, 100.0) == 0.025
 
 
 def test_a_limits_file_from_before_the_section_still_loads_with_defaults(tmp_path: Path):

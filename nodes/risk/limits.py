@@ -25,7 +25,7 @@ class ProtectLimits:
     a limits file from before the section still loads; the sha moves either way."""
     hedge_protect_window_s: float = 30.0
     unwind_reserve_s: float = 10.0
-    max_protect_loss_usd: float = 1.00
+    max_protect_loss_usd: float = 2.50
     max_protect_loss_per_contract_usd: float = 0.10
     max_protect_submits: int = 12
     protect_resubmit_ms: int = 400
@@ -71,7 +71,7 @@ def load_limits(path: Path | str = LIMITS_PATH) -> RiskLimits:
     protect = ProtectLimits(
         hedge_protect_window_s=float(pr.get("hedge_protect_window_s", 30.0)),
         unwind_reserve_s=float(pr.get("unwind_reserve_s", 10.0)),
-        max_protect_loss_usd=float(pr.get("max_protect_loss_usd", 1.00)),
+        max_protect_loss_usd=float(pr.get("max_protect_loss_usd", 2.50)),
         max_protect_loss_per_contract_usd=float(pr.get("max_protect_loss_per_contract_usd", 0.10)),
         max_protect_submits=int(pr.get("max_protect_submits", 12)),
         protect_resubmit_ms=int(pr.get("protect_resubmit_ms", 400)),
