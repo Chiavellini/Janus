@@ -31,7 +31,7 @@ from dataclasses import dataclass, replace
 from typing import Mapping, Sequence
 
 from kernel.schema import Book
-from nodes.cover.cover import PM_MIN_NOTIONAL_USD, Cover, Leg, walk_ladder
+from nodes.cover.cover import PM_MIN_NOTIONAL_USD, PM_WIRE_MIN_SHARES, Cover, Leg, walk_ladder
 from nodes.fees.models import Fill
 from nodes.fees.registry import model_for, params_for
 from nodes.opportunity.thresholds import (
@@ -134,6 +134,46 @@ def marginal_price(book: Book, contracts: float) -> float | None:
 CEIL_CENTS_USD = 0.01
 
 
+def pm_wire_shares(contracts: float, *, top: float | None, limit: float) -> float:
+    """The share count that actually reaches the CLOB for `contracts` at a padded `limit`.
+
+    L83 caps an order's collateral at `contracts x the venue's best ask`, and the adapter then
+    divides that ceiling by the price it sends (`wire = collateral / price`,
+    exec_polymarket/client.py), so the nominal size shrinks by `top / limit` on every order priced
+    above the top of the book -- which is every padded order and every multi-level walk.
+    """
+    if top is None or not (0.0 < top < limit):
+        return float(contracts)
+    return float(contracts) * (float(top) / float(limit))
+
+
+def pm_floors_ok(shares: float, price: float) -> bool:
+    """Both of the CLOB's floors on one order: 5.00 nominal shares, and $1.00 of maker notional."""
+    return (float(shares) + 1e-9 >= PM_WIRE_MIN_SHARES
+            and float(shares) * float(price) + 1e-9 >= PM_MIN_NOTIONAL_USD)
+
+
+def pm_wire_ok(contracts: float, *, top: float | None, limit: float,
+               sent_at_top: bool = False) -> bool:
+    """Whether a Polymarket order for `contracts` clears the CLOB's two floors as it is PRICED.
+
+    L96 (2026-09-13): at five contracts the shrink lands under the five-share floor at EVERY price --
+    top 0.95 with a one-cent pad gives 4.948, top 0.30 gives 4.84 -- which is exactly how all seven
+    of 2026-09-13's capped PRECISION rejections happened, and why L95's downsize could turn a decline
+    into a rejection instead of a fill. `wire x limit` is `contracts x top` when the ceiling binds:
+    the collateral actually committed, which is what the venue measures its dollar floor against.
+
+    `sent_at_top=True` asks the different question the SIZER has to ask -- is this size sendable at
+    all? -- and it is a different question because the entry reprices leg A to the venue's own ask
+    when a pad would shrink the wire under the floor. The size reaching the venue is then `contracts`
+    itself, so no pad can make a size unsendable and only the venue's own floors can. Answering the
+    priced question there instead would refuse five-contract covers the entry can now send.
+    """
+    if sent_at_top:
+        return pm_floors_ok(contracts, top if top else limit)
+    return pm_floors_ok(pm_wire_shares(contracts, top=top, limit=limit), limit)
+
+
 def best_supported_size(first_book: Book, hedge_book: Book, plan, *, min_net_profit_usd: float,
                         max_size: float) -> int | None:
     """The largest whole size at or under `max_size` that BOTH venues' own books can fill inside the
@@ -161,9 +201,14 @@ def best_supported_size(first_book: Book, hedge_book: Book, plan, *, min_net_pro
     settle = float(plan.settlement_buffer_per_contract or 0.0)
     ceiling = float(plan.max_cost_per_contract)
     floor = max(0.0, float(min_net_profit_usd))
+    # L96 (2026-09-13): a size has to clear the venue's own floors, or the downsize converts a
+    # BOOK_MOVED decline into a PRECISION rejection instead of into a fill. The entry reprices leg A
+    # to `top` when a pad would shrink the wire under the five-share floor, so the size that reaches
+    # the venue is `n` itself -- which is the question asked here.
+    top = first_book.asks[0].price if first_book.asks else None
     for n in range(int(max_size), 0, -1):
-        if n * limit + 1e-9 < PM_MIN_NOTIONAL_USD:
-            continue                                   # under the venue's own floor; smaller is worse
+        if not pm_wire_ok(n, top=top, limit=limit, sent_at_top=True):
+            continue                       # under a venue floor; smaller is only worse
         want = marginal_price(first_book, float(n))
         if want is None or want > limit + 1e-9:
             continue

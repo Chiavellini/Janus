@@ -31,7 +31,8 @@ from typing import Callable, Mapping
 
 from kernel.execution_protocol import Ack, ExecutionVenue, OrderRequest
 from kernel.schema import ExecutionState as X, FillState, Mode, OpportunityStatus as S
-from nodes.execute.plan import LegPlan, Plan, best_supported_size, marginal_price, vwap_for_size
+from nodes.execute.plan import (FIRST_VENUE, LegPlan, Plan, best_supported_size, marginal_price,
+                                pm_wire_ok, vwap_for_size)
 from nodes.execute.maker import MakerFillSession, MakerRestAuthorization
 from nodes.execute.protect import protect
 from nodes.execute.records import Execution, ExecutionRecords
@@ -85,6 +86,13 @@ class Coordinator:
         # wait and round trip on this path is named so ops/latency_report.py can blame it (2026-09-07).
         ex.stages = dict(pre_stages or {})
         self._t0[ex.execution_id] = self.mono()
+        # L97: the caller stamped a monotonic just before handing this to a worker thread. The gap is
+        # the executor queue hop, which had no stage and is the largest dark interval on the path.
+        _dispatch = ex.stages.pop("_dispatch_mono", None)
+        if _dispatch is not None:
+            hop = (self._t0[ex.execution_id] - float(_dispatch)) * 1000.0
+            if hop >= 0.0:      # negative means the caller's clock is not this Coordinator's `mono`
+                ex.stages["worker_hop_ms"] = round(hop, 2)
         self.executions[ex.execution_id] = ex
         self._timed(ex, self.records.start, ex, plan={"first": plan.first.__dict__, "hedge": plan.hedge.__dict__,
                                                       "max_cost": plan.max_cost_per_contract, "fee": plan.fee_per_contract,
@@ -252,6 +260,33 @@ class Coordinator:
                 moved = None
         if moved is not None:
             return self._fail(ex, X.BOOK_MOVED, moved + "; nothing sent", release=True)
+
+        # L96 (2026-09-13): L83's collateral ceiling and the CLOB's 5.00-share floor are jointly
+        # unsatisfiable for a PADDED order at small size. The wire size is `cap / price` with
+        # `cap = contracts x top`, so a limit one tick above `top` shrinks the nominal size below
+        # `contracts` -- 4.948 at top 0.95, 4.84 at 0.30 -- and under five shares `_cent_exact_buy`
+        # refuses before anything reaches the venue. Every capped five-contract order on 2026-09-13
+        # died exactly there, 7 of 7, and all seven had `marginal == top` with the full size resting
+        # AT the top level: executable orders killed by their own pad.
+        #
+        # The fix is not to refuse. It is to send at the venue's OWN ask, where the ceiling shrinks
+        # nothing and the nominal size is exactly `contracts`. Paying LESS than the limit cannot
+        # break any of the plan's economics -- its cost ceiling, its dollar floor and the hedge
+        # break-even were all cleared against a HIGHER assumed entry price -- so this direction needs
+        # no re-check. It buys a thinner fill, not a worse one: only asks at or under `top` can
+        # match, so a book with less than `contracts` resting there gives a partial, which is the
+        # ordinary handled outcome. If the cent-rounded ceiling cannot buy the whole size (possible
+        # only on a sub-cent book price), leave the order alone rather than loosen the ceiling.
+        if (collateral_cap is not None and top is not None and plan.first.venue == FIRST_VENUE
+                and not pm_wire_ok(plan.first.contracts, top=top, limit=plan.first.limit_price)):
+            at_top = round(float(plan.first.contracts) * float(top), 2)
+            if (pm_wire_ok(plan.first.contracts, top=top, limit=top)
+                    and at_top / float(top) + 1e-9 >= float(plan.first.contracts)):
+                ex.protect["first_leg_confirm"]["repriced_to_top"] = {
+                    "from": plan.first.limit_price, "to": float(top), "why": "wire under venue floor"}
+                ex.stages["repriced_to_top"] = float(top)
+                plan = replace(plan, first=replace(plan.first, limit_price=float(top)))
+                collateral_cap = at_top
 
         # LEG A: Polymarket, FAK (`ioc` in the internal protocol). Ambiguity here costs nothing;
         # that is why it goes first.

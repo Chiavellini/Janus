@@ -1,0 +1,60 @@
+row: L96
+date: 2026-09-13
+kind: descriptive_execution_repair
+status_at_registration: PENDING
+corrects: L95
+observed_failure: >-
+  `nodes/exec_polymarket/client._cent_exact_buy` enforces TWO venue floors, and only one of them was
+  known above the adapter. The dollar floor ($1.00 of maker notional) is checked at cover time. The
+  other is a hard, unconditional floor on nominal SHARES - `size_d < 5.00`, re-checked as `n < 500`
+  after the divisibility snap - and nothing upstream had ever heard of it. It binds because of L83:
+  an order's collateral is capped at `q x the venue's best ask`, and the adapter then divides that
+  ceiling by the price it SENDS, so the size reaching the wire is `q x top / limit`. The plan pads
+  leg A one tick above the top of book, which makes that ratio strictly less than one at every
+  price. At five contracts the wire therefore sees 4.84 shares at top $0.30 and 4.948 at $0.95 -
+  under the five-share floor AT EVERY PRICE.
+  THE LIVE ROWS SETTLE IT. Of the 216 executions on the box since the 08:03Z release of 2026-09-13,
+  the q=5 orders that carried a collateral ceiling produced 7 PRECISION rejections and 1 BOOK_MOVED:
+  zero fills, 100% loss of the class. All seven recorded `marginal == top` with the full five
+  contracts resting AT the top level, and `cap / top` of exactly 5.0 - executable orders destroyed by
+  their own pad. The two q=5 covers that did fill came from rows where the pre-send read failed, so
+  no ceiling was applied at all: the unbounded-fill path L83 exists to close, and the same class as
+  the 32.14-against-25 overfill that latched the kill. L95's row attributed the PRECISION rejections
+  to the measurement caps; that was the wrong mechanism, though right that small caps exposed it.
+immutable_success_criteria:
+  - Both venue floors live beside each other as venue facts (`PM_MIN_NOTIONAL_USD`,
+    `PM_WIRE_MIN_SHARES` in nodes/cover/cover.py) and are applied through one predicate in
+    nodes/execute/plan.py rather than from inside the adapter alone.
+  - When L83's ceiling would shrink the wire under the share floor, the entry REPRICES leg A to the
+    venue's own ask rather than refusing. At that price the ceiling shrinks nothing and the nominal
+    size is exactly `q`.
+  - The reprice direction is one-way and needs no economic re-check: the plan's cost ceiling, its
+    dollar floor and the hedge break-even were all cleared against a HIGHER assumed entry price, so
+    paying less cannot break any of them. A test pins that a size the ceiling does NOT shrink below
+    the floor is left exactly as the plan priced it.
+  - The ceiling is never loosened to make a size fit. It is a whole number of cents; when
+    `round(q x top, 2)` cannot buy the whole size (possible only on a sub-cent book price) the order
+    is left alone.
+  - The floor that is always true is kept in the sizer and in L95's downsize: a Polymarket leg under
+    `PM_WIRE_MIN_SHARES` contracts cannot be sent at any price. Four contracts at $0.30 clears the $1
+    notional the cover already applies and is still unsendable, which is the gap this closes. The
+    refusal is named `VENUE_WIRE_MIN` and is visible in the sizing audit beside the economic ones.
+  - The reprice is recorded: `stages_json.repriced_to_top` and `protect_json.first_leg_confirm
+    .repriced_to_top` carrying the price it came from.
+  - Outcome to evaluate after 50 attempts: PRECISION rejections at zero; the count of reprices and
+    what share of them filled; and the count of `VENUE_WIRE_MIN` refusals, which is the number of
+    opportunities the venue's own floors cost us.
+expected_ev_effect: >-
+  recovers a class of entry that was fully executable at the venue's own price and was rejected
+  before reaching it - 7 of 7 of the capped five-contract orders in the measured window. It lowers
+  the price paid on those entries (the venue's ask instead of a padded limit), buys a thinner fill
+  rather than a worse one, and spends no more collateral than L83 already authorised. No cap, hurdle,
+  allowance or ceiling moves.
+prohibited:
+  - Loosening L83's collateral ceiling to make a size fit. The ceiling is the bound on the fill.
+  - Raising a size to clear the share floor. The floor is a reason to refuse, never a reason to buy
+    more than the clearance authorised.
+  - Putting either floor only in the adapter. That is how a padded five-contract order came to be
+    impossible at every price with nothing upstream knowing.
+  - Treating a fill that arrived with NO collateral ceiling as evidence that the ceiling is the
+    problem. Those are the unbounded-fill rows, and that path is what the overfill came from.

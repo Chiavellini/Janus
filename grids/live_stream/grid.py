@@ -793,8 +793,13 @@ class Supervisor:
         m_entry = time.monotonic()
         # The path's first two stages, for ops/latency_report.py: the poller's own event->decision
         # time and the gap from the decision to here (records, the frontier).
-        pre = {"frame_to_eval_ms": round(float(getattr(ev, "latency_ms", 0.0) or 0.0), 2),
-               "eval_to_exec_ms": round(max(0.0, time.time() - ev.evaluated_utc) * 1000.0, 2)}
+        # L97 (2026-09-13): `eval_to_exec_ms` used to be measured from `ev.evaluated_utc`, which IS
+        # the frame's receive time (nodes/game_poller sets it to `t`) -- the same origin as
+        # `frame_to_eval_ms`. So the two overlapped completely and summing them double-counted the
+        # whole pricing phase. Subtract the first to make the name true: this is decision -> here.
+        _frame_to_eval = round(float(getattr(ev, "latency_ms", 0.0) or 0.0), 2)
+        pre = {"frame_to_eval_ms": _frame_to_eval,
+               "eval_to_exec_ms": round(max(0.0, (time.time() - ev.evaluated_utc) * 1000.0 - _frame_to_eval), 2)}
         offers = {o: list(v) for o, v in ev.offers.items()}
         plan = plan_from_cover(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
                                league=sup.poller.league, cov=cov, offers=offers, hurdle=MIN_RETURN,
@@ -1002,6 +1007,11 @@ class Supervisor:
             if clearance is None:
                 return
             pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
+            # L97: the `asyncio.to_thread` hop below had no stage at all, and it is the largest
+            # structurally-unmeasured interval on the path -- the executor is shared with discovery,
+            # the guard, retention and settlement, and a comparable hop was once measured at ~760 ms
+            # despite `balances_ms=0`. The coordinator converts this into `worker_hop_ms`.
+            pre["_dispatch_mono"] = time.monotonic()
             books = books_snapshot(offers)
             connected = self._connected()
             loop_proxy = OnLoop(self, asyncio.get_running_loop())

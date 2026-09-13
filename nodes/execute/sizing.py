@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Mapping, Sequence
 
 from nodes.cover.cover import Cover, Leg, best_cover
-from nodes.execute.plan import Plan, plan_from_cover
+from nodes.execute.plan import FIRST_VENUE, Plan, plan_from_cover, pm_wire_ok
 from nodes.risk.limits import RiskLimits
 from nodes.settle_wedge.equivalence import CoverProof
 
@@ -116,6 +116,17 @@ def _risk_refusals(*, event_id: str, league: str, per_venue: Mapping[str, float]
     return out
 
 
+def _top_ask(offers: Mapping[str, Sequence[Leg]], venue: str, market_id: str,
+             outcome_id: str) -> float | None:
+    """The best ask on the exact leg the plan will send, from the same frozen offers."""
+    for legs in offers.values():
+        for leg in legs:
+            if (leg.venue == venue and leg.market_id == market_id
+                    and leg.outcome_id == outcome_id and leg.book.asks):
+                return float(leg.book.asks[0].price)
+    return None
+
+
 def choose_live_size(offers: Mapping[str, Sequence[Leg]], *, now_utc: float, proof: CoverProof,
                      event_id: str, league: str, caps: Mapping[str, float], limits: RiskLimits,
                      ledger, balances: Mapping[str, float], max_leg_age_s: float = 5.0,
@@ -182,6 +193,16 @@ def choose_live_size(offers: Mapping[str, Sequence[Leg]], *, now_utc: float, pro
                     refusals.append("MIN_PROFIT")
                 if locked_return + 1e-12 < hurdle:
                     refusals.append("MIN_RETURN")
+                # L96 (2026-09-13): the CLOB refuses a marketable BUY under 5.00 nominal shares
+                # (`_cent_exact_buy`), a floor nothing above the adapter knew about. The entry sends
+                # leg A at the venue's own ask when a pad would shrink the wire, so the size reaching
+                # the venue is `q` itself -- which makes this the whole test, and it is exact. Four
+                # contracts at $0.30 clears the $1 notional floor and is still unsendable.
+                if plan.first.venue == FIRST_VENUE and not pm_wire_ok(
+                        q, top=_top_ask(offers, plan.first.venue, plan.first.market_id,
+                                        plan.first.outcome_id),
+                        limit=plan.first.limit_price, sent_at_top=True):
+                    refusals.append("VENUE_WIRE_MIN")
                 per_venue = {
                     plan.first.venue: plan.first.contracts * plan.first.limit_price,
                     plan.hedge.venue: plan.hedge.contracts * plan.hedge.limit_price,

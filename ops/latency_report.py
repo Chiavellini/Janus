@@ -5,8 +5,13 @@
     python3 ops/latency_report.py [--db PATH] [--last N] [--mode LIMITED_LIVE]
 
 Stages are ms from the machine's entry: the grid's pre-machine stages (frame_to_eval_ms,
-eval_to_exec_ms, balances_ms, clear_ms, pre_machine_ms), then a_submit/a_ack/a_settled,
+eval_to_exec_ms, worker_hop_ms, balances_ms, clear_ms, pre_machine_ms), then a_submit/a_ack/a_settled,
 b_submit/b_ack/b_settled, done_ms, with db_ms (store writes) and a_polls/b_polls/b_attempts.
+
+Two of those are disjoint intervals as of L97 (2026-09-13) and were not before: `eval_to_exec_ms`
+was measured from the FRAME, so it contained `frame_to_eval_ms` in full and summing the two
+double-counted it. `worker_hop_ms` is the executor queue hop -- the largest interval on the path
+that previously had no stage at all.
 Beside them, `orders.submitted_utc -> order_events.seen_ts` gives submit->ack per order as the
 cross-check. L34 gives the venues' bare round trips from each host."""
 from __future__ import annotations
@@ -22,9 +27,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from kernel.paths import DB  # noqa: E402
 
-ORDER = ["frame_to_eval_ms", "eval_to_exec_ms", "balances_ms", "clear_ms", "pre_machine_ms", "a_submit_ms",
+ORDER = ["frame_to_eval_ms", "eval_to_exec_ms", "worker_hop_ms", "balances_ms", "clear_ms",
+         "pre_machine_ms", "confirm_budget_ms", "a_submit_ms",
          "a_ack_ms", "a_settled_ms", "b_submit_ms", "b_ack_ms", "b_settled_ms", "done_ms", "db_ms",
-         "a_polls", "b_polls", "b_attempts"]
+         "a_polls", "b_polls", "b_attempts", "hedge_slippage_c"]
 
 
 def q(xs: list[float]) -> dict:

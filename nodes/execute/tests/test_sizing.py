@@ -111,3 +111,21 @@ def test_the_day_notional_is_read_once_per_decision():
     d = choose_live_size(offers(), now_utc=T, proof=mlb_cover_proof(["a", "b"]), event_id="g1", league="mlb",
                          caps=caps, limits=lim, ledger=Ledger(), balances={"kalshi": 100, "polymarket": 100})
     assert Ledger.calls == 1 and d.risk_context["day_notional_used_usd"] == 240.0, "one read for the whole q sweep"
+
+
+def test_a_size_under_the_clobs_own_share_floor_is_never_selected():
+    """L96 (2026-09-13): the CLOB refuses a marketable BUY under 5.00 nominal shares, a floor that
+    lived only inside `_cent_exact_buy` and that nothing upstream knew about. Four contracts clears
+    the $1 notional minimum at $0.30 and is still unsendable, so the dollar floor the cover already
+    applies does not cover this."""
+    os = offers(pm=((0.30, 30),), kalshi=((0.50, 30),))
+    d = choose(os)
+    by_q = {c.quantity: c for c in d.candidates}
+    # Four contracts at $0.30 is $1.20 of notional: past the dollar floor the cover already applies,
+    # and still under the share floor, which is the gap this closes.
+    assert by_q[4].plan is not None and by_q[4].plan.first.contracts * 0.30 > 1.0
+    assert "VENUE_WIRE_MIN" in by_q[4].refusals, "four contracts cannot reach the venue"
+    assert by_q[4].profit_usd > 0, "refused for the venue's floor, not for the economics"
+    assert "VENUE_WIRE_MIN" not in by_q[5].refusals and by_q[5].feasible
+    # Three contracts never get a plan at all: $0.90 is under the dollar floor, one layer earlier.
+    assert by_q[3].refusals == ("below_min_order",)

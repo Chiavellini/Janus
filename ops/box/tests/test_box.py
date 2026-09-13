@@ -103,6 +103,27 @@ def test_redemption_builder_cli_keeps_secure_value_off_argv():
                                    if value.startswith("file://")))
 
 
+def test_redemption_secret_pipe_gives_one_payload_per_reader_open():
+    """A reader that dawdles between opening the pipe and draining it still sees one payload.
+
+    The AWS CLI opens the FIFO, reads, closes, then opens again.  A feeder that reopens for write
+    while the first reader is still attached writes into the stream that reader is draining, so it
+    receives both payloads and the CLI's second read comes back empty."""
+    import json
+    import subprocess
+    import time
+    seen = {}
+    def runner(argv, **kwargs):
+        pipe_path = next(v.removeprefix("file://") for v in argv if v.startswith("file://"))
+        with open(pipe_path) as stream:      # blocking open pairs with the feeder's first write
+            time.sleep(0.05)                 # the window a reopening feeder used to write into
+            seen["payload"] = stream.read()
+        return subprocess.CompletedProcess(argv, 0, stdout='{"Version":1}', stderr="")
+    ssm = provision_redemption.AwsCliSsm("mx-central-1", runner=runner)
+    ssm.put_parameter(Name="/janus/test", Type="SecureString", Value="one-payload", Overwrite=False)
+    assert json.loads(seen["payload"])["Value"] == "one-payload"
+
+
 def test_redemption_builder_cli_parses_decrypted_parameter_response():
     import subprocess
     def runner(argv, **kwargs):

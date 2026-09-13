@@ -8,12 +8,31 @@ credentials are left unchanged; a partial set is a hard stop rather than an impl
 from __future__ import annotations
 
 import argparse
+import errno
 import json
 import os
 import subprocess
 import tempfile
 import threading
+import time
 from pathlib import Path
+
+
+def _await_pipe_release(pipe_path: Path) -> None:
+    """Block until nothing holds the FIFO's read end.
+
+    Reopening for write while the reader still has the pipe open appends to the stream it is
+    already draining, so that reader sees both payloads at once and the next read sees none.
+    A non-blocking write open raises ENXIO exactly while no reader is attached.
+    """
+    while True:
+        try:
+            os.close(os.open(pipe_path, os.O_WRONLY | os.O_NONBLOCK))
+        except OSError as exc:
+            if exc.errno == errno.ENXIO:
+                return
+            raise
+        time.sleep(0.001)
 
 
 BUILDER_NAMES = {
@@ -51,7 +70,9 @@ class AwsCliSsm:
 
             def feed() -> None:
                 try:
-                    for _ in range(2):
+                    for attempt in range(2):
+                        if attempt:
+                            _await_pipe_release(pipe_path)
                         with pipe_path.open("w") as stream:
                             stream.write(secret_json)
                 except (BrokenPipeError, FileNotFoundError):

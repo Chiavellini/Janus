@@ -1,0 +1,38 @@
+row: L97
+date: 2026-09-13
+kind: measurement_repair
+status_at_registration: PENDING
+observed_failure: >-
+  The question "is the edge evaporating because we are slow" cannot be answered with the clocks the
+  lane keeps, because two of the three pre-machine stages do not measure what their names say.
+  `eval_to_exec_ms` was computed from the FRAME rather than from the evaluation, so it contained
+  `frame_to_eval_ms` in full: every sum of the pre-machine stages double-counted the frame interval,
+  including the reading that opened this investigation. And the `asyncio.to_thread` hop between the
+  grid's dispatch and the coordinator's entry had no stage at all - on an executor shared with
+  discovery, guard, retention and settle, where a comparable hop has measured around 760 ms. It was
+  the largest dark interval on the path to the wire. Against that, the 28 recorded BOOK_MOVED
+  declines show the venue's price for our size above our limit by p50 8.0c (min 1.0, p90 16.0, max
+  22.0) while we arrived a median of 19.6 ms after evaluating. No market moves eight cents in twenty
+  milliseconds, so the instruments were the thing to fix before the clock.
+immutable_success_criteria:
+  - `frame_to_eval_ms` and `eval_to_exec_ms` are DISJOINT intervals that may be summed.
+  - The executor queue hop is stamped as `worker_hop_ms`, from a monotonic taken by the caller
+    immediately before the work is handed to the worker, converted to a stage on entry.
+  - `ops/latency_report.py` orders both on the path, names the former double-count in its own
+    docstring so the repaired numbers are not compared against the old ones by accident, and reports
+    `confirm_budget_ms` and `hedge_slippage_c`, which it had been silently sorting to the end.
+  - Recording only. No threshold, budget, cap or execution decision reads any of these stages, and
+    the change alters no execution outcome.
+  - Outcome to evaluate once covers accumulate under L89/L95/L96: re-run the 8-cent gap analysis on
+    declines recorded AFTER this release. That number, not the current one, decides whether latency
+    work is worth scoping. Every one of the 28 declines predates L89 (the frozen-replica fix), and a
+    frozen replica produces exactly this signature.
+expected_ev_effect: >-
+  none directly. It is the precondition for deciding whether the latency items (loop lag, the shared
+  executor, `shard_of` inside submit, HTTP keep-alive, the Kalshi confirm read) are worth their risk,
+  and it removes a double-count that would have made any before/after comparison meaningless.
+prohibited:
+  - Scoping latency work off the pre-repair numbers, or comparing post-repair stages against them.
+  - Letting any stage become an input to an execution decision. These are instruments.
+  - Reading a frozen replica's age as evidence about a market. That is L89's subject, and the reason
+    the gap analysis has to be re-run rather than merely re-read.

@@ -512,11 +512,21 @@ def test_the_first_leg_is_confirmed_against_the_venue_book_before_the_send(tmp_p
     co2, vs2, store2, _, _ = harness(tmp_path / "b")
     vs2["polymarket"].books = {"P_H": offs["home"][0].book}
     vs2["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
-    thin = {"P_H": bk([(p.first.limit_price, 3)])}
+    thin = {"P_H": bk([(p.first.limit_price, 7)])}
     co2.fresh_book = lambda venue, market, side: (thin if venue == "polymarket" else vs2[venue].books).get(market)
     ex2 = co2.execute(p, clearance_for(tmp_path / "b", now_mono=100.0))
-    assert ex2.state is X.HEDGED and ex2.quantity == 3.0, "3 is what the venue had; 100 was not"
-    assert ex2.stages["downsized_to"] == 3 and ex2.stages["planned_contracts"] == 100.0
+    assert ex2.state is X.HEDGED and ex2.quantity == 7.0, "7 is what the venue had; 100 was not"
+    assert ex2.stages["downsized_to"] == 7 and ex2.stages["planned_contracts"] == 100.0
+    # L96: but a downsize below the CLOB's five-share floor is not a trade, it is a PRECISION
+    # rejection waiting to happen. Refuse instead of sending something the wire cannot take.
+    co2b, vs2b, store2b, _, _ = harness(tmp_path / "b2")
+    vs2b["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs2b["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    tiny = {"P_H": bk([(p.first.limit_price, 3)])}
+    co2b.fresh_book = lambda venue, market, side: (tiny if venue == "polymarket" else vs2b[venue].books).get(market)
+    ex2b = co2b.execute(p, clearance_for(tmp_path / "b2", now_mono=100.0))
+    assert ex2b.state is X.BOOK_MOVED, "three shares is under the venue's own floor"
+    assert store2b.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0
     # at the limit with depth: the send goes out and the cover completes as before
     co3, vs3, store3, _, _ = harness(tmp_path / "c")
     vs3["polymarket"].books = {"P_H": offs["home"][0].book}
@@ -611,6 +621,65 @@ def test_the_hedge_leg_is_confirmed_against_its_own_book_before_leg_a_is_sent(tm
     vs4["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
     ex4 = co4.execute(p, clearance_for(tmp_path / "d", now_mono=100.0))
     assert ex4.state is X.HEDGED and "b_confirm_ms" not in ex4.stages
+
+
+def test_a_downsize_never_lands_under_the_clobs_own_share_floor(tmp_path):
+    """L96: the CLOB refuses a marketable BUY under 5.00 nominal shares, so a downsize that shrinks
+    below it converts a BOOK_MOVED decline into a PRECISION rejection instead of into a fill."""
+    from nodes.execute.plan import best_supported_size
+    from nodes.cover.cover import PM_WIRE_MIN_SHARES
+    offs = offers()
+    p4, _ = plan_for(offs, q=4.0)
+    deep = bk([(p4.first.limit_price, 5000)])
+    hedge_ok = bk([(0.30, 5000)])
+    assert best_supported_size(deep, hedge_ok, p4, min_net_profit_usd=0.0, max_size=4) is None, \
+        "four contracts cannot reach the venue however good the price is"
+    p10, _ = plan_for(offs, q=10.0)
+    n10 = best_supported_size(bk([(p10.first.limit_price, 5000)]), hedge_ok, p10,
+                              min_net_profit_usd=0.0, max_size=10)
+    assert n10 is not None and n10 >= PM_WIRE_MIN_SHARES
+
+
+def test_a_pad_that_would_shrink_the_wire_under_the_floor_sends_at_the_venues_own_ask(tmp_path):
+    """L96 (2026-09-13): L83's ceiling is `contracts x top` and the adapter divides it by the price
+    SENT, so a limit one tick above `top` shrinks the nominal size below `contracts` -- 4.948 at top
+    0.95 -- and under five shares nothing reaches the venue at all. Seven of seven capped
+    five-contract orders on 2026-09-13 died there, every one of them with the full size resting AT
+    the top of book. Repricing to that top is the whole fix: the ceiling then shrinks nothing, and
+    paying less than the limit cannot break economics that were cleared against paying more."""
+    co, vs, store, _, _ = harness(tmp_path)
+    offs = offers()
+    p, _ = plan_for(offs, q=5.0)
+    top = round(p.first.limit_price - 0.01, 4)                  # the one-tick pad, as the live plan pads
+    vs["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    cheaper = {"P_H": bk([(top, 5000)])}
+    co.fresh_book = lambda venue, market, side: (cheaper if venue == "polymarket" else vs[venue].books).get(market)
+    sent = []
+    real = vs["polymarket"].submit
+    vs["polymarket"].submit = lambda r, c: (sent.append(r), real(r, c))[1]
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.HEDGED
+    assert sent[0].price == pytest.approx(top), "leg A goes out at the venue's own ask, not the pad"
+    assert sent[0].max_collateral_usd == pytest.approx(round(5.0 * top, 2))
+    assert sent[0].max_collateral_usd / sent[0].price + 1e-9 >= 5.0, "the wire sees the whole size"
+    assert ex.stages["repriced_to_top"] == pytest.approx(top)
+    assert ex.protect["first_leg_confirm"]["repriced_to_top"]["from"] == p.first.limit_price
+    # A size the ceiling does not shrink below the floor is left exactly as the plan priced it.
+    co2, vs2, _, _, _ = harness(tmp_path / "b")
+    p25, _ = plan_for(offs, q=25.0)
+    top25 = round(p25.first.limit_price - 0.01, 4)
+    vs2["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs2["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    cheaper2 = {"P_H": bk([(top25, 5000)])}
+    co2.fresh_book = lambda venue, market, side: (cheaper2 if venue == "polymarket" else vs2[venue].books).get(market)
+    sent2 = []
+    real2 = vs2["polymarket"].submit
+    vs2["polymarket"].submit = lambda r, c: (sent2.append(r), real2(r, c))[1]
+    ex2 = co2.execute(p25, clearance_for(tmp_path / "b", now_mono=100.0))
+    assert ex2.state is X.HEDGED
+    assert sent2[0].price == pytest.approx(p25.first.limit_price), "no reprice: 25 shrinks to 24.7"
+    assert "repriced_to_top" not in ex2.stages
 
 
 def test_no_size_the_books_support_still_refuses_the_whole_entry(tmp_path):

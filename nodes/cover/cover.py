@@ -55,6 +55,12 @@ REJECT_BELOW_MIN_ORDER = "below_min_order"        # a leg cannot be sent at this
 #: "invalid amount for a marketable BUY order ($0.6), min size: 1" (2026-09-07, 5 contracts at $0.12,
 #: the first real order from Mexico). A Polymarket leg below it is not a cover at that size.
 PM_MIN_NOTIONAL_USD = 1.0
+#: L96 (2026-09-13): the CLOB's OTHER floor, on nominal SHARES rather than dollars, enforced twice in
+#: `nodes/exec_polymarket/client._cent_exact_buy` (as `size_d < 5.00` and again as `n < 500` after the
+#: divisibility snap). It lives here beside the notional floor because both are venue facts that the
+#: sizer has to respect BEFORE a size is chosen, and having the number in only the adapter is how a
+#: padded 5-contract order came to be impossible at every price without anything upstream knowing.
+PM_WIRE_MIN_SHARES = 5.0
 
 
 @dataclass(frozen=True)
