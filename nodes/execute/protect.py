@@ -365,6 +365,13 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
         reason, why = X.HEDGE_UNAVAILABLE, f"hedge rejected: {rejected}"
     elif ex.hedge_filled <= 0:
         reason, why = X.HEDGE_SLIPPAGE_EXCEEDED, "no hedge inside the loss cap"
+    elif rejected is not None:
+        # L100 (2026-09-13): a partial hedge that stopped for a NAMED reason still reported "not
+        # inside the loss cap". On 77013052 the loss cap had $1.28 of its $2.50 unspent and the book
+        # was five cents under the ceiling the 1.5625-share residual was entitled to -- the stop was
+        # the quantity cap at the top of this loop, and `rejected` said so and was discarded. That
+        # incident was diagnosed as a loss-cap problem for hours because the row claimed it was one.
+        reason, why = X.PARTIAL_FILL, f"hedged in part, then stopped: {rejected}"
     else:
         reason, why = X.PARTIAL_FILL, "hedged in part, the rest not inside the loss cap"
     text = f"UNPROTECTED: {left} after {attempts} attempts; {why}" + ("" if lim.unwind_enabled else "; unwind disabled")

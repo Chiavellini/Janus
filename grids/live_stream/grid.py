@@ -1146,7 +1146,16 @@ class Supervisor:
         retry = float(getattr(pr, "protect_retry_s", 0.0) or 0.0)
         if retry > 0 and getattr(pr, "protect_auto", False):
             now_m = time.monotonic()
-            self.reprotect_fast[ex.execution_id] = (now_m + retry, now_m + float(getattr(pr, "protect_fast_window_s", 60.0) or 0.0))
+            # L100 (2026-09-13): this re-armed the window on EVERY failure, so `until` moved forward
+            # `protect_fast_window_s` each time and the window never expired. Execution 77013052 held
+            # a 1.5625-share residual that `protect.py`'s quantity cap can never hedge without new
+            # authority; it re-ran 2,840 times over two hours and wrote 2,836 of the 5,322 rows in
+            # `execution_transitions` -- 53 % of the table -- for a verdict that could not change.
+            # The window belongs to the naked POSITION, not to the latest failed attempt: arm it once
+            # and let it expire into the guard's own 30 s cadence.
+            prior = self.reprotect_fast.get(ex.execution_id)
+            until = prior[1] if prior is not None else now_m + float(getattr(pr, "protect_fast_window_s", 60.0) or 0.0)
+            self.reprotect_fast[ex.execution_id] = (now_m + retry, until)
         try:
             if self.store is not None:
                 raise_flag(self.store, "PROTECT_FAILED", f"{ex.execution_id[:8]} {ex.event_id} {text}")

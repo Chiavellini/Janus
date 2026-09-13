@@ -1,0 +1,43 @@
+row: L100
+date: 2026-09-13
+kind: descriptive_execution_repair
+status_at_registration: PENDING
+observed_failure: >-
+  Execution 77013052 (NFL, Dolphins at Raiders, 21:14:41Z) planned 25 contracts and held 26.5625: leg A
+  is collateral-denominated, so a one-cent price improvement returned 1.5625 extra shares rather than
+  $0.25 of savings (26.5625 x 0.16 = $4.25 = 25 x 0.17). protect.py then sized the residual's hedge with
+  min(ex.unhedged, hedge.contracts - ex.hedge_filled), which is zero once the planned hedge is full, so
+  1.5625 shares were left naked and the position became directional: +$0.42 if Miami won, -$1.14 if Las
+  Vegas won, against a planned +$0.15. Two further defects surrounded it.
+  (1) grid.on_unprotected re-armed the fast-retry window on EVERY failure, moving `until` forward
+  protect_fast_window_s each time, so the window never expired. The execution re-ran 2,840 times over
+  two hours and wrote 2,836 of the 5,322 rows in execution_transitions - 53% of the table - re-deriving
+  a verdict that could not change without new operator authority.
+  (2) With hedge_filled > 0 and a named `rejected`, the failure label fell through to "the rest not
+  inside the loss cap" and discarded `rejected`. The loss cap had $1.28 of its $2.50 unspent and the
+  book was five cents under the 0.91 ceiling the residual was entitled to; the stop was the quantity
+  cap. The incident was diagnosed as a loss-cap problem for hours because the row said so.
+immutable_success_criteria:
+  - The fast-retry window belongs to the naked POSITION, not to the latest failed attempt: armed once,
+    expiring into the guard's own cadence. A repeated failure reschedules the next attempt inside the
+    window and never extends its end.
+  - A partial hedge stopped for a named reason reports that reason. No failure text asserts a
+    constraint that was not the binding one.
+  - The 25-contracts-per-leg cap is unchanged. It is operator-signed and it is the only enforcement
+    point in the system for aggregate hedge size; a larger second leg needs a new dated GATE row.
+  - Outcome to evaluate: executions ending with a residual that received zero hedge attempts, and the
+    count of guard re-runs per execution, which should be bounded.
+expected_ev_effect: >-
+  none directly on entry economics. It stops an unbounded write loop on a live database and makes the
+  failure row name its own cause, which is what a diagnosis costs when it is wrong.
+prohibited:
+  - Raising the aggregate hedge above the plan's authorised quantity without a dated GATE row. That cap
+    is the only place the system enforces hedge size at all.
+  - Treating a repeated unfixable failure as a reason to retry sooner.
+owed:
+  - Bounding the hedge by COST rather than contract count is the only change that removes the
+    naked-residual class. 11 of 21 live leg-A fills overfilled, 13.42 shares of excess in total, worst
+    0dfc6df3 at 32.14 against 25 requested. Needs a GATE row because it relaxes a signed cap, and the
+    bound must be dollars (a $30 order filling at $0.02 delivers 1,500 shares) rather than contracts.
+  - No check on the taker path asks whether the hedge can FILL at its stated limit.
+    grid._hedge_capacity_ok already encodes exactly that test and is gated behind post_only.

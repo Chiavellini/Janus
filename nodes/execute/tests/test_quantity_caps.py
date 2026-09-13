@@ -79,6 +79,18 @@ def test_multiple_hedge_fills_do_not_expand_aggregate_authorized_cap(tmp_path):
     assert ex.protect["quantity_cap_residual"] == pytest.approx(2.166667)
 
 
+def test_a_quantity_capped_residual_says_so_instead_of_blaming_the_loss_cap(tmp_path):
+    """L100 (2026-09-13): a partial hedge stopped by the quantity cap reported "the rest not inside
+    the loss cap" regardless. On 77013052 the loss cap had $1.28 of its $2.50 unspent and the book was
+    five cents under the ceiling the residual was entitled to -- the stop was this cap, `rejected`
+    named it, and the label threw it away. The incident was diagnosed as a loss-cap problem for hours
+    because the row said it was one."""
+    _, ex, _, _, _, _, _ = setup(tmp_path, 12.166667, hedge_fills=[6, 4])
+    assert ex.protect["quantity_cap_residual"] == pytest.approx(2.166667)
+    assert "HEDGE_QUANTITY_CAP" in ex.detail, "the row must name the constraint that actually stopped it"
+    assert "not inside the loss cap" not in ex.detail, "because the loss cap was not the reason"
+
+
 def test_late_authoritative_overfill_below_protection_dust_still_latches(tmp_path):
     kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
     _, journal, records, guard = _world(tmp_path, venues={}, kill=kill)

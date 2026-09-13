@@ -793,6 +793,44 @@ def test_the_fast_reprotect_tick_retries_a_naked_position_every_few_seconds_then
     asyncio.run(main())
 
 
+def test_a_repeated_protect_failure_does_not_extend_its_own_retry_window(tmp_path: Path):
+    """L100 (2026-09-13): the window was re-armed on EVERY failure, so `until` moved forward
+    `protect_fast_window_s` each time and never expired. Execution 77013052 held a 1.5625-share
+    residual that protect.py's quantity cap can never hedge without new authority; it re-ran 2,840
+    times over two hours and wrote 2,836 of the 5,322 rows in execution_transitions -- 53 % of the
+    table -- for a verdict that could not change. The window belongs to the naked POSITION, not to
+    the latest failed attempt."""
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.risk.kill import KillSwitches
+    sup, s = _supervisor(tmp_path)
+    sup.mode = Mode.PAPER_EXECUTION
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_kill_on_failure=False, protect_auto=True,
+                                                         protect_retry_s=3.0, protect_fast_window_s=60.0))
+    ex = SimpleNamespace(execution_id="dead0000beef1111", event_id="espn:nfl:401872928")
+    text = "UNPROTECTED: 1.5625 unhedged after 0 attempts; hedged in part"
+    import time as _t
+    real = _t.monotonic
+    try:
+        _t.monotonic = lambda: 1000.0
+        sup.on_unprotected(ex, text)
+        until = sup.reprotect_fast[ex.execution_id][1]
+        assert until == 1060.0, "armed once, for one window"
+        for t in (1003.0, 1006.0, 1030.0, 1059.0):
+            _t.monotonic = lambda t=t: t
+            sup.on_unprotected(ex, text)
+            assert sup.reprotect_fast[ex.execution_id][1] == until, \
+                "a repeated failure must not push the window's end forward"
+            assert sup.reprotect_fast[ex.execution_id][0] == t + 3.0, \
+                "the next attempt is still rescheduled inside the window"
+        # so the window expires and the guard's own 30 s cadence takes over
+        _t.monotonic = lambda: 1061.0
+        assert sup.fast_reprotect_due() == [] and sup.reprotect_fast == {}
+    finally:
+        _t.monotonic = real
+
+
 def _live_sized(tmp_path, monkeypatch, caps=None):
     import time
     from kernel.schema import Mode
