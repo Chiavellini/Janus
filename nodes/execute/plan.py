@@ -43,6 +43,17 @@ from nodes.opportunity.thresholds import (
 FIRST_VENUE, HEDGE_VENUE = "polymarket", "kalshi"
 
 
+def tick_floor(x: float, tick: float) -> float:
+    """The greatest multiple of `tick` at or below `x`. A BUY ceiling is floored, never rounded up."""
+    return round(math.floor(x / tick + 1e-9) * tick, 4)
+
+
+def tick_ceil(x: float, tick: float) -> float:
+    """The least multiple of `tick` at or above `x`. A BUY limit that must still reach a level is
+    ceiled: floored, it lands under the only level that could have filled it."""
+    return round(math.ceil(x / tick - 1e-9) * tick, 4)
+
+
 @dataclass(frozen=True)
 class LegPlan:
     venue: str
@@ -113,8 +124,7 @@ class Plan:
         A paid over its own priced VWAP, floored to the hedge venue's tick."""
         overpay = max(0.0, first_paid - self.first.vwap) if self.first.vwap else 0.0
         raw = self.hedge.limit_price - overpay
-        tick = self.hedge.tick or 0.01
-        return round(math.floor(raw / tick + 1e-9) * tick, 4)
+        return tick_floor(raw, self.hedge.tick or 0.01)
 
 
 def marginal_price(book: Book, contracts: float) -> float | None:
@@ -299,9 +309,69 @@ def plan_from_cover(*, opportunity_id: str, event_id: str, league: str, cov: Cov
     # the tighter ceiling through the plan so every later hedge budget preserves both promises.
     profit_cost = 1.0 - max(0.0, float(min_net_profit_usd)) / float(cov.contracts)
     max_cost = min(1.0 / (1.0 + hurdle), profit_cost)
-    fee = float(cov.fee_per_contract or 0.0)
+    base_fee = float(cov.fee_per_contract or 0.0)
+    fee = base_fee
     settlement = float(cov.settlement_buffer_per_contract or 0.0)
     first, hedge = plans[FIRST_VENUE], plans[HEDGE_VENUE]
+    tick = first.tick or 0.01
+
+    def fee_at(price: float) -> float:
+        """The cover's per-contract fee with leg A repriced at a worst-case whole fill at `price`.
+
+        The venue fee can move with probability (Polymarket uses p*(1-p)), so every candidate
+        entry price carries its own fee rather than the walked cover's.  Always measured from the
+        cover's own fee, never from an already-adjusted one.  Raises when the model cannot price
+        it: a fee that is not provable never becomes free room.
+        """
+        need, original_fills = first.contracts, []
+        for quote in source_leg.book.asks:
+            if need <= 1e-9:
+                break
+            take = min(need, quote.size)
+            original_fills.append(Fill(first.venue, first.market_id, first.outcome_id, "yes",
+                                       quote.price, take, "taker", 0))
+            need -= take
+        params = params_for(first.venue, source_leg.fee_overrides)
+        original_leg_fee = model_for(first.venue).entry_cost(original_fills, params)
+        worst_fee = model_for(first.venue).entry_cost(
+            [Fill(first.venue, first.market_id, first.outcome_id, "yes", price,
+                  first.contracts, "taker", 0)], params)
+        return base_fee + max(0.0, float(worst_fee) - float(original_leg_fee)) / float(cov.contracts)
+
+    def clears(price: float, fee_at_price: float) -> bool:
+        """Both registered economics -- the cost ceiling and, through it, the dollar profit floor --
+        AT THE PRICE ACTUALLY SENT, with that price's own fee."""
+        return max_cost - hedge.vwap - fee_at_price - settlement - price >= -1e-9
+
+    source_leg = legs_by_id[(first.venue, first.outcome_id)]
+    # L99 (2026-09-13): THE ENTRY LIMIT MUST SIT ON THE VENUE'S OWN TICK, AND ITS ECONOMICS MUST
+    # HOLD THERE. `marginal_price` returns a level off the book and the pad below adds one tick to
+    # it, so both inherit whatever grid that level was quoted on -- neither is constrained to the
+    # tick the leg itself carries. A Polymarket ask of 0.814 under a declared 0.01 tick planned
+    # 0.814, and padded to 0.824: three decimals where the grid has two. 17 of the 216 executions
+    # after the 2026-09-13 08:03Z release were planned that way. The hedge has been snapped since
+    # 2026-09-08 (`hedge_ceilings`, `next_hedge_limit`, `unwind_floor`, and the explicit defence in
+    # `protect.py`); leg A never was, and it is the leg that pays.
+    #
+    # UP, not down, and then re-checked. The venue rejects on the AMOUNTS, not the price -- a
+    # market BUY's maker amount is collateral and must land on a whole cent (5 @ $0.481 = $2.405
+    # was refused outright, GATE_TO_LIVE 2026-09-09) -- and the only thing that repairs it,
+    # `_cent_exact_buy`, searches DOWNWARD from the price it is handed. An off-grid limit therefore
+    # became an order priced under the very level the cover was walked against: 0.471 sent as 0.47,
+    # which cannot take a 0.471 ask, which is the `leg A unfilled (FAK): no position` signature.
+    # Ceiling keeps the level payable, but a BUY limit raised is real money the cover never priced,
+    # so the snapped price must clear the plan's own ceiling on its own terms or the entry is
+    # refused here. Refusing costs a candidate; sending costs a rejection or an unhedgeable fill.
+    snapped = tick_ceil(first.limit_price, tick)
+    if snapped > first.limit_price + 1e-12:
+        try:
+            snapped_fee = fee_at(snapped)
+        except Exception:  # noqa: BLE001 -- an entry whose fee is not provable is not sent
+            return None
+        if not clears(snapped, snapped_fee):
+            return None
+        first = replace(first, limit_price=snapped)
+        fee = snapped_fee
     # The first leg is FILL-AND-KILL at one tick above the walked level, when the cover still
     # clears the hurdle at that price. 2026-09-07, the first ten real orders from Mexico: every
     # fill-or-kill at the walked level came back "couldn't be fully filled" -- the CLOB's book was
@@ -310,38 +380,13 @@ def plan_from_cover(*, opportunity_id: str, event_id: str, league: str, cov: Cov
     # (a partial first leg is hedged for exactly what filled, LEG_A_PARTIAL); the pad buys the
     # step. The hedge limit tightens by whatever the first leg pays above its VWAP, so the pad
     # never buys a cover below the hurdle.
-    padded_price = round(first.limit_price + first.tick, 4)
-    padded_fee = fee
-    # The venue fee can move with probability (Polymarket uses p*(1-p)).  Reprice the padded first
-    # leg at its worst fill price and preserve every other fee already in the cover.  A failed fee
-    # reprice removes the optional pad; it never creates free room.
+    padded_price = round(first.limit_price + tick, 4)
     try:
-        source_leg = legs_by_id[(first.venue, first.outcome_id)]
-        need = first.contracts
-        original_fills = []
-        for quote in source_leg.book.asks:
-            if need <= 1e-9:
-                break
-            take = min(need, quote.size)
-            original_fills.append(Fill(first.venue, first.market_id, first.outcome_id, "yes",
-                                       quote.price, take, "taker", 0))
-            need -= take
-        original_leg_fee = model_for(first.venue).entry_cost(
-            original_fills, params_for(first.venue, source_leg.fee_overrides)
-        )
-        worst_fee = model_for(first.venue).entry_cost(
-            [Fill(first.venue, first.market_id, first.outcome_id, "yes", padded_price,
-                  first.contracts, "taker", 0)],
-            params_for(first.venue, source_leg.fee_overrides),
-        )
-        padded_fee += max(0.0, float(worst_fee) - float(original_leg_fee)) / float(cov.contracts)
+        padded_fee = fee_at(padded_price)
     except Exception:  # noqa: BLE001 -- an optional price pad is refused when its fee is not provable
-        padded_price = first.limit_price
-    room = max_cost - hedge.vwap - padded_fee - settlement - padded_price
-    if padded_price > first.limit_price and room >= -1e-9:
-        first = LegPlan(first.venue, first.market_id, first.outcome_id, first.side,
-                        padded_price, first.contracts, first.time_in_force,
-                        vwap=first.vwap, tick=first.tick)
+        padded_price, padded_fee = first.limit_price, fee
+    if padded_price > first.limit_price and clears(padded_price, padded_fee):
+        first = replace(first, limit_price=padded_price)
         fee = padded_fee
     return Plan(opportunity_id, event_id, league, cov.contracts, first, hedge,
                 max_cost_per_contract=max_cost, fee_per_contract=fee,

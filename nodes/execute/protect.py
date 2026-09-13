@@ -31,22 +31,17 @@ protective order can be reconciled against the venue by hand.
 """
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 
 from kernel.schema import ExecutionState as X, FillState, OpportunityStatus as S
-from nodes.execute.plan import marginal_price
+from nodes.execute.plan import marginal_price, tick_ceil, tick_floor
 from nodes.risk.limits import ProtectLimits
 
 
 # ── the arithmetic (pure) ─────────────────────────────────────────────────────
-
-def tick_floor(x: float, tick: float) -> float:
-    return round(math.floor(x / tick + 1e-9) * tick, 4)
-
-
-def tick_ceil(x: float, tick: float) -> float:
-    return round(math.ceil(x / tick - 1e-9) * tick, 4)
+# `tick_floor`/`tick_ceil` live in nodes/execute/plan.py so the entry leg and the protection layer
+# snap on ONE implementation (L99): this layer has floored every hedge and unwind price to the venue
+# tick since 2026-09-08, and leg A was the only order that reached a venue unsnapped.
 
 
 def clamp(p: float) -> float:

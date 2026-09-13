@@ -32,7 +32,7 @@ from typing import Callable, Mapping
 from kernel.execution_protocol import Ack, ExecutionVenue, OrderRequest
 from kernel.schema import ExecutionState as X, FillState, Mode, OpportunityStatus as S
 from nodes.execute.plan import (FIRST_VENUE, LegPlan, Plan, best_supported_size, marginal_price,
-                                pm_wire_ok, vwap_for_size)
+                                pm_wire_ok, tick_ceil, vwap_for_size)
 from nodes.execute.maker import MakerFillSession, MakerRestAuthorization
 from nodes.execute.protect import protect
 from nodes.execute.records import Execution, ExecutionRecords
@@ -277,7 +277,15 @@ class Coordinator:
         # match, so a book with less than `contracts` resting there gives a partial, which is the
         # ordinary handled outcome. If the cent-rounded ceiling cannot buy the whole size (possible
         # only on a sub-cent book price), leave the order alone rather than loosen the ceiling.
+        # L99 (2026-09-13): and it reprices to a LEVEL, which carries the book's grid, not the leg's.
+        # The plan now snaps leg A's limit onto the tick the leg declares (`plan_from_cover`) because
+        # an off-grid limit is re-priced DOWNWARD at the wire by `_cent_exact_buy`, under the only
+        # level that could have filled it. Repricing to an off-grid `top` would hand that back. The
+        # measured L96 cases are all on-grid tops (0.30, 0.95), so they keep the reprice; an off-grid
+        # top keeps the snapped limit and its PRECISION refusal, because which grid is real is
+        # exactly what is unknown there and only one of the two answers can be sent legally.
         if (collateral_cap is not None and top is not None and plan.first.venue == FIRST_VENUE
+                and tick_ceil(float(top), plan.first.tick or 0.01) == float(top)
                 and not pm_wire_ok(plan.first.contracts, top=top, limit=plan.first.limit_price)):
             at_top = round(float(plan.first.contracts) * float(top), 2)
             if (pm_wire_ok(plan.first.contracts, top=top, limit=top)

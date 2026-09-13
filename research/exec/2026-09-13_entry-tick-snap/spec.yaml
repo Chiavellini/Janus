@@ -1,0 +1,55 @@
+row: L99
+date: 2026-09-13
+kind: descriptive_execution_repair
+status_at_registration: PENDING
+observed_failure: >-
+  Leg A was the only order in the system that reached a venue unsnapped to a tick, and the wire
+  silently re-priced it DOWNWARD, under the level the cover was walked against. `marginal_price`
+  returns the book's level verbatim and the entry pad adds one declared tick to it, so both inherit
+  whatever grid that level was quoted on: a 0.814 Polymarket ask under a declared 0.01 tick planned
+  0.814 and padded to 0.824 - three decimals where the declared grid has two. 17 of the 216
+  executions after the 08:03Z release of 2026-09-13 were planned that way (0.881, 0.802, 0.571,
+  0.314, 0.545, 0.648, 0.202, 0.541, 0.481, 0.479, 0.531, and 0.824 three times), and their outcomes
+  included an outright HTTP_400 maker-precision refusal, a post_only_rejected, and several
+  "leg A unfilled (FAK/GTC): no position".
+  WHAT THE VENUE CHECKS IS THE AMOUNTS, NOT THE PRICE. The SDK cent-floors a market BUY's maker
+  amount itself, but its LIMIT builder sets maker = shares x price capped at 4-5 decimals, which is
+  how 5 @ $0.481 = $2.405 was refused outright (GATE_TO_LIVE 2026-09-09); `price_valid` checks only
+  the RANGE, never grid alignment, so the SDK signs an off-tick price and the venue answers with an
+  opaque error about amounts. The only thing that repaired it, `_cent_exact_buy`, searches DOWNWARD
+  from the price it is handed: 0.471 went to the wire as 0.47, which cannot take a 0.471 ask, and
+  nothing recorded that the price had been moved. The hedge and unwind have been tick-snapped since
+  2026-09-08; `coordinator._request` rounds to four decimals, which PRESERVES a third.
+immutable_success_criteria:
+  - The entry limit sits on the tick the leg declares, ceiled not floored: a floored BUY limit lands
+    under the only level that could have filled it.
+  - The plan's own cost ceiling is re-verified AT THE SNAPPED PRICE with THAT price's own fee (the
+    Polymarket fee moves with probability), measured from the cover's own fee and never from an
+    already-adjusted one. An entry that no longer clears, or whose fee cannot be priced, is REFUSED
+    rather than sent. A raised BUY limit is real money the cover never priced.
+  - L96's reprice-to-top assigns a book LEVEL and therefore carries the book's grid, which would hand
+    the off-grid limit straight back after the snap. It is taken only when `top` is itself on-grid.
+  - `tick_floor` / `tick_ceil` live in one module so the entry leg and the protection layer snap on
+    one implementation.
+  - Outcome to evaluate after 50 attempts: off-grid planned limits at zero; the count of entries
+    refused by the snap's own re-check, which is what the extra tick costs in surface.
+expected_ev_effect: >-
+  removes a class of order that was either refused by the venue on amounts or silently re-priced
+  under the level it was walked against. It can raise the entry price by at most one declared tick,
+  and only when the plan's registered ceiling still clears at that price; otherwise the candidate is
+  refused. No cap, hurdle, allowance or ceiling moves.
+prohibited:
+  - Flooring the entry limit onto the tick. It lands under the level the cover was priced from.
+  - Letting a failed fee reprice become free room. It refuses the entry.
+  - Repricing to a book level without checking that the level is on the leg's own grid (L96).
+open_question_that_bounds_this:
+  - WHICH TICK IS AUTHORITATIVE IS NOT SETTLED. `Leg.tick` is Gamma's `orderPriceMinTickSize`, and
+    the captured corpus has 631 league moneylines all at 0.01 and none at 0.001. But the lane's OWN
+    recorded books disagree: 764 of 10,908 Polymarket ask levels in the last 300 executions carry
+    three decimals, and 68 of 570 books contain at least one sub-cent price (0.074, 0.943, 0.978).
+    So on those books the declared tick is COARSER than the grid the venue is actually quoting on,
+    and the snap will refuse entries that could have been sent legally at the true tick. The durable
+    repair is to carry the CLOB's own `get_tick_size(token_id)` as `Leg.tick`; note that
+    `post_bounded_taker_buy` already accepts a `tick` argument and silently discards it, leaving the
+    SDK to re-round under the venue's own config. Until then this fix is conservative in the safe
+    direction and costs surface on about 7% of books.

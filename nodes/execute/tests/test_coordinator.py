@@ -12,7 +12,7 @@ from kernel.execution_protocol import Ack, OrderState
 from kernel.schema import Book, ExecutionState as X, FillState, Mode, OpportunityStatus as S, Quote
 from nodes.cover.cover import Leg, best_cover
 from nodes.execute.coordinator import Coordinator
-from nodes.execute.plan import marginal_price, plan_from_cover
+from nodes.execute.plan import marginal_price, plan_from_cover, pm_wire_ok
 from nodes.execute.records import ExecutionRecords
 from nodes.execute.venues import build_venues
 from nodes.execution.journal import Journal
@@ -103,6 +103,57 @@ def test_settlement_reserve_is_in_every_execution_budget_and_can_remove_the_entr
     assert p.first.limit_price == 0.45, "the one-tick pad would spend the settlement reserve"
     assert p.hedge_budget(0.45) == pytest.approx(round(1 / 1.01 - cov.fee_per_contract - 0.01 - 0.45, 4))
     assert p.hedge_break_even(0.45) == pytest.approx(round(1 - cov.fee_per_contract - 0.01 - 0.45, 4))
+
+
+def off_grid_offers(pm_level, k_level, *, pm_tick=0.01, depth=5000.0):
+    """A Polymarket ask quoted off the grid the leg itself declares (the L99 inputs)."""
+    return {"home": [Leg("polymarket", "pm_clob", "P_H", "P_H", bk([(pm_level, depth)]), FEES_P, tick=pm_tick)],
+            "away": [Leg("kalshi", "kalshi_clob", "K_A", "K_A", bk([(k_level, depth)]), FEES_K, tick=0.01)]}
+
+
+def test_the_entry_limit_is_snapped_up_to_its_own_tick_and_refused_when_that_breaks_the_economics():
+    """L99 (2026-09-13): leg A reached the venue off tick, and the wire silently re-priced it DOWN.
+
+    17 of the 216 executions after the 08:03Z release were planned with a three-decimal Polymarket
+    limit on a two-decimal grid: `marginal_price` hands back the book's level verbatim and the
+    entry pad adds one tick to it, so both inherit whatever grid that level was quoted on. A
+    0.814 ask under a declared 0.01 tick planned 0.814, padded to 0.824. The hedge has been
+    tick-snapped since 2026-09-08; leg A never was.
+
+    Downstream, the adapter's cent-exact search is the only thing that repairs an off-grid price
+    and it searches DOWNWARD: 0.471 goes to the wire as 0.47, which cannot take the 0.471 ask the
+    cover was walked against ("leg A unfilled (FAK): no position"). So the snap has to be UP, at
+    the layer that owns the economics, and a raised BUY limit that no longer clears the plan's own
+    ceiling must be refused rather than sent.
+    """
+    from nodes.exec_polymarket.client import PyClobTransport
+
+    offs = off_grid_offers(0.814, 0.15)
+    cov = best_cover(offs, 10.0, now_utc=T, proof=PROOF)
+    assert cov.ok
+    p = plan_from_cover(opportunity_id="o", event_id="e", league="mlb", cov=cov, offers=offs)
+    assert p is not None
+    # was 0.824 (0.814 + one tick), three decimals on a two-decimal grid
+    assert p.first.limit_price == 0.82, "the entry limit must sit on the tick the leg declares"
+    assert p.first.limit_price / p.first.tick == pytest.approx(round(p.first.limit_price / p.first.tick))
+    assert p.first.limit_price >= 0.814, "a BUY limit floored lands under the level it was priced from"
+    # The economics hold AT THE PRICE SENT, with that price's own fee -- not at the walked level.
+    assert (p.first.limit_price + p.hedge.vwap + p.fee_per_contract
+            + p.settlement_buffer_per_contract) <= p.max_cost_per_contract + 1e-9
+    # ... and the wire no longer has to move it: the venue rejects on the AMOUNTS (a market BUY's
+    # maker amount is collateral and must land on a whole cent), and the repair that enforces that
+    # now finds the price already on the grid, so the order can still take the level.
+    assert PyClobTransport._cent_exact_buy(size=10.0, price=p.first.limit_price,
+                                           tick=p.first.tick) == (0.82, 10.0)
+
+    # A cover that only clears while the limit is off tick is REFUSED, not sent off tick.
+    thin = off_grid_offers(0.638, 0.33)
+    cov_thin = best_cover(thin, 10.0, now_utc=T, proof=PROOF)
+    assert cov_thin.ok, "the cover prices at the off-grid level; only the snapped entry breaks it"
+    assert plan_from_cover(opportunity_id="o", event_id="e", league="mlb", cov=cov_thin, offers=thin) is None
+
+    # An on-grid book is untouched: the one-tick pad still applies (0.44 -> 0.45).
+    assert plan_for(offers())[0].first.limit_price == 0.45
 
 
 def test_a_no_ladder_leg_becomes_buy_no_on_the_other_ticker():
@@ -680,6 +731,36 @@ def test_a_pad_that_would_shrink_the_wire_under_the_floor_sends_at_the_venues_ow
     assert ex2.state is X.HEDGED
     assert sent2[0].price == pytest.approx(p25.first.limit_price), "no reprice: 25 shrinks to 24.7"
     assert "repriced_to_top" not in ex2.stages
+
+
+def test_the_wire_floor_reprice_never_puts_an_off_grid_level_back_on_the_entry(tmp_path):
+    """L99 (2026-09-13): L96 reprices leg A to a LEVEL, and a level carries the book's grid.
+
+    The plan snaps leg A onto the tick the leg declares precisely because an off-grid limit is
+    re-priced DOWNWARD at the wire, under the only level that could have filled it. Repricing to an
+    off-grid `top` hands that straight back, so the reprice is taken only when `top` is itself on
+    the grid -- which every measured L96 case was."""
+    co, vs, store, _, _ = harness(tmp_path)
+    offs = offers(pm_home=0.81, k_away=0.15)
+    p, _ = plan_for(offs, q=5.0)
+    assert p.first.limit_price == 0.82                # 0.81 walked, one tick of pad, on the grid
+    # An ask the declared 0.01 grid cannot express, chosen so L96's own sub-cent check passes it:
+    # 5 x 0.812 = $4.06 exactly, so the cent-rounded ceiling still buys the whole size.
+    off_grid_top = 0.812
+    vs["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs["kalshi"].books = {"K_A": bk([(0.15, 5000)])}
+    cheaper = {"P_H": bk([(off_grid_top, 5000)])}
+    co.fresh_book = lambda venue, market, side: (cheaper if venue == "polymarket" else vs[venue].books).get(market)
+    sent = []
+    real = vs["polymarket"].submit
+    vs["polymarket"].submit = lambda r, c: (sent.append(r), real(r, c))[1]
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    # the wire WOULD shrink under the floor at 0.82, so L96's reprice is live for this shape
+    assert not pm_wire_ok(5.0, top=off_grid_top, limit=p.first.limit_price)
+    assert round(5.0 * off_grid_top, 2) / off_grid_top + 1e-9 >= 5.0, "L96's sub-cent check passes it"
+    assert sent[0].price == pytest.approx(0.82), "an off-grid ask must not become the entry limit"
+    assert sent[0].price / p.first.tick == pytest.approx(round(sent[0].price / p.first.tick))
+    assert "repriced_to_top" not in ex.stages
 
 
 def test_no_size_the_books_support_still_refuses_the_whole_entry(tmp_path):
