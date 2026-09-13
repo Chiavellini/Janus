@@ -41,6 +41,13 @@ class PollerState(str, Enum):
     DRAINING = "DRAINING"      # game over; stop, unsubscribe, report
 
 
+#: The SEND path's own cover requirement, as `nodes/execute/sizing.choose_live_size` applies it to
+#: every size it considers: exactly two legs, one on each of the two venues. A cover of any other
+#: shape cannot become an order however cheap it is, so it cannot answer "how close were we".
+LIVE_REQUIRED_VENUES = frozenset({"polymarket", "kalshi"})
+LIVE_LEG_COUNT = 2
+
+
 @dataclass(frozen=True)
 class Evaluation:
     """One re-pricing, triggered by one book event."""
@@ -54,6 +61,11 @@ class Evaluation:
     #: The exact legs this was priced from, so a consumer can solve the size frontier without
     #: re-reading the replicas (which will have moved by then).
     offers: Mapping[str, tuple] = field(default_factory=dict)
+    #: The pricing CONTEXT `cover` was produced under, carried so a consumer can re-price these
+    #: same books under a different requirement. Carried and never re-derived: a proof minted
+    #: downstream would be a label this code path invented, which is the defect L88 named.
+    proof: CoverProof | None = None
+    max_leg_age_s: float | None = None
 
     @property
     def actionable_return(self) -> float | None:
@@ -61,6 +73,28 @@ class Evaluation:
         if c is None or not c.ok or not c.cost_per_contract:
             return None
         return (1.0 - c.cost_per_contract) / c.cost_per_contract
+
+    def sendable_cover(self) -> Cover | None:
+        """The cheapest cover over these SAME books that the lane could actually send: two legs,
+        one per venue, exactly the requirement `choose_live_size` imposes.
+
+        L98 (2026-09-13): `cover` is the UNCONSTRAINED best, and on ~76 % of a 24 h window's
+        BLOCKED_MATCH rows that best was SINGLE-VENUE -- so the `gross`, `required_ask_sum` and
+        `cents_from_actionable` recorded from it describe a cover the lane can never send, and
+        `cents_from_actionable` reached the further absurdity of pricing INTRA-venue legs through
+        the CROSS-venue fee model. A row measured at -11.53c (past actionable) re-priced to
+        +5.35c (short of it): a 16.9c error with the wrong sign, on the metric the lane uses to
+        decide whether it is being too conservative.
+
+        None when there is no context to re-price from. A `Cover` that is not `ok` means the books
+        held no sendable cover at this size, which is a finding, not a missing measurement.
+        """
+        if not self.offers or not isinstance(self.proof, CoverProof):
+            return None
+        kw = {} if self.max_leg_age_s is None else {"max_leg_age_s": float(self.max_leg_age_s)}
+        return best_cover({k: list(v) for k, v in self.offers.items()}, self.quantity,
+                          now_utc=self.evaluated_utc, proof=self.proof,
+                          required_venues=LIVE_REQUIRED_VENUES, leg_count=LIVE_LEG_COUNT, **kw)
 
 
 #: The evaluation coalescing window per slate tier (2026-09-08). Every co-listed game in the
@@ -311,7 +345,9 @@ class GamePoller:
                                  max_leg_age_s=self.max_book_age_s, proof=self.proof)
             ev = Evaluation(self.game_id, market_id, q, cov, blocked, t,
                             latency_ms=(time.time() - t) * 1000.0,
-                            offers={k: tuple(v) for k, v in offers.items()} if ready else {})
+                            offers={k: tuple(v) for k, v in offers.items()} if ready else {},
+                            proof=self.proof if ready else None,
+                            max_leg_age_s=self.max_book_age_s)
             self.evaluations += 1
             r = ev.actionable_return
             if r is not None and r >= self.min_return and cov is not None and not cov.single_venue:

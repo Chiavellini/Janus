@@ -354,3 +354,46 @@ def test_a_three_way_cover_prices_as_two_legs_through_the_no_token():
         _sync(p2.replicas[key], px)
     e2 = p2.on_event("kalshi", "K_H", now=T)[0]
     assert e2.cover is not None and e2.cover.ok and len(e2.cover.legs) == 3
+
+
+def test_an_evaluation_carries_the_context_to_reprice_the_same_books():
+    """L98: `cover` is the unconstrained best. An Evaluation must carry the proof and the freshness
+    bound it was priced under, so a consumer can ask the same books a different question without
+    re-reading replicas that have already moved -- and without minting a proof of its own (L88)."""
+    p = mlb()
+    sync_all(p, kh=0.44, ka=0.99, ph=0.99, pa=0.44)
+    ev = p.on_event("kalshi", "K_H", now=T)[-1]
+    assert ev.proof is p.proof and ev.proof is not None
+    assert ev.max_leg_age_s == p.max_book_age_s
+    # an unpriced (warming) evaluation carries no context to re-price from
+    cold = GamePoller("g2", "mlb", OUT, fee_params=FEES, equivalence=mlb_equivalence()).on_event(
+        "kalshi", "K_H", now=T)[0]
+    assert cold.proof is None and cold.sendable_cover() is None
+
+
+def test_sendable_cover_is_the_two_venue_cover_the_send_path_would_route():
+    """The constraint is the one nodes/execute/sizing.choose_live_size imposes on every size."""
+    from nodes.game_poller.poller import LIVE_LEG_COUNT, LIVE_REQUIRED_VENUES
+    assert LIVE_REQUIRED_VENUES == frozenset({"polymarket", "kalshi"}) and LIVE_LEG_COUNT == 2
+    p = mlb()
+    # Kalshi cheapest on BOTH sides: the unconstrained best is intra-venue, which the lane blocks
+    sync_all(p, kh=0.40, ka=0.45, ph=0.60, pa=0.62)
+    ev = p.on_event("kalshi", "K_H", now=T)[-1]
+    assert ev.cover.single_venue and {l.venue for l in ev.cover.legs} == {"kalshi"}
+    send = ev.sendable_cover()
+    assert send is not None and send.ok and not send.single_venue
+    assert {l.venue for l in send.legs} == {"polymarket", "kalshi"} and len(send.legs) == LIVE_LEG_COUNT
+    # the blocked intra-venue cover was the CHEAPER one -- that is why it won the unconstrained best
+    assert ev.cover.cost_per_contract < send.cost_per_contract
+
+
+def test_sendable_cover_honours_the_pollers_own_freshness_bound():
+    """The re-price must be held to the SAME max_leg_age_s the cover was priced under, or it would
+    admit a leg the evaluation itself refused."""
+    p = mlb(max_book_age_s=5.0)
+    sync_all(p, kh=0.40, ka=0.45, ph=0.60, pa=0.62)
+    ev = p.on_event("kalshi", "K_H", now=T)[-1]
+    assert ev.sendable_cover().ok
+    from dataclasses import replace as dc_replace
+    stale = dc_replace(ev, evaluated_utc=T + 60.0)      # every book is now 60 s old
+    assert stale.sendable_cover().reject_reason == "stale_leg"

@@ -1,0 +1,53 @@
+row: L98
+date: 2026-09-13
+kind: measurement_repair
+status_at_registration: PENDING
+observed_failure: >-
+  All ~967,547 `BLOCKED_MATCH` rows in a 24 h window came through one branch, `status.status_for`'s
+  `if single_venue`, and no tradeable opportunity was lost by any of them: cost >= gross always, so a
+  row at gross >= 1.00 proves no combination could lock a profit, and of the 225 rows under $1 all
+  price at gross 0.39-0.47, the known phantom-partition class, blocked on other grounds.
+  The damage was recording. `game_poller.on_event` calls `best_cover` with no `required_venues` and no
+  `leg_count`, while the send path (`sizing.choose_live_size`) requires exactly two legs, one per
+  venue, of every size it considers. So on a single-venue best -- about 76% of rows -- the recorded
+  `gross`, `cost`, `required_ask_sum` and `cents_from_actionable` all described a cover the lane can
+  never route, and `cents_from_actionable` compounded it by anchoring `hurdle_for` on that cover's
+  favourite leg and charging it the KALSHI-plus-POLYMARKET fee curve: a cross-venue fee model against
+  intra-venue prices. On the reproduction (kalshi 0.40/0.45 against polymarket 0.60/0.62, q=100) the
+  row read gross 0.85 and -11.53c - eleven and a half cents PAST actionable, with a locked return of
+  13.1% and $11.59 of net profit, on a row the lane BLOCKED. The two-venue re-price of the same books
+  reads gross 1.02 and +5.35c: five cents SHORT. A 16.9c error with the sign reversed, on the one
+  metric that was to decide whether the lane is being too conservative.
+immutable_success_criteria:
+  - The evaluation carries the context it was priced under (`Evaluation.proof`, `max_leg_age_s`),
+    carried and never re-derived. A proof minted downstream would be a label this code path invented,
+    which is the defect L88 named.
+  - `Evaluation.sendable_cover()` re-prices the SAME books under the send path's own requirement, and
+    `record_evaluation` records that cover's numbers.
+  - Classification is unchanged and still taken from the unconstrained cover: a single-venue best is
+    `BLOCKED_MATCH` before and after. Nothing about what is blocked, sized or sent moves.
+  - The single-venue best survives beside it as the L1 no-arb control, not as the answer.
+  - `cost`, `fees` and `return_locked` move WITH `gross`. Leaving cost as the single-venue number
+    would produce rows with cost < gross, which is impossible, i.e. worse telemetry than the defect.
+  - No sendable cover at all records NULL rather than an unsendable number wearing tradeable labels.
+  - The re-price is gated on the single-venue branch alone, so the ~24% of rows whose best was already
+    two-venue cost nothing; a test spies on the method and requires zero calls on those.
+  - Outcome to evaluate after one window: the distribution of `cents_from_actionable` over
+    BLOCKED_MATCH rows, which is the first trustworthy reading of how close the lane actually gets.
+expected_ev_effect: >-
+  none directly; it is a recording change. It makes the lane's distance-to-actionable telemetry sound
+  for the first time, which is the input to every decision about whether the profit floor and the
+  hurdle are set too tight.
+prohibited:
+  - Letting the re-price change what is blocked. The classification is the unconstrained cover's.
+  - Minting a CoverProof downstream of the poller to make a re-price possible (L88).
+  - Comparing row COUNTS across this change. The store's materiality gate keys on `cost`, which now
+    tracks the tradeable cover, so the row set tracks that series; the 967,547 is not a baseline.
+owed:
+  - Gating the re-price down to only the rows that survive the store's materiality test needs a
+    predicate `nodes/store_tuples/store.py` does not export (`would_record_evaluation`, plus a
+    `gate_cost` parameter on `evaluation()`). That would also restore the exact pre-change row set and
+    make the next window comparable with the 967,547.
+  - The control rides in `legs_json` as a tagged entry because `stream_evaluations` has no column for
+    it. Safe (its only reader, `cover_cost/suspect.py`, selects PROFITABLE_UNEXECUTED only, and a
+    single-venue best is always BLOCKED_MATCH), but one real column is the better fix.
