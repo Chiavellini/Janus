@@ -31,7 +31,7 @@ from dataclasses import dataclass, replace
 from typing import Mapping, Sequence
 
 from kernel.schema import Book
-from nodes.cover.cover import Cover, Leg, walk_ladder
+from nodes.cover.cover import PM_MIN_NOTIONAL_USD, Cover, Leg, walk_ladder
 from nodes.fees.models import Fill
 from nodes.fees.registry import model_for, params_for
 from nodes.opportunity.thresholds import (
@@ -124,6 +124,59 @@ def marginal_price(book: Book, contracts: float) -> float | None:
         cum += q.size
         if cum >= contracts - 1e-9:
             return q.price
+    return None
+
+
+#: The most a Kalshi per-order fee ceil can add to a whole order, in dollars. Its fee is
+#: `ceil(0.07 * C * p * (1-p))` in CENTS per order, so shrinking an order raises the per-contract
+#: cost by at most one cent spread over the contracts that remain. Used to bound a downsize's fee
+#: without re-pricing the cover, which needs offers the coordinator does not hold.
+CEIL_CENTS_USD = 0.01
+
+
+def best_supported_size(first_book: Book, hedge_book: Book, plan, *, min_net_profit_usd: float,
+                        max_size: float) -> int | None:
+    """The largest whole size at or under `max_size` that BOTH venues' own books can fill inside the
+    plan's economics, or None when no size can.
+
+    L95 (2026-09-13): the pre-send reads used to be a verdict on one size -- the book either covered
+    the planned quantity or the entry was refused outright. On the night of 2026-09-12, 25 of 42
+    attempts died that way, and a decline says only that the FULL size was unavailable; it never
+    asked whether half of it was. Shrinking is the one direction that is always legal here: the
+    reservation, the stake cap, the contract cap, the day notional and the ledger were all cleared
+    against the larger size, so anything smaller is inside every one of them.
+
+    Every test below is the one the entry already applies, re-asked per size:
+      * leg A's worst level for `n` is at or under the plan's limit (`marginal_price`, as L77);
+      * the hedge's AVERAGE for `n` is at or under break-even (`vwap_for_size`, as L85) -- the
+        threshold is per contract, so it does not move with `n`;
+      * the all-in cost still clears the plan's own ceiling, and the cover still earns the dollar
+        floor, which is the test that actually bites on the way down because profit is size-linear;
+      * the Polymarket $1 notional minimum still holds.
+    Fees are not re-priced -- that needs the offers, which live on the loop -- so the Kalshi ceil is
+    bounded by `CEIL_CENTS_USD / n`, the worst it can cost per contract at the smaller size.
+    """
+    limit = float(plan.first.limit_price)
+    break_even = plan.hedge_break_even(limit)
+    settle = float(plan.settlement_buffer_per_contract or 0.0)
+    ceiling = float(plan.max_cost_per_contract)
+    floor = max(0.0, float(min_net_profit_usd))
+    for n in range(int(max_size), 0, -1):
+        if n * limit + 1e-9 < PM_MIN_NOTIONAL_USD:
+            continue                                   # under the venue's own floor; smaller is worse
+        want = marginal_price(first_book, float(n))
+        if want is None or want > limit + 1e-9:
+            continue
+        hedge_vwap = vwap_for_size(hedge_book, float(n))
+        if hedge_vwap is None or hedge_vwap > break_even + 1e-9:
+            continue
+        fee = float(plan.fee_per_contract or 0.0) + CEIL_CENTS_USD / n
+        all_in = limit + hedge_vwap + fee + settle
+        if all_in > ceiling + 1e-9:
+            continue
+        if n * (1.0 - all_in) + 1e-9 < floor:
+            continue
+        return n
     return None
 
 

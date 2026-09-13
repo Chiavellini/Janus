@@ -1,0 +1,45 @@
+row: L95
+date: 2026-09-13
+kind: descriptive_execution_repair
+status_at_registration: PENDING
+observed_failure: >-
+  The pre-send reads (L77 first leg, L85 hedge leg) were a verdict on ONE size: the venue's own book
+  either covered the planned quantity or the entry was refused outright. A decline therefore says
+  only that the FULL size was unavailable; it never asked whether half of it was. On the night of
+  2026-09-12, of 42 attempts after the 23:36Z kill clear, 26 ended BOOK_MOVED - 25 of them on the
+  first leg - and a further 6 were rejected PRECISION because 5 contracts on a low-priced outcome
+  falls under Polymarket's $1 notional minimum. Three attempts filled. Meanwhile the frontier the
+  lane records for the same opportunities claimed n_max of 946, 495, 473 and 346 contracts; that
+  number is computed from the socket replica at evaluation time with zero slippage, is not filtered
+  to the executable two-leg shape, and is read by nothing.
+immutable_success_criteria:
+  - When the venue's own books cannot support the planned size, the coordinator takes the largest
+    WHOLE size at or under the plan's that both books support inside the plan's economics, instead
+    of refusing the entry. Refusal remains when no size works.
+  - The direction is one-way. Shrinking is legal here because the reservation, the stake cap, the
+    contract cap, the day notional and the ledger were all cleared against the larger size; growing
+    is not, because nothing re-checks a cap between the clearance and the wire. A test pins that no
+    size above the plan's is ever chosen.
+  - Every test applied per size is one the entry already applies: leg A's worst level at or under
+    the plan limit (marginal_price, L77); the hedge's AVERAGE at or under break-even (vwap_for_size,
+    L85); the all-in cost inside the plan's own ceiling; the Polymarket $1 notional minimum; and the
+    registered dollar floor, which is the test that bites on the way down because profit is
+    size-linear.
+  - Fees are not re-priced, which would need the offers the coordinator does not hold. The Kalshi
+    per-order ceil is bounded instead by CEIL_CENTS_USD / n - the most it can cost per contract at
+    the smaller size - so the economics check is conservative by construction.
+  - The downsize is recorded: stages_json `planned_contracts` and `downsized_to`, and protect_json
+    `downsized` carrying the reason the full size failed.
+  - Outcome to evaluate after 50 attempts: the share of attempts that downsized rather than
+    declined, their realised P&L against the full-size covers, and whether PRECISION rejections fall
+    to zero once the contract cap is back at 25.
+expected_ev_effect: >-
+  converts entries the venue could have supported at a smaller size from refusals into real covers.
+  It cannot create a trade the books do not support, cannot raise a size, and cannot spend more than
+  the clearance already authorised. No cap, hurdle, allowance or ceiling moves.
+prohibited:
+  - Raising the size at or after the clearance mint. Every cap was evaluated against the candidate;
+    there is no size check between the clearance and the wire, so an increase there is unchecked.
+  - Sizing on `frontiers.n_max`. It is replica-priced, slippage-free, unfiltered by executable shape
+    and contradicted by the venue's own book within 200 ms; it is write-only and should stay so.
+  - Skipping the dollar floor on a downsize because the full size cleared it.

@@ -31,7 +31,7 @@ from typing import Callable, Mapping
 
 from kernel.execution_protocol import Ack, ExecutionVenue, OrderRequest
 from kernel.schema import ExecutionState as X, FillState, Mode, OpportunityStatus as S
-from nodes.execute.plan import LegPlan, Plan, marginal_price, vwap_for_size
+from nodes.execute.plan import LegPlan, Plan, best_supported_size, marginal_price, vwap_for_size
 from nodes.execute.maker import MakerFillSession, MakerRestAuthorization
 from nodes.execute.protect import protect
 from nodes.execute.records import Execution, ExecutionRecords
@@ -65,6 +65,9 @@ class Coordinator:
     limits: object | None = None
     fresh_book: Callable | None = None
     on_unprotected: Callable | None = None
+    #: The registered dollar floor, so a pre-send downsize (L95) can prove the smaller cover still
+    #: earns it. Profit is size-linear, so this is the test that bites on the way down.
+    min_net_profit_usd: float = 0.0
     executions: dict[str, Execution] = field(default_factory=dict)
     opp_refusals: dict[str, int] = field(default_factory=dict)
     _t0: dict[str, float] = field(default_factory=dict)      # execution_id -> mono at entry (stage stamps)
@@ -151,8 +154,9 @@ class Coordinator:
         # whole game off as though the venue had rejected it -- the check meant to stop bad entries
         # would have stopped all of them. `confirm_budget_ms` records what was left of the window, so
         # this stays measured rather than argued.
-        collateral_cap = None
+        collateral_cap = top = moved = None
         book = hedge_book = None
+        ex.stages["planned_contracts"] = plan.first.contracts
         if not plan.first.post_only and self.fresh_book is not None and self.mode.executes:
             def _read(leg, key):
                 m = self.mono()
@@ -180,10 +184,8 @@ class Coordinator:
                 collateral_cap = round(float(plan.first.contracts) * float(top), 2)
                 ex.protect["first_leg_confirm"]["max_collateral_usd"] = collateral_cap
             if want is None or want > plan.first.limit_price + 1e-9:
-                return self._fail(ex, X.BOOK_MOVED,
-                                  f"first leg: {plan.first.venue} book offers {plan.first.contracts:g} at "
-                                  f"{('%.4f' % want) if want is not None else 'no depth'} vs limit {plan.first.limit_price:.4f}; nothing sent",
-                                  release=True)
+                moved = (f"first leg: {plan.first.venue} book offers {plan.first.contracts:g} at "
+                         f"{('%.4f' % want) if want is not None else 'no depth'} vs limit {plan.first.limit_price:.4f}")
 
         # L85 (2026-09-12): the same read for the leg we RELY on to get out. L77 confirmed only the
         # price about to be paid, so the lane could commit leg A against a hedge price minutes stale
@@ -219,11 +221,37 @@ class Coordinator:
                 # the layer must reject a NEGATIVE age too: a stamp written before a reboot.
                 "at_mono": round(self.mono(), 6)}
             if vwap is None or vwap > break_even + 1e-9:
-                return self._fail(ex, X.BOOK_MOVED,
-                                  f"hedge leg: {plan.hedge.venue} book covers {plan.hedge.contracts:g} at "
-                                  f"{('%.4f' % vwap) if vwap is not None else 'no depth'} vs break-even "
-                                  f"{break_even:.4f}; nothing sent",
-                                  release=True)
+                moved = (f"hedge leg: {plan.hedge.venue} book covers {plan.hedge.contracts:g} at "
+                         f"{('%.4f' % vwap) if vwap is not None else 'no depth'} vs break-even {break_even:.4f}")
+
+        # L95 (2026-09-13): a decline said only that the FULL size was unavailable; it never asked
+        # whether half of it was, and 25 of 42 attempts on the night of 2026-09-12 died that way.
+        # Shrinking is the one direction that is legal here -- the reservation, the stake cap, the
+        # contract cap, the day notional and the ledger were all cleared against the larger size, so
+        # anything smaller is inside every one of them. Growing is NOT: nothing re-checks a cap
+        # between here and the wire. Only refuse when no size at all works.
+        if moved is not None and book is not None and hedge_book is not None:
+            smaller = best_supported_size(book, hedge_book, plan,
+                                          min_net_profit_usd=self.min_net_profit_usd,
+                                          max_size=plan.first.contracts)
+            if smaller is not None and smaller < plan.first.contracts:
+                plan = replace(plan, quantity=float(smaller),
+                               first=replace(plan.first, contracts=float(smaller)),
+                               hedge=replace(plan.hedge, contracts=float(smaller)),
+                               # The dollar floor is size-linear, so the plan's own ceiling loosens
+                               # as the size falls; recompute it rather than carry the larger one.
+                               max_cost_per_contract=min(plan.max_cost_per_contract,
+                                                         1.0 - self.min_net_profit_usd / float(smaller))
+                               if self.min_net_profit_usd > 0 else plan.max_cost_per_contract)
+                ex.quantity = float(smaller)
+                ex.protect["downsized"] = {"from": ex.stages.get("planned_contracts", None),
+                                           "to": smaller, "why": moved}
+                ex.stages["downsized_to"] = smaller
+                if collateral_cap is not None:
+                    collateral_cap = round(float(smaller) * float(top), 2)
+                moved = None
+        if moved is not None:
+            return self._fail(ex, X.BOOK_MOVED, moved + "; nothing sent", release=True)
 
         # LEG A: Polymarket, FAK (`ioc` in the internal protocol). Ambiguity here costs nothing;
         # that is why it goes first.

@@ -508,14 +508,15 @@ def test_the_first_leg_is_confirmed_against_the_venue_book_before_the_send(tmp_p
     assert store.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0, "nothing was sent"
     assert "a_confirm_ms" in ex.stages and ex.protect["first_leg_confirm"]["marginal"] == pytest.approx(p.first.limit_price + 0.02)
     assert "nothing sent" in ex.detail
-    # depth short of the size: nothing sent either
+    # depth short of the size: L95 takes what the book HAS rather than refusing the whole entry
     co2, vs2, store2, _, _ = harness(tmp_path / "b")
     vs2["polymarket"].books = {"P_H": offs["home"][0].book}
     vs2["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
     thin = {"P_H": bk([(p.first.limit_price, 3)])}
     co2.fresh_book = lambda venue, market, side: (thin if venue == "polymarket" else vs2[venue].books).get(market)
     ex2 = co2.execute(p, clearance_for(tmp_path / "b", now_mono=100.0))
-    assert ex2.state is X.BOOK_MOVED and "no depth" in ex2.detail and store2.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0
+    assert ex2.state is X.HEDGED and ex2.quantity == 3.0, "3 is what the venue had; 100 was not"
+    assert ex2.stages["downsized_to"] == 3 and ex2.stages["planned_contracts"] == 100.0
     # at the limit with depth: the send goes out and the cover completes as before
     co3, vs3, store3, _, _ = harness(tmp_path / "c")
     vs3["polymarket"].books = {"P_H": offs["home"][0].book}
@@ -594,14 +595,15 @@ def test_the_hedge_leg_is_confirmed_against_its_own_book_before_leg_a_is_sent(tm
     ex2 = co2.execute(p, clearance_for(tmp_path / "b", now_mono=100.0))
     assert ex2.state is X.HEDGED, "gating on the budget would have refused this"
 
-    # depth short of the authorized size: the naked-residual failure, declined before entry
+    # hedge depth short of the authorized size: L95 hedges what the book can cover whole, rather
+    # than refusing an entry the venue could have supported at a smaller size
     co3, vs3, store3, _, _ = harness(tmp_path / "c")
     vs3["polymarket"].books = {"P_H": offs["home"][0].book}
     vs3["kalshi"].books = {"K_A": bk([(0.44, p.hedge.contracts - 1)])}
     co3.fresh_book = lambda venue, market, side: vs3[venue].books.get(market)
     ex3 = co3.execute(p, clearance_for(tmp_path / "c", now_mono=100.0))
-    assert ex3.state is X.BOOK_MOVED and "no depth" in ex3.detail
-    assert store3.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0
+    assert ex3.state is X.HEDGED and ex3.quantity == p.hedge.contracts - 1
+    assert ex3.unhedged == 0.0, "the whole downsized position is covered"
 
     # no reader: the pre-L85 path, untouched
     co4, vs4, _, _, _ = harness(tmp_path / "d")
@@ -609,6 +611,38 @@ def test_the_hedge_leg_is_confirmed_against_its_own_book_before_leg_a_is_sent(tm
     vs4["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
     ex4 = co4.execute(p, clearance_for(tmp_path / "d", now_mono=100.0))
     assert ex4.state is X.HEDGED and "b_confirm_ms" not in ex4.stages
+
+
+def test_no_size_the_books_support_still_refuses_the_whole_entry(tmp_path):
+    """L95 only ever SHRINKS. When the price is wrong at every level -- not merely thin -- there is
+    no size to fall back to and the entry is refused exactly as before."""
+    co, vs, store, _, _ = harness(tmp_path)
+    offs = offers()
+    p, _ = plan_for(offs)
+    vs["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    dear = {"P_H": bk([(p.first.limit_price + 0.05, 5000)])}      # deep, but above the limit at q=1
+    co.fresh_book = lambda venue, market, side: (dear if venue == "polymarket" else vs[venue].books).get(market)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.BOOK_MOVED and ex.released and "nothing sent" in ex.detail
+    assert store.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0
+    assert "downsized_to" not in ex.stages
+
+
+def test_a_downsize_must_still_earn_the_dollar_floor(tmp_path):
+    """Profit is size-linear, so the floor is the test that bites on the way down. A book that can
+    only support a size too small to earn `min_net_profit_usd` is a refusal, not a tiny trade."""
+    co, vs, store, _, _ = harness(tmp_path)
+    co.min_net_profit_usd = 5.00                       # far above anything 3 contracts could earn
+    offs = offers()
+    p, _ = plan_for(offs)
+    vs["polymarket"].books = {"P_H": offs["home"][0].book}
+    vs["kalshi"].books = {"K_A": bk([(0.44, 5000)])}
+    thin = {"P_H": bk([(p.first.limit_price, 3)])}
+    co.fresh_book = lambda venue, market, side: (thin if venue == "polymarket" else vs[venue].books).get(market)
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.BOOK_MOVED, "3 contracts cannot earn $5.00; refuse rather than trade it"
+    assert store.con.execute("SELECT count(*) FROM orders").fetchone()[0] == 0
 
 
 def test_the_64d6925e_shape_is_declined_instead_of_locking_a_loss(tmp_path):

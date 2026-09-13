@@ -1563,7 +1563,8 @@ def main() -> int:
         sup.coordinator = Coordinator(sup.venues, records, sup.mode,
                                       hedge_deadline_s=limits.max_hedge_latency_ms / 1000.0,
                                       opportunities=opps, kill=kill, limits=limits.protect,
-                                      fresh_book=sup.fresh_book, on_unprotected=sup.on_unprotected)
+                                      fresh_book=sup.fresh_book, on_unprotected=sup.on_unprotected,
+                                      min_net_profit_usd=float(getattr(limits, "min_net_profit_usd", 0.0) or 0.0))
         if sup.mode.sends_real_orders:
             sup.guard = PositionGuard(venues=sup.venues, journal=journal, records=records, store=sup.store,
                                       limits=limits.protect, started_utc=time.time(), ledger=sup.ledger, kill=kill,
