@@ -104,7 +104,16 @@ from ops import run_index  # noqa: E402
 from nodes.opportunity.thresholds import EXECUTION_MIN_LOCKED_RETURN  # noqa: E402
 
 from kernel.paths import DATA_ROOT, DB  # noqa: E402,F401
-QUANTITIES = (5.0, 10.0, 25.0, 100.0)
+#: The size ladder. 25 and 100 were dropped for the 2026-09-14 measurement run: the operator's
+#: standing rule is the smallest size that still executes, and 10 is where the evidence puts it.
+#: Measured over 24 h of the box's own evaluations, a 10-contract ceiling keeps **516 of 590**
+#: actionable prints (87 %) and loses **none at all** to the $0.05 dollar floor, while 5 loses 87 of
+#: 375 (23 %) to it. And of the eleven real overfills to date, five exceed the one-contract accepted
+#: excess at 25 but only two do at 10 -- going on down to 5 removes none of the remaining two, so 10
+#: is where the overfill benefit stops and the surface starts costing. The venues' own computed
+#: smallest size is a separate rung and is unaffected. Signed cap (25) unchanged and still enforced:
+#: this is a tightening under it, not a new authority.
+QUANTITIES = (5.0, 10.0)
 #: L79: the frontier report is solved at most once per game per period (every rung of an epoch
 #: shares it); sizing itself is gated in Supervisor._worth_sizing.
 FRONTIER_PERIOD_S = 5.0   # 10 added 2026-09-07: under a $12 per-order cap only 5 fit, and 5 nets under the floor

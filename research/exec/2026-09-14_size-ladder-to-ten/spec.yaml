@@ -1,0 +1,49 @@
+row: L106
+date: 2026-09-14
+kind: operator_directed_size_reduction
+status_at_registration: PENDING
+operator_instruction: >-
+  Asked what the relaunch is for, the operator chose "Measurement run, smallest size": drop to the
+  smallest executable size, the standing 2026-09-07 rule ("the smallest amount that doesent cause
+  fill failures"), and judge the run on whether it produces the L102 fill-mechanics verdict and a
+  per-league slippage p90, not on P&L. Unwind proofs and a raised per-contract protection
+  allowance were deferred, not rejected.
+observed_failure: >-
+  Not a failure - a size chosen against measurement rather than feel. Two things were measured on
+  the box's own data before the rung was picked, because "smallest" and "best" are not the same
+  number.
+  OVERFILL: 11 of 42 real filled orders overfilled (the CLOB BUY wire bounds collateral, not
+  received shares, so price improvement returns surplus). Improvement p50 1.8%, but the tail is
+  28.6% and 55.4%. The overfill latch has an ABSOLUTE allowance - one contract of excess
+  (BOUNDED_TAKER_MAX_ACCEPTED_EXCESS) - so the excess scales with size while the allowance does
+  not. Of those eleven, FIVE exceed one contract at q=25 and only TWO at q=10. Going on to q=5
+  removes neither of the remaining two.
+  SURFACE: over 24 h of stream_evaluations, prints clearing the 0.5% hurdle AND the $0.05 dollar
+  floor number 590 at q=25, 516 at q=10, and 288 at q=5. At q=10 the dollar floor costs NOTHING
+  (516 of 516 that clear the hurdle also clear the floor); at q=5 it costs 87 of 375, 23%.
+  So q=10 is where the overfill benefit stops and the surface starts costing.
+immutable_success_criteria:
+  - The ladder is (5.0, 10.0) in grids/live_stream/grid.py AND nodes/replay/replay.py. The two must
+    move together or GATE step 4 parity breaks - replay must coalesce and size exactly as the lane.
+  - The venues' own computed smallest size stays a separate rung and is untouched.
+  - The signed caps do not move: 25 contracts per leg, $30 per order, $500 daily notional remain
+    the authority, and BOUNDED_TAKER_MAX_CONTRACTS stays 25. This is a tightening UNDER the signed
+    cap, which needs no GATE row; nothing here is new authority.
+  - CAP_BINDS_SMALLEST must not begin firing. The alarm exists for "the cap refused the smallest
+    quantity the lane prices", and this change moves away from it, but that is verified on the box
+    after release, not assumed.
+expected_ev_effect: >-
+  Roughly 87% of the actionable surface retained (516 of 590 prints/24 h) at 40% of the position
+  size. Per-cover P&L is expected to stay negative - that is the point of calling this a
+  measurement run, not a profit run. What it buys is a smaller naked position when a p90 slippage
+  draw halts the lane (about $1.26 of exposure instead of $3.16) and three fewer overfill latches
+  in eleven.
+watch_for:
+  - CAP_BINDS_SMALLEST in the watchdog.
+  - The actual order rate against 516 prints/24 h. If executions fall much faster than the print
+    count, the constraint is not the ladder and this row should say so.
+prohibited:
+  - Reading a fall in per-day P&L as evidence this was wrong. A smaller size at an unchanged
+    negative per-cover expectancy loses less money, not more; the run is judged on its verdicts.
+  - Dropping to q=5 for "more safety". Measured, it removes no further overfill latch and costs
+    23% of the surface.
