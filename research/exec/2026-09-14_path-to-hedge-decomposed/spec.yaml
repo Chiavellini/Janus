@@ -1,0 +1,52 @@
+row: L107
+date: 2026-09-14
+kind: measurement
+status_at_registration: PENDING
+observed_failure: >-
+  The "2,480 ms decision to hedge ack" existed in one sentence of NEXT.md with no decomposition,
+  no script and no row, and every stage figure behind it was taken while L100's retry loop had the
+  box at load 4-5. NEXT.md's own instruction was to re-measure before scoping latency work. This is
+  that re-measurement, from `ops/latency_report.py --last 200` on the box running 9387297 at load
+  0.8, and it moves the target.
+  Decomposed p50 (the stage clocks are cumulative from _t0, so these are differences), n=200
+  executions of which 20 reached a hedge:
+    leg A submit -> ack            442 ms   18%
+    leg A settle polling           1,048 ms 42%   <- the largest single component
+    leg A settled -> hedge submit  693 ms   28%
+    hedge submit -> ack            289 ms   12%
+    hedge ack -> settled           0.1 ms    0%   (b_polls p50 = 0)
+  Two things follow, and both contradict the plan that was written before the measurement.
+  FIRST, the hedge leg is not the slow leg. Kalshi submit->ack is 188.5 ms p50 at the transport
+  against Polymarket's 485.2 ms, the hedge never polls at all (Kalshi's create response carries
+  fill_count and average_fill_price, so _settle_ack's UNCONFIRMED loop never runs), and HTTP
+  keep-alive on Kalshi - the item scoped as the highest value-per-line - would save roughly 30 ms
+  of TLS on 2-3 calls, about 3% of the path.
+  SECOND, the largest component is leg A's settle polling: 3 polls at about 350 ms each while the
+  lane does not yet know whether it is holding a position. The authenticated Polymarket account
+  stream is SUPPOSED to make this free - `status()` consults `transport.user_order(...)` before it
+  spends a REST round trip, and the comment says "the authenticated user channel reports MATCHED
+  immediately; REST can omit a consumed FAK for minutes". The stream is connected and healthy:
+  1,255 of 1,255 health rows connected, 0 errors, 2.3 M frames in 24 h. But of the terminal answers
+  recorded in `order_events` over the same 24 h, only 5 came from the stream (`status_user_stream`)
+  against 22 from REST (`status`). The stream answers 18% of the time while being up 100% of it.
+immutable_success_criteria:
+  - Descriptive only. No code, threshold, cap or behaviour changes under this row.
+  - Every figure is from the box's own rows under a single deployed sha (9387297), taken after
+    L100's saturation fix, and the sha is named so a later comparison is honest.
+  - The open question is stated but NOT answered here: why a connected, error-free account stream
+    supplies 18% of terminal answers. Candidates are the key (`user_order` is looked up by
+    `venue_order_id`, which a `delayed` order may not yet carry), the timing (the first 0.1 s poll
+    commits to a 350 ms REST call before the frame arrives), and the event set the stream emits.
+expected_ev_effect: >-
+  none directly. It redirects the latency work from the hedge leg to leg A's settle polling, and it
+  reframes that polling as unhedged-exposure time rather than latency: those 1,048 ms are spent not
+  yet knowing whether a position is held, which is the interval hedge slippage accrues in.
+watch_for:
+  - The ratio of `status_user_stream` to `status` in order_events after any change here. It is the
+    measurement, and it needs no new instrument.
+  - db_ms max 37,386 ms across these 200 executions - a pathological store stall on the hot path,
+    separate from everything above and not diagnosed.
+prohibited:
+  - Quoting the 2,480 ms as though it were decomposed before this row. It was not.
+  - Scoping HTTP keep-alive off the pre-L100 numbers. Measured here, it is worth about 3% of the
+    path, not the 240-360 ms a call-count estimate suggested.
