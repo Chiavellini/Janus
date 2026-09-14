@@ -71,7 +71,15 @@ max_protect_loss_usd = 2.50      # per execution: the most a chase past break-ev
                                  # F21 size exactly as it did at 10; at $1.00 the cap was four Kalshi ticks at 25
                                  # and VARILLA V WILD sat unprotected 39 s with 25 available one tick above it.
 max_protect_loss_per_contract_usd = 0.10   # the same cap per contract; the tighter of the two binds
-max_protect_submits = 12         # hedge + unwind IOCs per execution under the protect window
+max_protect_submits = 12         # hedge + unwind IOCs per ONE protect() call under the protect window
+max_protect_submits_total = 60   # L105 (2026-09-14): and per EXECUTION, across every guard re-run.
+                                 # The line above bounds one call; clear_protect mints a fresh
+                                 # clearance with a fresh 12 on every hand-over and _scan_naked hands
+                                 # a naked row over on every pass forever, so the total was bounded
+                                 # by nothing: 77013052 sent 511 orders for 12,775 contracts to hedge
+                                 # 25. Counted from hedge_client_ids, which is persisted with the row
+protect_total_window_s = 600.0   # and the other durable bound: a naked position does not become more
+                                 # hedgeable by being retried for an hour. Both 0 to disable
 protect_resubmit_ms = 400        # between IOCs: enough for a fresh book, short enough for 12 tries
 unwind_enabled = false           # true from release R5: sell the naked side back inside the cap
 protect_auto = true              # R5 (2026-09-08): the guard re-protects a naked row on its own.

@@ -44,6 +44,13 @@ from nodes.risk.limits import ProtectLimits
 # tick since 2026-09-08, and leg A was the only order that reached a venue unsnapped.
 
 
+#: Stops the layer imposes on itself. `rejected` carries both these and a venue's real rejection,
+#: and L100 is the standing lesson about a row that names the wrong constraint: an execution stopped
+#: by one of these was never "rejected" by anybody, and an operator reading the row must not spend
+#: hours on the venue. Prefix-matched against `rejected`.
+INTERNAL_STOPS = ("HEDGE_QUANTITY_CAP", "PROTECT_SUBMIT_CEILING", "PROTECT_WINDOW_EXHAUSTED")
+
+
 def clamp(p: float) -> float:
     return min(0.99, max(0.01, p))
 
@@ -142,6 +149,31 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
     ex.protect.setdefault("attempts", [])
     ex.protect.update({"loss_cap_usd": lim.max_protect_loss_usd, "window_s": round(deadline - now, 3),
                        "unwind_enabled": lim.unwind_enabled})
+    # ── the ceilings that survive a re-run (L105, 2026-09-14) ────────────
+    # Everything below counting submits -- `attempts`, `phase1`, `phase_attempts`, and the
+    # clearance's own `max_protect_submits` -- is scoped to ONE call. `clear_protect` mints a fresh
+    # clearance with a fresh 12 on every hand-over and `_scan_naked` hands a naked row over on every
+    # guard pass forever, so the total was bounded by nothing at all: 77013052 sent 511 orders for
+    # 12,775 contracts to hedge 25. `hedge_client_ids` is persisted and reloaded with the row
+    # (records.py:136,171), so it is the one submit count that is already durable -- and the
+    # position's own age is the other bound, because a naked position does not become more
+    # hedgeable by being re-tried for an hour.
+    prior_submits = len(ex.hedge_client_ids)
+    naked_since = ex.protect.get("first_naked_utc")
+    if naked_since is None:
+        ex.protect["first_naked_utc"] = naked_since = co.clock()
+
+    def over_ceiling() -> str | None:
+        """The named reason this execution may send no further hedge, or None."""
+        cap = lim.max_protect_submits_total
+        if cap > 0 and prior_submits + attempts >= cap:
+            return (f"PROTECT_SUBMIT_CEILING: {prior_submits + attempts} hedge submits on this "
+                    f"execution across re-runs, cap {cap}")
+        window = lim.protect_total_window_s
+        age = co.clock() - float(naked_since)
+        if window > 0 and age > window:
+            return (f"PROTECT_WINDOW_EXHAUSTED: naked {age:.0f}s across re-runs, window {window:.0f}s")
+        return None
     base_ceiling = hedge_ceilings(plan, paid, 0.0)
     # Keep the continuous VWAP budget in the record/label; only the order ceiling is tick-floored.
     budget = plan.hedge_budget(paid)
@@ -173,6 +205,12 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
     for phase in ("walked", "budget", "loss_cap"):
         phase_attempts = 0
         while ex.unhedged > dust and attempts < chase_cap and rejected is None:
+            stop = over_ceiling()
+            if stop is not None:
+                ex.protect["submit_ceiling"] = {"prior": prior_submits, "this_call": attempts,
+                                                "contracts": round(ex.protect.get("hedge_contracts_submitted", 0.0), 4)}
+                rejected = stop
+                break
             # The authorized plan caps aggregate hedge buys, including retries and
             # guard reruns. An excess first-leg fill never authorizes a larger second leg.
             qty = min(ex.unhedged, max(0.0, hedge.contracts - ex.hedge_filled))
@@ -249,6 +287,8 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
             limit = tick_floor(clamp(max(limit, 0.01)), tick)
             req = co._request(plan, hedge, qty, limit, hedge=True, execution_id=ex.execution_id)
             ex.hedge_client_ids.append(req.client_order_id)
+            ex.protect["hedge_contracts_submitted"] = round(
+                float(ex.protect.get("hedge_contracts_submitted", 0.0)) + float(req.contracts), 4)
             co._move_after_fill(ex, X.LEG_B_SUBMITTED,
                                 detail=f"attempt {attempts} limit {limit:.4f} budget {budget:.4f}"
                                 + ("" if phase == "walked" else f" phase {phase} ceiling {ceiling:.4f}"))
@@ -305,6 +345,8 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
     # ── phase 4: the unwind ───────────────────────────────────────────────
     if lim.unwind_enabled:
         while (ex.unhedged > dust or ex.overhedged > dust) and co.mono() < deadline and attempts < lim.max_protect_submits:
+            if over_ceiling() is not None:
+                break
             if ex.unhedged > dust:
                 leg, qty, entry, which = plan.first, ex.unhedged, paid, "first"
             else:
@@ -361,8 +403,12 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
         return _hedged(co, ex, plan, paid, budget, protected=True)
 
     left = f"{ex.unhedged:g} unhedged" if ex.unhedged > dust else f"{ex.overhedged:g} over-hedged"
+    ours = rejected is not None and rejected.startswith(INTERNAL_STOPS)
     if rejected is not None and ex.hedge_filled <= 0:
-        reason, why = X.HEDGE_UNAVAILABLE, f"hedge rejected: {rejected}"
+        # The state is right either way -- no hedge was obtained -- but the WORDING must not blame
+        # the venue for a ceiling of ours (L100: the row claimed a loss-cap stop for hours).
+        why = f"stopped before a hedge: {rejected}" if ours else f"hedge rejected: {rejected}"
+        reason = X.HEDGE_UNAVAILABLE
     elif ex.hedge_filled <= 0:
         reason, why = X.HEDGE_SLIPPAGE_EXCEEDED, "no hedge inside the loss cap"
     elif rejected is not None:

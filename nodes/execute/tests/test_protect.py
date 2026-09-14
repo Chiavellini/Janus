@@ -490,3 +490,66 @@ def test_without_a_fresh_book_the_walked_phase_still_sends_three_times(tmp_path)
     hedge = [a for a in ex.protect["attempts"] if a["kind"] == "hedge"]
     assert [a["phase"] for a in hedge][:3] == ["walked"] * 3 and not any("advance" in a for a in hedge)
     assert ex.state is X.HEDGED and ex.hedge_avg_price == pytest.approx(0.19)
+
+
+def test_the_hedge_submit_ceiling_survives_the_guard_s_re_runs(tmp_path):
+    """L105 (2026-09-14): nothing bounded the hedge submits an EXECUTION may make.
+
+    `attempts`, `phase1` and `phase_attempts` are locals of `protect()`; `clear_protect` mints a
+    fresh clearance with a fresh `max_protect_submits` on every hand-over; and `_scan_naked` hands a
+    naked row over on every guard pass forever. One execution fired **511 orders for 12,775
+    contracts to hedge 25**. The bound has to be durable, so it is counted from `hedge_client_ids`,
+    which is persisted with the row and reloaded with it.
+    """
+    from nodes.execute.tests.test_quantity_caps import setup
+    from nodes.risk.clearance import clear_protect
+    from nodes.risk.kill import KillSwitches
+    from nodes.risk.limits import load_limits
+    from kernel.schema import Mode
+
+    # Leg A fills; every hedge attempt comes back filled ZERO, which is the runaway's real shape --
+    # a rejection would have set `rejected` and stopped after one.
+    co, ex, _pm, _k, _kill, _store, plan = setup(tmp_path, 10, hedge_fills=[0] * 5000)
+    assert ex.hedge_filled == 0 and ex.unhedged == 10
+    first_call = len(ex.hedge_client_ids)
+    assert first_call > 0, "the first call must actually send, or this proves nothing"
+
+    limits, kills = load_limits(), KillSwitches(tmp_path / "kill", enforce_volume=False)
+    for i in range(40):                      # the guard's hand-over, over and over
+        c = clear_protect(opportunity_id="o1", event_id="espn:mlb:1", venues=("kalshi", "polymarket"),
+                          mode=Mode.LIMITED_LIVE, limits=limits, kill=kills, now_mono=200.0 + i)
+        assert not hasattr(c, "code"), c     # clear_protect ignores kill/live, by design
+        co.protect_existing(ex, plan, c)
+
+    cap = limits.protect.max_protect_submits_total
+    assert len(ex.hedge_client_ids) == cap, f"{len(ex.hedge_client_ids)} submits against a cap of {cap}"
+    assert ex.protect["submit_ceiling"]["contracts"] == 600.0
+    assert "PROTECT_SUBMIT_CEILING" in ex.detail
+    # L100's lesson: a ceiling of ours is not a venue rejection, and the row must not say it is.
+    assert "hedge rejected" not in ex.detail, ex.detail
+    assert "stopped before a hedge" in ex.detail, ex.detail
+
+
+def test_a_position_naked_past_the_total_window_stops_being_re_run(tmp_path):
+    """The second durable bound: a naked position does not become more hedgeable by being retried
+    for an hour, and the submit ceiling alone cannot stop a re-run that sends nothing."""
+    from dataclasses import replace as _replace
+    from nodes.execute.tests.test_quantity_caps import setup
+    from nodes.risk.clearance import clear_protect
+    from nodes.risk.kill import KillSwitches
+    from nodes.risk.limits import load_limits
+    from kernel.schema import Mode
+
+    co, ex, _pm, _k, _kill, _store, plan = setup(tmp_path, 10, hedge_fills=[0] * 5000)
+    co.limits = _replace(co.limits, max_protect_submits_total=0, protect_total_window_s=60.0)
+    assert ex.protect["first_naked_utc"], "the position's age is stamped when it first goes naked"
+
+    limits, kills = load_limits(), KillSwitches(tmp_path / "kill", enforce_volume=False)
+    co.clock = lambda: ex.protect["first_naked_utc"] + 61.0      # one second past the window
+    c = clear_protect(opportunity_id="o1", event_id="espn:mlb:1", venues=("kalshi", "polymarket"),
+                      mode=Mode.LIMITED_LIVE, limits=limits, kill=kills, now_mono=300.0)
+    before = len(ex.hedge_client_ids)
+    co.protect_existing(ex, plan, c)
+    assert len(ex.hedge_client_ids) == before, "past the window, not one further order goes out"
+    assert "PROTECT_WINDOW_EXHAUSTED" in ex.detail, ex.detail
+

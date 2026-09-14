@@ -43,6 +43,15 @@ class ProtectLimits:
     #: live covers), so this only has to outlast that; past it the layer reads its own book as
     #: before. 0 disables the skip.
     entry_book_trust_s: float = 2.0
+    #: L105 (2026-09-14): the ceilings that survive a re-run. `max_protect_submits` bounds ONE
+    #: `protect()` call; `clear_protect` mints a fresh clearance with a fresh 12 on every hand-over
+    #: and `_scan_naked` hands over on every guard pass forever, so nothing bounded the total.
+    #: Execution 77013052 sent 511 orders for 12,775 contracts to hedge 25. These two are per
+    #: EXECUTION, counted from the durable `hedge_client_ids` and a stamp on `protect_json`, and
+    #: they are deliberately generous: five full chase cycles, or ten minutes naked, whichever
+    #: comes first. 0 disables either one.
+    max_protect_submits_total: int = 60
+    protect_total_window_s: float = 600.0
 
 
 @dataclass(frozen=True)
@@ -91,7 +100,9 @@ def load_limits(path: Path | str = LIMITS_PATH) -> RiskLimits:
         guard_period_s=float(pr.get("guard_period_s", 30.0)),
         protect_retry_s=float(pr.get("protect_retry_s", 3.0)),
         protect_fast_window_s=float(pr.get("protect_fast_window_s", 60.0)),
-        entry_book_trust_s=float(pr.get("entry_book_trust_s", 2.0)))
+        entry_book_trust_s=float(pr.get("entry_book_trust_s", 2.0)),
+        max_protect_submits_total=int(pr.get("max_protect_submits_total", 60)),
+        protect_total_window_s=float(pr.get("protect_total_window_s", 600.0)))
     return RiskLimits(
         max_total_usd=float(cap["max_total_usd"]), max_unresolved_usd=float(cap["max_unresolved_usd"]),
         per_venue_usd={k: float(v) for k, v in cap["per_venue_usd"].items()},

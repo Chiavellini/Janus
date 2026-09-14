@@ -859,7 +859,7 @@ class PositionGuard:
                     rep.findings.append(f"POSITION_GONE {exid[:8]} {gone}")
             elif self._protection_order_unresolved(ex):
                 self._report_unresolved_protection(ex, rep)
-            elif not working:
+            elif not working and not self._ceiling_reached(ex, rep):
                 rep.to_protect.append(exid)
         elif (not naked and not ex.released and ex.net_first > self.limits.protect_dust_contracts
               and ex.state not in _QUIET and ex.state is not X.HEDGED and cash_final):
@@ -949,6 +949,26 @@ class PositionGuard:
             return f"{leg.venue} holds nothing on {leg.market_id[:14]}: settled or closed by hand; left to the settlement pass"
         return None
 
+    def _ceiling_reached(self, ex, rep: GuardReport) -> bool:
+        """True once the layer has spent this execution's durable hedge-submit ceiling (L105).
+
+        Both re-run drivers ask this. Handing a capped row over again buys nothing and costs a row
+        load, a plan load, a clearance mint and a worker hop on a one-vCPU box -- every guard pass,
+        forever. What stops is only the retry: the position is still naked, still `UNHEDGED_POSITION`
+        and still flagged, so nothing becomes quieter than it was.
+        """
+        if ex is None or not ex.protect.get("submit_ceiling"):
+            return False
+        key = f"capped:{ex.execution_id}"
+        if key not in self.said:
+            self.said.add(key)
+            c = ex.protect["submit_ceiling"]
+            rep.findings.append(
+                f"PROTECT_CEILING_REACHED {ex.execution_id[:8]} {ex.event_id} unhedged {ex.unhedged:g} "
+                f"after {c.get('prior', 0) + c.get('this_call', 0)} submits / {c.get('contracts', 0)} "
+                f"contracts; no further hedge will be sent for it")
+        return True
+
     def _scan_naked(self, snap: GuardSnapshot, rep: GuardReport, *, skip: set[str]) -> None:
         """Every open execution that holds a naked (or over-hedged) position is handed over on EVERY
         pass, whether or not a new fill arrived: the fills cursor moves on, the position does not."""
@@ -985,7 +1005,7 @@ class PositionGuard:
                     rep.findings.append(f"POSITION_GONE {exid[:8]} {gone}")
             elif self._protection_order_unresolved(ex):
                 self._report_unresolved_protection(ex, rep)
-            elif not working:
+            elif not working and not self._ceiling_reached(ex, rep):
                 rep.to_protect.append(exid)
 
     def _last_utc(self, exid: str) -> float | None:

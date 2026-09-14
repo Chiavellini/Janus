@@ -1,0 +1,46 @@
+row: L105
+date: 2026-09-14
+kind: protection_bound
+status_at_registration: PENDING
+observed_failure: >-
+  One execution fired 511 hedge orders for 12,775 contracts to hedge 25. Nothing bounded the hedge
+  submits an EXECUTION may make - only the submits one `protect()` CALL may make. `attempts`,
+  `phase1` and `phase_attempts` are locals of `protect()` (protect.py:149-152); `b_attempts` is
+  written with `=` and not `+=` (protect.py:261), so each call overwrites the previous total;
+  `clear_protect` mints a brand-new clearance with `_hedge_used = 0` and a fresh
+  `max_protect_submits` on every hand-over (clearance.py:245-265); and `_scan_naked` re-queues a
+  naked row on EVERY guard pass, forever, by design (guard.py:953). `max_hedge_submits` (3) bounds
+  only the walked phase of one call, and `max_protect_submits` (12) only that one call.
+  Reproduced exactly in a test: leg A fills, every hedge attempt returns a ZERO fill (a REJECTION
+  would have set `rejected` and stopped after one, which is why the runaway needs zero-fills), and
+  70 guard hand-overs send 497 orders for 4,970 contracts against a 10-contract position.
+immutable_success_criteria:
+  - The bound is DURABLE across re-runs, not a local. It is counted from `hedge_client_ids`, which
+    is already persisted with the row and reloaded with it (records.py:136,171) - no new column.
+  - Two independent ceilings, either of which stops further sending: total submits per execution
+    (`max_protect_submits_total`, default 60 = five full chase cycles) and the age of the naked
+    position itself (`protect_total_window_s`, default 600 s), stamped as `first_naked_utc` the
+    first time the layer sees the position. Both default-on; 0 disables either.
+  - A stop the layer imposes on ITSELF is never reported as a venue rejection. `INTERNAL_STOPS`
+    names them and the terminal row says "stopped before a hedge", not "hedge rejected". This is
+    L100's lesson applied before it is repeated, not after.
+  - Both guard re-run drivers stop handing a capped row over (`_ceiling_reached`), so a permanently
+    stuck execution stops costing a row load, a plan load, a clearance mint and a worker hop every
+    30 s forever on a one-vCPU box. The position stays naked, stays UNHEDGED_POSITION and stays
+    flagged - only the retry stops.
+  - No cap, hurdle, price, size or kill condition changes. The layer may still do everything it
+    could do; it may not do it an unbounded number of times.
+expected_ev_effect: >-
+  none on a healthy cover. It bounds a failure mode whose cost is venue spam, CPU on a single-vCPU
+  box, and execution_transitions rows - 77013052 wrote 53% of that table on its own. A hedge that
+  needs more than 60 submits is not going to arrive on the 61st.
+watch_for:
+  - PROTECT_SUBMIT_CEILING or PROTECT_WINDOW_EXHAUSTED in an execution row. Each occurrence is a
+    position the layer gave up on and the operator must look at; it is not a routine outcome.
+  - PROTECT_CEILING_REACHED in the guard's findings, which says the same thing once per process.
+prohibited:
+  - Raising `max_protect_submits_total` to make a stuck position "try harder". The measured p90
+    hedge slippage (14c) exceeds what the loss cap can absorb (about 10.7c) at every size, so a
+    position that cannot be hedged inside the cap is a PRICE problem, not a persistence problem.
+  - Reading a ceiling stop as evidence the venue was unavailable. The venue answered every time;
+    it answered zero.
