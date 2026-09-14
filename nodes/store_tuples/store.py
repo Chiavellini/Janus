@@ -97,6 +97,7 @@ RETENTION_TABLES: tuple[tuple[str, str], ...] = (
     # candidate ladder per book epoch per poller. It is re-derivable (nodes/replay rebuilds it
     # from frames and the runner's constants) and its orders carry their own evidence.
     ("sizing_decisions", "seen_ts"),
+    ("refusal_counts", "seen_ts"),
 )
 
 
@@ -340,6 +341,36 @@ CREATE INDEX IF NOT EXISTS socket_health_ts ON socket_health(venue, seen_ts);
         cols = {r[1] for r in self.con.execute(f"PRAGMA table_info({table})")}
         if column not in cols:
             self.con.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+
+    REFUSAL_COUNTS_DDL = """
+CREATE TABLE IF NOT EXISTS refusal_counts(
+  seen_ts REAL NOT NULL, channel TEXT NOT NULL, code TEXT NOT NULL, league TEXT NOT NULL,
+  n INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS refusal_counts_ts ON refusal_counts(seen_ts);
+"""
+
+    def refusal_counts(self, counts: dict[tuple[str, str, str], int], *, seen_ts: float | None = None) -> int:
+        """Aggregated refusals for one report tick. Returns the number of rows written.
+
+        COUNTS, not rows, and the reason is this project's own history. Both refusal channels fire
+        on a hot path -- `[risk] refused` once per dispatch and `[size] refused` once per non-
+        selecting epoch, at roughly 200 book events a second -- and a row apiece is precisely what
+        `sizing_decisions` did: 24.7 of 27.4 GB, about 1.95 M rows a day, which L74 had to gate away
+        and which helped fill the disk on 2026-09-11, killing the lane inside a commit.
+
+        Until now both channels ended at `print()`, so the largest attrition in the funnel was
+        readable only by grepping journald. One row per (channel, code, league) per tick is two
+        channels by ~20 codes by 14 leagues at worst, and it joins to every other stage.
+        """
+        if not counts:
+            return 0
+        if self.REFUSAL_COUNTS_DDL not in self._ddl_applied:
+            self.ensure_ddl(self.REFUSAL_COUNTS_DDL)
+        t = seen_ts or time.time()
+        self.con.executemany(
+            "INSERT INTO refusal_counts(seen_ts, channel, code, league, n) VALUES(?,?,?,?,?)",
+            [(t, ch, code, lg, n) for (ch, code, lg), n in sorted(counts.items()) if n])
+        return len(counts)
 
     def socket_health(self, *, venue: str, stats: dict[str, Any], seen_ts: float | None = None) -> None:
         """One row per report tick per socket. This used to live only in stdout, which is not

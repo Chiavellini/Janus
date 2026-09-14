@@ -224,6 +224,9 @@ class Supervisor:
     stall_aftermath_ticks: int = 2
     #: The last halt REASON said, so a transition between two reasons sharing a halt value prints.
     halt_reason: str = ""
+    #: L113: refusals by (channel, code, league), flushed to `refusal_counts` on the report tick.
+    #: Counted rather than rowed -- see TupleStore.refusal_counts for why that is not a preference.
+    refusals: dict = field(default_factory=dict)
     tiers: dict[str, int] = field(default_factory=dict)
     wake_state: tuple = ("WAKE", None, None)
     #: Capture-only subscriptions for what the slate cannot co-list yet (tennis has no ESPN anchor):
@@ -609,6 +612,7 @@ class Supervisor:
             if self.said.get(key) != "said":
                 self.said[key] = "said"
                 print(f"  [size] refused {sup.short_name}: {','.join(decision.binding_constraints) or 'NO_FEASIBLE_SIZE'}", flush=True)
+            self._count_size_refusal(sup, decision)
             return
         epoch_payload = []
         for outcome, legs in sorted(offers.items()):
@@ -640,6 +644,7 @@ class Supervisor:
             if self.said.get(key) != "said":
                 self.said[key] = "said"
                 print(f"  [size] refused {sup.short_name}: {','.join(decision.binding_constraints) or 'NO_FEASIBLE_SIZE'}", flush=True)
+            self._count_size_refusal(sup, decision)
             return
         selected = decision.selected
         ev = replace(base, quantity=float(selected.quantity), cover=selected.cover)
@@ -783,6 +788,12 @@ class Supervisor:
         for venue, st_ in (("kalshi", self.ks), ("polymarket", self.ps)):
             if st_ is not None:
                 self.store.socket_health(venue=venue, stats={**st_.stats(), "loop_lag_s": round(lag, 3)}, seen_ts=t)
+        if self.refusals and self.store is not None:
+            try:
+                self.store.refusal_counts(self.refusals, seen_ts=t)
+            except Exception as exc:  # noqa: BLE001 -- telemetry must never break the tick
+                print(f"  [risk] refusal counts not written: {brief_error(exc)}", flush=True)
+            self.refusals = {}
         pm_exec = self.venues.get("polymarket")
         user_stream = getattr(getattr(pm_exec, "transport", None), "user_stream", None)
         if user_stream is not None:
@@ -828,6 +839,7 @@ class Supervisor:
             # The override stopped authorising this process between ticks (check_arm). Refused
             # before any plan, balance call or clearance: nothing is minted for a stale arm.
             print(f"  [risk] refused {sup.short_name}: ARM_STALE {self.arm_stale}", flush=True)
+            self.refuse("risk", "ARM_STALE", sup.poller.league)
             return
         cov = ev.cover
         m_entry = time.monotonic()
@@ -886,6 +898,7 @@ class Supervisor:
                 self.said["polymarket:geoblocked"] = "said"
                 print(f"  [risk] refused every cover: VENUE_GEOBLOCKED polymarket -- {blocked_venue[:120]} "
                       f"(this host cannot place Polymarket orders; restart from a permitted host)", flush=True)
+            self.refuse("risk", "VENUE_GEOBLOCKED", sup.poller.league)
             return
         if self.caps and self.mode.risks_capital:
             stake = sum(c * p for _v, c, p in cand.legs)
@@ -902,6 +915,7 @@ class Supervisor:
                 if self.said.get(key) != early[1][:12]:          # once per game, code and size, not per print
                     self.said[key] = early[1][:12]
                     print(f"  [risk] refused {sup.short_name}: {early[0]} {early[1]} (q={ev.quantity:g}, before any round trip)", flush=True)
+                    self.refuse("risk", str(early[0]), sup.poller.league)
                     if early[0] in ("CAP_STAKE", "CAP_CONTRACTS") and ev.quantity <= min(QUANTITIES):
                         # The operator's rule (GATE row 2026-09-07): a cap that refuses the SMALLEST
                         # size the lane prices is a defect, not a limit. Said, stored, alarmed.
@@ -919,6 +933,7 @@ class Supervisor:
                 if self.said.get(key) != self.in_flight:
                     self.said[key] = self.in_flight
                     print(f"  [risk] refused {sup.short_name}: IN_FLIGHT {self.in_flight} is executing", flush=True)
+                self.refuse("risk", "IN_FLIGHT", sup.poller.league)
                 return
             try:
                 loop = asyncio.get_running_loop()
@@ -1020,6 +1035,7 @@ class Supervisor:
         pre["clear_ms"] = round((time.monotonic() - m) * 1000.0, 2)
         if hasattr(clearance, "code"):
             print(f"  [risk] refused {sup.short_name}: {clearance.code} {clearance.detail}", flush=True)
+            self.refuse("risk", str(clearance.code), sup.poller.league)
             return None
         return clearance
 
@@ -1036,6 +1052,7 @@ class Supervisor:
             if (plan is not None and plan.sizing and plan.first.post_only
                     and not self._hedge_capacity_ok(sup, plan, plan.quantity)):
                 print(f"  [risk] refused {sup.short_name}: HEDGE_DEPTH_CHANGED before entry", flush=True)
+                self.refuse("risk", "HEDGE_DEPTH_CHANGED", sup.poller.league)
                 return
             aged = (replace(cand, max_book_age_s=cand.max_book_age_s + max(0.0, time.monotonic() - m_entry))
                     if isinstance(cand, Candidate) else cand)
@@ -1207,6 +1224,25 @@ class Supervisor:
             return v.orderbook(market_id, side) if v is not None and hasattr(v, "orderbook") else None
         except Exception:  # noqa: BLE001
             return None
+
+    def refuse(self, channel: str, code: str, league: str = "") -> None:
+        """Count one refusal. The two channels are not the same question (L113).
+
+        `size` is `nodes/execute/sizing`'s read-only mirror saying no whole quantity in 1..cap could
+        have worked, so nothing was proposed; `risk` is `nodes/risk.clear` -- the authoritative gate
+        that owns the reservation -- rejecting a quantity that WAS proposed. An epoch emits one or
+        the other, never both, because `_execute_sized` returns before `_execute` is reached.
+        """
+        key = (channel, code or "UNKNOWN", league or "")
+        self.refusals[key] = self.refusals.get(key, 0) + 1
+
+    def _count_size_refusal(self, sup, decision) -> None:
+        """Every binding constraint, counted separately: the sizer reports a SET, and which members
+        co-occur is the finding. `CAP_CONTRACTS` is unioned in unconditionally by both return paths
+        in `sizing.py`, so it is noise and is dropped here rather than swamping the table."""
+        codes = [c for c in (decision.binding_constraints or ()) if c != "CAP_CONTRACTS"]
+        for code in codes or ["NO_FEASIBLE_SIZE"]:
+            self.refuse("size", str(code).split(":")[0], sup.poller.league)
 
     def flag(self, name: str, detail: str, *, on=None) -> None:
         """Raise a lane flag on the connection THIS thread owns -- the only way the grid flags.

@@ -2,6 +2,7 @@
 """The supervisor's socket callback: it records, it sizes, and it never raises into the socket."""
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 
 from grids.live_stream.grid import Supervised, Supervisor
@@ -1017,3 +1018,55 @@ def test_the_frontier_report_runs_at_most_once_per_period_per_game(tmp_path: Pat
     sup._on_update("g1")("K_H", T + 1)
     sup._on_update("g1")("K_H", T + g.FRONTIER_PERIOD_S + 1)
     assert n == [1, 1], "solved at T and at T+5, not at T+1 (one rung per epoch here)"
+
+
+def test_refusals_are_counted_per_tick_not_rowed_per_refusal(tmp_path: Path):
+    """L113: both refusal channels used to end at `print()`, so the largest attrition in the funnel
+    was readable only by grepping journald.
+
+    They are COUNTS, and that is not a preference. Both fire on a hot path at roughly 200 book
+    events a second, and a row apiece is exactly what `sizing_decisions` did: 24.7 of 27.4 GB and
+    ~1.95 M rows a day, which L74 had to gate away and which helped fill the disk on 2026-09-11,
+    killing the lane inside a commit. One row per (channel, code, league) per report tick.
+    """
+    from nodes.stream_kalshi.stream import KalshiStream
+    from nodes.stream_polymarket.stream import PolymarketStream
+    sup, _s = _supervisor(tmp_path)
+    sup.ks, sup.ps = KalshiStream(api_key="k", private_key=None), PolymarketStream()
+
+    # 10,000 refusals across a handful of distinct (channel, code, league) keys.
+    for i in range(10_000):
+        sup.refuse("risk", ["IN_FLIGHT", "CLOCK_UNHEALTHY", "KILL_SWITCH"][i % 3], "mlb")
+        sup.refuse("size", ["MIN_PROFIT", "VENUE_WIRE_MIN"][i % 2], "itf")
+    assert len(sup.refusals) == 5, sup.refusals
+
+    sup.on_report_tick(now=T)
+    rows = sup.store.con.execute(
+        "SELECT channel, code, league, n FROM refusal_counts ORDER BY channel, code").fetchall()
+    assert len(rows) == 5, f"{len(rows)} rows for 20,000 refusals"
+    assert sum(r[3] for r in rows) == 20_000
+    got = {(ch, code, lg): n for ch, code, lg, n in rows}
+    assert got[("risk", "IN_FLIGHT", "mlb")] > 3_000
+    assert got[("size", "MIN_PROFIT", "itf")] == 5_000, "the two channels are counted apart"
+    assert sup.refusals == {}, "the accumulator resets, or the next tick double-counts"
+
+    # A tick with nothing refused writes nothing at all.
+    sup.on_report_tick(now=T + 60)
+    assert sup.store.con.execute("SELECT COUNT(*) FROM refusal_counts").fetchone()[0] == 5
+
+
+def test_a_failed_refusal_write_never_breaks_the_report_tick(tmp_path: Path, capsys):
+    """Telemetry is not allowed to take the lane down with it."""
+    from nodes.stream_kalshi.stream import KalshiStream
+    from nodes.stream_polymarket.stream import PolymarketStream
+    sup, _s = _supervisor(tmp_path)
+    sup.ks, sup.ps = KalshiStream(api_key="k", private_key=None), PolymarketStream()
+    sup.refuse("risk", "IN_FLIGHT", "mlb")
+
+    def boom(*_a, **_k):
+        raise sqlite3.OperationalError("database is locked")
+    sup.store.refusal_counts = boom
+    sup.on_report_tick(now=T)
+    assert "refusal counts not written" in capsys.readouterr().out
+    assert sup.refusals == {}, "a failed flush still clears, or the accumulator grows without bound"
+

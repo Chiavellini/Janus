@@ -1,0 +1,55 @@
+row: L113
+date: 2026-09-14
+kind: measurement_instrumentation
+status_at_registration: PENDING
+observed_failure: >-
+  The largest attrition in the funnel was readable only by grepping journald. Both refusal channels
+  ended at `print()` and were discarded: `nodes/risk/clearance.Refused` (the authoritative gate,
+  which owns the reservation) and `SizingDecision.binding_constraints` (the read-only mirror that
+  decides nothing is proposed at all). `_execute`'s own docstring claimed "Every refusal is recorded
+  on the opportunity" - that has not been true for some time.
+  And nothing joined the stages. `ops/box/launchpad_extract.py` computes `profitable_prints` from
+  stream_evaluations and `attempts` from executions independently and never joins them;
+  `ops/coverage_report.py` stops at "did the lane pair it"; `ops/slippage_report.py` starts at covers
+  that already completed. Measured on the box on 2026-09-14: 408 events seen in 24 h, 40 co-listed,
+  345 UNPAIRED of which 342 are kalshi=missing; 1,634,515 evaluation rows over 163 games; 1,893
+  PROFITABLE_UNEXECUTED prints over 73 games. What happens between 1,893 prints and the orders
+  actually sent was not answerable from the database at all.
+immutable_success_criteria:
+  - Refusals are COUNTS, aggregated in memory and flushed once per report tick as one row per
+    (channel, code, league). Not rows per refusal. Both channels fire on a hot path at roughly 200
+    book events a second, and a row apiece is exactly what `sizing_decisions` did - 24.7 of 27.4 GB,
+    about 1.95 M rows a day - which L74 had to gate away and which helped fill the disk on
+    2026-09-11, killing the lane inside a commit. A test asserts 20,000 refusals produce 5 rows.
+  - The two channels stay distinguishable. `size` means no whole quantity in 1..cap could have
+    worked, so nothing was proposed; `risk` means a proposed quantity was rejected by the gate that
+    owns the reservation. An epoch emits one or the other, never both.
+  - `CAP_CONTRACTS` is dropped from the size channel: both return paths in sizing.py union it in
+    unconditionally, so it is noise rather than a finding.
+  - A failed flush never breaks the report tick, and clears the accumulator either way so it cannot
+    grow without bound.
+  - `refusal_counts` joins `RETENTION_TABLES` and ages out at 7 days with the other observation
+    tables.
+  - Recording only. No entry decision, cap, hurdle, gate or behaviour changes; replay parity digests
+    unmoved.
+  - `ops/funnel_report.py` prints the stages end to end and states its own caveats: that
+    stream_evaluations is material-change gated and per-rung, that halted epochs priced nothing and
+    are counted apart, that refusal counts begin at the first tick after deploy, and that an empty
+    refusals section means "not yet ticked", not "nothing refused".
+expected_ev_effect: >-
+  none directly. It converts the question the operator actually asked - what stands between the
+  surface and $100/day - from an argument into a query. The measured context: the entire actionable
+  surface is bounded at about $20/day gross (GATE_TO_LIVE 2026-09-12) and the last 19 settled covers
+  were net -$0.55, so knowing precisely where the surface is lost is the precondition for spending
+  anything on widening it.
+watch_for:
+  - The ratio of `risk` to `size` refusals. If `size` dominates, the sizer is refusing before the
+    gate ever sees a candidate and the caps are the constraint; if `risk` dominates, look at which
+    codes - IN_FLIGHT and CLOCK_UNHEALTHY are throughput and L111 respectively, not economics.
+  - IN_FLIGHT's share specifically. It is the global single-flight lock, and C2 exists to lift it;
+    this counter is how that change gets measured rather than asserted.
+prohibited:
+  - Writing a row per refusal. The disk-full outage is one commit away and this path is hot.
+  - Reading an empty refusals section as evidence of no refusals.
+  - Quoting an actionable-print count without naming the size rung. The table carries one row per
+    rung and a naive count double-counts.
