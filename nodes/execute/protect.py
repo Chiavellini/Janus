@@ -44,6 +44,14 @@ from nodes.risk.limits import ProtectLimits
 # tick since 2026-09-08, and leg A was the only order that reached a venue unsnapped.
 
 
+#: How stale a book carried from one phase to the next may be before it is re-read (L109). The
+#: carry exists for ONE sequence: L75's post-zero-fill read `break`s out of the walked phase without
+#: sleeping, and the budget phase's first iteration then reads the same book microseconds later.
+#: The bound is generous against an age that is in practice ~0, and it is deliberately far tighter
+#: than `entry_book_trust_s`: that one governs a reading used to DECLINE a send, this one governs a
+#: reading used to PRICE one, and hedge slippage is the number that decides this lane's P&L.
+CARRIED_BOOK_MAX_AGE_S = 0.5
+
 #: Stops the layer imposes on itself. `rejected` carries both these and a venue's real rejection,
 #: and L100 is the standing lesson about a row that names the wrong constraint: an execution stopped
 #: by one of these was never "rejected" by anybody, and an operator reading the row must not spend
@@ -180,6 +188,8 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
     limit = max(base_ceiling.walked, 0.01)
     attempts = phase1 = 0
     rejected = None
+    #: A book already paid for, handed from the phase that read it to the phase that needs it.
+    carried: tuple[object, float] | None = None
     #: Submits kept for the unwind so the chase can never starve it (phases 2-3 get the rest).
     chase_cap = lim.max_protect_submits - (3 if lim.unwind_enabled else 0)
 
@@ -261,9 +271,19 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                 L = loss_allowance(lim, remaining_loss_usd(ex, plan, lim), ex.unhedged)
                 c = hedge_ceilings(plan, paid, L)
                 ceiling = max(limit, c.budget) if phase == "budget" else max(limit, c.loss_cap)
-                book = (co._accrue(ex, "hedge_book_ms", "hedge_book_reads",
-                                   fresh_book, hedge.venue, hedge.market_id, hedge.side)
-                        if fresh_book is not None else None)
+                if carried is not None and co.mono() - carried[1] <= CARRIED_BOOK_MAX_AGE_S:
+                    # L109: the walked phase just read this exact book to decide it was done, and
+                    # `break` skips the sleep, so the read below would repeat it microseconds later
+                    # for another ~190 ms. Kalshi's orderbook GET is the single largest item in the
+                    # chase (~55 % of it), and this one buys nothing.
+                    book = carried[0]
+                    ex.stages["hedge_book_reused"] = ex.stages.get("hedge_book_reused", 0) + 1
+                elif fresh_book is not None:
+                    book = co._accrue(ex, "hedge_book_ms", "hedge_book_reads",
+                                      fresh_book, hedge.venue, hedge.market_id, hedge.side)
+                else:
+                    book = None
+                carried = None          # one hand-over only; every later iteration reads its own
                 nxt = next_hedge_limit(limit, tick, book, ex.unhedged, ceiling)
                 if nxt is None:
                     # at this phase's ceiling already: one more try there (the book may have refilled
@@ -343,6 +363,9 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                     want = marginal_price(book, ex.unhedged) if book is not None else None
                     if want is not None and want > ceiling + 1e-9:
                         ex.protect["attempts"][-1].update(advance="book_above_ceiling", book_marginal=want, left=phase)
+                        # This `break` skips the sleep below, so the budget phase starts immediately:
+                        # hand it the book rather than let it buy the same one again (L109).
+                        carried = (book, co.mono()) if book is not None else None
                         break
                 co._accrue(ex, "b_sleep_ms", None, co.sleep,
                            co.poll_interval_s if phase == "walked" else lim.protect_resubmit_ms / 1000.0)

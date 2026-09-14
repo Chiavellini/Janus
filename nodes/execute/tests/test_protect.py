@@ -606,3 +606,38 @@ def test_the_hedge_stamps_record_the_first_attempt_and_the_last(tmp_path):
     # of real work that every previous reading of this system attributed to dead time.
     assert last - first >= 380.0, ex.stages
     assert ex.stages["b_last_ack_ms"] - ex.stages["b_ack_ms"] >= 380.0, ex.stages
+
+def test_the_budget_phase_reuses_the_book_the_walked_phase_just_paid_for(tmp_path):
+    """L109 (2026-09-14): two identical Kalshi orderbook GETs, back to back, ~190 ms each.
+
+    L75's post-zero-fill read decides the walked phase is finished and `break`s -- which skips the
+    sleep at the bottom of the loop -- so the budget phase's first iteration ran immediately and
+    re-read the very same book microseconds later. Orderbook reads are ~55% of the chase's cost and
+    that one bought nothing.
+
+    This is the MORIYA schedule from the test above, unchanged: same fills, same limits, same end
+    state. Only the round trip is gone. The carry is bounded to one hand-over and half a second,
+    because a reading used to PRICE a hedge is not the same as one used to DECLINE a send -- the
+    entry book, at 1-1.5 s old by the time the layer runs, is deliberately NOT reused this way.
+    """
+    co, vs, _, _, _ = harness(tmp_path)
+    p0, _ = plan_for(offers(), q=10.0)
+    p = replace(p0, quantity=10.0,
+                first=replace(p0.first, limit_price=0.94, vwap=0.93, contracts=10.0),
+                hedge=replace(p0.hedge, limit_price=0.03, vwap=0.03, contracts=10.0, tick=0.01),
+                max_cost_per_contract=0.99, fee_per_contract=0.005295,
+                settlement_buffer_per_contract=0.01046315)
+    vs["polymarket"].books = {"P_H": bk([(0.93, 10)])}
+    vs["kalshi"].books = {"K_A": bk([(0.04, 5000)])}
+    co.fresh_book = hedge_book_that_moves(vs, "kalshi", bk([(0.03, 5000)]))
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+
+    # The outcome is byte-for-byte the one the MORIYA test pins: the saving is a round trip, not a
+    # different decision.
+    assert ex.state is X.HEDGED and ex.hedge_avg_price == pytest.approx(0.04)
+    hedge = [a for a in ex.protect["attempts"] if a["kind"] == "hedge"]
+    assert [(a["phase"], a["limit"], a["state"]) for a in hedge] == [
+        ("walked", 0.03, "UNFILLED"), ("budget", 0.04, "FILLED")]
+    # One read paid for, one hand-over, none repeated.
+    assert ex.stages["hedge_book_reads"] == 1, ex.stages
+    assert ex.stages["hedge_book_reused"] == 1, ex.stages

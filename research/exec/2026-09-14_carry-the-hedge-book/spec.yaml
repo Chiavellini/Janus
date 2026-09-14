@@ -1,0 +1,38 @@
+row: L109
+date: 2026-09-14
+kind: latency_repair
+status_at_registration: PENDING
+observed_failure: >-
+  The hedge chase pays for the same Kalshi orderbook twice, microseconds apart. L75's
+  post-zero-fill read (protect.py, phase "walked") decides the walked phase is finished and
+  `break`s - and that `break` skips the sleep at the bottom of the loop - so the budget phase's
+  first iteration begins immediately and calls `fresh_book` again for the identical book.
+  A Kalshi orderbook GET is measured at ~190 ms (L34 put box-mx to Kalshi at 91.7 ms on a fresh
+  connection; L107 measured submit->ack at 188.5 ms p50 at the transport). With `b_attempts` p50
+  2.5 on the live box, orderbook reads are about 55% of the whole chase, and this is one of two.
+  It was invisible until L108 added `hedge_book_ms` and `hedge_book_reads`, because a repeating
+  cost cannot be recorded by a stamp.
+immutable_success_criteria:
+  - The carry is ONE hand-over: the book is cleared after a single use, and every later iteration
+    reads its own. It is additionally bounded by `CARRIED_BOOK_MAX_AGE_S` (0.5 s) against an age
+    that is in practice near zero.
+  - The entry confirm's hedge book is deliberately NOT reused this way. By the time `protect()`
+    runs it is 1-1.5 s old (leg A settle is 697 ms p50 and the coordinator tail another 366 ms),
+    and `entry_book_trust_s` governs a reading used to DECLINE a send, not one used to PRICE a
+    hedge. Hedge slippage is the number that decides this lane's P&L; 190 ms is not worth pricing
+    a hedge off a stale ladder.
+  - Behaviour is identical. Proven on the registered MORIYA schedule (L75's own test case): same
+    two attempts, same phases, same limits, same fill at 0.04, same end state - with
+    `hedge_book_reads` 1 instead of 2.
+  - Replay parity digests unmoved.
+expected_ev_effect: >-
+  about 190 ms off the interval between a filled first leg and its hedge, on every execution whose
+  walked phase advances on the L75 read. That interval is where hedge slippage accrues, and
+  slippage decides the sign of the outcome on 16 of 19 covers.
+watch_for:
+  - `hedge_book_reused` against `hedge_book_reads` per hedged execution. A reused count of zero
+    means the walked phase is not advancing the way L75 intended and this row bought nothing.
+prohibited:
+  - Extending the carry to a second hand-over, or to the entry confirm's book, without measuring
+    what pricing a hedge off a stale ladder costs. The saving is 190 ms; the tail risk it would be
+    trading against is a measured 14c p90.
