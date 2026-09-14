@@ -1,0 +1,50 @@
+row: L114
+date: 2026-09-14
+kind: throughput_repair
+status_at_registration: PENDING
+operator_instruction: >-
+  Asked whether a hedged cover should free the event for another, the operator chose "Release at
+  hedge, keep the notional cap", having been shown that the current rule caps the architecture near
+  40 covers a day regardless of universe size.
+observed_failure: >-
+  An event yielded roughly ONE cover, ever. `ExposureLedger.has_event` refused a second entry with
+  EVENT_IN_FLIGHT while any reservation on that event was open, and `release()` happens only in the
+  reconcile pass after BOTH venues settle - hours for a live sports market. So an event that
+  produced one cover was closed to further entry for the rest of its life.
+  The arithmetic: about 40 co-listed events are in play on a measured day (408 events seen, 40
+  co-listed, 345 unpaired of which 342 are kalshi=missing). One cover per event is therefore a
+  ceiling near 40 covers/day, which at a realistic $0.20-0.50 per cover is $8-20/day - the same
+  order as GATE_TO_LIVE's independently measured "about $20 a day" bound on the entire actionable
+  surface, arrived at from a completely different direction. No amount of universe expansion moves
+  a per-event ceiling.
+immutable_success_criteria:
+  - Only the single-flight REFUSAL ends at the hedge. The capital stays committed, because the
+    contracts really are held until settlement, so `EVENT_NOTIONAL`, `LEAGUE_EXPOSURE`,
+    `VENUE_CAPITAL`, `TOTAL_CAPITAL`, `UNRESOLVED_EXPOSURE` and `MAX_EVENTS` all keep counting the
+    reservation exactly as before. Asserted directly: after `mark_hedged`, `event_usd` is unchanged
+    and a reservation at the per-event cap is still refused EVENT_NOTIONAL.
+  - Covers on one event still SERIALISE. A second cover that is itself in flight refuses a third
+    with EVENT_IN_FLIGHT. What ends is stopping at one, not concurrency control.
+  - `hedged_utc` is persisted and reloaded, so a restart does not re-block an event whose cover is
+    already done - the reservations table is reloaded at start precisely so single-flight survives
+    a restart, and this must survive it the same way.
+  - No cap, hurdle, price or size changes. This moves a lock, not an authority.
+expected_ev_effect: >-
+  it lifts a hard ceiling; it does not create edge. Per-cover expectancy is still negative (median
+  booked margin 0.67c against median hedge slippage 3.0c), so the honest expectation is MORE COVERS
+  AT THE SAME SIGN until the slippage work lands. That is the point of doing it during a
+  measurement run: more covers per day is more evidence per day, and the size is at the smallest
+  rung deliberately.
+watch_for:
+  - Covers per event per day. If it stays at ~1, the ceiling was somewhere else - most likely the
+    GLOBAL `in_flight` lock in the grid, which is the other half of this and is not changed here.
+  - `EVENT_NOTIONAL` and `MAX_EVENTS` in `refusal_counts` (L113). They should begin to appear as
+    events accumulate multiple covers; if they never do, the caps are not binding where this row
+    assumes they are.
+  - Realised P&L per event. Multiple covers on one event concentrate exposure on one outcome, which
+    the notional cap bounds in dollars but does not diversify.
+prohibited:
+  - Releasing the capital at hedge. The contracts are held until settlement and the caps must keep
+    counting them; only the lock moves.
+  - Reading the replay parity digests as proof this is behaviour-neutral. The harness uses a stub
+    executor and never reaches HEDGED, so it exercises none of this - the ledger and grid tests do.

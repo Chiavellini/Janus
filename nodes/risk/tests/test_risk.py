@@ -392,12 +392,12 @@ def test_a_hedged_executions_reservation_is_committed_capital_not_an_unreconcile
     con = sqlite3.connect(db)
     con.execute("CREATE TABLE capital_reservations(reservation_id TEXT, event_id TEXT, league TEXT, per_venue_json TEXT, opportunity_id TEXT, created_utc REAL, released_utc REAL, release_reason TEXT)")
     con.execute("CREATE TABLE executions(execution_id TEXT, reservation_id TEXT, state TEXT)")
-    con.execute("INSERT INTO capital_reservations VALUES('hedged','e','mlb','{}',NULL,?,NULL,NULL)", (1000.0,))
+    con.execute("INSERT INTO capital_reservations(reservation_id, event_id, league, per_venue_json, opportunity_id, created_utc, released_utc, release_reason) VALUES('hedged','e','mlb','{}',NULL,?,NULL,NULL)", (1000.0,))
     con.execute("INSERT INTO executions VALUES('x','hedged','HEDGED')")
     con.commit()
     kw = dict(kill_root=tmp_path / "kill", breaker_path=tmp_path / "kill" / "breaker.json", db_path=db, max_unreconciled_s=60)
     assert risk_alerts(now=10_000.0, **kw) == [], "held to settlement, by design"
-    con.execute("INSERT INTO capital_reservations VALUES('stuck','e2','mlb','{}',NULL,?,NULL,NULL)", (1000.0,))
+    con.execute("INSERT INTO capital_reservations(reservation_id, event_id, league, per_venue_json, opportunity_id, created_utc, released_utc, release_reason) VALUES('stuck','e2','mlb','{}',NULL,?,NULL,NULL)", (1000.0,))
     con.execute("INSERT INTO executions VALUES('y','stuck','LEG_A_SUBMITTED')")
     con.commit()
     assert any("UNRECONCILED_TOO_LONG" in a for a in risk_alerts(now=10_000.0, **kw)), "an unhedged one is late"
@@ -468,3 +468,62 @@ def test_execution_stuck_is_quiet_on_hedged_and_settled_and_fires_on_a_submitted
     got = risk_alerts(now=T, **kw)
     assert any("EXECUTION_STUCK" in a and "stuckleg" in a and "600s" in a for a in got), got
     assert not any("hedgedol" in a or "settledo" in a for a in got), got
+
+
+def test_a_hedged_reservation_frees_the_event_but_keeps_the_capital(tmp_path):
+    """L114: the single-flight lock meant one cover per event, ever.
+
+    `release()` happens in the reconcile pass after BOTH venues settle, which for a live sports
+    market is hours -- so an event that produced one cover was closed to further entry for the rest
+    of its life. With ~40 co-listed events in play a day, that caps the architecture near 40 covers
+    a day whatever the universe looks like.
+
+    What ends at the hedge is the single-flight REFUSAL. The capital is still committed, because the
+    contracts really are held until settlement, so every notional cap must keep counting it.
+    """
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+    from nodes.store_tuples.store import TupleStore
+
+    limits = load_limits()
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    led = ExposureLedger(store=store)
+    first = led.reserve(event_id="espn:mlb:1", league="mlb", per_venue_usd={"kalshi": 5.0, "polymarket": 5.0},
+                        limits=limits, opportunity_id="o1")
+    assert not hasattr(first, "code"), first
+
+    # Before the hedge: the event is in flight and a second entry is refused.
+    assert led.has_event("espn:mlb:1")
+    again = led.reserve(event_id="espn:mlb:1", league="mlb", per_venue_usd={"kalshi": 5.0, "polymarket": 5.0},
+                        limits=limits)
+    assert getattr(again, "code", None) == "EVENT_IN_FLIGHT"
+
+    # After the hedge: the event is enterable, and the capital has NOT moved.
+    assert led.mark_hedged(first.reservation_id) is True
+    assert not led.has_event("espn:mlb:1")
+    assert led.event_usd("espn:mlb:1") == 10.0, "the contracts are still held; the caps still count them"
+    assert led.total_usd() == 10.0 and led.league_usd("mlb") == 10.0
+    second = led.reserve(event_id="espn:mlb:1", league="mlb", per_venue_usd={"kalshi": 5.0, "polymarket": 5.0},
+                         limits=limits)
+    assert not hasattr(second, "code"), second
+    assert led.event_usd("espn:mlb:1") == 20.0
+    assert led.mark_hedged(first.reservation_id) is False, "idempotent"
+
+    # The second cover is itself in flight now, so a THIRD is refused until it too is hedged:
+    # covers on one event still serialise, which is what single-flight was written for. They just
+    # no longer stop at one.
+    third = led.reserve(event_id="espn:mlb:1", league="mlb", per_venue_usd={"kalshi": 5.0, "polymarket": 5.0},
+                        limits=limits)
+    assert getattr(third, "code", None) == "EVENT_IN_FLIGHT"
+    led.mark_hedged(second.reservation_id)
+
+    # The per-event notional cap still binds, which is the whole safety argument for the change.
+    huge = led.reserve(event_id="espn:mlb:1", league="mlb",
+                       per_venue_usd={"kalshi": limits.max_event_notional_usd, "polymarket": 1.0}, limits=limits)
+    assert getattr(huge, "code", None) == "EVENT_NOTIONAL"
+
+    # And it survives a restart: a reloaded ledger must not re-block a hedged event.
+    reloaded = ExposureLedger(store=TupleStore(tmp_path / "t.sqlite", enforce_volume=False))
+    assert reloaded.event_usd("espn:mlb:1") == 20.0
+    assert reloaded.open[first.reservation_id].hedged_utc is not None
+

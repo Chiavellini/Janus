@@ -39,7 +39,7 @@ def world(tmp_path):
     con = journal.store.con
     con.executescript(SETTLEMENTS_DDL + LEDGER_DDL + FLAGS_DDL)
     con.execute("UPDATE executions SET state='RECONCILED',released=1,reservation_id='reservation',first_filled=10.166667,first_avg_price=.354,unhedged=0")
-    con.execute("INSERT INTO capital_reservations VALUES('reservation',?,?,?, ?,?,?,?)", (ex.event_id, ex.league, '{"polymarket":3.72}', ex.opportunity_id, T0, T0 + 250, 'settled winners'))
+    con.execute("INSERT INTO capital_reservations(reservation_id, event_id, league, per_venue_json, opportunity_id, created_utc, released_utc, release_reason) VALUES('reservation',?,?,?, ?,?,?,?)", (ex.event_id, ex.league, '{"polymarket":3.72}', ex.opportunity_id, T0, T0 + 250, 'settled winners'))
     leg = dict(venue='polymarket', client_order_id='a1', outcome_id=TOK, side='buy_yes', state='FILLED',
                contracts=10.166667, price=.354, fee_usd=.11626, final=True)
     con.execute('INSERT INTO execution_settlements(execution_id,opportunity_id,event_id,league,mode,settled_ts,realized_usd,released,legs_json) VALUES(?,?,?,?,?,?,?,?,?)',

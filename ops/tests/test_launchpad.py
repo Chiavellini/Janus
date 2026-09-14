@@ -52,8 +52,8 @@ def fixture(tmp_path: Path) -> Path:
                   (cid, venue, side, px, n, state, filled, avg, opn, NOW - 1000, NOW - 999, exid))
     c.execute("INSERT INTO execution_settlements VALUES('e-cover','pm:atp:1:opp','pm:atp:1','atp','LIMITED_LIVE',?,'K','P',0.7798,1,'[]','COVER',10,0,0.7798,0)", (NOW - 1800,))
     c.execute("INSERT INTO execution_settlements VALUES('e-partial','espn:mlb:2:opp','espn:mlb:2','mlb','LIMITED_LIVE',?,'K','P',-0.447,1,'[]','PARTIAL',25,0.32,-0.5143,0.0672)", (NOW - 1700,))
-    c.execute("INSERT INTO capital_reservations VALUES('r-e-open','pm:atp:1','atp','{\"kalshi\": 4.7, \"polymarket\": 5.5}','pm:atp:1:opp',?,NULL,NULL)", (NOW - 600,))
-    c.execute("INSERT INTO capital_reservations VALUES('r-e-miss','espn:mlb:2','mlb','{\"kalshi\": 4.0, \"polymarket\": 5.0}','espn:mlb:2:opp',?,?,'ORDER_UNFILLED zero fill')", (NOW - 300, NOW - 290))
+    c.execute("INSERT INTO capital_reservations(reservation_id, event_id, league, per_venue_json, opportunity_id, created_utc, released_utc, release_reason) VALUES('r-e-open','pm:atp:1','atp','{\"kalshi\": 4.7, \"polymarket\": 5.5}','pm:atp:1:opp',?,NULL,NULL)", (NOW - 600,))
+    c.execute("INSERT INTO capital_reservations(reservation_id, event_id, league, per_venue_json, opportunity_id, created_utc, released_utc, release_reason) VALUES('r-e-miss','espn:mlb:2','mlb','{\"kalshi\": 4.0, \"polymarket\": 5.0}','espn:mlb:2:opp',?,?,'ORDER_UNFILLED zero fill')", (NOW - 300, NOW - 290))
     c.execute("INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?,'PROTECT_FAILED','e-partial 0x1234567890abcdef unprotected')", (NOW - 7000,))
     for i in range(5):
         st.socket_health(venue="kalshi", stats={"connected": True, "frames": 100 * i, "age_s": 0.3, "loop_lag_s": 0.5 * i}, seen_ts=NOW - 300 + 60 * i)

@@ -1070,3 +1070,35 @@ def test_a_failed_refusal_write_never_breaks_the_report_tick(tmp_path: Path, cap
     assert "refusal counts not written" in capsys.readouterr().out
     assert sup.refusals == {}, "a failed flush still clears, or the accumulator grows without bound"
 
+
+def test_a_hedged_execution_tells_the_ledger_the_event_is_free(tmp_path: Path, capsys):
+    """L114, and the reason this test exists at all.
+
+    The first version of this branch referred to `X.HEDGED` in a module where `X` is not imported.
+    Every test passed, because nothing drove the HEDGED path -- exactly the shape of L104, where a
+    swallowed failure on an unexercised branch went unnoticed for six days. So the branch is driven
+    here, with a real ledger, and the assertion is on the ledger's state rather than on a log line.
+    """
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+
+    sup, s_ = _supervisor(tmp_path)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.ledger = ExposureLedger(store=sup.store)
+    res = sup.ledger.reserve(event_id="espn:mlb:1", league="mlb",
+                             per_venue_usd={"kalshi": 5.0, "polymarket": 5.0}, limits=load_limits())
+    assert sup.ledger.has_event("espn:mlb:1")
+
+    ex = SimpleNamespace(state=SimpleNamespace(value="HEDGED"), released=False,
+                         reservation_id=res.reservation_id, execution_id="abcdef01" * 4,
+                         event_id="espn:mlb:1", first_filled=10, first_avg_price=0.45,
+                         hedge_filled=10, hedge_avg_price=0.5, unhedged=0, detail="hedged",
+                         stages={}, protect={})
+    sup._after_execution(s_, SimpleNamespace(game_id="g1", quantity=10.0), ex)
+
+    assert not sup.ledger.has_event("espn:mlb:1"), "the event is enterable again"
+    assert sup.ledger.event_usd("espn:mlb:1") == 10.0, "and the capital is still committed"
+    assert "free to enter again" in capsys.readouterr().out
+

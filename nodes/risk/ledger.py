@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Mapping
 
 from nodes.risk.limits import RiskLimits
@@ -24,7 +24,7 @@ LEDGER_DDL = """
 CREATE TABLE IF NOT EXISTS capital_reservations(
   reservation_id TEXT PRIMARY KEY, event_id TEXT NOT NULL, league TEXT NOT NULL,
   per_venue_json TEXT NOT NULL, opportunity_id TEXT, created_utc REAL NOT NULL,
-  released_utc REAL, release_reason TEXT);
+  released_utc REAL, release_reason TEXT, hedged_utc REAL);
 CREATE INDEX IF NOT EXISTS capital_reservations_open ON capital_reservations(released_utc);
 CREATE TABLE IF NOT EXISTS capital_reservation_events(
   id INTEGER PRIMARY KEY AUTOINCREMENT, seen_ts REAL NOT NULL, reservation_id TEXT NOT NULL,
@@ -41,6 +41,11 @@ class Reservation:
     per_venue_usd: Mapping[str, float]
     opportunity_id: str | None
     created_utc: float
+    #: L114: set when both legs are filled. The capital is STILL committed -- the contracts are held
+    #: until settlement -- so every notional cap keeps counting this reservation. What ends is the
+    #: single-flight refusal: an event whose first cover is hedged is no longer "in flight", and
+    #: holding the lock until the reconcile pass hours later yielded one cover per event, ever.
+    hedged_utc: float | None = None
 
     @property
     def total_usd(self) -> float:
@@ -61,10 +66,14 @@ class ExposureLedger:
     def __post_init__(self) -> None:
         if self.store is not None:
             self.store.ensure_ddl(LEDGER_DDL)
+            add = getattr(self.store, "_add_column_if_missing", None)
+            if add is not None:
+                add("capital_reservations", "hedged_utc", "REAL")
             for row in self.store.con.execute(
-                    "SELECT reservation_id, event_id, league, per_venue_json, opportunity_id, created_utc "
+                    "SELECT reservation_id, event_id, league, per_venue_json, opportunity_id, created_utc, hedged_utc "
                     "FROM capital_reservations WHERE released_utc IS NULL").fetchall():
-                r = Reservation(row[0], row[1], row[2], json.loads(row[3]), row[4], row[5])
+                # hedged_utc is reloaded: a restart must not re-block an event whose cover is done.
+                r = Reservation(row[0], row[1], row[2], json.loads(row[3]), row[4], row[5], row[6])
                 self.open[r.reservation_id] = r
 
     # ── the picture ──────────────────────────────────────────────────────
@@ -84,7 +93,30 @@ class ExposureLedger:
         return {r.event_id for r in self.open.values()}
 
     def has_event(self, event_id: str) -> bool:
-        return any(r.event_id == event_id for r in self.open.values())
+        """Is an execution on this event still IN FLIGHT -- i.e. not yet hedged?
+
+        Deliberately not "does this event hold capital". Capital is what the notional caps are for,
+        and they count every open reservation, hedged or not. This answers the narrower question the
+        single-flight rule was written for: is there an unfinished attempt whose outcome we do not
+        know yet. An event whose first cover is safely hedged is not that.
+        """
+        return any(r.event_id == event_id and r.hedged_utc is None for r in self.open.values())
+
+    def mark_hedged(self, reservation_id: str, *, now: float | None = None) -> bool:
+        """Both legs filled: end the single-flight refusal, keep the capital committed."""
+        r = self.open.get(reservation_id)
+        if r is None or r.hedged_utc is not None:
+            return False
+        t = now or time.time()
+        self.open[reservation_id] = replace(r, hedged_utc=t)
+        if self.store is not None:
+            self.store.con.execute("UPDATE capital_reservations SET hedged_utc=? WHERE reservation_id=?",
+                                   (t, reservation_id))
+            self.store.con.execute(
+                "INSERT INTO capital_reservation_events(seen_ts, reservation_id, kind, detail) VALUES(?,?,?,?)",
+                (t, reservation_id, "hedged", "single-flight released; capital still committed"))
+            self.store.con.commit()
+        return True
 
     # ── reserve / release ────────────────────────────────────────────────
     def assess(self, *, event_id: str, league: str, per_venue_usd: Mapping[str, float],

@@ -609,7 +609,7 @@ def selftest() -> None:
         con = sqlite3.connect(db)
         con.execute("CREATE TABLE capital_reservations(reservation_id TEXT, event_id TEXT, league TEXT, "
                     "per_venue_json TEXT, opportunity_id TEXT, created_utc REAL, released_utc REAL, release_reason TEXT)")
-        con.execute("INSERT INTO capital_reservations VALUES('r','e','mlb','{}',NULL,?,NULL,NULL)", (NOW - 3600,))
+        con.execute("INSERT INTO capital_reservations(reservation_id, event_id, league, per_venue_json, opportunity_id, created_utc, released_utc, release_reason) VALUES('r','e','mlb','{}',NULL,?,NULL,NULL)", (NOW - 3600,))
         con.commit(); con.close()
         assert any("UNRECONCILED_TOO_LONG" in a for a in check(fresh("q"), now=NOW, slas={}, risk=R)), "UNRECONCILED"
         con = sqlite3.connect(db); con.execute("DELETE FROM capital_reservations"); con.commit(); con.close()

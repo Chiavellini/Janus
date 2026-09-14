@@ -67,7 +67,7 @@ def world():
     ]
     con.execute("INSERT INTO execution_settlements VALUES(?,?,?,?,?,?,?,?)",
                 (EXID, "opp", "event", "wta", common[0], 1100, 1, json.dumps(legs)))
-    con.execute("INSERT INTO capital_reservations VALUES(?,?,?,?,?)",
+    con.execute("INSERT INTO capital_reservations(reservation_id, event_id, league, opportunity_id, released_utc) VALUES(?,?,?,?,?)",
                 ("reserve", "event", "wta", "opp", 1100))
     con.execute("INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?,?,?)", (1001,
         "ORDER_PERSISTENCE_FAILED",

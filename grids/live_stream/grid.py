@@ -1424,6 +1424,15 @@ class Supervisor:
             pass
         if ex.released and self.ledger is not None:
             self.ledger.release(ex.reservation_id, reason=f"nothing filled: {ex.state.value}")
+        elif ex.state.value == "HEDGED" and self.ledger is not None and ex.reservation_id:
+            # L114: both legs are filled, so this attempt is no longer IN FLIGHT and the event may
+            # be entered again. The capital stays committed until settlement -- the contracts really
+            # are held -- so every notional cap keeps counting it. Only the single-flight refusal
+            # ends. Holding it until the reconcile pass hours later meant one cover per event, ever,
+            # which caps the architecture near 40 covers a day whatever the universe looks like.
+            if self.ledger.mark_hedged(ex.reservation_id):
+                print(f"  [risk] {sup.short_name} hedged: event free to enter again "
+                      f"(capital still committed)", flush=True)
         if ex.state.value == "UNKNOWN_PROVIDER_STATE" and self.mode.risks_capital:
             self.flag("UNKNOWN_PROVIDER_STATE", f"{ex.execution_id[:8]} {ex.event_id} {ex.detail[:180]}", on=ex)
             print("  [risk] kill/live latched: a submitted order has no authoritative outcome", flush=True)
