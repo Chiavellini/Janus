@@ -553,3 +553,56 @@ def test_a_position_naked_past_the_total_window_stops_being_re_run(tmp_path):
     assert len(ex.hedge_client_ids) == before, "past the window, not one further order goes out"
     assert "PROTECT_WINDOW_EXHAUSTED" in ex.detail, ex.detail
 
+
+def test_the_hedge_stamps_record_the_first_attempt_and_the_last(tmp_path):
+    """L108 (2026-09-14): `b_submit_ms` lived inside the chase loop and `_stamp` assigns, so it
+    recorded the LAST attempt under a name every reader took for the first.
+
+    At `b_attempts` p50 2.5 on the live box that made `a_settled -> b_submit` look like one hop when
+    it actually contained about one and a half complete failed attempts: two Kalshi orderbook reads
+    at ~190 ms each, a submit round trip, and a fixed sleep. The chase's own cost is accumulated
+    separately now, because it repeats and a stamp can only ever hold the last one.
+
+    The venue here advances the clock the way a real round trip does; the shared `ScriptedVenue`
+    answers instantly, which is exactly why a stamp-ordering bug could never have shown up in it.
+    """
+    from dataclasses import replace as _replace
+
+    from kernel.schema import Mode
+    from nodes.execute.coordinator import Coordinator
+    from nodes.execute.records import ExecutionRecords
+    from nodes.execute.tests.test_coordinator import Clock
+    from nodes.execute.tests.test_quantity_caps import ScriptedVenue
+    from nodes.execution.testing import clearance_for as _clearance_for
+    from nodes.risk.kill import KillSwitches
+    from nodes.risk.limits import ProtectLimits
+    from nodes.store_tuples.store import TupleStore
+
+    class Slow(ScriptedVenue):
+        """A venue whose submit costs wall time, as Kalshi's 188 ms p50 does."""
+
+        def submit(self, req, clearance):
+            self.clock.sleep(0.19)
+            return super().submit(req, clearance)
+
+    clk = Clock()
+    kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    pm = Slow("polymarket", clk, [10])
+    k = Slow("kalshi", clk, [0, 0, 10])          # two zero fills, then the hedge lands
+    store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
+    co = Coordinator({"polymarket": pm, "kalshi": k}, ExecutionRecords(store), Mode.LIMITED_LIVE,
+                     kill=kill, clock=clk.now, mono=clk.mono, sleep=clk.sleep,
+                     limits=_replace(ProtectLimits(), protect_dust_contracts=1.0))
+    plan, _ = plan_for(offers(), q=10)
+    ex = co.execute(plan, _clearance_for(tmp_path, mode=Mode.LIMITED_LIVE, now_mono=100.0))
+
+    assert ex.stages["b_attempts"] == 3, ex.stages["b_attempts"]
+    first, last = ex.stages["b_submit_ms"], ex.stages["b_last_submit_ms"]
+    assert first < last, f"the first send must predate the last ({first} !< {last})"
+    assert ex.stages["b_ack_ms"] < ex.stages["b_last_ack_ms"]
+    assert ex.stages["protect_entry_ms"] <= ex.stages["b_first_attempt_ms"] <= first
+    # Two whole attempts hide between the first send and the last -- the interval the single stamp
+    # used to fold into "leg A settled -> hedge submitted". At 0.19 s a round trip that is 380 ms
+    # of real work that every previous reading of this system attributed to dead time.
+    assert last - first >= 380.0, ex.stages
+    assert ex.stages["b_last_ack_ms"] - ex.stages["b_ack_ms"] >= 380.0, ex.stages

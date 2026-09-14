@@ -1,0 +1,22 @@
+{
+ "label": "parity-probe",
+ "capture": "/Volumes/Kilos/janus/research/l51-capture-7q8lj2ab/level-3-repeat-0",
+ "slate": "/Volumes/Kilos/janus/research/l78-slate-20260909T04/slate.sqlite",
+ "runs": [
+  {
+   "cpu_s": 4.705,
+   "wall_s": 4.913,
+   "frames": 20000,
+   "pollers": 234,
+   "evaluations": 11884,
+   "evaluation_rows": 2271,
+   "sizing_skipped": 2957,
+   "sizing_rows": 0,
+   "selections": 0,
+   "rows_digest": "738ef6b0fee1d25e",
+   "selections_digest": "4f53cda18c2baa0c"
+  }
+ ],
+ "median_cpu_s": 4.705,
+ "digests_stable": true
+}

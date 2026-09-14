@@ -395,9 +395,14 @@ class Coordinator:
             self._post_terminal_book(ex, plan.first, req_a.contracts, "unfilled")
             return self._fail(ex, X.ORDER_UNFILLED, f"leg A unfilled ({tif}): no position", release=True)
         ex.first_filled, ex.first_avg_price = ack.filled_contracts, ack.avg_price
+        # L108: the overfill check runs on more than half of live fills and does two SELECTs, a
+        # filesystem kill latch and a flag write -- none of it wrapped in `_timed`, so none of it
+        # appeared in `db_ms` or anywhere else. It sits between a held position and its hedge.
         self._check_overfill(ex, req_a, ack)
+        self._stamp(ex, "a_overfill_ms")
         self._move_after_fill(ex, X.LEG_A_FILLED if ack.state is FillState.FILLED else X.LEG_A_PARTIAL,
                               detail=f"filled {ack.filled_contracts} @ {ack.avg_price}")
+        self._stamp(ex, "a_recorded_ms")
         if ack.state is FillState.PARTIAL:
             self._opp(ex, S.PARTIALLY_FILLED, self.clock())
 
@@ -658,6 +663,32 @@ class Coordinator:
         t0 = self._t0.get(ex.execution_id)
         if t0 is not None:
             ex.stages[key] = round((self.mono() - t0) * 1000.0, 2)
+
+    def _stamp_once(self, ex: Execution, key: str) -> None:
+        """Stamp only the FIRST time the key is asked for.
+
+        `_stamp` assigns, and the hedge's stamps live INSIDE the chase loop, so `b_submit_ms` has
+        always meant "the last attempt" while every reader took it for the first. At `b_attempts`
+        p50 2.5 that made `a_settled -> b_submit` look like one hop when it contained about one and
+        a half complete failed attempts -- two Kalshi book reads, a submit round trip and a sleep.
+        """
+        if key not in ex.stages:
+            self._stamp(ex, key)
+
+    def _accrue(self, ex: Execution, key: str, count_key: str | None, fn, *args, **kwargs):
+        """Run `fn`, adding its wall time to stages[key] and counting the calls.
+
+        For work that REPEATS inside one execution, where a stamp can only ever record the last
+        one. The chase's orderbook reads are the case this exists for: two per median hedge, about
+        190 ms each, and until now invisible in every stage report.
+        """
+        m = self.mono()
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            ex.stages[key] = round(ex.stages.get(key, 0.0) + (self.mono() - m) * 1000.0, 2)
+            if count_key is not None:
+                ex.stages[count_key] = ex.stages.get(count_key, 0) + 1
 
     def _timed(self, ex: Execution, fn, *args, **kwargs):
         """A store write, its cost accumulated in stages['db_ms'] (a commit is an fsync)."""

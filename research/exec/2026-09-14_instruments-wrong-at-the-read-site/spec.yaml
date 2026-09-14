@@ -1,0 +1,66 @@
+row: L108
+date: 2026-09-14
+kind: correction_and_instrument_repair
+status_at_registration: PENDING
+corrects: L107
+observed_failure: >-
+  L107 decomposed the 2,480 ms path for the first time and got three things wrong, all because this
+  system's instruments do not mean at the read site what they appear to mean. Rule 6 forbids editing
+  a row, so the corrections are here.
+  ONE - the arithmetic. L107 reported each segment as p50(cumulative_b) - p50(cumulative_a). The
+  stage stamps are cumulative from the machine's `_t0`, the median of a difference is not the
+  difference of medians, and the segments had different populations (n=153 leg A, n=20 hedge).
+  Redone per row over 1,500 real executions: A submit->ack 400 ms, A ack->settled 697 ms (NOT the
+  1,048 ms / 42% L107 claims), A settled->protect 366 ms, protect->first hedge 306 ms, B submit->ack
+  210 ms, B ack->settled 0 ms. The ranking survives; the numbers do not.
+  TWO - `socket_health.frames` is CUMULATIVE per connection and was summed across rows, producing
+  "2.3 M frames in 24 h". Differenced properly, treating a decrease as a reconnect reset, the
+  Polymarket account stream takes 8,558 frames in 24 h = 0.099/s - about one per ten seconds, i.e.
+  close to pure keepalive, against 542/s and 971/s on the public market streams.
+  THREE - L107 said the account stream "answers 18% of the time while being up 100% of it", which
+  reads as an untapped win. Measured over 200 real orders, REST answered FIRST 63 times out of 63,
+  and the stream is the last event on 62 - it closes the record after REST has already answered.
+  But the code says that is a race, not a ceiling: `status()` fuses the free in-memory stream read
+  and the ~350 ms REST call, so with poll_interval_s = 0.1 the stream is sampled at t=0, 450, 900 ms
+  - three times in a second, not ten. Whether it CAN win is still undiagnosed.
+  And the defect that made the whole decomposition unreadable: `b_submit_ms` / `b_ack_ms` /
+  `b_settled_ms` are stamped INSIDE the chase loop by a plain assignment, so they recorded the LAST
+  attempt under names every reader took for the first. At b_attempts p50 2.5 that folded about one
+  and a half complete failed attempts - two Kalshi orderbook reads at ~190 ms, a submit round trip
+  and a fixed sleep - into what looked like a 672 ms gap between a settled first leg and its hedge.
+  It is not a gap. It is the chase, and ~55% of it is orderbook reads.
+  Separately, `protect_existing` resets `_t0`, so on a guard re-run the b_* stamps are re-based to
+  the re-run's start while the a_* stamps keep the original run's. Differencing across such a row
+  subtracts two different clocks, and L100 recorded 2,840 re-runs on a single execution.
+immutable_success_criteria:
+  - `b_submit_ms` and `b_ack_ms` keep the meaning every reader assumed - the FIRST attempt - and the
+    last attempt gets its own names. Proven by a test whose venue costs wall time; the shared
+    ScriptedVenue answers instantly, which is why a stamp-ordering bug could never surface in it.
+  - The chase's repeating costs are ACCUMULATED, not stamped, because a stamp can only hold the
+    last: `hedge_book_ms` + `hedge_book_reads` around every `fresh_book`, `b_sleep_ms` around the
+    retry sleep. Both were previously invisible in every report.
+  - `a_overfill_ms` and `a_recorded_ms` bracket the overfill check, which runs on more than half of
+    live fills, does two SELECTs plus a filesystem kill latch plus a flag write, is wrapped in no
+    timer, and sits between a held position and its hedge.
+  - `ops/latency_report.py` reports PER-ROW segment differences as its primary table, excludes
+    `guard_rerun` rows by default, and takes `--since` so a window is pinned to one code tree. The
+    absence of that filter is why `worker_hop_ms` read n=4 against 200 rows: the key is younger than
+    the window.
+  - Replay parity holds. The documented digest `9f41923b8cf055a1` is STALE - it predates L95-L103,
+    which deliberately changed evaluation rows. The true baseline at e297f7d is
+    `rows_digest 738ef6b0fee1d25e`, 2,271 evaluation rows, `selections_digest 4f53cda18c2baa0c`,
+    and L104/L105 and these repairs all reproduce it exactly. L106's ladder change is the only
+    behaviour change in this branch, and it moves the digest to `13e4fb08a76c920f` / 1,093 rows.
+expected_ev_effect: >-
+  none. No cap, price, size, hurdle or protection behaviour changes. What changes is that the next
+  latency decision is made against numbers that mean what they say.
+watch_for:
+  - Any future segment quoted as a difference of two medians. The report now prints the per-row
+    table first for that reason.
+  - `hedge_book_reads` per hedged execution. The reconstruction predicts a median of 2; if the live
+    number differs, the chase is not shaped the way this row claims.
+prohibited:
+  - Quoting L107's segment table. Use this row's.
+  - Using `9f41923b8cf055a1` as a parity gate. It is pre-L95.
+  - Concluding the account stream cannot beat REST. Measured, it does not; diagnosed, it has not
+    been given the chance.

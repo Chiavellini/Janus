@@ -202,9 +202,11 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
         return ex
 
     # ── phases 1-3: the hedge, then the chase ────────────────────────────
+    co._stamp(ex, "protect_entry_ms")
     for phase in ("walked", "budget", "loss_cap"):
         phase_attempts = 0
         while ex.unhedged > dust and attempts < chase_cap and rejected is None:
+            co._stamp_once(ex, "b_first_attempt_ms")
             stop = over_ceiling()
             if stop is not None:
                 ex.protect["submit_ceiling"] = {"prior": prior_submits, "this_call": attempts,
@@ -259,7 +261,9 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                 L = loss_allowance(lim, remaining_loss_usd(ex, plan, lim), ex.unhedged)
                 c = hedge_ceilings(plan, paid, L)
                 ceiling = max(limit, c.budget) if phase == "budget" else max(limit, c.loss_cap)
-                book = fresh_book(hedge.venue, hedge.market_id, hedge.side) if fresh_book is not None else None
+                book = (co._accrue(ex, "hedge_book_ms", "hedge_book_reads",
+                                   fresh_book, hedge.venue, hedge.market_id, hedge.side)
+                        if fresh_book is not None else None)
                 nxt = next_hedge_limit(limit, tick, book, ex.unhedged, ceiling)
                 if nxt is None:
                     # at this phase's ceiling already: one more try there (the book may have refilled
@@ -292,9 +296,13 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
             co._move_after_fill(ex, X.LEG_B_SUBMITTED,
                                 detail=f"attempt {attempts} limit {limit:.4f} budget {budget:.4f}"
                                 + ("" if phase == "walked" else f" phase {phase} ceiling {ceiling:.4f}"))
-            co._stamp(ex, "b_submit_ms")
+            # L108: these are inside the chase loop, so a plain stamp recorded the LAST attempt
+            # under a name every reader took for the first. Both are kept now.
+            co._stamp_once(ex, "b_submit_ms")
+            co._stamp(ex, "b_last_submit_ms")
             hb = venues[hedge.venue].submit(req, clearance)
-            co._stamp(ex, "b_ack_ms")
+            co._stamp_once(ex, "b_ack_ms")
+            co._stamp(ex, "b_last_ack_ms")
             hb = co._settle_ack(hedge.venue, hb, deadline_mono=deadline, ex=ex, key="b")
             co._check_overfill(ex, req, hb)
             co._stamp(ex, "b_settled_ms")
@@ -330,12 +338,14 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
                     # unhedged is above the walked ceiling, the next attempt belongs to the budget
                     # phase. Nothing about the ceilings, caps, window or submit budget moves; with
                     # no book the sequence is what it was.
-                    book = fresh_book(hedge.venue, hedge.market_id, hedge.side)
+                    book = co._accrue(ex, "hedge_book_ms", "hedge_book_reads",
+                                      fresh_book, hedge.venue, hedge.market_id, hedge.side)
                     want = marginal_price(book, ex.unhedged) if book is not None else None
                     if want is not None and want > ceiling + 1e-9:
                         ex.protect["attempts"][-1].update(advance="book_above_ceiling", book_marginal=want, left=phase)
                         break
-                co.sleep(co.poll_interval_s if phase == "walked" else lim.protect_resubmit_ms / 1000.0)
+                co._accrue(ex, "b_sleep_ms", None, co.sleep,
+                           co.poll_interval_s if phase == "walked" else lim.protect_resubmit_ms / 1000.0)
         if ex.unhedged <= dust or rejected is not None:
             break
 
@@ -354,7 +364,9 @@ def protect(co, ex, plan, clearance, *, limits: ProtectLimits | None = None, fre
             side = "sell_yes" if leg.side == "buy_yes" else "sell_no"
             L = loss_allowance(lim, remaining_loss_usd(ex, plan, lim), qty)
             floor = unwind_floor(entry, plan.fee_per_contract / 2.0, L, leg.tick or 0.01)
-            book = fresh_book(leg.venue, leg.market_id, side) if fresh_book is not None else None
+            book = (co._accrue(ex, "hedge_book_ms", "hedge_book_reads",
+                               fresh_book, leg.venue, leg.market_id, side)
+                    if fresh_book is not None else None)
             bb = best_bid(book)
             if bb is not None and bb < floor - 1e-9:
                 log(kind="unwind_wait", leg=which, floor=floor, best_bid=bb, qty=round(qty, 4))
