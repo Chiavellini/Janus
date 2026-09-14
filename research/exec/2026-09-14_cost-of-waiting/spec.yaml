@@ -1,0 +1,42 @@
+row: L116
+date: 2026-09-14
+kind: measurement
+status_at_registration: PENDING
+observed_failure: >-
+  Two questions had no measurement behind them. First: resting leg A as a Polymarket maker saves a
+  certain 0.828 c/contract, but a resting order fills when the market comes TO it, and nobody had
+  measured what waiting costs. Second, and it turned out to be the larger one: the lane has been
+  shortening the 2,480 ms decision-to-hedge-ack path all session (L103's metadata prefetch, L109's
+  duplicated orderbook read, L110/L111's loop blockers) with no idea what a second of it is worth.
+  Both are the same measurement - how far the hedge book moves while we wait - taken at different
+  elapsed times.
+method: >-
+  The "price now" side needs no frames: every stream_evaluations row carries legs_json with the
+  per-leg vwap, which is walk_ladder(book, q)/q - exactly vwap_for_size(hedge_book, q) at that
+  instant, and exactly what becomes plan.hedge.vwap, which is what the live hedge_slippage_c is
+  measured against. So only the "+N seconds" side needs frames, and only Kalshi frames, because
+  Kalshi is always the hedge. One streaming forward pass, bounded memory, actionable moments held
+  in a heap until the clock passes t+W and then priced off the reconstructed book with the same
+  ladder walk the lane uses (asserted equal to vwap_for_size on 400 random ladders).
+immutable_success_criteria:
+  - The offline walk is arithmetically identical to nodes/execute/plan.vwap_for_size, so the number
+    is comparable to plan.hedge.vwap. Pinned by test, not asserted.
+  - Short depth is counted, never dropped and never coerced to zero: a hedge that cannot be filled
+    whole is a worse outcome than a dear one (the naked-residual failure), not a missing sample.
+  - A Kalshi leg whose outcome ends ":NO" is read off the NO projection. Reading the YES side there
+    measures a different instrument.
+  - Signed, not floored. L27 floored at zero, which measures cost-if-you-must-cross; adverse
+    selection is signed and the favourable half is real information.
+  - Reported as book DRIFT, which is a lower bound on realised slippage: the live hedge_slippage_c
+    is (realised fill average - planned vwap) and therefore includes the chase up the ladder, while
+    this measures only what the book did. Post-L85 realised slippage p50 is 0.50c, which sits close
+    to these drift numbers and is the consistency check.
+expected_ev_effect: >-
+  none directly; it prices two decisions. It is the first measurement in this project that puts a
+  cents-per-contract value on execution latency.
+prohibited:
+  - Reading this as a maker EV. It is unconditional book drift; a real maker fills selectively, and
+    L63 withholds EV claims until its 200-attempt cohort. The maker number here is an upper bound on
+    the case FOR resting, because conditional-on-fill drift is worse than unconditional.
+  - Quoting a single window without its baseline. The maker's cost is incremental to the drift a
+    taker already pays, and the whole conclusion turns on that.
