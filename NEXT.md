@@ -4,110 +4,123 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-12 ~22:00Z, on `claude/hedge-ladder-speed-3b5042c`.
+Updated 2026-09-14 ~05:30Z, on `claude/hedge-ladder-speed-3b5042c`.
 
 ## Where it stands
 
 **Trading is stopped and should stay stopped until the release below is pasted.** `kill/live` is
-latched (the operator, ~19:30Z). The box is healthy and still runs `3b5042c`: **nothing from today
-is deployed.** No open unhedged positions.
+latched (the guard, on `77013052`'s unprotected residual — correctly). The lane process is up and
+pricing; it is entering nothing. **No open positions**; the Dolphins/Raiders position settled
+**−$1.1392**, the worst-case branch.
 
-A three-way audit swept connectivity, opportunity detection, and execution/accounting against
-`5b8cf11`. It found real money-path defects — including four in the L85 code written an hour
-earlier, one of which would have stopped the lane trading outright. Rows **L88–L94** are registered
-and green at **1,524 tests, zero skips**.
+The box runs **`9387297`** (L96–L100). **Pushed and NOT deployed: `a213130` (L101), `49b8e79`
+(L102/L103), `c5f6da4`.** Suite green at **1,547 tests, zero skips**.
 
-## What the sweep found and fixed
+Box health is good and that is new: **load 0.46, loop lag 0.32 s**, down from 4.8 and rising before
+L100 landed. The runaway protect loop was most of the saturation.
 
-- **L85 corrected (four defects).** `clearance_ttl_ms` is 500 ms from the mint on the loop, and L85
-  added a *second* REST read after L77's measured 187.7 ms one; sequential they would have spent the
-  window and every send would have returned `CLEARANCE_SPENT`, which the grid backs off as a venue
-  rejection. The reads now run concurrently and `confirm_budget_ms` records what is left. Also:
-  `at_mono` had no lower bound (a pre-reboot monotonic stamp gives a *negative* age that passed an
-  upper bound alone); `entry_book_trust_s` was never parsed from `limits.toml`, so its documented
-  "0 disables" lever did not exist; and the skip compared a reading taken for the full planned hedge
-  size against a send for whatever leg A actually left. Each pinned by a test that fails against the
-  old condition — checked, not assumed.
-- **L88, the phantom edge.** `status_for` had no lower bound on gross, so three-leg soccer/MLS covers
-  summing to **0.31 against a $1 payout** published as 201 % returns. That is the operator's "the
-  dashboard's raw is buggy", and they were right. `MIN_CREDIBLE_GROSS = 0.70`.
-- **L89, a frozen book that reported itself fresh forever — and it was LIVE.** `unregister` was keyed
-  by ticker with no owner, so a capture ticker ageing out took the *poller's* registration with it;
-  the orphan kept the shared socket pulse, so `as_of()` read age 0 and `SYNCED` over a dead ladder,
-  unreachable by both sweeps. The box runs without `--capture-series`, whose argparse default is the
-  four tennis series plus the PM `tennis` tag — **exactly the leagues carrying the losses** (atp 5 of
-  5 adverse, −$3.29). A frozen book priced against a live one manufactures the entire apparent edge.
-- **L90** an undated leg escaped the staleness gate; **L91** a fill with no reported average was
-  booked at $0.00/contract, re-opening the whole loss allowance; **L92** a zero-fill *state* was
-  read as finality, releasing capital while a position could still fill and letting a second
-  full-size execution open on the same game; **L94** a venue token claimed by two entities bound to
-  one of them, which is a naked directional bet wearing a 40–50 % edge.
-- **L93, the alarm that did not exist.** All ~33 watchdog conditions were operational; the first
-  money signal was the daily breaker at −$25. `cover_pnl_alerts` now raises `COVERS_LOSING` and
-  `HEDGE_ABOVE_BREAK_EVEN`. Checked against the box: last 10 real settled covers net **−$3.55**, 8
-  losers, 6 above break-even — both fire.
+## The honest position on the money
 
-## Now — the sequence, and it is not optional
+Six days live, and the number that matters is not the headline:
 
-1. **Operator pastes the release at measurement caps.** Small size is the point: a DJERE-shaped
-   disaster costs cents instead of $2.50, and the slippage samples the reserve needs can only come
-   from real fills.
-   `JANUS_BOX_REGION=mx-central-1 JANUS_BOX_ID=i-0a8c073c72dcdae11 JANUS_ARM_CAPS="6 5 60 168" bash ops/box/release.sh <sha>`
-   `ops/box/arm_statement.txt` must be edited to match those numbers first, or the release signs a
-   statement that does not describe it.
-2. **The restart re-latches `kill/live`** (the overfill acknowledgement still does not exist). Clear
-   it once by hand. L87 means that should be the last time.
-3. **Watch, read-only:** `ops/box/status.sh`, and `ops/slippage_report.py --hours 168 --rows` on the
-   box. The three things that decide whether to step size back up: whether `atp` slippage stays at a
-   5c median now that L89 is fixed (some of that "slippage" may have been the frozen book), whether
-   `BOOK_MOVED` starts appearing on the hedge leg, and whether the margin column ever clears a cent.
+- **The arbitrage business made $0.98 in total — $0.14/day.** The +$4.34 headline is **77%
+  `directional_usd`**: money made on contracts that were never hedged, and **$4.25 of it is one
+  accident** (`789ad9b2`, ten contracts left naked with no hedge ever placed, which happened to win).
+  Strip it and 20 covers netted **+$0.09 on $286 of turnover**.
+- **Four consecutive losing days** since 09-10. Median cover realises **−$0.0149**; 11 of 21 lost.
+- **Fees are 2.05c/contract** (PM taker 0.855c + Kalshi 1.199c) against a **median booked margin of
+  0.67c**.
+- **Hedge slippage median 3.0c, p90 14c, adverse on 14 of 20.** `margin − slippage` predicts the sign
+  of the outcome on **16 of 19** covers. Nothing else does.
+- **$100/day is ~208x away** at today's expectancy. The defensible target is **$3–19/day once the sign
+  is positive, and $0/day until it is.** Scaling a negative-EV cover scales the loss.
 
-## Still owed, in order
+## What this session found, by theme
 
-1. **The `as_of()` question.** L89 fixed the ownership bug; the deeper one stands. `as_of()` folds
-   the shared socket pulse into per-market freshness, so `max_book_age_s` (5 s),
-   `max_rest_book_age_s` (3 s) and the cover's `max_leg_age_s` are **inert for every streamed
-   book** — on Kalshi there is no per-market freshness bound at all, and on Polymarket the real
-   bound is `max_unverified_s` at 30 s. Changing it could stop the lane trading the moment the
-   bounds start binding, so it wants its own row and its own release.
-2. **The identity check behind L88.** The floor is arithmetic standing in for an identity test. The
-   exhaustiveness proof is tautological in the live lane: `proof.outcome_ids` is minted from the
-   same offers keys it is checked against, so it compares labels this code path invented and cannot
-   see a wrong instrument behind a right label. The fix is a venue-independent outcome identity on
-   `Leg`, asserted against the proof.
-3. **`correct_fills` has no ratchet** (`guard._reconcile_execution`): a missing journal row can zero
-   a real fill, after which `protect_existing` may buy the hedge a **second** time. Largest blast
-   radius found; the audit marked reachability UNCERTAIN, so reproduce it in a test *before*
-   changing behaviour.
-4. **The slippage reserve.** Entry still charges nothing for the hedge moving. `ops/slippage_report.py`
-   measures it and refuses a per-league number under 20 covers; no league qualifies yet. Charging it
-   is a dated GATE row.
-5. **The kill-latch on losing covers** — drafted at
-   `research/exec/2026-09-12_pnl-latch-GATE-ROW-DRAFT.md`, needs the operator's N-of-M and signature.
-6. **The overfill acknowledgement** (one order now, thanks to L87): freeze the venue evidence for
-   `0429ef24…`, `--prepare`, dry run, then the operator's `--confirm`. Evidence must be committed
-   *before* the release that carries it.
+Row numbers are what nobody remembers, so: themes first, rows in the next section.
 
-## Deferred from the sweep, each with file:line in the audit
+**1. The book may be advertising liquidity the engine will not honour.** Of 141 Polymarket taker BUYs,
+**118 zero-filled and exactly ONE partially filled.** Losing a race yields crumbs; all-or-nothing does
+not. The pre-send confirm has **no discriminating power** — 15 of 16 confirmed zero-fills *and* 6 of 6
+confirmed fills showed full size at or below the limit, with identical confirm latency. Orders the
+engine `matched` at receipt filled **5 of 5**; orders routed `delayed` filled **13 of 107 (12%)**.
+This is the open question the whole strategy turns on, and L102 is the instrument for it.
 
-Kalshi seq-gap holes (a regression is invisible, unsequenced frames unchecked, `sid=None` aliasing);
-`unregister`+`register` in one pass leaving a market dark; one malformed `best_bid` tearing down the
-whole PM socket (`float()` outside the try); the unbounded `kalshi_open_markets` cursor loop; the
-REST reconciler adopting a ~3-minute-old ladder; `shard_of` blocking up to 62 s between clearance and
-wire; `_hedge_capacity_ok` using the WS bound on a REST book; `UNWOUND` rows carrying unrealised P&L
-into the breaker (latent while `unwind_enabled=false`); phase 1's walked ceiling never bounded by the
-loss cap; sizing optimising against an unpadded price it will not pay; the three-way YES/NO index
-binding; `PMQuadratic` ignoring `fee_exponent`; PM `socket_health.seq_gaps` NULL by construction;
-`coordinator.py:531,564` swallowing a failed kill write where the guard records and retries one.
+**2. Fees eat the edge, and half of that is optional.** `PM_MAKER_RATE = 0.0` — *"takerOnly: makers pay
+nothing."* The 0.855c is the cost of *crossing*, not of trading. Credited back across 201,870
+evaluations it makes **+1,084 more rows actionable (+188%)**, and — the certain, fill-independent half
+— every executed cover earns **+0.855c**, which more than doubles a 0.67c cushion.
 
-## Not now, deliberately
+**3. We are ~10x slower to act than to look.** Observation (book change → decision) is **~200 ms
+median**; execution (decision → hedge ack) is **2,480 ms**. Of leg A's 564 ms, **354 ms is a cold
+metadata cache** paid by 56% of orders. Signing is 6.8 ms. **Mexico is already optimal** — every cloud
+region closer to Kalshi is geoblocked by Polymarket; Dublin is the trap the latency guides recommend.
 
-Spreads and totals (`STRATEGY_VERSION` is moneyline-only, and thinner books slip more while slippage
-is the binding problem). Lowering the hurdle or widening caps — on these numbers that buys variance,
-not profit.
+**4. Structural safety gaps, all live.** 11 of 21 leg-A fills **overfilled** (the order is
+collateral-denominated, so price improvement returns extra shares), leaving naked residuals the hedge
+never covers. **25 contracts already exceeds the $2.50 protection cap** at p90 slippage ($3.16), so a
+p90 event *necessarily* ends in a naked position and a halted lane — which is exactly what `77013052`
+did. Aggregate hedge submits are **unbounded**: one execution fired **511 orders for 12,775 contracts**
+to hedge 25. And **3,373 of 3,373** protect kill latches failed to write their audit flag.
 
-## The question that actually matters
+**5. Corrections to my own earlier claims — do not re-inherit them.**
+- The **"207 ms edge life" was my sampling floor**, not the market. It was `heartbeat_s = 15.0` in the
+  recording gate and the 200 ms coalescing cap, divided two different ways. The true lifetime is
+  **unmeasured**.
+- **Depth is a median 30 contracts, p25 zero** — not "plausibly hundreds". Only 52% of attempts hold 25
+  on both legs. `frontiers.n_max` (median 588) is ~20x what real attempts support; it is not capacity.
+- The **root-disk diagnosis was wrong**. The box wedged from **single-vCPU starvation**, itself largely
+  caused by L100's own retry loop. Root was 24% full.
+- Every latency stage figure above was measured while that loop had the box at load 4–5. **Re-measure
+  before scoping latency work.**
 
-Whether the edge was ever real. L89 means some of the measured 5c "hedge slippage" on tennis may not
-have been slippage at all but a dead Kalshi book quoting a world that had moved. The next twenty
-small covers, read through `ops/slippage_report.py`, are what answer it.
+## What landed (L95–L103)
+
+| row | what | deployed |
+|---|---|---|
+| L95 | a pre-send read that cannot fill the planned size takes what the book has | yes |
+| L96 | a padded order the venue's own floors make illegal; entry reprices to the venue's ask | yes |
+| L97 | two stage clocks measured the wrong interval; `worker_hop_ms` added | yes |
+| L98 | distance-to-actionable was measured on an unroutable cover, **sign reversed** | yes |
+| L99 | the entry limit reached the venue off tick and the wire re-priced it *downward* | yes |
+| L100 | a residual the quantity cap cannot hedge re-ran **2,840 times**; the row blamed the wrong constraint | yes |
+| L101 | the REST reconciler priced books up to **8 s old** and computed their age as 0.0 | **no** |
+| L102 | record the confirm's ladder, and re-read the book after the venue's terminal answer | **no** |
+| L103 | 56% of orders paid **354 ms** for metadata the SDK fetches before signing | **no** |
+
+## What to do next, in order
+
+1. **Deploy `c5f6da4` and clear the kill.** *(operator — the release and the clear are both blocked for
+   me by the permission classifier.)* Note the kill re-latches on every restart until item 5 is done.
+2. **Let ~50 orders accumulate, then run the L102 verdict query.** Among zero-fills whose confirm showed
+   full size: **STILL_THERE ≥ 60%** means the published book is not honoured and speed cannot fix it;
+   **CONSUMED ≥ 60% with STILL_THERE < 20%** means an honest race and latency is the answer; a high
+   **PULLED** fraction means the resting size was never committed liquidity. *Threshold set before
+   seeing the data, deliberately.* **This decides the strategy. Everything below waits on it.**
+3. **Verify L103** — the first-vs-repeat submit→ack split, scoped to a single process run (the cache is
+   per-process, so a restart re-colds every token and would mute the result).
+4. **Owed safety work:** bound aggregate hedge submits per execution; fix the flag write; bring the
+   contract cap to ~20 *or* raise the protection budget above measured p90 slippage. *(The cap is
+   operator-signed — needs a dated GATE row.)*
+5. **The overfill acknowledgement row** for `0429ef24`. This is why every release re-latches the kill.
+   Needs frozen evidence and an operator `--confirm`.
+6. **Redemption** is failing on a Polymarket rate limit with no backoff, with capital stuck in an
+   unredeemed position.
+7. **Deferred, pending item 2:** the **maker path** (complete, 279 tests, live-proven, switched off by a
+   two-line revert on 2026-09-10; its guard timed out on 8 of 10 rests on a box that was *starved* —
+   worth re-testing now load is 0.5; needs a GATE row, F20 says taker). And **widening to
+   spreads/totals** (~10x the contract pairs per event, blocked on two matcher defects:
+   `CanonicalKey.line_abs` has zero producers so legs on different lines would pair, and a middle
+   prices as a cover while paying nothing).
+
+## What not to do
+
+- **Do not raise caps or size** until per-cover EV is measurably positive. At p90 slippage, 700
+  contracts is a $98 single-cover loss against a $25 daily breaker.
+- **Do not scope latency work off the pre-L100 numbers.** The box was starved by a bug when they were
+  taken.
+- **Do not read a fall in actionable prints after L101 as a regression.** Those evaluations were pricing
+  stale books while reporting perfect freshness. A fall is the fix working.
+- **Do not cite `frontiers.n_max` as capacity.** It is replica-priced, slippage-free and unfiltered by
+  executable shape.
+- **Do not treat a pre-send confirm as evidence** either way. It cannot discriminate; that is measured.
