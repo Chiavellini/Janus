@@ -238,6 +238,17 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
                 opportunities.move(opp, S.SETTLED, now=t, detail=f"{pnl:+.4f}")
             if opp is not None and released and opp.status is S.SETTLED:
                 opportunities.move(opp, S.RECONCILED, now=t)
+        # L110 (2026-09-14): commit per ITEM, not per pass. `store.con` is DEFERRED, so the first
+        # item's write took the file's single WAL write lock and held it across every remaining
+        # item -- each doing two SELECTs, a ledger release, three writes and up to two opportunity
+        # moves. Everything else on that file then queued behind it: the order path's journal write
+        # has a 30 s busy timeout, and `db_ms` has been seen at 37,386 ms with one execution past
+        # 30,000. The 2026-09-08 incident (GEA V ZANDSCH) was this exact collision from the other
+        # side -- leg A filled, the hedge never sent -- and its fix made the LOOP release the lock
+        # per frame while leaving this pass taking it for the whole backlog.
+        # An item is the natural atomic unit: its settlement row, its executions update, its
+        # transition and its opportunity move are one fact about one cover.
+        store.con.commit()
         out["settled" if released else "unreleasable"] += 1
         log(f"[settle ] {it['event_id']} {it['mode']} {split['kind']} realized {pnl:+.4f} USD"
             + (f" (cover {split['cover_usd']:+.4f}, directional {split['directional_usd']:+.4f} on {split['unhedged']} unhedged)"

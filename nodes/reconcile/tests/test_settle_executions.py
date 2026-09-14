@@ -278,3 +278,36 @@ def test_a_hedged_cover_is_kind_cover(tmp_path):
     apply_settlements(st, ledger, None, opps, items, fetch_results(items, None, fetch_kalshi=fk, fetch_event=fe), now=T, log=lambda s: None)
     # (the fixture's execution row records no fill counts; a COVER row carries the whole PnL as cover_usd)
     assert st.con.execute("SELECT kind, unhedged_contracts, cover_usd, directional_usd FROM execution_settlements").fetchone() == ("COVER", 0.0, 5.0, 0.0)
+
+
+def test_the_write_lock_is_released_between_settled_items(tmp_path):
+    """L110 (2026-09-14): the pass held the file's single WAL write lock across every item.
+
+    `store.con` is DEFERRED, so the first item's write took the lock and nothing released it until
+    the end of the loop. Everything else on that file queued behind it -- and the order path's
+    journal write has a 30 s busy timeout, which is why `db_ms` has been seen at 37,386 ms. The
+    2026-09-08 GEA V ZANDSCH incident was this collision from the other side: leg A filled, the
+    hedge never sent, because the journal write waited out the lane's lock and raised.
+
+    The pass's own log callback runs immediately after the per-item commit, so it is the honest
+    place to ask whether the lock is still held.
+    """
+    st, ledger, opps, _rid = _hedged(tmp_path)
+    items = pending(st, now=T)
+    fk, fe = _fetchers({"K-LAD": "no", "K-STL": "yes"}, "STL")
+    winners = fetch_results(items, None, fetch_kalshi=fk, fetch_event=fe)
+
+    seen: list[bool] = []
+    out = apply_settlements(st, ledger, None, opps, items, winners, now=T,
+                            log=lambda _s: seen.append(st.con.in_transaction))
+    assert out["settled"] == 1
+    assert seen and not any(seen), "the item's writes are still uncommitted: the lock is held"
+
+    # And a second connection can in fact write while the lane holds none.
+    other = TupleStore(tmp_path / "t.sqlite", enforce_volume=False, isolation_level="IMMEDIATE",
+                       timeout_s=1.0)
+    other.con.execute("INSERT INTO execution_venue_results(execution_id,venue,winner,observed_ts) "
+                      "VALUES('probe','kalshi','K-STL',?)", (T,))
+    other.con.commit()
+    other.con.close()
+

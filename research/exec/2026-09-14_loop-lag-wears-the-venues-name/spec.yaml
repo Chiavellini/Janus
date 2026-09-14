@@ -1,0 +1,52 @@
+row: L111
+date: 2026-09-14
+kind: attribution_repair
+status_at_registration: PENDING
+observed_failure: >-
+  CLOCK_UNHEALTHY is overwhelmingly self-inflicted, and when it fires the lane stops pricing
+  entirely - `poller.halt` makes `best_cover` unreachable, so an arbitrage inside the window is
+  never computed and cannot appear in any histogram of orders sent.
+  `ClockMonitor` takes its receive timestamp AFTER `ws.recv()` returns, so it measures loop
+  availability, not the wire; its own docstring says so. Measured on the box over 7 days, 9,800
+  ticks, bucketed by the loop probe's own reading:
+    loop lag 0-1 s -> median |offset| 0.118 s, 0.5% of ticks unhealthy   (n=4,109)
+    loop lag 1-2 s -> 3.407 s, 21.7%                                     (n=1,632)
+    loop lag 2-3 s -> 7.564 s, 47.6%                                     (n=1,325)
+    loop lag 4-5 s -> 10.513 s, 59.3%                                    (n=150)
+  Monotonic, and entirely BELOW the 5 s halt bound. Two independent venue clocks cannot track our
+  event loop, and 48.9% of unhealthy ticks name BOTH venues at once, which a genuine venue fault
+  essentially never does. Today's loop lag p90 is 2.003 s - inside the band where a fifth to a half
+  of ticks are declared unhealthy.
+  Two defects made it persist and made it uncountable. FIRST, the aftermath branch's grace is one
+  report tick (30 s) against a clock window of 60 s, and the post-stall burst enters that window at
+  once, so two ticks later the same contaminated samples were still the median and the verdict fell
+  through to HALT CLOCK. SECOND, the branch could not report itself: it prints only when the halt
+  VALUE changes on some poller, branches 1 and 2 both assign "LOOP_STALLED", and branch 2 can only
+  run when branch 1 ran last tick - so its four appearances in six days were pollers spawned
+  mid-window, not four aftermath events, and the 530:207:4 split is a logging artefact.
+immutable_success_criteria:
+  - The tick that detects a stall DISCARDS both clock windows. Those samples are contaminated, not
+    merely old, and `min_samples` (20) means no verdict is given again until the window genuinely
+    refills - which on a busy slate is sub-second, so a real venue skew is re-detected at once.
+  - Halting is NOT relaxed. A stall still halts, a genuine skew still halts, and a 3 s loop lag
+    still means 3 s old books and a cover priced on them is a fiction. What changes is that the
+    refusal ends when the condition does, instead of outliving it by a 60 s window.
+  - The aftermath grace covers the clock window (two ticks), which is what its own comment always
+    claimed.
+  - Every halt transition prints on its REASON, so STALL and CLOCK become countable for the first
+    time. A test asserts the aftermath line actually appears; it was structurally unprintable.
+expected_ev_effect: >-
+  recovered pricing time, which is the only quantity here measured in minutes rather than
+  milliseconds. Unquantified deliberately: the size depends on the live lag distribution, and the
+  honest number comes from counting halt transitions by reason after release - which is exactly
+  what this row makes possible.
+watch_for:
+  - The ratio of HALT STALL, HALT STALL aftermath and HALT CLOCK lines after release. A HALT CLOCK
+    naming ONE venue while the loop was prompt is the genuine article; one naming both is not.
+  - Whether dropped windows re-arm quickly. If `min_samples` is not reached for long stretches, the
+    lane is quieter than assumed and the drop is costing verdicts.
+prohibited:
+  - Reading this as licence to price on stale books. The lane still halts; only the attribution and
+    the duration change.
+  - Quoting the 530:207:4 split. Those are transition counts, the aftermath branch could not print,
+    and they span six days including the pre-L100 saturation.

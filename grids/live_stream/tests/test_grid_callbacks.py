@@ -256,16 +256,33 @@ def test_the_report_tick_names_a_stall_apart_from_a_clock_fault(tmp_path: Path, 
     assert sup.loop_lag_max_s == 0.0, "the tick resets the probe"
     sup.on_report_tick(now=T + 9)
     assert s.poller.halt is None and sup.clock_ok() and "healthy again" in capsys.readouterr().out
-    # the tick after a stall: the clock window still holds the late stamps; that is aftermath, not a clock fault
+    # A stall's own late stamps are OUR delay wearing the venue's name, so the tick that detects
+    # the stall discards both windows (L111). Before that, they aged out over the clock's 60 s
+    # window while a 30 s tick gave one tick of grace, and the lane went on refusing to price --
+    # measured over 7 days: at 2-3 s of loop lag, 47.6 % of ticks read unhealthy and 48.9 % of
+    # those named BOTH venues, which two independent venue clocks do not do.
     sup.loop_probe_reading(30.0)
     for i in range(25):
         sup.ps.clock.observe(T + 12 + i * 0.1, T + 12 + i * 0.1 - 30.0)
     sup.on_report_tick(now=T + 12)
     assert s.poller.halt == "LOOP_STALLED"
-    sup.on_report_tick(now=T + 15)                         # loop prompt now, stamps still off
-    assert s.poller.halt == "LOOP_STALLED" and "HALT CLOCK" not in capsys.readouterr().out, "aftermath, not a clock fault"
-    sup.ps.clock = type(sup.ps.clock)()
+    assert "window dropped after a 30.0s stall" in capsys.readouterr().out
+    sup.on_report_tick(now=T + 15)                         # loop prompt, and the skew went with it
+    assert s.poller.halt is None and sup.clock_ok(), "a prompt loop prices again at the next tick"
+
+    # A GENUINE skew arriving soon after a stall is still labelled aftermath rather than a clock
+    # fault, while the dropped window refills -- and it still halts either way.
+    sup.loop_probe_reading(30.0)
     sup.on_report_tick(now=T + 18)
+    assert s.poller.halt == "LOOP_STALLED"
+    for i in range(25):
+        sup.ps.clock.observe(T + 21 + i * 0.1, T + 21 + i * 0.1 - 30.0)
+    capsys.readouterr()
+    sup.on_report_tick(now=T + 21)                         # loop prompt, stamps off, one tick on
+    assert s.poller.halt == "LOOP_STALLED", "inside the grace it is aftermath, not a clock finding"
+    assert "HALT STALL aftermath" in capsys.readouterr().out, "and it must be able to SAY so"
+    sup.ps.clock = type(sup.ps.clock)()
+    sup.on_report_tick(now=T + 24)
     assert s.poller.halt is None
 
 

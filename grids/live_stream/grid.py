@@ -218,6 +218,12 @@ class Supervisor:
     enforce_volume: bool = True
     #: The last tick's verdict on the loop; what the risk gate sees between ticks.
     stalled: bool = False
+    #: Report ticks since the loop last overshot. The clock's window is 60 s and the tick is 30 s,
+    #: so the aftermath of a stall outlives one tick of grace (L111).
+    ticks_since_stall: int = 99
+    stall_aftermath_ticks: int = 2
+    #: The last halt REASON said, so a transition between two reasons sharing a halt value prints.
+    halt_reason: str = ""
     tiers: dict[str, int] = field(default_factory=dict)
     wake_state: tuple = ("WAKE", None, None)
     #: Capture-only subscriptions for what the slate cannot co-list yet (tennis has no ESPN anchor):
@@ -764,7 +770,16 @@ class Supervisor:
             raise DiskPressure(f"DISK_PRESSURE {free / 2 ** 30:.2f} GiB free under {self.db.parent}, floor "
                                f"{self.disk_floor_bytes / 2 ** 30:.2f} GiB (JANUS_MINFREE_KB): stopping before a commit fails")
         lag = self.loop_lag_max_s
-        stalled_prev, self.stalled = self.stalled, lag > self.max_loop_lag_s
+        self.stalled = lag > self.max_loop_lag_s
+        if self.stalled:
+            # L111: the frames read during a stall carry OUR delay as the venue's skew, and the
+            # backlog burst takes the 60 s median with it. They are contaminated, not merely old.
+            for venue, st_ in (("kalshi", self.ks), ("polymarket", self.ps)):
+                if st_ is not None:
+                    print(f"  [clock] {venue} window dropped after a {lag:.1f}s stall: {st_.clock.reset()}", flush=True)
+            self.ticks_since_stall = 0
+        else:
+            self.ticks_since_stall += 1
         for venue, st_ in (("kalshi", self.ks), ("polymarket", self.ps)):
             if st_ is not None:
                 self.store.socket_health(venue=venue, stats={**st_.stats(), "loop_lag_s": round(lag, 3)}, seen_ts=t)
@@ -777,8 +792,11 @@ class Supervisor:
                if st_ is not None and not st_.clock.healthy]
         if self.loop_stalled():
             halt, why = "LOOP_STALLED", f"HALT STALL {lag:.1f}s" + (f" (stamps off on {','.join(bad)})" if bad else "")
-        elif bad and stalled_prev:
-            # The clock window is 60 s; the tick after a stall still holds the late stamps.
+        elif bad and self.ticks_since_stall <= self.stall_aftermath_ticks:
+            # The clock window is 60 s and the report tick is 30 s, so ONE tick of grace covered
+            # half of what it was written to cover; two ticks later the same contaminated samples
+            # were still the median and the verdict fell through to HALT CLOCK. The window is now
+            # dropped outright on a stall, so this is belt and braces while it refills.
             halt, why = "LOOP_STALLED", f"HALT STALL aftermath (stamps off on {','.join(bad)})"
         elif bad:
             halt, why = "CLOCK_UNHEALTHY", f"HALT CLOCK {','.join(bad)}"
@@ -788,8 +806,14 @@ class Supervisor:
         for sup in self.live.values():
             changed += int(sup.poller.halt != halt)
             sup.poller.halt = halt
-        if changed:
+        # L111: this used to print only when the halt VALUE changed. Branches 1 and 2 both assign
+        # "LOOP_STALLED", and branch 2 can only run when branch 1 ran last tick -- so the aftermath
+        # line was structurally unprintable, and its four appearances in six days were pollers
+        # spawned mid-window, not four aftermath events. Every transition prints on its REASON now,
+        # which is also what makes the STALL/CLOCK split countable at all.
+        if changed or why != self.halt_reason:
             print(f"[clock] {why} ({changed} pollers)", flush=True)
+        self.halt_reason = why
         self.loop_lag_max_s, self.loop_lag_readings = 0.0, []
 
     def _execute(self, sup: Supervised, ev, rec, *, sizing: SizingDecision | None = None) -> None:

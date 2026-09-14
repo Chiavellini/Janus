@@ -1,0 +1,44 @@
+row: L110
+date: 2026-09-14
+kind: contention_repair
+status_at_registration: PENDING
+observed_failure: >-
+  The settlement pass held the database file's single WAL write lock across its entire backlog.
+  `apply_settlements` runs on `store.con`, which is DEFERRED, and its last commit inside the item
+  loop is the per-venue-result one taken BEFORE the settlement writes; the next commit is after
+  every item. So the first item's `execution_settlements` insert took the lock and nothing released
+  it until the pass ended - each remaining item doing two SELECTs, a ledger release, three writes
+  and up to two opportunity moves in between.
+  Everything else on that file queues behind it. The order path writes through its own connection
+  (`worker_store`) but the same file, with a 30 s busy timeout and no `busy_timeout` PRAGMA
+  anywhere; `db_ms` on the execution hot path measures p50 5.8 ms, p99 1,295 ms and max 37,386 ms,
+  with one execution in 226 past 30,000 ms - the shape of a full busy timeout plus a second
+  contended write, since `_move_after_fill` and `_sync_after_fill` both swallow the failure and
+  carry on.
+  This is the 2026-09-08 GEA V ZANDSCH incident from the other side. That one was recorded as "the
+  journal write after the POST waited the worker's 30 s busy timeout behind the loop's 30 s
+  report-tick transaction and raised", and leg A filled with the hedge never sent. Its fix made the
+  LOOP release the lock per frame (grid.py, commit per frame rather than per report tick); nothing
+  addressed a pass that TAKES the lock for its whole duration.
+immutable_success_criteria:
+  - The commit moves inside the item loop, so the lock is held per item rather than per pass. An
+    item is the natural atomic unit - its settlement row, its executions update, its transition and
+    its opportunity move are one fact about one cover - and the per-venue-result commit above it
+    already works this way.
+  - Proven by a test, not argued: the pass's own log callback runs immediately after the commit, so
+    it asserts `store.con.in_transaction` is False there, and a second connection with a 1 s busy
+    timeout writes successfully afterwards. The test fails against the pre-fix code.
+  - No settlement arithmetic, release rule or ordering changes. Replay parity digests unmoved.
+expected_ev_effect: >-
+  none per cover directly. It removes a source of multi-second stalls on the order path, which is
+  where a naked first leg waits for its hedge, and hedge slippage decides the sign of the outcome
+  on 16 of 19 covers.
+watch_for:
+  - `db_ms` p99 and max on `executions`. The 37,386 ms outlier should not recur; if it does, the
+    holder is something else (retention, `ops/guard_once.py` at its 120 s timeout, or a WAL
+    checkpoint) and this row did not find it.
+prohibited:
+  - Reading this as the whole of the contention problem. `apply_settlements` still runs ON the
+    event loop while `fetch_results` beside it does not, retention churns the lock for up to 10 s
+    every 900 s, and no `wal_autocheckpoint` is set anywhere - so whichever connection crosses the
+    1000-page default pays for the checkpoint.

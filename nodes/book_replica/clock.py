@@ -57,6 +57,23 @@ class ClockMonitor:
         if abs(d) > abs(self.worst_s):
             self.worst_s = d
 
+    def reset(self) -> str:
+        """Drop the window. Returns a short note for the caller's log.
+
+        For the one case where the samples are known to be contaminated rather than merely old: a
+        stalled event loop takes its receive timestamp after `ws.recv()` returns, so every frame
+        read during the stall carries OUR delay as if it were the venue's skew, and a backlog burst
+        enters the window all at once and takes the median with it. Measured over 7 days on the box:
+        at 0-1 s of loop lag the median offset is 0.118 s and 0.5% of ticks read unhealthy; at 2-3 s
+        it is 7.564 s and 47.6%; and 48.9% of unhealthy ticks name BOTH venues at once, which two
+        independent venue clocks do not do. Discarding a contaminated sample is strictly more
+        correct than ageing it out over the next 60 s, and `min_samples` means no verdict is given
+        again until the window has genuinely refilled.
+        """
+        n, off = len(self._win), self.offset_s
+        self._win.clear()
+        return f"{n} samples, median offset {off:+.3f}s" if off is not None else f"{n} samples"
+
     def _expire(self, now: float) -> None:
         cut = now - self.window_s
         while self._win and self._win[0][0] < cut:
