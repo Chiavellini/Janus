@@ -94,6 +94,15 @@ class Reconciler:
         thread: `on_update` records to the tuple store, whose sqlite connection belongs to that
         thread (2026-09-03: run in the worker thread, every reconciled evaluation died on
         ProgrammingError and was lost)."""
+        # L101 (2026-09-14): the replica keeps the stamp of when the book WAS TRUE
+        # (`received_utc`), but the poller must be told the time it is being asked to price AT.
+        # Passing the fetch stamp as "now" made every REST-reconciled evaluation compute
+        # `now - as_of()` = 0.0, so `max_rest_book_age_s` (3.0 s) could not fire on this path at all.
+        # And `fetch_due` fetches SEQUENTIALLY while the whole batch is applied afterwards, so the
+        # first asset fetched was routinely seconds old by the time it priced: Polymarket-triggered
+        # evaluations measured p90 3,543 ms, p99 6,341 ms, max 8,249 ms, on 10.7 % of all recorded
+        # evaluations, every one of them reporting an age of zero.
+        t_apply = now if now is not None else time.time()
         done = []
         for asset_id, fetched in books.items():
             versions = dict(fetched.versions)
@@ -113,10 +122,10 @@ class Reconciler:
                     self.drifted.append(asset_id)
                     self.drifted = self.drifted[-20:]
                 if reg.on_update:
-                    reg.on_update(asset_id, fetched.received_utc)
+                    reg.on_update(asset_id, t_apply)
             if applied:
                 done.append(asset_id)
-        self.last_run_utc = now if now is not None else time.time()
+        self.last_run_utc = t_apply
         return done
 
     def once(self, now: float | None = None, mono: float | None = None) -> list[str]:

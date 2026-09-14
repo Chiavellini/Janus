@@ -1,0 +1,29 @@
+row: L101
+date: 2026-09-14
+kind: descriptive_correctness_repair
+status_at_registration: PENDING
+observed_failure: >-
+  nodes/stream_polymarket/reconcile.py fetches REST books sequentially in a worker thread
+  (`fetch_due`), stamping each with its own completion time, then applies the entire batch on the event
+  loop (`apply`). It passed each asset's fetch stamp to `on_update` as the poller's "now". Because
+  BookReplica.reconcile sets updated_utc = verified_utc = heartbeat_utc to that same stamp, the poller's
+  freshness test computed `now - as_of()` as identically 0.0, so max_rest_book_age_s = 3.0 could never
+  fire on this path. Measured: Polymarket-triggered latency_ms p90 3,543 ms, p99 6,341 ms, max 8,249 ms,
+  in bursts every 4.86 s, decreasing within each burst, on 10.7% of all recorded evaluations. `due()`
+  selects precisely the quiet replicas that no stream traffic is verifying.
+immutable_success_criteria:
+  - The replica continues to record WHEN THE BOOK WAS TRUE (`received_utc`) in updated_utc/verified_utc.
+    Only the clock the poller is asked to price against changes, to the real apply time.
+  - A book fetched N seconds before it is applied reads as N seconds old, and is refused by a bound
+    smaller than N.
+  - Deterministic for tests and replay: `apply(now=...)` governs when supplied.
+  - Outcome to evaluate: the actionable-print count is expected to FALL, and the Polymarket-triggered
+    latency_ms tail to stop appearing as fresh. A fall is the fix working, not a regression.
+expected_ev_effect: >-
+  removes a class of evaluation that priced a stale book while reporting perfect freshness. It can only
+  refuse entries, never create them, and it is a candidate source of the phantom edge behind the median
+  9c BOOK_MOVED gap.
+prohibited:
+  - Stamping the replica with the apply time. That would claim the book is newer than it is, which is
+    the same defect with the sign reversed.
+  - Reading a fall in actionable prints as a regression.

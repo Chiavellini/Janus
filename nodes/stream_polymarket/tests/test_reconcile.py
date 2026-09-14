@@ -42,6 +42,29 @@ def test_a_quiet_replica_is_reverified_and_kept_servable():
     assert seen == [("a", T + 20)], "the poller is told, with the reconcile time"
 
 
+def test_a_reconciled_book_is_priced_at_its_real_age_not_at_zero():
+    """L101 (2026-09-14): `fetch_due` fetches SEQUENTIALLY in a worker and the whole batch is applied
+    afterwards, so the first asset's book can be seconds old by the time it prices. Passing its FETCH
+    stamp to the poller as `now` made `now - as_of()` identically 0.0, so `max_rest_book_age_s` (3.0 s)
+    could never fire on this path -- while Polymarket-triggered evaluations measured p90 3,543 ms and
+    max 8,249 ms, on 10.7 % of all recorded evaluations, every one reporting an age of zero.
+
+    The replica still records WHEN THE BOOK WAS TRUE; only the clock the poller prices against moves."""
+    s, reps = stream_with("a")
+    seen = []
+    s.regs["a"][0].on_update = lambda m, t: seen.append((m, t))
+    rc = Reconciler(s, lambda aid: ([(0.40, 10)], [(0.45, 10)]), period_s=1.0)
+    books = rc.fetch_due(rc.prepare(T + 20), now=T + 20, mono=5.0)   # fetched at T+20 ...
+    rc.apply(books, now=T + 26)                                      # ... applied six seconds later
+    assert seen == [("a", T + 26)], "the poller is told the time it is pricing AT, not the fetch stamp"
+    r = reps["a"]
+    assert r.updated_utc == T + 20 and r.verified_utc == T + 20, "the replica keeps when it was true"
+    assert r.check(T + 26, max_age_s=3.0) is not None, "a six-second-old REST book must read as stale"
+    assert r.check(T + 26, max_age_s=10.0) is None, "and fresh against a bound that allows it"
+    assert r.snapshot(T + 26, max_age_s=3.0) is None, "and it is not servable at the lane's own bound"
+    assert r.snapshot(T + 26, max_age_s=10.0).fetched_utc == T + 20
+
+
 def test_a_disagreement_adopts_rest_and_reports_drift():
     s, reps = stream_with("a")
     rc = Reconciler(s, lambda aid: ([(0.40, 10)], [(0.46, 10)]))
