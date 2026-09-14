@@ -54,6 +54,17 @@ The box still runs **`9387297`**. Everything below is committed and **undeployed
 - **L112** — nothing recorded what the Polymarket account channel delivers, so its perfect health
   figures were unfalsifiable. Per-kind counters now, with the verdict rule registered in advance.
 
+**And then the operator asked the question that matters: what moves us toward $100/day.**
+- **L113** — the largest attrition in the funnel was readable only by grepping journald. Both
+  refusal channels ended at `print()`, and nothing joined prints → orders → covers. Counted now, as
+  **counters flushed per report tick, never a row per refusal** — a row apiece is what put 24.7 GB
+  in `sizing_decisions` and helped fill the disk on 2026-09-11. Plus `ops/funnel_report.py`.
+- **L114** — an event yielded **one cover, ever**: the capital reservation blocked re-entry until
+  both venues settled, hours later. At ~40 co-listed events a day that alone caps the lane near
+  **40 covers/day ≈ $8-20/day**, which is the same order as `GATE_TO_LIVE`'s independently measured
+  "about $20 a day" bound on the whole surface. The lock now ends at the hedge; the capital stays
+  committed and every notional cap keeps counting it.
+
 ## What to do next, in order
 
 1. **Release. One paste, one frozen tree.** `bash ops/box/release.sh <sha>`. The arming override
@@ -103,8 +114,38 @@ been a reliable signal; both are deselected in verification and a task is queued
 - **Do not read the halt change as licence to price on stale books.** A 3 s loop lag still means 3 s
   old books; what changed is that the refusal ends when the condition does.
 
+## On $100/day, since it was asked
+
+**Nothing this session moved the economics**, and that is the honest headline. The arbitrage
+business makes **$0.14/day**: over 7 days `COVER` rows realised +$2.25 and `PARTIAL` cover legs
+-$1.28, so **+$0.98 of actual arbitrage**, while +$3.36 of the headline was directional money on
+unhedged contracts — luck, not edge.
+
+**The universe has been targeted hard, but mostly before this session** (22 leagues registered, 14
+enabled, the daily census, the coverage audit, tennis/ITF, CFB labels, MLS/Eredivisie/UCL). Nothing
+was added to it today.
+
+**$100/day is not reachable on the current universe at current caps, and the project measured that
+before I arrived** — `GATE_TO_LIVE.md:171`: *"Upper bound of the whole excluded band at 25
+contracts: about $20 a day."* It needs roughly **10x the events, 5x the size, and a positive
+sign** — all three. The measured funnel says where to look: **84% of events we can see are
+Polymarket-only** (342 of 345 unpaired are `kalshi=missing`), and 1,893 actionable prints a day
+converted to almost nothing. L113 makes that conversion countable for the first time; L114 removed
+one of the two hard ceilings under it.
+
+**Still open, in order:** the other ceiling (the grid's `in_flight` is GLOBAL — while any game
+executes, every other game's covers are refused; it needs to be per-event with a small concurrency
+bound, carefully, because it was made global to stop 6-11 s loop stalls). Then the sign, which the
+slippage report says is a slippage problem and not a coverage one. Then universe, cheapest first:
+CFB re-evidence (113 co-listed/48 h, the largest competition in the census), the four blocked
+soccer leagues **and their missing `limits.toml` cap rows**, NBA/NHL when the seasons overlap, and
+only then spreads/totals (~10x contract pairs, but it needs a market-identity axis the kernel does
+not have — `line_abs` has zero producers, and `total 8.5` pairs with `total 9.5` as locked
+arbitrage today).
+
 ## The question that actually matters
 
 Unchanged, and now measurable: whether a cover's margin can exceed its hedge slippage. Everything
-this session did was either safety owed before more real orders, or removing the reasons the
-measurement could not be trusted. The economics are still negative and still undecided.
+this session did was either safety owed before more real orders, removing the reasons the
+measurement could not be trusted, or lifting a ceiling that capped the answer. The economics are
+still negative and still undecided.
