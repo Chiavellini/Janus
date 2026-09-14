@@ -249,6 +249,8 @@ class Supervisor:
     capture_series: tuple[str, ...] = ()
     capture_pm_tags: tuple = ()
     watch_rows: int = 0
+    #: L102: Polymarket token ids whose SDK metadata is already cached, so a warm pass costs nothing.
+    _pm_warmed: set = field(default_factory=set)
 
     # ── discovery ───────────────────────────────────────────────────────
     def discover(self) -> dict[str, dict]:
@@ -1039,6 +1041,47 @@ class Supervisor:
         finally:
             self.in_flight = None
 
+    def warm_pm_metadata(self, *, budget: int = 12, spacing_s: float = 0.12) -> dict:
+        """L102 (2026-09-14): warm the Polymarket SDK's per-token metadata before an order needs it.
+
+        `create_market_order` calls `__ensure_market_info_cached(token_id)` before it signs anything,
+        and on an unseen token that is two blocking GETs -- `/markets-by-token/{token}` and then
+        `/clob-markets/{condition_id}`. Sports tokens are new every game, so nearly every first leg
+        paid it: measured on this box, leg A submit-to-ack is **559.6 ms p50 on the FIRST order for a
+        token (n=71) against 205.7 ms on a REPEAT (n=56)**, and 56 % of orders were firsts. Signing
+        itself is under 7 ms, so this gap is the whole of it.
+
+        `get_fee_exponent` is the cheapest public call on exactly that path -- its body is the same
+        `__fee_infos` check followed by the same `__ensure_market_info_cached`. One call warms every
+        token in the market, because the response carries them all, so this loop is self-deduping:
+        an already-warm token costs a dict lookup and no HTTP at all.
+
+        Runs in a worker thread, paced, and fail-soft by construction: a warm-up that fails leaves
+        the cache exactly as cold as it is today. It can slow a trade down to the status quo; it can
+        never block or fail one.
+        """
+        venue = (self.venues or {}).get("polymarket")
+        client = getattr(getattr(venue, "transport", None), "_c", None)
+        if client is None or not callable(getattr(client, "get_fee_exponent", None)):
+            return {}                       # paper/shadow modes hold no transport to warm
+        want = {t for s in self.live.values() for t in s.pm_assets}
+        self._pm_warmed &= want              # a token that rotated off the slate is not worth keeping
+        warmed = errors = 0
+        for token in sorted(want - self._pm_warmed):
+            if warmed >= budget:
+                break                       # the backlog drains over the next discovery passes
+            try:
+                client.get_fee_exponent(token)
+                self._pm_warmed.add(token)
+                warmed += 1
+            except Exception:  # noqa: BLE001 -- a cold cache is the status quo, never a failure
+                errors += 1
+            # The SDK bypasses kernel/fetch's rate limiter entirely (its own module-level httpx
+            # client), so the pacing has to be ours. This sleep is in the worker; the loop is free.
+            time.sleep(spacing_s)
+        return {"warmed": warmed, "errors": errors, "known": len(self._pm_warmed),
+                "pending": len(want - self._pm_warmed)}
+
     def _hedge_capacity_ok(self, sup: Supervised, plan, quantity: float) -> bool:
         """Fresh loop-owned Kalshi depth for the full prospective maker fill."""
         now = time.time()
@@ -1383,6 +1426,12 @@ async def run(sup: Supervisor, *, discovery_period: float, report_period: float,
                     now_d, d = await asyncio.to_thread(sup.fetch_discovery)
                     slate = sup.apply_discovery(now_d, d)
                     sup.reconcile(slate)
+                    try:
+                        warm = await asyncio.to_thread(sup.warm_pm_metadata)
+                        if warm.get("warmed") or warm.get("errors"):
+                            print(f"[warm] polymarket metadata {warm}", flush=True)
+                    except Exception as exc:  # noqa: BLE001 -- warming must never break discovery
+                        print(f"[warm FAILED] {type(exc).__name__}: {exc}", flush=True)
                     try:
                         added, removed = sup.apply_watch(await asyncio.to_thread(sup.fetch_watch))
                         if added or removed:

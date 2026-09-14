@@ -1,0 +1,36 @@
+row: L103
+date: 2026-09-14
+kind: latency_repair
+status_at_registration: PENDING
+observed_failure: >-
+  Polymarket leg A submit-to-ack measured 559.6 ms p50 on the FIRST order for a token (n=71) against
+  205.7 ms on a REPEAT order for the same token (n=56) - a 353.9 ms penalty paid by 55.9% of orders.
+  The cause is in the SDK: `create_market_order` calls `__ensure_market_info_cached(token_id)` before
+  it signs anything, and on an unseen token that issues two blocking GETs, `/markets-by-token/{token}`
+  then `/clob-markets/{condition_id}`. Because the lane trades sports, tokens are new for every game,
+  so nearly every first leg pays it. EIP-712 signing itself is under 7 ms, so this gap is the whole of
+  the recoverable interval on leg A.
+immutable_success_criteria:
+  - The SDK's per-token metadata is warmed when a game enters the slate, hours before it trades, never
+    on the execution path.
+  - The warmer is `get_fee_exponent`, whose body is the same `__fee_infos` check and the same
+    `__ensure_market_info_cached` that the order path takes. `get_tick_size` and `get_neg_risk` are NOT
+    substitutes: on a cold token each writes a different dict, leaving `__fee_infos` empty, so the order
+    still issues both GETs and the net effect is one MORE request, not fewer.
+  - Self-deduping: one call warms every token in the market, so an already-warm token costs a dict
+    lookup and no HTTP.
+  - Off the event loop, paced, and bounded per pass. The SDK bypasses kernel/fetch's rate limiter
+    entirely (its own module-level httpx client), so the pacing has to be ours.
+  - Fail-soft by construction: a failed warm-up leaves the cache exactly as cold as it is today. It can
+    slow a trade to the status quo; it can never block or fail one. No transport (paper, shadow) no-ops.
+  - Outcome to evaluate: the first-vs-repeat split above, scoped to a single process run because the
+    cache is per-process and a restart re-colds every token. The FIRST bucket should fall toward the
+    REPEAT figure; the REPEAT figure should not move.
+expected_ev_effect: >-
+  removes ~354 ms from the first order on every token, which is 56% of orders - roughly 198 ms off the
+  average leg A submit-to-ack. It changes no trading logic, no price, no size and no cap.
+prohibited:
+  - Warming from the execution path. The whole point is that this work happens hours earlier.
+  - Using get_tick_size or get_neg_risk as the warmer; both leave the order path unchanged and add a
+    request.
+  - Letting a warm-up failure propagate. A cold cache is the status quo.

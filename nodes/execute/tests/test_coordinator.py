@@ -202,6 +202,55 @@ def test_an_unfilled_first_leg_leaves_no_position_and_releases(tmp_path):
     assert not any(v.fills(since_utc=0) for v in vs.values())
 
 
+def test_a_zero_filled_leg_a_records_the_book_again_afterwards(tmp_path):
+    """L102 (2026-09-14): a pre-send confirm cannot separate "the book advertised size the engine would
+    not honour" from "we lost a race" -- in BOTH worlds it shows a level at our price with our size.
+    Measured, it has no discriminating power at all: 15 of 16 confirmed zero-fills AND 6 of 6 confirmed
+    fills had the full size at or below the limit. The SECOND read, after the venue's terminal answer,
+    is what separates them -- size still resting there was taken by nobody.
+
+    The fixture is the hypothesis in miniature: the confirm shows the whole size at the limit while the
+    venue fills none of it."""
+    co, vs, store, _, _ = harness(tmp_path)
+    offs = offers()
+    p, _ = plan_for(offs)
+    vs["polymarket"].books = {"P_H": bk([(0.60, 5000)])}      # the engine honours nothing at our limit
+    vs["kalshi"].books = {"K_A": offs["away"][0].book}
+    confirmed = bk([(p.first.limit_price, 4000.0), (round(p.first.limit_price + 0.01, 4), 900.0)])
+    co.fresh_book = lambda venue, market, side: (confirmed if venue == "polymarket"
+                                                 else vs[venue].books.get(market))
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert ex.state is X.ORDER_UNFILLED and ex.first_filled == 0.0
+
+    before = ex.protect["first_leg_confirm"]
+    assert before["ladder"][0] == [p.first.limit_price, 4000.0], "the ladder carries SIZES, not a price alone"
+    assert before["at_mono"] is not None and before["at_utc"] is not None
+    assert before["source"] == confirmed.source and before["fetched_utc"] == confirmed.fetched_utc
+    # and it states what was actually SENT, which a downsize or a reprice can move away from the plan
+    assert before["sent"]["contracts"] == p.first.contracts and before["sent"]["price"] == p.first.limit_price
+
+    after = ex.protect["first_leg_post"]
+    assert after["why"] == "unfilled", "recorded on the path that holds no position"
+    assert after["at_mono"] >= before["at_mono"] and after["ladder"], "the book is read AGAIN, afterwards"
+    assert "a_post_confirm_ms" in ex.stages
+
+
+def test_a_partial_fill_is_not_delayed_by_the_post_mortem_read(tmp_path):
+    """L102: the same read on a PARTIAL would sit between the fill and the hedge, and hedge latency is
+    what costs the most money here (median 3.0c of slippage against 0.67c of margin). One partial in
+    141 orders does not justify paying that, so the instrumentation stops where a position begins."""
+    co, vs, store, _, _ = harness(tmp_path)
+    offs = offers()
+    p, _ = plan_for(offs)
+    vs["polymarket"].books = {"P_H": bk([(0.44, 10)])}        # only part of the size fills
+    vs["kalshi"].books = {"K_A": offs["away"][0].book}
+    co.fresh_book = lambda venue, market, side: (bk([(p.first.limit_price, 4000.0)]) if venue == "polymarket"
+                                                 else vs[venue].books.get(market))
+    ex = co.execute(p, clearance_for(tmp_path, now_mono=100.0))
+    assert 0 < ex.first_filled < p.first.contracts, "a genuine partial"
+    assert "first_leg_post" not in ex.protect and "a_post_confirm_ms" not in ex.stages
+
+
 @dataclass
 class AmbiguousVenue:
     """Submit never answers; status says whatever the script says."""

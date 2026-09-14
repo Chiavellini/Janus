@@ -1,0 +1,42 @@
+row: L102
+date: 2026-09-14
+kind: measurement_instrumentation
+status_at_registration: PENDING
+observed_failure: >-
+  Of 141 Polymarket taker BUY orders, 118 zero-filled (84%) and exactly ONE partially filled (0.7%).
+  Losing a race yields crumbs, so all-or-nothing is the signature of a book advertising levels the
+  matching engine will not honour. But we could not test that, and a pre-send confirm alone NEVER can:
+  in both worlds it shows a level at our price with our size. Measured, it has no discriminating power
+  whatever - 15 of 16 confirmed zero-fills AND 6 of 6 confirmed fills had the full size at or below the
+  limit, and confirm latency is identical for fills and failures (186.2 vs 186.1 ms). Separately the
+  POST status already localises the failure: orders the engine matched at receipt filled 5 of 5, while
+  orders routed to `delayed` filled 13 of 107 (12%).
+  Two recording defects made even the existing evidence unusable. `first_leg_confirm` describes the
+  size the plan STARTED with: L95 can downsize and L96 can reprice after it is written, so on 5594b81b
+  the row reads marginal 0.61 against limit 0.52 for 25 contracts while TEN were sent - any analysis
+  filtering on `marginal <= limit` misclassifies every downsized order - and `max_collateral_usd` is
+  stale the same way (persisted 12.75, sent 5.10).
+immutable_success_criteria:
+  - The pre-send confirm records the LADDER it saw with sizes, its source, its fetched_utc and the
+    monotonic time it completed - not only a summary price.
+  - It also states what was actually SENT (price, contracts, collateral cap, and the marginal at the
+    sent size), because a downsize or a reprice can move all four after the confirm is written. What
+    the confirm SAW is preserved; what was SENT is stated beside it.
+  - The book is read AGAIN after the venue's terminal answer, on the paths that hold NO position
+    (unfilled, rejected). This second observation is the only thing that separates the two hypotheses.
+  - It is NOT read on a partial. That read would sit between the fill and the hedge, and hedge latency
+    is the largest cost in the system; 1 partial in 141 does not justify paying it.
+  - Recording only. No entry decision, cap, hurdle or protection behaviour changes.
+  - Outcome to evaluate after ~50 orders: of the zero-fills whose confirm showed full size at or below
+    the sent price, classify the post-terminal ladder as STILL_THERE (depth at our price still >= our
+    size), CONSUMED (depth fell by at least our size) or PULLED (fell by less). STILL_THERE >= 60%
+    means the published book is not honoured and speed cannot fix it. CONSUMED >= 60% with STILL_THERE
+    under 20% means we lost an honest race and latency is the answer. A high PULLED fraction is a third
+    answer: the resting size was never committed liquidity.
+expected_ev_effect: >-
+  none directly; it is instrumentation. It is the measurement that decides whether the lane's premise
+  holds, and every strategy choice downstream depends on it.
+prohibited:
+  - Reading a pre-send confirm alone as evidence either way. It cannot discriminate, and that is
+    measured, not argued.
+  - Adding the post-terminal read to the partial path without first showing the hedge delay is free.

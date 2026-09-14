@@ -793,6 +793,58 @@ def test_the_fast_reprotect_tick_retries_a_naked_position_every_few_seconds_then
     asyncio.run(main())
 
 
+def test_polymarket_token_metadata_is_warmed_once_and_never_blocks(tmp_path: Path):
+    """L102 (2026-09-14): `create_market_order` resolves per-token metadata BEFORE it signs, which on
+    an unseen token is two blocking GETs. Sports tokens are new every game, so leg A measured 559.6 ms
+    p50 on the FIRST order for a token against 205.7 ms on a repeat, with 56 % of orders being firsts.
+    Warming at discovery moves that off the order path entirely."""
+    from types import SimpleNamespace
+    sup, _ = _supervisor(tmp_path)
+    calls = []
+
+    class Client:
+        def get_fee_exponent(self, token):
+            calls.append(token)
+            if token == "boom":
+                raise RuntimeError("the venue said no")
+            return 0.0
+
+    sup.venues = {"polymarket": SimpleNamespace(transport=SimpleNamespace(_c=Client()))}
+    sup.live = {"g1": SimpleNamespace(pm_assets=("t1", "t2")),
+                "g2": SimpleNamespace(pm_assets=("t2", "boom"))}
+    out = sup.warm_pm_metadata(spacing_s=0.0)
+    assert sorted(calls) == ["boom", "t1", "t2"], "one call per DISTINCT token, deduped across games"
+    assert out["warmed"] == 2 and out["errors"] == 1
+
+    calls.clear()
+    sup.warm_pm_metadata(spacing_s=0.0)
+    assert calls == ["boom"], "a warm token costs no HTTP; a failed one is simply retried"
+
+    # a token that rotates off the slate is forgotten rather than accumulating forever
+    sup.live = {"g1": SimpleNamespace(pm_assets=("t1",))}
+    calls.clear()
+    sup.warm_pm_metadata(spacing_s=0.0)
+    assert calls == [] and sup._pm_warmed == {"t1"}
+
+    # and a burst is bounded, so the backlog drains across discovery passes instead of at once
+    sup.live = {"g": SimpleNamespace(pm_assets=tuple(f"n{i}" for i in range(30)))}
+    calls.clear()
+    out3 = sup.warm_pm_metadata(budget=5, spacing_s=0.0)
+    assert out3["warmed"] == 5 and len(calls) == 5 and out3["pending"] == 25
+
+
+def test_warming_no_ops_without_a_transport_and_never_raises(tmp_path: Path):
+    """PAPER and SHADOW hold no Polymarket transport, and a warm-up failure must leave the cache as
+    cold as it already is -- never a blocked or failed trade."""
+    from types import SimpleNamespace
+    sup, _ = _supervisor(tmp_path)
+    sup.live = {"g": SimpleNamespace(pm_assets=("t1",))}
+    sup.venues = {"polymarket": SimpleNamespace(transport=None)}
+    assert sup.warm_pm_metadata() == {}
+    sup.venues = {}
+    assert sup.warm_pm_metadata() == {}
+
+
 def test_a_repeated_protect_failure_does_not_extend_its_own_retry_window(tmp_path: Path):
     """L100 (2026-09-13): the window was re-armed on EVERY failure, so `until` moved forward
     `protect_fast_window_s` each time and never expired. Execution 77013052 held a 1.5625-share

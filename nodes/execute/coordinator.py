@@ -122,6 +122,41 @@ class Coordinator:
             ex.machine_error = exc
             return ex
 
+    def _post_terminal_book(self, ex: Execution, leg: LegPlan, contracts: float, why: str) -> None:
+        """L102 (2026-09-14): read leg A's book AGAIN, after the venue's terminal answer.
+
+        A pre-send confirm cannot separate "the book advertised size the engine would not honour"
+        from "we lost a race": in BOTH worlds it shows a level at our price with our size, and
+        measured it has no discriminating power at all -- 15 of 16 confirmed zero-fills AND 6 of 6
+        confirmed fills had the full size at or below the limit. The SECOND observation is what
+        separates them. Liquidity still resting after our order was killed was taken by nobody, and
+        no amount of speed would have reached it; liquidity consumed by our size means we lost a
+        race we could in principle win.
+
+        Only called where leg A left NO position. On a partial the same read would delay the hedge,
+        and hedge latency is the thing costing the most money -- 1 partial in 141 is not worth
+        paying that. Nothing is pending here and the clearance is already spent, so this costs a
+        read on a path that is terminating anyway.
+        """
+        if self.fresh_book is None or not self.mode.executes:
+            return
+        m = self.mono()
+        try:
+            book = self.fresh_book(leg.venue, leg.market_id, leg.side)
+        except Exception:  # noqa: BLE001 -- a failed read is not a verdict, here least of all
+            return
+        ex.stages["a_post_confirm_ms"] = round((self.mono() - m) * 1000.0, 2)
+        if book is None:
+            return
+        ex.protect["first_leg_post"] = {
+            "why": why, "at_mono": round(self.mono(), 6), "at_utc": self.clock(),
+            "top": book.asks[0].price if book.asks else None,
+            "marginal": marginal_price(book, contracts),
+            "source": getattr(book, "source", None),
+            "fetched_utc": getattr(book, "fetched_utc", None),
+            "ladder": [[q.price, q.size] for q in book.asks[:5]],
+        }
+
     def _run(self, ex: Execution, plan: Plan, clearance: RiskClearance, *, venues_connected,
              maker_guard=None) -> Execution:
         if self.mode.risks_capital and self._quantity_stop:
@@ -164,6 +199,9 @@ class Coordinator:
         # this stays measured rather than argued.
         collateral_cap = top = moved = None
         book = hedge_book = None
+        #: L102: when each confirm read COMPLETED, so the recorded ladder can be aged against the
+        #: order that followed it. Keyed by the same stage name the read stamps.
+        read_at: dict[str, tuple[float, float]] = {}
         ex.stages["planned_contracts"] = plan.first.contracts
         if not plan.first.post_only and self.fresh_book is not None and self.mode.executes:
             def _read(leg, key):
@@ -173,6 +211,7 @@ class Coordinator:
                 except Exception:  # noqa: BLE001 -- a failed read is not a verdict
                     out = None
                 ex.stages[key] = round((self.mono() - m) * 1000.0, 2)
+                read_at[key] = (self.clock(), round(self.mono(), 6))
                 return out
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
@@ -185,8 +224,20 @@ class Coordinator:
         if book is not None:
             want = marginal_price(book, plan.first.contracts)
             top = book.asks[0].price if book.asks else None
+            # L102 (2026-09-14): record the LADDER the confirm returned, not only its summary. Of 141
+            # Polymarket taker BUYs, 118 zero-filled and exactly ONE partially filled -- losing a race
+            # yields crumbs, so all-or-nothing points at a book advertising levels the matching engine
+            # will not honour. Settling that needs what the confirm SAW set against what the order DID,
+            # and the order half is already complete in `orders` and `order_events`. Five levels is
+            # ~150 bytes; every JSON blob on `executions` totals under 4 MB across the table's life,
+            # against 29 GB in `stream_evaluations`, so this costs nothing measurable.
+            _utc, _mono = read_at.get("a_confirm_ms", (None, None))
             ex.protect["first_leg_confirm"] = {"limit": plan.first.limit_price, "marginal": want, "top": top,
-                                               "contracts": plan.first.contracts}
+                                               "contracts": plan.first.contracts,
+                                               "ladder": [[q.price, q.size] for q in book.asks[:5]],
+                                               "source": getattr(book, "source", None),
+                                               "fetched_utc": getattr(book, "fetched_utc", None),
+                                               "at_utc": _utc, "at_mono": _mono}
             if top is not None and 0 < top < plan.first.limit_price:
                 # L83: spend at most contracts x the venue's own ask, whatever the limit allows.
                 collateral_cap = round(float(plan.first.contracts) * float(top), 2)
@@ -302,6 +353,19 @@ class Coordinator:
                               execution_id=ex.execution_id)
         if collateral_cap is not None and not req_a.post_only and req_a.time_in_force in ("ioc", "fok"):
             req_a = replace(req_a, max_collateral_usd=collateral_cap)
+        if "first_leg_confirm" in ex.protect:
+            # L102 (2026-09-14): the confirm block above describes the size the plan STARTED with, but
+            # L95 can downsize and L96 can reprice between there and here, and neither rewrites it. On
+            # 5594b81b the row reads `marginal 0.61` against `limit 0.52` for 25 contracts while TEN
+            # were sent -- so it looks like the book was short when the order actually sent was the one
+            # L95 chose BECAUSE its marginal fitted. Any analysis filtering on `marginal <= limit`
+            # silently misclassifies every downsized order, and `max_collateral_usd` is stale the same
+            # way (persisted 12.75, sent 5.10). Keep what the confirm SAW and state what was SENT.
+            ex.protect["first_leg_confirm"]["sent"] = {
+                "price": req_a.price, "contracts": req_a.contracts,
+                "max_collateral_usd": collateral_cap,
+                "marginal_at_sent_size": (marginal_price(book, req_a.contracts)
+                                          if book is not None else None)}
         rest_deadline = None
         if req_a.post_only:
             rest_deadline = min(self.mono() + min(2.0, self.leg_a_settle_s),
@@ -324,9 +388,11 @@ class Coordinator:
         if ack.state is FillState.UNCONFIRMED:
             return self._fail(ex, X.UNKNOWN_PROVIDER_STATE, f"leg A unconfirmed: {ack.raw_status} {ack.detail}", release=False)
         if ack.state is FillState.REJECTED:
+            self._post_terminal_book(ex, plan.first, req_a.contracts, "rejected")
             return self._fail(ex, X.ORDER_REJECTED, f"leg A rejected: {ack.raw_status} {ack.detail}", release=True)
         if ack.state is FillState.UNFILLED:
             tif = "FAK" if plan.first.time_in_force == "ioc" else plan.first.time_in_force.upper()
+            self._post_terminal_book(ex, plan.first, req_a.contracts, "unfilled")
             return self._fail(ex, X.ORDER_UNFILLED, f"leg A unfilled ({tif}): no position", release=True)
         ex.first_filled, ex.first_avg_price = ack.filled_contracts, ack.avg_price
         self._check_overfill(ex, req_a, ack)
