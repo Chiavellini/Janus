@@ -1,0 +1,42 @@
+row: L104
+date: 2026-09-14
+kind: audit_trail_repair
+status_at_registration: PENDING
+observed_failure: >-
+  Every one of 3,373 protect kill latches wrote no audit flag. `grid.on_unprotected` raised
+  PROTECT_FAILED through `self.store`, the event loop's connection, opened check_same_thread=True
+  (grid.py:1575); but `on_unprotected` only ever runs in the worker thread, reached from
+  `protect.fail_unprotected` under `asyncio.to_thread` (grid.py:1023 and :1308). sqlite3 therefore
+  raised ProgrammingError on every call, into a blind `except Exception` that printed a type name
+  and dropped it. The kill itself is a FILE write and succeeded, so the box carried a latched
+  kill/live with no flag beside it and the watchdog's PROTECT_FAILED branch could not fire - for
+  six days, across every protect failure the lane had.
+  The suite asserted the opposite and was wrong about its own subject: the existing test
+  (test_grid_callbacks.py, "latches_the_live_kill_and_flags") calls `on_unprotected`
+  SYNCHRONOUSLY on the test's own thread, where `self.store` is legal. A monitor demonstrated
+  firing against a fake target is still untested if its PRODUCER never writes the row - the
+  GATE_TO_LIVE:29-32 discipline covers the watchdog's consumer and stopped at the lane's producer.
+immutable_success_criteria:
+  - The flag is written on the connection the calling thread owns. `worker_store` is
+    check_same_thread=False and therefore legal from either thread; it is preferred whenever it
+    exists, and no call site chooses.
+  - `raise_flag` appears in grids/live_stream/grid.py exactly once, inside `Supervisor.flag`. Four
+    call sites each chose a connection and one chose wrong; the choice is removed, not re-audited.
+  - A test drives `on_unprotected` through `asyncio.to_thread` against a production-shaped store
+    pair and asserts the flag lands. It must FAIL against the pre-fix connection - demonstrated,
+    not asserted (it fails with the exact ProgrammingError above).
+  - A failed flag write is recorded on the execution row (`<flag>_flag_error` in `protect_json`),
+    not only printed, so the next instance of this class leaves durable evidence.
+  - No change to when a kill latches, to any cap, hurdle, or protection behaviour. Audit trail only.
+expected_ev_effect: >-
+  none directly. It restores the alarm that tells the operator a position went unprotected, which
+  every other protection decision is monitored through. The 3,373 latches were real and visible in
+  the log; what was lost was the watchdog surface and the queryable record.
+watch_for:
+  - PROTECT_FAILED appearing in lane_flags after the next real protect failure. Zero occurrences
+    after a latch means the repair did not land.
+  - Any `<flag>_flag_error` key in protect_json - that is this class recurring on another path.
+prohibited:
+  - Widening `Supervisor.flag` into a general logging helper. It exists to remove one choice.
+  - Reading the pre-2026-09-14 absence of PROTECT_FAILED rows as evidence the lane never failed to
+    protect a position. It failed 3,373 times; the flag simply could not be written.

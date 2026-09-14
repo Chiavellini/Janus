@@ -868,11 +868,7 @@ class Supervisor:
                         # The operator's rule (GATE row 2026-09-07): a cap that refuses the SMALLEST
                         # size the lane prices is a defect, not a limit. Said, stored, alarmed.
                         print(f"  [risk] CAP_BINDS_SMALLEST {sup.short_name}: {early[0]} {early[1]} at q={ev.quantity:g}", flush=True)
-                        if self.store is not None:
-                            try:
-                                raise_flag(self.store, "CAP_BINDS_SMALLEST", f"{sup.short_name} {early[0]} {early[1]} q={ev.quantity:g}")
-                            except Exception as exc:  # noqa: BLE001 -- the flag must not break the loop
-                                print(f"  [risk] flag write failed: {type(exc).__name__}", flush=True)
+                        self.flag("CAP_BINDS_SMALLEST", f"{sup.short_name} {early[0]} {early[1]} q={ev.quantity:g}")
                 return
         if self.mode.sends_real_orders:
             # The round trips (balances, POSTs, settle polling: 0.2-10 s) leave the socket loop.
@@ -1033,11 +1029,7 @@ class Supervisor:
             tb = traceback.format_exc().strip().splitlines()
             print(f"  [exec FAILED] {sup.short_name} {brief_error(exc)}\n    " + "\n    ".join(tb[-4:]), flush=True)
             self.backoff[ev.game_id] = time.monotonic() + self.backoff_s
-            if self.store is not None:
-                try:
-                    raise_flag(self.store, "EXEC_CRASHED", f"{sup.short_name} q={ev.quantity:g} {brief_error(exc)}")
-                except Exception as exc2:  # noqa: BLE001
-                    print(f"  [risk] flag write failed: {type(exc2).__name__}", flush=True)
+            self.flag("EXEC_CRASHED", f"{sup.short_name} q={ev.quantity:g} {brief_error(exc)}")
         finally:
             self.in_flight = None
 
@@ -1178,6 +1170,30 @@ class Supervisor:
         except Exception:  # noqa: BLE001
             return None
 
+    def flag(self, name: str, detail: str, *, on=None) -> None:
+        """Raise a lane flag on the connection THIS thread owns -- the only way the grid flags.
+
+        `self.store` is the loop's connection (check_same_thread=True); `self.worker_store` is the
+        worker's. Callbacks that run in the worker (`on_unprotected`, and anything reached from
+        `asyncio.to_thread`) cannot use the former, and the failure is a swallowed ProgrammingError
+        that costs the alarm silently -- 3,373 of 3,373 protect latches wrote no flag that way.
+        Choosing per call site is what went wrong, so no call site chooses: `worker_store` works
+        from either thread, and is preferred whenever it exists.
+
+        `on` is an optional Execution whose `protect` dict records a failure, so a lost audit write
+        leaves a trace on the row as well as in the log.
+        """
+        store = self.worker_store if self.worker_store is not None else self.store
+        if store is None:
+            return
+        try:
+            raise_flag(store, name, detail)
+        except Exception as exc:  # noqa: BLE001 -- a flag must never break the caller
+            detail_map = getattr(on, "protect", None)
+            if isinstance(detail_map, dict):
+                detail_map[f"{name.lower()}_flag_error"] = brief_error(exc)
+            print(f"  [risk] flag write failed ({name}): {brief_error(exc)}", flush=True)
+
     def on_unprotected(self, ex, text: str) -> None:
         """A position the layer could neither hedge nor unwind inside the cap (2026-09-08): the
         operator's decision is fail closed. The live kill is latched (real orders stop; pricing
@@ -1199,11 +1215,13 @@ class Supervisor:
             prior = self.reprotect_fast.get(ex.execution_id)
             until = prior[1] if prior is not None else now_m + float(getattr(pr, "protect_fast_window_s", 60.0) or 0.0)
             self.reprotect_fast[ex.execution_id] = (now_m + retry, until)
-        try:
-            if self.store is not None:
-                raise_flag(self.store, "PROTECT_FAILED", f"{ex.execution_id[:8]} {ex.event_id} {text}")
-        except Exception as exc:  # noqa: BLE001
-            print(f"  [risk] flag write failed: {type(exc).__name__}", flush=True)
+        # The flag goes on the connection THIS thread owns.  `on_unprotected` only ever runs in the
+        # worker (`asyncio.to_thread`, _execute_off_loop / _protect_off_loop) and `self.store` is the
+        # loop's connection, opened check_same_thread=True -- so every write here raised
+        # ProgrammingError and was swallowed below.  3,373 of 3,373 protect latches between
+        # 2026-09-08 and 2026-09-14 wrote no flag at all: the watchdog's PROTECT_FAILED alarm could
+        # never fire beside the kill it belongs to.  `worker_store` is check_same_thread=False.
+        self.flag("PROTECT_FAILED", f"{ex.execution_id[:8]} {ex.event_id} {text}", on=ex)
         kill_it = bool(getattr(getattr(self.limits, "protect", None), "protect_kill_on_failure", True))
         if kill_it and self.kill is not None and self.mode.risks_capital:
             try:
@@ -1333,12 +1351,7 @@ class Supervisor:
         if ex.released and self.ledger is not None:
             self.ledger.release(ex.reservation_id, reason=f"nothing filled: {ex.state.value}")
         if ex.state.value == "UNKNOWN_PROVIDER_STATE" and self.mode.risks_capital:
-            if self.store is not None:
-                try:
-                    raise_flag(self.store, "UNKNOWN_PROVIDER_STATE",
-                               f"{ex.execution_id[:8]} {ex.event_id} {ex.detail[:180]}")
-                except Exception as exc:  # noqa: BLE001
-                    print(f"  [risk] flag write failed: {type(exc).__name__}", flush=True)
+            self.flag("UNKNOWN_PROVIDER_STATE", f"{ex.execution_id[:8]} {ex.event_id} {ex.detail[:180]}", on=ex)
             print("  [risk] kill/live latched: a submitted order has no authoritative outcome", flush=True)
         if ex.first_filled <= 0 and ex.state.value in ("ORDER_REJECTED", "UNKNOWN_PROVIDER_STATE"):
             self.backoff[ev.game_id] = time.monotonic() + self.backoff_s

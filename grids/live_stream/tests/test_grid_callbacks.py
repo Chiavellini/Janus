@@ -628,6 +628,57 @@ def test_an_unprotected_position_latches_the_live_kill_and_flags(tmp_path: Path,
     assert sup.kill.active(live=True) == []
 
 
+def test_the_grid_raises_every_flag_through_one_method():
+    """`raise_flag` must appear in grid.py exactly once: inside `Supervisor.flag`.
+
+    The 3,373-of-3,373 silent failure was not a typo, it was a CHOICE offered at every call site --
+    `self.store` (the loop's connection) or `self.worker_store` (the worker's) -- with the wrong
+    answer swallowed by a blind `except`. Four sites chose, one of them ran in the worker, and the
+    watchdog lost the alarm for six days. So no site chooses any more. This test is what stops a
+    fifth call site reintroducing the question.
+    """
+    src = (Path(__file__).resolve().parents[1] / "grid.py").read_text()
+    calls = [ln.strip() for ln in src.splitlines() if "raise_flag(" in ln and not ln.strip().startswith("#")]
+    assert calls == ["raise_flag(store, name, detail)"], calls
+    assert "def flag(self, name: str, detail: str" in src
+
+
+def test_an_unprotected_position_writes_its_flag_from_the_worker_thread(tmp_path: Path):
+    """The flag must be written on the connection the calling thread owns.
+
+    `on_unprotected` only ever runs in the worker (`asyncio.to_thread`, from `_execute_off_loop` and
+    `_protect_off_loop`), while `sup.store` is the loop's connection, opened check_same_thread=True.
+    Every write therefore raised ProgrammingError into a swallowing `except` -- 3,373 of 3,373 real
+    protect latches between 2026-09-08 and 2026-09-14 carried no flag, so the watchdog's
+    PROTECT_FAILED alarm could never fire beside the kill it belongs to. The test above drives
+    `on_unprotected` on its OWN thread, which is exactly why it passed throughout.
+    """
+    import asyncio
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.risk.flags import recent_flags
+    from nodes.risk.kill import KillSwitches
+    sup, _s = _supervisor(tmp_path)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    # As grid.py:1591 builds it for the worker.
+    sup.worker_store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False,
+                                  check_same_thread=False, isolation_level="IMMEDIATE")
+    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_kill_on_failure=True,
+                                                         protect_auto=False, protect_retry_s=0.0,
+                                                         protect_fast_window_s=0.0))
+    ex = SimpleNamespace(execution_id="fedcba9876543210", event_id="pm:atp:2", protect={})
+
+    async def main():
+        await asyncio.to_thread(sup.on_unprotected, ex,
+                                "UNPROTECTED: 3 unhedged; no hedge inside the loss cap")
+
+    asyncio.run(main())
+    assert recent_flags(tmp_path / "t.sqlite", "PROTECT_FAILED"), "the kill latched with no flag beside it"
+    assert "protect_flag_error" not in ex.protect, ex.protect
+    assert sup.kill.active(live=True) == ["live"]
+
+
 def test_the_guard_s_hand_over_re_runs_the_layer_from_the_row_when_protect_auto_is_on(tmp_path: Path, capsys):
     """R5 (2026-09-08): a naked execution the guard hands over is loaded from its row with its plan,
     cleared through clear_protect on the loop and protected in the worker; a released end state
