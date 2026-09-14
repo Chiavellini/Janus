@@ -114,6 +114,44 @@ been a reliable signal; both are deselected in verification and a task is queued
 - **Do not read the halt change as licence to price on stale books.** A 3 s loop lag still means 3 s
   old books; what changed is that the refusal ends when the condition does.
 
+## The finding that matters most, and it is new
+
+**The Polymarket taker fee is larger than the margin the lane books.** From the venues' own
+recorded fees on every real filled order:
+
+```
+polymarket   legA           0.828 c/contract     <- taker_only: True. A maker pays ZERO.
+kalshi       hedge/unwind   1.187 c/contract     <- charges makers; the hedge must cross anyway.
+median booked margin        0.670 c/contract
+```
+
+Across all 21 real settled executions we paid **$2.61 in Polymarket fees against $0.98 of actual
+arbitrage profit** — the fee is **2.7x the edge**. Strip the one directional accident (`789ad9b2`,
++$4.25 naked) and the same 20 covers are **+$0.09 as taker, +$2.58 with the fee removed**.
+
+There is already one on-venue data point. `13feaaad` (TEX @ SEA) is the single post-only order that
+ever filled and its Polymarket fee was **zero**: `10 x (0.69 + 0.22) + $0.1202 = $9.2202` against a
+$10 payout is `+$0.7798`, **exactly the settled cash**. As a taker that leg pays $0.10695.
+
+**L115** now records the counterfactual on every priced cover (`margin_c_maker` in
+`ops/slippage_report.py`). Recording only — F20 stands, no GATE row, nothing changed about what the
+lane does.
+
+**The other half is not measured yet, and it decides the question.** A resting maker order fills
+when the market comes *to* it, which is disproportionately when the hedge has moved *away* — the
+same adverse selection L85 removed by confirming the hedge book microseconds before sending. So:
+0.828c saved against Xc paid, and X is unknown. It is measurable **offline from frames already on
+disk** (`nodes/capture` + `nodes/replay`): for each moment a cover was actionable, replay forward
+and price the hedge at +5s, +10s, +20s. **That is the next piece of work**, and it needs no
+deployment.
+
+Also closed: **L88's owed outcome**, unread for two days. `BLOCKED_MATCH` is 64% of evaluations and
+splits **1,029,973 `single_venue` (99.97%)** against **302 refused by the 0.70 floor (0.03%)** — and
+all 302 are one La Liga fixture claiming 37-38% returns, the phantom class the floor exists for. Not
+one genuine cover refused. `single_venue` means the cheapest cover *of any shape* cost at least a
+dollar; with `NO_EDGE` that is 82.6% of rows correctly saying there was nothing there. **It is a
+naming problem, not lost money** — stop investigating it.
+
 ## On $100/day, since it was asked
 
 **Nothing this session moved the economics**, and that is the honest headline. The arbitrage
