@@ -67,6 +67,10 @@ def covers(con, *, since_ts: float):
             planned_first = float(p["first"]["vwap"])
             hold = float(p["fee"]) + float(p["settlement_buffer"])
             max_cost = float(p["max_cost"])
+            # L115: the same cover with leg A as a Polymarket maker. Absent on rows planned before
+            # it shipped, which is why it is optional rather than part of the tuple above.
+            shadow = p.get("shadow_maker_fee")
+            maker_hold = (float(shadow) + float(p["settlement_buffer"])) if shadow is not None else None
         except (ValueError, KeyError, TypeError):
             continue
         planned_all = planned_first + planned_hedge + hold
@@ -76,6 +80,12 @@ def covers(con, *, since_ts: float):
             "quantity": float(qty or 0.0),
             # The cover's own cushion at entry, in cents: what it could afford to lose and still clear.
             "margin_c": round((max_cost - planned_all) * 100.0, 2),
+            # The same cushion had leg A rested as a maker. Polymarket's pinned schedule says
+            # `taker_only: True`, so the difference is the whole Polymarket entry fee -- measured at
+            # 0.828 c/contract against a median booked margin of 0.67c. A COST counterfactual: it
+            # says what the cover would have cost IF a maker order filled, never what P(fill) is.
+            "margin_c_maker": (None if maker_hold is None else
+                               round((max_cost - (planned_first + planned_hedge + maker_hold)) * 100.0, 2)),
             "slippage_c": round((float(hedge) - planned_hedge) * 100.0, 2),
             "planned_return": round((1.0 - planned_all) / planned_all, 6) if planned_all > 0 else None,
             "actual_return": round((1.0 - actual_all) / actual_all, 6) if actual_all > 0 else None,
@@ -97,6 +107,12 @@ def report(db: Path, *, hours: float = 168.0, min_samples: int = 20) -> dict:
             "pnl_usd": round(sum(r["pnl_usd"] for r in rs), 4),
             "lost_money": sum(1 for r in rs if r["pnl_usd"] < 0),
             "margin_c_p50": round(statistics.median([r["margin_c"] for r in rs]), 2),
+            # L115: the same median with leg A as a maker. Read it beside the slippage median: a
+            # cover is a coin flip when margin < slippage, and this is how much of that gap the
+            # Polymarket entry fee accounts for.
+            "margin_c_maker_p50": (round(statistics.median(mk), 2)
+                                   if (mk := [r["margin_c_maker"] for r in rs
+                                              if r["margin_c_maker"] is not None]) else None),
             # A reserve is only proposed once the league has enough covers to mean anything.
             "reserve_c": (round(statistics.median(slips), 2) if len(rs) >= min_samples else None),
             "measured": len(rs) >= min_samples,
@@ -130,11 +146,12 @@ def main() -> int:
     print(f"pooled P&L: {p['pnl_usd']:+.2f} USD across {p['n']} covers; {p['lost_money']} lost money")
     print()
     print(f"{'league':<8}{'n':>4}{'slip p50':>10}{'slip max':>10}{'adverse':>9}"
-          f"{'margin p50':>12}{'P&L':>10}{'reserve':>13}")
+          f"{'margin p50':>12}{'margin maker':>14}{'P&L':>10}{'reserve':>13}")
     for lg, s in r["by_league"].items():
         reserve = f"{s['reserve_c']:.2f}c" if s["measured"] else "unmodelled"
         print(f"{lg:<8}{s['n']:>4}{s['p50']:>10}{s['max']:>10}"
               f"{str(s['adverse']) + '/' + str(s['n']):>9}{s['margin_c_p50']:>12}"
+              f"{(s.get('margin_c_maker_p50') if s.get('margin_c_maker_p50') is not None else '-'):>14}"
               f"{s['pnl_usd']:>10.2f}{reserve:>13}")
     thin = [lg for lg, s in r["by_league"].items() if not s["measured"]]
     if thin:

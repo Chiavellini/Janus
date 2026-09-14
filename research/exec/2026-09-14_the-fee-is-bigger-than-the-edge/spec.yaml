@@ -1,0 +1,61 @@
+row: L115
+date: 2026-09-14
+kind: measurement_instrumentation
+status_at_registration: PENDING
+operator_instruction: >-
+  "continue working on making us closer to the 100 usd per day; im not sure how, but you do."
+  Asked how to handle the fact that this contradicts F20's signed "switch back to taker", the
+  operator chose to MEASURE FIRST and decide later: recording only, no order change, no GATE row.
+observed_failure: >-
+  The Polymarket taker fee on leg A is LARGER than the margin the lane books. Measured from the
+  venues' own recorded fees on every real filled order: polymarket legA 0.828 c/contract,
+  kalshi hedge/unwind 1.187 c/contract, against a median booked margin of 0.67 c/contract. The
+  Polymarket half is avoidable and the Kalshi half is not - Polymarket's pinned schedule on a live
+  event reads `taker_only: True` (a maker pays zero), while Kalshi's reads
+  `quadratic_with_maker_fees` and the hedge must cross to be certain.
+  Across all 21 real settled executions we paid $2.61 in Polymarket fees against $0.98 of actual
+  arbitrage profit - the fee is 2.7x the edge. Stripping the one directional accident (789ad9b2,
+  +$4.25 on ten contracts left naked), the same 20 covers are +$0.09 as taker and +$2.58 with the
+  Polymarket fee removed.
+  There is one on-venue data point already. Execution 13feaaad (TEX @ SEA, 10 contracts) is the one
+  post-only order that ever filled, and its Polymarket fee was zero: gross 10 x (0.69 + 0.22) =
+  $9.1000 plus $0.1202 Kalshi = $9.2202 against a $10 payout is +$0.7798, exactly the settled cash.
+  The same leg crossing at the live-verified rate 0.05 pays $0.10695.
+  And none of this is currently measurable in the lane, because every Fill producer hardcodes
+  liquidity="taker" and `maker_plan_from_cover` delegates to `plan_from_cover` without recomputing
+  the fee - a fact a test currently asserts as a contract
+  (test_maker_entry.py: `assert plan.fee_per_contract == historical.fee_per_contract`).
+immutable_success_criteria:
+  - Recording only. The shadow is computed beside the real fee and read by nothing that prices,
+    sizes, gates or routes. Replay parity digests unmoved - it is written into `plan_json`, which
+    `nodes/replay/replay.py`'s parity column list does not compare.
+  - Kalshi is NOT shadowed. Its schedule charges makers, and the hedge crossing is what makes the
+    cover certain; pretending otherwise would flatter the counterfactual.
+  - The asymmetry is pinned by a test: `entry_cost` reads `liquidity` from the FILL while
+    `screening_coeff` reads it from `params`, so a shadow built by passing
+    `params_for(venue, {"liquidity": "maker"})` over taker Fills silently returns the TAKER number -
+    wrong in the direction that flatters the maker case.
+  - The fee model is checked against cash the venue actually charged, not only against itself:
+    10.763158 shares at 0.38 must reproduce the recorded $0.12679 to the cent.
+  - Reported as a COST counterfactual and never as EV. L63 withholds realized-EV comparisons until
+    an immutable 200-attempt cohort with at least ten full-N maker fills, and forbids inferring
+    fill probability from historical rows. The honest statement is "maker entry needs P(fill) above
+    X to beat taker"; today's evidence is one fill in seventeen attempts.
+expected_ev_effect: >-
+  none directly - nothing changes what the lane does. It accumulates, from live covers, the number
+  that decides whether the maker path is worth a GATE row at all.
+watch_for:
+  - `margin_c_maker_p50` against `margin_c_p50` and the slippage median in ops/slippage_report.py.
+    A cover is a coin flip when margin < slippage; this says how much of that gap the Polymarket
+    entry fee accounts for.
+  - Whether the gap is stable across leagues and prices. The fee is quadratic in price
+    (rate * p * (1-p)), so it is largest at even money and near zero on heavy favourites - the
+    counterfactual should therefore help mid-priced covers most.
+prohibited:
+  - Reading the shadow as evidence the maker path is profitable. It is a cost counterfactual on
+    fills that DID happen as takers; a resting order fills when the market comes to it, which is
+    disproportionately when the hedge has moved away. That adverse-selection cost is the separate
+    measurement, and until it exists this number is half the answer.
+  - Re-enabling the maker path off this row. That needs F20 closed on its own "policy change"
+    condition, a new dated GATE row with the operator's verbatim statement, a new F-row registered
+    before implementation, and a re-signed override.

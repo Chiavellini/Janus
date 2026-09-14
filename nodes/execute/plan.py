@@ -88,6 +88,11 @@ class Plan:
     #: Live-only audit of the cap-aware quantity decision. Historical/paper callers leave this
     #: empty; it never changes cover economics or grants risk authority.
     sizing: Mapping | None = None
+    #: L115: `fee_per_contract` with leg A priced as a Polymarket maker, carried from the cover.
+    #: Recording only; nothing prices, sizes or gates on it. It is a COST counterfactual, and
+    #: deliberately not an EV one -- it says what the cover would have cost IF a maker order filled,
+    #: and nothing about whether one would have (L63 withholds that until its 200-attempt cohort).
+    maker_fee_per_contract: float | None = None
 
     @classmethod
     def from_dict(cls, d: Mapping, *, opportunity_id: str, event_id: str, league: str, quantity: float,
@@ -390,4 +395,5 @@ def plan_from_cover(*, opportunity_id: str, event_id: str, league: str, cov: Cov
         fee = padded_fee
     return Plan(opportunity_id, event_id, league, cov.contracts, first, hedge,
                 max_cost_per_contract=max_cost, fee_per_contract=fee,
-                settlement_buffer_per_contract=settlement)
+                settlement_buffer_per_contract=settlement,
+                maker_fee_per_contract=cov.maker_fee_per_contract)

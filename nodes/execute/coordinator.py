@@ -96,6 +96,7 @@ class Coordinator:
         self.executions[ex.execution_id] = ex
         self._timed(ex, self.records.start, ex, plan={"first": plan.first.__dict__, "hedge": plan.hedge.__dict__,
                                                       "max_cost": plan.max_cost_per_contract, "fee": plan.fee_per_contract,
+                                              "shadow_maker_fee": plan.maker_fee_per_contract,
                                                       "settlement_buffer": plan.settlement_buffer_per_contract,
                                                       "quote_expires_utc": plan.quote_expires_utc,
                                                       "sizing": dict(plan.sizing or {})},

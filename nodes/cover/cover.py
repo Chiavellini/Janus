@@ -115,6 +115,11 @@ class Cover:
     single_venue: bool = False
     #: The settlement-risk reserve per contract (nodes/settle_wedge), already inside `cost`.
     settlement_buffer_per_contract: float | None = None
+    #: L115: what `fee_per_contract` would have been with leg A resting as a Polymarket maker.
+    #: Recording only -- nothing reads it to decide anything. It is a COST counterfactual, never an
+    #: EV one: it says what a maker cover would have cost IF it filled, and says nothing about
+    #: P(fill), which L63 forbids inferring from historical rows without its 200-attempt cohort.
+    maker_fee_per_contract: float | None = None
 
     @property
     def edge_per_contract(self) -> float | None:
@@ -177,7 +182,7 @@ def price_leg(leg: Leg, contracts: float, *, order_seq: int = 0) -> LegCost:
     return LegCost(leg.venue, leg.outcome_id, contracts, gross, fee, fill.price, filled)
 
 
-def _cover_fees(legs: Sequence[Leg], fills_per_leg: Sequence[Sequence[Fill]]) -> tuple[float, float, str]:
+def _cover_fees(legs: Sequence[Leg], fills_per_leg: Sequence[Sequence[Fill]]) -> tuple[float, float, str, float]:
     """(entry fees, WORST-CASE settlement fees, the state that produces the worst case).
 
     WHY WORST CASE, NOT EXPECTED. Commission on net winnings is charged only where you finish
@@ -196,6 +201,20 @@ def _cover_fees(legs: Sequence[Leg], fills_per_leg: Sequence[Sequence[Fill]]) ->
 
     entry = sum(model_for(v).entry_cost(fs, params_for(v, _ov(legs, v)))
                 for v, fs in by_venue.items())
+    # L115 (2026-09-14): the same entry fee with the Polymarket leg priced as a MAKER, recorded
+    # beside the real number and gating nothing. Polymarket's own pinned schedule says
+    # `taker_only: True`, so a maker pays exactly zero there -- and the measured taker fee, 0.828
+    # c/contract on leg A, is LARGER than the median booked margin of 0.67c. That single comparison
+    # is the whole P&L: the lane books an edge smaller than the fee it pays to open the position.
+    # Kalshi is deliberately untouched: its schedule is `quadratic_with_maker_fees` and the hedge
+    # must cross to be certain, so its fee is not avoidable.
+    # NOTE the asymmetry that makes this easy to get wrong: `entry_cost` reads `liquidity` from the
+    # FILL, while `screening_coeff` reads it from `params`. Setting only the params silently returns
+    # the taker number. `nodes/analysis/execution_styles.fee_for` is the one place that sets both.
+    maker_entry = sum(
+        model_for(v).entry_cost([replace(f, liquidity="maker") for f in fs] if v == "polymarket" else fs,
+                                params_for(v, _ov(legs, v)))
+        for v, fs in by_venue.items())
 
     worst, worst_state = 0.0, ""
     # Exactly one PROVEN OUTCOME settles; a leg wins when its covered set holds it. Iterating
@@ -208,7 +227,7 @@ def _cover_fees(legs: Sequence[Leg], fills_per_leg: Sequence[Sequence[Fill]]) ->
                 for v, fs in by_venue.items())
         if s > worst:
             worst, worst_state = s, state
-    return entry, worst, worst_state
+    return entry, worst, worst_state, maker_entry
 
 
 def _ov(legs: Sequence[Leg], venue: str) -> Mapping[str, object]:
@@ -291,7 +310,7 @@ def price_combination(legs: Sequence[Leg], contracts: float, *, now_utc: float,
 
     fills_per_leg = [fs for fs, _, _ in made]
     gross = sum(g for _, g, _ in made)
-    entry, settle, state = _cover_fees(legs, fills_per_leg)
+    entry, settle, state, maker_entry = _cover_fees(legs, fills_per_leg)
     fee = entry + settle
     # The settlement-risk reserve: probability x worst-case loss on each bounded dimension,
     # charged at the fill prices. A cover is only a cover net of it.
@@ -301,7 +320,8 @@ def price_combination(legs: Sequence[Leg], contracts: float, *, now_utc: float,
     return Cover((gross + fee) / contracts + buf, contracts, costs, True, None, max_age,
                  gross / contracts, fee / contracts, worst_settlement_state=state,
                  single_venue=len({l.venue for l in legs}) == 1,
-                 settlement_buffer_per_contract=buf)
+                 settlement_buffer_per_contract=buf,
+                 maker_fee_per_contract=(maker_entry + settle) / contracts)
 
 
 def best_cover(offers: Mapping[str, Sequence[Leg]], contracts: float, *, now_utc: float,
