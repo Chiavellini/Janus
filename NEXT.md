@@ -4,91 +4,107 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-14 ~22:00Z, on `claude/hedge-safety-and-speed` (pushed; branched from
-`claude/hedge-ladder-speed-3b5042c`).
+Updated 2026-09-14 after the L116 confirmation and the 2026-09-14 orphan-fill investigation, on
+`claude/hedge-safety-and-speed`.
 
-**This hand-off deliberately does not choose what to do next.** The operator asked that the next
-agent make its own calls. What follows is state, evidence, and the open questions — not a plan.
+## Current state
 
-## Where it stands
+`5053154` is deployed on the Mexico box. The lane is active in `LIMITED_LIVE`, but `kill/live`
+exists and entry is stopped. **Do not clear it.** Seven historical overfill acknowledgements still
+validate, but a new, unrelated account incident now blocks relaunch.
 
-`5053154` deployed; lane active. **`kill/live` is still latched and nothing is trading.** The
-overfill acknowledgement is done: all **7** candidates carry a fresh row (ids 6–12), every one of
-the 20 flag ids is bound as evidence inside them, and `match_overfill_ack` answers for all seven —
-verified read-only as *"would still latch on: NOTHING"*. So a restart no longer re-latches on the
-historical overfills, and clearing the kill is now a live decision rather than a blocked one.
+The branch contains the already-pushed L104–L116 work plus a local L117 candidate. L117 makes kill
+files first-writer-wins so a later alarm cannot erase the reason trading first stopped. It changes
+no kill condition, cap, hurdle, size, allowance, protection decision, or order path. Focused tests
+are 37/37, the full suite is 1,568/1,568 on this run, and replay parity remains
+`13e4fb08a76c920f` / `4f53cda18c2baa0c` over 1,093 rows.
 
-Suite green at 1,565 (two known-flaky `ops/box` FIFO tests deselected; they fail ~65% in isolation
-and are pre-existing — a task is queued).
+## The account incident — operator attribution required
 
-## The economics, as measured
+At 2026-09-14 18:06:29Z the authenticated Polymarket account bought **666.666667 Yes shares at
+$0.15** on *“Will there be no change in Fed interest rates after the September 2026 meeting?”*
+Order `0x32813cbb23731ca96e8830adb5118adb16367d4c0beecf2554040dec4eb3afa3`, trade
+`99f8e62b-0684-446f-baa7-08bb785c3d30`, authoritative cash **$104.25**. The guard flagged it as
+`ORPHAN_FILL` 30 seconds later.
 
-Three numbers now exist that did not this morning, all from the box's own data:
+This is real quantity, not a decimal/display bug: `666.667` is only `:g` formatting. It is a taker
+trade, on a non-sports token, with no matching `orders`, `order_events`, `pm_bounded_taker_orders`,
+or post-only row. Current Janus code cannot create it: the live universe is sports and the only BUY
+signer is hard-limited to 25 requested contracts / $30 collateral. The fill does share the account
+and CLOB API-owner UUID used by Janus. The honest attribution is therefore **manual/shared-account,
+another client using the account, or compromised credentials**; the database cannot choose among
+those without the operator.
 
-- **The Polymarket entry fee on leg A is 0.828 c/contract** and a maker pays **zero** there
-  (`taker_only: True`, from the venue's own pinned schedule). Kalshi's hedge fee, 1.187c, is not
-  avoidable. Median booked margin is **0.67c** — smaller than the avoidable fee.
-- **Execution latency is priced at roughly 0.25 c/contract per second** (L116). Hedge-book drift by
-  elapsed time: 0.5 s → 0.18c, 1.0 s → 0.28c, 2.5 s → 0.78c, 5 s → 1.30c, 20 s → 3.36c. The drift
-  over today's 2,480 ms path (0.78c) **exceeds the entire booked margin**.
-- **A maker's rest is incremental to that drift**: +0.53c at a ~2.5 s rest against 0.828c saved
-  (net +0.30c), +1.19c at ~5 s (net −0.36c), +2.59c at ~17.5 s. Of 17 post-only orders ever sent,
-  the only one that filled rested 20.46 s.
+The public positions feed still showed all 666.6666 shares open, marked at $76.67 (about −$23.33
+against the ~$100 token value before the separately recorded $4.25 cash residual/fee), end date
+2026-09-16. Janus did not hedge, sell, or otherwise alter it. It is outside the sports execution P&L
+breaker.
 
-Caveat carried in the row: L116 measures **book drift**, a lower bound. Realised `hedge_slippage_c`
-also contains the chase up the ladder (median 3.0c against 0.78c of pure drift); post-L85 realised
-p50 of 0.50c is the consistency check. One ITF-dominated day (2026-09-11, 674 prints, 16.7 M
-frames). **The 2026-09-13 confirmation run is owed** — the harness is
-`research/exec/2026-09-14_cost-of-waiting/measure.py`, it runs detached on the box in ~10 min for a
-small day, and it is unrun for 09-13 only because I stopped it to answer a question.
+One further finding changes the interpretation of the “harmless” legacy alarm in the prior
+handoff. `KillSwitches.latch()` unconditionally rewrote an existing file. Repeated
+`LEGACY_INCIDENT_ACK_INVALID flag=211` latches replaced the orphan reason and timestamp in
+`kill/live`; at inspection the file named the legacy alarm at 21:24:32Z although it was born the
+previous day. `lane_flags` preserved the orphan, but the operator-facing first cause did not. L117
+repairs that provenance loss with atomic exclusive creation. It deliberately does not suppress the
+137/day legacy rows, which remain a separate cleanup.
 
-## What landed today
+## Economics — what survives confirmation
 
-L104 the protect flag that never wrote (3,373 of 3,373) · L105 the unbounded hedge submits (497
-orders for 4,970 contracts, reproduced) · L106 the 10-contract ladder · L107 the first path
-decomposition · **L108 correcting it**, plus the instruments that made it wrong · L109 the duplicated
-orderbook read · L110 settlement holding the write lock on the loop · L111 loop lag wearing the
-venues' name · L112 account-channel counters · L113 the refusal funnel · L114 one-cover-per-event ·
-L115 the maker cost counterfactual · L116 the cost of waiting. Plus L88's owed verdict.
+- Polymarket taker entry cost remains measured at 0.828c/contract; Kalshi hedge fee at
+  1.187c/contract; median booked margin 0.67c. The fee problem is real.
+- L116's 2026-09-11 result does **not** generalize as a pooled cents-per-second slope. That day,
+  mean drift was 0.28c at 1.0 s and 0.78c at 2.5 s, implying +0.50c from speeding up.
+- The owed 2026-09-13 confirmation read 2,797 actionable moments, 30,671 samples and 100,232,969
+  frames with zero parse errors/corrupt files. Mean drift was **0.29c at 1.0 s and 0.19c at 2.5 s**:
+  2.5→1.0 s was **−0.11c**, not +0.50c. By 20 s the pooled mean was −0.84c.
+- The adverse tail still worsened with time on 09-13: p90 was 3c at 1 s, 5c at 2.5 s and 6c at
+  20 s. Speed can improve tail risk even when the pooled mean does not.
+- The sign is league-dependent. ATP/ELC/EPL got dearer between 1.0 and 2.5 s; La Liga/MLS/NFL/MLB
+  did not. **Do not use “0.25c per second” for a blanket hurdle or $100/day forecast.** Measure EV
+  per league and keep the Sharpe/tail benefit separate.
+- Negative unconditional drift at long windows is not maker EV. A maker fills selectively when the
+  market comes to it; L63's prospective cohort remains the authority. Nothing here re-enables maker.
 
-## Open questions, not answered here
+The confirmation took about 35 minutes over 3.5 GB / 100.2 M frames on the one-vCPU box at
+`nice -n 19`; the old “~10 minutes” estimate was false.
 
-- **Whether to clear the kill.** Nothing collects until it is cleared: L102's fill verdict, L112's
-  stream counts, L113's refusal funnel, L114's extra covers per event all begin then.
-- **Whether speed or the maker path is the better next investment.** L116 says they are substitutes
-  and that speed gets relatively better as the taker gets faster; it does not say how much more
-  speed is available. The remaining named targets are the ~366 ms coordinator tail, the ~306 ms
-  protect preamble, and leg A's settle polling.
-- **Whether the entry hurdle should move.** It admits covers at 0.5c against an all-in cost that
-  L116 now prices. The slippage report's standing instruction is *not* to raise a blanket hurdle
-  before per-league measurement exists; whether L116 changes that is a judgement.
-- **Whether to widen the universe at all yet.** CFB is the largest competition in the census and is
-  quarantined on evidence; fl1/por/scop/bel1 sit at `$0.00` caps that would refuse everything if
-  enabled; spreads/totals need a market-identity axis the kernel does not have.
+## What to do next
 
-## Two things found late and not investigated
+1. **Operator answer:** did the operator intentionally place the Fed-rate order above? If yes, a
+   source-bound external-fill disposition can be prepared. If no, rotate/revoke the Polymarket
+   trading credentials and investigate every client using the wallet before any kill clear.
+2. Release L117 only through the operator's ordinary `ops/box/release.sh <sha>` paste. A release is
+   required because `nodes/risk/kill.py` is in the executable-tree hash. The current genuine kill
+   remains; never use the false-maker auto-clear path as a disposition for this fill.
+3. After account attribution and a clean guard, decide whether to resume the 10-contract measurement
+   run. Only real orders make L112 (account-stream kinds), L113 (post-kill refusal funnel), and L114
+   (covers per event) answer their registered questions.
+4. Treat latency as per-league/tail work. The remaining 366 ms and 306 ms segments are mostly durable
+   pre-wire database work, not proven idle time. Instrument SQLite lock wait/serialization before
+   scoping a rewrite. Racing the user stream against REST is plausibly ~350 ms, but L112 explicitly
+   requires a real-order day before changing that path.
+5. Clean up `LEGACY_INCIDENT_ACK_INVALID flag=211` only under a separate row. It is noisy but no
+   longer able to overwrite a first latch after L117.
 
-- **`ORPHAN_FILL`, 2026-09-14 18:06:59Z: `polymarket 5615282760875985 buy_yes 666.667 @ 0.15`,
-  order `0x32813cbb23`** — a venue fill that no order row explains, about **$100** and **26× the
-  25-contract cap**, while the kill was latched. Two earlier orphans on 09-09 were 5.13 contracts.
-  This one is a different magnitude and I did not chase it.
-- **`POST_ONLY_PERSISTENCE_FAILED` fires 126 times in 24 h and all 126 are the same thing**:
-  `LEGACY_INCIDENT_ACK_INVALID flag=211`, a legacy acknowledgement of an old
-  `database is locked` that can no longer validate. Harmless in itself, but it is 126 rows/day of
-  noise in the table the watchdog reads.
+## Session delta and source of truth
 
-## Things that will mislead you if you do not know them
+Created: L116's `results_20260913.json` and `confirmation_20260913.md`; L117's immutable
+`spec.yaml` and `verdict.md`. Changed: `nodes/risk/kill.py`, its focused risk tests,
+`snooping_ledger.md` by append-only rows/notes, and this handoff. Intentionally untouched:
+`GATE_TO_LIVE.md`, all caps/hurdles/limits, the maker/taker policy, box modes/overrides, the current
+kill file, the open Polymarket position, and all user changes in the main checkout.
 
-- **The instruments lie at the read site.** `stages_json` `*_ms` are cumulative from `_t0` (difference
-  them per row, never as medians); `socket_health.frames` is cumulative (take deltas, a decrease is a
-  reconnect); `protect_existing` re-bases `_t0`, so exclude `guard_rerun` rows from any segment maths.
-  `ops/latency_report.py` now prints a per-row SEGMENTS table first and takes `--since`.
-- **The replay parity digest in the 2026-09-12 verdict (`9f41923b8cf055a1`) is stale** — it predates
-  L95–L103. The `e297f7d` baseline is `738ef6b0fee1d25e` / 2,271 rows; this branch is
-  `13e4fb08a76c920f` / 1,093 rows, moved by L106's ladder alone.
-- **`BLOCKED_MATCH` is 64% of evaluations and is not lost surface.** 99.97% is the `single_venue`
-  branch, meaning the cheapest cover of any shape cost at least a dollar. With `NO_EDGE` that is
-  82.6% of rows correctly saying there was nothing there. It is a naming problem.
-- **The local archive DB (`data/tuples/tuples.sqlite`) is corrupt beyond reading** — even
-  `sqlite_master`. The box is unaffected and the replay harness uses a separate slate snapshot.
-- **Frames age out at 7 days.** 2026-09-07 is rolling off now.
+Sources of truth were `AGENTS.md`, `README.md`, `GATE_TO_LIVE.md`, L104–L117 and their immutable
+specs, the box's read-only `venue_fills`/`pm_cash_sources`/`orders`/`lane_flags` rows, the public
+Polymarket position feed, replay parity, and the test suite. The official Polymarket CLOB schema
+confirms that `owner` is the API-key-owner UUID; it does not identify which human or client sent an
+order sharing that owner.
+
+## Instrument traps that still apply
+
+- `stages_json` `*_ms` are cumulative from `_t0`; difference them per row. Exclude `guard_rerun`
+  rows because `protect_existing` re-bases `_t0`.
+- `socket_health.frames` is cumulative; take deltas and treat decreases as reconnects.
+- `BLOCKED_MATCH` is mostly the `single_venue` branch, not lost paired surface.
+- The local archive DB is corrupt; replay uses the separate slate snapshot.
+- Frames age out at seven days.

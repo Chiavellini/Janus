@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -74,6 +76,49 @@ def test_every_scope_is_a_file_and_nothing_else(kill):
         ["all", "event-e", "strategy-v1", "venue-polymarket"]
     assert "live" in kill.active(live=True)
     assert kill.any_present() == ["all", "event-e", "live", "strategy-v1", "venue-polymarket"]
+
+
+def test_latch_is_first_writer_wins_and_preserves_existing_bytes_and_mtime(kill):
+    p = kill.root / "live"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_bytes(b"operator stop\n")
+    before = p.stat()
+    os.utime(p, ns=(before.st_atime_ns, 1_234_567_890_000_000_000))
+    before = p.stat()
+
+    assert kill.latch("live", "later alarm") == p
+    after = p.stat()
+    assert p.read_bytes() == b"operator stop\n"
+    assert after.st_mtime_ns == before.st_mtime_ns
+
+
+def test_latch_preserves_an_existing_empty_operator_file(kill):
+    p = kill.root / "live"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.touch()
+    before = p.stat()
+
+    assert kill.latch("live", "later alarm") == p
+    after = p.stat()
+    assert p.read_bytes() == b""
+    assert after.st_mtime_ns == before.st_mtime_ns
+
+
+def test_latch_exclusive_creation_has_one_complete_first_reason(tmp_path):
+    root = tmp_path / "kill"
+
+    def attempt(i):
+        return KillSwitches(root, enforce_volume=False).latch("live", f"reason-{i}")
+
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        paths = list(pool.map(attempt, range(64)))
+
+    p = root / "live"
+    assert paths and all(path == p for path in paths)
+    record = json.loads(p.read_text())
+    assert set(record) == {"reason", "latched_utc"}
+    assert record["reason"].startswith("reason-")
+    assert isinstance(record["latched_utc"], float)
 
 
 # ── breaker ──────────────────────────────────────────────────────────────────
@@ -526,4 +571,3 @@ def test_a_hedged_reservation_frees_the_event_but_keeps_the_capital(tmp_path):
     reloaded = ExposureLedger(store=TupleStore(tmp_path / "t.sqlite", enforce_volume=False))
     assert reloaded.event_usd("espn:mlb:1") == 20.0
     assert reloaded.open[first.reservation_id].hedged_utc is not None
-

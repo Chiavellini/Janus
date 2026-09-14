@@ -54,8 +54,17 @@ class KillSwitches:
         return sorted(p.name for p in self.root.iterdir() if p.is_file())
 
     def latch(self, name: str, reason: str) -> Path:
-        """Write a switch with its reason. Used by the breaker for `live`; a human may use it too."""
+        """Create a switch with its reason, preserving the first latch provenance.
+
+        ``x`` mode maps to an exclusive ``O_CREAT | O_EXCL`` open.  The existence of the
+        file is the enforcement input, so a later alarm must not rewrite either an
+        operator-created empty switch or the first alarm's evidence.
+        """
         self.root.mkdir(parents=True, exist_ok=True)
         p = self.root / name
-        p.write_text(json.dumps({"reason": reason, "latched_utc": time.time()}) + "\n")
+        try:
+            with p.open("x") as f:
+                f.write(json.dumps({"reason": reason, "latched_utc": time.time()}) + "\n")
+        except FileExistsError:
+            pass
         return p

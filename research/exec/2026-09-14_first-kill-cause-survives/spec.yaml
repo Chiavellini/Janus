@@ -1,0 +1,36 @@
+row: L117
+date: 2026-09-14
+kind: audit_trail_repair
+status_at_registration: PENDING
+observed_failure: >-
+  `KillSwitches.latch()` rewrites an already-present kill file on every later latch. The current
+  box proves the consequence: ORPHAN_FILL detected a confirmed, unexplained $104.25 Polymarket
+  taker purchase at 18:06:29Z while `kill/live` was already present, but the file now names
+  `LEGACY_INCIDENT_ACK_INVALID flag=211` with a 21:24:32Z timestamp because the 137/day legacy
+  persistence-noise path latched again. The durable lane_flags table retains the orphan, but the
+  operator-facing latch has lost the first cause and now falsely looks newly created. NEXT.md
+  called that repeated legacy alarm harmless; overwriting a material incident's latch provenance
+  is not harmless.
+immutable_success_criteria:
+  - Latching is first-writer-wins. If the named kill file already exists, its exact bytes and
+    mtime are unchanged; this includes an intentionally empty file created by the operator.
+  - The create is atomic against concurrent latch attempts. It must use exclusive creation rather
+    than an exists-then-write check whose race can still replace or interleave provenance.
+  - A first latch still creates the directory and writes the same JSON reason and `latched_utc`
+    shape with the same file permissions inherited from the process umask.
+  - Every caller still receives the kill path and file existence remains the only enforcement
+    input. No kill condition, cap, hurdle, size, protection allowance, or order behavior changes.
+  - Replay parity digests remain `13e4fb08a76c920f` / `4f53cda18c2baa0c`.
+expected_ev_effect: >-
+  none directly. This preserves the operator's evidence for why trading first stopped, so a noisy
+  later alarm cannot conceal the material incident that must be resolved before relaunch.
+watch_for:
+  - A kill file whose mtime advances while it remains continuously present. That would mean a
+    writer bypasses `KillSwitches.latch()` or the first-writer invariant regressed.
+  - Repeated lane_flags while a kill is present. They remain valid secondary causes; this repair
+    deliberately preserves them in the append-only table rather than compressing them into one
+    mutable file.
+prohibited:
+  - Clearing, rotating, or rewriting an existing kill file to improve its message.
+  - Suppressing the repeated legacy flag under this row. Its invalid acknowledgement is a
+    separate data/validation problem; this repair only prevents it from destroying provenance.
