@@ -107,6 +107,13 @@ class PolymarketUserStream:
         self.errors = 0
         self.last_error = ""
         self.last_frame_utc = 0.0
+        #: L112: what the account channel actually delivers, by kind. `frames` alone cannot tell a
+        #: working feed from a firehose being discarded -- `handle` increments it before the
+        #: PING/PONG branch and drops every kind that is not `order` or `trade`. Measured as a rate
+        #: the channel takes 0.099 frames/s against 542 and 971 on the public streams, which is
+        #: about one per ten seconds: nearly all keepalive. Whether the few real events are enough
+        #: is the question this counter answers, and it costs one dict.
+        self.kinds: dict[str, int] = {}
         self._orders: dict[str, dict] = {}
         self._trades: dict[str, dict[str, dict]] = {}
         self._role_evidence: dict[str, dict[str, set[str]]] = {}
@@ -126,17 +133,22 @@ class PolymarketUserStream:
         except ArithmeticError:
             pass
 
+    def _count(self, kind: str) -> None:
+        self.kinds[kind] = self.kinds.get(kind, 0) + 1
+
     def handle(self, raw, *, now: float | None = None) -> list[str]:
         self.frames += 1
         if isinstance(raw, str):
             if raw.strip().upper() in ("PING", "PONG"):
                 self.last_frame_utc = now or time.time()
+                self._count("pong")
                 return ["pong"]
             try:
                 raw = json.loads(raw)
             except ValueError:
                 self.errors += 1
                 self.last_error = "non-JSON user frame"
+                self._count("error")
                 return ["error"]
         events = raw if isinstance(raw, list) else [raw]
         kinds = []
@@ -174,11 +186,16 @@ class PolymarketUserStream:
                     if taker or self._get(payload, "maker_orders", "makerOrders"):
                         kinds.append("trade")
             self.last_frame_utc = now or time.time()
+        for k in kinds or ["dropped"]:
+            self._count(k)
         return kinds
 
     def stats(self) -> dict:
+        # `snapshots` and `deltas` are the socket_health columns the account channel never used;
+        # orders and trades ride in them so the split persists with no schema change.
         return {"connected": self.connected, "frames": self.frames, "errors": self.errors,
-                "last_error": self.last_error,
+                "last_error": self.last_error, "kinds": dict(self.kinds),
+                "snapshots": self.kinds.get("order", 0), "deltas": self.kinds.get("trade", 0),
                 "age_s": round(time.time() - self.last_frame_utc, 2) if self.last_frame_utc else None}
 
     def order(self, order_id: str) -> dict | None:

@@ -1,0 +1,45 @@
+row: L112
+date: 2026-09-14
+kind: measurement_instrumentation
+status_at_registration: PENDING
+observed_failure: >-
+  Nothing records what the authenticated Polymarket account channel actually delivers, so its
+  health figures cannot be falsified. `handle` increments `frames` BEFORE the PING/PONG branch and
+  silently drops every event type that is not `order` or `trade`; `stats()` exposes only connected,
+  frames, errors, last_error and age_s. A firehose being discarded and a working account feed look
+  identical.
+  What is known. Differenced properly (the counter is cumulative per connection), the channel takes
+  8,558 frames in 24 h = 0.099/s, against 542/s and 971/s on the public market streams - about one
+  frame per ten seconds, the shape of a keepalive. It cannot be ONLY keepalive: 62 of the last 200
+  real orders were closed by a `status_user_stream` event, so real frames do arrive. And REST
+  answered first 63 times out of 63 when both answered, with the stream last on 62 - it closes the
+  record after the answer is already known.
+  Two candidate causes, and this row distinguishes them. The subscription sends
+  {"auth": ..., "type": "user"} with no `markets` key while the public stream maintains an explicit
+  id list. And `status()` fuses the free in-memory stream read with the ~350 ms REST call, so at
+  poll_interval_s 0.1 the stream is sampled at t=0, 450, 900 ms - three times a second, not ten.
+immutable_success_criteria:
+  - Per-kind counts for everything `handle` sees: order, trade, pong, error, and `dropped` for a
+    frame that yields no accepted kind. `handle` already RETURNS the kinds it accepted and `run`
+    discarded them, so this counts what was always there.
+  - Persisted with no schema change: orders and trades ride in the `snapshots` and `deltas`
+    columns, which the account channel has never used, and the full dict is said on the report tick.
+  - Recording only. No entry decision, gate, cap or behaviour changes under this row.
+  - Verdict rule, set before the data: of frames seen over a day, if order + trade is ZERO while
+    orders were placed, the subscription is wrong and no re-timing of the poll can help. If
+    order + trade is non-zero and roughly tracks the orders placed, the subscription is fine and
+    the 63-of-63 loss is the sampling race - in which case splitting `status()` so `_settle_ack`
+    can read the cache without buying a REST round trip is the fix, and its size is the share of
+    those frames that arrive within the first 350 ms.
+expected_ev_effect: >-
+  none directly. It decides whether the account-stream work is worth anything at all, and the
+  answer has been assumed twice in two directions in one day without being measured once.
+watch_for:
+  - `connected` against the kind counts. The flag is set immediately after the subscribe SEND
+    (client.py), so it proves a handshake and not a subscription - and real entry is gated on it to
+    satisfy F12's registered criterion. A long run of connected=True with zero order/trade frames
+    while orders are being placed means that gate is decorative, which is a safety finding and not
+    a latency one.
+prohibited:
+  - Changing the subscription or the poll loop before this has run for a day with real orders.
+    Both candidate causes are plausible and the cheap measurement separates them.

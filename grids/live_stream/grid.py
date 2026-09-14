@@ -786,8 +786,13 @@ class Supervisor:
         pm_exec = self.venues.get("polymarket")
         user_stream = getattr(getattr(pm_exec, "transport", None), "user_stream", None)
         if user_stream is not None:
-            self.store.socket_health(venue="polymarket_user", stats={**user_stream.stats(),
-                                     "loop_lag_s": round(lag, 3)}, seen_ts=t)
+            us = user_stream.stats()
+            self.store.socket_health(venue="polymarket_user", stats={**us, "loop_lag_s": round(lag, 3)}, seen_ts=t)
+            # L112: say the split out loud as well as store it. `frames` alone cannot distinguish a
+            # working account feed from keepalive, and the entry gate trusts `connected`, which is
+            # set on the subscribe SEND and proves only a handshake.
+            if us.get("kinds"):
+                print(f"  [pm-user] {us['kinds']} connected={us['connected']}", flush=True)
         bad = [v for v, st_ in (("kalshi", self.ks), ("polymarket", self.ps))
                if st_ is not None and not st_.clock.healthy]
         if self.loop_stalled():
