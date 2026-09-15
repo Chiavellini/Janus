@@ -1,0 +1,29 @@
+row: L126
+date: 2026-09-14
+kind: operator_safety
+status_at_registration: PENDING
+observed_failure: >-
+  The operator-authorized L125 release passed both exact digest validators, then the local helper
+  exited before its first remote invocation with STARTED: unbound variable. The unquoted heredoc
+  intentionally interpolates reviewed local paths and digests, but the remote warm-up timestamp
+  reference was not escaped for the second shell. The candidate is deployed with the original
+  retained kill unchanged.
+immutable_success_criteria:
+  - Preserve STARTED as a remote-shell variable in the constructed script while retaining the
+    intended local interpolation of exact release SHA, kill SHA, paths, and interpreter.
+  - Execute the production helper through real heredoc construction in a focused test, replacing
+    only its final remote invocation, and prove set -u construction succeeds with valid inputs.
+  - Assert the constructed remote script still assigns STARTED before using it and contains the
+    remote reference rather than an empty or locally expanded value.
+  - Audit the complete heredoc for any other unintended local expansion; every remote variable is
+    escaped and every deliberate local value is named.
+  - No evidence, guard, archive, rollback, stop, cap, mode, or trading-policy behavior changes.
+  - Focused tests, shell syntax, integrated baseline, and replay parity are green.
+expected_ev_effect: >-
+  None per trade. This restores the reviewed release proof without weakening it.
+watch_for:
+  - Quoting the whole heredoc and thereby disabling required local binding.
+  - A test that copies the heredoc instead of executing production text.
+prohibited:
+  - Bypassing the warm-up or directly deleting the kill.
+  - Changing caps, hurdles, size, entry, protection, or settlement behavior.
