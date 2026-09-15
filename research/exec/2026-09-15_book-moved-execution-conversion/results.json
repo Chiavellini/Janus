@@ -1,0 +1,102 @@
+{
+  "schema": "janus.l141.book_moved_execution_conversion.summary.v1",
+  "window": {
+    "start_utc": 1789418782.132788,
+    "end_utc": 1789505182.132788,
+    "execution_first_utc": 1789449186.4880905,
+    "execution_last_utc": 1789504422.7707887,
+    "execution_span_hours": 15.343411860598458
+  },
+  "exclusion": {
+    "execution_id": "17077a35da5b46bb92b62daf0d927ff7",
+    "rows": 1,
+    "reason": "registered scalar-settlement cover"
+  },
+  "accounting": {
+    "included_executions": 108,
+    "states": {
+      "BOOK_MOVED": 95,
+      "ORDER_UNFILLED": 10,
+      "RECONCILED": 3
+    },
+    "book_moved_unique_events": 35,
+    "book_moved_unique_opportunities": 49,
+    "book_moved_attempts_per_event": {
+      "p50": 2.0,
+      "p90": 8.0,
+      "max": 13.0
+    },
+    "book_moved_attempts_per_opportunity": {
+      "p50": 1.0,
+      "p90": 5.0,
+      "max": 9.0
+    }
+  },
+  "fresh_confirmation": {
+    "book_moved_rows_with_structured_confirmation": 95,
+    "planned_book_source": {
+      "ws": 95
+    },
+    "planned_book_age_ms": {
+      "p50": 547.871,
+      "p90": 810.096,
+      "max": 3178.077
+    },
+    "decision_to_confirmation_ms": {
+      "p50": 180.429,
+      "p90": 219.733,
+      "max": 2196.656
+    },
+    "first_leg_above_limit_or_short_depth": 90,
+    "first_leg_rechecked_minus_limit_c": {
+      "p50": 6.0,
+      "p90": 10.0,
+      "max": 13.0
+    },
+    "first_leg_passed_but_hedge_above_break_even": 5,
+    "hedge_rechecked_minus_break_even_c": {
+      "p50": 1.88,
+      "p90": 5.64,
+      "max": 5.64
+    }
+  },
+  "first_book_age_ms_by_terminal_state": {
+    "BOOK_MOVED": {"n": 95, "p50": 547.871, "p90": 810.096},
+    "ORDER_UNFILLED": {"n": 10, "p50": 67.976, "p90": 205.064},
+    "RECONCILED": {"n": 3, "p50": 480.934, "p90": 751.547}
+  },
+  "pre_wire_stages_ms_on_book_moved": {
+    "frame_to_eval": {"p50": 1.66, "p90": 4.14, "max": 108.2},
+    "eval_to_exec": {"p50": 32.09, "p90": 54.0, "max": 550.57},
+    "worker_hop": {"p50": 5.59, "p90": 7.03, "max": 125.52},
+    "clear": {"p50": 5.55, "p90": 8.82, "max": 31.98},
+    "db": {"p50": 8.14, "p90": 37.92, "max": 81.32},
+    "first_leg_confirmation": {"p50": 168.42, "p90": 187.93, "max": 2181.34},
+    "hedge_confirmation": {"p50": 102.87, "p90": 205.43, "max": 235.64}
+  },
+  "orders": {
+    "polymarket_first_leg_submitted": 13,
+    "polymarket_first_leg_filled": 3,
+    "submitted_order_fill_conversion": 0.23076923076923078,
+    "active_sizing_windows": 108,
+    "active_windows_with_fill": 3,
+    "active_window_fill_conversion": 0.027777777777777776
+  },
+  "economics": {
+    "three_cover_realized_net_usd": 0.82908,
+    "three_cover_total_fees_usd": 1.40092,
+    "three_cover_polymarket_fees_usd": 0.60932,
+    "mean_current_net_usd_per_cover": 0.27636,
+    "mean_net_if_only_polymarket_fee_removed_usd_per_cover": 0.47946666666666665,
+    "mean_pre_all_fee_usd_per_cover": 0.7433333333333333,
+    "projected_36_cover_net_at_observed_mean_usd": 9.94896,
+    "projected_36_cover_net_without_polymarket_fee_usd": 17.2608,
+    "projected_36_cover_net_without_any_fee_usd": 26.76
+  },
+  "assessment": {
+    "one_third_of_all_108_supported": false,
+    "one_third_of_submitted_orders_identifiable": false,
+    "book_moved_rows_with_proved_safe_conversion_counterfactual": 0,
+    "reason": "Ninety rows failed fresh first-leg price/depth and five failed fresh hedge break-even. The submitted-order sample is only 13."
+  }
+}

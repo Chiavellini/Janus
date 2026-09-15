@@ -1,0 +1,43 @@
+id: L142
+date: 2026-09-15
+kind: execution_safety
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L142
+title: Bound each maker-rest safety proof instead of waiting blind for the whole rest
+
+# IMMUTABLE AFTER REGISTRATION. This file and the PENDING ledger row precede implementation.
+
+observed_failure: >-
+  Both F22 maker executions, 785f1ce65f61402c9d940e001be2f41e and
+  9c19f3decab547c69f4cf7844e6a4ee5, recorded MAKER_GUARD_ERROR:TimeoutError. Their maker-rest
+  remaining budgets were 1623.36 ms and 1745.77 ms. The worker gave one loop-owned safety check
+  the entire remaining rest as its Future timeout, so a busy loop could leave the order resting
+  without another hedge/cap/kill proof until the experiment deadline, then cancel it. Both orders
+  zero-filled, so this is not evidence of exposure, but it contradicts F23's continuous-proof
+  requirement.
+
+change: >-
+  Bound each off-loop maker-guard wait by the existing coordinator poll interval and the remaining
+  maker-rest deadline, whichever is smaller. A timeout or failed proof cancels immediately through
+  the existing fail-closed path. Record enough structured timing/count evidence to distinguish a
+  checked rest, a loop-timeout cancellation and a maker fill.
+
+success_criteria:
+  - A loop that does not service the guard Future within one existing poll interval causes the
+    maker rest to end and cancellation to begin; it cannot consume the full two-second rest blind.
+  - A responsive loop is checked repeatedly until fill, a named guard refusal, or the immutable
+    rest deadline. Taker execution is unchanged.
+  - Timeout/error remains fail-closed and is explicitly recorded. No timeout may be interpreted as
+    a healthy guard or a fill.
+  - Focused maker/on-loop/grid tests, full suite and exact replay digests pass.
+
+expected_ev_effect: >-
+  Unknown and possibly negative for maker fill conversion; this closes an unsafe measurement path.
+  A maker arm unable to retain continuous proof must cancel rather than earn apparent fee savings
+  by resting without a current hedge guarantee.
+
+forbidden:
+  - lengthen the two-second rest
+  - weaken hedge, cap, kill, balance, clock or settlement requirements
+  - change taker behavior, caps, hurdles, size or protection allowances
+  - reinterpret either stopped F22 row

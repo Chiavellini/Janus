@@ -1,165 +1,129 @@
 # NEXT
 
-An opinion, not a record. Overwrite this file; never append to it. What changed is git log.
+Current-state handoff, updated 2026-09-15. Evidence belongs in the linked registered rows; this
+file is an opinionated map and may be overwritten.
 
-Updated 2026-09-15 for the F22 maker-versus-taker release candidate on branch
-`claude/hedge-safety-and-speed`.
+## Production now
 
-## Current production state
+The Mexico box is still deployed at `59dd5ae2ce3619104aa95d127d1b115d7c0702a9`. The service is
+active for streams/reconciliation but entry is blocked by `kill/live`; it is **not trading**. The
+retained kill was latched at `1789504505.261733` with SHA-256
+`d81bbfc267a235ca7f268e7317d77ee7e83c65f5263117590e4e86d1552b1636` and exact reason:
 
-The Mexico box is deployed at `59dd5ae2ce3619104aa95d127d1b115d7c0702a9`. The lane is active in
-`LIMITED_LIVE`, `kill/live` is absent, and all three sockets were connected and fresh at the first
-independent post-release proof. It may send orders under the unchanged signed limits.
+> F22 STOP: terminal maker zero-fill fee evidence is NULL; strict report classifies persistence_or_reconciliation_failure
 
-The former kill SHA-256
-`dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83` was archived only after L139
-settled the exact held cover and both stopped guards passed. Registered `GUARD_FAILED` rows 1169 and
-1170 are exactly resolved. Post-release proof found zero unresolved guard, orphan, overfill, or
-post-only-persistence flags and zero unreleased executions/reservations.
+At the latch there was zero flight and zero unhedged quantity. F22 is permanently closed. Its first
+two maker decisions and orders remain unchanged evidence: authoritative terminal zero fills with
+valid post-only proof, but `fee_usd=NULL`, so F22 correctly stopped rather than manufacturing a
+zero-dollar observation.
 
-The Polymarket redemption timer is failing while `data-api.polymarket.com/positions` returns a rate
-limit error. This is an unresolved operating-cost/reliability issue, not evidence of runaway order
-submission. It must not be confused with the entry-attempt volume in the lane.
+The earlier scalar/cancelled cover is settled and released at `-$0.99357`. That economic loss did
+not cause the current stop. The separately reported approximately $100 `ORPHAN_FILL` was operator
+manual activity, not Janus, and the operator has asked that it not be pursued as a system incident.
 
-L134 repaired the SSM transport-newline bug, after which release `1be680b` checked out and re-signed
-the unchanged F22 authority. L133 then stopped safely. L135 proved its four nonquiet counters were
-not one stale identity: execution `17077a35` / reservation `b292be2a` is a real 25-contract ATP
-cover with both owned IOC legs filled, zero unhedged quantity and no settlement row. Its $24.49357
-reservation must remain held until both venues finalize. The admission is canonically empty despite
-its retained timestamp; historical persistence flag 211 has valid exact resolution marker 215 but
-no lifecycle row because that incident was itself a persistence failure.
+The Polymarket redemption timer's rate-limited positions call remains an operating-cost issue. It
+is distinct from order attempts and should stay bounded/quiet rather than retrying expensively.
 
-L136's winner-only provider read returned `null` from both venues, but that did **not** mean venue
-finality was pending. L138's fresh raw read contradicted that interpretation: both Kalshi markets
-were already finalized with scalar payouts (`SHA=0.44`, `IVA=0.56`), and Polymarket was closed and
-resolved at `0.50/0.50`. L138's proposed coexistence route was stopped before implementation.
+## Release candidate in this tree
 
-L139 is deployed. It represents complete authoritative per-outcome payout
-maps without manufacturing a winner, stores them in additive tables that preserve historical exact
-evidence, settles complementary NO and sell legs, and lets the guard recognize a paid scalar leg.
-The exact stopped-lane helper bound the measured maps and the cover's `-$0.99357` realized PnL in
-addition to every prior L136 identity, economics, kill, unit and atomic rollback proof. The exact
-settlement and both payout maps are durable; reservation `b292be2a` is released.
+L140 fixes the F22 instrumentation defect prospectively: explicit `fee_usd=0.0` is persisted only
+for complete terminal, non-open, non-pending, zero-fill maker proof. Ambiguous, partial and filled
+orders retain blocking fee requirements. Historical F22 rows are not repaired.
 
-## F22 release candidate
+F23 is a fresh event-randomized comparison of the same bounded immediate Polymarket taker entry
+against the registered two-second post-only maker entry. It has a separate table, assignment
+digest, authority and report. F22 cannot reactivate in capital mode. The fixed F23 end is 200
+eligible decisions, at least 80 per arm, 50 events, five league-local days and three leagues; the
+first three covers must reconcile before the fourth, but later fills are not serialized behind
+settlement. Each F23 decision now persists its event start, league and canonical America/New_York
+venue date before the wire; malformed or missing dates keep the five-day minimum unscored.
 
-F22 is the registered event-randomized comparison between:
+L142 closes a defect observed on both F22 maker orders. Their loop-owned safety callback went
+unserviced for 1.62/1.75 seconds and timed out at nearly the full rest deadline. Each check is now
+bounded by the existing poll interval; timeout/error cancels immediately and structured evidence
+distinguishes responsive checks, timeout, refusal, fill and deadline.
 
-- the existing bounded immediate Polymarket taker entry; and
-- a reviewed short-rest Polymarket post-only maker entry, followed by the same Kalshi hedge.
+The release/recovery route recognizes only the exact retained F22 kill, proves the complete
+decision/execution/opportunity/client/order/digest identities of decisions 1 and 3 and their
+unchanged NULL-fee orders, requires zero F23 rows and globally quiet capital, runs two
+stopped complete guards around a retained-kill stream warmup, archives only that exact kill, and
+restarts under exact F23 authority. A mismatch remains stopped and rollback restores the kill.
 
-Assignment is a stable SHA-256 parity of canonical `event_id`. It is persisted before any provider
-wire action, with the complete sizing, opportunity, book-epoch, order, execution, fee, hedge and
-settlement lineage needed to score an observation. Arms cannot cross, fall back, or replace one
-another. The maker arm must remain post-only and the taker arm remains immediate.
+Local verification is green: 172 focused tests, all 1,766 collected tests in the complete suite,
+compilation, shell syntax and
+diff checks. Replay is unchanged over 20,000 frames, 234 pollers, 5,858 evaluations and 1,093 rows:
+`13e4fb08a76c920f / 4f53cda18c2baa0c`.
 
-F22 is default-off unless the signed override pins the exact F22 spec digest, assignment algorithm,
-unchanged caps, `LIMITED_LIVE` mode and the operator's exact statement:
+## What the last live window actually proved
 
-> proceed with the experiment; consider todays goal (reach 20 usd profit)
+L141 fixed the denominator. In the registered 24-hour window, the included execution records span
+15.34 wall-clock hours and reconcile exactly to:
 
-The first three actual F22 fills form an online safety gate: no later admission is allowed until
-each is uniquely linked, reconciled, settled as a released COVER, and proves zero unhedged and zero
-directional quantity. Any persistence or lineage failure stops F22 entry and latches a kill.
+- 95 `BOOK_MOVED` before wire;
+- ten authoritative Polymarket terminal zero fills; and
+- three complete covers, net `+$0.82908` after `$1.40092` fees.
 
-`ops/f22_report.py` fails closed on incomplete or contradictory assignment, order-role, fill, fee,
-hedge or settlement evidence. A no-wire outcome cannot score if it has an order, settlement,
-first-order id, hedge id or nonzero fill.
+The 95 declines were not 95 independent games: 35 event IDs and 49 opportunity IDs, with up to 13
+attempts on one event. They do map to separate selected sizing windows, but none is proved safely
+fillable. All have structured fresh confirmation: 90 failed Polymarket first-leg price/depth by
+6c median and 10c p90; the other five passed leg A but the Kalshi hedge was above break-even by
+1.88c median. Calling all 108 records “takeable prints” is therefore false.
 
-## Verification
+The correct submitted-first-leg conversion was 3/13 = **23.1%**. The raw selected-window conversion
+was 3/108 = 2.78%. Thirteen submitted orders are too few to distinguish a true one-third fill rate,
+but one-third of all 108 is contradicted under the existing safe economics because no declined row
+has a two-leg executable counterfactual.
 
-F22 is now active but had zero decisions at the first post-release report. It is operationally live,
-not economically validated.
+The execution problem is nevertheless real. All eight eligible taker zero fills had sufficient
+depth at the sent price immediately before submission and zero depth afterward: interim L102
+classification `CONSUMED=8`, `STILL_THERE=0`, `PULLED=0`. Median REST confirmation was 180.74 ms,
+confirmation-to-submit only 6.83 ms, and submit-to-ack 197.63 ms. This is latency-consistent but is
+only eight observations, not L102's approximately 50-order final verdict.
 
-- Focused F22/grid/report tests: 65 passed; the final combined F22/recovery selection passed 87.
-- L139 focused reconcile/helper/guard/legacy selection: 167 passed.
-- Integrated suite after the additive-table correction: exit zero.
-- Replay: stable over 20,000 frames, 234 pollers, 5,858 evaluations and 1,093 rows.
-- Replay digests: `13e4fb08a76c920f / 4f53cda18c2baa0c`, unchanged.
-- Shell syntax, Python compilation and `git diff --check`: passed.
-- Final independent Luna L139 safety audit: RELEASE.
+For the 95 pre-wire declines, the Polymarket websocket book was already 548 ms old at median and
+the fresh confirmation completed another 180 ms later. Ordinary machine dispatch is not the main
+cost: frame-to-evaluation 1.66 ms, evaluation-to-executor 32.09 ms, worker hop 5.59 ms, clearance
+5.55 ms and database work 8.14 ms at median. The direct target is the serial
+websocket/venue-authority/network path while retaining a fresh hedge proof.
 
-The agent ran the operator-authorized release route. It checked out `1be680b` and re-signed the
-unchanged standing limits, then failed closed in L133. No kill archive, entry, account mutation,
-guard resolution or F22 observation occurred. The one already-held cover is unchanged.
+## Profit arithmetic
 
-## Economic truth
+The recent three-cover mean was `$0.27636` net. Thirty-six covers at that mean produce `$9.95`, not
+`$100`. The exact Polymarket fees on those covers were `$0.60932`; removing them raises 36 covers to
+`$17.26`. Even removing **all** `$1.40092` of venue fees produces only `$26.76`.
 
-The most recent measured pre-F22 12/24-hour funnel had 107 execution attempts, 16 submitted orders,
-8 filled orders and 3 completed covers for `+$0.8291` realized. Ninety-five attempts ended
-`BOOK_MOVED`; of the remaining Polymarket orders, eight had zero fill and four filled. The current
-route therefore has neither a proved `$20/day` floor nor evidence supporting `$100/day`.
-The current watchdog independently reports the latest ten completed covers at `-$2.37`, with four
-losses and four hedges above their own break-even. That is adverse historical entry economics; it
-is not new PnL earned while the retained kill blocks entry.
+At observed economics, `$100/day` requires about 362 covers. With only the Polymarket fee removed,
+it still requires about 209. Therefore execution conversion plus the current maker saving are
+necessary improvements but not sufficient. Reaching the goal also requires materially more
+eligible surface, more dollars per cover within proven caps, a cheaper venue/mechanism, or some
+combination. The high-evidence Kalshi MM-at-open lead remains untested in sports and avoids the
+expensive two-venue fee pair, but it is a different mechanism and must be registered separately.
 
-The held cancelled cover adds a directly measured `-$0.99357` settlement-basis loss: Polymarket
-paid `0.50` on the owned token while Kalshi paid `0.44` on the owned ticker. The existing entry had
-priced this dimension probabilistically through its settlement buffer; it did not guarantee a
-positive realized return in this cancellation state. That contradicts any claim that every admitted
-two-leg position is outcome-by-outcome riskless and must be addressed separately from parser
-correctness after the lane is recovered.
+## Open questions that directly target the goal
 
-F22 directly targets the avoidable Polymarket taker fee, but it tests a tradeoff rather than a free
-improvement: maker entry saves the fee only when it fills quickly enough to avoid losing more edge
-to waiting and adverse selection. Historical maker evidence is one fill in seventeen attempts.
-The registered cohort must reach its fixed minimums before any profitability claim: 200 decisions,
-80 per arm, 50 events, five days and three leagues, unless a registered STOP occurs first.
+1. Does F23's maker fee saving survive its lower fill probability, event-loop proof availability,
+   waiting drift and hedge tail? Only the fixed forward cohort can answer.
+2. Can taker entry remove one serial Polymarket confirmation round trip while preserving the fresh
+   Kalshi hedge guarantee? The current data support testing a hedge-first strict-limit IOC arm, not
+   blindly sending all 95 declined rows. That requires a new preregistered entry experiment and a
+   dated GATE amendment before live use.
+3. Why is the local Polymarket book commonly roughly 0.5–0.8 seconds old at selection, and can
+   network placement or stream handling reduce the venue-authority gap? L141 says Python dispatch
+   alone cannot supply the needed gain.
+4. Can co-listed event coverage rise beyond the observed 35 `BOOK_MOVED` events without importing
+   unmeasured settlement basis? Coverage and repeated covers are needed because current per-cover
+   dollars cannot close `$100/day` alone.
+5. Does the L102 `CONSUMED` split persist near 50 eligible taker zero fills? If it does, speed is the
+   correct execution lever; if it reverses toward `STILL_THERE`, more speed will not fix the engine.
 
-The `$20` target is a goal for measurement, not a daily constraint the code may chase. The signed
-limits remain $30 combined planned stake, 25 contracts, $500 daily notional, $25 breaker,
-$0.05/0.5% hurdle and $2.50/$0.10-per-contract protection. There is no authority here to increase
-turnover, loosen safety, or stop early after a favorable result.
+## Things that will mislead you
 
-## Release boundary and immediate continuation
-
-The exact recovery is complete. Continue read-only observation with `ops/f22_report.py` and the
-production funnel. Do not loosen policy or stop early based on the first favorable outcome.
-
-After a successful release, use `ops/f22_report.py` and the production funnel to observe:
-
-1. whether the first three fills reconcile exactly;
-2. maker versus taker fill conversion and time-to-fill;
-3. net realized EV and Sharpe per trade after both venues' fees and hedge slippage;
-4. `BOOK_MOVED`, authoritative zero-fill and unresolved outcomes separately; and
-5. whether rate-limited redemption calls are consuming avoidable AWS/API work.
-
-Do not pool leagues to hide adverse selection, do not treat an unresolved provider response as a
-no-fill, and do not infer profitability from attempts, theoretical edges or midpoint movement.
-
-## Files in this release candidate
-
-- `nodes/execute/entry_experiment.py` and tests: exact assignment, authority, persistence and
-  first-three-fill gate.
-- `grids/live_stream/grid.py` and tests: pre-wire assignment, arm construction, lifecycle linking,
-  hard stop and board visibility.
-- `ops/f22_report.py` and tests: strict prospective scoring and audit report.
-- `ops/arming_override.py`, `ops/box/write_override.sh`, and risk reporting: exact signed F22 pins.
-- `ops/box/clear_guard_failure_latch.py/.sh` and tests: exact L133 recovery, rollback and retry.
-- `ops/box/settle_held_cover.py` and tests: exact atomic L136 settlement convergence while stopped.
-- `ops/box/release.sh` and tests: pre-mutation kill classification and helper-owned guard route.
-- `research/exec/2026-09-15_f22-entry-arm-instrumentation/`: L131 spec and local verdict.
-- `research/exec/2026-09-15_guard-failure-recovery/`: L132 spec and STOP.
-- `research/exec/2026-09-15_guard-failure-pair-recovery/`: L133 spec and local verdict.
-- `research/exec/2026-09-15_release-kill-reason-newline/`: L134 measured transport fix and verdict.
-- `research/exec/2026-09-15_l133-nonquiet-identity/`: L135 exact read-only diagnosis.
-- `research/exec/2026-09-15_stopped-lane-settlement-convergence/`: L136 immutable recovery spec.
-- `research/exec/2026-09-15_l136-direct-script-import/`: L137 direct-invocation packaging fix.
-- `research/exec/2026-09-15_exact-held-cover-coexistence/`: L138 superseded premise and STOP.
-- `research/exec/2026-09-15_scalar-half-settlement/`: L139 payout-aware settlement spec/verdict.
-- `research/sports/2026-09-15_limited-live-f22-maker-vs-taker/`: immutable F22 forward spec.
-- `GATE_TO_LIVE.md` and `ops/box/arm_statement.txt`: exact operator statement, unchanged caps.
-- `snooping_ledger.md`: immutable registrations and results.
-
-## Instrument traps
-
-- `stages_json` timing values are cumulative from loop start; difference adjacent stages and
-  exclude guard-rerun rows.
-- `socket_health.frames` is cumulative; take deltas and treat decreases as reconnects.
-- `BLOCKED_MATCH` is mostly the single-venue branch, not lost paired surface.
-- `refusal_counts` is hot-path callback aggregation, not unique opportunities.
-- `PROFITABLE_UNEXECUTED` is material-change gated and per size rung; always name the rung.
-- An active service plus `kill/live` means polling may continue while entry remains blocked.
-- The status script's execution field can include historical untimestamped repeated lines. Use the
-  production database for actual unresolved execution, reservation and PnL state.
-- Negative unconditional hedge drift is not maker EV. L63 remains the maker authority.
+- `stages_json` stamps are cumulative from `_t0`; difference adjacent stamps per row.
+- `socket_health.frames` is cumulative; use deltas and treat decreases as reconnects.
+- `refusal_counts` are callback counts, not unique opportunities or stage conversion.
+- `PROFITABLE_UNEXECUTED` is material-change gated and per size rung.
+- `BOOK_MOVED` is a safe pre-wire terminal, not a submitted order and not proof the frozen print
+  was still executable at the venue.
+- A service can be active while `kill/live` blocks every entry.
+- A provider response that is unresolved is not a zero fill.
+- Negative unconditional hedge drift is not maker EV. The F23 randomized result governs.

@@ -1,0 +1,71 @@
+id: L140
+date: 2026-09-15
+kind: execution_safety_instrumentation
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L140
+title: Complete zero-dollar fee evidence for authoritative terminal no-fill orders
+
+# IMMUTABLE AFTER REGISTRATION. This file and its PENDING ledger row precede implementation or
+# post-fix tests. The production facts below were observed under the already-registered F22 read.
+
+question: >-
+  Can Janus persist an explicit zero-dollar fee for an authoritatively terminal zero-fill order,
+  so a forward report can distinguish a proved zero-dollar outcome from missing cash evidence,
+  without manufacturing zero for an unresolved, partially filled, or otherwise ambiguous order?
+
+known_at_registration:
+  - >-
+    F22 decisions 1 and 3 are maker-assigned Polymarket GTC orders. Both have a venue order id,
+    state UNFILLED, filled_contracts=0, open=0, settlement_pending=0, a post-only lifecycle row
+    with terminal_proved=1 and violated=0, an ORDER_UNFILLED released execution, no Kalshi order,
+    zero execution fill and zero unhedged quantity. Their order fee_usd and avg_price are NULL.
+  - >-
+    The strict F22 report classifies the first observed row as
+    persistence_or_reconciliation_failure because fee_usd is missing. The live kill was latched
+    at 1789504505.261733 with zero executions in flight and zero unhedged positions. F22 therefore
+    ended at its registered first STOP; no repair may reopen, relabel, or score those rows.
+
+scope:
+  - >-
+    On the authoritative terminal no-position path only, persist fee_usd=0.0 before the execution
+    is released. The proof must require zero filled quantity, terminal/non-open provider state and
+    complete maker terminal proof where maker semantics apply.
+  - >-
+    Preserve NULL/missing fee as a hard reporting block for any unknown, open, settlement-pending,
+    positive-fill, partial-fill, contradictory, or incomplete lifecycle state.
+  - >-
+    Make the prospective cohort's runtime/report lineage fail closed if an allegedly terminal
+    zero-position order still lacks explicit zero-dollar fee evidence.
+  - >-
+    Do not mutate F22 production rows or results. A separately registered F23 cohort begins only
+    after this correction is committed, tested, replay-stable, released and independently proved.
+
+success_criteria:
+  - >-
+    A pre-fix regression fixture matching the two observed F22 rows is classified as persistence
+    failure; after the production persistence path runs, the order contains fee_usd=0.0 and the
+    strict report classifies it as accepted_terminal_zero_fill with settled_pnl_usd=0.0.
+  - >-
+    Unknown/unconfirmed/open orders, any positive fill without authoritative fee, incomplete
+    post-only terminal proof, conflicting role evidence, and missing provider identity remain
+    UNKNOWN or persistence/role failure and cannot score as zero dollars.
+  - >-
+    Existing binary/scalar settlement, taker, maker-fill, guard, order-journal and legacy report
+    tests remain green. The full suite passes and replay digests remain exactly
+    13e4fb08a76c920f / 4f53cda18c2baa0c.
+  - >-
+    Production release starts with the registered F22 kill unchanged and zero flight/unhedged
+    quantity; it proves the exact historical rows without changing them, activates only F23 under
+    unchanged limits, and leaves no unresolved instrumentation flag or unexplained account state.
+
+expected_ev_effect: >-
+  Zero direct trading EV: entry, price, fee calculation, size and hedge behavior do not change.
+  The correction prevents a true zero-dollar no-fill from becoming unusable evidence and prevents
+  the system from continuing an economically unscorable experiment.
+
+forbidden:
+  - infer zero fee from a missing or ambiguous provider outcome
+  - edit or backfill either stopped F22 decision/order
+  - reopen F22 or pool its rows into F23
+  - change any cap, hurdle, protection allowance, settlement buffer, rest duration or venue role
+  - clear the production kill before the exact corrected release proof

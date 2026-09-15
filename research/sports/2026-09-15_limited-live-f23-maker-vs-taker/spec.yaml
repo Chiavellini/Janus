@@ -1,0 +1,135 @@
+id: F23
+date: 2026-09-15
+kind: forward_randomized_limited_live
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row F23
+title: Fresh event-randomized Polymarket maker versus bounded-taker entry after F22 instrumentation STOP
+
+# IMMUTABLE AFTER REGISTRATION. This file, the L140/F23 PENDING rows and the dated GATE amendment
+# precede implementation tests, release, kill recovery or any F23 observation.
+operator_statement_verbatim: "we want to be able to prove we can or cannot reach the goal with the system as is and fix whatever is necessary to reach it."
+
+question: >-
+  Under the unchanged executable-cover policy and signed limits, does the reviewed two-second
+  Polymarket post-only maker entry improve terminal realized dollars per eligible decision versus
+  bounded immediate Polymarket taker entry after zero fills, fees, hedge tails and losses; and what
+  measured 24-hour dollar rate remains between the better arm and $20/day?
+
+known_at_registration:
+  - >-
+    F22 ended at its first registered STOP after two maker orders proved terminal zero fill but
+    retained NULL fee_usd, making their dollar outcomes unscorable. They had no fill, position,
+    hedge or PnL; F23 excludes them rather than repairing or pooling them.
+  - >-
+    Before F22, the measured approximately twelve-hour taker window had 107 execution attempts,
+    16 submitted orders, eight filled orders and three completed covers for +$0.82908, while 95
+    attempts ended BOOK_MOVED. Four covers paid $2.14449 combined fees. Historical maker evidence
+    was one fill in seventeen attempts. None of this is F23 evidence.
+  - >-
+    The $20/day and $100/day figures are measurement goals, not promises, stopping rules, or
+    authority to force orders, weaken safety, take directional risk or raise limits.
+
+population: >-
+  Fresh settlement-proved two-venue sports covers that pass the unchanged executable-price,
+  freshness, fee, settlement and cap-aware sizing rules after the exact F23 release. Assignment is
+  by canonical event_id before arm construction. Repeated epochs stay in one arm and inference is
+  clustered by event.
+
+arms:
+  maker:
+    entry: exact-share-capped Polymarket post-only BUY one tick below current best ask and no higher than the original executable ceiling
+    rest_seconds_max: 2.0
+    continuous_requirement: fresh complete Kalshi hedge and every existing safety input
+    replacement_count: 0
+    taker_fallback: false
+  taker:
+    entry: current bounded immediate Polymarket FAK/FOK BUY at the walked executable ceiling
+    maker_fallback: false
+    residual: actual price-improvement excess below one contract remains preserved and audited
+  common:
+    sizing: current cap-aware N-star selection before arm construction
+    hedge: current immediate Kalshi IOC and unchanged book-aware protection schedule
+    venue_order: Polymarket first, Kalshi second
+
+assignment:
+  unit: canonical event_id
+  rule: SHA-256 parity, version janus:f23:entry-arm:v1
+  balance: expected one-half per arm, never post-hoc forced
+  exclusion: F19, F20, F21, F22 and L63 are reported separately and never enter F23 estimates
+
+limits:
+  max_combined_planned_stake_usd: 30.0
+  max_requested_contracts_per_leg: 25
+  committed_daily_notional_usd: 500.0
+  max_daily_realized_loss_usd: 25.0
+  min_net_profit_usd: 0.05
+  min_locked_return: 0.005
+  max_protection_loss_usd: 2.50
+  max_protection_loss_per_contract_usd: 0.10
+  per_venue_capital_usd: 250.0
+  total_capital_usd: 500.0
+  per_event_notional_usd: 200.0
+  simultaneous_events: 6
+  protect_auto: true
+  unwind_enabled: false
+
+start: >-
+  The first F23 decision strictly after L140/F23 implementation is committed; focused tests, full
+  suite and registered replay are green; the exact F22 STOP rows and unchanged kill are proved;
+  zero flight, unhedged exposure, unexplained imbalance, unresolved admission or reservation
+  exists; complete guards and streams pass; and the override pins the exact F23 tree, spec,
+  assignment, limits and verbatim statement.
+
+end: >-
+  At the later of 200 eligible randomized decisions and at least 80 decisions per arm, with at
+  least 50 distinct events, five league-local calendar days and three leagues; or immediately at
+  the first genuine STOP, breaker, assignment/instrumentation/entry/cap/hurdle/settlement-policy
+  change, 90 days, or explicit operator closure. No PnL-based optional stopping. The first three
+  filled covers must be authoritatively reconciled before a fourth is admitted.
+
+unit_of_observation: >-
+  One deduplicated frozen-book executable decision selected by common sizing before arm behavior.
+  It contributes terminal net dollars, including explicit zero for a proved no-fill/refusal and
+  actual losses for losing covers. Unknown, NULL-fee, or unreconciled states remain blocking.
+
+outcome_taxonomy:
+  - local_or_risk_refused_no_wire
+  - provider_rejected_no_position
+  - accepted_terminal_zero_fill
+  - accepted_partial_fill
+  - accepted_full_fill
+  - unknown_provider_state
+  - role_violation
+  - persistence_or_reconciliation_failure
+
+prespecified_analysis:
+  primary: maker minus taker mean terminal realized USD per eligible decision, with deterministic 10000-resample event-clustered percentile interval seed 230915
+  conversion: per-arm accepted, zero-fill, partial/full-fill and hedge/settlement funnel with exact binomial 95-percent intervals
+  economics: per-arm PM fee, combined fee, planned edge, hedge tail, protection loss, settled PnL, and PnL per decision/order/fill/observed hour
+  daily_target: after the fixed minimum only, scale the better arm's observed PnL per lane hour to 24 hours and report interval plus gaps to $20/day and $100/day
+  diagnostics: fixed reporting of N, league, phase, PM spread/queue proxy, book age, rest/fill/cancel/hedge latency and hedge slippage; never post-hoc filters
+
+verdicts:
+  PROVED_IMPROVEMENT: minimum sample and reconciliation complete, no STOP, and clustered 95-percent interval for maker-minus-taker mean is strictly above zero
+  PROMISING_NOT_PROVED: minimum sample complete and point estimate positive but interval includes zero
+  NO_IMPROVEMENT: minimum sample complete and maker-minus-taker point estimate is zero or negative without STOP
+  STOP: any stop condition; preserve the triggering row without reinterpretation
+  INSUFFICIENT_SAMPLE: minimum sample or reconciliation incomplete; report operational counts only
+
+stop_conditions:
+  - cross-arm assignment, reassignment, fallback or replacement
+  - maker taker/conflicting/unknown role, excess shares, or unresolved bounded lifecycle
+  - missing or NULL fee on any terminal order, unexplained quantity/cash/fee/ownership or incomplete settlement
+  - unknown provider state, persistence failure, overhedge, unprotected fill or unexplained imbalance
+  - active cap breach, realized-loss breaker or protection allowance reached
+  - incomplete guard, unhealthy required stream/clock, or unavailable durable safety evidence
+
+expected_ev_effect: >-
+  If maker conversion were identical, the known pre-F22 sample implies roughly 0.8 cents saved per
+  filled contract, about $0.20 on 25 contracts. Maker may fill less often or suffer adverse
+  selection, so the signed expected effect is unknown; F23 measures the net effect.
+
+authority: >-
+  The operator statement authorizes preparing, releasing and running this exact experiment inside
+  the unchanged limits after its independent safety gates. It does not authorize higher limits,
+  weaker hurdles, one-sided risk, retroactive F22 repair, or generic clearing of an unrelated kill.

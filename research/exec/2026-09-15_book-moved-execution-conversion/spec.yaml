@@ -1,0 +1,67 @@
+id: L141
+date: 2026-09-15
+kind: descriptive_execution_funnel
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L141
+title: Decompose BOOK_MOVED attempts into unique executable windows and fixable latency
+
+# IMMUTABLE AFTER REGISTRATION. This file and the PENDING ledger row precede the detailed
+# production extraction. Aggregate counts below were already observed in the operator-requested
+# trailing-24-hour ledger and are therefore listed as known facts, not rediscovered evidence.
+
+question: >-
+  Of the recent BOOK_MOVED execution attempts, how many were independent executable windows rather
+  than repeated epochs, how long did their executable edge survive, where did time elapse between
+  frozen-book decision and provider submission, and what fraction could a specific latency or
+  order-lifecycle correction have converted without weakening price, fee, settlement, hedge or
+  safety requirements?
+
+known_at_registration:
+  - >-
+    In the trailing window read at 2026-09-15T20:46:22Z, excluding execution 17077a35, Janus stored
+    108 executions: 95 BOOK_MOVED before wire, ten Polymarket terminal zero fills and three complete
+    settled covers. The three covers netted +$0.82908 after $1.40092 fees.
+  - >-
+    This does not prove 108 independent takeable prints. Execution rows may repeat the same event,
+    opportunity, or short-lived book path; BOOK_MOVED explicitly says the frozen plan was no longer
+    executable at the checked limit. The status script's counts and cumulative stage timestamps are
+    known instrument traps documented in NEXT.md.
+
+population: >-
+  All structured Janus executions started in the exact trailing window ending at the extraction
+  timestamp, excluding the registered scalar-settlement execution 17077a35. Use execution,
+  opportunity, sizing-decision, order, structured book/stage and event evidence; log text may only
+  supplement fields that are absent and must be labeled.
+
+measurements:
+  - exact counts by terminal state, league, canonical event and opportunity id
+  - unique events, unique opportunity ids, repeated attempts per identity and inter-attempt spacing
+  - BOOK_MOVED planned limit versus rechecked executable first-leg price/depth when structurally available
+  - correctly differenced decision-to-worker, balance, clearance, submit and provider-ack stages
+  - age/freshness and executor-queue contribution, without summing overlapping cumulative stages
+  - contiguous executable-window count and duration from structured sizing/evaluation epochs
+  - conversion ceiling for each named correction, counting a row only when both legs, fees, depth,
+    settlement proof, hedge allowance and all existing limits remain satisfied
+  - observed fill conversion per submitted first-leg order and per unique executable window
+
+success_criteria:
+  - Every one of the 95 known BOOK_MOVED rows is accounted for exactly once and reconciles to the
+    known aggregate; exclusions and missing fields are explicit rather than imputed.
+  - Repeated rows are not called independent prints. Any claimed recoverable row has a named cause,
+    an executable-price/depth proof, and a counterfactual that preserves every current hurdle/cap.
+  - Report measured p50/p90/max stage contributions and the maximum evidence-supported conversion
+    gain for each mechanism. State whether one-third conversion is supported, contradicted or not
+    identifiable; do not install one-third as a target after seeing the data.
+  - No production state, order, kill, override, cap, hurdle or entry policy is changed by this row.
+
+expected_ev_effect: >-
+  Descriptive only. A later preregistered correction may increase dollars per eligible decision by
+  converting still-profitable vanished-before-wire opportunities, but higher fill count has no value
+  unless terminal net EV and Sharpe improve after fees and hedge slippage.
+
+forbidden:
+  - count midpoint or stale frozen prices as executable
+  - treat repeated attempts as independent opportunities
+  - infer a fill from displayed depth without respecting queue, venue response and role
+  - widen limits, lower hurdles, raise caps or alter maker/taker assignment under L141
+  - pool F22 STOP rows into F23 or use F23 outcomes before its registered start
