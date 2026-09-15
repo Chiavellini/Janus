@@ -1,0 +1,47 @@
+row: L122
+date: 2026-09-14
+kind: operator_safety
+status_at_registration: PENDING
+observed_failure: >-
+  The retained live kill has SHA256
+  a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6 and exact reason
+  `LEGACY_INCIDENT_ACK_INVALID flag=211: ValueError: acknowledged incident state changed`.
+  L120 proves and repairs the sole additive-null schema difference, but the only audited clear
+  helper is deliberately restricted to a different false-maker terminality signature and rejects
+  this kill. A direct rm/mv would omit exact reason, database, incident, global-quiet, restart and
+  rollback proofs. Review also found that the existing false-maker helper checks only Polymarket
+  open orders, does not recheck database state after its warm-up, and hashes then unlinks by path.
+immutable_success_criteria:
+  - Add a separate operator-invoked helper restricted to the exact legacy flag 211 invalidation
+    reason. It requires the caller's full kill SHA256 and full deployed Git SHA, verifies the box
+    checkout equals that SHA, and validates the current historical acknowledgement through
+    match_incident without weakening L120's comparator.
+  - Before any stop or archive, and again while stopped immediately before activation, require all
+    expected safety tables, zero unresolved material-stop flags, zero open/unconfirmed/cash-pending
+    orders on either venue, zero unreleased executions, zero materially unhedged unreleased
+    executions, and zero unreleased capital reservations.
+  - Run a complete real two-venue guard pass while the lane is stopped and the original kill is
+    present. Start once under the retained kill, require fresh connected Kalshi, Polymarket market,
+    and Polymarket authenticated-user socket rows, stop again, and run/recheck a second complete
+    guard pass before activation.
+  - Activation is recoverable and race-safe: atomically move only the exact unchanged kill bytes
+    to a new exclusive audit path while the lane is stopped. A changed/replaced/new kill is never
+    removed. Any failure leaves or restores the byte-identical kill and leaves the lane stopped.
+  - The helper never clears SSM kill parameters, kill/all, breaker or venue/event kills, flags,
+    positions, accounting, or evidence rows. It never arms, changes mode, writes an override, or
+    submits an order. Only the operator receives and may run its exact command.
+  - Existing false-maker clear semantics remain unchanged; its independent limitations are not
+    silently generalized under this row. Focused and full tests are green.
+expected_ev_effect: >-
+  None per trade. This provides the auditable final transition from a proved-resolved retained
+  incident to the already-signed LIMITED_LIVE lane, enabling the q=10 economics cohort without a
+  blind kill deletion.
+watch_for:
+  - A path-based hash-then-unlink race or an overwriteable audit artifact.
+  - Checking only one venue's orders or treating a missing table as zero risk.
+  - Removing the kill before a fresh stopped-lane guard pass and post-restart recheck.
+  - Clearing an SSM/human/new/changed latch or leaving the lane live after a failed proof.
+prohibited:
+  - Agent execution of the helper or any kill clear.
+  - Reusing or broadening the false-maker reason predicate.
+  - Generic kill-clear authority, wildcard reasons, shortened digests, or best-effort checks.
