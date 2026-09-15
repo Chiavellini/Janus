@@ -1,0 +1,26 @@
+row: L124
+date: 2026-09-14
+kind: operator_safety
+status_at_registration: PENDING
+observed_failure: >-
+  Static inspection of the operator release path found that the case pattern validating
+  DEPLOYED_SHA contains 20 hexadecimal character classes, while git rev-parse --verify HEAD
+  returns the required 40-character full SHA. A valid release therefore checks out and restarts
+  the candidate but fails closed before the exact L122 legacy-kill recovery.
+immutable_success_criteria:
+  - The release accepts exactly 40 lowercase hexadecimal characters as DEPLOYED_SHA.
+  - It rejects 20-character, 39-character, 41-character, uppercase, and non-hex values before
+    invoking the legacy recovery helper.
+  - A focused test exercises the operator release routing with a full 40-character deployed SHA
+    and proves the helper receives that exact value without truncation.
+  - No kill, mode, override, cap, hurdle, size, entry, protection, or settlement behavior changes.
+  - Focused tests, shell syntax checks, and the integrated baseline are green.
+expected_ev_effect: >-
+  None per trade. This restores reachability of the already-reviewed fail-closed release proof so
+  the prospective q=10 economics cohort can start without manual kill manipulation.
+watch_for:
+  - Accepting abbreviated Git SHAs or silently truncating the full SHA.
+  - Broadening any kill signature or bypassing L122 evidence checks.
+prohibited:
+  - Agent execution of release, mode, override, arm, confirm, or kill-clear commands.
+  - Changing the exact reviewed live-kill digest or reason.
