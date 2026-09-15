@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "dispositions": [
+    {
+      "fill": {
+        "venue": "polymarket",
+        "venue_order_id": "0x32813cbb23731ca96e8830adb5118adb16367d4c0beecf2554040dec4eb3afa3",
+        "fill_id": "99f8e62b-0684-446f-baa7-08bb785c3d30",
+        "contracts": "666.666667",
+        "price": "0.1499999999",
+        "fee_usd": "4.250000016666666",
+        "is_taker": true,
+        "ts": "1789409189",
+        "final": true,
+        "market_id": "5615282760875985231868508008056959876238536896643315063916840237042205273721",
+        "side": "buy_yes"
+      },
+      "action": "open_external_manual",
+      "source": {
+        "git_commit": "5ca42d0205604a8284ad24439a90f05dbd685ceb",
+        "ref": "research/exec/2026-09-14_open-manual-fill-disposition/evidence.json",
+        "sha256": "94066b7d071a5df89fa7448da67b7fb5c1594de00c29753ce9ea7f124f2d75e2"
+      },
+      "reason": "Exact authenticated operator-owned open manual fill; ownership attribution only, never settlement, accounting, protection, or kill clearance.",
+      "supersedes_id": null,
+      "source_lines": [1, 15],
+      "orphan_flags": [
+        {
+          "id": 587,
+          "seen_ts": "1789409219.495691",
+          "flag": "ORPHAN_FILL",
+          "detail": "polymarket 5615282760875985 buy_yes 666.667 @ 0.1499999999 order 0x32813cbb23"
+        }
+      ],
+      "proof": null
+    }
+  ]
+}

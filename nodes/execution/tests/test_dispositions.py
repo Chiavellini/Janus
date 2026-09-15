@@ -10,13 +10,15 @@ import pytest
 
 from kernel.execution_protocol import FillRecord
 from nodes.execution.dispositions import (DDL, append_confirmed, canonical, confirmation_plan,
-    digest, fill_identity, main, match_disposition, prepare_manifest, verify_source)
+    _reject_secrets, digest, fill_identity, main, match_disposition, prepare_manifest, verify_open_manual_evidence,
+    verify_source)
 from nodes.execute.guard import GuardSnapshot
 from nodes.execute.tests.test_guard import _world
 from nodes.risk.kill import KillSwitches
 
 ROOT = Path(__file__).resolve().parents[3]
 PROPOSAL = ROOT / 'research/exec/2026-09-09_historical-proof-dispositions/prepared.json'
+MANUAL_PROPOSAL = ROOT / 'research/exec/2026-09-14_open-manual-fill-disposition/prepared.json'
 
 
 @pytest.fixture(scope='module')
@@ -24,9 +26,18 @@ def manifest():
     return prepare_manifest(json.loads(PROPOSAL.read_text()), repo=ROOT)
 
 
+@pytest.fixture(scope='module')
+def manual_manifest():
+    return prepare_manifest(json.loads(MANUAL_PROPOSAL.read_text()), repo=ROOT)
+
+
 def fills(manifest):
     return [FillRecord(**{k: float(v) if k in {'contracts', 'price', 'fee_usd', 'ts'} else v
                          for k, v in entry['fill'].items()}) for entry in manifest['dispositions']]
+
+
+def manual_fill(manual_manifest):
+    return fills(manual_manifest)[0]
 
 
 def confirm(con, db, manifest):
@@ -264,3 +275,122 @@ def test_failed_orphan_latch_does_not_poison_retry_cache(tmp_path, manifest):
     kill.fail = False
     report = guard.apply(GuardSnapshot(now=1788973601, fills=[fill]))
     assert kill.calls and any(f.startswith('ORPHAN_FILL ') for f in report.findings)
+
+
+def test_open_manual_is_exact_ownership_only_and_preserves_janus_state(tmp_path, manual_manifest):
+    journal, guard, kill = world(tmp_path, manual_manifest)
+    fill = manual_fill(manual_manifest)
+    before = {table: journal.store.con.execute(f'SELECT * FROM {table}').fetchall()
+              for table in ('orders', 'executions')}
+    report = guard.apply(GuardSnapshot(now=1789409300, fills=[fill]))
+    assert not report.orphans and report.dispositions == [(fill, 1)]
+    assert not kill.active(live=True)
+    assert all(journal.store.con.execute(f'SELECT * FROM {table}').fetchall() == rows
+               for table, rows in before.items())
+    assert any('ownership' in finding.lower() for finding in report.findings)
+
+
+@pytest.mark.parametrize('field,value', [
+    ('venue', 'kalshi'), ('fill_id', 'different-fill'), ('venue_order_id', 'different-order'),
+    ('market_id', 'different-market'), ('side', 'buy_no'), ('contracts', 666.666668),
+    ('price', 0.15), ('fee_usd', 4.25), ('ts', 1789409190), ('is_taker', False), ('final', False),
+])
+def test_open_manual_every_identity_change_is_orphan_stop(tmp_path, manual_manifest, field, value):
+    _, guard, kill = world(tmp_path, manual_manifest)
+    changed = replace(manual_fill(manual_manifest), **{field: value})
+    report = guard.apply(GuardSnapshot(now=1789409300, fills=[changed]))
+    assert report.orphans == [changed] and kill.active(live=True) == ['live']
+
+
+def test_open_manual_same_order_different_fill_never_matches(tmp_path, manual_manifest):
+    _, guard, kill = world(tmp_path, manual_manifest)
+    fill = replace(manual_fill(manual_manifest), fill_id='99f8e62b-0684-446f-baa7-08bb785c3d31')
+    report = guard.apply(GuardSnapshot(now=1789409300, fills=[fill]))
+    assert report.orphans == [fill] and kill.active(live=True) == ['live']
+
+
+@pytest.mark.parametrize('mutation', ['operator_statements_verbatim', 'schema', 'cash_identity',
+                                      'cash_arithmetic', 'janus_rows', 'orphan_detail', 'orphan_time'])
+def test_open_manual_malformed_or_unbound_evidence_is_rejected(manual_manifest, mutation):
+    source = deepcopy(manual_manifest['dispositions'][0]['source'])
+    evidence = json.loads(source['content'])
+    if mutation == 'operator_statements_verbatim':
+        evidence['operator_statements_verbatim'][0] = 'close enough'
+    elif mutation == 'schema':
+        evidence['schema'] = 'janus.open_external_manual.evidence.v0'
+    elif mutation == 'cash_identity':
+        evidence['authenticated_cash_source']['trade_id'] = 'other-fill'
+    elif mutation == 'cash_arithmetic':
+        evidence['authenticated_cash_source']['activity_usdc_size'] = '105.25'
+    elif mutation == 'janus_rows':
+        evidence['janus_order_rows'] = [{'id': 'unexpected'}]
+    elif mutation == 'orphan_detail':
+        evidence['orphan_flags'][0]['detail'] = 'polymarket same order, probably this fill'
+    else:
+        evidence['orphan_flags'][0]['seen_ts'] = '1789409188'
+    # A changed source is not a source at the registered Git commit. This proves the archive
+    # membership check rejects tampering before any evidence interpretation occurs.
+    source['content'] = json.dumps(evidence, separators=(',', ':'))
+    source['sha256'] = hashlib.sha256(source['content'].encode()).hexdigest()
+    with pytest.raises(ValueError):
+        verify_open_manual_evidence(source, manual_manifest['dispositions'][0]['fill'])
+
+
+def test_open_manual_secret_bearing_evidence_is_rejected_before_use(manual_manifest):
+    with pytest.raises(ValueError, match='reusable authentication'):
+        _reject_secrets({'authenticated_cash_source': {'api_key': 'reusable-secret'}})
+    with pytest.raises(ValueError, match='reusable authentication'):
+        _reject_secrets({'notes': '-----BEGIN PRIVATE KEY-----'})
+
+
+def test_open_manual_manifest_incidents_must_equal_committed_evidence(manual_manifest):
+    changed = deepcopy(manual_manifest)
+    changed['dispositions'][0]['orphan_flags'][0]['id'] += 1
+    with pytest.raises(ValueError, match='incidents differ'):
+        prepare_manifest(changed)
+
+
+def test_open_manual_revocation_and_stale_confirmation_reorphan(tmp_path, manual_manifest):
+    journal, guard, kill = world(tmp_path, manual_manifest)
+    fill = manual_fill(manual_manifest)
+    accepted = guard.apply(GuardSnapshot(now=1789409300, fills=[fill]))
+    assert not accepted.orphans
+    revoked = {'version': 1, 'dispositions': [dict(manual_manifest['dispositions'][0],
+        action='revoked', supersedes_id=1)]}
+    stale = confirmation_plan(journal.store.con, tmp_path / 't.sqlite', revoked)['confirm_sha256']
+    confirm(journal.store.con, tmp_path / 't.sqlite', revoked)
+    with pytest.raises(ValueError, match='stale'):
+        append_confirmed(journal.store.con, tmp_path / 't.sqlite', revoked, stale, now=1001)
+    kill.calls.clear() if hasattr(kill, 'calls') else None
+    report = guard.apply(GuardSnapshot(now=1789409301, fills=[fill]))
+    assert report.orphans == [fill] and kill.active(live=True) == ['live']
+
+
+def test_open_manual_incomplete_guard_never_resolves_bound_flag(tmp_path, manual_manifest):
+    from nodes.risk.flags import recent_flags
+    journal, guard, kill = world(tmp_path, manual_manifest)
+    seed_flags(journal, manual_manifest)
+    guard.venues = {'polymarket': object()}
+    fill = manual_fill(manual_manifest)
+    kill.latch('live', 'preexisting stop')
+    report = guard.apply(GuardSnapshot(now=1789409300, fills=[fill], fills_read_complete=False,
+                                       positions={'polymarket': []}))
+    assert not any('ORPHAN_FILL_RESOLVED_EXACT' in finding for finding in report.findings)
+    assert recent_flags(tmp_path / 't.sqlite', 'ORPHAN_FILL', now=1789409300)
+    assert kill.active(live=True) == ['live']
+
+
+def test_open_manual_reorphan_same_process_after_corruption(tmp_path, manual_manifest):
+    kill = FakeKill()
+    _, journal, _, guard = _world(tmp_path, venues={}, kill=kill)
+    fill = manual_fill(manual_manifest)
+    assert guard.apply(GuardSnapshot(now=1789409300, fills=[fill])).orphans == [fill]
+    confirm(journal.store.con, tmp_path / 't.sqlite', manual_manifest)
+    assert not guard.apply(GuardSnapshot(now=1789409301, fills=[fill])).orphans
+    kill.calls.clear()
+    row = journal.store.con.execute('SELECT record_json FROM external_fill_dispositions WHERE id=1').fetchone()[0]
+    journal.store.con.execute('INSERT INTO external_fill_dispositions(venue,fill_id,supersedes_id,record_json,record_sha256) VALUES(?,?,?,?,?)',
+                              (fill.venue, fill.fill_id, 1, row, '0' * 64))
+    journal.store.con.commit()
+    report = guard.apply(GuardSnapshot(now=1789409302, fills=[fill]))
+    assert report.orphans == [fill] and kill.calls and kill.calls[-1][0] == 'live'

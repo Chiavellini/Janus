@@ -38,6 +38,20 @@ OR (NEW.supersedes_id IS NOT NULL AND NOT EXISTS(
 BEGIN SELECT RAISE(ABORT,'disposition must supersede the exact latest row'); END;
 """
 
+MANUAL_EVIDENCE_SCHEMA = 'janus.open_external_manual.evidence.v1'
+MANUAL_EVIDENCE_COMMIT = '5ca42d0205604a8284ad24439a90f05dbd685ceb'
+MANUAL_EVIDENCE_REF = 'research/exec/2026-09-14_open-manual-fill-disposition/evidence.json'
+MANUAL_OPERATOR_STATEMENTS = [
+    'That position was placed manually on a hunch i got',
+    'You should not worry about it',
+]
+MANUAL_MEANING = ('Operator ownership attribution only. The position remains external to Janus; '
+                  'this is not settlement, PnL, protection, or kill-clear evidence.')
+_SECRET_KEY = re.compile(
+    r'(?:api[_-]?key|access[_-]?token|refresh[_-]?token|private[_-]?key|secret|password|passwd|'
+    r'credential|authorization|bearer|cookie|session[_-]?token|client[_-]?secret|mnemonic|seed)', re.I)
+_HEX64 = re.compile(r'[0-9a-f]{64}')
+
 
 def canonical(value) -> str:
     return json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
@@ -108,7 +122,8 @@ def verify_source(source: dict) -> None:
     ref = source['ref']
     if not isinstance(ref, str) or not ref or ref.startswith('/') or '..' in ref.split('/') or str(PurePosixPath(ref)) != ref:
         raise ValueError('source ref must be an exact relative Git file path')
-    if not isinstance(source['content'], str) or not isinstance(source['tree_objects'], list):
+    if (not isinstance(source['sha256'], str) or not _HEX64.fullmatch(source['sha256'])
+            or not isinstance(source['content'], str) or not isinstance(source['tree_objects'], list)):
         raise ValueError('source bytes/tree chain malformed')
     blob = source['content'].encode()
     if len(blob) > 1_000_000 or hashlib.sha256(blob).hexdigest() != source['sha256']:
@@ -149,6 +164,113 @@ def source_from_git(repo: str | Path, commit: str, ref: str, sha256: str) -> dic
                   commit_object=base64.b64encode(raw_commit).decode(), tree_objects=trees)
     verify_source(source)
     return source
+
+
+def _reject_secrets(value, path='evidence') -> None:
+    """Reject credentials even when they are hidden in an otherwise valid evidence document."""
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if not isinstance(key, str) or _SECRET_KEY.search(key):
+                raise ValueError(f'evidence contains reusable authentication material at {path}')
+            _reject_secrets(child, f'{path}.{key}')
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            _reject_secrets(child, f'{path}[{index}]')
+    elif isinstance(value, str):
+        upper = value.upper()
+        if ('-----BEGIN ' in upper or 'BEARER ' in upper or 'PRIVATE KEY' in upper
+                or re.fullmatch(r'eyJ[\w-]+\.[\w-]+\.[\w-]+', value)):
+            raise ValueError(f'evidence contains reusable authentication material at {path}')
+
+
+def _manual_incident_detail(fill: dict) -> str:
+    return (f"{fill['venue']} {fill['market_id'][:16]} {fill['side']} "
+            f"{float(Decimal(fill['contracts'])):g} @ {fill['price']} "
+            f"order {fill['venue_order_id'][:12]}")
+
+
+def verify_open_manual_evidence(source: dict, fill: dict) -> dict:
+    """Validate the committed, authenticated evidence for one still-open manual fill.
+
+    This deliberately does not create a settlement proof.  It only proves that the operator's
+    exact ownership statement and one exact venue fill are the bytes being attributed.
+    """
+    exact_fields(source, {'git_commit', 'ref', 'sha256', 'content', 'commit_object', 'tree_objects'})
+    if source['git_commit'] != MANUAL_EVIDENCE_COMMIT or source['ref'] != MANUAL_EVIDENCE_REF:
+        raise ValueError('open manual evidence must be the registered committed evidence.json')
+    verify_source(source)
+    try:
+        evidence = json.loads(source['content'], parse_float=Decimal)
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise ValueError(f'malformed manual evidence JSON: {exc}') from exc
+    exact_fields(evidence, {'schema', 'observed_database', 'observed_deployed_sha',
+                            'operator_statements_verbatim', 'fill', 'authenticated_cash_source',
+                            'janus_order_rows', 'janus_order_event_rows', 'orphan_flags', 'meaning'})
+    if evidence['schema'] != MANUAL_EVIDENCE_SCHEMA:
+        raise ValueError('unsupported open manual evidence schema')
+    if (evidence['observed_database'] != '/srv/janus/tuples/tuples.sqlite'
+            or not isinstance(evidence['observed_deployed_sha'], str)
+            or not re.fullmatch('[0-9a-f]{40}', evidence['observed_deployed_sha'])):
+        raise ValueError('authenticated observation identity is malformed')
+    if evidence['operator_statements_verbatim'] != MANUAL_OPERATOR_STATEMENTS:
+        raise ValueError('operator statements are not the exact registered statements')
+    if evidence['meaning'] != MANUAL_MEANING:
+        raise ValueError('manual evidence meaning is not the ownership-only statement')
+    _reject_secrets(evidence)
+    observed_fill = fill_identity(evidence['fill'])
+    if observed_fill != fill:
+        raise ValueError('manual evidence does not bind the exact FillRecord')
+    cash = evidence['authenticated_cash_source']
+    exact_fields(cash, {'database_id', 'source_sha256', 'observed_utc', 'trade_id', 'taker_order_id',
+                        'asset_id', 'side', 'size', 'price', 'status', 'trader_side',
+                        'transaction_hash', 'activity_price', 'activity_usdc_size'})
+    if (type(cash['database_id']) is not int or cash['database_id'] <= 0
+            or not isinstance(cash['source_sha256'], str) or not _HEX64.fullmatch(cash['source_sha256'])
+            or not isinstance(cash['observed_utc'], str) or not Decimal(cash['observed_utc']).is_finite()
+            or not isinstance(cash['trade_id'], str) or cash['trade_id'] != fill['fill_id']
+            or not isinstance(cash['taker_order_id'], str) or cash['taker_order_id'] != fill['venue_order_id']
+            or not isinstance(cash['asset_id'], str) or cash['asset_id'] != fill['market_id']
+            or cash['side'] != ('BUY' if fill['side'].startswith('buy_') else 'SELL')
+            or cash['status'] != 'CONFIRMED' or cash['trader_side'] != ('TAKER' if fill['is_taker'] else 'MAKER')
+            or not isinstance(cash['transaction_hash'], str)
+            or not re.fullmatch(r'0x[0-9a-fA-F]{64}', cash['transaction_hash'])):
+        raise ValueError('authenticated cash source identity/status mismatch')
+    for key in ('size', 'price', 'activity_price', 'activity_usdc_size'):
+        if isinstance(cash[key], bool):
+            raise ValueError('authenticated cash values must be numeric text')
+        number = Decimal(str(cash[key]))
+        if not number.is_finite():
+            raise ValueError('authenticated cash values must be finite')
+    if Decimal(str(cash['size'])) != Decimal(fill['contracts']):
+        raise ValueError('authenticated cash quantity does not bind the fill')
+    if (abs(Decimal(str(cash['price'])) - Decimal(fill['price'])) > Decimal('0.000000001')
+            or Decimal(str(cash['activity_price'])) != Decimal(fill['price'])):
+        raise ValueError('authenticated activity price does not bind the fill')
+    if Decimal(cash['observed_utc']) < Decimal(fill['ts']):
+        raise ValueError('authenticated cash observation predates the fill')
+    # The venue activity is rounded to cents/decimal display precision. Keep the tolerance explicit
+    # and tiny; this is arithmetic reconciliation, never permission to invent cash finality.
+    expected_cash = Decimal(fill['contracts']) * Decimal(fill['price']) + Decimal(fill['fee_usd'])
+    if abs(Decimal(str(cash['activity_usdc_size'])) - expected_cash) > Decimal('0.000000000001'):
+        raise ValueError('authenticated cash arithmetic does not bind quantity, price and fee')
+    if evidence['janus_order_rows'] != [] or evidence['janus_order_event_rows'] != []:
+        raise ValueError('manual fill must have empty Janus order and order-event rows')
+    flags = evidence['orphan_flags']
+    if not isinstance(flags, list) or not flags:
+        raise ValueError('manual evidence requires bounded orphan flag snapshots')
+    expected_detail = _manual_incident_detail(fill)
+    seen_ids = set()
+    for incident in flags:
+        exact_fields(incident, {'id', 'seen_ts', 'flag', 'detail'})
+        if (type(incident['id']) is not int or incident['id'] <= 0 or incident['id'] in seen_ids
+                or incident['flag'] != 'ORPHAN_FILL' or incident['detail'] != expected_detail
+                or not isinstance(incident['seen_ts'], str)):
+            raise ValueError('orphan snapshot is not bounded to the exact manual fill')
+        seen = Decimal(incident['seen_ts'])
+        if not seen.is_finite() or seen < Decimal(fill['ts']):
+            raise ValueError('orphan snapshot timestamp is outside the exact fill bound')
+        seen_ids.add(incident['id'])
+    return evidence
 
 
 def _pointer(document, pointer: str):
@@ -227,7 +349,7 @@ def prepare_manifest(manifest: dict, *, repo: str | Path = '.') -> dict:
     for raw in manifest['dispositions']:
         exact_fields(raw, {'fill', 'action', 'source', 'reason', 'supersedes_id', 'source_lines', 'orphan_flags', 'proof'})
         entry = dict(raw, fill=fill_identity(raw['fill']))
-        if entry['action'] not in {'settled_external_proof', 'revoked'}:
+        if entry['action'] not in {'settled_external_proof', 'open_external_manual', 'revoked'}:
             raise ValueError('unknown disposition action')
         if not isinstance(entry['reason'], str) or len(entry['reason'].strip()) < 16:
             raise ValueError('explicit substantive disposition reason required')
@@ -238,15 +360,21 @@ def prepare_manifest(manifest: dict, *, repo: str | Path = '.') -> dict:
             source = source_from_git(repo, source['git_commit'], source['ref'], source['sha256'])
         verify_source(source)
         entry['source'] = source
-        entry['proof'] = dict(entry['proof'])
-        if entry['proof']['cash_activity'] is not None:
-            entry['proof']['cash_activity'] = dict(entry['proof']['cash_activity'])
-        for archive in [entry['proof'], entry['proof']['cash_activity']]:
-            if archive is None:
-                continue
-            git_source = archive['git_source']
-            if isinstance(git_source, dict) and set(git_source) == {'git_commit', 'ref', 'sha256'}:
-                archive['git_source'] = source_from_git(repo, git_source['git_commit'], git_source['ref'], git_source['sha256'])
+        manual_evidence = None
+        if entry['action'] == 'open_external_manual' or (entry['action'] == 'revoked' and entry['proof'] is None):
+            if entry['proof'] is not None:
+                raise ValueError('open manual ownership cannot contain settlement proof')
+            manual_evidence = verify_open_manual_evidence(entry['source'], entry['fill'])
+        else:
+            entry['proof'] = dict(entry['proof'])
+            if entry['proof']['cash_activity'] is not None:
+                entry['proof']['cash_activity'] = dict(entry['proof']['cash_activity'])
+            for archive in [entry['proof'], entry['proof']['cash_activity']]:
+                if archive is None:
+                    continue
+                git_source = archive['git_source']
+                if isinstance(git_source, dict) and set(git_source) == {'git_commit', 'ref', 'sha256'}:
+                    archive['git_source'] = source_from_git(repo, git_source['git_commit'], git_source['ref'], git_source['sha256'])
         lines = entry['source_lines']
         if (not isinstance(lines, list) or len(lines) != 2 or any(type(x) is not int for x in lines)
                 or not 1 <= lines[0] <= lines[1] <= len(source['content'].splitlines()) or lines[1] - lines[0] > 30):
@@ -259,7 +387,10 @@ def prepare_manifest(manifest: dict, *, repo: str | Path = '.') -> dict:
                     or not isinstance(incident['detail'], str) or not incident['detail']
                     or not isinstance(incident['seen_ts'], str) or not Decimal(incident['seen_ts']).is_finite()):
                 raise ValueError('invalid exact orphan incident snapshot')
-        verify_proof(entry)
+        if manual_evidence is not None and entry['orphan_flags'] != manual_evidence['orphan_flags']:
+            raise ValueError('manual disposition incidents differ from committed evidence')
+        if entry['proof'] is not None:
+            verify_proof(entry)
         key = (entry['fill']['venue'], entry['fill']['fill_id'])
         if key in seen:
             raise ValueError('duplicate fill in proposal')
@@ -304,7 +435,7 @@ def match_disposition(con, fill: FillRecord) -> dict | None:
     entry = prepare_manifest({'version': 1, 'dispositions': [record['entry']]})['dispositions'][0]
     if entry['supersedes_id'] != row[3]:
         raise ValueError('disposition chain identity mismatch')
-    if entry['action'] != 'settled_external_proof' or entry['fill'] != identity:
+    if entry['action'] not in {'settled_external_proof', 'open_external_manual'} or entry['fill'] != identity:
         return None
     return {'id': row[0], 'reason': entry['reason'], 'source': entry['source'], 'fill_sha256': digest(identity),
             'orphan_flags': entry['orphan_flags']}
@@ -372,8 +503,12 @@ def main(argv=None) -> int:
                          'action': e['action'], 'source_commit': e['source']['git_commit'],
                          'source_ref': e['source']['ref'], 'source_sha256': e['source']['sha256'],
                          'source_lines': e['source_lines'], 'source_excerpt': '\n'.join(e['source']['content'].splitlines()[e['source_lines'][0]-1:e['source_lines'][1]]),
-                         'proof_origin': e['proof']['origin'], 'proof_sha256': e['proof']['sha256'],
-                         'proof_facts': verify_proof(e), 'orphan_flags': e['orphan_flags']} for e in manifest['dispositions']]
+                         'proof_origin': (e['proof']['origin'] if e['proof'] is not None else None),
+                         'proof_sha256': (e['proof']['sha256'] if e['proof'] is not None else None),
+                         'proof_facts': (verify_proof(e) if e['action'] != 'open_external_manual' else None),
+                         'manual_evidence_facts': (verify_open_manual_evidence(e['source'], e['fill'])
+                                                   if e['action'] == 'open_external_manual' else None),
+                         'orphan_flags': e['orphan_flags']} for e in manifest['dispositions']]
         print(json.dumps(plan, indent=2, default=str))
         return 0
     except (ValueError, ArithmeticError, KeyError, IndexError, TypeError, OSError, sqlite3.Error, subprocess.SubprocessError) as exc:

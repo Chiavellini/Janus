@@ -138,7 +138,10 @@ def confirmation_plan(con, db, manifest, operator):
     head = history[-1][0] if history else None
     if manifest['supersedes_id'] != head:
         raise ValueError('stale incident acknowledgement head')
-    if manifest['action'] != 'revoke' and incident_snapshot(con, manifest['client_order_id'], flag_id, violation_id) != manifest['snapshot']:
+    if (manifest['action'] != 'revoke'
+            and not _legacy_snapshot_equal(manifest['snapshot'],
+                                           incident_snapshot(con, manifest['client_order_id'], flag_id,
+                                                             violation_id))):
         raise ValueError('exact incident/settled state changed')
     payload = dict(database=str(Path(db).resolve()), manifest_sha256=digest(manifest), head=head, operator=operator.strip())
     return dict(payload, confirm_sha256=digest(payload))
@@ -188,7 +191,10 @@ def match_incident(con, flag_id, *, require_idle=True):
         previous = row_id
     if manifest['action'] == 'revoke':
         raise ValueError('incident acknowledgement revoked')
-    if incident_snapshot(con, manifest['client_order_id'], flag_id, manifest['snapshot']['violation']['id'], require_idle=require_idle) != manifest['snapshot']:
+    if not _legacy_snapshot_equal(
+            manifest['snapshot'],
+            incident_snapshot(con, manifest['client_order_id'], flag_id,
+                              manifest['snapshot']['violation']['id'], require_idle=require_idle)):
         raise ValueError('acknowledged incident state changed')
     return dict(id=previous, flag=manifest['snapshot']['flag'], reason=manifest['reason'])
 
@@ -218,6 +224,40 @@ def resolve_idle_incidents(store, *, now, verify_pass, position_evidence=None):
 
 _MIGRATION_FALSE_ALARM_PREFIX = 'LEGACY_INCIDENT_ACK_INVALID flag='
 _MIGRATION_FALSE_ALARM_SUFFIX = ': ValueError: acknowledged incident state changed'
+
+# L120: the v1 legacy acknowledgement predates this one reservation-column migration.  Keep the
+# allowance deliberately path-specific.  In particular, this is not a subset comparison: every
+# stored key must still exist with the exact same type and value, and every current key must have a
+# stored counterpart except this one known additive null.
+_LEGACY_NULL_ADDITIVE_PATH = ('settled', 'reservation', 'hedged_utc')
+
+
+def _legacy_snapshot_equal(stored, current, *, _path=()):
+    """Compare a v1 stored snapshot to current evidence with one exact null-field allowance.
+
+    The comparator is only for legacy incident acknowledgement validation.  Missing stored
+    ``/settled/reservation/hedged_utc`` is compatible with a current ``null`` value because that
+    column was added after the acknowledgement.  Missing, added, type-changed, or value-changed
+    data at any other path is a mismatch; current non-null hedged_utc is also a mismatch.
+    """
+    if type(stored) is not type(current):
+        return False
+    if isinstance(stored, dict):
+        stored_keys, current_keys = set(stored), set(current)
+        if stored_keys - current_keys:
+            return False
+        for key in current_keys - stored_keys:
+            path = _path + (key,)
+            if path != _LEGACY_NULL_ADDITIVE_PATH or current[key] is not None:
+                return False
+        return all(_legacy_snapshot_equal(stored[key], current[key], _path=_path + (key,))
+                   for key in stored_keys)
+    if isinstance(stored, list):
+        if len(stored) != len(current):
+            return False
+        return all(_legacy_snapshot_equal(old, new, _path=_path + (index,))
+                   for index, (old, new) in enumerate(zip(stored, current)))
+    return stored == current
 
 
 def _migration_source_id(detail):

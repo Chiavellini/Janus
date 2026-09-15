@@ -135,6 +135,38 @@ Revocation, changed identity or corrupt evidence re-flags in the same process;
 current unknown inventory attempts the kill on every pass, including after a
 human reset. A failed latch cannot poison the reporting cache.
 
+## Exact open manual fill ownership (L118)
+
+`open_external_manual` is a separate append-only ownership attribution for a still-open position
+the operator says was placed manually. It is not a settled proof: its `proof` is required to be
+`null`, and it cannot change settlement, cash finality, P&L, protection, execution ownership,
+positions, balances, reservations, flags or the kill. The exact `FillRecord` identity (all fields,
+including canonical Decimal text) is bound to the committed `evidence.json` at the registered
+full Git commit. The evidence validator also requires the exact operator statements, authenticated
+cash identity and arithmetic, empty Janus order/event rows, bounded exact orphan snapshots, and
+rejects credential/private-key material.
+
+Prepare and dry-run remain database-read-only; confirmation uses the same exact target-database and
+current-head digest envelope and appends only the ownership record:
+
+```sh
+python3 -m nodes.execution.dispositions --db /absolute/path/to/tuples.sqlite \
+  --manifest research/exec/2026-09-14_open-manual-fill-disposition/prepared.json
+python3 -m nodes.execution.dispositions --db /absolute/path/to/tuples.sqlite \
+  --manifest research/exec/2026-09-14_open-manual-fill-disposition/prepared.json \
+  --confirm EXACT_DIGEST_FROM_THAT_DRY_RUN
+```
+
+Only the exact named fill can match. A future fill sharing its order, token, account, side, price
+or quantity remains an orphan. Revocation, a changed identity, corrupt/unconfirmed/stale evidence,
+an incomplete guard pass, or an unknown/equal-time incident re-orphans or leaves the flag active.
+A fresh complete guard pass may append a named `ORPHAN_FILL_RESOLVED_EXACT` marker for this fill,
+but that marker never clears the kill and shared-account inventory remains outside Janus.
+
+Expected EV effect: none. This removes one proved shared-account bookkeeping blocker so registered
+q=10 measurement can resume without weakening orphan, protection, fee, settlement or accounting
+checks.
+
 ## Exact historical legacy persistence label (L56)
 
 `legacy_incident_ack.py` separately acknowledges one reviewed historical IOC

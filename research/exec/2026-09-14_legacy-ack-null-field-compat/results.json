@@ -1,0 +1,45 @@
+{
+  "schema": "janus.l120.legacy_ack_null_field_compat.v1",
+  "row": "L120",
+  "verdict": "LOCAL_PASS_DEPLOYMENT_PENDING",
+  "production_mutations": false,
+  "database_mutations": false,
+  "kill_or_mode_mutations": false,
+  "compatibility": {
+    "allowed_path": "/settled/reservation/hedged_utc",
+    "allowed_stored_state": "absent",
+    "allowed_current_state": null,
+    "comparator": "recursive exact type/key/value equality with one path-specific absent-to-null allowance"
+  },
+  "focused_tests": {
+    "command": "python3 -m pytest -q nodes/execution/tests/test_legacy_incident_ack.py",
+    "passed": 43,
+    "failed": 0
+  },
+  "execution_tests": {
+    "command": "python3 -m pytest -q nodes/execution/tests",
+    "passed": 159,
+    "failed": 0
+  },
+  "full_suite": {
+    "command": "python3 -m pytest -q",
+    "collected": 1601,
+    "passed": 1601,
+    "failed": 0
+  },
+  "replay_parity": {
+    "status": "PASS",
+    "rows": 1093,
+    "rows_digest": "13e4fb08a76c920f",
+    "selections_digest": "4f53cda18c2baa0c",
+    "basis": "research/infra/2026-09-12_loop-waste/measure.py --label l118_l120 --runs 1"
+  },
+  "required_mutations": {
+    "absent_to_null": "PASS",
+    "absent_to_nonnull": "FAIL",
+    "stored_null_to_current_nonnull": "FAIL",
+    "another_added_null_field": "FAIL",
+    "removed_field": "FAIL",
+    "changed_economic_field": "FAIL"
+  }
+}

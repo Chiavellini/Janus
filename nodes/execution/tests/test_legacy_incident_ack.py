@@ -12,7 +12,7 @@ from nodes.exec_polymarket.position_evidence import capture, sha
 from kernel.execution_protocol import Position
 from nodes.execution.dispositions import canonical, digest, source_from_git
 from nodes.execution.legacy_incident_ack import (DDL, FLAG, TABLE, append_confirmed, confirmation_plan,
-    _empty_admission_state, incident_snapshot, main, match_incident, prepare_manifest,
+    _empty_admission_state, _legacy_snapshot_equal, incident_snapshot, main, match_incident, prepare_manifest,
     prepare_from_database, resolve_idle_incidents)
 from nodes.execution.tests.test_overfill_ack import world as overfill_world, confirm as overfill_confirm, complete_snapshot as base_snapshot, T0
 from nodes.risk.flags import unresolved_flag_rows, recent_flags
@@ -80,6 +80,61 @@ def test_exact_guard_resolution_preserves_every_source_row_and_kill(tmp_path, pr
     after = GuardReport()
     guard._resolve_legacy_incidents(shared, after)
     assert after.findings == [], "resolved legacy incidents do not demand a one-time position proof forever"
+
+
+@pytest.mark.parametrize(
+    ('stored', 'current', 'expected'),
+    [
+        pytest.param(
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10'}}},
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10', 'hedged_utc': None}}},
+            True, id='absent-hedged-utc-to-null-pass'),
+        pytest.param(
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10'}}},
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10', 'hedged_utc': '11'}}},
+            False, id='absent-hedged-utc-to-nonnull-fail'),
+        pytest.param(
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10', 'hedged_utc': None}}},
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10', 'hedged_utc': '11'}}},
+            False, id='stored-null-to-nonnull-fail'),
+        pytest.param(
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10'}}},
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10', 'other': None}}},
+            False, id='another-added-null-field-fail'),
+        pytest.param(
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10', 'hedged_utc': None}}},
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10'}}},
+            False, id='current-removed-field-fail'),
+        pytest.param(
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10'},
+                         'settlement': {'realized_usd': '1.23'}}},
+            {'settled': {'reservation': {'reservation_id': 'r', 'released_utc': '10', 'hedged_utc': None},
+                         'settlement': {'realized_usd': '1.24'}}},
+            False, id='economic-value-change-fail'),
+    ],
+)
+def test_legacy_snapshot_compatibility_allows_only_one_exact_null_addition(stored, current, expected):
+    assert _legacy_snapshot_equal(stored, current) is expected
+
+
+def test_legacy_snapshot_absent_hedged_utc_passes_confirmation_and_revalidation(tmp_path, proof):
+    store, _, _, _, manifest, _ = world(tmp_path, proof)
+    legacy = deepcopy(manifest)
+    del legacy['snapshot']['settled']['reservation']['hedged_utc']
+    assert confirm(tmp_path, store, legacy) == 1
+    assert match_incident(store.con, 211)['id'] == 1
+
+
+@pytest.mark.parametrize('value', [T0 + 1, '11'])
+def test_legacy_snapshot_absent_hedged_utc_rejects_current_nonnull(tmp_path, proof, value):
+    store, _, _, _, manifest, _ = world(tmp_path, proof)
+    legacy = deepcopy(manifest)
+    del legacy['snapshot']['settled']['reservation']['hedged_utc']
+    confirm(tmp_path, store, legacy)
+    store.con.execute('UPDATE capital_reservations SET hedged_utc=? WHERE reservation_id=?', (value, 'reservation'))
+    store.con.commit()
+    with pytest.raises(ValueError, match='acknowledged incident state changed'):
+        match_incident(store.con, 211)
 
 
 def test_resolved_ack_closes_only_exact_migration_false_alarms_after_terminal_maker_history(tmp_path, proof):
