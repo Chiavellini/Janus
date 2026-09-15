@@ -1,0 +1,28 @@
+row: L125
+date: 2026-09-14
+kind: operator_safety
+status_at_registration: PENDING
+observed_failure: >-
+  The first operator-authorized release of L124 reached the exact L122 helper and failed closed
+  with full 40-hex release SHA required. Static counting then found 42 hexadecimal character
+  classes in the helper release-SHA pattern and 61 in its kill-SHA256 pattern. Valid full inputs
+  cannot both pass, so exact recovery is unreachable while the retained kill stays protective.
+immutable_success_criteria:
+  - The helper accepts exactly 40 lowercase hexadecimal characters for RELEASE_SHA and exactly
+    64 lowercase hexadecimal characters for KILL_SHA.
+  - It rejects short, long, uppercase, and non-hex values for each argument before any remote or
+    mutating command is constructed or invoked.
+  - A focused test executes the real helper preamble and proves valid exact inputs cross the
+    validation boundary while every malformed case fails.
+  - The exact reviewed kill digest, reason, database proof, two guard passes, archive, rollback,
+    and stop semantics remain unchanged.
+  - Focused tests, shell syntax checks, integrated baseline, and replay parity are green.
+expected_ev_effect: >-
+  None per trade. This restores reachability of the already-reviewed recovery proof and permits
+  the q=10 prospective economics cohort to begin.
+watch_for:
+  - A regex that accepts newlines, uppercase, abbreviated, or overlong values.
+  - A test that duplicates rather than executes the production validation preamble.
+prohibited:
+  - Bypassing any evidence check or directly deleting a kill.
+  - Changing caps, hurdles, size, entry, protection, or settlement behavior.
