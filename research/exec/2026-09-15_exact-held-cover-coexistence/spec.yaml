@@ -1,0 +1,92 @@
+id: L138
+registered_at: 2026-09-15
+track: operator/safety
+kind: exact held-cover recovery coexistence
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L138
+title: Recover the guard latch while one exact fully hedged cancelled-event cover remains reserved
+
+# IMMUTABLE AFTER REGISTRATION. This precedes implementation edits, tests, credentialed guards,
+# kill resolution/archive, restart, F22 entry, or any database/account mutation.
+known_at_registration:
+  deployed_release: c65d6206eb2a3b91569fda8fc8af06c716c671b8
+  lane: inactive with MainPID=0 and ControlPID=0
+  retained_kill_sha256: dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83
+  unresolved_guard_sources: [1169, 1170]
+  l136_result: both venue-authoritative winners remain null; no settlement write
+  exact_cover:
+    execution_id: 17077a35da5b46bb92b62daf0d927ff7
+    reservation_id: b292be2ab30449a3a9f53a3387c1aa17
+    event_id: pm:atp:1013694
+    opportunity_id: pm:atp:1013694:moneyline:v1-taker-taker-moneyline:25
+    state: HEDGED
+    quantity: 25.0
+    unhedged: 0.0
+    reserved_usd: {polymarket: 13.06237, kalshi: 11.4312}
+    settlement_rows: 0
+  settlement_delay_evidence: >-
+    Current external score coverage reports Sharipov-Ivashka Guangzhou cancelled. The stored and
+    public Polymarket rule permits a no-play result to remain unresolved until 2026-09-28 23:59 ET;
+    this is descriptive context, never settlement authority.
+  code_evidence:
+    - L133's static _quiet rejects every unreleased execution and reservation without distinguishing
+      a fully hedged expected cover from money in flight.
+    - guard_once --require-complete-quiet accepts expected positions when both venue reads are
+      complete and their holdings match the unreleased execution; it rejects mismatch, orphan,
+      unhedged quantity, protection work, provider error, or material finding.
+    - ExposureLedger intentionally reloads open reservations, counts them under all total, venue,
+      league, simultaneous-event, unresolved and signed daily-notional limits, and treats hedged_utc
+      as ending only the same-event single-flight lock.
+    - The running lane polls every unreleased HEDGED execution through venue-authoritative
+      settlement and releases it only after both venues finalize.
+
+question: >-
+  Can the exact two-source guard latch be resolved and F22 restarted while retaining this one exact
+  fully hedged cover and all of its capital accounting, without allowing any unknown, unhedged,
+  extra, mismatched, open-order, unresolved-provider, or otherwise nonquiet state?
+
+required_behavior:
+  compatibility:
+    - Original L133 prove/activate commands and zero-money quiet semantics remain unchanged.
+    - The exact-held path is distinct and reachable only after L136 returns its explicit WAIT code 3.
+  exact_cover:
+    - Require the complete L138 release SHA, exact retained kill bytes and exact cover identity,
+      opportunity, event slug/outcome map, two owned filled closed IOC orders, prices, fees,
+      zero unhedged/unwound quantity, open exact reservation and no settlement row.
+    - Require no other unreleased execution, reservation, open/unconfirmed/pending order, admission,
+      post-only violation/order, or unresolved material flag except registered GUARD_FAILED 1169/1170.
+    - Never mark the cover settled, release/shrink its reservation, remove a position, or manufacture
+      a venue result.
+  guards_and_activation:
+    - Require two stopped-lane credentialed complete-quiet guards around the retained-kill three-stream
+      warm-up; both must read both venues completely and match the exact expected positions.
+    - Re-prove exact held state immediately before exact joint flag resolution and again before
+      exclusively archiving only the unchanged kill.
+    - Any new evidence, provider error, mismatch, extra state, partial result, process-state failure,
+      write/archive/restart failure restores/retains the kill and leaves the lane stopped.
+  running_state:
+    - After restart the existing ledger must reload the reservation and count its full $24.49357
+      against every current limit; the lane's existing settlement pass continues authoritative polls.
+    - F22's unchanged first-three-fill gate, assignment, caps, hurdles, sizing, hedge and protection
+      rules remain in force. This exact pre-F22 cover is not an F22 observation.
+
+success_criteria:
+  - Adversarial fixtures show only the exact registered held cover can coexist; any changed/extra/
+    unhedged/open-order/reservation/settlement/outcome-map/marker state blocks.
+  - Original L133 all-quiet tests remain green and cannot invoke held-cover semantics accidentally.
+  - Shell tests prove L136 SETTLED uses original L133, WAIT uses only L138, and any other L136 exit
+    stops before guards, resolution, archive or restart.
+  - Ledger/restart tests prove the full reservation still consumes current caps and later ordinary
+    authoritative settlement releases it exactly once.
+  - Focused and integrated suites, Bash/Python checks and exact replay parity pass; independent Luna
+    audit returns RELEASE before production.
+
+expected_ev_effect: >-
+  No change to EV per trade. It avoids potentially losing up to thirteen days of valid F22 sampling
+  merely because one cancelled-event cover remains correctly reserved, allowing evidence toward the
+  $20/day and $100/day goals under the already signed limits.
+
+authority: >-
+  The operator asked to fix whatever is necessary to prove whether the current system can reach the
+  profit goal. This authorizes only exact coexistence recovery; it does not authorize a cap, hurdle,
+  size, fee, settlement-rule, entry-arm, hedge, protection, account-position or manual-finality change.

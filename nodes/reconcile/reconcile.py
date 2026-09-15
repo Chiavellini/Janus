@@ -17,6 +17,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from typing import Mapping, Sequence
+import math
 
 from kernel.execution_protocol import ExecutionVenue, FillRecord
 from kernel.schema import FillState
@@ -87,10 +88,14 @@ def _client_ids_for(journal: Journal, venue_order_id: str) -> list[str]:
     return [r[0] for r in rows]
 
 
-def settle(*, legs: Sequence[dict], winners: Mapping[str, str], now: float | None = None) -> list[RealizedFill]:
+def settle(*, legs: Sequence[dict], winners: Mapping[str, str],
+           payouts: Mapping[str, Mapping[str, float]] | None = None,
+           now: float | None = None) -> list[RealizedFill]:
     """Realized PnL per leg. `legs`: [{venue, client_order_id, outcome_id, side, contracts, price, fee_usd,
     state, final}]; `winners`: venue -> the outcome_id that won on that venue (each venue's OWN
-    settlement, which is the point). A leg whose venue has not settled yields an UNCONFIRMED
+    settlement, which is the point). ``payouts`` optionally supplies the venue-authoritative
+    outcome_id -> payout map (including scalar/half outcomes); when absent, the legacy binary
+    ``winners`` path is used. A leg whose venue has not settled yields an UNCONFIRMED
     RealizedFill, which keeps the day's PnL unknown and the breaker closed."""
     t = now or time.time()
     out = []
@@ -102,18 +107,33 @@ def settle(*, legs: Sequence[dict], winners: Mapping[str, str], now: float | Non
         if st in (FillState.UNFILLED, FillState.REJECTED) or leg["contracts"] <= 0:
             out.append(RealizedFill(leg["client_order_id"], st, 0.0, day_of(t)))
             continue
-        w = winners.get(leg["venue"])
-        if w is None:
+        venue = leg["venue"]
+        w = winners.get(venue)
+        venue_payouts = payouts.get(venue) if payouts else None
+        bought = leg["outcome_id"]
+        base = bought[:-3] if bought.endswith(":NO") else bought
+        payout_per_contract = None
+        if venue_payouts is not None:
+            try:
+                candidate = venue_payouts.get(base)
+                if candidate is not None:
+                    candidate = float(candidate)
+                    if math.isfinite(candidate) and 0.0 <= candidate <= 1.0:
+                        payout_per_contract = 1.0 - candidate if bought.endswith(":NO") else candidate
+            except (TypeError, ValueError):
+                payout_per_contract = None
+        if payout_per_contract is None and w is None:
             out.append(RealizedFill(leg["client_order_id"], FillState.UNCONFIRMED, 0.0, day_of(t)))
             continue
-        bought = leg["outcome_id"]
-        if bought.endswith(":NO"):
+        if payout_per_contract is None:
+            if bought.endswith(":NO"):
             # Kalshi's complementary NO on the other ticker, or Polymarket's NO token on a
             # three-way team market (2026-09-04): pays when the game did NOT go to its YES twin.
-            won = w != bought[:-3]
-        else:
-            won = w == bought
-        payout = leg["contracts"] if won else 0.0
+                won = w != base
+            else:
+                won = w == bought
+            payout_per_contract = 1.0 if won else 0.0
+        payout = leg["contracts"] * payout_per_contract
         # A sell leg (the unwind, 2026-09-08) took the price in and owes the payout: the sign flips.
         sign = -1.0 if str(leg.get("side") or "").startswith("sell_") else 1.0
         pnl = sign * (payout - leg["contracts"] * leg["price"]) - float(leg.get("fee_usd") or 0.0)

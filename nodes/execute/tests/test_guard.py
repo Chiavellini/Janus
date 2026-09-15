@@ -284,6 +284,36 @@ def test_a_paid_venue_leg_is_not_expected_in_open_positions_while_its_pair_resol
     assert rep.mismatches == [] and rep.to_protect == []
 
 
+def test_a_scalar_paid_venue_leg_is_not_expected_in_open_positions(tmp_path):
+    """A complete payout-map row has the same position-finality meaning as a binary winner."""
+    from kernel.execution_protocol import Ack, OrderRequest
+    p = _plan()
+    venues = {
+        "polymarket": Venue("polymarket", [], [Position("polymarket", TOK, "yes", 10.0, .57, T0 + 300)]),
+        "kalshi": Venue("kalshi", [], []),
+    }
+    main, journal, records, g = _world(tmp_path, venues=venues)
+    ex = Execution("settling", p.opportunity_id, p.event_id, p.league, "LIMITED_LIVE", 10, T0,
+                   state=X.HEDGED, first_client_id="pa", hedge_client_ids=["kb"], first_filled=10,
+                   first_avg_price=.57, hedge_filled=10, hedge_avg_price=.31)
+    records.start(ex, plan={"first": p.first.__dict__, "hedge": p.hedge.__dict__,
+                            "max_cost": p.max_cost_per_contract, "fee": p.fee_per_contract}, books={})
+    records.sync(ex, now=T0 + 2)
+    for cid, venue, market, price, vid in (("pa", "polymarket", TOK, .57, "p-order"),
+                                           ("kb", "kalshi", p.hedge.market_id, .31, "k-order")):
+        journal.pending(OrderRequest(venue, market, market, "buy_yes", price, 10, "ioc", cid,
+                                     p.opportunity_id, hedge=(venue == "kalshi")),
+                        mode="LIMITED_LIVE", now=T0)
+        journal.record(Ack(venue, cid, vid, FillState.FILLED, 10, price, 0, "trade", T0 + 1), kind="ack")
+    main.con.execute("CREATE TABLE execution_venue_payouts(execution_id TEXT,venue TEXT,payouts_json TEXT,"
+                     "observed_ts REAL,PRIMARY KEY(execution_id,venue))")
+    main.con.execute("INSERT INTO execution_venue_payouts VALUES('settling','kalshi','{\"K\":0.44}',?)",
+                     (T0 + 200,))
+    main.con.commit()
+    rep = g.apply(g.fetch())
+    assert rep.mismatches == [] and rep.to_protect == []
+
+
 def test_a_released_rejection_the_venue_contradicts_is_reopened(tmp_path):
     trade = FillRecord("polymarket", "0xlate", "late1", 10.0, 0.57, 0.0, True, T0 + 101, True, market_id=TOK, side="buy_yes")
     main, journal, records, g = _world(tmp_path, venues={"polymarket": Venue("polymarket", [trade], None)})

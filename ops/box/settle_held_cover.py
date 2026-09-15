@@ -30,7 +30,7 @@ sys.path.insert(0, str(ROOT))
 
 from kernel.fetch import Client
 from nodes.opportunity.opportunity import OpportunityStore
-from nodes.reconcile.settle_executions import apply_settlements, fetch_results, pending
+from nodes.reconcile.settle_executions import PAYOUT_RESULTS_DDL, apply_settlements, fetch_results, pending
 from nodes.risk.ledger import ExposureLedger
 from nodes.store_tuples.store import TupleStore
 from ops.box.clear_guard_failure_latch import _empty_admission, _post_only_violation_history
@@ -67,6 +67,12 @@ HEDGE_PRICE = 0.44
 FIRST_FEE = 0.31237
 HEDGE_FEE = 0.4312
 RESERVED_USD = {"polymarket": 13.06237, "kalshi": 11.4312}
+EXPECTED_PAYOUTS = {
+    "kalshi": {HEDGE_MARKET_ID: 0.44, OTHER_KALSHI_MARKET_ID: 0.56},
+    "polymarket": {FIRST_MARKET_ID: 0.50, OTHER_PM_MARKET_ID: 0.50},
+}
+EXPECTED_REALIZED_USD = -0.99357
+EXPECTED_COVER_USD = round(EXPECTED_REALIZED_USD, 4)
 _FULL_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 _FULL_GIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 _EPS = 1e-9
@@ -405,23 +411,35 @@ def _fetch_item(con: sqlite3.Connection) -> tuple[dict, dict, dict, list[dict]]:
     return execution, reservation, item, orders
 
 
-def _validate_winners(item: dict, winners: dict[str, dict]) -> dict[str, str]:
-    record = winners.get(EXECUTION_ID)
+def _validate_results(item: dict, results: dict[str, dict]) -> dict[str, Any]:
+    """Require the exact freshly measured non-binary final payout vectors."""
+    record = results.get(EXECUTION_ID)
     if not isinstance(record, dict):
         raise SettlementBlocked("fetch_results returned no result for the registered execution")
     if any(key.endswith("_error") for key in record):
         raise SettlementBlocked("provider result carried an error")
-    if record.get("kalshi") is None or record.get("polymarket") is None:
-        raise SettlementWaiting("one or both venue outcomes are not final")
-    valid_k = {str(v["kalshi"]) for v in item["outcomes"].values()}
-    valid_p = {str(v["polymarket"]) for v in item["outcomes"].values()}
-    kalshi, polymarket = str(record["kalshi"]), str(record["polymarket"])
-    if kalshi not in valid_k or polymarket not in valid_p:
-        raise SettlementBlocked("provider winner is not one of the registered event outcomes")
-    return {"kalshi": kalshi, "polymarket": polymarket}
+    maps: dict[str, dict[str, float]] = {}
+    for venue in ("kalshi", "polymarket"):
+        raw = record.get(f"{venue}_payouts")
+        if raw is None:
+            raise SettlementWaiting("one or both venue payout maps are not final")
+        if not isinstance(raw, dict) or set(map(str, raw)) != set(EXPECTED_PAYOUTS[venue]):
+            raise SettlementBlocked(f"{venue} payout outcomes are not the registered exact set")
+        parsed: dict[str, float] = {}
+        for outcome, value in raw.items():
+            if not _same(value, EXPECTED_PAYOUTS[venue][str(outcome)]):
+                raise SettlementBlocked(f"{venue} payout changed from the registered venue result")
+            parsed[str(outcome)] = float(value)
+        if not _same(sum(parsed.values()), 1.0):
+            raise SettlementBlocked(f"{venue} payout map is not complete")
+        maps[venue] = parsed
+    if record.get("kalshi") is not None or record.get("polymarket") is not None:
+        raise SettlementBlocked("registered scalar/half result unexpectedly carries a unique winner")
+    return {"kalshi": None, "polymarket": None,
+            "kalshi_payouts": maps["kalshi"], "polymarket_payouts": maps["polymarket"]}
 
 
-def _settled_proof(con: sqlite3.Connection, winners: dict[str, str]) -> dict[str, Any]:
+def _settled_proof(con: sqlite3.Connection, results: dict[str, Any]) -> dict[str, Any]:
     """Prove the complete exact post-state on either the uncommitted or read-only connection."""
     _require_schema(con)
     execution, reservation, orders = _exact_rows(con, settled=True)
@@ -436,12 +454,30 @@ def _settled_proof(con: sqlite3.Connection, winners: dict[str, str]) -> dict[str
         raise SettlementBlocked("registered execution does not have exactly one settlement")
     settlement = rows[0]
     if (settlement.get("released"), settlement.get("kind"), settlement.get("kalshi_winner"),
-            settlement.get("polymarket_winner")) != (1, "COVER", winners["kalshi"], winners["polymarket"]):
+            settlement.get("polymarket_winner")) != (1, "COVER", None, None):
         raise SettlementBlocked("released settlement is not the exact COVER result")
     if not (_same(settlement.get("hedged_contracts"), QUANTITY)
             and _same(settlement.get("unhedged_contracts"), 0.0)
-            and _same(settlement.get("directional_usd"), 0.0)):
+            and _same(settlement.get("directional_usd"), 0.0)
+            and _same(settlement.get("cover_usd"), EXPECTED_COVER_USD)
+            and _same(settlement.get("realized_usd"), EXPECTED_REALIZED_USD)):
         raise SettlementBlocked("settlement is not exactly 25 hedged and zero directional")
+    tables = {row[0] for row in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if not {"execution_venue_payouts", "execution_settlement_payouts"} <= tables:
+        raise SettlementBlocked("durable payout evidence tables are missing")
+    for venue in ("kalshi", "polymarket"):
+        rows = con.execute(
+            "SELECT payouts_json FROM execution_venue_payouts WHERE execution_id=? AND venue=?",
+            (EXECUTION_ID, venue),
+        ).fetchall()
+        settled_rows = con.execute(
+            "SELECT payouts_json FROM execution_settlement_payouts WHERE execution_id=? AND venue=?",
+            (EXECUTION_ID, venue),
+        ).fetchall()
+        if (len(rows) != 1 or len(settled_rows) != 1
+                or json.loads(rows[0][0] or "null") != EXPECTED_PAYOUTS[venue]
+                or json.loads(settled_rows[0][0] or "null") != EXPECTED_PAYOUTS[venue]):
+            raise SettlementBlocked(f"durable {venue} payout evidence is not exact")
     legs = _json_list(settlement.get("legs_json"), "settlement legs")
     if len(legs) != 2 or {str(leg.get("client_order_id")) for leg in legs} != {
             FIRST_CLIENT_ID, HEDGE_CLIENT_ID}:
@@ -462,14 +498,14 @@ def _settled_proof(con: sqlite3.Connection, winners: dict[str, str]) -> dict[str
     return {"execution": execution, "reservation": reservation, "settlement": settlement}
 
 
-def _final_proof(db_path: Path, winners: dict[str, str], *, kill_path: Path,
+def _final_proof(db_path: Path, results: dict[str, Any], *, kill_path: Path,
                  expected_kill_sha: str) -> dict[str, Any]:
     raw = _regular_bytes(kill_path, "live kill")
     if _sha(raw) != expected_kill_sha:
         raise SettlementBlocked("live kill changed during settlement")
     con = _ro(db_path)
     try:
-        return _settled_proof(con, winners)
+        return _settled_proof(con, results)
     finally:
         con.close()
 
@@ -498,24 +534,26 @@ def settle_exact(*, db_path: Path, kill_path: Path, expected_kill_sha: str,
         ).fetchall()
         if existing:
             if len(existing) != 1 or existing[0][2] != 1 or existing[0][3] != "COVER" \
-                    or not existing[0][0] or not existing[0][1]:
+                    or existing[0][0] is not None or existing[0][1] is not None:
                 raise SettlementBlocked("existing registered settlement is not an exact released COVER")
-            retry_winners = {"kalshi": str(existing[0][0]), "polymarket": str(existing[0][1])}
+            retry_results = {"kalshi": None, "polymarket": None,
+                             "kalshi_payouts": EXPECTED_PAYOUTS["kalshi"],
+                             "polymarket_payouts": EXPECTED_PAYOUTS["polymarket"]}
             ro.close()
-            proof = _final_proof(db_path, retry_winners, kill_path=kill_path,
+            proof = _final_proof(db_path, retry_results, kill_path=kill_path,
                                  expected_kill_sha=expected_kill_sha)
             return {"status": "SETTLED", "execution_id": EXECUTION_ID, "reservation_id": RESERVATION_ID,
-                    "winners": retry_winners, "proof": proof, "retry": True}
+                    "results": retry_results, "proof": proof, "retry": True}
         _, _, item, _ = _fetch_item(ro)
         # The corrected predicates are read as part of the same stopped-lane proof.  They do not
         # authorize mutation, but make the result available to the following L133 static proof.
         predicates = l133_predicates(ro)
         if not predicates["admission_empty"] or predicates["unresolved_post_only_violations"]:
             raise SettlementBlocked("corrected L133 admission/history predicate is not quiet")
-        winners_payload = fetcher(
+        results_payload = fetcher(
             [item], client or Client("l136-settle", rate=2, burst=2, cache_dir=None)
         )
-        winners = _validate_winners(item, winners_payload)
+        results = _validate_results(item, results_payload)
     finally:
         ro.close()
     # Re-check the retained kill and the complete exact identity after network I/O and immediately
@@ -527,21 +565,24 @@ def settle_exact(*, db_path: Path, kill_path: Path, expected_kill_sha: str,
     base_store = factory(db_path)
     try:
         _require_schema(base_store.con)
+        # Additive evidence tables do not alter any historical incident or settlement row. Create
+        # them before the atomic money-state transaction because SQLite DDL may commit implicitly.
+        base_store.ensure_ddl(PAYOUT_RESULTS_DDL)
         base_store.con.execute("BEGIN IMMEDIATE")
         store = _AtomicSettlementStore(base_store)
         _, _, item, _ = _fetch_item(store.con)
-        winners = _validate_winners(item, {EXECUTION_ID: winners})
+        results = _validate_results(item, {EXECUTION_ID: results})
         _prove_stopped(unit_reader)
         ledger = ExposureLedger(store)
         opportunities = OpportunityStore(store)
-        result = applier(store, ledger, None, opportunities, [item], {EXECUTION_ID: winners},
+        result = applier(store, ledger, None, opportunities, [item], {EXECUTION_ID: results},
                          now=now, log=log)
         if result != {"settled": 1, "waiting": 0, "unreleasable": 0}:
             raise SettlementBlocked(f"settlement path did not release exactly one cover: {result}")
         _prove_stopped(unit_reader)
         check_release_and_kill(repo=repo, release_sha=release_sha, kill_path=kill_path,
                                expected_kill_sha=expected_kill_sha)
-        _settled_proof(store.con, winners)
+        _settled_proof(store.con, results)
         base_store.con.commit()
     except Exception:
         try:
@@ -554,9 +595,9 @@ def settle_exact(*, db_path: Path, kill_path: Path, expected_kill_sha: str,
             base_store.con.close()
         except Exception:
             pass
-    proof = _final_proof(db_path, winners, kill_path=kill_path, expected_kill_sha=expected_kill_sha)
+    proof = _final_proof(db_path, results, kill_path=kill_path, expected_kill_sha=expected_kill_sha)
     return {"status": "SETTLED", "execution_id": EXECUTION_ID, "reservation_id": RESERVATION_ID,
-            "winners": winners, "proof": proof}
+            "results": results, "proof": proof}
 
 
 def main(argv: list[str] | None = None) -> int:

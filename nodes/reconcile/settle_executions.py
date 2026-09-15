@@ -27,7 +27,8 @@ from typing import Callable
 
 from kernel.schema import ExecutionState as X, OpportunityStatus as S
 from nodes.reconcile.reconcile import releasable, settle
-from nodes.reconcile.results import PM_GAMMA, fetch_kalshi_market, kalshi_result, polymarket_result
+from nodes.reconcile.results import (PM_GAMMA, fetch_kalshi_market, kalshi_payouts, kalshi_result,
+                                     polymarket_payouts)
 
 SETTLEMENTS_DDL = """
 CREATE TABLE IF NOT EXISTS execution_settlements(
@@ -39,6 +40,14 @@ CREATE TABLE IF NOT EXISTS execution_settlements(
 VENUE_RESULTS_DDL = """
 CREATE TABLE IF NOT EXISTS execution_venue_results(
   execution_id TEXT NOT NULL, venue TEXT NOT NULL, winner TEXT NOT NULL, observed_ts REAL NOT NULL,
+  PRIMARY KEY(execution_id, venue));
+"""
+PAYOUT_RESULTS_DDL = """
+CREATE TABLE IF NOT EXISTS execution_venue_payouts(
+  execution_id TEXT NOT NULL, venue TEXT NOT NULL, payouts_json TEXT NOT NULL, observed_ts REAL NOT NULL,
+  PRIMARY KEY(execution_id, venue));
+CREATE TABLE IF NOT EXISTS execution_settlement_payouts(
+  execution_id TEXT NOT NULL, venue TEXT NOT NULL, payouts_json TEXT NOT NULL,
   PRIMARY KEY(execution_id, venue));
 """
 SETTLEMENT_REVISIONS_DDL = """
@@ -94,36 +103,49 @@ def pending(store, *, now: float | None = None, grace_s: float = 6 * 3600.0) -> 
     return out
 
 
+def _pm_payouts(event: dict | None, slug: str, outcomes: dict) -> tuple[dict[str, float] | None, str | None]:
+    """Return token -> payout and (for binary markets) the winning YES token.
+
+    Two shapes: one market carrying the event slug (label -> token by position), or per-side
+    markets (`{slug}-x`), the one that closed Yes.
+    """
+    if not event:
+        return None, None
+    markets = [m for m in event.get("markets") or [] if m.get("sportsMarketType") == "moneyline" or m.get("slug") == slug]
+    one = next((m for m in markets if m.get("slug") == slug), None)
+    if one is not None:
+        labels = polymarket_payouts(one)
+        outs, toks = one.get("outcomes"), one.get("clobTokenIds")
+        outs = json.loads(outs) if isinstance(outs, str) else outs
+        toks = json.loads(toks) if isinstance(toks, str) else toks
+        if labels is None or not isinstance(outs, list) or not isinstance(toks, list) or len(outs) != len(toks):
+            return None, None
+        by = dict(zip(map(str, outs), map(str, toks)))
+        if set(by) != set(labels) or len(set(by.values())) != len(by):
+            return None, None
+        token_payouts = {by[label]: value for label, value in labels.items()}
+        wins = [token for token, value in token_payouts.items() if value >= 0.999]
+        return token_payouts, wins[0] if len(wins) == 1 else None
+    for m in markets:
+        if not str(m.get("slug", "")).startswith(slug + "-"):
+            continue
+        labels = polymarket_payouts(m)
+        toks = m.get("clobTokenIds")
+        toks = json.loads(toks) if isinstance(toks, str) else toks
+        if labels is not None and labels.get("Yes") == 1.0 and isinstance(toks, list) and toks:
+            return {str(toks[0]): 1.0}, str(toks[0])
+    return None, None
+
+
 def _pm_winner(event: dict | None, slug: str, outcomes: dict) -> str | None:
     """The winning YES token per the Gamma event, or None while open. Two shapes: one market
     carrying the event slug (label -> token by position), or per-side markets (`{slug}-x`), the
     one that closed Yes."""
-    if not event:
-        return None
-    markets = [m for m in event.get("markets") or [] if m.get("sportsMarketType") == "moneyline" or m.get("slug") == slug]
-    one = next((m for m in markets if m.get("slug") == slug), None)
-    if one is not None:
-        label = polymarket_result(one)
-        if label is None:
-            return None
-        outs, toks = one.get("outcomes"), one.get("clobTokenIds")
-        outs = json.loads(outs) if isinstance(outs, str) else outs
-        toks = json.loads(toks) if isinstance(toks, str) else toks
-        by = dict(zip(outs or [], toks or []))
-        return str(by[label]) if label in by else None
-    for m in markets:
-        if not str(m.get("slug", "")).startswith(slug + "-"):
-            continue
-        label = polymarket_result(m)
-        toks = m.get("clobTokenIds")
-        toks = json.loads(toks) if isinstance(toks, str) else toks
-        if label == "Yes" and toks:
-            return str(toks[0])
-    return None
+    return _pm_payouts(event, slug, outcomes)[1]
 
 
 def fetch_results(items: list[dict], cl, *, fetch_kalshi=fetch_kalshi_market, fetch_event=None) -> dict[str, dict]:
-    """The network half: execution_id -> {"kalshi": winning ticker | None, "polymarket": winning token | None}."""
+    """The network half, retaining the legacy winner keys and adding maps for non-binary finals."""
     def _event(slug):
         ev = cl.get_json(f"{PM_GAMMA}/events", params={"slug": slug}, use_cache=False)
         return ev[0] if isinstance(ev, list) and ev else None
@@ -133,19 +155,104 @@ def fetch_results(items: list[dict], cl, *, fetch_kalshi=fetch_kalshi_market, fe
         winners: dict[str, str | None] = {"kalshi": None, "polymarket": None}
         try:
             tickers = [v["kalshi"] for v in it["outcomes"].values() if v.get("kalshi")]
-            results = {tk: kalshi_result(fetch_kalshi(tk, cl)) for tk in tickers}
+            raw = {tk: fetch_kalshi(tk, cl) for tk in tickers}
+            parsed = {tk: kalshi_payouts(m) for tk, m in raw.items()}
+            results = {tk: kalshi_result(m) for tk, m in raw.items()}
+            scalar = {tk: parsed[tk]["yes"] for tk, m in raw.items()
+                      if parsed[tk] is not None and str(m.get("market", m).get("result", "")).lower() == "scalar"}
             yes = [tk for tk, r in results.items() if r == "yes"]
-            if len(yes) == 1 and all(r is not None for r in results.values()):
+            if len(yes) == 1 and all(r is not None for r in results.values()) and not scalar:
                 winners["kalshi"] = yes[0]
+            elif (len(scalar) == len(tickers) and len(tickers) > 0
+                  and abs(sum(scalar.values()) - 1.0) <= 1e-6):
+                winners["kalshi_payouts"] = scalar
+            elif tickers and all(parsed[tk] is not None for tk in tickers):
+                winners["kalshi_error"] = "InvalidFinalPayout"
+            elif any(str(m.get("market", m).get("status", "")).lower()
+                     in ("settled", "finalized", "determined") and parsed[tk] is None
+                     for tk, m in raw.items()):
+                winners["kalshi_error"] = "InvalidFinalPayout"
         except Exception as exc:  # noqa: BLE001 -- one venue down must not hide the other's final result
             winners["kalshi_error"] = f"{type(exc).__name__}"
         try:
             if it.get("pm_slug"):
-                winners["polymarket"] = _pm_winner(fetch_event(it["pm_slug"]), it["pm_slug"], it["outcomes"])
+                event = fetch_event(it["pm_slug"])
+                pm_payouts, pm_winner = _pm_payouts(event, it["pm_slug"], it["outcomes"])
+                if pm_payouts is not None:
+                    if pm_winner is not None:
+                        winners["polymarket"] = pm_winner
+                    else:
+                        winners["polymarket_payouts"] = pm_payouts
+                else:
+                    relevant = [m for m in (event or {}).get("markets") or []
+                                if m.get("sportsMarketType") == "moneyline" or m.get("slug") == it["pm_slug"]]
+                    if any(bool(m.get("closed")) for m in relevant):
+                        winners["polymarket_error"] = "InvalidFinalPayout"
         except Exception as exc:  # noqa: BLE001 -- one venue down must not hide the other's final result
             winners["polymarket_error"] = f"{type(exc).__name__}"
         out[it["execution_id"]] = winners
     return out
+
+
+def _valid_payouts(value) -> dict[str, float] | None:
+    if not isinstance(value, dict) or not value:
+        return None
+    out = {}
+    for key, raw in value.items():
+        try:
+            number = float(raw)
+        except (TypeError, ValueError):
+            return None
+        if not (number == number and abs(number) != float("inf") and 0.0 <= number <= 1.0):
+            return None
+        out[str(key)] = number
+    return out
+
+
+def _json_payouts(value) -> dict[str, float] | None:
+    if not value:
+        return None
+    try:
+        return _valid_payouts(json.loads(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _legacy_payouts(winner: str | None, order_rows) -> dict[str, float] | None:
+    """Expand a durable binary winner into a map for the owned order outcomes."""
+    if not winner:
+        return None
+    out = {}
+    for row in order_rows:
+        outcome = str(row[2])
+        base = outcome[:-3] if outcome.endswith(":NO") else outcome
+        out[base] = 1.0 if base == str(winner) else 0.0
+    return out or None
+
+
+def _covers_orders(payouts: dict[str, float] | None, order_rows) -> bool:
+    if payouts is None:
+        return False
+    required = {str(r[2])[:-3] if str(r[2]).endswith(":NO") else str(r[2])
+                for r in order_rows if float(r[4] or 0.0) > 0}
+    return bool(required) and required.issubset(payouts)
+
+
+def _expected_outcomes(item: dict, venue: str) -> set[str]:
+    return {str(value[venue]) for value in (item.get("outcomes") or {}).values()
+            if isinstance(value, dict) and value.get(venue)}
+
+
+def _covers_expected(payouts: dict[str, float] | None, item: dict, venue: str) -> bool:
+    expected = _expected_outcomes(item, venue)
+    return (payouts is not None and bool(expected) and set(payouts) == expected
+            and abs(sum(payouts.values()) - 1.0) <= 1e-6)
+
+
+def _binary_event_map(winner: str | None, item: dict, venue: str) -> dict[str, float] | None:
+    expected = _expected_outcomes(item, venue)
+    return ({key: 1.0 if key == str(winner) else 0.0 for key in expected}
+            if winner and expected else None)
 
 
 def apply_settlements(store, ledger, records, opportunities, items: list[dict], winners: dict[str, dict],
@@ -154,6 +261,7 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
     t = now or time.time()
     store.ensure_ddl(SETTLEMENTS_DDL)
     store.ensure_ddl(VENUE_RESULTS_DDL)
+    store.ensure_ddl(PAYOUT_RESULTS_DDL)
     _ensure_columns(store)
     out = {"settled": 0, "waiting": 0, "unreleasable": 0}
     for it in items:
@@ -189,12 +297,55 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
         # Venues do not necessarily finalize at the same time. Persist each authoritative result
         # immediately so the position guard knows why that venue no longer reports a position;
         # the reservation remains open until every venue is final and the cover is settled below.
+        fetched_maps = {venue: _valid_payouts(w.get(f"{venue}_payouts")) for venue in venues_needed}
         for venue in venues_needed:
-            if w.get(venue) is not None:
-                store.con.execute(
-                    "INSERT OR REPLACE INTO execution_venue_results(execution_id,venue,winner,observed_ts) VALUES(?,?,?,?)",
-                    (it["execution_id"], venue, str(w[venue]), t),
-                )
+            if w.get(venue) is not None and str(w[venue]) not in _expected_outcomes(it, venue):
+                raise ValueError(f"{venue} winner is not a registered event outcome")
+            if fetched_maps[venue] is not None and (
+                    not _covers_expected(fetched_maps[venue], it, venue)
+                    or not _covers_orders(fetched_maps[venue], [r for r in order_rows if r[0] == venue])):
+                fetched_maps[venue] = None
+        conflict = False
+        for venue in venues_needed:
+            if w.get(venue) is not None or fetched_maps[venue] is not None:
+                previous = store.con.execute(
+                    "SELECT winner FROM execution_venue_results WHERE execution_id=? AND venue=?",
+                    (it["execution_id"], venue)).fetchone()
+                payout_row = store.con.execute(
+                    "SELECT payouts_json FROM execution_venue_payouts WHERE execution_id=? AND venue=?",
+                    (it["execution_id"], venue)).fetchone()
+                if previous is not None or payout_row is not None:
+                    old_winner = previous[0] if previous is not None else None
+                    old_map = _json_payouts(payout_row[0]) if payout_row is not None else None
+                    new_map = fetched_maps[venue]
+                    if old_winner and w.get(venue) and old_winner != str(w[venue]):
+                        conflict = True
+                    if old_map is not None and new_map is not None and old_map != new_map:
+                        conflict = True
+                    # Never replace a scalar/half map with a binary winner (or vice versa)
+                    # unless the two durable claims are economically identical.
+                    if old_map is not None and w.get(venue) is not None:
+                        if old_map != _binary_event_map(w[venue], it, venue):
+                            conflict = True
+                    if old_winner and new_map is not None:
+                        if new_map != _binary_event_map(old_winner, it, venue):
+                            conflict = True
+                if conflict:
+                    log(f"[settle ] {it['event_id']} {venue} contradictory final result; refusing overwrite")
+                    break
+                if w.get(venue) is not None:
+                    store.con.execute(
+                        "INSERT OR REPLACE INTO execution_venue_results(execution_id,venue,winner,observed_ts) VALUES(?,?,?,?)",
+                        (it["execution_id"], venue, str(w[venue]), t),
+                    )
+                if fetched_maps[venue] is not None:
+                    store.con.execute(
+                        "INSERT OR REPLACE INTO execution_venue_payouts(execution_id,venue,payouts_json,observed_ts) VALUES(?,?,?,?)",
+                        (it["execution_id"], venue, json.dumps(fetched_maps[venue], sort_keys=True), t),
+                    )
+        if conflict:
+            store.con.rollback()
+            raise RuntimeError("contradictory durable venue settlement result")
         store.con.commit()
         # Venue endpoints can finalize on different passes and can later become temporarily
         # unavailable. Durable results are evidence; merge them before the completeness check.
@@ -203,14 +354,26 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
                 (it["execution_id"],)).fetchall():
             if w.get(venue) is None:
                 w[venue] = winner
-        if any(w.get(v) is None for v in venues_needed):
+        for venue, payout_json in store.con.execute(
+                "SELECT venue,payouts_json FROM execution_venue_payouts WHERE execution_id=?",
+                (it["execution_id"],)).fetchall():
+            if fetched_maps.get(venue) is None:
+                loaded = _json_payouts(payout_json)
+                fetched_maps[venue] = loaded if _covers_expected(loaded, it, venue) else None
+        # Legacy winner rows are expanded over the event's complete outcome map. This keeps old
+        # databases restart-safe while scalar rows persist their exact map verbatim.
+        for venue in venues_needed:
+            if fetched_maps.get(venue) is None:
+                fetched_maps[venue] = _binary_event_map(w.get(venue), it, venue)
+        if any(fetched_maps.get(v) is None for v in venues_needed):
             out["waiting"] += 1
             continue
         legs = [{"venue": r[0], "client_order_id": r[1], "outcome_id": r[2], "side": r[3], "contracts": float(r[4] or 0.0),
                  "price": float(r[5] or 0.0), "fee_usd": float(r[6] or 0.0), "state": r[7],
                  "final": not bool(r[8])}
                 for r in order_rows]
-        realized = settle(legs=legs, winners={v: w[v] for v in venues_needed}, now=t)
+        realized = settle(legs=legs, winners={v: w.get(v) for v in venues_needed},
+                          payouts={v: fetched_maps[v] for v in venues_needed}, now=t)
         pnl = sum(x.realized_usd for x in realized)
         ok = releasable(realized)
         released = bool(ok and it.get("reservation_id") and
@@ -226,6 +389,11 @@ def apply_settlements(store, ledger, records, opportunities, items: list[dict], 
             (it["execution_id"], it["opportunity_id"], it["event_id"], it["league"], it["mode"], t,
              w.get("kalshi"), w.get("polymarket"), pnl, int(released), json.dumps(legs), split["kind"],
              split["hedged"], split["unhedged"], split["cover_usd"], split["directional_usd"]))
+        for venue in venues_needed:
+            store.con.execute(
+                "INSERT OR REPLACE INTO execution_settlement_payouts(execution_id,venue,payouts_json) VALUES(?,?,?)",
+                (it["execution_id"], venue, json.dumps(fetched_maps[venue], sort_keys=True)),
+            )
         store.con.execute("UPDATE executions SET state=?, released=?, last_utc=?, detail=? WHERE execution_id=?",
                           (X.RECONCILED.value if released else X.SETTLED.value, int(released), t,
                            f"settled {pnl:+.4f} USD ({split['kind']})" + ("" if released else "; not releasable"), it["execution_id"]))
@@ -271,6 +439,7 @@ def refresh_settlement_accounting(store, *, now: float | None = None,
     t = now or time.time()
     store.ensure_ddl(SETTLEMENTS_DDL)
     store.ensure_ddl(SETTLEMENT_REVISIONS_DDL)
+    store.ensure_ddl(PAYOUT_RESULTS_DDL)
     _ensure_columns(store)
     rows = store.con.execute(
         "SELECT s.execution_id,s.settled_ts,s.kalshi_winner,s.polymarket_winner,s.realized_usd,s.legs_json,"
@@ -281,6 +450,9 @@ def refresh_settlement_accounting(store, *, now: float | None = None,
     changed = 0
     for row in rows:
         exid, settled_ts, kalshi_winner, pm_winner, old_pnl, old_legs = row[:6]
+        stored_maps = {venue: _json_payouts(payload) for venue, payload in store.con.execute(
+            "SELECT venue,payouts_json FROM execution_settlement_payouts WHERE execution_id=?", (exid,)
+        ).fetchall()}
         client_ids = [row[6]] if row[6] else []
         for payload in row[7:9]:
             try:
@@ -299,7 +471,9 @@ def refresh_settlement_accounting(store, *, now: float | None = None,
             continue
         winners = {"kalshi": kalshi_winner, "polymarket": pm_winner}
         venues = {r[0] for r in order_rows if float(r[4] or 0.0) > 0}
-        if any(winners.get(v) is None for v in venues):
+        payouts = {v: stored_maps.get(v) or _legacy_payouts(winners.get(v), [r for r in order_rows if r[0] == v and float(r[4] or 0) > 0])
+                   for v in venues}
+        if any(payouts.get(v) is None for v in venues):
             continue
         legs = [
             {"venue": r[0], "client_order_id": r[1], "outcome_id": r[2], "side": r[3],
@@ -307,7 +481,7 @@ def refresh_settlement_accounting(store, *, now: float | None = None,
              "fee_usd": float(r[6] or 0.0), "state": r[7], "final": not bool(r[8])}
             for r in order_rows
         ]
-        realized = settle(legs=legs, winners={v: winners[v] for v in venues}, now=float(settled_ts))
+        realized = settle(legs=legs, winners={v: winners.get(v) for v in venues}, payouts=payouts, now=float(settled_ts))
         if not releasable(realized):
             continue
         pnl = sum(x.realized_usd for x in realized)

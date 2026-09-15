@@ -1,0 +1,49 @@
+id: L139
+date: 2026-09-15
+track: execution
+kind: descriptive
+title: Authoritative non-binary venue settlement and exact held-cover release
+status: PENDING
+
+question: >-
+  Can Janus represent an authoritative final per-outcome payout when a cancelled market has no
+  unique winner, use that payout to settle the exact fully hedged held cover, and preserve every
+  existing binary-winner and stopped-lane safety invariant?
+
+registered_evidence:
+  deployment: c65d6206eb2a3b91569fda8fc8af06c716c671b8
+  kill_sha256: dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83
+  execution_id: 17077a35da5b46bb92b62daf0d927ff7
+  reservation_id: b292be2ab30449a3a9f53a3387c1aa17
+  event_id: pm:atp:1013694
+  observed_raw_facts:
+    kalshi: both mapped tickers report status finalized and result scalar
+    polymarket: the mapped market reports closed true, umaResolutionStatus resolved, and outcomePrices [0.5, 0.5]
+
+success:
+  - A venue result is final only from an authoritative final/resolved response containing a complete, finite, bounded per-outcome payout map; unknown, malformed, partial, ambiguous, or non-final data remains a BLOCK.
+  - Binary winner results remain backward compatible and produce identical realized PnL, durable evidence, release behavior, and replay digests.
+  - Scalar/half outcomes compute each owned leg from its venue's exact authoritative payout, including complementary NO and sell signs, without inventing a winner.
+  - Durable venue-result and settlement evidence records the payout map needed to reproduce realized PnL after restart and during fee-accounting refresh.
+  - The stopped-lane helper remains bound to the exact kill digest, zero unit PIDs, deployed release, execution, reservation, outcome map, filled quantities, prices, fees, and zero unhedged exposure; it releases only after both venue payout maps are final and the transaction's post-proof passes.
+  - Focused parser, settlement, durability, restart/refresh, exact-helper, malformed-input, binary-regression, and rollback tests pass.
+  - The integrated suite passes except only the two declared pre-existing FIFO flakes when independently green in isolation.
+  - Replay parity remains exactly 13e4fb08a76c920f / 4f53cda18c2baa0c; any movement is reported as a behavior change and blocks release.
+  - A fresh independent implementation audit returns RELEASE before production deployment.
+
+production_success:
+  - Release completes under the unchanged signed caps and exact retained kill.
+  - The exact cover settles from fresh authoritative venue payout responses, writes reproducible realized PnL, releases only its exact reservation, and leaves zero unhedged exposure.
+  - The existing exact L133 recovery then proves complete quiet state, resolves only its registered guard sources, archives only the unchanged kill, and restarts the lane.
+  - Post-release proof shows the exact deployed SHA, active service with fresh streams, kill/live absent, zero unresolved material flags, zero unreleased executions/reservations, and F22 instrumentation ready to collect observations.
+
+stop:
+  - Any authoritative response lacks the exact payout value or outcome mapping required to calculate a leg.
+  - Any payout is non-finite, outside [0,1], incomplete, or inconsistent with a final venue response.
+  - Any registered production identity, economics, kill, unit, release, or cover fact differs.
+  - Any cap, hurdle, size, entry, hedge, or protection policy changes.
+  - Any test, replay, audit, exact-helper post-proof, or recovery proof fails.
+
+notes:
+  - This is settlement-accounting correctness, not a profitability or live-authority claim.
+  - L138 is superseded before implementation: raw venue evidence shows the cover is final, so coexistence with an unresolved cover would hide the actual parser defect.

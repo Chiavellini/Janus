@@ -91,7 +91,11 @@ def _fixture(tmp_path: Path):
 def _run(db, kill, digest, release, tmp_path, monkeypatch, **kwargs):
     monkeypatch.setattr(helper, "EXPECTED_KILL_SHA256", digest)
     fetcher = kwargs.pop("fetcher", lambda items, client: {
-        helper.EXECUTION_ID: {"kalshi": helper.HEDGE_MARKET_ID, "polymarket": helper.OTHER_PM_MARKET_ID}})
+        helper.EXECUTION_ID: {
+            "kalshi": None, "polymarket": None,
+            "kalshi_payouts": dict(helper.EXPECTED_PAYOUTS["kalshi"]),
+            "polymarket_payouts": dict(helper.EXPECTED_PAYOUTS["polymarket"]),
+        }})
     return helper.settle_exact(db_path=db, kill_path=kill, expected_kill_sha=digest, release_sha=release,
                                repo=Path("."), fetcher=fetcher,
                                unit_reader=kwargs.pop("unit_reader", lambda: ("inactive", "0", "0")),
@@ -106,6 +110,11 @@ def test_exact_final_results_settle_one_cover_and_release(tmp_path, monkeypatch)
         assert con.execute("SELECT state,released FROM executions").fetchone() == ("RECONCILED", 1)
         assert con.execute("SELECT status FROM opportunities").fetchone() == ("RECONCILED",)
         assert con.execute("SELECT COUNT(*),kind,hedged_contracts,unhedged_contracts FROM execution_settlements").fetchone() == (1, "COVER", 25.0, 0.0)
+        assert con.execute("SELECT realized_usd,cover_usd,directional_usd FROM execution_settlements").fetchone() == pytest.approx(
+            (helper.EXPECTED_REALIZED_USD, helper.EXPECTED_COVER_USD, 0.0))
+        assert [json.loads(row[0]) for row in con.execute(
+            "SELECT payouts_json FROM execution_venue_payouts ORDER BY venue").fetchall()] == [
+                helper.EXPECTED_PAYOUTS["kalshi"], helper.EXPECTED_PAYOUTS["polymarket"]]
         assert con.execute("SELECT released_utc IS NOT NULL FROM capital_reservations").fetchone() == (1,)
     assert kill.exists()
 
@@ -120,7 +129,7 @@ def test_open_result_writes_nothing(tmp_path, monkeypatch):
         assert con.execute("SELECT COUNT(*) FROM execution_settlements").fetchone() == (0,)
 
 
-@pytest.mark.parametrize("mutation", ["identity", "economics", "extra", "extra_held", "order_identity", "wrong_winner", "kill"])
+@pytest.mark.parametrize("mutation", ["identity", "economics", "extra", "extra_held", "order_identity", "wrong_payout", "kill"])
 def test_adversarial_state_never_releases(tmp_path, monkeypatch, mutation):
     db, kill, digest, release = _fixture(tmp_path)
     if mutation == "identity":
@@ -147,11 +156,17 @@ def test_adversarial_state_never_releases(tmp_path, monkeypatch, mutation):
             con.execute("UPDATE orders SET time_in_force='gtc' WHERE client_order_id=?", (helper.FIRST_CLIENT_ID,))
     elif mutation == "kill":
         kill.write_bytes(b'{"reason":"new kill"}\n')
-    fetcher = (lambda items, client: {
-        helper.EXECUTION_ID: {"kalshi": helper.HEDGE_MARKET_ID, "polymarket": helper.OTHER_PM_MARKET_ID}})
-    if mutation == "wrong_winner":
+    fetcher = lambda items, client: {helper.EXECUTION_ID: {
+        "kalshi": None, "polymarket": None,
+        "kalshi_payouts": dict(helper.EXPECTED_PAYOUTS["kalshi"]),
+        "polymarket_payouts": dict(helper.EXPECTED_PAYOUTS["polymarket"]),
+    }}
+    if mutation == "wrong_payout":
         fetcher = lambda items, client: {helper.EXECUTION_ID: {
-            "kalshi": "K-NOT-REGISTERED", "polymarket": helper.OTHER_PM_MARKET_ID}}
+            "kalshi": None, "polymarket": None,
+            "kalshi_payouts": {helper.HEDGE_MARKET_ID: 0.45, helper.OTHER_KALSHI_MARKET_ID: 0.55},
+            "polymarket_payouts": dict(helper.EXPECTED_PAYOUTS["polymarket"]),
+        }}
     with pytest.raises((helper.SettlementBlocked, RuntimeError)):
         _run(db, kill, digest, release, tmp_path, monkeypatch, fetcher=fetcher)
     with sqlite3.connect(db) as con:

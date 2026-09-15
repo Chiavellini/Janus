@@ -30,17 +30,17 @@ reservation must remain held until both venues finalize. The admission is canoni
 its retained timestamp; historical persistence flag 211 has valid exact resolution marker 215 but
 no lifecycle row because that incident was itself a persistence failure.
 
-L136 is the registered convergence. Its stopped-lane helper binds the full release, exact retained
-kill, exact execution/reservation/order identities and economics; uses the existing authoritative
-venue result and settlement paths; writes only when both winners are final; performs the entire
-release/reconciliation atomically; and leaves the kill untouched. Its corrected L133 predicates
-accept only the canonical null-owner admission and let an exact cryptographic resolution cover a
-missing lifecycle row while any present bad row still blocks. The first registered provider read
-returned `null` from both venues, so production was not mutated and remains waiting for venue
-finality. The first L136 release attempt exposed only a direct-script import boundary: the release
-checked out `d7366db`, re-signed the unchanged limits and then failed before provider/database work
-because `/opt/janus` was absent from Python's import path. L137 registers the narrow packaging fix;
-the box remained stopped with no settlement row and the reservation unreleased.
+L136's winner-only provider read returned `null` from both venues, but that did **not** mean venue
+finality was pending. L138's fresh raw read contradicted that interpretation: both Kalshi markets
+were already finalized with scalar payouts (`SHA=0.44`, `IVA=0.56`), and Polymarket was closed and
+resolved at `0.50/0.50`. L138's proposed coexistence route was stopped before implementation.
+
+L139 is the corrected release candidate. It represents complete authoritative per-outcome payout
+maps without manufacturing a winner, stores them in additive tables that preserve historical exact
+evidence, settles complementary NO and sell legs, and lets the guard recognize a paid scalar leg.
+The exact stopped-lane helper binds the measured maps and the cover's `-$0.99357` realized PnL in
+addition to every prior L136 identity, economics, kill, unit and atomic rollback proof. Production
+has not received L139 yet; it remains stopped with no settlement row and the reservation unreleased.
 
 ## F22 release candidate
 
@@ -70,16 +70,16 @@ first-order id, hedge id or nonzero fill.
 ## Verification
 
 The release candidate has zero live F22 observations. It is locally ready, not economically
-validated. L136 and L137 are locally verified, independently audited and deployed. Production is
-blocked only on authoritative venue finality for the exact held cover, not on an unshipped change.
+validated. Production is blocked on the unshipped L139 payout-aware settlement correction, not on
+venue finality.
 
 - Focused F22/grid/report tests: 65 passed; the final combined F22/recovery selection passed 87.
-- Integrated suite: the only failure in the final run was the documented pre-existing box FIFO
-  flake; it passed immediately in isolation.
+- L139 focused reconcile/helper/guard/legacy selection: 167 passed.
+- Integrated suite after the additive-table correction: exit zero.
 - Replay: stable over 20,000 frames, 234 pollers, 5,858 evaluations and 1,093 rows.
 - Replay digests: `13e4fb08a76c920f / 4f53cda18c2baa0c`, unchanged.
 - Shell syntax, Python compilation and `git diff --check`: passed.
-- Final independent Luna safety audit: RELEASE after its last no-wire reporting blocker was fixed.
+- Final independent Luna L139 safety audit: RELEASE.
 
 The agent ran the operator-authorized release route. It checked out `1be680b` and re-signed the
 unchanged standing limits, then failed closed in L133. No kill archive, entry, account mutation,
@@ -95,6 +95,13 @@ The current watchdog independently reports the latest ten completed covers at `-
 losses and four hedges above their own break-even. That is adverse historical entry economics; it
 is not new PnL earned while the retained kill blocks entry.
 
+The held cancelled cover adds a directly measured `-$0.99357` settlement-basis loss: Polymarket
+paid `0.50` on the owned token while Kalshi paid `0.44` on the owned ticker. The existing entry had
+priced this dimension probabilistically through its settlement buffer; it did not guarantee a
+positive realized return in this cancellation state. That contradicts any claim that every admitted
+two-leg position is outcome-by-outcome riskless and must be addressed separately from parser
+correctness after the lane is recovered.
+
 F22 directly targets the avoidable Polymarket taker fee, but it tests a tradeoff rather than a free
 improvement: maker entry saves the fee only when it fills quickly enough to avoid losing more edge
 to waiting and adverse selection. Historical maker evidence is one fill in seventeen attempts.
@@ -108,12 +115,11 @@ turnover, loosen safety, or stop early after a favorable result.
 
 ## Release boundary and immediate continuation
 
-Do not repeatedly release while either venue result is still open: the deployed exact helper will
-return WAIT, retain the kill and leave the lane stopped. The operator has authorized the agent to
-run the exact release route once both venues are authoritative. It must atomically settle only the
-registered cover before L133's static proof; then the unchanged two stopped guards, retained-kill
-stream warm-up, exact joint resolution, exclusive kill archive and restart requirements apply. Any
-mismatch retains/restores the kill and leaves the lane stopped.
+L139 is release-ready. The operator has authorized the agent to run the exact release route. It must
+atomically settle only the registered cover at `-$0.99357` before L133's static proof; then the
+unchanged two stopped guards, retained-kill stream warm-up, exact joint resolution, exclusive kill
+archive and restart requirements apply. Any mismatch retains/restores the kill and leaves the lane
+stopped.
 
 After a successful release, use `ops/f22_report.py` and the production funnel to observe:
 
@@ -144,6 +150,8 @@ no-fill, and do not infer profitability from attempts, theoretical edges or midp
 - `research/exec/2026-09-15_l133-nonquiet-identity/`: L135 exact read-only diagnosis.
 - `research/exec/2026-09-15_stopped-lane-settlement-convergence/`: L136 immutable recovery spec.
 - `research/exec/2026-09-15_l136-direct-script-import/`: L137 direct-invocation packaging fix.
+- `research/exec/2026-09-15_exact-held-cover-coexistence/`: L138 superseded premise and STOP.
+- `research/exec/2026-09-15_scalar-half-settlement/`: L139 payout-aware settlement spec/verdict.
 - `research/sports/2026-09-15_limited-live-f22-maker-vs-taker/`: immutable F22 forward spec.
 - `GATE_TO_LIVE.md` and `ops/box/arm_statement.txt`: exact operator statement, unchanged caps.
 - `snooping_ledger.md`: immutable registrations and results.

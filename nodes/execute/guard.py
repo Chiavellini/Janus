@@ -1054,13 +1054,22 @@ class PositionGuard:
                 # A venue can pay and remove its position hours before the other venue finalizes.
                 # The settlement pass records that venue-authoritative result while retaining the
                 # cover's capital reservation. It is no longer an expected open position there.
-                has_results = self.records.store.con.execute(
+                con = self.records.store.con
+                has_winners = con.execute(
                     "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_venue_results'"
                 ).fetchone()
-                if has_results and self.records.store.con.execute(
+                has_payouts = con.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='execution_venue_payouts'"
+                ).fetchone()
+                winner_final = has_winners and con.execute(
                     "SELECT 1 FROM execution_venue_results WHERE execution_id=? AND venue=?",
                     (exid, leg.venue),
-                ).fetchone():
+                ).fetchone()
+                payout_final = has_payouts and con.execute(
+                    "SELECT 1 FROM execution_venue_payouts WHERE execution_id=? AND venue=?",
+                    (exid, leg.venue),
+                ).fetchone()
+                if winner_final or payout_final:
                     continue
                 sign = -1.0 if leg.side.endswith("_no") else 1.0
                 key = (leg.venue, leg.market_id)

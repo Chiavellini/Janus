@@ -69,3 +69,20 @@ def test_a_polymarket_no_leg_wins_when_its_yes_twin_loses():
     assert draw[0].realized_usd == 100 - 50 - 1 and draw[1].realized_usd == -40 - 1
     home = settle(legs=legs, winners={"polymarket": "P_H", "kalshi": "K_H"})
     assert home[0].realized_usd == -50 - 1 and home[1].realized_usd == 100 - 40 - 1
+
+
+def test_authoritative_half_payouts_apply_to_yes_no_and_sell_legs():
+    legs = [
+        {"venue": "polymarket", "client_order_id": "half-yes", "outcome_id": "P_H", "side": "buy_yes",
+         "contracts": 10.0, "price": 0.40, "fee_usd": 0.10, "state": "FILLED", "final": True},
+        {"venue": "kalshi", "client_order_id": "half-no", "outcome_id": "K_H:NO", "side": "buy_no",
+         "contracts": 10.0, "price": 0.40, "fee_usd": 0.10, "state": "FILLED", "final": True},
+        {"venue": "polymarket", "client_order_id": "half-sell", "outcome_id": "P_H", "side": "sell_yes",
+         "contracts": 10.0, "price": 0.60, "fee_usd": 0.10, "state": "FILLED", "final": True},
+    ]
+    r = settle(legs=legs, winners={}, payouts={"polymarket": {"P_H": 0.5}, "kalshi": {"K_H": 0.5}}, now=1.0)
+    assert [x.realized_usd for x in r] == pytest.approx([0.9, 0.9, 0.9])
+    assert releasable(r)
+    blocked = settle(legs=[{**legs[0], "outcome_id": "P_UNKNOWN"}], winners={},
+                     payouts={"polymarket": {"P_H": 0.5}}, now=1.0)
+    assert blocked[0].state is FillState.UNCONFIRMED

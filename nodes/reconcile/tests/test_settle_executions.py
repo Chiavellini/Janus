@@ -88,6 +88,67 @@ def test_a_hedged_cover_settles_on_both_results_and_releases(tmp_path):
     assert pending(st, now=T) == [], "released executions are not asked again"
 
 
+def test_scalar_and_half_maps_settle_and_survive_refresh(tmp_path):
+    st, ledger, opps, rid = _hedged(tmp_path)
+    items = pending(st, now=T)
+
+    def fk(ticker, _cl):
+        values = {"K-LAD": "0.4400", "K-STL": "0.5600"}
+        return {"market": {"status": "finalized", "result": "scalar",
+                            "settlement_value_dollars": values[ticker]}}
+
+    def fe(_slug):
+        return {"markets": [{"slug": "mlb-stl-lad-2026-09-03", "sportsMarketType": "moneyline",
+                              "closed": True, "umaResolutionStatus": "resolved",
+                              "umaResolutionStatuses": ["proposed", "proposed"],
+                              "outcomes": '["Los Angeles Dodgers","St. Louis Cardinals"]',
+                              "clobTokenIds": json.dumps([LAD, STL]),
+                              "outcomePrices": '["0.5","0.5"]'}]}
+
+    result = fetch_results(items, None, fetch_kalshi=fk, fetch_event=fe)
+    assert result["x1"]["kalshi"] is None and result["x1"]["polymarket"] is None
+    assert result["x1"]["kalshi_payouts"] == {"K-LAD": 0.44, "K-STL": 0.56}
+    assert result["x1"]["polymarket_payouts"] == {LAD: 0.5, STL: 0.5}
+    out = apply_settlements(st, ledger, None, opps, items, result, now=T, log=lambda *_: None)
+    assert out == {"settled": 1, "waiting": 0, "unreleasable": 0}
+    row = st.con.execute("SELECT realized_usd, released, kalshi_winner, polymarket_winner FROM execution_settlements").fetchone()
+    assert row[0] == pytest.approx(11.0) and row[1:4] == (1, None, None)
+    assert st.con.execute("SELECT venue,payouts_json FROM execution_venue_payouts ORDER BY venue").fetchall() == [
+        ("kalshi", '{"K-LAD": 0.44, "K-STL": 0.56}'),
+        ("polymarket", f'{{"{LAD}": 0.5, "{STL}": 0.5}}'),
+    ]
+    assert st.con.execute("SELECT venue,payouts_json FROM execution_settlement_payouts ORDER BY venue").fetchall() == [
+        ("kalshi", '{"K-LAD": 0.44, "K-STL": 0.56}'),
+        ("polymarket", f'{{"{LAD}": 0.5, "{STL}": 0.5}}'),
+    ]
+    st.con.execute("UPDATE orders SET fee_usd=0.2 WHERE client_order_id='a'")
+    st.con.commit()
+    assert refresh_settlement_accounting(st, now=T + 1, log=lambda *_: None) == 1
+    assert st.con.execute("SELECT realized_usd FROM execution_settlements").fetchone()[0] == pytest.approx(10.8)
+
+
+def test_invalid_or_contradictory_final_evidence_never_releases(tmp_path):
+    st, ledger, opps, rid = _hedged(tmp_path)
+    items = pending(st, now=T)
+    incomplete = {"x1": {"kalshi": None, "polymarket": None,
+                          "kalshi_payouts": {"K-LAD": 0.44},
+                          "polymarket_payouts": {LAD: 0.5, STL: 0.5}}}
+    assert apply_settlements(st, ledger, None, opps, items, incomplete,
+                             now=T, log=lambda *_: None)["waiting"] == 1
+    assert st.con.execute("SELECT released_utc FROM capital_reservations WHERE reservation_id=?",
+                          (rid,)).fetchone() == (None,)
+
+    st.con.execute(
+        "INSERT OR REPLACE INTO execution_venue_payouts(execution_id,venue,payouts_json,observed_ts) "
+        "VALUES('x1','kalshi',?,?)", (json.dumps({"K-LAD": 0.44, "K-STL": 0.56}), T))
+    st.con.commit()
+    changed = {"x1": {"kalshi": "K-STL", "polymarket": None}}
+    with pytest.raises(RuntimeError, match="contradictory durable"):
+        apply_settlements(st, ledger, None, opps, items, changed, now=T + 1, log=lambda *_: None)
+    assert st.con.execute("SELECT released_utc FROM capital_reservations WHERE reservation_id=?",
+                          (rid,)).fetchone() == (None,)
+
+
 def test_a_late_fee_correction_revises_settled_pnl_once_with_an_audit_row(tmp_path):
     st, ledger, opps, _ = _hedged(tmp_path)
     items = pending(st, now=T)
@@ -192,6 +253,23 @@ def test_one_venue_result_survives_the_other_venues_transport_error(tmp_path):
     winners = fetch_results(items, None, fetch_kalshi=fk, fetch_event=pm_down)
     assert winners["x1"]["kalshi"] == "K-LAD"
     assert winners["x1"]["polymarket"] is None and winners["x1"]["polymarket_error"] == "TimeoutError"
+
+
+def test_closed_malformed_final_payload_is_an_error_not_an_open_market(tmp_path):
+    st, *_ = _hedged(tmp_path)
+    items = pending(st, now=T)
+
+    def fk(ticker, _cl):
+        return {"market": {"status": "finalized", "result": "scalar"}}
+
+    def fe(slug):
+        return {"markets": [{"slug": slug, "sportsMarketType": "moneyline", "closed": True,
+                             "umaResolutionStatus": "resolved", "outcomes": '["A","B"]',
+                             "outcomePrices": '["0.5"]'}]}
+
+    got = fetch_results(items, None, fetch_kalshi=fk, fetch_event=fe)["x1"]
+    assert got["kalshi_error"] == "InvalidFinalPayout"
+    assert got["polymarket_error"] == "InvalidFinalPayout"
 
 
 def _partial(tmp_path: Path):
@@ -310,4 +388,3 @@ def test_the_write_lock_is_released_between_settled_items(tmp_path):
                       "VALUES('probe','kalshi','K-STL',?)", (T,))
     other.con.commit()
     other.con.close()
-
