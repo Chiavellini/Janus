@@ -4,107 +4,132 @@
 What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
 commit message.*
 
-Updated 2026-09-14 after the L116 confirmation and the 2026-09-14 orphan-fill investigation, on
-`claude/hedge-safety-and-speed`.
+Updated 2026-09-14 after L118–L120, on `claude/hedge-safety-and-speed`.
 
 ## Current state
 
-`5053154` is deployed on the Mexico box. The lane is active in `LIMITED_LIVE`, but `kill/live`
-exists and entry is stopped. **Do not clear it.** Seven historical overfill acknowledgements still
-validate, but a new, unrelated account incident now blocks relaunch.
+`31e7a42` is deployed on the Mexico box. The lane and credentials are active, but `kill/live`
+exists and entry is stopped. The lane is collecting market and refusal data; it is not placing
+orders. Do not clear the kill until the exact disposition and legacy false-alarm rows below have
+resolved under a complete guard pass.
 
-The branch contains the already-pushed L104–L116 work plus a local L117 candidate. L117 makes kill
-files first-writer-wins so a later alarm cannot erase the reason trading first stopped. It changes
-no kill condition, cap, hurdle, size, allowance, protection decision, or order path. Focused tests
-are 37/37, the full suite is 1,568/1,568 on this run, and replay parity remains
-`13e4fb08a76c920f` / `4f53cda18c2baa0c` over 1,093 rows.
+The branch's functional candidate is `6bb2ebd` plus this handoff update. L118 adds an exact
+append-only ownership disposition for the one operator-confirmed manual fill. L120 repairs one
+schema-only invalidation of the historical legacy acknowledgement. The full suite is 1,601/1,601,
+including the two previously flaky box tests on this run. Replay parity remains 1,093 rows at
+`13e4fb08a76c920f` / `4f53cda18c2baa0c`.
 
-## The account incident — operator attribution required
+No cap, hurdle, size, entry policy, protection decision, settlement rule, or kill condition changed.
 
-At 2026-09-14 18:06:29Z the authenticated Polymarket account bought **666.666667 Yes shares at
-$0.15** on *“Will there be no change in Fed interest rates after the September 2026 meeting?”*
-Order `0x32813cbb23731ca96e8830adb5118adb16367d4c0beecf2554040dec4eb3afa3`, trade
-`99f8e62b-0684-446f-baa7-08bb785c3d30`, authoritative cash **$104.25**. The guard flagged it as
-`ORPHAN_FILL` 30 seconds later.
+## The Polymarket fill is operator-owned manual activity
 
-This is real quantity, not a decimal/display bug: `666.667` is only `:g` formatting. It is a taker
-trade, on a non-sports token, with no matching `orders`, `order_events`, `pm_bounded_taker_orders`,
-or post-only row. Current Janus code cannot create it: the live universe is sports and the only BUY
-signer is hard-limited to 25 requested contracts / $30 collateral. The fill does share the account
-and CLOB API-owner UUID used by Janus. The honest attribution is therefore **manual/shared-account,
-another client using the account, or compromised credentials**; the database cannot choose among
-those without the operator.
+The operator states verbatim:
 
-The public positions feed still showed all 666.6666 shares open, marked at $76.67 (about −$23.33
-against the ~$100 token value before the separately recorded $4.25 cash residual/fee), end date
-2026-09-16. Janus did not hedge, sell, or otherwise alter it. It is outside the sports execution P&L
-breaker.
+- *"That position was placed manually on a hunch i got"*
+- *"You should not worry about it"*
 
-One further finding changes the interpretation of the “harmless” legacy alarm in the prior
-handoff. `KillSwitches.latch()` unconditionally rewrote an existing file. Repeated
-`LEGACY_INCIDENT_ACK_INVALID flag=211` latches replaced the orphan reason and timestamp in
-`kill/live`; at inspection the file named the legacy alarm at 21:24:32Z although it was born the
-previous day. `lane_flags` preserved the orphan, but the operator-facing first cause did not. L117
-repairs that provenance loss with atomic exclusive creation. It deliberately does not suppress the
-137/day legacy rows, which remain a separate cleanup.
+The exact fill remains:
 
-## Economics — what survives confirmation
+- fill `99f8e62b-0684-446f-baa7-08bb785c3d30`
+- order `0x32813cbb23731ca96e8830adb5118adb16367d4c0beecf2554040dec4eb3afa3`
+- 666.666667 Yes shares at 0.1499999999
+- token `5615282760875985231868508008056959876238536896643315063916840237042205273721`
+- authoritative cash $104.25; confirmed taker trade; no Janus order or execution row
 
-- Polymarket taker entry cost remains measured at 0.828c/contract; Kalshi hedge fee at
-  1.187c/contract; median booked margin 0.67c. The fee problem is real.
-- L116's 2026-09-11 result does **not** generalize as a pooled cents-per-second slope. That day,
-  mean drift was 0.28c at 1.0 s and 0.78c at 2.5 s, implying +0.50c from speeding up.
-- The owed 2026-09-13 confirmation read 2,797 actionable moments, 30,671 samples and 100,232,969
-  frames with zero parse errors/corrupt files. Mean drift was **0.29c at 1.0 s and 0.19c at 2.5 s**:
-  2.5→1.0 s was **−0.11c**, not +0.50c. By 20 s the pooled mean was −0.84c.
-- The adverse tail still worsened with time on 09-13: p90 was 3c at 1 s, 5c at 2.5 s and 6c at
-  20 s. Speed can improve tail risk even when the pooled mean does not.
-- The sign is league-dependent. ATP/ELC/EPL got dearer between 1.0 and 2.5 s; La Liga/MLS/NFL/MLB
-  did not. **Do not use “0.25c per second” for a blanket hurdle or $100/day forecast.** Measure EV
-  per league and keep the Sharpe/tail benefit separate.
-- Negative unconditional drift at long windows is not maker EV. A maker fills selectively when the
-  market comes to it; L63's prospective cohort remains the authority. Nothing here re-enables maker.
+It is not a Janus cap breach, Janus P&L, or credential incident. It is still operationally relevant
+because the correct guard treats every fill without Janus ownership as an orphan. Existing L56
+dispositions required a settled archived proof and could not truthfully express an open manual
+position.
 
-The confirmation took about 35 minutes over 3.5 GB / 100.2 M frames on the one-vCPU box at
-`nice -n 19`; the old “~10 minutes” estimate was false.
+L118's `open_external_manual` action binds every FillRecord field, the exact operator statements,
+the authenticated cash-source hash and transaction, empty Janus order/event rows, and exact orphan
+flag 587 to committed evidence at `5ca42d0`. Only that fill can match. A future fill sharing its
+order, token, wallet, owner, price, side, or quantity remains an orphan. Confirmation appends
+ownership only; it never changes the position, orders, P&L, accounting, flags, protection, or kill.
 
-## What to do next
+The prepared proposal is
+`research/exec/2026-09-14_open-manual-fill-disposition/prepared.json`. The target-bound dry-run and
+separate `--confirm` remain operator actions. After confirmation, a complete guard pass may resolve
+only the exact ORPHAN_FILL flag; the retained kill is unchanged.
 
-1. **Operator answer:** did the operator intentionally place the Fed-rate order above? If yes, a
-   source-bound external-fill disposition can be prepared. If no, rotate/revoke the Polymarket
-   trading credentials and investigate every client using the wallet before any kill clear.
-2. Release L117 only through the operator's ordinary `ops/box/release.sh <sha>` paste. A release is
-   required because `nodes/risk/kill.py` is in the executable-tree hash. The current genuine kill
-   remains; never use the false-maker auto-clear path as a disposition for this fill.
-3. After account attribution and a clean guard, decide whether to resume the 10-contract measurement
-   run. Only real orders make L112 (account-stream kinds), L113 (post-kill refusal funnel), and L114
-   (covers per event) answer their registered questions.
-4. Treat latency as per-league/tail work. The remaining 366 ms and 306 ms segments are mostly durable
-   pre-wire database work, not proven idle time. Instrument SQLite lock wait/serialization before
-   scoping a rewrite. Racing the user stream against REST is plausibly ~350 ms, but L112 explicitly
-   requires a real-order day before changing that path.
-5. Clean up `LEGACY_INCIDENT_ACK_INVALID flag=211` only under a separate row. It is noisy but no
-   longer able to overwrite a first latch after L117.
+## The legacy alarm is a proved null-column migration
 
-## Session delta and source of truth
+L119 compared the immutable acknowledgement for flag 211 to the current database field by field.
+There is exactly one difference: `/settled/reservation/hedged_utc` is present now with `null` and
+absent from the old snapshot. The acknowledgement record SHA verifies. No identity, quantity,
+price, fee, cash, order/execution state, settlement, reservation value, flag, or violation changed.
 
-Created: L116's `results_20260913.json` and `confirmation_20260913.md`; L117's immutable
-`spec.yaml` and `verdict.md`. Changed: `nodes/risk/kill.py`, its focused risk tests,
-`snooping_ledger.md` by append-only rows/notes, and this handoff. Intentionally untouched:
-`GATE_TO_LIVE.md`, all caps/hurdles/limits, the maker/taker policy, box modes/overrides, the current
-kill file, the open Polymarket position, and all user changes in the main checkout.
+The first ad-hoc classifier printed MATERIAL_STOP because it whitelisted the wrong path; the
+registered criterion classifies the one null additive field as ADDITIVE_SCHEMA_ONLY. Both facts are
+preserved in L119's result.
 
-Sources of truth were `AGENTS.md`, `README.md`, `GATE_TO_LIVE.md`, L104–L117 and their immutable
-specs, the box's read-only `venue_fills`/`pm_cash_sources`/`orders`/`lane_flags` rows, the public
-Polymarket position feed, replay parity, and the test suite. The official Polymarket CLOB schema
-confirms that `owner` is the API-key-owner UUID; it does not identify which human or client sent an
-order sharing that owner.
+L120 accepts only stored-absent/current-null at that exact path, after recursive exact equality of
+every other key, type, and value. A non-null `hedged_utc`, second added field, removal, type change,
+or economic/incident change remains invalid and STOP. After deploy, a complete guard pass can close
+the repeated exact migration false alarms. It never clears the kill or rewrites acknowledgement
+evidence.
+
+## Economics and the $100/day constraint
+
+The operator now states verbatim: *"turnover is no constraint because we are specifically targeting
+short horizon events (meaning 600 usd across both venues can probably result in turnovers over
+10,000)"*.
+
+That is the intended capital model, not current Janus behavior:
+
+- The signed arm is $30/order, 25 contracts/leg, and $500 cumulative daily notional.
+- `day_notional_usd()` counts filled-and-released reservations for the rest of the UTC day. Venue
+  cash does not recycle under this cap today.
+- Hedging ends only the per-event single-flight refusal. Capital remains committed until both
+  venues are final and reconciliation releases the reservation.
+- Open exposure is bounded more tightly by $250 unresolved/per-venue limits, and executions are
+  globally serialized by one in-flight worker.
+
+Do not change those semantics before positive q=10 unit economics and safe settlement release are
+measured. If the evidence passes, a later dated GATE row can use the operator's words above and set
+an explicit cumulative-turnover cap; the existing statement is not silently reinterpreted.
+
+Economics remain unresolved:
+
+- Twenty real covers: pooled P&L -$1.50, 10 losers; hedge slippage p50 3.04c/contract.
+- Polymarket taker fee 0.828c and Kalshi hedge fee 1.187c against 0.67c median booked margin.
+- No league has the 20 covers required for a defensible per-league reserve. ATP is 6/6 adverse;
+  MLB has high slippage but positive realized P&L; pooling them is misleading.
+- Maker entry might remove the PM fee, but it has one historical fill in seventeen attempts and
+  needs L63's prospective 200-attempt cohort before any EV claim or policy change.
+- The independently measured moneyline surface remains about $20/day gross. Reaching $100/day
+  likely requires both positive unit economics and wider safe coverage, not only more capital.
+
+The first post-`31e7a42` one-hour q=10 funnel reported 80 events seen, 72 co-listed, 74 games priced,
+26 actionable prints, zero executions, and 31 KILL_SWITCH refusals. This is a short instrument check,
+not a daily forecast. It proves the funnel recorder works while the retained kill prevents the real
+conversion measurement.
+
+## Immediate sequence
+
+1. Push and operator-release the branch head once. The release is required because L118/L120 touch
+   executable code; release remains the operator's paste.
+2. On the deployed tree, operator runs the L118 disposition dry-run against
+   `/srv/janus/tuples/tuples.sqlite`, reviews the exact facts/digest, then separately pastes the exact
+   digest confirmation. The agent never runs `--confirm`.
+3. Let one complete guard pass resolve exact ORPHAN_FILL 587 and the L120 migration false alarms.
+   Inspect every unresolved flag, venue position, order, execution, reservation and stream before
+   preparing any kill-clear line.
+4. Only the operator clears the retained kill. The agent never clears, arms, changes mode, writes an
+   override, or releases.
+5. Resume the q=10 measurement cohort. Read L112 account-stream kinds, L113 funnel conversion, L114
+   covers/event, and per-league net EV/Sharpe/slippage. Stop at the first registered safety STOP.
+6. If unit economics are positive, decide maker-vs-taker and then design the explicit recyclable
+   turnover policy. If they are not, exclude/reserve losing leagues before increasing turnover.
 
 ## Instrument traps that still apply
 
-- `stages_json` `*_ms` are cumulative from `_t0`; difference them per row. Exclude `guard_rerun`
-  rows because `protect_existing` re-bases `_t0`.
+- `stages_json` `*_ms` are cumulative from `_t0`; difference per row. Exclude `guard_rerun` rows.
 - `socket_health.frames` is cumulative; take deltas and treat decreases as reconnects.
 - `BLOCKED_MATCH` is mostly the `single_venue` branch, not lost paired surface.
-- The local archive DB is corrupt; replay uses the separate slate snapshot.
-- Frames age out at seven days.
+- `refusal_counts` is hot-path aggregation, not unique opportunities. An empty section means not
+  yet ticked, not zero refusals.
+- `PROFITABLE_UNEXECUTED` is material-change gated and per size rung. Always name the rung.
+- The local archive DB is corrupt; replay uses the separate slate snapshot. Frames age out at seven
+  days.
+- Negative unconditional long-window hedge drift is not maker EV. L63 remains the maker authority.
