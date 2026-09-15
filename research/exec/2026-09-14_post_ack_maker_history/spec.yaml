@@ -1,0 +1,28 @@
+row: L127
+date: 2026-09-14
+kind: descriptive_read_only_incident_diff
+status_at_registration: PENDING
+observed_failure: >-
+  The operator-authorized L126 release reached the registered pre-stop proof and match_incident
+  refused because pm_post_only_orders now contains history, while the original acknowledgement
+  was confirmed when that table was empty. The lane is stopped with the exact kill restored.
+immutable_success_criteria:
+  - Read only the production acknowledgement, pm_post_only_orders, pm_post_only_admission,
+    pm_post_only_violations, orders, executions, reservations, and unresolved material flags.
+  - Emit exact row counts, schemas, canonical row hashes, active/terminal state counts, the
+    acknowledgement time and post-ack time range, plus results of match_incident with
+    require_idle true and false.
+  - Classify APPEND_ONLY_TERMINAL_HISTORY only if all post-ack maker rows are immutable historical
+    terminal attempts, admission is exactly empty, no additional violation changes the bound
+    incident, and global order/execution/reservation/material-flag state is quiet. Any active,
+    unconfirmed, cash-pending, unreleased, admitted, new violation, changed incident, or unknown
+    state is MATERIAL_STOP.
+  - Persist a deterministic JSON result and verdict. Any compatibility repair is a new
+    pre-registered row; no production code changes under L127.
+expected_ev_effect: >-
+  None. This determines whether later legitimate maker history can coexist with the exact
+  historical acknowledgement without weakening current-risk checks.
+prohibited:
+  - Writing the database, acknowledgement, flags, kill, archive, orders, or venue state.
+  - Treating history as harmless without exact terminal and global-quiet evidence.
+  - Clearing or bypassing the kill.
