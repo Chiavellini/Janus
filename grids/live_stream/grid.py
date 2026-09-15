@@ -248,6 +248,11 @@ class Supervisor:
     guard: PositionGuard | None = None
     fills_today: tuple = ()
     guard_passes: int = 0
+    #: L123: a guard fetch/apply failure is an entry stop even if an operator later clears an
+    #: unrelated kill.  A complete later pass may clear this in-memory gate; durable evidence is
+    #: append-only and the live kill remains a human decision.
+    guard_unhealthy: bool = True
+    guard_failure_detail: str = "no complete guard pass since process start"
     reprotect_queue: list = field(default_factory=list)
     #: L76 (2026-09-12): execution_id -> (next_due_mono, until_mono) for a position the layer left
     #: naked: re-run every [protect] protect_retry_s for protect_fast_window_s, from the run loop,
@@ -589,6 +594,10 @@ class Supervisor:
 
     def _execute_sized(self, sup: Supervised, evaluated) -> None:
         """One cap-aware live quantity decision for one frozen book epoch."""
+        # L123: do this before consuming even the cached balance snapshot.  The callback may have
+        # priced the event already, but no new capital entry is allowed while guard health is unknown.
+        if self._guard_entry_refused(sup):
+            return
         base = evaluated[0][0]
         if not base.offers or sup.poller.proof is None or self.limits is None or self.ledger is None:
             return
@@ -835,6 +844,9 @@ class Supervisor:
     def _execute(self, sup: Supervised, ev, rec, *, sizing: SizingDecision | None = None) -> None:
         """PAPER and above: plan from the priced cover, clear it through nodes/risk, run the machine.
         Every refusal is recorded on the opportunity; nothing here raises into the socket loop."""
+        # L123: this is deliberately before planning, balances, clearance, or any venue helper.
+        if self._guard_entry_refused(sup):
+            return
         if self.arm_stale:
             # The override stopped authorising this process between ticks (check_arm). Refused
             # before any plan, balance call or clearance: nothing is minted for a stale arm.
@@ -1044,6 +1056,10 @@ class Supervisor:
         opportunity moves and journal rows come back to the loop through OnLoop), the
         bookkeeping on the loop. Nothing here raises into the loop; the flight always clears."""
         try:
+            # A guard may fail after _execute dispatches this task but before the worker starts.
+            # Recheck on the loop before the first balance read; protection has its own path.
+            if self._guard_entry_refused(sup):
+                return
             # A guard snapshot is already authoritative and copying it cannot block. Do that on
             # the loop so a completed zero-work worker future does not sit behind socket traffic.
             balances = self._cached_balances(pre)
@@ -1236,6 +1252,46 @@ class Supervisor:
         key = (channel, code or "UNKNOWN", league or "")
         self.refusals[key] = self.refusals.get(key, 0) + 1
 
+    def _guard_entry_refused(self, sup) -> bool:
+        """Refuse a new capital entry while the guard's health proof is invalid.
+
+        The guard's kill is durable and is normally the first refusal seen by ``clear()``.  This
+        separate in-memory gate is required when either alarm write failed, and remains in force
+        until a complete pass restores health even if a human clears an unrelated live switch.
+        It is intentionally not consulted by the protection path, which must remain able to hedge
+        or unwind an already-open position.
+        """
+        if not self.guard_unhealthy or not getattr(self.mode, "risks_capital", False):
+            return False
+        league = getattr(getattr(sup, "poller", None), "league", "")
+        key = f"{getattr(sup, 'short_name', league)}:GUARD_FAILED"
+        if self.said.get(key) != self.guard_failure_detail:
+            self.said[key] = self.guard_failure_detail
+            print(f"  [risk] refused {getattr(sup, 'short_name', league)}: GUARD_FAILED "
+                  f"{self.guard_failure_detail or 'guard health unavailable'}", flush=True)
+        self.refuse("risk", "GUARD_FAILED", league)
+        return True
+
+    def _guard_pass_complete(self, snap) -> bool:
+        """Require the full reconciliation proof before reopening capital entry.
+
+        ``PositionGuard.fetch`` intentionally returns a structured snapshot even when one of its
+        reads fails. Capital mode may only recover from that state when fills were read completely,
+        every configured venue returned position evidence, and no errors remain. Balances are not
+        required here: adapters may legitimately omit a balance while still providing complete
+        position reconciliation (the entry gate will independently require balances).
+        """
+        if not getattr(self.mode, "risks_capital", False):
+            return True
+        if getattr(snap, "fills_read_complete", False) is not True:
+            return False
+        if getattr(snap, "errors", None):
+            return False
+        positions = getattr(snap, "positions", None)
+        if not isinstance(positions, dict):
+            return False
+        return all(venue in positions and positions[venue] is not None for venue in self.venues)
+
     def _count_size_refusal(self, sup, decision) -> None:
         """Every binding constraint, counted separately: the sizer reports a SET, and which members
         co-occur is the finding. `CAP_CONTRACTS` is unioned in unconditionally by both return paths
@@ -1244,7 +1300,7 @@ class Supervisor:
         for code in codes or ["NO_FEASIBLE_SIZE"]:
             self.refuse("size", str(code).split(":")[0], sup.poller.league)
 
-    def flag(self, name: str, detail: str, *, on=None) -> None:
+    def flag(self, name: str, detail: str, *, on=None) -> bool:
         """Raise a lane flag on the connection THIS thread owns -- the only way the grid flags.
 
         `self.store` is the loop's connection (check_same_thread=True); `self.worker_store` is the
@@ -1259,14 +1315,16 @@ class Supervisor:
         """
         store = self.worker_store if self.worker_store is not None else self.store
         if store is None:
-            return
+            return False
         try:
             raise_flag(store, name, detail)
+            return True
         except Exception as exc:  # noqa: BLE001 -- a flag must never break the caller
             detail_map = getattr(on, "protect", None)
             if isinstance(detail_map, dict):
                 detail_map[f"{name.lower()}_flag_error"] = brief_error(exc)
             print(f"  [risk] flag write failed ({name}): {brief_error(exc)}", flush=True)
+            return False
 
     def on_unprotected(self, ex, text: str) -> None:
         """A position the layer could neither hedge nor unwind inside the cap (2026-09-08): the
@@ -1304,6 +1362,46 @@ class Supervisor:
             except Exception as exc:  # noqa: BLE001
                 print(f"  [risk] kill latch failed: {type(exc).__name__}", flush=True)
 
+    def _guard_failed(self, exc: BaseException) -> None:
+        """Record a failed guard pass and close the capital-entry gate.
+
+        This handler runs on the loop after ``fetch`` returns from ``asyncio.to_thread`` (or after
+        ``apply`` raises), so the flag write must use the connection selected by ``flag`` rather
+        than reaching into the worker-owned guard journal. Kill/lane-flag writes are independent:
+        a failure of either leaves ``guard_unhealthy`` set and therefore cannot become logging-only.
+        ``KillSwitches.latch`` itself is exclusive, preserving the first writer's provenance.
+        """
+        try:
+            diag = brief_error(exc)
+        except Exception:  # noqa: BLE001 -- even diagnostic formatting cannot reopen entry
+            diag = repr(exc)
+        detail = f"{type(exc).__name__}: {diag}"[:180]
+        self.guard_unhealthy = True
+        self.guard_failure_detail = detail
+        # Any snapshots from before the failed pass are not authoritative.  In particular, do not
+        # let a stale balance or breaker fill view survive a failed fetch/apply.
+        self.balance_snapshot = {}
+        self.balance_snapshot_mono = 0.0
+        self.fills_today = ()
+
+        if getattr(self.mode, "risks_capital", False):
+            if self.kill is None:
+                print("  [guard kill latch failed] no kill switch configured", flush=True)
+            else:
+                try:
+                    self.kill.latch("live", f"guard failed: {detail}"[:220])
+                except Exception as kill_exc:  # noqa: BLE001 -- preserve the guard failure visibly
+                    print(f"  [guard kill latch failed] {brief_error(kill_exc)}", flush=True)
+        # Keep the alarm observable below LIMITED_LIVE, but acquire no live kill/order authority
+        # there. A failed write is itself an unhealthy state, retained in memory above.
+        try:
+            alarm_ok = self.flag("GUARD_FAILED", detail)
+        except Exception as flag_exc:  # noqa: BLE001 -- alarm failure must not reopen entry
+            alarm_ok = False
+            print(f"  [guard alarm write failed] {brief_error(flag_exc)}", flush=True)
+        if not alarm_ok:
+            print("  [guard alarm] GUARD_FAILED durable write unavailable; entry remains refused", flush=True)
+
     async def guard_pass(self) -> None:
         """One pass of the position guard: the network half in a worker, the state half here.
         Serialised with executions through `in_flight` (one connection, one thread at a time).
@@ -1315,11 +1413,24 @@ class Supervisor:
         try:
             snap = await asyncio.to_thread(self.guard.fetch)
             rep = self.guard.apply(snap)
+            # PositionGuard.fetch reports venue/read failures in ``snap.errors`` so the loop can
+            # still inspect the rest of the evidence. Such a snapshot is not a complete pass and
+            # takes the same fail-closed path as an exception; only a complete pass restores health.
+            if not self._guard_pass_complete(snap):
+                errors = getattr(snap, "errors", None) or {}
+                detail = "; ".join(f"{k}: {v}" for k, v in sorted(errors.items()))
+                if not detail:
+                    detail = "missing complete fills/positions proof"
+                raise RuntimeError(f"incomplete guard snapshot: {detail[:140]}")
             if getattr(snap, "balances", None) and set(snap.balances) >= set(self.venues):
                 self.balance_snapshot = dict(snap.balances)
                 self.balance_snapshot_mono = time.monotonic()
             self.fills_today = rep.fills_today
             self.guard_passes += 1
+            # Recovery is intentionally in-memory only. Do not resolve GUARD_FAILED or clear the
+            # live kill here; both are durable operator evidence and require an explicit human act.
+            self.guard_unhealthy = False
+            self.guard_failure_detail = ""
             for line in rep.findings:
                 print(f"  [guard] {line}", flush=True)
             if rep.to_protect:
@@ -1333,6 +1444,7 @@ class Supervisor:
                     self.reprotect_queue = list(rep.to_protect)
         except Exception as exc:  # noqa: BLE001 -- the guard must never kill the loop
             print(f"  [guard FAILED] {brief_error(exc)}", flush=True)
+            self._guard_failed(exc)
         finally:
             self.in_flight = None
         # One re-protection per pass, after the guard's slot is released: the layer runs in the

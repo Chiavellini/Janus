@@ -5,6 +5,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from grids.live_stream.grid import Supervised, Supervisor
 from nodes.game_poller.tests.test_poller import FEES, mlb, sync_all
 from nodes.opportunity.opportunity import OpportunityStore
@@ -15,6 +17,10 @@ T = 1000.0
 
 def _supervisor(tmp_path: Path) -> tuple[Supervisor, Supervised]:
     sup = Supervisor(["mlb"])
+    # These unit fixtures represent a process after its first healthy guard pass. The startup
+    # default is intentionally unhealthy in capital mode; the dedicated L123 tests exercise it.
+    sup.guard_unhealthy = False
+    sup.guard_failure_detail = ""
     sup.store = TupleStore(tmp_path / "t.sqlite", enforce_volume=False)
     sup.opportunities = OpportunityStore(sup.store)
     p = mlb()
@@ -496,6 +502,186 @@ def test_the_guard_pass_feeds_the_breaker_and_holds_the_flight_slot(tmp_path: Pa
         G.clear = old
 
 
+@pytest.mark.parametrize("stage", ["fetch", "apply"])
+def test_guard_failure_crosses_to_thread_and_fails_closed_until_complete_recovery(tmp_path: Path, stage):
+    """L123: an unexpected fetch/apply exception is not a healthy pass or a stale snapshot."""
+    import asyncio
+    import threading
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.risk.flags import recent_flags
+    from nodes.risk.kill import KillSwitches
+
+    sup, _s = _supervisor(tmp_path)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_auto=False))
+    sup.balance_snapshot = {"kalshi": 91.0, "polymarket": 82.0}
+    sup.balance_snapshot_mono = 123.0
+    sup.fills_today = ("stale-fill",)
+    loop_thread = threading.get_ident()
+    seen = {}
+
+    class Guard:
+        def fetch(self):
+            seen["fetch_thread"] = threading.get_ident()
+            if stage == "fetch":
+                raise RuntimeError("fetch broke")
+            return SimpleNamespace(balances={}, errors={}, fills_read_complete=True, positions={})
+
+        def apply(self, snap):
+            seen["apply_thread"] = threading.get_ident()
+            if stage == "apply":
+                raise ValueError("apply broke")
+            return SimpleNamespace(findings=[], to_protect=[], fills_today=())
+
+    sup.guard = Guard()
+    asyncio.run(sup.guard_pass())
+
+    assert seen["fetch_thread"] != loop_thread, "fetch must use the real asyncio.to_thread boundary"
+    if stage == "apply":
+        assert seen["apply_thread"] == loop_thread
+    assert sup.guard_passes == 0 and sup.in_flight is None
+    assert sup.guard_unhealthy and sup.balance_snapshot == {} and sup.balance_snapshot_mono == 0.0
+    assert sup.fills_today == ()
+    assert sup.kill.active(live=True) == ["live"]
+    assert recent_flags(tmp_path / "t.sqlite", "GUARD_FAILED")
+
+    # A complete pass restores only this in-memory gate: it cannot clear durable evidence.
+    sup.guard = SimpleNamespace(fetch=lambda: SimpleNamespace(
+                                    balances={}, errors={}, fills_read_complete=True, positions={}),
+                                apply=lambda _snap: SimpleNamespace(findings=[], to_protect=[], fills_today=("fresh",)))
+    asyncio.run(sup.guard_pass())
+    assert not sup.guard_unhealthy and sup.guard_passes == 1 and sup.fills_today == ("fresh",)
+    assert sup.kill.active(live=True) == ["live"]
+    assert recent_flags(tmp_path / "t.sqlite", "GUARD_FAILED")
+
+
+def test_incomplete_guard_snapshot_cannot_reopen_capital_entry(tmp_path: Path):
+    """L123: structured fetch output with missing fills/positions proof is still a failure."""
+    import asyncio
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.execute.guard import GuardSnapshot
+    from nodes.risk.flags import recent_flags
+    from nodes.risk.kill import KillSwitches
+
+    sup, _s = _supervisor(tmp_path)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_auto=False))
+    sup.venues = {"kalshi": object(), "polymarket": object()}
+    # It is deliberately incomplete without raising: no complete fill read and one venue has no
+    # position result. This must not count as recovery.
+    snap = GuardSnapshot(now=1.0, errors={}, fills_read_complete=False,
+                         positions={"kalshi": [], "polymarket": None})
+    rep = SimpleNamespace(findings=[], to_protect=[], fills_today=())
+    sup.guard = SimpleNamespace(fetch=lambda: snap, apply=lambda _snap: rep)
+    asyncio.run(sup.guard_pass())
+    assert sup.guard_unhealthy and sup.guard_passes == 0
+    assert sup.kill.active(live=True) == ["live"]
+    assert recent_flags(tmp_path / "t.sqlite", "GUARD_FAILED")
+
+    # All required proof fields restore only the in-memory gate; the live kill/evidence remain.
+    complete = GuardSnapshot(now=2.0, errors={}, fills_read_complete=True,
+                             positions={"kalshi": [], "polymarket": []})
+    sup.guard = SimpleNamespace(fetch=lambda: complete, apply=lambda _snap: rep)
+    asyncio.run(sup.guard_pass())
+    assert not sup.guard_unhealthy and sup.guard_passes == 1
+    assert sup.kill.active(live=True) == ["live"]
+    assert recent_flags(tmp_path / "t.sqlite", "GUARD_FAILED")
+
+
+def test_capital_mode_starts_guard_unhealthy_until_first_complete_pass(tmp_path: Path):
+    """L123: startup cannot admit a real entry before the first complete guard pass."""
+    import asyncio
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.execute.guard import GuardSnapshot
+    from nodes.risk.kill import KillSwitches
+
+    sup = Supervisor(["mlb"])
+    assert sup.guard_unhealthy and "process start" in sup.guard_failure_detail
+    sup.mode = Mode.LIMITED_LIVE
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.venues = {"kalshi": object(), "polymarket": object()}
+    s = SimpleNamespace(short_name="SF @ PIT", poller=SimpleNamespace(league="mlb"))
+    assert sup._guard_entry_refused(s)
+    assert sup.refusals[("risk", "GUARD_FAILED", "mlb")] == 1
+    snap = GuardSnapshot(now=1.0, errors={}, fills_read_complete=True,
+                         positions={"kalshi": [], "polymarket": []})
+    sup.guard = SimpleNamespace(fetch=lambda: snap,
+                                apply=lambda _snap: SimpleNamespace(findings=[], to_protect=[], fills_today=()))
+    asyncio.run(sup.guard_pass())
+    assert not sup.guard_unhealthy and sup.guard_passes == 1
+    # Once the guard has proved complete, no extra in-memory policy remains; durable kill state is
+    # the only remaining risk decision (clearance owns that check).
+    sup.kill.latch("live", "test kill after complete pass")
+    assert not sup._guard_entry_refused(s)
+
+
+@pytest.mark.parametrize("kill_fails, flag_fails", [(True, False), (False, True)])
+def test_guard_alarm_write_failure_keeps_entry_closed_but_not_protection(tmp_path: Path, monkeypatch,
+                                                                          kill_fails, flag_fails):
+    """L123: loss of either durable alarm path remains an in-memory entry stop."""
+    import asyncio
+    from types import SimpleNamespace
+    import grids.live_stream.grid as G
+    from kernel.schema import Mode
+    from nodes.risk.flags import recent_flags
+    from nodes.risk.kill import KillSwitches
+
+    sup, s = _supervisor(tmp_path)
+    sup.mode = Mode.LIMITED_LIVE
+    real_kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+
+    class Kill:
+        def latch(self, *_a, **_k):
+            if kill_fails:
+                raise OSError("kill unavailable")
+            return real_kill.latch(*_a, **_k)
+
+        def active(self, **kw):
+            return real_kill.active(**kw)
+
+    sup.kill = Kill()
+    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_auto=False))
+    protected = []
+
+    async def protect(execution_id):
+        protected.append(execution_id)
+
+    monkeypatch.setattr(sup, "_protect_off_loop", protect)
+    sup.reprotect_queue = ["open-position"]
+    sup.guard = SimpleNamespace(fetch=lambda: (_ for _ in ()).throw(RuntimeError("guard broke")),
+                                apply=lambda _snap: None)
+    if flag_fails:
+        monkeypatch.setattr(G, "raise_flag", lambda *_a, **_k: (_ for _ in ()).throw(OSError("db unavailable")))
+
+    asyncio.run(sup.guard_pass())
+    assert sup.guard_unhealthy
+    assert protected == ["open-position"], "guard health failure must not block protection"
+    if kill_fails:
+        assert sup.kill.active(live=True) == []
+    else:
+        assert sup.kill.active(live=True) == ["live"]
+    if flag_fails:
+        assert not recent_flags(tmp_path / "t.sqlite", "GUARD_FAILED")
+    else:
+        assert recent_flags(tmp_path / "t.sqlite", "GUARD_FAILED")
+
+    # Refusal is before balance, clearance, and venue helpers, while an existing position's
+    # protection hand-over remains a separate path.
+    calls = []
+    monkeypatch.setattr(sup, "_balances", lambda *_a, **_k: calls.append("balances"))
+    monkeypatch.setattr(sup, "_clear", lambda *_a, **_k: calls.append("clear"))
+    ev = SimpleNamespace(game_id="g1", cover=object())
+    sup._execute(s, ev, None)
+    assert calls == []
+    assert sup.refusals[("risk", "GUARD_FAILED", "mlb")] == 1
+
+
+
 def test_real_entry_requires_the_authenticated_polymarket_account_stream(tmp_path: Path):
     """Market data alone is insufficient: without account events a delayed fill can go naked."""
     from types import SimpleNamespace
@@ -731,7 +917,8 @@ def test_the_guard_s_hand_over_re_runs_the_layer_from_the_row_when_protect_auto_
     released = []
     sup.coordinator = SimpleNamespace(records=records, protect_existing=protect_existing)
     sup.ledger = SimpleNamespace(release=lambda rid, **k: released.append(rid) or True)
-    sup.guard = SimpleNamespace(fetch=lambda: "snap", apply=lambda snap: SimpleNamespace(
+    sup.guard = SimpleNamespace(fetch=lambda: SimpleNamespace(
+        errors={}, fills_read_complete=True, positions={}), apply=lambda snap: SimpleNamespace(
         findings=[], to_protect=["naked001"], fills_today=(), corrected=[], orphans=[], mismatches=[]))
 
     async def main():
@@ -1101,4 +1288,3 @@ def test_a_hedged_execution_tells_the_ledger_the_event_is_free(tmp_path: Path, c
     assert not sup.ledger.has_event("espn:mlb:1"), "the event is enterable again"
     assert sup.ledger.event_usd("espn:mlb:1") == 10.0, "and the capital is still committed"
     assert "free to enter again" in capsys.readouterr().out
-
