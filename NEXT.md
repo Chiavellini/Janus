@@ -2,23 +2,26 @@
 
 An opinion, not a record. Overwrite this file; never append to it. What changed is git log.
 
-Updated 2026-09-15 after L130 local validation on branch claude/hedge-safety-and-speed.
+Updated 2026-09-15 after L130 production confirmation on branch claude/hedge-safety-and-speed.
 
 ## Current state
 
-The Mexico box is deployed at a29a7c1. The lane service is stopped in systemd failed state and
-kill/live remains present with exact SHA
-a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6
-and reason LEGACY_INCIDENT_ACK_INVALID flag=211. Nothing is trading. Read-only inspection found no
-current open or unconfirmed journal orders, cash-pending orders, unreleased executions, or
-unreleased reservations. The production database has every table and column required by L122.
+The Mexico box is deployed at f7c9c1b177f757d6bfbc6e126eeb47bbb001c6eb. The lane service is
+active/running in LIMITED_LIVE and `kill/live` is absent after exact reviewed recovery. Independent
+read-only inspection found no current open or unconfirmed journal orders, unreleased executions,
+material unhedged exposure, unreleased reservations, or unresolved ORPHAN_FILL, ORDER_OVERFILL,
+POST_ONLY_PERSISTENCE_FAILED, or GUARD_FAILED flags. All three sockets were connected and fresh.
 
 The candidate through L130 passed the integrated suite when the two documented pre-existing FIFO
 flakes were excluded. The one FIFO failure seen in an earlier unfiltered run passed immediately
 in isolation. Replay parity is unchanged: 1,093 rows and zero selections at
 13e4fb08a76c920f / 4f53cda18c2baa0c. A fresh external audit returned RELEASE with no remaining
-P0/P1 in the audited recovery and guard paths. L130 is locally complete and awaiting its one
-release continuation.
+P0/P1 in the audited recovery and guard paths. L130 is production-confirmed.
+
+One observability defect remains: `ops/box/status.sh` reports the persistent advisory file
+`.legacy-incident-211.lock` as `KILL_FILE_PRESENT`. Runtime entry checks ignore arbitrary files and
+look only for named all/live/venue/event/strategy switches, so this is not an entry block; it is a
+false watchdog alert that could mask a later real kill and should be repaired separately.
 
 No cap, hurdle, size, entry policy, settlement rule, or trading behavior changed. The changes make
 restart recovery exact, make guard failure fail closed, preserve protection on incomplete guard
@@ -198,13 +201,11 @@ GATE_TO_LIVE.md amendment using the operator's verbatim authorization.
 
 ## Immediate sequence
 
-1. Push the L130 branch head and execute one ordinary release under the operator's explicit
-   authorization. Do not bypass the helper, manually edit the database, or directly clear a kill.
-2. Verify the deployed full SHA, exact kill transition, lane state, complete guard result, fresh
-   sockets, and zero open/unreleased material state. Stop on any mismatch.
-3. Resume the registered q=10 prospective cohort and measure per-league net EV, Sharpe, slippage,
+1. Observe the production-confirmed lane and resume the registered q=10 prospective cohort;
+   measure per-league net EV, Sharpe, slippage,
    fill conversion, and covers per event. Do not pool leagues to hide adverse selection.
-4. If taker unit economics remain negative, test the registered maker cohort and/or exclude losing
+2. Repair the watchdog's advisory-lock false positive without changing runtime kill semantics.
+3. If taker unit economics remain negative, test the registered maker cohort and/or exclude losing
    leagues. Only after positive unit economics should wider coverage and recyclable turnover be
    considered.
 

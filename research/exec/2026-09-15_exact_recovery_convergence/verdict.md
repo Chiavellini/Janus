@@ -1,4 +1,4 @@
-# L130 verdict — PASS locally; release continuation pending
+# L130 verdict — PRODUCTION PASS
 
 L129's two independent production blockers are repaired without broadening resolution authority.
 Disposition recovery widens its already-qualified cursor by exactly one second so the venue's
@@ -28,3 +28,18 @@ Evidence:
 
 No cap, hurdle, size, entry, protection, settlement, or trading behavior changed. Expected EV
 effect remains zero per trade.
+
+## Production confirmation
+
+Release `f7c9c1b177f757d6bfbc6e126eeb47bbb001c6eb` completed with exit zero. Under the exact retained
+kill, the live guard returned the disposed fill with its exact ID and hash, classified all seven
+acknowledged overfills and four bounded residuals, and appended the exact orphan and overfill
+resolution markers. Both stopped credentialed guard passes reported no unconfirmed orders,
+orphans, mismatches, or positions requiring protection. The original kill bytes were archived at
+the release's exclusive audit path before the lane restarted.
+
+Independent post-release verification found the exact deployed SHA, service active/running,
+`kill/live` absent, all three sockets connected and fresh, no unresolved ORPHAN_FILL,
+ORDER_OVERFILL, POST_ONLY_PERSISTENCE_FAILED, or GUARD_FAILED rows, and zero open/unconfirmed
+orders, unreleased executions, materially unhedged executions, or unreleased reservations.
+Automatic redemption completed with zero eligible/pending/unknown/failed items.
