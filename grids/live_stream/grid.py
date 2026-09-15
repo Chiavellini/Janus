@@ -37,6 +37,7 @@ import traceback
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -74,10 +75,10 @@ from nodes.execute.sizing import SizingDecision, choose_live_size  # noqa: E402
 from nodes.execute.guard import PositionGuard  # noqa: E402
 from nodes.execute.on_loop import OnLoop  # noqa: E402
 from nodes.execute.plan import maker_plan_from_cover, plan_from_cover, marginal_price  # noqa: E402
-from nodes.execute.entry_experiment import (F22_ROW_ID, EntryArmAssignment, assign_entry_arm,
-                                             assignment_from_record, f22_activation,
-                                             first_three_fills_reconciled, record_f22_decision,
-                                             update_f22_decision)  # noqa: E402
+from nodes.execute.entry_experiment import (F22_ROW_ID, F23_ROW_ID, EntryArmAssignment, assign_entry_arm,
+                                             assign_f23_entry_arm, assignment_from_record, f22_activation,
+                                             f23_activation, first_three_fills_reconciled, record_f22_decision,
+                                             record_f23_decision, update_f22_decision, update_f23_decision)  # noqa: E402
 from nodes.execute.records import ExecutionRecords  # noqa: E402
 from nodes.execute.venues import build_venues  # noqa: E402
 from nodes.exec_kalshi.client import DEMO_BASE, PROD_BASE, KalshiExecution  # noqa: E402
@@ -128,6 +129,22 @@ MIN_RETURN = EXECUTION_MIN_LOCKED_RETURN   # one source: nodes/opportunity/thres
 EVAL_INTERVAL_S = 0.2
 #: How often finished games' executions are settled against the venues' results (PAPER and above).
 SETTLE_PERIOD_S = 300.0
+VENUE_DATE_ZONE = ZoneInfo("America/New_York")
+
+
+def _f23_audit_context(sup: Supervised, evaluated_utc: float) -> dict[str, object]:
+    """Return immutable event/date fields for the F23 decision audit.
+
+    The venue-date basis is the event start in America/New_York, not the process wall clock. A
+    missing supervised start is only a discovery-data gap, so retain an explicit evaluated-time
+    fallback rather than silently omitting the field.
+    """
+    event_start_utc = float(sup.start_utc if sup.start_utc is not None else evaluated_utc)
+    return {
+        "league": str(sup.league or sup.poller.league),
+        "event_start_utc": event_start_utc,
+        "league_local_date": datetime.fromtimestamp(event_start_utc, VENUE_DATE_ZONE).date().isoformat(),
+    }
 
 
 @dataclass
@@ -193,6 +210,11 @@ class Supervisor:
     f22_enabled: bool = False
     f22_authority_detail: str = "not checked"
     f22_failed: bool = False
+    #: F23 is a fresh cohort with its own table, assignment digest and signed authority. It never
+    #: reads or pools F22 decisions (including F22's first-three checkpoint).
+    f23_enabled: bool = False
+    f23_authority_detail: str = "not checked"
+    f23_failed: bool = False
     ledger: ExposureLedger | None = None
     kill: KillSwitches | None = None
     breaker: LossBreaker | None = None
@@ -604,15 +626,17 @@ class Supervisor:
     def _execute_sized(self, sup: Supervised, evaluated) -> None:
         """One cap-aware live quantity decision for one frozen book epoch."""
         base = evaluated[0][0]
-        # F22 assignment is event-level and must precede the common sizing sweep: the sweep builds
+        # Forward assignment is event-level and must precede the common sizing sweep: the sweep builds
         # the current taker-shaped economic candidates, while the selected arm's wire plan is built
         # only afterwards.  It is deliberately inactive outside LIMITED_LIVE, so paper/history are
         # never backfilled or relabelled.
-        if self.mode is Mode.LIMITED_LIVE and self.f22_failed:
-            self.refuse("execution", "F22_PERSISTENCE_FAILED", sup.poller.league)
+        active_row = F23_ROW_ID if self.f23_enabled else F22_ROW_ID if self.f22_enabled else None
+        if self.mode is Mode.LIMITED_LIVE and ((self.f23_enabled and self.f23_failed) or (self.f22_enabled and self.f22_failed)):
+            code = f"{active_row}_PERSISTENCE_FAILED"
+            self.refuse("execution", code, sup.poller.league)
             return
-        assignment = (assign_entry_arm(base.game_id)
-                      if self.mode is Mode.LIMITED_LIVE and self.f22_enabled else None)
+        assignment = ((assign_f23_entry_arm(base.game_id) if active_row == F23_ROW_ID else assign_entry_arm(base.game_id))
+                      if self.mode is Mode.LIMITED_LIVE and active_row else None)
         if assignment is not None and (self.store is None or self.opportunities is None):
             # F22's unit cannot exist without both sides of its durable pre-wire join. This is an
             # instrumentation STOP, not permission to run an unscored order.
@@ -663,7 +687,7 @@ class Supervisor:
         if assignment is not None:
             # Include the arm (and its versioned digest) in the idempotency input.  A changed arm
             # cannot silently look like the same frozen-book epoch.
-            epoch_payload.append(["f22", assignment.as_record(self.caps)])
+            epoch_payload.append([active_row.lower(), assignment.as_record(self.caps)])
         input_hash = hashlib.sha256(json.dumps(epoch_payload, separators=(",", ":")).encode()).hexdigest()
         if identity is not None:
             # `input_hash` alone is not unique: a real A -> B -> A book path records the second A
@@ -692,6 +716,11 @@ class Supervisor:
             # SizingDecision above; this merge keeps lightweight replay stubs safe as well.
             decision_audit = dict(decision_audit)
             decision_audit["entry_experiment"] = dict(identity or assignment.as_record(self.caps))
+            if active_row == F23_ROW_ID:
+                # These are part of the immutable decision payload, alongside entry_experiment;
+                # report code can therefore enforce the registered league-local-day minimum
+                # without reconstructing dates from a later execution or wall-clock timestamp.
+                decision_audit.update(_f23_audit_context(sup, base.evaluated_utc))
         recorded = self.opportunities is None or self.opportunities.record_sizing_decision(
             event_id=base.game_id, input_hash=input_hash, executable=executable,
             selected_opportunity_id=selected_oid, decision=decision_audit, now=base.evaluated_utc)
@@ -703,7 +732,8 @@ class Supervisor:
             # before _execute can construct a provider request.  A no-selection transition is kept
             # for lineage but is excluded by the report's eligible-decision filter.
             try:
-                inserted = record_f22_decision(
+                recorder = record_f23_decision if active_row == F23_ROW_ID else record_f22_decision
+                inserted = recorder(
                     self.store, assignment=identity, decision=decision_audit,
                     selected_quantity=(float(decision.selected.quantity)
                                        if decision.selected is not None else None),
@@ -744,36 +774,61 @@ class Supervisor:
               f"fill_model={decision.fill_model}", flush=True)
         self._execute(sup, ev, rec, sizing=decision)
 
-    def _f22_stop(self, detail: str) -> None:
-        """Make an instrumentation failure a real entry stop, with redundant durable alarms."""
-        already = self.f22_failed
-        self.f22_failed = True
+    def _experiment_stop(self, row: str, detail: str) -> None:
+        """Make one cohort's instrumentation failure a real entry stop."""
+        if row not in {F22_ROW_ID, F23_ROW_ID}:
+            row = F23_ROW_ID
+        already = self.f23_failed if row == F23_ROW_ID else self.f22_failed
+        if row == F23_ROW_ID:
+            self.f23_failed = True
+        else:
+            self.f22_failed = True
         if not already:
-            print(f"  [f22 STOP] {detail}", flush=True)
-            self.flag("F22_PERSISTENCE_FAILED", detail)
+            print(f"  [{row.lower()} STOP] {detail}", flush=True)
+            self.flag(f"{row}_PERSISTENCE_FAILED", detail)
         if self.kill is not None and self.mode.risks_capital:
-            self.kill.latch("live", f"F22 instrumentation failed: {detail}")
+            self.kill.latch("live", f"{row} instrumentation failed: {detail}")
+
+    def _f22_stop(self, detail: str) -> None:
+        """Compatibility name for the active forward-cohort stop path."""
+        self._experiment_stop(F23_ROW_ID if self.f23_enabled else F22_ROW_ID, detail)
 
     def _f22_update(self, sizing, *, outcome: str | None = None, detail: str | None = None,
                     execution_id: str | None = None) -> bool:
-        """Persist an explicit F22 disposition/link without making it an execution input."""
+        """Persist an explicit forward-cohort disposition/link without making it an execution input."""
         identity = getattr(sizing, "entry_experiment", None)
         if identity is None and isinstance(sizing, dict):
             identity = sizing.get("entry_experiment")
         if not identity or self.store is None:
             return True
+        row = str(identity.get("forward_row_id") or identity.get("row_id") or "")
+        active = (F23_ROW_ID if self.f23_enabled else F22_ROW_ID if self.f22_enabled else None)
+        # Non-capital replay/paper fixtures may carry a historical experiment identity without a
+        # live authority. Capital mode remains strict: only the signed active cohort is accepted.
+        if active is None and not self.mode.risks_capital:
+            active = row
+        if active is None and self.mode.risks_capital:
+            self._experiment_stop(F23_ROW_ID, "cohort identity received without an active signed authority")
+            return False
+        if row not in {F22_ROW_ID, F23_ROW_ID}:
+            self._experiment_stop(active or F23_ROW_ID, f"unknown cohort row id: {row or '<missing>'}")
+            return False
+        if active is not None and row != active:
+            self._experiment_stop(active, f"cohort identity {row} does not match active {active}")
+            return False
         try:
-            update_f22_decision(self.store, event_id=str(identity.get("event_id") or identity.get("canonical_event_id")),
-                                sizing_book_epoch=str(identity["sizing_book_epoch"]), outcome=outcome,
-                                detail=detail, execution_id=execution_id, now=time.time())
+            updater = update_f23_decision if row == F23_ROW_ID else update_f22_decision
+            updater(self.store, event_id=str(identity.get("event_id") or identity.get("canonical_event_id")),
+                    sizing_book_epoch=str(identity["sizing_book_epoch"]), outcome=outcome,
+                    detail=detail, execution_id=execution_id, now=time.time())
             self.store.commit()
             return True
         except Exception as exc:  # noqa: BLE001 -- reporting must never break the execution door
-            key = (str(identity.get("event_id", "")), "f22:" + type(exc).__name__)
+            key = (str(identity.get("event_id", "")), row.lower() + ":" + type(exc).__name__)
             self.record_errors[key] = self.record_errors.get(key, 0) + 1
             if self.record_errors[key] == 1:
                 print(f"  [f22] disposition persistence failed: {brief_error(exc)}", flush=True)
-            self._f22_stop(f"disposition persistence failed: {brief_error(exc)}")
+            self._experiment_stop(row, f"disposition persistence failed: {brief_error(exc)}")
             return False
 
     def _f22_link_execution(self, sizing, ex) -> None:
@@ -809,15 +864,23 @@ class Supervisor:
         if not self.mode.risks_capital:
             self.arm_stale = None
             self.f22_enabled = False
+            self.f23_enabled = False
             self.f22_authority_detail = "mode does not risk capital"
+            self.f23_authority_detail = "mode does not risk capital"
             return None
         limits_sha = str(getattr(self.limits, "sha", "") or "")
         st = override_state(self.override_path, code_sha=self.code_sha, limits_sha=limits_sha, now=now)
         reason = stale_reason(st, code_sha=self.code_sha, limits_sha=limits_sha)
-        enabled, authority = f22_activation(root=ROOT, state=st) if reason is None else (False, str(reason))
-        if enabled != self.f22_enabled or authority != self.f22_authority_detail:
-            print(f"[f22] {'ENABLED' if enabled else 'disabled'}: {authority}", flush=True)
-        self.f22_enabled, self.f22_authority_detail = enabled, authority
+        f23_enabled, f23_authority = f23_activation(root=ROOT, state=st) if reason is None else (False, str(reason))
+        # F22 is permanently closed after its instrumentation STOP. Its report remains available
+        # for historical/read-only evidence, but no signed override may reactivate its live path.
+        f22_enabled, f22_authority = False, "F22 closed after instrumentation STOP; read-only reporting only"
+        if f23_enabled != self.f23_enabled or f23_authority != self.f23_authority_detail:
+            print(f"[f23] {'ENABLED' if f23_enabled else 'disabled'}: {f23_authority}", flush=True)
+        if f22_enabled != self.f22_enabled or f22_authority != self.f22_authority_detail:
+            print(f"[f22] {'ENABLED' if f22_enabled else 'disabled'}: {f22_authority}", flush=True)
+        self.f23_enabled, self.f23_authority_detail = f23_enabled, f23_authority
+        self.f22_enabled, self.f22_authority_detail = f22_enabled, f22_authority
         if reason != self.arm_stale:
             print(f"[arm] STALE {reason}" if reason else "[arm] override matches again; real orders resume", flush=True)
         self.arm_stale = reason
@@ -855,6 +918,8 @@ class Supervisor:
         return {"as_of": t, "mode": self.mode.value, "caps": dict(self.caps), "arm_stale": self.arm_stale,
                 "f22_enabled": self.f22_enabled, "f22_failed": self.f22_failed,
                 "f22_authority": self.f22_authority_detail,
+                "f23_enabled": self.f23_enabled, "f23_failed": self.f23_failed,
+                "f23_authority": self.f23_authority_detail,
                 "loop_lag_s": round(self.loop_lag_max_s, 3), "stalled": self.stalled, "blocked": len(self.blocked),
                 "sockets": socks, "games": games}
 
@@ -1006,21 +1071,36 @@ class Supervisor:
             except (TypeError, ValueError) as exc:
                 # The sizing decision is durable before this point. A contradictory identity is a
                 # fail-closed instrumentation stop, never permission to guess or fall back.
-                print(f"  [f22] refused {sup.short_name}: assignment contradiction {exc}", flush=True)
-                self.refuse("execution", "F22_ASSIGNMENT_CONTRADICTION", sup.poller.league)
+                row = str(experiment.get("forward_row_id") or F22_ROW_ID)
+                print(f"  [{row.lower()}] refused {sup.short_name}: assignment contradiction {exc}", flush=True)
+                self.refuse("execution", f"{row}_ASSIGNMENT_CONTRADICTION", sup.poller.league)
                 self._f22_update(sizing, outcome="persistence_or_reconciliation_failure", detail="assignment contradiction")
                 return
-            if assignment.forward_row_id != F22_ROW_ID or assignment.event_id != ev.game_id:
-                print(f"  [f22] refused {sup.short_name}: assignment identity mismatch", flush=True)
-                self.refuse("execution", "F22_ASSIGNMENT_CONTRADICTION", sup.poller.league)
+            if assignment.forward_row_id not in {F22_ROW_ID, F23_ROW_ID} or assignment.event_id != ev.game_id:
+                row = assignment.forward_row_id
+                print(f"  [{row.lower()}] refused {sup.short_name}: assignment identity mismatch", flush=True)
+                self.refuse("execution", f"{row}_ASSIGNMENT_CONTRADICTION", sup.poller.league)
                 self._f22_update(sizing, outcome="persistence_or_reconciliation_failure", detail="assignment identity mismatch")
                 return
-            checkpoint_ok, checkpoint_detail = first_three_fills_reconciled(self.store)
+            active = (F23_ROW_ID if self.f23_enabled else F22_ROW_ID if self.f22_enabled else None)
+            if active is None and not self.mode.risks_capital:
+                active = assignment.forward_row_id
+            if assignment.forward_row_id != active:
+                row = assignment.forward_row_id
+                print(f"  [{row.lower()}] refused {sup.short_name}: cohort is not active", flush=True)
+                self.refuse("execution", f"{row}_ASSIGNMENT_CONTRADICTION", sup.poller.league)
+                self._f22_update(sizing, outcome="persistence_or_reconciliation_failure", detail="cohort is not active")
+                return
+            checkpoint_ok, checkpoint_detail = first_three_fills_reconciled(
+                self.store, row_id=assignment.forward_row_id,
+                exclude_event_id=assignment.event_id,
+                exclude_book_epoch=str(experiment.get("sizing_book_epoch")) if experiment else None)
             if not checkpoint_ok:
-                print(f"  [f22] refused {sup.short_name}: F22_RECONCILIATION_CHECKPOINT {checkpoint_detail}", flush=True)
-                self.refuse("execution", "F22_RECONCILIATION_CHECKPOINT", sup.poller.league)
+                row = assignment.forward_row_id
+                print(f"  [{row.lower()}] refused {sup.short_name}: {row}_RECONCILIATION_CHECKPOINT {checkpoint_detail}", flush=True)
+                self.refuse("execution", f"{row}_RECONCILIATION_CHECKPOINT", sup.poller.league)
                 self._f22_update(sizing, outcome="local_or_risk_refused_no_wire",
-                                 detail="F22_RECONCILIATION_CHECKPOINT")
+                                 detail=f"{row}_RECONCILIATION_CHECKPOINT")
                 return
         plan_kwargs = dict(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
                            league=sup.poller.league, cov=cov, offers=offers, hurdle=MIN_RETURN,

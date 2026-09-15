@@ -126,6 +126,50 @@ def test_f22_assignment_is_stable_in_sizing_and_plan_lineage(tmp_path: Path, mon
     assert assign_entry_arm("g1") == assign_entry_arm("g1"), "repeat epoch cannot reassign"
 
 
+def test_f23_production_path_persists_event_start_and_venue_local_date_audit(tmp_path: Path):
+    """F23 decision rows carry date evidence from the event, never the decision wall clock."""
+    import json
+    import time
+    from datetime import datetime
+    from types import SimpleNamespace
+    from zoneinfo import ZoneInfo
+    from kernel.schema import Mode
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+    from nodes.risk.kill import KillSwitches
+
+    sup, s = _supervisor(tmp_path)
+    sup.mode, sup.limits, sup.ledger = Mode.LIMITED_LIVE, load_limits(), ExposureLedger()
+    sup.f23_enabled = True
+    s.start_utc = 1_757_866_200.0
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.caps = {"stake_usd": 30.0, "max_contracts": 25.0, "day_notional_usd": 500.0}
+    sup.balance_snapshot, sup.balance_snapshot_mono = {"kalshi": 100.0, "polymarket": 100.0}, time.monotonic()
+    sync_all(s.poller, kh=.44, ka=.99, ph=.99, pa=.44)
+    sup._clear = lambda *_a, **_k: SimpleNamespace(reservation=SimpleNamespace(reservation_id="r"))
+    sup.coordinator = SimpleNamespace(execute=lambda *_a, **_k: object())
+    sup._after_execution = lambda *_a: None
+    sup._on_update("g1")("K_H", T)
+
+    row = sup.store.con.execute("SELECT decision_json FROM f23_decisions WHERE event_id='g1'").fetchone()
+    assert row is not None
+    audit = json.loads(row[0])
+    assert audit["league"] == "mlb"
+    assert audit["event_start_utc"] == s.start_utc
+    assert audit["league_local_date"] == datetime.fromtimestamp(
+        s.start_utc, ZoneInfo("America/New_York")).date().isoformat()
+
+
+def test_f23_audit_date_falls_back_to_evaluated_time_when_supervised_start_is_missing(tmp_path: Path):
+    from grids.live_stream.grid import _f23_audit_context
+
+    _, supervised = _supervisor(tmp_path)
+    supervised.start_utc = None
+    out = _f23_audit_context(supervised, T)
+    assert out["event_start_utc"] == T
+    assert out["league_local_date"] == "1969-12-31"
+
+
 def test_normal_limited_live_is_taker_and_has_no_f22_row_when_authority_is_disabled(tmp_path, monkeypatch):
     """A signed live override without the separate F22 authority preserves the old taker path."""
     import grids.live_stream.grid as G
@@ -165,28 +209,50 @@ def test_f22_update_failure_stops_entries_and_latches_live(tmp_path, monkeypatch
     import grids.live_stream.grid as G
     from types import SimpleNamespace
     from kernel.schema import Mode
-    from nodes.execute.entry_experiment import assign_entry_arm
+    from nodes.execute.entry_experiment import assign_f23_entry_arm
     from nodes.risk.kill import KillSwitches
 
     sup, _ = _supervisor(tmp_path)
     sup.mode = Mode.LIMITED_LIVE
     sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
-    identity = assign_entry_arm("g1").as_record({"stake_usd": 30, "max_contracts": 25})
+    sup.f23_enabled = True
+    identity = assign_f23_entry_arm("g1").as_record({"stake_usd": 30, "max_contracts": 25})
     identity.update({"sizing_input_hash": "h", "sizing_occurrence": 1, "sizing_book_epoch": "epoch"})
-    from nodes.execute.entry_experiment import F22_DECISIONS_DDL
-    sup.store.ensure_ddl(F22_DECISIONS_DDL)
+    from nodes.execute.entry_experiment import F23_DECISIONS_DDL
+    sup.store.ensure_ddl(F23_DECISIONS_DDL)
     sup.store.con.execute(
-        "INSERT INTO f22_decisions(event_id,forward_row_id,assignment_algorithm,digest,arm,sizing_input_hash,"
+        "INSERT INTO f23_decisions(event_id,forward_row_id,assignment_algorithm,digest,arm,sizing_input_hash,"
         "sizing_occurrence,sizing_book_epoch,selected_quantity,decision_json,created_utc,updated_utc) "
         "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
         ("g1", "F22", identity["assignment_algorithm"], identity["digest"], identity["arm"], "h", 1,
          "epoch", 10.0, "{}", T, T))
     sup.store.commit()
-    monkeypatch.setattr(G, "update_f22_decision", lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError("db down")))
+    monkeypatch.setattr(G, "update_f23_decision", lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError("db down")))
 
     assert not sup._f22_update(SimpleNamespace(entry_experiment=identity), outcome="accepted_full_fill")
-    assert sup.f22_failed is True
+    assert sup.f23_failed is True
     assert "live" in sup.kill.any_present()
+
+
+def test_f22_update_rejects_unknown_or_inactive_cohort_identity(tmp_path):
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.execute.entry_experiment import assign_entry_arm
+    from nodes.risk.kill import KillSwitches
+
+    sup, _ = _supervisor(tmp_path)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.f23_enabled = True
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    unknown = {"forward_row_id": "F24", "event_id": "g1", "sizing_book_epoch": "e"}
+    assert not sup._f22_update(SimpleNamespace(entry_experiment=unknown))
+    assert sup.f23_failed
+
+    sup.f23_failed = False
+    inactive = assign_entry_arm("g1").as_record({"stake_usd": 30, "max_contracts": 25})
+    inactive.update({"sizing_input_hash": "h", "sizing_occurrence": 1, "sizing_book_epoch": "e"})
+    assert not sup._f22_update(SimpleNamespace(entry_experiment=inactive))
+    assert sup.f23_failed
 
 
 def test_f22_first_three_checkpoint_blocks_before_provider_execution(tmp_path):

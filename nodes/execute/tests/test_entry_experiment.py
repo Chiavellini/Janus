@@ -1,5 +1,9 @@
 from nodes.execute.entry_experiment import (
     ASSIGNMENT_ALGORITHM,
+    F23_ASSIGNMENT_ALGORITHM,
+    F23_CAPS,
+    F23_OPERATOR_STATEMENT,
+    F23_SPEC_PATH,
     F22_CAPS,
     F22_OPERATOR_STATEMENT,
     F22_SPEC_PATH,
@@ -9,6 +13,8 @@ from nodes.execute.entry_experiment import (
     classify_outcome,
     first_three_fills_reconciled,
     f22_activation,
+    f23_activation,
+    assign_f23_entry_arm,
 )
 
 
@@ -128,6 +134,14 @@ def test_first_three_fills_reconciliation_checkpoint(tmp_path):
     ok, detail = first_three_fills_reconciled(store)
     assert not ok and "not released RECONCILED" in detail
 
+    # Once the first three are authoritatively settled, a later fill may still be in-flight;
+    # requiring it here would turn the warm-up guard into a permanent one-fill-at-a-time throttle.
+    store = _checkpoint_store()
+    for i in (1, 2, 3):
+        _insert_fill(store, i)
+    _insert_fill(store, 4, complete=False)
+    assert first_three_fills_reconciled(store) == (True, "first three F22 fills are authoritatively reconciled")
+
 
 def test_first_three_exact_complete_fills_pass_and_identity_or_economics_mismatch_blocks():
     for kwargs, fragment in (
@@ -163,6 +177,18 @@ def test_first_three_checkpoint_rejects_duplicate_execution_and_cross_event_iden
     store.con.execute("UPDATE f22_decisions SET event_id='other' WHERE id=3")
     ok, detail = first_three_fills_reconciled(store)
     assert not ok and ("assignment" in detail or "identity mismatch" in detail)
+
+
+def test_first_three_allows_explicit_no_wire_without_execution_lineage():
+    store = _checkpoint_store()
+    store.con.execute("ALTER TABLE f22_decisions ADD COLUMN outcome TEXT")
+    store.con.execute(
+        "INSERT INTO f22_decisions(id,event_id,forward_row_id,assignment_algorithm,digest,arm,execution_id,selected_quantity,outcome) "
+        "VALUES(?,?,?,?,?,?,?,?,?)",
+        (1, "refused", "F22", ASSIGNMENT_ALGORITHM, assign_entry_arm("refused").digest,
+         assign_entry_arm("refused").arm, None, 10.0, "local_or_risk_refused_no_wire"))
+    ok, detail = first_three_fills_reconciled(store)
+    assert ok and "0 of first three F22 fills" in detail
 
 
 def test_assignment_uses_registered_exact_bytes_and_stable_vectors():
@@ -202,3 +228,22 @@ def test_outcome_taxonomy_does_not_collapse_unknown_or_zero_fill():
         "accepted_partial_fill", "accepted_full_fill", "unknown_provider_state", "role_violation",
         "persistence_or_reconciliation_failure",
     }
+
+
+def test_f23_activation_and_assignment_are_independent_from_f22(tmp_path):
+    import hashlib
+    spec = tmp_path / F23_SPEC_PATH
+    spec.parent.mkdir(parents=True, exist_ok=True)
+    spec.write_text("registered: F23\n", encoding="utf-8")
+    state = {
+        "experiment": {"row_id": "F23", "spec_path": F23_SPEC_PATH,
+                       "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+                       "assignment_algorithm": F23_ASSIGNMENT_ALGORITHM},
+        "mode": "LIMITED_LIVE", "operator_statement": F23_OPERATOR_STATEMENT,
+        "caps": dict(F23_CAPS),
+    }
+    assert f23_activation(root=tmp_path, state=state)[0]
+    f22, f23 = assign_entry_arm("event-1"), assign_f23_entry_arm("event-1")
+    assert f22.forward_row_id == "F22" and f23.forward_row_id == "F23"
+    assert f22.algorithm != f23.algorithm and f22.digest != f23.digest
+    assert f23 == assign_f23_entry_arm("event-1")

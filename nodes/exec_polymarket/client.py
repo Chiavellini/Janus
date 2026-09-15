@@ -665,6 +665,11 @@ class PolymarketExecution:
 
     def _record_post_only_after_wire(self, ack, *, kind, raw, terminal_proof=False):
         try:
+            # An explicit venue rejection is authoritative no-position evidence.  Persist the
+            # cash fact alongside the terminal marker; a missing fee must never be interpreted as
+            # zero by reports.  Filled/ambiguous acks intentionally retain their provider fee.
+            if terminal_proof and float(ack.filled_contracts or 0.0) <= 1e-9 and not ack.open and not ack.settlement_pending:
+                ack = replace(ack, fee_usd=0.0)
             if terminal_proof:
                 self.journal.store.con.execute("UPDATE pm_post_only_orders SET terminal_proved=1 WHERE client_order_id=?", (ack.client_order_id,))
             self.journal.record(ack, kind=kind, raw=raw)
@@ -1174,7 +1179,10 @@ class PolymarketExecution:
         state = (FillState.FILLED if known >= cap and qty > 0 else FillState.PARTIAL if qty > 0
                  else FillState.UNFILLED if terminal else FillState.UNCONFIRMED)
         price = float(Decimal(marker[1]) / Decimal(marker[0])) if qty else None
-        st = OrderState(self.venue, cid, oid, state, qty, price, None, "post_only_terminal" if terminal else "post_only_pending",
+        # Only the complete terminal, zero-position proof earns explicit zero-dollar cash
+        # evidence.  A maker fill still needs the venue's cash projection and remains NULL here.
+        fee = 0.0 if terminal and qty <= 1e-9 else None
+        st = OrderState(self.venue, cid, oid, state, qty, price, fee, "post_only_terminal" if terminal else "post_only_pending",
                         t, open=not terminal, final=terminal, settlement_pending=not terminal,
                         detail="maker lifecycle reconciled" if terminal else "maker order/late-fill coverage remains unresolved")
         try:

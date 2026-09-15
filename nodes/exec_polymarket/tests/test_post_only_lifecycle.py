@@ -244,7 +244,19 @@ def test_terminal_zero_requires_stable_explicit_cancel_and_fresh_reads(tmp_path)
     v.clock = lambda: 1002.1
     assert v.status("c1").final
     assert j.store.con.execute("SELECT terminal_proved FROM pm_post_only_orders").fetchone() == (1,)
+    assert j.get("c1")["fee_usd"] == 0.0, "authoritative terminal zero-fill must persist explicit zero fee"
     assert j.store.con.execute("SELECT client_order_id FROM pm_post_only_admission").fetchone() == (None,)
+
+
+def test_terminal_maker_fill_does_not_infer_zero_fee(tmp_path):
+    v, j, tr = setup(tmp_path)
+    v.submit(maker_request(), cl(tmp_path))
+    tr.payload.update(status="CANCELED", size_matched="6", associate_trades=["t"])
+    fill(j, 6)
+    v.clock = lambda: 1002.1
+    state = v.status("c1")
+    assert state.open and not state.final and state.fee_usd is None
+    assert j.get("c1")["fee_usd"] is None
 
 
 def test_missing_lookup_never_becomes_a_post_only_no_fill(tmp_path):

@@ -184,6 +184,61 @@ def test_rest_guard_failure_cancels_immediately_before_deadline(tmp_path):
                                   maker_guard=lambda _remaining: "HEDGE_DEPTH_INSUFFICIENT")
     assert calls == [100.0] and result.state is FillState.UNFILLED
     assert ex.protect["maker_rest_block"] == "HEDGE_DEPTH_INSUFFICIENT"
+    assert ex.protect["maker_guard"] == {
+        "checks": 1, "timeouts": 0, "errors": 0,
+        "last_timeout_ms": 100.0, "last_duration_ms": 0.0,
+        "outcome": "guard_refusal", "last_reason": "HEDGE_DEPTH_INSUFFICIENT",
+    }
+
+
+def test_rest_guard_timeout_is_bounded_by_poll_interval_and_remaining_deadline(tmp_path):
+    co, _, _, clock, _ = harness(tmp_path)
+    calls = []
+    final = OrderState("polymarket", "cid", "order", FillState.UNFILLED, 0, None, 0,
+                       "canceled", clock.now(), open=False, final=True)
+    co.venues = {"polymarket": SimpleNamespace(
+        observed=lambda _cid: None,
+        cancel=lambda _cid: calls.append(clock.mono()) or final,
+    )}
+    seen = []
+    ex = Execution("ex", "o", "e", "mlb", co.mode.value, 10, clock.now())
+    start = Ack("polymarket", "cid", "order", FillState.UNCONFIRMED, 0, None, None,
+                "live", clock.now(), open=True)
+    result = co._settle_maker_ack(
+        "polymarket", start, ex=ex, rest_deadline_mono=100.05,
+        maker_guard=lambda _remaining, *, timeout_s: seen.append(timeout_s)
+        or "MAKER_GUARD_TIMEOUT",
+    )
+    assert calls == [100.0] and result.state is FillState.UNFILLED
+    assert seen == [pytest.approx(0.05)]
+    evidence = ex.protect["maker_guard"]
+    assert evidence["checks"] == 1 and evidence["timeouts"] == 0 and evidence["errors"] == 0
+    assert evidence["last_timeout_ms"] == pytest.approx(50.0)
+    assert evidence["outcome"] == "guard_refusal"
+
+
+def test_responsive_rest_guard_repeats_until_the_immutable_deadline(tmp_path):
+    co, _, _, clock, _ = harness(tmp_path)
+    co.poll_interval_s = 0.1
+    calls = []
+    final = OrderState("polymarket", "cid", "order", FillState.UNFILLED, 0, None, 0,
+                       "canceled", clock.now(), open=False, final=True)
+    co.venues = {"polymarket": SimpleNamespace(
+        observed=lambda _cid: None,
+        cancel=lambda _cid: calls.append(clock.mono()) or final,
+    )}
+    checks = []
+    ex = Execution("ex", "o", "e", "mlb", co.mode.value, 10, clock.now())
+    start = Ack("polymarket", "cid", "order", FillState.UNCONFIRMED, 0, None, None,
+                "live", clock.now(), open=True)
+    result = co._settle_maker_ack(
+        "polymarket", start, ex=ex, rest_deadline_mono=100.25,
+        maker_guard=lambda _remaining, *, timeout_s: checks.append(timeout_s) or None,
+    )
+    assert calls == [100.25] and result.state is FillState.UNFILLED
+    assert checks == [pytest.approx(0.1), pytest.approx(0.1), pytest.approx(0.05)]
+    assert ex.protect["maker_guard"]["checks"] == 3
+    assert ex.protect["maker_guard"]["outcome"] == "rest_deadline"
 
 
 def test_rest_guard_exception_is_a_cancel_reason_not_an_escape(tmp_path):
@@ -204,6 +259,54 @@ def test_rest_guard_exception_is_a_cancel_reason_not_an_escape(tmp_path):
     )
     assert calls == [100.0] and result.state is FillState.UNFILLED
     assert ex.protect["maker_rest_block"] == "MAKER_GUARD_ERROR:RuntimeError"
+    assert ex.protect["maker_guard"]["checks"] == 1
+    assert ex.protect["maker_guard"]["errors"] == 1
+    assert ex.protect["maker_guard"]["outcome"] == "guard_error"
+
+
+def test_rest_guard_timeout_is_recorded_as_error_and_never_as_a_fill(tmp_path):
+    import concurrent.futures
+
+    co, _, _, clock, _ = harness(tmp_path)
+    calls = []
+    final = OrderState("polymarket", "cid", "order", FillState.UNFILLED, 0, None, 0,
+                       "canceled", clock.now(), open=False, final=True)
+    co.venues = {"polymarket": SimpleNamespace(
+        observed=lambda _cid: None,
+        cancel=lambda _cid: calls.append(clock.mono()) or final,
+    )}
+    ex = Execution("ex", "o", "e", "mlb", co.mode.value, 10, clock.now())
+    start = Ack("polymarket", "cid", "order", FillState.UNCONFIRMED, 0, None, None,
+                "live", clock.now(), open=True)
+    result = co._settle_maker_ack(
+        "polymarket", start, ex=ex, rest_deadline_mono=102.0,
+        maker_guard=lambda _remaining, **_kw: (_ for _ in ()).throw(
+            concurrent.futures.TimeoutError()),
+    )
+    assert calls == [100.0] and result.state is FillState.UNFILLED
+    assert ex.protect["maker_rest_block"] == "MAKER_GUARD_ERROR:TimeoutError"
+    assert ex.protect["maker_guard"]["timeouts"] == 1
+    assert ex.protect["maker_guard"]["errors"] == 0
+    assert ex.protect["maker_guard"]["outcome"] == "guard_timeout"
+
+
+def test_maker_fill_racing_cancel_is_recorded_as_maker_fill(tmp_path):
+    co, _, _, clock, _ = harness(tmp_path)
+    final = OrderState("polymarket", "cid", "order", FillState.FILLED, 5, .43, 0,
+                       "matched", clock.now(), open=False, final=True)
+    co.venues = {"polymarket": SimpleNamespace(
+        observed=lambda _cid: None,
+        cancel=lambda _cid: final,
+    )}
+    ex = Execution("ex", "o", "e", "mlb", co.mode.value, 10, clock.now())
+    start = Ack("polymarket", "cid", "order", FillState.UNCONFIRMED, 0, None, None,
+                "live", clock.now(), open=True)
+    result = co._settle_maker_ack(
+        "polymarket", start, ex=ex, rest_deadline_mono=100.05,
+        maker_guard=lambda _remaining, *, timeout_s: None,
+    )
+    assert result.state is FillState.FILLED and result.filled_contracts == 5
+    assert ex.protect["maker_guard"]["outcome"] == "maker_fill"
 
 
 def test_socket_high_water_two_then_five_hedges_two_then_only_three(tmp_path):

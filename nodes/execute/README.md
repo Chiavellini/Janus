@@ -99,7 +99,7 @@ calls may delay terminal reconciliation after cancel dispatch; restart recovery 
 cancel intent, order journal and position guard. L63 prospectively measures maker fill selection,
 realized-EV and Sharpe inputs; conditional-fill sizing is not claimed realized-EV optimal.
 
-## F22/L131 reporting
+## F22/L131 and F23 reporting
 
 `entry_experiment.py` owns the pure arm assignment and the additive `f22_decisions` analysis
 ledger. A normal `LIMITED_LIVE` override leaves F22 disabled and preserves the historical taker
@@ -112,3 +112,7 @@ cover settlements with complete economics. `ops/f22_report.py` joins those
 immutable epochs to structured orders, post-only role evidence and reconciled settlements. It never
 uses human log text and treats absent or unresolved provider, fee, role, or settlement evidence as
 unknown/blocking; it does not infer zero from a missing row.
+
+F23 uses the same unchanged executable/risk path but has a fresh SHA-256 version
+(`janus:f23:entry-arm:v1`), independent `f23_decisions` table and `ops/f23_report.py`; F22 rows,
+including its STOP, are never pooled or repaired into F23.

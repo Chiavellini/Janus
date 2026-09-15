@@ -555,6 +555,16 @@ class Coordinator:
         ex.stages["maker_rest_remaining_ms"] = max(0, (wait_until - self.mono()) * 1000)
         known = ack
         polls = 0
+        guard_evidence = None
+        if maker_guard is not None:
+            # This is deliberately execution evidence, not a health verdict: a guard Future can
+            # time out while the order is still resting, and that must be distinguishable from a
+            # responsive proof, a named refusal, or a venue fill (L142, 2026-09-15).
+            guard_evidence = ex.protect.setdefault("maker_guard", {
+                "checks": 0, "timeouts": 0, "errors": 0,
+                "last_timeout_ms": None, "last_duration_ms": None,
+                "outcome": "resting",
+            })
         # Only authenticated socket/durable high-water reads occur while resting. A blocking
         # venue GET cannot postpone cancel beyond the immutable deadline.
         while self.mono() < wait_until:
@@ -565,23 +575,55 @@ class Coordinator:
                 except Exception:
                     pass
             if known.filled_contracts > 0:
+                if guard_evidence is not None:
+                    guard_evidence["outcome"] = "maker_fill"
                 ex.stages["maker_fill_observed_ms"] = round((self.mono() - self._t0.get(ex.execution_id, self.mono())) * 1000, 2)
                 break
             if maker_guard is not None:
+                guard_evidence["checks"] += 1
+                guard_started = self.mono()
+                remaining = max(0.0, float(getattr(plan, "quantity", 0.0)) - known.filled_contracts)
+                # OnLoop turns this into a Future.result(timeout=...).  The old code gave one
+                # check the whole remaining rest, so a busy loop could leave a maker order blind
+                # until its deadline.  Keep the existing poll cadence as the upper bound while
+                # also respecting the immutable absolute rest deadline (L142).
+                guard_timeout_s = min(max(0.0, float(self.poll_interval_s)),
+                                      max(0.0, wait_until - self.mono()))
+                guard_evidence["last_timeout_ms"] = round(guard_timeout_s * 1000.0, 2)
                 try:
-                    remaining = max(0.0, float(getattr(plan, "quantity", 0.0)) - known.filled_contracts)
                     try:
-                        reason = maker_guard(remaining, timeout_s=max(0.001, wait_until - self.mono()))
+                        reason = maker_guard(remaining, timeout_s=guard_timeout_s)
                     except TypeError as exc:
                         if "unexpected keyword argument 'timeout_s'" not in str(exc):
                             raise
                         reason = maker_guard(remaining)  # compatibility for pure/test guards
+                except concurrent.futures.TimeoutError:
+                    # Preserve the historical reason string for operators and existing reports,
+                    # while the structured counters make this a timeout rather than a healthy
+                    # guard or a maker fill.
+                    guard_evidence["timeouts"] += 1
+                    reason = "MAKER_GUARD_ERROR:TimeoutError"
                 except Exception as exc:  # noqa: BLE001 -- failed proof means cancel, never a resting order
+                    guard_evidence["errors"] += 1
                     reason = f"MAKER_GUARD_ERROR:{type(exc).__name__}"
+                finally:
+                    guard_evidence["last_duration_ms"] = round(
+                        (self.mono() - guard_started) * 1000.0, 2)
                 if reason:
+                    guard_evidence["outcome"] = (
+                        "guard_timeout" if reason == "MAKER_GUARD_ERROR:TimeoutError"
+                        else "guard_error" if reason.startswith("MAKER_GUARD_ERROR:")
+                        else "guard_refusal")
+                    guard_evidence["last_reason"] = reason
                     ex.protect["maker_rest_block"] = reason
                     break
+                guard_evidence["outcome"] = "checked"
             self.sleep(min(self.poll_interval_s, max(0.0, wait_until - self.mono())))
+        if (guard_evidence is not None and known.filled_contracts <= 0
+                and "maker_rest_block" not in ex.protect
+                and guard_evidence["outcome"] in ("resting", "checked")):
+            guard_evidence["outcome"] = "rest_deadline"
+            guard_evidence["last_reason"] = "MAKER_REST_DEADLINE"
         # The adapter's finality contract may deliberately require a stable terminal observation
         # window after the venue first reports CANCELED.  That evidence can appear near the end of
         # the ordinary response window.  Budget its declared grace plus one poll here; otherwise
@@ -593,6 +635,11 @@ class Coordinator:
             canceled = cancel_only(ack.client_order_id) if cancel_only is not None else adapter.cancel(ack.client_order_id)
             if canceled.filled_contracts >= known.filled_contracts:
                 known = canceled
+            if guard_evidence is not None and known.filled_contracts > 0:
+                # A fill racing cancel is still a maker fill.  Keep the evidence outcome aligned
+                # with the authoritative cumulative venue quantity; the report separately rejects
+                # any session that already recorded a guard timeout/error.
+                guard_evidence["outcome"] = "maker_fill"
             if getattr(canceled, "final", False) and not canceled.open and canceled.filled_contracts >= known.filled_contracts:
                 ex.stages["a_poll_count"] = polls
                 return known
@@ -612,6 +659,8 @@ class Coordinator:
                 continue
             if st.filled_contracts >= known.filled_contracts:
                 known = st
+                if guard_evidence is not None and known.filled_contracts > 0:
+                    guard_evidence["outcome"] = "maker_fill"
                 if (st.filled_contracts > ex.first_filled and plan is not None and clearance is not None
                         and not ex.protect.get("maker_delta_unconfirmed")):
                     self._hedge_maker_high_water(plan, clearance, ex, known)

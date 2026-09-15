@@ -191,6 +191,7 @@ def risk_alerts(*, kill_root: Path | str = KILL_ROOT, breaker_path: Path | str =
                                ("POST_ONLY_ROLE_VIOLATION", "post-only maker guarantee violated; live entry stopped; held quantity retained"),
                                ("POST_ONLY_PERSISTENCE_FAILED", "post-wire persistence failed; live entry stopped; observed quantity retained"),
                                ("F22_PERSISTENCE_FAILED", "F22 decision/lifecycle evidence failed; live entry stopped"),
+                               ("F23_PERSISTENCE_FAILED", "F23 decision/lifecycle evidence failed; live entry stopped"),
                                ("ORDER_PERSISTENCE_FAILED", "order persistence failed; live entry stopped; observed quantity requires reconciliation"),
                                ("POSITION_MISMATCH", "a venue position the fills since start do not explain"),
                                ("PROTECT_FAILED", "the protection layer could neither hedge nor unwind inside the cap; the live kill was latched"),
