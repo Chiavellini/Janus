@@ -11,9 +11,9 @@ import pytest
 from kernel.execution_protocol import FillRecord
 from nodes.execution.dispositions import (DDL, append_confirmed, canonical, confirmation_plan,
     _reject_secrets, digest, fill_identity, main, match_disposition, prepare_manifest, verify_open_manual_evidence,
-    verify_source)
+    recovery_fill_since, verify_source)
 from nodes.execute.guard import GuardSnapshot
-from nodes.execute.tests.test_guard import _world
+from nodes.execute.tests.test_guard import Venue, _world
 from nodes.risk.kill import KillSwitches
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -394,3 +394,68 @@ def test_open_manual_reorphan_same_process_after_corruption(tmp_path, manual_man
     journal.store.con.commit()
     report = guard.apply(GuardSnapshot(now=1789409302, fills=[fill]))
     assert report.orphans == [fill] and kill.calls and kill.calls[-1][0] == 'live'
+
+
+def test_open_manual_unresolved_incident_widens_only_to_exact_bounded_fill(tmp_path, manual_manifest):
+    journal, _, _ = world(tmp_path, manual_manifest)
+    seed_flags(journal, manual_manifest)
+    fill = manual_fill(manual_manifest)
+    ordinary = fill.ts + 100
+
+    assert recovery_fill_since(journal.store.con, ordinary, now=fill.ts + 3600) == fill.ts
+    assert recovery_fill_since(journal.store.con, ordinary, now=fill.ts + 24 * 3600 + 1) == ordinary
+
+    # With no unresolved incident, the ordinary cursor is untouched.
+    clean = tmp_path / 'clean'
+    clean.mkdir()
+    clean_journal, _, _ = world(clean, manual_manifest)
+    assert recovery_fill_since(clean_journal.store.con, ordinary, now=fill.ts + 3600) == ordinary
+
+
+def test_position_guard_fetches_exact_venue_fill_after_restart_cursor(tmp_path, manual_manifest):
+    journal, guard, _ = world(tmp_path, manual_manifest)
+    seed_flags(journal, manual_manifest)
+    fill = manual_fill(manual_manifest)
+    pm = Venue('polymarket', fills=[fill], positions=[])
+    ks = Venue('kalshi', fills=[], positions=[])
+    guard.venues = {'polymarket': pm, 'kalshi': ks}
+    guard.cursor_utc = fill.ts + 100
+    guard.clock = lambda: fill.ts + 3600
+
+    snap = guard.fetch()
+    assert pm.asked_since == [fill.ts]
+    assert ks.asked_since == [fill.ts]
+    assert snap.fills == [fill]
+    report = guard.apply(snap)
+    assert report.dispositions == [(fill, 1)] and not report.orphans
+
+
+@pytest.mark.parametrize('mutation', ['revoked', 'corrupt', 'wrong-target', 'cited-mismatch'])
+def test_invalid_disposition_evidence_never_widens_restart_cursor(tmp_path, manual_manifest, mutation):
+    journal, _, _ = world(tmp_path, manual_manifest)
+    seed_flags(journal, manual_manifest)
+    fill = manual_fill(manual_manifest)
+    con = journal.store.con
+    if mutation == 'revoked':
+        revoked = {'version': 1, 'dispositions': [dict(manual_manifest['dispositions'][0],
+            action='revoked', supersedes_id=1)]}
+        confirm(con, tmp_path / 't.sqlite', revoked)
+    elif mutation == 'cited-mismatch':
+        con.execute('UPDATE lane_flags SET detail=? WHERE id=?', ('different exact incident',
+                     manual_manifest['dispositions'][0]['orphan_flags'][0]['id']))
+        con.commit()
+    else:
+        record = json.loads(con.execute(
+            'SELECT record_json FROM external_fill_dispositions WHERE id=1').fetchone()[0])
+        if mutation == 'corrupt':
+            record_sha = '0' * 64
+        else:
+            record['confirmation']['database'] = '/different/database.sqlite'
+            record['confirmed_sha256'] = digest(record['confirmation'])
+            record['entry']['supersedes_id'] = 1
+            record_sha = digest(record)
+        con.execute(
+            'INSERT INTO external_fill_dispositions(venue,fill_id,supersedes_id,record_json,record_sha256) VALUES(?,?,?,?,?)',
+            (fill.venue, fill.fill_id, 1, canonical(record), record_sha))
+        con.commit()
+    assert recovery_fill_since(con, fill.ts + 100, now=fill.ts + 3600) == fill.ts + 100

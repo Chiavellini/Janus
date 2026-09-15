@@ -18,6 +18,7 @@ import subprocess
 import time
 
 from kernel.execution_protocol import FillRecord
+from nodes.risk.flags import flag_snapshot, unresolved_flag_rows
 
 DDL = """
 CREATE TABLE IF NOT EXISTS external_fill_dispositions(
@@ -439,6 +440,64 @@ def match_disposition(con, fill: FillRecord) -> dict | None:
         return None
     return {'id': row[0], 'reason': entry['reason'], 'source': entry['source'], 'fill_sha256': digest(identity),
             'orphan_flags': entry['orphan_flags']}
+
+
+DISPOSITION_RECOVERY_WINDOW_S = 24 * 60 * 60
+
+
+def recovery_fill_since(con, ordinary_since: float, *, now: float,
+                        max_age_s: float = DISPOSITION_RECOVERY_WINDOW_S) -> float:
+    """Return the narrowest bounded fill time an intact disposition may recover.
+
+    This is a read-side cursor hint only.  The disposition's fill is never treated as venue
+    evidence: ``PositionGuard`` must still receive that exact venue ``FillRecord`` and run the
+    normal ``match_disposition``/exact-flag-resolution path.  Invalid, revoked, stale or
+    wrong-target rows are ignored, as are rows whose exact cited incident is no longer an
+    unresolved ORPHAN_FILL.  The query examines disposition metadata, never a historical venue
+    fill stream, and is deliberately bounded to the restart recovery window.
+    """
+    if max_age_s < 0 or not isinstance(ordinary_since, (int, float)) or not isinstance(now, (int, float)):
+        return ordinary_since
+    if not con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='external_fill_dispositions'").fetchone():
+        return ordinary_since
+    unresolved = {int(row[0]): flag_snapshot(row) for row in unresolved_flag_rows(con, 'ORPHAN_FILL')}
+    if not unresolved:
+        return ordinary_since
+
+    # Only the current head for each exact fill can have authority.  ``match_disposition``
+    # revalidates the complete record, confirmation envelope and chain under the target DB.
+    rows = con.execute(
+        "SELECT d.id, d.venue, d.fill_id, d.record_json, d.record_sha256, d.supersedes_id "
+        "FROM external_fill_dispositions d "
+        "JOIN (SELECT venue, fill_id, MAX(id) AS id FROM external_fill_dispositions "
+        "      GROUP BY venue, fill_id) heads ON heads.id=d.id"
+    ).fetchall()
+    candidates = []
+    for row in rows:
+        try:
+            record = json.loads(row[3])
+            entry = record['entry']
+            raw = entry['fill']
+            # Keep this conversion local to the cursor hint.  It is not returned to the caller and
+            # cannot suppress a fill that the venue did not return.
+            fill = FillRecord(**{
+                key: (float(value) if key in {'contracts', 'price', 'fee_usd', 'ts'} else value)
+                for key, value in raw.items()
+            })
+            matched = match_disposition(con, fill)
+            if matched is None or matched['id'] != row[0]:
+                continue
+            cited = {int(flag['id']): flag for flag in matched['orphan_flags']}
+            if not any(unresolved.get(flag_id) == flag for flag_id, flag in cited.items()):
+                continue
+            age = float(now) - fill.ts
+            if age < 0 or age > float(max_age_s) or fill.ts >= float(ordinary_since):
+                continue
+            candidates.append(fill.ts)
+        except (KeyError, TypeError, ValueError, ArithmeticError, json.JSONDecodeError):
+            # Corrupt or changed evidence is never a reason to widen the venue read.
+            continue
+    return min(candidates, default=ordinary_since)
 
 
 def confirmation_plan(con, db: Path, manifest: dict) -> dict:

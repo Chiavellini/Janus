@@ -163,6 +163,15 @@ an incomplete guard pass, or an unknown/equal-time incident re-orphans or leaves
 A fresh complete guard pass may append a named `ORPHAN_FILL_RESOLVED_EXACT` marker for this fill,
 but that marker never clears the kill and shared-account inventory remains outside Janus.
 
+The ordinary guard cursor starts 120 seconds before the process. An operator may confirm an exact
+disposition for a fill older than that after a restart, so an unresolved cited orphan would
+otherwise remain invisible forever. While such an exact active disposition and exact unresolved
+flag coexist, the read lower bound widens to the disposition's fill timestamp, capped at 24 hours.
+This is only a cursor hint: the venue must still return the complete matching `FillRecord`, and the
+same complete-pass and exact-ID checks above remain the only resolution authority. With no exact
+current overlap—or with corrupt, revoked, stale, wrong-target, future, or older evidence—the normal
+cursor is unchanged.
+
 Expected EV effect: none. This removes one proved shared-account bookkeeping blocker so registered
 q=10 measurement can resume without weakening orphan, protection, fee, settlement or accounting
 checks.

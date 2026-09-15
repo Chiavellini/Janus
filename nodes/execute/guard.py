@@ -39,7 +39,7 @@ from kernel.execution_protocol import Ack, FillRecord, Position
 from kernel.schema import ExecutionState as X, FillState, Mode, OpportunityStatus as S
 from nodes.reconcile.reconcile import check_fees, ingest_fills, resolve_unconfirmed
 from nodes.reconcile.settle_executions import refresh_settlement_accounting
-from nodes.execution.dispositions import latest as latest_disposition, match_disposition
+from nodes.execution.dispositions import latest as latest_disposition, match_disposition, recovery_fill_since
 from nodes.execution.overfill_ack import bounded_taker_residual, match_overfill_ack
 from nodes.execution.legacy_incident_ack import resolve_idle_incidents, resolve_migration_false_alarms
 from nodes.execution.legacy_incident_ack import match_incident
@@ -113,6 +113,10 @@ class PositionGuard:
         fill_since = self.cursor_utc
         if unresolved and unresolved[0] is not None:
             fill_since = min(fill_since, max(0.0, float(unresolved[0]) - 1.0))
+        # A restart can begin after the normal cursor has passed an exact, still-unresolved
+        # disposition incident.  Widen only to that disposition's bounded fill timestamp; the
+        # venue must still return the real FillRecord and apply() performs normal exact matching.
+        fill_since = recovery_fill_since(self.store.con, fill_since, now=snap.now)
         try:
             snap.unconfirmed, snap.unconfirmed_final = resolve_unconfirmed(self.journal, self.venues)
         except Exception as exc:  # noqa: BLE001
