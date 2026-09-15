@@ -1,0 +1,38 @@
+row: L128
+date: 2026-09-14
+kind: operator_safety
+status_at_registration: PENDING
+observed_failure: >-
+  L127 proves the original incident and all later maker rows independently: the one bound
+  violation and acknowledgement match exactly, all 17 later maker attempts are terminal and
+  unviolated, the admission slot is empty under its existing contract, and global capital state
+  is quiet. The L122 helper nevertheless calls the historical empty-table matcher. Its 75-second
+  pre-proof also ended before the running guard could complete the two ordered exact resolutions:
+  first the manual-fill orphan, then acknowledged overfill duplicates.
+immutable_success_criteria:
+  - For the exact L122 flag-211 path only, accept later maker history only through the existing
+    settled-current-database predicate, match_incident with require_idle false, and an exact single
+    bound post-only violation row. Any active/unproved/violated maker row, held admission, changed
+    incident, added violation, open order, unreleased execution, unhedged exposure, or reservation
+    remains a block.
+  - The helper itself never resolves flags during pre-proof. It waits under the exact unchanged
+    retained kill for the ordinary live guard to append its already-authorized exact disposition
+    and overfill resolution markers.
+  - Keep the zero-unresolved-material-flags proof before the first stop. Extend the bounded wait
+    to at most five minutes, enough for two 30-second guard cadences plus venue read timeouts; a
+    timeout still restores/stops and fails.
+  - Recheck the complete exact incident, current terminal state, all material flags, global quiet,
+    two stopped real-venue guards, warm-up sockets, archive, and rollback exactly as before.
+  - Focused adversarial tests, shell syntax, integrated baseline, replay parity, and fresh audit
+    are green before another release attempt.
+expected_ev_effect: >-
+  None per trade. This permits exact historical evidence and current terminal history to coexist
+  while retaining every current-risk and final activation proof.
+watch_for:
+  - Reusing require_idle false without the separate current terminal and single-violation checks.
+  - Treating acknowledged or disposed flags as resolved before append-only resolution markers.
+  - Stopping the lane before all current material flags are actually resolved.
+prohibited:
+  - Direct database edits or direct guard/resolution invocation outside the release helper.
+  - Bypassing any flag, incident, venue, archive, rollback, or kill check.
+  - Changing caps, hurdles, sizing, entry, protection, or settlement policy.
