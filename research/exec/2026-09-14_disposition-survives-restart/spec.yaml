@@ -1,0 +1,41 @@
+row: L121
+date: 2026-09-14
+kind: execution_safety
+status_at_registration: PENDING
+observed_failure: >-
+  The exact open-manual disposition for Polymarket fill
+  99f8e62b-0684-446f-baa7-08bb785c3d30 was confirmed as append-only row 4 at
+  1789436244.278682. The fill occurred at 1789409189 and its ORPHAN_FILL flag 587 remains
+  unresolved after normal guard cycles. The deployed process started at 2026-09-15 01:27:52 UTC;
+  PositionGuard initializes its fill cursor only 120 seconds before process start, about seven
+  hours after the fill, so the guard never re-reads the exact FillRecord that match_disposition
+  requires. L118's statement that a post-release complete guard pass can resolve the flag is
+  therefore false under the measured restart sequence.
+immutable_success_criteria:
+  - When an active, intact, target-database-bound disposition cites a currently unresolved exact
+    ORPHAN_FILL row and its fill is older than the ordinary restart cursor but no more than 24
+    hours old, the guard's read-side fill lower bound includes that exact fill time.
+  - With the venue returning that exact FillRecord and complete two-venue positions, the ordinary
+    guard pass recognizes the disposition and resolves only its exact cited ORPHAN_FILL ID.
+  - With no unresolved ORPHAN_FILL, no disposition table, no exact cited-flag overlap, or a fill
+    outside the bounded 24-hour recovery window, the ordinary cursor is unchanged.
+  - Corrupt, revoked, stale-chain, wrong-target, changed-fill, or incomplete evidence never gains
+    recovery authority and never resolves or suppresses an orphan. An additional unknown orphan
+    remains unresolved and keeps the pass unsafe.
+  - Recovery changes only the read lower bound and existing exact-resolution path. It does not
+    clear or rewrite kill files, dispositions, fills, positions, orders, executions, reservations,
+    PnL, caps, hurdles, sizing, entry policy, settlement policy, or fee policy.
+  - The full suite is green and replay parity remains 13e4fb08a76c920f / 4f53cda18c2baa0c.
+expected_ev_effect: >-
+  None per trade. This closes a restart-only safety/recovery deadlock so the retained kill can be
+  reviewed honestly and the q=10 live EV/throughput cohort can begin; it does not improve or prove
+  unit economics.
+watch_for:
+  - A broad or unbounded historical fill scan every guard cycle.
+  - Treating the disposition record itself as venue fill evidence.
+  - Resolution when any cited incident, current fill field, confirmation envelope, or chain head
+    differs.
+prohibited:
+  - Running --confirm, clearing any kill, arming, changing mode, writing an override, or releasing.
+  - Blanket ORPHAN_FILL resolution or weakening match_disposition.
+  - Extending ordinary fill history when no exact unresolved disposition requires it.
