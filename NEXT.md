@@ -1,135 +1,97 @@
 # NEXT
 
-*An opinion, not a record. Overwrite this file; never append to it and never create a second one.
-What changed is `git log`. Where we are is the run index. Why a decision was made belongs in a
-commit message.*
+An opinion, not a record. Overwrite this file; never append to it. What changed is git log.
 
-Updated 2026-09-14 after L118–L120, on `claude/hedge-safety-and-speed`.
+Updated 2026-09-14 after L121-L123 on branch claude/hedge-safety-and-speed.
 
 ## Current state
 
-`31e7a42` is deployed on the Mexico box. The lane and credentials are active, but `kill/live`
-exists and entry is stopped. The lane is collecting market and refusal data; it is not placing
-orders. Do not clear the kill until the exact disposition and legacy false-alarm rows below have
-resolved under a complete guard pass.
+The Mexico box is still deployed at 8e7ab4a. The lane service is active but kill/live remains
+present with exact SHA a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6
+and reason LEGACY_INCIDENT_ACK_INVALID flag=211. Nothing is trading. Read-only inspection found no
+current open or unconfirmed journal orders, cash-pending orders, unreleased executions, or
+unreleased reservations. The production database has every table and column required by L122.
 
-The branch's functional candidate is `6bb2ebd` plus this handoff update. L118 adds an exact
-append-only ownership disposition for the one operator-confirmed manual fill. L120 repairs one
-schema-only invalidation of the historical legacy acknowledgement. The full suite is 1,601/1,601,
-including the two previously flaky box tests on this run. Replay parity remains 1,093 rows at
-`13e4fb08a76c920f` / `4f53cda18c2baa0c`.
+The candidate code tree at 1ad69b5 passed 1,642 tests when the two documented pre-existing FIFO
+flakes were excluded. The one FIFO failure seen in an unfiltered run passed immediately in
+isolation. Replay parity is unchanged: 1,093 rows and zero selections at
+13e4fb08a76c920f / 4f53cda18c2baa0c. A fresh external audit returned RELEASE with no remaining
+P0/P1 in the audited recovery and guard paths.
 
-No cap, hurdle, size, entry policy, protection decision, settlement rule, or kill condition changed.
+No cap, hurdle, size, entry policy, settlement rule, or trading behavior changed. The changes make
+restart recovery exact, make guard failure fail closed, preserve protection on incomplete guard
+snapshots, and permit only a narrowly proved legacy-kill recovery during an operator-run release.
 
-## The Polymarket fill is operator-owned manual activity
+## L121: exact restart-safe disposition recovery
 
-The operator states verbatim:
+research/exec/2026-09-14_disposition-survives-restart/spec.yaml registers the proof. Recovery uses
+the worker-owned database connection, accepts only an active target-bound disposition, requires
+the venue to return the exact fill, and has a 24-hour window plus a 500-row work bound. Corrupt,
+revoked, expired, wrong-target, or unverifiable evidence cannot gain authority. Recovery errors
+remain visible and latch the kill. The exact operator-owned manual Polymarket fill is the only
+intended match.
 
-- *"That position was placed manually on a hunch i got"*
-- *"You should not worry about it"*
+## L122: exact reviewed legacy-kill recovery
 
-The exact fill remains:
+research/exec/2026-09-14_reviewed-legacy-kill-clear/spec.yaml registers the proof. The helper is
+reachable only from the operator release path and only when the full deployed SHA, full current
+kill SHA, exact flag/reason, incident acknowledgement, schema, all material flags, every venue
+journal state, executions, and reservations match the reviewed state.
 
-- fill `99f8e62b-0684-446f-baa7-08bb785c3d30`
-- order `0x32813cbb23731ca96e8830adb5118adb16367d4c0beecf2554040dec4eb3afa3`
-- 666.666667 Yes shares at 0.1499999999
-- token `5615282760875985231868508008056959876238536896643315063916840237042205273721`
-- authoritative cash $104.25; confirmed taker trade; no Janus order or execution row
+Before removal it waits boundedly for L121 recovery, runs two strict complete-and-quiet
+stopped-lane venue guards with retained-kill socket warmup between them, and preserves an
+independent fsynced exact archive. Cleanup restores and verifies the original kill before
+attempting to stop the lane; rollback failures are explicit hard failures. A changed or new kill
+is preserved.
 
-It is not a Janus cap breach, Janus P&L, or credential incident. It is still operationally relevant
-because the correct guard treats every fill without Janus ownership as an orphan. Existing L56
-dispositions required a settled archived proof and could not truthfully express an open manual
-position.
+## L123: guard failure is an entry stop
 
-L118's `open_external_manual` action binds every FillRecord field, the exact operator statements,
-the authenticated cash-source hash and transaction, empty Janus order/event rows, and exact orphan
-flag 587 to committed evidence at `5ca42d0`. Only that fill can match. A future fill sharing its
-order, token, wallet, owner, price, side, or quantity remains an orphan. Confirmation appends
-ownership only; it never changes the position, orders, P&L, accounting, flags, protection, or kill.
+research/exec/2026-09-14_guard-failure-fails-closed/spec.yaml registers the proof. A process starts
+guard-unhealthy and cannot enter capital until one complete guard pass. Fetch, apply, or
+incomplete-snapshot failure clears cached authority, appends GUARD_FAILED, and first-writer latches
+the kill. If persistence itself fails, the in-memory entry stop remains. Existing findings and
+required protection are processed before an incomplete snapshot is rejected, so fail-closed entry
+does not suppress protection.
 
-The prepared proposal is
-`research/exec/2026-09-14_open-manual-fill-disposition/prepared.json`. The target-bound dry-run and
-separate `--confirm` remain operator actions. After confirmation, a complete guard pass may resolve
-only the exact ORPHAN_FILL flag; the retained kill is unchanged.
+## What is and is not proved toward $100/day
 
-## The legacy alarm is a proved null-column migration
+These changes have zero claimed EV uplift per trade. They remove ways that a restart, stale guard
+state, or failed cleanup could make the prospective profit measurement unsafe or ambiguous. They
+are necessary measurement infrastructure, not proof of profitability.
 
-L119 compared the immutable acknowledgement for flag 211 to the current database field by field.
-There is exactly one difference: `/settled/reservation/hedged_utc` is present now with `null` and
-absent from the old snapshot. The acknowledgement record SHA verifies. No identity, quantity,
-price, fee, cash, order/execution state, settlement, reservation value, flag, or violation changed.
+The economic evidence is still adverse: twenty real covers produced pooled P&L of -$1.50, and the
+latest ten were net -$3.96. Median booked margin was below combined realized fee/slippage. No
+league has the twenty covers required for a defensible per-league reserve. Maker entry remains an
+unproved lead with one historical fill in seventeen attempts; its registered prospective cohort
+is still owed. The independently measured moneyline surface remains about $20/day gross.
 
-The first ad-hoc classifier printed MATERIAL_STOP because it whitelisted the wrong path; the
-registered criterion classifies the one null additive field as ADDITIVE_SCHEMA_ONLY. Both facts are
-preserved in L119's result.
-
-L120 accepts only stored-absent/current-null at that exact path, after recursive exact equality of
-every other key, type, and value. A non-null `hedged_utc`, second added field, removal, type change,
-or economic/incident change remains invalid and STOP. After deploy, a complete guard pass can close
-the repeated exact migration false alarms. It never clears the kill or rewrites acknowledgement
-evidence.
-
-## Economics and the $100/day constraint
-
-The operator now states verbatim: *"turnover is no constraint because we are specifically targeting
-short horizon events (meaning 600 usd across both venues can probably result in turnovers over
-10,000)"*.
-
-That is the intended capital model, not current Janus behavior:
-
-- The signed arm is $30/order, 25 contracts/leg, and $500 cumulative daily notional.
-- `day_notional_usd()` counts filled-and-released reservations for the rest of the UTC day. Venue
-  cash does not recycle under this cap today.
-- Hedging ends only the per-event single-flight refusal. Capital remains committed until both
-  venues are final and reconciliation releases the reservation.
-- Open exposure is bounded more tightly by $250 unresolved/per-venue limits, and executions are
-  globally serialized by one in-flight worker.
-
-Do not change those semantics before positive q=10 unit economics and safe settlement release are
-measured. If the evidence passes, a later dated GATE row can use the operator's words above and set
-an explicit cumulative-turnover cap; the existing statement is not silently reinterpreted.
-
-Economics remain unresolved:
-
-- Twenty real covers: pooled P&L -$1.50, 10 losers; hedge slippage p50 3.04c/contract.
-- Polymarket taker fee 0.828c and Kalshi hedge fee 1.187c against 0.67c median booked margin.
-- No league has the 20 covers required for a defensible per-league reserve. ATP is 6/6 adverse;
-  MLB has high slippage but positive realized P&L; pooling them is misleading.
-- Maker entry might remove the PM fee, but it has one historical fill in seventeen attempts and
-  needs L63's prospective 200-attempt cohort before any EV claim or policy change.
-- The independently measured moneyline surface remains about $20/day gross. Reaching $100/day
-  likely requires both positive unit economics and wider safe coverage, not only more capital.
-
-The first post-`31e7a42` one-hour q=10 funnel reported 80 events seen, 72 co-listed, 74 games priced,
-26 actionable prints, zero executions, and 31 KILL_SWITCH refusals. This is a short instrument check,
-not a daily forecast. It proves the funnel recorder works while the retained kill prevents the real
-conversion measurement.
+The operator's short-horizon turnover thesis may eventually make $600 recycle above $10,000/day,
+but current signed behavior still caps cumulative daily notional at $500 and keeps event capital
+reserved until settlement/reconciliation. Do not increase turnover or loosen entry until q=10
+unit economics are positive and settlement release is proved. Any later increase requires a dated
+GATE_TO_LIVE.md amendment using the operator's verbatim authorization.
 
 ## Immediate sequence
 
-1. Push and operator-release the branch head once. The release is required because L118/L120 touch
-   executable code; release remains the operator's paste.
-2. On the deployed tree, operator runs the L118 disposition dry-run against
-   `/srv/janus/tuples/tuples.sqlite`, reviews the exact facts/digest, then separately pastes the exact
-   digest confirmation. The agent never runs `--confirm`.
-3. Let one complete guard pass resolve exact ORPHAN_FILL 587 and the L120 migration false alarms.
-   Inspect every unresolved flag, venue position, order, execution, reservation and stream before
-   preparing any kill-clear line.
-4. Only the operator clears the retained kill. The agent never clears, arms, changes mode, writes an
-   override, or releases.
-5. Resume the q=10 measurement cohort. Read L112 account-stream kinds, L113 funnel conversion, L114
-   covers/event, and per-league net EV/Sharpe/slippage. Stop at the first registered safety STOP.
-6. If unit economics are positive, decide maker-vs-taker and then design the explicit recyclable
-   turnover policy. If they are not, exclude/reserve losing leagues before increasing turnover.
+1. Push branch head and have the operator run one release command. The agent never releases,
+   confirms, clears a kill, arms, changes mode, or writes an override.
+2. Verify the deployed full SHA, exact kill transition, lane state, complete guard result, fresh
+   sockets, and zero open/unreleased material state. Stop on any mismatch.
+3. Resume the registered q=10 prospective cohort and measure per-league net EV, Sharpe, slippage,
+   fill conversion, and covers per event. Do not pool leagues to hide adverse selection.
+4. If taker unit economics remain negative, test the registered maker cohort and/or exclude losing
+   leagues. Only after positive unit economics should wider coverage and recyclable turnover be
+   considered.
 
 ## Instrument traps that still apply
 
-- `stages_json` `*_ms` are cumulative from `_t0`; difference per row. Exclude `guard_rerun` rows.
-- `socket_health.frames` is cumulative; take deltas and treat decreases as reconnects.
-- `BLOCKED_MATCH` is mostly the `single_venue` branch, not lost paired surface.
-- `refusal_counts` is hot-path aggregation, not unique opportunities. An empty section means not
-  yet ticked, not zero refusals.
-- `PROFITABLE_UNEXECUTED` is material-change gated and per size rung. Always name the rung.
-- The local archive DB is corrupt; replay uses the separate slate snapshot. Frames age out at seven
-  days.
-- Negative unconditional long-window hedge drift is not maker EV. L63 remains the maker authority.
+- stages_json timing values are cumulative from the loop start; difference adjacent stages and
+  exclude guard_rerun rows.
+- socket_health.frames is cumulative; take deltas and treat decreases as reconnects.
+- BLOCKED_MATCH is mostly the single_venue branch, not lost paired surface.
+- refusal_counts is hot-path aggregation, not unique opportunities.
+- PROFITABLE_UNEXECUTED is material-change gated and per size rung; always name the rung.
+- The status script execs field can include historical untimestamped repeated lines. Use the
+  production database to decide whether an execution or reservation is actually unresolved.
+- The local archive database is corrupt; replay uses the separate slate snapshot.
+- Negative unconditional hedge drift is not maker EV. L63 remains the maker authority.
