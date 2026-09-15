@@ -1,0 +1,55 @@
+row: L118
+date: 2026-09-14
+kind: safety_exact_manual_fill_ownership
+status_at_registration: PENDING
+operator_statements_verbatim:
+  - "That position was placed manually on a hunch i got"
+  - "You should not worry about it"
+observed_failure: >-
+  The authenticated Polymarket account contains fill
+  99f8e62b-0684-446f-baa7-08bb785c3d30 for order
+  0x32813cbb23731ca96e8830adb5118adb16367d4c0beecf2554040dec4eb3afa3:
+  666.666667 Yes shares of token
+  5615282760875985231868508008056959876238536896643315063916840237042205273721
+  at 0.1499999999, with authoritative cash 104.2500000167 USD. It is an open,
+  non-sports manual position and has no Janus order or execution row. The guard correctly calls
+  every unexplained fill an ORPHAN_FILL. The existing external-fill disposition accepts only a
+  settled archived execution proof, so it cannot truthfully express the operator's ownership of
+  this still-open manual fill.
+immutable_success_criteria:
+  - Add one explicit append-only action for an operator-owned open manual fill. It is ownership
+    attribution only: never settlement, PnL, cash finality, protection, execution ownership, or
+    permission to clear a kill.
+  - Bind every FillRecord field exactly: venue, fill ID, venue order ID, token/market ID, side,
+    contracts, price, fee, timestamp, taker role, and finality. Numeric identity remains canonical
+    Decimal text. A change in any field remains an orphan and STOP.
+  - Bind the exact operator statement and exact authenticated venue/account evidence to immutable
+    committed source bytes with the existing Git commit/tree/blob and SHA256 proof. Evidence must
+    contain no credential, private key, secret, or reusable authentication material.
+  - A future fill remains unknown even when it shares this order, token, wallet, owner UUID, side,
+    or price. Only the exact named fill ID and complete identity are attributable.
+  - Reuse the existing target-database-bound dry-run and separate exact-digest --confirm envelope,
+    append-only table, linear supersession, correction, and revocation rules. Confirmation appends
+    ownership evidence only and never changes orders, executions, positions, balances, PnL,
+    reservations, flags, or kill files.
+  - The guard may omit only this exact confirmed fill from ORPHAN_FILL classification. Existing
+    Janus position reconciliation, protection, overfill, fee, cash, persistence, and every other
+    risk check remain unchanged. Shared-account positions stay outside Janus expected inventory.
+  - After a complete fresh guard pass, only exact incident snapshots bound by the confirmed record
+    may receive ORPHAN_FILL_RESOLVED_EXACT. An unknown, incomplete read, missing venue/position,
+    invalid record, stale confirmation, revocation, or later same-time incident blocks resolution.
+    The kill remains unchanged.
+  - Adversarial tests cover every changed identity field, same-order different-fill identity,
+    corrupt/unconfirmed/revoked/stale records, malformed or secret-bearing evidence, incomplete
+    guard passes, and re-orphaning in the same process. Existing settled-proof tests stay green.
+  - Full suite and replay parity pass. Expected parity remains rows
+    13e4fb08a76c920f and selections 4f53cda18c2baa0c over 1,093 evaluation rows.
+expected_ev_effect: >-
+  None directly. This removes only a proved shared-account bookkeeping blocker so the registered
+  q=10 real-order measurement can resume without teaching the guard to ignore any unknown fill.
+prohibited:
+  - Fabricating a settled result, redemption, Janus execution, hedge, or PnL for the manual fill.
+  - Matching by order, token, wallet, owner, market title, approximate quantity, or time range.
+  - Clearing a kill, resolving unrelated flags, or changing a cap, hurdle, size, entry policy, or
+    protection policy under this row.
+

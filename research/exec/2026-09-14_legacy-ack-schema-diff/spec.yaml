@@ -1,0 +1,30 @@
+row: L119
+date: 2026-09-14
+kind: descriptive_read_only_incident_diff
+status_at_registration: PENDING
+observed_failure: >-
+  The deployed guard emits LEGACY_INCIDENT_ACK_INVALID flag=211 with ValueError
+  "acknowledged incident state changed" on every pass. The acknowledgement was originally bound
+  to an exact settled historical IOC database-lock incident. The repository contains a comment
+  attributing one prior false-alarm class to an additive orders.execution_id schema migration, but
+  the current box has not been compared field-by-field under a registered measurement.
+immutable_success_criteria:
+  - Read only the committed acknowledgement record for flag 211 and reconstruct the current
+    incident_snapshot for its exact client order, flag, and violation IDs with require_idle=False.
+  - Emit a deterministic recursive diff listing every added, removed, type-changed, and
+    value-changed path, with both stored and current canonical values. Emit the acknowledgement
+    record hash, current deployed SHA, and database path. Do not write the database or kill files.
+  - Classify the result as ADDITIVE_SCHEMA_ONLY only when every difference is a newly added schema
+    field whose value is null/default or independently derivable exact ownership metadata and no
+    stored field changed or disappeared. Any identity, quantity, cash, fee, order state, execution
+    state, settlement, reservation, flag, or violation change is MATERIAL_STOP.
+  - Persist the exact JSON result and a verdict. A compatibility repair, if justified, is a new
+    pre-registered row; no production code changes under L119.
+expected_ev_effect: >-
+  None directly. It decides whether a stale schema-bound acknowledgement can be repaired without
+  suppressing a genuine persistence incident, which is required before the q=10 measurement run.
+prohibited:
+  - Updating or deleting the acknowledgement, incident, order, execution, flag, or violation.
+  - Treating an unexplained or economic-field difference as a migration.
+  - Clearing a kill, confirming a new acknowledgement, or changing live policy.
+
