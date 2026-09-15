@@ -14,8 +14,15 @@ only the lower bound passed to both venue fill readers. The disposition is never
 venue evidence; the venue must still return the exact FillRecord and the existing complete guard
 pass must still resolve the exact cited IDs.
 
-Focused disposition and guard tests are 92/92. The combined execution and guard test directories
-are green. Mutation coverage includes revoked, corrupt, wrong-target and cited-incident mismatch,
-plus no flag/table, out-of-window, and an integration-style restart fetch. Full-suite and replay
-parity checks are pending until L122 is integrated into the same release candidate. No box write,
-kill clear, arm, mode, override, release, cap, hurdle, size, entry or accounting change occurred.
+The first implementation was not releasable: an independent review reproduced
+`sqlite3.ProgrammingError` because the loop-owned store connection was read inside
+`asyncio.to_thread`. Recovery now uses the journal's worker-owned connection and the integration
+test crosses the real thread boundary. Non-finite, negative, and over-24-hour window overrides are
+rejected; candidate rows are filtered by exact unresolved incident IDs; and recovery stops
+fail-closed above a hard 500-incident work bound rather than repeatedly scanning an unbounded
+backlog. Malformed flags and database errors remain visible and latch live entry; corrupt,
+revoked, stale, wrong-target, and cited-incident-mismatch evidence is ignored without authority.
+
+Focused disposition and guard tests are 100/100. Full-suite and replay parity checks are pending
+until L122/L123 are integrated into the same release candidate. No box write, kill clear, arm,
+mode, override, release, cap, hurdle, size, entry or accounting change occurred.

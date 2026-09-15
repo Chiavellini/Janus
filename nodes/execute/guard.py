@@ -116,7 +116,18 @@ class PositionGuard:
         # A restart can begin after the normal cursor has passed an exact, still-unresolved
         # disposition incident.  Widen only to that disposition's bounded fill timestamp; the
         # venue must still return the real FillRecord and apply() performs normal exact matching.
-        fill_since = recovery_fill_since(self.store.con, fill_since, now=snap.now)
+        # This read runs in the worker, so use the worker-owned journal connection rather than the
+        # event-loop store connection (fetch() is invoked through asyncio.to_thread()).
+        try:
+            fill_since = recovery_fill_since(self.journal.store.con, fill_since, now=snap.now)
+        except Exception as exc:  # noqa: BLE001 -- recovery uncertainty is a safety failure
+            detail = f"{type(exc).__name__}: {exc}"
+            snap.errors["disposition_recovery"] = detail
+            if self.kill is not None:
+                try:
+                    self.kill.latch("live", f"guard: disposition recovery failed {detail[:180]}")
+                except Exception as kill_exc:  # noqa: BLE001 -- preserve the fetch error visibly
+                    snap.errors["disposition_recovery_kill"] = f"{type(kill_exc).__name__}: {kill_exc}"
         try:
             snap.unconfirmed, snap.unconfirmed_final = resolve_unconfirmed(self.journal, self.venues)
         except Exception as exc:  # noqa: BLE001

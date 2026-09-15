@@ -412,7 +412,19 @@ def test_open_manual_unresolved_incident_widens_only_to_exact_bounded_fill(tmp_p
     assert recovery_fill_since(clean_journal.store.con, ordinary, now=fill.ts + 3600) == ordinary
 
 
+@pytest.mark.parametrize('max_age', [float('nan'), float('inf'), 25 * 3600])
+def test_recovery_window_cannot_be_extended_by_invalid_override(tmp_path, manual_manifest, max_age):
+    journal, _, _ = world(tmp_path, manual_manifest)
+    seed_flags(journal, manual_manifest)
+    fill = manual_fill(manual_manifest)
+    ordinary = fill.ts + 100
+    assert recovery_fill_since(journal.store.con, ordinary, now=fill.ts + 3600,
+                               max_age_s=max_age) == ordinary
+
+
 def test_position_guard_fetches_exact_venue_fill_after_restart_cursor(tmp_path, manual_manifest):
+    import asyncio
+
     journal, guard, _ = world(tmp_path, manual_manifest)
     seed_flags(journal, manual_manifest)
     fill = manual_fill(manual_manifest)
@@ -422,7 +434,7 @@ def test_position_guard_fetches_exact_venue_fill_after_restart_cursor(tmp_path, 
     guard.cursor_utc = fill.ts + 100
     guard.clock = lambda: fill.ts + 3600
 
-    snap = guard.fetch()
+    snap = asyncio.run(asyncio.to_thread(guard.fetch))
     assert pm.asked_since == [fill.ts]
     assert ks.asked_since == [fill.ts]
     assert snap.fills == [fill]
@@ -459,3 +471,87 @@ def test_invalid_disposition_evidence_never_widens_restart_cursor(tmp_path, manu
             (fill.venue, fill.fill_id, 1, canonical(record), record_sha))
         con.commit()
     assert recovery_fill_since(con, fill.ts + 100, now=fill.ts + 3600) == fill.ts + 100
+
+
+def test_recovery_query_does_not_revalidate_unrelated_disposition_history(tmp_path, manual_manifest, monkeypatch):
+    import nodes.execution.dispositions as dispositions
+
+    journal, _, _ = world(tmp_path, manual_manifest)
+    seed_flags(journal, manual_manifest)
+    fill = manual_fill(manual_manifest)
+    con = journal.store.con
+    for index in range(500):
+        con.execute(
+            'INSERT INTO external_fill_dispositions(venue,fill_id,supersedes_id,record_json,record_sha256) VALUES(?,?,?,?,?)',
+            ('polymarket', f'unrelated-{index}', None, canonical({'unrelated': index}), '0' * 64))
+    con.commit()
+    calls = []
+    original = dispositions.match_disposition
+    def counted(connection, candidate):
+        calls.append(candidate.fill_id)
+        return original(connection, candidate)
+    monkeypatch.setattr(dispositions, 'match_disposition', counted)
+    assert recovery_fill_since(con, fill.ts + 100, now=fill.ts + 3600) == fill.ts
+    assert calls == [fill.fill_id]
+
+
+def test_recovery_work_is_hard_bounded_by_unresolved_incident_count(tmp_path, manual_manifest):
+    import asyncio
+
+    journal, guard, kill = world(tmp_path, manual_manifest)
+    seed_flags(journal, manual_manifest)
+    fill = manual_fill(manual_manifest)
+    con = journal.store.con
+    con.executemany('INSERT INTO lane_flags(id,seen_ts,flag,detail) VALUES(?,?,?,?)',
+                    [(index, fill.ts, 'ORPHAN_FILL', f'unrelated incident {index}')
+                     for index in range(1000, 1500)])
+    con.commit()
+    guard.clock = lambda: fill.ts + 3600
+    snap = asyncio.run(asyncio.to_thread(guard.fetch))
+    assert 'bounded maximum is 500' in snap.errors['disposition_recovery']
+    assert kill.active(live=True) == ['live']
+
+
+def test_malformed_flag_fails_closed_in_worker_fetch(tmp_path, manual_manifest):
+    import asyncio
+
+    journal, guard, kill = world(tmp_path, manual_manifest)
+    seed_flags(journal, manual_manifest)
+    fill = manual_fill(manual_manifest)
+    journal.store.con.execute('UPDATE lane_flags SET seen_ts=? WHERE id=?',
+                              ('not-a-timestamp', manual_manifest['dispositions'][0]['orphan_flags'][0]['id']))
+    journal.store.con.commit()
+    guard.clock = lambda: fill.ts + 3600
+    snap = asyncio.run(asyncio.to_thread(guard.fetch))
+    assert 'disposition_recovery' in snap.errors and kill.active(live=True) == ['live']
+    guard.apply(snap)
+    assert journal.store.con.execute(
+        "SELECT COUNT(*) FROM lane_flags WHERE flag='ORPHAN_FILL_RESOLVED_EXACT'").fetchone()[0] == 0
+
+
+def test_deep_corrupt_disposition_fails_closed_in_worker_fetch(tmp_path, manual_manifest):
+    journal, _, _ = world(tmp_path, manual_manifest)
+    seed_flags(journal, manual_manifest)
+    fill = manual_fill(manual_manifest)
+    deep = '{"id":587,"blob":' + ('[' * 2000) + '0' + (']' * 2000) + '}'
+    journal.store.con.execute(
+        'INSERT INTO external_fill_dispositions(venue,fill_id,supersedes_id,record_json,record_sha256) VALUES(?,?,?,?,?)',
+        (fill.venue, fill.fill_id, 1, deep, '0' * 64))
+    journal.store.con.commit()
+    assert recovery_fill_since(journal.store.con, fill.ts + 100, now=fill.ts + 3600) == fill.ts + 100
+
+
+def test_database_lock_in_recovery_fails_closed_and_is_visible(tmp_path, manual_manifest, monkeypatch):
+    import asyncio
+    import sqlite3
+    import nodes.execute.guard as guard_module
+
+    journal, guard, kill = world(tmp_path, manual_manifest)
+    seed_flags(journal, manual_manifest)
+    guard.clock = lambda: manual_fill(manual_manifest).ts + 3600
+    def locked(*args, **kwargs):
+        raise sqlite3.OperationalError('database is locked')
+    monkeypatch.setattr(guard_module, 'recovery_fill_since', locked)
+    snap = asyncio.run(asyncio.to_thread(guard.fetch))
+    assert snap.errors['disposition_recovery'] == 'OperationalError: database is locked'
+    assert kill.active(live=True) == ['live']

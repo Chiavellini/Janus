@@ -11,6 +11,7 @@ from dataclasses import asdict
 from decimal import Decimal
 import hashlib
 import json
+import math
 from pathlib import Path, PurePosixPath
 import re
 import sqlite3
@@ -443,6 +444,7 @@ def match_disposition(con, fill: FillRecord) -> dict | None:
 
 
 DISPOSITION_RECOVERY_WINDOW_S = 24 * 60 * 60
+_RECOVERY_MAX_UNRESOLVED = 500
 
 
 def recovery_fill_since(con, ordinary_since: float, *, now: float,
@@ -456,21 +458,40 @@ def recovery_fill_since(con, ordinary_since: float, *, now: float,
     unresolved ORPHAN_FILL.  The query examines disposition metadata, never a historical venue
     fill stream, and is deliberately bounded to the restart recovery window.
     """
-    if max_age_s < 0 or not isinstance(ordinary_since, (int, float)) or not isinstance(now, (int, float)):
+    if (not isinstance(ordinary_since, (int, float)) or not isinstance(now, (int, float))
+            or not isinstance(max_age_s, (int, float))):
+        return ordinary_since
+    if (not math.isfinite(float(ordinary_since)) or not math.isfinite(float(now))
+            or not math.isfinite(float(max_age_s)) or float(max_age_s) < 0
+            or float(max_age_s) > DISPOSITION_RECOVERY_WINDOW_S):
         return ordinary_since
     if not con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='external_fill_dispositions'").fetchone():
         return ordinary_since
     unresolved = {int(row[0]): flag_snapshot(row) for row in unresolved_flag_rows(con, 'ORPHAN_FILL')}
     if not unresolved:
         return ordinary_since
+    if len(unresolved) > _RECOVERY_MAX_UNRESOLVED:
+        raise RuntimeError(
+            f"disposition recovery has {len(unresolved)} unresolved orphan incidents; "
+            f"bounded maximum is {_RECOVERY_MAX_UNRESOLVED}"
+        )
 
-    # Only the current head for each exact fill can have authority.  ``match_disposition``
-    # revalidates the complete record, confirmation envelope and chain under the target DB.
-    rows = con.execute(
+    # Filter heads by exact incident ids before doing JSON decoding and full matcher work.  The
+    # records are canonical JSON written by ``append_confirmed``; validation below remains
+    # authoritative for every candidate.
+    base_query = (
         "SELECT d.id, d.venue, d.fill_id, d.record_json, d.record_sha256, d.supersedes_id "
         "FROM external_fill_dispositions d "
         "JOIN (SELECT venue, fill_id, MAX(id) AS id FROM external_fill_dispositions "
-        "      GROUP BY venue, fill_id) heads ON heads.id=d.id"
+        "      GROUP BY venue, fill_id) heads ON heads.id=d.id "
+    )
+    # One bounded statement stays below SQLite's host-parameter limit and scans the head set only
+    # once.  An implausibly large unresolved-incident backlog stops recovery above instead of
+    # turning every 30-second guard pass into unbounded database work.
+    patterns = [f'%"id":{flag_id},%' for flag_id in unresolved]
+    rows = con.execute(
+        base_query + f"WHERE {' OR '.join('d.record_json LIKE ?' for _ in patterns)}",
+        patterns,
     ).fetchall()
     candidates = []
     for row in rows:
@@ -494,7 +515,7 @@ def recovery_fill_since(con, ordinary_since: float, *, now: float,
             if age < 0 or age > float(max_age_s) or fill.ts >= float(ordinary_since):
                 continue
             candidates.append(fill.ts)
-        except (KeyError, TypeError, ValueError, ArithmeticError, json.JSONDecodeError):
+        except (KeyError, TypeError, ValueError, ArithmeticError, RecursionError, json.JSONDecodeError):
             # Corrupt or changed evidence is never a reason to widen the venue read.
             continue
     return min(candidates, default=ordinary_since)
