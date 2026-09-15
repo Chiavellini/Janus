@@ -44,3 +44,17 @@ reservation, outcome map, order economics, zero unhedged quantity, and atomic po
 One non-blocking limitation remains: non-binary Polymarket events represented only as multiple
 per-side markets remain fail-closed. The exact production event uses the single main moneyline
 market, so this cannot affect the registered release.
+
+## Production result
+
+Release `59dd5ae2ce3619104aa95d127d1b115d7c0702a9` settled the exact cover, released only reservation
+`b292be2a`, passed both stopped credentialed guards, resolved only registered guard failures 1169
+and 1170, archived the unchanged kill, and restarted the lane. Independent proof found the exact
+deployed SHA, active service, no `kill/live`, three connected fresh sockets, zero unreleased
+executions/reservations, zero unresolved material flags, and the exact payout evidence and
+`-0.99357` settlement row.
+
+The release command itself ended nonzero only after recovery, when its separate final immediate
+Polymarket redemption invocation failed. The redemption timer remains an operating-cost/reliability
+issue; it did not undo or invalidate settlement, guard recovery, or lane restart. F22 had zero
+decisions at the first post-release read.

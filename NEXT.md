@@ -7,16 +7,15 @@ Updated 2026-09-15 for the F22 maker-versus-taker release candidate on branch
 
 ## Current production state
 
-The Mexico box is deployed at `c65d6206eb2a3b91569fda8fc8af06c716c671b8`. The lane service is
-stopped (`inactive`, `MainPID=0`, `ControlPID=0`) and `kill/live` is retained, so neither polling nor
-new entry is running. Do not describe the lane as trading.
+The Mexico box is deployed at `59dd5ae2ce3619104aa95d127d1b115d7c0702a9`. The lane is active in
+`LIMITED_LIVE`, `kill/live` is absent, and all three sockets were connected and fresh at the first
+independent post-release proof. It may send orders under the unchanged signed limits.
 
-The current kill is bound to SHA-256
-`dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83` and the first guard failure
-at UTC `1789484735.5242064`. The exact unresolved `GUARD_FAILED` rows remain 1169 (Polymarket
-balance/trade-batch failure) and 1170 (missing complete fills/positions proof). L132 required only
-1169 and stopped. L133 registered the pair, but its production run stopped at the first static proof
-because an exact real cover remained unsettled. It appended no resolution and archived no kill.
+The former kill SHA-256
+`dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83` was archived only after L139
+settled the exact held cover and both stopped guards passed. Registered `GUARD_FAILED` rows 1169 and
+1170 are exactly resolved. Post-release proof found zero unresolved guard, orphan, overfill, or
+post-only-persistence flags and zero unreleased executions/reservations.
 
 The Polymarket redemption timer is failing while `data-api.polymarket.com/positions` returns a rate
 limit error. This is an unresolved operating-cost/reliability issue, not evidence of runaway order
@@ -35,12 +34,12 @@ finality was pending. L138's fresh raw read contradicted that interpretation: bo
 were already finalized with scalar payouts (`SHA=0.44`, `IVA=0.56`), and Polymarket was closed and
 resolved at `0.50/0.50`. L138's proposed coexistence route was stopped before implementation.
 
-L139 is the corrected release candidate. It represents complete authoritative per-outcome payout
+L139 is deployed. It represents complete authoritative per-outcome payout
 maps without manufacturing a winner, stores them in additive tables that preserve historical exact
 evidence, settles complementary NO and sell legs, and lets the guard recognize a paid scalar leg.
-The exact stopped-lane helper binds the measured maps and the cover's `-$0.99357` realized PnL in
-addition to every prior L136 identity, economics, kill, unit and atomic rollback proof. Production
-has not received L139 yet; it remains stopped with no settlement row and the reservation unreleased.
+The exact stopped-lane helper bound the measured maps and the cover's `-$0.99357` realized PnL in
+addition to every prior L136 identity, economics, kill, unit and atomic rollback proof. The exact
+settlement and both payout maps are durable; reservation `b292be2a` is released.
 
 ## F22 release candidate
 
@@ -69,9 +68,8 @@ first-order id, hedge id or nonzero fill.
 
 ## Verification
 
-The release candidate has zero live F22 observations. It is locally ready, not economically
-validated. Production is blocked on the unshipped L139 payout-aware settlement correction, not on
-venue finality.
+F22 is now active but had zero decisions at the first post-release report. It is operationally live,
+not economically validated.
 
 - Focused F22/grid/report tests: 65 passed; the final combined F22/recovery selection passed 87.
 - L139 focused reconcile/helper/guard/legacy selection: 167 passed.
@@ -115,11 +113,8 @@ turnover, loosen safety, or stop early after a favorable result.
 
 ## Release boundary and immediate continuation
 
-L139 is release-ready. The operator has authorized the agent to run the exact release route. It must
-atomically settle only the registered cover at `-$0.99357` before L133's static proof; then the
-unchanged two stopped guards, retained-kill stream warm-up, exact joint resolution, exclusive kill
-archive and restart requirements apply. Any mismatch retains/restores the kill and leaves the lane
-stopped.
+The exact recovery is complete. Continue read-only observation with `ops/f22_report.py` and the
+production funnel. Do not loosen policy or stop early based on the first favorable outcome.
 
 After a successful release, use `ops/f22_report.py` and the production funnel to observe:
 
