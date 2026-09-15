@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import sqlite3
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +26,7 @@ if "__file__" in globals():
 from kernel.paths import DB  # noqa: E402
 from nodes.execute.entry_experiment import (  # noqa: E402
     F22_CAPS,
+    F23_CAPS,
     OUTCOME_TAXONOMY,
     assignment_from_record,
 )
@@ -36,6 +39,13 @@ _TERMINAL = frozenset({
 })
 _ACCEPTED = frozenset({"accepted_terminal_zero_fill", "accepted_partial_fill", "accepted_full_fill"})
 _BLOCKING = frozenset({"unknown_provider_state", "role_violation", "persistence_or_reconciliation_failure"})
+
+# F23's registered stopping boundary is an analysis requirement, not a live-entry hurdle.  Keep
+# these values here (rather than deriving them from whatever rows happen to be present) so a short
+# report can never be described as a scored verdict.
+F23_MINIMUM = {"decisions": 200, "per_arm": 80, "events": 50, "days": 5, "leagues": 3}
+F23_CLUSTER_SEED = 230915
+F23_CLUSTER_RESAMPLES = 10_000
 
 
 def _has_table(con: sqlite3.Connection, name: str) -> bool:
@@ -86,7 +96,7 @@ def _plan_identity(execution: dict | None) -> dict | None:
     return identity if isinstance(identity, dict) else None
 
 
-def _identity_matches(identity: dict | None, row: dict) -> bool:
+def _identity_matches(identity: dict | None, row: dict, registered_caps=F22_CAPS) -> bool:
     if not isinstance(identity, dict):
         return False
     event = identity.get("event_id", identity.get("canonical_event_id"))
@@ -98,23 +108,23 @@ def _identity_matches(identity: dict | None, row: dict) -> bool:
             (identity.get("sizing_occurrence"), "sizing_occurrence"),
             (identity.get("sizing_book_epoch"), "sizing_book_epoch"))):
         return False
-    caps = identity.get("caps")
+    identity_caps = identity.get("caps")
     active_caps = identity.get("active_caps")
     try:
-        normalized = {str(k): float(v) for k, v in dict(caps or {}).items()}
+        normalized = {str(k): float(v) for k, v in dict(identity_caps or {}).items()}
         normalized_active = {str(k): float(v) for k, v in dict(active_caps or {}).items()}
     except (TypeError, ValueError):
         return False
-    return normalized == normalized_active == F22_CAPS
+    return normalized == normalized_active == dict(registered_caps)
 
 
-def _linked_execution(row: dict, executions: list[dict]) -> dict | None:
+def _linked_execution(row: dict, executions: list[dict], registered_caps=F22_CAPS) -> dict | None:
     """Join only an execution carrying the complete immutable F22 sizing identity."""
     def matches(execution: dict) -> bool:
         identity = _plan_identity(execution)
         return (
             execution.get("event_id") == row.get("event_id")
-            and _identity_matches(identity, row)
+            and _identity_matches(identity, row, registered_caps)
         )
     if row.get("execution_id"):
         linked = [e for e in executions if e["execution_id"] == row["execution_id"]]
@@ -126,7 +136,7 @@ def _linked_execution(row: dict, executions: list[dict]) -> dict | None:
     return candidates[0] if len(candidates) == 1 else None
 
 
-def _sizing_join(con: sqlite3.Connection, row: dict) -> tuple[dict | None, str | None]:
+def _sizing_join(con: sqlite3.Connection, row: dict, registered_caps=F22_CAPS) -> tuple[dict | None, str | None]:
     """Validate the F22 row against exactly one durable sizing decision."""
     if not _has_table(con, "sizing_decisions"):
         return None, "sizing_decisions table absent"
@@ -164,7 +174,7 @@ def _sizing_join(con: sqlite3.Connection, row: dict) -> tuple[dict | None, str |
     if len(selected) != 1 or abs(float(selected[0].get("quantity")) - quantity) > 1e-9:
         return None, "selected quantity contradicts sizing decision"
     identity = decision.get("entry_experiment")
-    if not _identity_matches(identity, row):
+    if not _identity_matches(identity, row, registered_caps):
         return None, "sizing decision has no exact F22 identity"
     if decision != _json(row.get("decision_json"), None):
         return None, "F22 and sizing decision payloads differ"
@@ -314,7 +324,52 @@ def _settlement_status(execution: dict, settlement: dict | None, orders: list[di
     return None
 
 
-def _role_status(con: sqlite3.Connection, row: dict, execution: dict | None, orders: list[dict], filled: float) -> str | None:
+def _maker_guard_status(execution: dict, row: dict, pm: dict, filled: float, *, required: bool) -> str | None:
+    """Require L142's continuous maker-rest evidence for the fresh F23 cohort.
+
+    A provider rejection happens before a maker order can rest, so it is the one terminal maker
+    disposition that may legitimately have no guard record.  Every fill, and every zero-fill
+    cancellation/unfill, must otherwise carry the coordinator's structured guard counters.  The
+    counters are deliberately validated here rather than trusting the report's outcome label:
+    timeout/error is never a healthy proof.
+    """
+    if not required or row.get("arm") != "maker":
+        return None
+    state = str(pm.get("state") or "").upper()
+    if filled <= 1e-9 and state in {"REJECTED", "ORDER_REJECTED"}:
+        return None
+    protect = _json(execution.get("protect_json"), None)
+    evidence = protect.get("maker_guard") if isinstance(protect, dict) else None
+    if not isinstance(evidence, dict):
+        return "persistence_or_reconciliation_failure"
+
+    def _count(name: str) -> int | None:
+        value = evidence.get(name)
+        if isinstance(value, bool):
+            return None
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return None
+        return parsed if parsed >= 0 and float(value) == parsed else None
+
+    checks, errors, timeouts = (_count(name) for name in ("checks", "errors", "timeouts"))
+    outcome = evidence.get("outcome")
+    if checks is None or errors is None or timeouts is None:
+        return "persistence_or_reconciliation_failure"
+    if errors != 0 or timeouts != 0:
+        return "persistence_or_reconciliation_failure"
+    if filled > 1e-9:
+        return None if outcome == "maker_fill" else "persistence_or_reconciliation_failure"
+    reason = evidence.get("last_reason")
+    if (checks < 1 or outcome not in {"guard_refusal", "rest_deadline"}
+            or not isinstance(reason, str) or not reason.strip()):
+        return "persistence_or_reconciliation_failure"
+    return None
+
+
+def _role_status(con: sqlite3.Connection, row: dict, execution: dict | None, orders: list[dict], filled: float,
+                 *, require_maker_guard: bool = False) -> str | None:
     """Return a taxonomy override for contradictory/missing maker-role evidence."""
     if execution is None or not orders:
         return None
@@ -334,6 +389,9 @@ def _role_status(con: sqlite3.Connection, row: dict, execution: dict | None, ord
         return "role_violation"
     if marker is not None and marker["violated"]:
         return "role_violation"
+    guard_status = _maker_guard_status(execution, row, pm, filled, required=require_maker_guard)
+    if guard_status is not None:
+        return guard_status
     if filled <= 1e-9:
         if marker is None:
             return "persistence_or_reconciliation_failure"
@@ -360,7 +418,8 @@ def _role_status(con: sqlite3.Connection, row: dict, execution: dict | None, ord
     return None
 
 
-def _classify(con: sqlite3.Connection, row: dict, execution: dict | None, orders: list[dict], settlement: dict | None) -> str:
+def _classify(con: sqlite3.Connection, row: dict, execution: dict | None, orders: list[dict], settlement: dict | None,
+              *, require_maker_guard: bool = False) -> str:
     explicit = row.get("outcome")
     if explicit is not None and explicit not in OUTCOME_TAXONOMY:
         return "persistence_or_reconciliation_failure"
@@ -436,7 +495,7 @@ def _classify(con: sqlite3.Connection, row: dict, execution: dict | None, orders
         return "persistence_or_reconciliation_failure"
     requested = float(first.get("contracts") or execution.get("quantity") or 0.0)
     filled = float(first.get("filled_contracts") or 0.0)
-    role = _role_status(con, row, execution, orders, filled)
+    role = _role_status(con, row, execution, orders, filled, require_maker_guard=require_maker_guard)
     if role is not None:
         return role
     state = str(first.get("state") or "").upper()
@@ -462,16 +521,19 @@ def _fee_total(orders: list[dict]) -> float | None:
     return round(sum(float(o["fee_usd"]) for o in orders), 8)
 
 
-def _row_report(con: sqlite3.Connection, row: dict, executions: list[dict], sizing_error: str | None = None) -> dict:
+def _row_report(con: sqlite3.Connection, row: dict, executions: list[dict], sizing_error: str | None = None,
+                registered_caps=F22_CAPS, *, require_maker_guard: bool = False) -> dict:
     decision = _json(row.get("decision_json"), {})
-    execution = _linked_execution(row, executions)
+    execution = _linked_execution(row, executions, registered_caps)
     if row.get("execution_id") and execution is None:
         sizing_error = sizing_error or "execution link is missing or identity does not match"
     orders = _orders(con, execution.get("execution_id") if execution else row.get("execution_id"))
     settlement = _settlement(con, execution.get("execution_id") if execution else row.get("execution_id"))
     quantity = float(row["selected_quantity"]) if row.get("selected_quantity") is not None else None
     candidate = _selected_candidate(decision, quantity)
-    outcome = "persistence_or_reconciliation_failure" if sizing_error else _classify(con, row, execution, orders, settlement)
+    outcome = ("persistence_or_reconciliation_failure" if sizing_error else
+               _classify(con, row, execution, orders, settlement,
+                         require_maker_guard=require_maker_guard))
     proved_no_position = outcome in {"provider_rejected_no_position", "accepted_terminal_zero_fill"}
     explicit_no_wire = outcome == "local_or_risk_refused_no_wire"
     realized = (float(settlement["realized_usd"]) if outcome in _ACCEPTED and settlement
@@ -496,6 +558,10 @@ def _row_report(con: sqlite3.Connection, row: dict, executions: list[dict], sizi
     return {
         "id": row["id"], "forward_row_id": row["forward_row_id"],
         "assignment_algorithm": row["assignment_algorithm"], "event_id": row["event_id"],
+        "league": (execution.get("league") if execution else
+                   (row.get("_opportunity") or {}).get("league") or decision.get("league")),
+        "event_start_utc": decision.get("event_start_utc"),
+        "league_local_date": decision.get("league_local_date"),
         "arm": row["arm"], "digest": row["digest"], "sizing_input_hash": row["sizing_input_hash"],
         "sizing_occurrence": row["sizing_occurrence"], "sizing_book_epoch": row["sizing_book_epoch"],
         "selected_quantity": quantity, "sizing_decision": decision,
@@ -545,15 +611,79 @@ def _arm_summary(rows: list[dict]) -> dict:
     }
 
 
-def report(db: Path = DB, *, hours: float | None = None) -> dict:
+def _minimum_counts(facts: list[dict]) -> dict:
+    # The registration requires league-local calendar days. A UTC timestamp is not a valid
+    # substitute around midnight, so the report stays insufficient until the collector records an
+    # authoritative league_local_date for every eligible decision.
+    local_dates = [f.get("league_local_date") for f in facts]
+    parsed_dates = []
+    for value in local_dates:
+        try:
+            parsed = date.fromisoformat(value) if isinstance(value, str) else None
+        except ValueError:
+            parsed = None
+        if parsed is None or parsed.isoformat() != value:
+            parsed_dates = []
+            break
+        parsed_dates.append(parsed)
+    dates = set(parsed_dates)
+    return {
+        "decisions": len(facts),
+        "maker": sum(f["arm"] == "maker" for f in facts),
+        "taker": sum(f["arm"] == "taker" for f in facts),
+        "events": len({f.get("event_id") for f in facts if f.get("event_id")}),
+        "days": len(dates) if len(parsed_dates) == len(facts) else None,
+        "leagues": len({f.get("league") for f in facts if f.get("league")}),
+    }
+
+
+def _clustered_interval(facts: list[dict]) -> dict | None:
+    """Deterministic event-cluster bootstrap for the registered F23 primary contrast."""
+    clusters: dict[str, dict[str, list[float]]] = {}
+    for fact in facts:
+        if fact.get("outcome") not in _TERMINAL or fact.get("settled_pnl_usd") is None:
+            return None
+        clusters.setdefault(str(fact.get("event_id")), {}).setdefault(fact["arm"], []).append(
+            float(fact["settled_pnl_usd"]))
+    if not clusters or not any("maker" in c for c in clusters.values()) or not any("taker" in c for c in clusters.values()):
+        return None
+    keys = sorted(clusters)
+    rng = random.Random(F23_CLUSTER_SEED)
+    diffs: list[float] = []
+    for _ in range(F23_CLUSTER_RESAMPLES):
+        sample = [clusters[rng.choice(keys)] for _ in keys]
+        maker = [v for cluster in sample for v in cluster.get("maker", ())]
+        taker = [v for cluster in sample for v in cluster.get("taker", ())]
+        if maker and taker:
+            diffs.append(sum(maker) / len(maker) - sum(taker) / len(taker))
+    if not diffs:
+        return None
+    diffs.sort()
+    def percentile(p: float) -> float:
+        pos = (len(diffs) - 1) * p
+        lo, hi = int(pos), min(int(pos) + 1, len(diffs) - 1)
+        return round(diffs[lo] + (diffs[hi] - diffs[lo]) * (pos - lo), 8)
+    maker = [f["settled_pnl_usd"] for f in facts if f["arm"] == "maker"]
+    taker = [f["settled_pnl_usd"] for f in facts if f["arm"] == "taker"]
+    return {"seed": F23_CLUSTER_SEED, "resamples": F23_CLUSTER_RESAMPLES,
+            "maker_minus_taker_usd": round(sum(maker) / len(maker) - sum(taker) / len(taker), 8),
+            "lower_95": percentile(.025), "upper_95": percentile(.975), "clusters": len(keys)}
+
+
+def report(db: Path = DB, *, hours: float | None = None, row_id: str = "F22") -> dict:
     """Return JSON-ready F22 facts from a read-only SQLite connection."""
     con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
     try:
-        if not _has_table(con, "f22_decisions"):
-            return {"row_id": "F22", "hours": hours, "decisions": [], "arms": {a: _arm_summary([]) for a in ("maker", "taker")},
-                    "scored_checkpoint": False, "blocking_reason": "f22_decisions table absent"}
+        table = "f23_decisions" if row_id == "F23" else "f22_decisions"
+        registered_caps = F23_CAPS if row_id == "F23" else F22_CAPS
+        if not _has_table(con, table):
+            requirements = dict(F23_MINIMUM) if row_id == "F23" else None
+            return {"row_id": row_id, "hours": hours, "decisions": [], "arms": {a: _arm_summary([]) for a in ("maker", "taker")},
+                    "terminal_complete": False, "minimum_complete": False, "minimum_requirements": requirements,
+                    "minimum_counts": _minimum_counts([]), "clustered_ci": None, "verdict": "INSUFFICIENT_SAMPLE",
+                    "scored_checkpoint": False, "blocking_reason": f"{table} table absent"}
         since = None if hours is None else __import__("time").time() - float(hours) * 3600.0
-        query = "SELECT id,event_id,forward_row_id,assignment_algorithm,digest,arm,sizing_input_hash,sizing_occurrence,sizing_book_epoch,selected_quantity,decision_json,outcome,outcome_detail,execution_id,created_utc,updated_utc FROM f22_decisions"
+        query = f"SELECT id,event_id,forward_row_id,assignment_algorithm,digest,arm,sizing_input_hash,sizing_occurrence,sizing_book_epoch,selected_quantity,decision_json,outcome,outcome_detail,execution_id,created_utc,updated_utc FROM {table}"
         params: tuple = ()
         if since is not None:
             query += " WHERE created_utc>?"
@@ -573,25 +703,54 @@ def report(db: Path = DB, *, hours: float | None = None) -> dict:
                                         "canonical_event_id": row["event_id"], "digest": row["digest"], "arm": row["arm"]})
             except (TypeError, ValueError):
                 row["outcome"] = "persistence_or_reconciliation_failure"
-            sizing, sizing_error = _sizing_join(con, row)
+            sizing, sizing_error = _sizing_join(con, row, registered_caps)
             row["_selected_opportunity_id"] = sizing.get("selected_opportunity_id") if sizing else None
             row["_opportunity"] = sizing.get("_opportunity") if sizing else None
             sizing_errors[row["id"]] = sizing_error
             rows.append(row)
         executions = _execution_rows(con)
-        facts = [_row_report(con, row, executions, sizing_errors.get(row["id"])) for row in rows]
+        facts = [_row_report(con, row, executions, sizing_errors.get(row["id"]), registered_caps,
+                             require_maker_guard=(row_id == "F23")) for row in rows]
         execution_ids = [r["execution_id"] for r in facts if r.get("execution_id")]
         duplicate_ids = {eid for eid in execution_ids if execution_ids.count(eid) > 1}
         for fact in facts:
             if fact.get("execution_id") in duplicate_ids:
                 fact["outcome"] = "persistence_or_reconciliation_failure"
                 fact["persistence_or_reconciliation_failure"] = True
-                fact["outcome_detail"] = "execution linked by more than one F22 decision"
+                fact["outcome_detail"] = f"execution linked by more than one {row_id} decision"
         arms = {arm: _arm_summary([r for r in facts if r["arm"] == arm]) for arm in ("maker", "taker")}
-        complete = bool(facts) and all(r["outcome"] in _TERMINAL and r["settled_pnl_usd"] is not None for r in facts)
-        return {"row_id": "F22", "hours": hours, "decisions": facts, "arms": arms,
-                "scored_checkpoint": complete,
-                "blocking_reason": None if complete else "unknown, role, persistence, or unreconciled outcome present"}
+        terminal_complete = bool(facts) and all(r["outcome"] in _TERMINAL and r["settled_pnl_usd"] is not None for r in facts)
+        counts = _minimum_counts(facts)
+        minimum_complete = (row_id != "F23" or (
+            counts["decisions"] >= F23_MINIMUM["decisions"]
+            and counts["maker"] >= F23_MINIMUM["per_arm"]
+            and counts["taker"] >= F23_MINIMUM["per_arm"]
+            and counts["events"] >= F23_MINIMUM["events"]
+            and counts["days"] is not None and counts["days"] >= F23_MINIMUM["days"]
+            and counts["leagues"] >= F23_MINIMUM["leagues"]))
+        blocking = any(r["outcome"] in _BLOCKING for r in facts)
+        clustered_ci = _clustered_interval(facts) if row_id == "F23" and terminal_complete and minimum_complete else None
+        if row_id != "F23":
+            verdict = None if terminal_complete else "INSUFFICIENT_SAMPLE"
+        elif blocking:
+            verdict = "STOP"
+        elif not terminal_complete or not minimum_complete:
+            verdict = "INSUFFICIENT_SAMPLE"
+        elif clustered_ci is None:
+            verdict = "INSUFFICIENT_SAMPLE"
+        elif clustered_ci["lower_95"] > 0:
+            verdict = "PROVED_IMPROVEMENT"
+        elif clustered_ci["maker_minus_taker_usd"] > 0:
+            verdict = "PROMISING_NOT_PROVED"
+        else:
+            verdict = "NO_IMPROVEMENT"
+        return {"row_id": row_id, "hours": hours, "decisions": facts, "arms": arms,
+                "terminal_complete": terminal_complete, "minimum_complete": minimum_complete,
+                "minimum_requirements": dict(F23_MINIMUM) if row_id == "F23" else None, "minimum_counts": counts,
+                "clustered_ci": clustered_ci, "verdict": verdict,
+                "scored_checkpoint": (terminal_complete if row_id != "F23" else
+                                      verdict in {"PROVED_IMPROVEMENT", "PROMISING_NOT_PROVED", "NO_IMPROVEMENT"}),
+                "blocking_reason": None if terminal_complete else "unknown, role, persistence, or unreconciled outcome present"}
     finally:
         con.close()
 

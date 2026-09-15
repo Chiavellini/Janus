@@ -10,7 +10,53 @@ from nodes.opportunity.thresholds import STRATEGY_VERSION
 from nodes.exec_polymarket.post_only import POST_ONLY_DDL
 from nodes.reconcile.settle_executions import SETTLEMENTS_DDL
 from nodes.store_tuples.store import TupleStore
-from ops.f22_report import report
+from ops.f22_report import _identity_matches, _maker_guard_status, report
+
+
+def test_identity_caps_are_compared_to_registered_caps_not_a_shadowed_argument():
+    assignment = assign_entry_arm("caps-event").as_record(F22_CAPS)
+    row = dict(assignment, event_id="caps-event", sizing_input_hash=None, sizing_occurrence=None,
+               sizing_book_epoch=None)
+    assert _identity_matches(assignment, row, F22_CAPS)
+    changed = dict(assignment, caps={**F22_CAPS, "stake_usd": 30.01})
+    assert not _identity_matches(changed, row, F22_CAPS)
+    # Both identity copies must agree with the registered caps; accepting a self-consistent but
+    # unregistered cap set would let a later override silently change the experiment.
+    changed = dict(assignment, caps={"stake_usd": 7.0, "max_contracts": 2.0, "day_notional_usd": 8.0},
+                   active_caps={"stake_usd": 7.0, "max_contracts": 2.0, "day_notional_usd": 8.0})
+    assert not _identity_matches(changed, row, F22_CAPS)
+
+
+def test_f23_maker_guard_proof_requires_clean_fill_or_terminal_rest_evidence():
+    row = {"arm": "maker"}
+    pm = {"state": "FILLED"}
+
+    def execution(evidence):
+        return {"protect_json": json.dumps({"maker_guard": evidence})}
+
+    clean_fill = {"checks": 2, "errors": 0, "timeouts": 0, "outcome": "maker_fill"}
+    assert _maker_guard_status(execution(clean_fill), row, pm, 5.0, required=True) is None
+    assert _maker_guard_status(execution({**clean_fill, "timeouts": 1}), row, pm, 5.0, required=True) == \
+        "persistence_or_reconciliation_failure"
+    assert _maker_guard_status(execution({**clean_fill, "outcome": "rest_deadline"}), row, pm, 5.0, required=True) == \
+        "persistence_or_reconciliation_failure"
+    assert _maker_guard_status({"protect_json": "{}"}, row, pm, 5.0, required=True) == \
+        "persistence_or_reconciliation_failure"
+
+    for outcome in ("guard_refusal", "rest_deadline"):
+        zero = {"checks": 1, "errors": 0, "timeouts": 0,
+                "outcome": outcome, "last_reason": "HEDGE_BOOK_STALE"}
+        assert _maker_guard_status(execution(zero), row, {"state": "CANCELED"}, 0.0, required=True) is None
+    assert _maker_guard_status(
+        execution({"checks": 1, "errors": 0, "timeouts": 0,
+                   "outcome": "rest_deadline"}), row, {"state": "CANCELED"}, 0.0, required=True
+    ) == "persistence_or_reconciliation_failure"
+
+
+def test_f23_immediate_maker_rejection_may_have_no_rest_guard_proof():
+    assert _maker_guard_status(
+        {"protect_json": None}, {"arm": "maker"}, {"state": "REJECTED"}, 0.0, required=True
+    ) is None
 
 
 def _decision(st, event: str, *, epoch: str, quantity: float, arm: str | None = None,
