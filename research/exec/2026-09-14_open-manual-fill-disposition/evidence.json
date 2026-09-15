@@ -1,0 +1,15 @@
+{
+  "schema": "janus.open_external_manual.evidence.v1",
+  "observed_database": "/srv/janus/tuples/tuples.sqlite",
+  "observed_deployed_sha": "31e7a42ec0ccb53e8e8fed917e8e991f559b4922",
+  "operator_statements_verbatim": [
+    "That position was placed manually on a hunch i got",
+    "You should not worry about it"
+  ],
+  "fill": {"venue":"polymarket","fill_id":"99f8e62b-0684-446f-baa7-08bb785c3d30","venue_order_id":"0x32813cbb23731ca96e8830adb5118adb16367d4c0beecf2554040dec4eb3afa3","market_id":"5615282760875985231868508008056959876238536896643315063916840237042205273721","side":"buy_yes","contracts":"666.666667","price":"0.1499999999","fee_usd":"4.250000016666666","is_taker":true,"ts":"1789409189","final":true},
+  "authenticated_cash_source": {"database_id":23,"source_sha256":"2f7ad3c4727cd712027dce5f6086d307200a29c6d54341372447600d030cf933","observed_utc":"1789409220.210616","trade_id":"99f8e62b-0684-446f-baa7-08bb785c3d30","taker_order_id":"0x32813cbb23731ca96e8830adb5118adb16367d4c0beecf2554040dec4eb3afa3","asset_id":"5615282760875985231868508008056959876238536896643315063916840237042205273721","side":"BUY","size":"666.666667","price":"0.15","status":"CONFIRMED","trader_side":"TAKER","transaction_hash":"0x5691e6948b760180e953f32135178ec1b79b2da664b02d6182088ddd44df6287","activity_price":"0.1499999999","activity_usdc_size":"104.25"},
+  "janus_order_rows": [],
+  "janus_order_event_rows": [],
+  "orphan_flags": [{"id":587,"seen_ts":"1789409219.495691","flag":"ORPHAN_FILL","detail":"polymarket 5615282760875985 buy_yes 666.667 @ 0.1499999999 order 0x32813cbb23"}],
+  "meaning": "Operator ownership attribution only. The position remains external to Janus; this is not settlement, PnL, protection, or kill-clear evidence."
+}
