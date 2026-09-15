@@ -1,0 +1,40 @@
+row: L123
+date: 2026-09-14
+kind: execution_safety
+status_at_registration: PENDING
+observed_failure: >-
+  Supervisor.guard_pass catches every exception from PositionGuard.fetch or apply, prints
+  `[guard FAILED]`, and continues without latching kill/live or recording a durable lane flag.
+  The live guard fetch runs in asyncio.to_thread; a recovery read through the loop-owned SQLite
+  connection reproduces sqlite3.ProgrammingError there. If an operator later clears an unrelated
+  reviewed kill, LIMITED_LIVE can therefore continue admitting new entries while its venue/ledger
+  reconciliation guard is silently failing.
+immutable_success_criteria:
+  - In a capital-risking mode, every unexpected exception from guard fetch or apply first-writer
+    latches kill/live with a bounded diagnostic and appends a durable GUARD_FAILED lane flag.
+  - The pass is not counted healthy and no balance or fills snapshot is refreshed after any such
+    exception. A later successful pass never clears the kill or silently resolves the incident.
+  - If either durable alarm write itself fails, the Supervisor retains an in-memory unhealthy
+    state that refuses every subsequent new entry before balance reads, clearance, or venue calls.
+    Protective handling for an already-open position remains available.
+  - A complete later guard pass may restore only the in-memory health gate; it cannot remove the
+    first-writer kill or GUARD_FAILED evidence. Non-capital modes retain observability without
+    acquiring live kill-clear or order authority.
+  - Tests exercise the real asyncio.to_thread boundary, both fetch and apply exceptions, failed
+    kill/flag persistence, first-writer provenance, entry refusal, and a later successful pass.
+  - No kill clear, cap, hurdle, size, allowance, economics, settlement, protection, or entry
+    eligibility policy changes. The full suite is green and replay parity remains
+    13e4fb08a76c920f / 4f53cda18c2baa0c.
+expected_ev_effect: >-
+  None per trade. This prevents capital deployment when the safety observer is unavailable; it
+  can reduce turnover during faults, which is the required direction until reconciliation is
+  healthy.
+watch_for:
+  - A failure handler that tries to write a loop-owned SQLite connection from the worker thread.
+  - Automatically clearing kill/live or resolving GUARD_FAILED on recovery.
+  - Blocking protection or unwind work needed for an already-open position.
+  - Logging-only behavior when kill or flag persistence fails.
+prohibited:
+  - Running any live helper, clearing any kill, arming, changing mode, writing an override, or
+    releasing.
+  - Treating an exception as a complete guard pass or carrying forward a stale balance snapshot.
