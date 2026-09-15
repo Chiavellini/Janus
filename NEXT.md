@@ -22,6 +22,52 @@ No cap, hurdle, size, entry policy, settlement rule, or trading behavior changed
 restart recovery exact, make guard failure fail closed, preserve protection on incomplete guard
 snapshots, and permit only a narrowly proved legacy-kill recovery during an operator-run release.
 
+## Initial state and source of truth
+
+The session began after release 31e7a42 stopped during legacy-latch recovery. The operator
+cancelled that command after it printed a very long repeated flag list. Read-only inspection later
+showed the box safely stopped by a retained kill, no live capital in flight, and deployment
+8e7ab4a. NEXT.md, AGENTS.md, GATE_TO_LIVE.md, the L104-L123 ledger rows and registered specs,
+git history, the production database, and exact kill/deployment hashes were treated as sources of
+truth. Status log counters were not treated as authoritative execution state.
+
+## Files changed
+
+- grids/live_stream/grid.py and grids/live_stream/tests/test_grid_callbacks.py: recover exact
+  dispositions after restart and make every guard failure an entry stop without suppressing
+  protection.
+- nodes/execute/guard.py and ops/guard_once.py, with ops/tests/test_guard_once.py: expose and require
+  a complete, quiet guard proof for stopped-lane release checks.
+- nodes/execution/dispositions.py and nodes/execution/tests/test_dispositions.py: add bounded,
+  target-bound, venue-authoritative restart recovery.
+- nodes/execution/README.md and ops/box/README.md: document the recovery and operator contracts.
+- ops/box/release.sh and ops/box/tests/test_box.py: route only the exact reviewed retained kill
+  through the bounded proof helper.
+- snooping_ledger.md: register L121-L123 before their runs and record their immutable results.
+- NEXT.md: replace the stale deployed-state handoff with this release state and economic truth.
+
+## Files created
+
+- ops/box/clear_legacy_incident_latch.py: exact evidence validator, quarantine, archive, and rollback
+  engine for the one reviewed legacy kill.
+- ops/box/clear_legacy_incident_latch.sh: stopped-lane two-pass guard and verified cleanup wrapper.
+- ops/box/tests/test_legacy_incident_clear.py: adversarial tests for mismatch, race, archive, stop,
+  and rollback behavior.
+- research/exec/2026-09-14_disposition-survives-restart/spec.yaml and verdict.md: L121 registration
+  and result.
+- research/exec/2026-09-14_reviewed-legacy-kill-clear/spec.yaml and verdict.md: L122 registration
+  and result.
+- research/exec/2026-09-14_guard-failure-fails-closed/spec.yaml and verdict.md: L123 registration
+  and result.
+
+## Intentionally untouched
+
+GATE_TO_LIVE.md, caps, hurdles, sizing, settlement templates, venue credentials, balances, venue
+positions, and production database records were not changed. No arm, confirm, mode, override,
+kill-clear, release, or order command was run by the agent. The user's manual Polymarket position
+was not changed or attributed to Janus. The two known flaky FIFO tests were not chased because
+they are pre-existing and separately queued.
+
 ## L121: exact restart-safe disposition recovery
 
 research/exec/2026-09-14_disposition-survives-restart/spec.yaml registers the proof. Recovery uses
