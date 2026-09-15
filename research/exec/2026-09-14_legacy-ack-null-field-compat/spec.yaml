@@ -1,0 +1,40 @@
+row: L120
+date: 2026-09-14
+kind: safety_schema_compatibility_repair
+status_at_registration: PENDING
+parent: L119
+observed_failure: >-
+  L119 found one and only one difference between the immutable acknowledgement for legacy flag 211
+  and the current incident snapshot: current /settled/reservation/hedged_utc is null and the field
+  did not exist in the stored snapshot. The generic dict equality invalidates the acknowledgement,
+  creates repeated POST_ONLY_PERSISTENCE_FAILED rows, and latches entry even though none of the
+  acknowledged economic or incident evidence changed.
+immutable_success_criteria:
+  - Compatibility is restricted to one path: an absent stored
+    /settled/reservation/hedged_utc may equal a current null value. No other missing, added,
+    type-changed, or value-changed path is accepted.
+  - The immutable acknowledgement record, hash, source proof, confirmation envelope, operator,
+    original snapshot, flag, violation, order, execution, settlement, and reservation rows are not
+    updated, replaced, or re-confirmed.
+  - A recursive or schema-aware equality helper proves every stored field remains present and
+    exactly equal before applying the one null-field allowance. Current hedged_utc non-null is a
+    change and remains invalid.
+  - The compatibility applies only to legacy incident acknowledgement validation. It does not alter
+    current reservation accounting, one-cover-per-event behaviour, orphan matching, overfill,
+    persistence detection, or any other guard comparison.
+  - Existing mutation tests remain STOP. New tests cover absent-to-null PASS; absent-to-non-null,
+    stored-null-to-current-non-null, another added null field, removed field, and changed economic
+    field FAIL.
+  - A fresh complete guard pass may resolve only exact migration false-alarm flag rows under the
+    existing writer-locked resolver. It never clears a kill or changes original evidence.
+  - Full suite and replay parity pass at rows 13e4fb08a76c920f and selections
+    4f53cda18c2baa0c over 1,093 evaluation rows.
+expected_ev_effect: >-
+  None directly. It removes a proved schema-only false STOP so the q=10 profitability cohort can
+  collect real orders after the operator separately reviews and clears the retained kill.
+prohibited:
+  - Generic subset matching, ignoring unknown fields, normalizing non-null values, or accepting a
+    second schema difference.
+  - Resolving an unacknowledged persistence finding or changing a kill, cap, hurdle, entry policy,
+    size, or protection decision.
+

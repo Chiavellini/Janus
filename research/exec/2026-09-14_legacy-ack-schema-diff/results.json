@@ -1,0 +1,26 @@
+{
+  "schema": "janus.l119.legacy_ack_diff.v1",
+  "database": "/srv/janus/tuples/tuples.sqlite",
+  "deployed_sha": "31e7a42ec0ccb53e8e8fed917e8e991f559b4922",
+  "ack_row_id": 1,
+  "ack_supersedes_id": null,
+  "record_sha256_stored": "6bd5dd8dd81624ee58cb43acd9f38d65d93c27821834f0f873867dbd6d2bd790",
+  "record_sha256_computed": "6bd5dd8dd81624ee58cb43acd9f38d65d93c27821834f0f873867dbd6d2bd790",
+  "client_order_id": "40797bee0f17449ca1e4fa3840125232",
+  "flag_id": 211,
+  "violation_id": 1,
+  "stored_snapshot_sha256": "083285c352a6000b38635c6b7f903ed5dfa1ecc3908435e245c8dadea27ba659",
+  "current_snapshot_sha256": "ea13c19876eed8f7f75326bd71d67d208db7ffb460543a102b13f37e3729d15b",
+  "diffs": [
+    {
+      "kind": "added",
+      "path": "/settled/reservation/hedged_utc",
+      "stored": null,
+      "current": null
+    }
+  ],
+  "inline_harness_classification": "MATERIAL_STOP",
+  "inline_harness_error": "The ad-hoc classifier whitelisted orders.execution_id instead of applying the registered general null/default additive-field rule.",
+  "registered_criteria_classification": "ADDITIVE_SCHEMA_ONLY"
+}
+
