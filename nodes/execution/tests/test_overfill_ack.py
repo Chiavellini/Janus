@@ -92,6 +92,44 @@ def test_exact_ack_closes_only_later_duplicate_findings_with_the_same_economic_i
     assert not unresolved_flag_rows(con, 'ORDER_OVERFILL')
 
 
+def _add_bounded_taker_residual(journal, *, flag=False):
+    con = journal.store.con
+    journal.pending(OrderRequest('polymarket', TOK, TOK, 'buy_yes', .36, 10, 'ioc',
+                                 'bounded', 'bounded-opportunity'),
+                    mode='LIMITED_LIVE', now=T0 + 280)
+    journal.record(Ack('polymarket', 'bounded', 'bounded-order', FillState.FILLED,
+                       10.2, .35, 0, 'confirmed', T0 + 281), kind='ack')
+    con.execute("CREATE TABLE IF NOT EXISTS pm_bounded_taker_orders("
+                "client_order_id TEXT PRIMARY KEY,max_accepted_excess TEXT)")
+    con.execute("INSERT INTO pm_bounded_taker_orders VALUES('bounded','1')")
+    if flag:
+        con.execute("INSERT INTO lane_flags(seen_ts,flag,detail) VALUES(?, 'ORDER_OVERFILL', ?)",
+                    (T0 + 282, 'polymarket bounded: requested 10, venue filled 10.2'))
+    con.commit()
+
+
+def test_bounded_taker_residual_does_not_block_other_exact_overfill_resolution(tmp_path):
+    _, journal, guard, _, manifest = world(tmp_path)
+    confirm(tmp_path, journal, manifest)
+    _add_bounded_taker_residual(journal)
+    report = guard.apply(complete_snapshot())
+    assert any('BOUNDED_TAKER_RESIDUAL_ACCEPTED' in finding for finding in report.findings)
+    assert any('ORDER_OVERFILL_RESOLVED' in finding for finding in report.findings)
+    assert not unresolved_flag_rows(journal.store.con, 'ORDER_OVERFILL')
+
+
+def test_bounded_taker_exemption_never_closes_its_own_unacknowledged_flag(tmp_path):
+    _, journal, guard, _, manifest = world(tmp_path)
+    confirm(tmp_path, journal, manifest)
+    _add_bounded_taker_residual(journal, flag=True)
+    guard._resolve_acknowledged_overfills(complete_snapshot(), GuardReport())
+    rows = unresolved_flag_rows(journal.store.con, 'ORDER_OVERFILL')
+    assert {row[3] for row in rows} == {
+        'polymarket a1: requested 10, venue filled 10.1667',
+        'polymarket bounded: requested 10, venue filled 10.2',
+    }
+
+
 def test_exact_ack_never_closes_a_later_different_overfill_finding(tmp_path):
     store, journal, guard, _, manifest = world(tmp_path)
     confirm(tmp_path, journal, manifest)

@@ -15,6 +15,30 @@ set -euo pipefail
 AUDIT_ROOT=/srv/janus/release-audit
 AUDIT=""
 ARCHIVE=""
+stop_lane_verified() {
+  # systemd can report a stop timeout after it has SIGKILLed the complete cgroup. Accept that
+  # label only when both unit-owned PIDs are provably gone, then reset the bookkeeping state so
+  # the next retained-kill warmup can start. A live or unknown PID is always a hard failure.
+  systemctl stop janus-live-stream || true
+  state=\$(systemctl is-active janus-live-stream || true)
+  main_pid=\$(systemctl show janus-live-stream --property=MainPID --value 2>/dev/null || true)
+  control_pid=\$(systemctl show janus-live-stream --property=ControlPID --value 2>/dev/null || true)
+  case "\$main_pid:\$control_pid" in
+    0:0) ;;
+    *) return 1 ;;
+  esac
+  case "\$state" in
+    inactive) return 0 ;;
+    failed)
+      systemctl reset-failed janus-live-stream || return 1
+      [ "\$(systemctl is-active janus-live-stream || true)" = inactive ] || return 1
+      [ "\$(systemctl show janus-live-stream --property=MainPID --value 2>/dev/null || true)" = 0 ] || return 1
+      [ "\$(systemctl show janus-live-stream --property=ControlPID --value 2>/dev/null || true)" = 0 ] || return 1
+      return 0
+      ;;
+    *) return 1 ;;
+  esac
+}
 cleanup() {
   rc=\$?
   trap - EXIT
@@ -35,7 +59,7 @@ cleanup() {
     # A failed helper must leave both independent stops in place. Retry stop, then verify it.
     stopped=0
     for _ in 1 2 3; do
-      if systemctl stop janus-live-stream && [ "\$(systemctl is-active janus-live-stream || true)" = inactive ]; then
+      if stop_lane_verified; then
         stopped=1
         break
       fi
@@ -73,8 +97,7 @@ done
 if [ "\$pre_proved" != 1 ]; then echo PRE_STOP_LEGACY_211_PROOF_FAILED >&2; exit 1; fi
 echo PRE_STOP_LEGACY_211_PROOF_OK
 # Complete real two-venue guard pass while stopped with the exact retained kill present.
-systemctl stop janus-live-stream
-test "\$(systemctl is-active janus-live-stream || true)" = inactive
+stop_lane_verified
 sudo -u janus /usr/bin/zsh -c 'set -a; source /etc/janus.env; source /run/janus/janus.env; exec /opt/janus/.venv/bin/python3 /opt/janus/ops/guard_once.py --db /srv/janus/tuples/tuples.sqlite --require-complete-quiet'
 echo STOPPED_GUARD_PASS_1_OK
 # Start once under the retained kill, requiring fresh connected three-socket health rows.
@@ -87,8 +110,7 @@ for _ in \$(seq 1 25); do
 done
 if [ "\$green" != 1 ]; then echo POST_START_STREAMS_FAILED >&2; exit 1; fi
 echo RETAINED_KILL_STREAM_WARMUP_OK
-systemctl stop janus-live-stream
-test "\$(systemctl is-active janus-live-stream || true)" = inactive
+stop_lane_verified
 sudo -u janus /usr/bin/zsh -c 'set -a; source /etc/janus.env; source /run/janus/janus.env; exec /opt/janus/.venv/bin/python3 /opt/janus/ops/guard_once.py --db /srv/janus/tuples/tuples.sqlite --require-complete-quiet'
 echo STOPPED_GUARD_PASS_2_OK
 # activate repeats all proofs immediately before its exclusive exact-byte move.

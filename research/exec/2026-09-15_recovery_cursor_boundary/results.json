@@ -1,0 +1,48 @@
+{
+  "schema": "janus.l129.recovery_cursor_boundary.v1",
+  "classification": "EXCLUSIVE_BOUNDARY",
+  "deployed_sha": "a29a7c1f61991fcf20f75b688a9ac576bf178879",
+  "kill_sha256": "a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6",
+  "disposition": {
+    "row": 4,
+    "record_sha256": "ce0a26cea0b7d529933b5345a9dfbf1fa5d02e89136681f7376f5fe9989be096",
+    "fill_id": "99f8e62b-0684-446f-baa7-08bb785c3d30",
+    "fill_ts": 1789409189.0,
+    "recovery_cursor": 1789409189.0
+  },
+  "polymarket_reads": {
+    "after_1789409189": {
+      "count": 0,
+      "target_count": 0,
+      "rows_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "after_1789409188": {
+      "count": 1,
+      "target_count": 1,
+      "rows_sha256": "a75d3c3578e1e8e08804e5d19134aab615b729f737797dca778e8d7f9719cce9",
+      "target": {
+        "id": "99f8e62b-0684-446f-baa7-08bb785c3d30",
+        "match_time": "1789409189",
+        "side": "BUY",
+        "size": "666.666667",
+        "price": "0.15",
+        "status": "CONFIRMED"
+      }
+    }
+  },
+  "overfill": {
+    "candidate_count": 11,
+    "acknowledged_count": 7,
+    "bounded_taker_residual_count": 4,
+    "unresolved_flag_count": 20,
+    "unmatched_unresolved_flag_count": 0
+  },
+  "service_after_failed_release": {
+    "active_state": "failed",
+    "main_pid": 0,
+    "control_pid": 0,
+    "stop_result": "timeout",
+    "timeout_stop_seconds": 30,
+    "kill_present": true
+  }
+}

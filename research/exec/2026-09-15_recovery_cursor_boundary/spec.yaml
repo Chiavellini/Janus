@@ -1,0 +1,33 @@
+row: L129
+date: 2026-09-15
+kind: execution_measurement
+status_at_registration: PENDING
+observed_failure: >-
+  The a29a7c1 release ran the live guard for the full five-minute retained-kill window. Every pass
+  logged all seven exact historical overfill acknowledgements, but no external-fill disposition or
+  exact orphan/overfill resolution marker appeared. The pre-proof timed out with the same orphan
+  and twenty overfill flags. The service then required SIGKILL after its 30-second stop timeout;
+  it is stopped/failed and the exact original kill remains present.
+immutable_success_criteria:
+  - Read the active disposition head and its exact fill timestamp/identity from the production
+    database without mutation, and compare the authenticated Polymarket trade result at the
+    currently emitted integer after-bound with the same read one second earlier.
+  - EXCLUSIVE_BOUNDARY requires the exact disposed fill to be absent at after=int(fill.ts) and
+    present with matching identity at after=int(fill.ts)-1. Any other result is NOT_EXCLUSIVE or
+    UNKNOWN and cannot justify a cursor repair.
+  - Independently reconstruct the current overfill candidate acknowledgement allowance and
+    unresolved exact flag snapshots read-only. Report every unmatched current flag or matcher
+    error; do not infer resolution authority from log text.
+  - Hash raw row sets and emit counts/identities needed to reproduce the classification without
+    printing credentials, signatures, private keys, or authorization headers.
+  - No database, kill, mode, override, service, order, cap, hurdle, size, entry, protection, or
+    settlement mutation occurs.
+expected_ev_effect: >-
+  None. This localizes a restart recovery deadlock; it does not alter or prove trading economics.
+watch_for:
+  - API pagination or filtering that makes both reads incomplete.
+  - Confusing a market/token identifier with the exact venue fill identifier.
+  - Treating acknowledged flags as resolved before an append-only exact marker exists.
+prohibited:
+  - Starting the service, direct guard/resolver invocation, database writes, clearing the kill,
+    arming, changing mode, writing an override, or releasing.

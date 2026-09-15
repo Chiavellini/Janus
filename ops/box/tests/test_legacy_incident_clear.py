@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import re
 import sqlite3
 import subprocess
@@ -72,6 +73,60 @@ def test_shell_bounds_preproof_wait_at_five_minutes():
     assert "seq 1 100" in preproof
     assert "sleep 3" in preproof
     assert "seq 1 101" not in preproof
+
+
+def _render_remote_helper_script():
+    helper = Path(__file__).resolve().parents[1] / "clear_legacy_incident_latch.sh"
+    script = helper.read_text()
+    harness = script.replace('bash "$HERE/run.sh" "$REMOTE"', "printf '%s\\n' \"$REMOTE\"")
+    release = "0123456789abcdef" * 2 + "01234567"
+    kill = "abcdef0123456789" * 4
+    result = subprocess.run(("bash", "-c", harness, str(helper), release, kill),
+                            text=True, capture_output=True, check=False)
+    assert result.returncode == 0, result.stderr
+    return result.stdout
+
+
+@pytest.mark.parametrize("state,main_pid,control_pid,ok,reset", [
+    ("inactive", "0", "0", True, False),
+    ("failed", "0", "0", True, True),
+    ("failed", "123", "0", False, False),
+    ("failed", "0", "456", False, False),
+    ("active", "0", "0", False, False),
+])
+def test_remote_stop_accepts_failed_only_after_zero_unit_pid_proof(
+        tmp_path, state, main_pid, control_pid, ok, reset):
+    remote = _render_remote_helper_script()
+    function = remote.split("stop_lane_verified() {", 1)[1].split("\n}\ncleanup()", 1)[0]
+    function = "stop_lane_verified() {" + function + "\n}\nstop_lane_verified\n"
+    fake = tmp_path / "systemctl"
+    fake.write_text("""#!/usr/bin/env bash
+case "$1" in
+  stop) exit 1 ;;
+  is-active)
+    if [ -e "$FAKE_RESET" ]; then echo inactive; else echo "$FAKE_STATE"; fi
+    exit 1 ;;
+  show)
+    case "$*" in *MainPID*) echo "$FAKE_MAIN" ;; *ControlPID*) echo "$FAKE_CONTROL" ;; esac
+    ;;
+  reset-failed) : > "$FAKE_RESET" ;;
+  *) exit 2 ;;
+esac
+""")
+    fake.chmod(0o755)
+    marker = tmp_path / "reset"
+    env = dict(os.environ, PATH=f"{tmp_path}:{os.environ['PATH']}", FAKE_STATE=state,
+               FAKE_MAIN=main_pid, FAKE_CONTROL=control_pid, FAKE_RESET=str(marker))
+    result = subprocess.run(("bash", "-c", function), env=env, text=True,
+                            capture_output=True, check=False)
+    assert (result.returncode == 0) is ok
+    assert marker.exists() is reset
+
+
+def test_every_remote_stop_uses_zero_pid_verifier():
+    remote = _render_remote_helper_script()
+    assert remote.count("systemctl stop janus-live-stream") == 1
+    assert remote.count("stop_lane_verified") == 4  # definition, cleanup, two guard stops
 
 
 def fixture(tmp_path):

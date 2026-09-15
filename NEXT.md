@@ -2,21 +2,22 @@
 
 An opinion, not a record. Overwrite this file; never append to it. What changed is git log.
 
-Updated 2026-09-14 after L128 local validation on branch claude/hedge-safety-and-speed.
+Updated 2026-09-15 after L130 local validation on branch claude/hedge-safety-and-speed.
 
 ## Current state
 
-The Mexico box is deployed at 40e2258. The lane service is inactive and kill/live remains
-present with exact SHA a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6
+The Mexico box is deployed at a29a7c1. The lane service is stopped in systemd failed state and
+kill/live remains present with exact SHA
+a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6
 and reason LEGACY_INCIDENT_ACK_INVALID flag=211. Nothing is trading. Read-only inspection found no
 current open or unconfirmed journal orders, cash-pending orders, unreleased executions, or
 unreleased reservations. The production database has every table and column required by L122.
 
-The candidate through L128 passed the integrated suite when the two documented pre-existing FIFO
+The candidate through L130 passed the integrated suite when the two documented pre-existing FIFO
 flakes were excluded. The one FIFO failure seen in an earlier unfiltered run passed immediately
 in isolation. Replay parity is unchanged: 1,093 rows and zero selections at
 13e4fb08a76c920f / 4f53cda18c2baa0c. A fresh external audit returned RELEASE with no remaining
-P0/P1 in the audited recovery and guard paths. L128 is locally complete and awaiting its one
+P0/P1 in the audited recovery and guard paths. L130 is locally complete and awaiting its one
 release continuation.
 
 No cap, hurdle, size, entry policy, settlement rule, or trading behavior changed. The changes make
@@ -52,7 +53,7 @@ truth. Status log counters were not treated as authoritative execution state.
 - ops/box/clear_legacy_incident_latch.sh and ops/box/tests/test_legacy_incident_clear.py: preserve
   exact helper semantics while validating full digests and constructing remote shell variables
   and quotes correctly.
-- snooping_ledger.md: register L121-L128 before their runs and record their immutable results.
+- snooping_ledger.md: register L121-L130 before their runs and record their immutable results.
 - NEXT.md: replace the stale deployed-state handoff with this release state and economic truth.
 
 ## Files created
@@ -78,6 +79,10 @@ truth. Status log counters were not treated as authoritative execution state.
   production classification.
 - research/exec/2026-09-14_terminal_history_release_convergence/spec.yaml and verdict.md: L128
   registration and local result.
+- research/exec/2026-09-15_recovery_cursor_boundary/spec.yaml, results.json, and verdict.md: L129
+  read-only production boundary measurement.
+- research/exec/2026-09-15_exact_recovery_convergence/spec.yaml and verdict.md: L130 registration
+  and local result.
 
 ## Intentionally untouched
 
@@ -158,6 +163,21 @@ still blocks. The retained-kill wait is bounded at five minutes so the ordinary 
 helper—can append both ordered exact resolutions. Focused adversarial tests, integrated suite,
 replay parity, and a fresh audit passed locally.
 
+## L129-L130: measured recovery boundaries
+
+The authorized a29a7c1 release failed closed after five minutes. L129 proved why. Polymarket's
+authenticated integer `after` cursor excludes a fill at that exact second: the disposed fill was
+absent at 1789409189 and the sole returned row one second earlier. It also proved that all twenty
+unresolved overfill flags are covered, while four separate candidates legitimately pass the
+existing bounded-taker-residual rule but caused the resolver to abort. Finally, systemd had zero
+unit PIDs after killing the lane at its 30-second stop deadline, but the failed state label caused
+cleanup to report a stop failure. The exact kill remained present throughout.
+
+L130 crosses only the qualified disposition's one-second API boundary, applies the same bounded
+residual predicate during overfill resolution while retaining exact unresolved-flag coverage, and
+accepts/reset-failed only after MainPID and ControlPID both prove zero. Its 182 focused tests,
+integrated suite, exact replay, shell syntax, and independent audit passed.
+
 ## What is and is not proved toward $100/day
 
 These changes have zero claimed EV uplift per trade. They remove ways that a restart, stale guard
@@ -178,7 +198,7 @@ GATE_TO_LIVE.md amendment using the operator's verbatim authorization.
 
 ## Immediate sequence
 
-1. Push the L128 branch head and execute one ordinary release under the operator's explicit
+1. Push the L130 branch head and execute one ordinary release under the operator's explicit
    authorization. Do not bypass the helper, manually edit the database, or directly clear a kill.
 2. Verify the deployed full SHA, exact kill transition, lane state, complete guard result, fresh
    sockets, and zero open/unreleased material state. Stop on any mismatch.

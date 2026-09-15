@@ -514,7 +514,11 @@ def recovery_fill_since(con, ordinary_since: float, *, now: float,
             age = float(now) - fill.ts
             if age < 0 or age > float(max_age_s) or fill.ts >= float(ordinary_since):
                 continue
-            candidates.append(fill.ts)
+            # Polymarket's authenticated ``after`` bound is exclusive and integer-valued. A
+            # fill at an exact integer second is omitted when its own timestamp is passed back on
+            # restart. Cross only that one-second API boundary; the disposition and exact
+            # unresolved incident remain the sole authority for widening the cursor.
+            candidates.append(max(0.0, fill.ts - 1.0))
         except (KeyError, TypeError, ValueError, ArithmeticError, RecursionError, json.JSONDecodeError):
             # Corrupt or changed evidence is never a reason to widen the venue read.
             continue

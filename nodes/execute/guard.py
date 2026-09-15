@@ -560,7 +560,12 @@ class PositionGuard:
         evidence = []
         def current_evidence():
             allowed = set()
-            for cid, *_ in self._overfill_candidates():
+            for cid, venue, requested, filled, _mode in self._overfill_candidates():
+                # Detection already proves this collateral-bounded taker class safe without an
+                # operator acknowledgement. It must not obstruct resolution of different exact,
+                # acknowledged historical incidents merely because it also improved in price.
+                if bounded_taker_residual(self.journal.store.con, cid, venue, requested, filled):
+                    continue
                 ack = match_overfill_ack(self.journal.store.con, cid)
                 if ack is None:
                     return None

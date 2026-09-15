@@ -402,7 +402,7 @@ def test_open_manual_unresolved_incident_widens_only_to_exact_bounded_fill(tmp_p
     fill = manual_fill(manual_manifest)
     ordinary = fill.ts + 100
 
-    assert recovery_fill_since(journal.store.con, ordinary, now=fill.ts + 3600) == fill.ts
+    assert recovery_fill_since(journal.store.con, ordinary, now=fill.ts + 3600) == fill.ts - 1
     assert recovery_fill_since(journal.store.con, ordinary, now=fill.ts + 24 * 3600 + 1) == ordinary
 
     # With no unresolved incident, the ordinary cursor is untouched.
@@ -435,8 +435,8 @@ def test_position_guard_fetches_exact_venue_fill_after_restart_cursor(tmp_path, 
     guard.clock = lambda: fill.ts + 3600
 
     snap = asyncio.run(asyncio.to_thread(guard.fetch))
-    assert pm.asked_since == [fill.ts]
-    assert ks.asked_since == [fill.ts]
+    assert pm.asked_since == [fill.ts - 1]
+    assert ks.asked_since == [fill.ts - 1]
     assert snap.fills == [fill]
     report = guard.apply(snap)
     assert report.dispositions == [(fill, 1)] and not report.orphans
@@ -491,7 +491,7 @@ def test_recovery_query_does_not_revalidate_unrelated_disposition_history(tmp_pa
         calls.append(candidate.fill_id)
         return original(connection, candidate)
     monkeypatch.setattr(dispositions, 'match_disposition', counted)
-    assert recovery_fill_since(con, fill.ts + 100, now=fill.ts + 3600) == fill.ts
+    assert recovery_fill_since(con, fill.ts + 100, now=fill.ts + 3600) == fill.ts - 1
     assert calls == [fill.fill_id]
 
 

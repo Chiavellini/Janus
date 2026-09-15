@@ -1,0 +1,36 @@
+row: L130
+date: 2026-09-15
+kind: operator_safety
+status_at_registration: PENDING
+observed_failure: >-
+  L129 proved that the disposed fill is excluded by the exact integer `after` cursor but returned
+  one second earlier. It also proved all twenty unresolved overfill flags are covered by seven
+  exact acknowledgements, while the resolver aborts on four additional candidates that pass the
+  detector's existing bounded-taker-residual predicate. Finally, systemd killed the lane after its
+  30-second graceful-stop deadline and had zero unit processes, but cleanup required the state
+  string inactive and therefore returned rollback-stop failure from a safely stopped failed unit.
+immutable_success_criteria:
+  - Disposition recovery crosses the authenticated venue's exclusive integer boundary by at most
+    one second. The exact disposition, unresolved-flag, 24-hour, 500-row and venue-returned
+    FillRecord checks remain authoritative; unrelated rows receive no resolution authority.
+  - Overfill exact-resolution evidence applies the same existing bounded-taker-residual exemption
+    as detection. Only exempt candidates may omit acknowledgements; every unresolved overfill flag
+    must still exactly match acknowledgement evidence and any new/unmatched flag blocks.
+  - Every release-helper stop site accepts success only after systemd proves MainPID=0 and
+    ControlPID=0. A timeout/failed state may be reset to inactive only after those zero-PID proofs;
+    active, activating, deactivating, unknown, or nonzero-PID state remains a hard failure.
+  - Cleanup continues to restore/verify the exact original kill before stopping on any failure.
+    No helper writes resolutions or edits database evidence.
+  - Focused boundary, bounded-residual, unmatched-flag, stop-timeout and live-process adversarial
+    tests, shell syntax, integrated baseline, replay parity, and fresh audit pass before release.
+expected_ev_effect: >-
+  None per trade. This permits already-authorized exact safety evidence to converge under the
+  retained kill and makes stopped-state verification reflect process fact rather than one systemd
+  result label.
+watch_for:
+  - Widening ordinary fill history without an active exact disposition.
+  - Letting the bounded residual exemption cover an unresolved flag absent from acknowledgement.
+  - Resetting a failed unit while either unit PID is nonzero.
+prohibited:
+  - Direct database edits or resolver invocation, blanket flag resolution, manual kill removal,
+    arming, cap/hurdle/size/entry/protection/settlement changes, or release before all gates pass.
