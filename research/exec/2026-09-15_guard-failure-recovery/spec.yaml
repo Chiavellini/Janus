@@ -1,0 +1,73 @@
+id: L132
+registered_at: 2026-09-15
+track: operator/safety
+kind: exact incident recovery
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L132
+title: Exact recovery of a proved-transient guard-failure latch
+
+# IMMUTABLE AFTER REGISTRATION. This file and the L132 PENDING ledger row precede implementation
+# tests, release integration, any kill mutation, or any F22 observation.
+incident:
+  kill_sha256: dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83
+  latched_utc: 1789484735.5242064
+  reason: >-
+    guard failed: RuntimeError: RuntimeError: incomplete guard snapshot:
+    balance:polymarket: venue did not return a balance; fills:polymarket:
+    PROJECTION_BATCH_INCOMPLETE: trade read: PolyApiExcepti
+  lane_flag_id: 1169
+  lane_flag: GUARD_FAILED
+  known_after_latch: >-
+    The lane remained active under kill/live. A read before registration found zero submitted orders
+    and zero executions after the latch; later ordinary retained-kill guard passes repeatedly
+    completed and the authenticated PM user stream remained connected. This suggests a transient
+    account-API read failure but is not authority to remove the durable stop.
+
+question: >-
+  Can the repository provide an operator-only, exact-evidence path that proves the failed account
+  reads and all money state are now complete and quiet, appends an exact resolution for only flag
+  1169, and removes only the unchanged incident kill with rollback on every failure?
+
+required_proof:
+  identity:
+    - full deployed 40-hex Git SHA and exact checked-out tree
+    - regular non-symlink kill/live with the exact 64-hex digest, valid JSON, latched UTC and reason above
+    - exactly one unresolved GUARD_FAILED source row, id 1169, whose detail exactly equals the kill reason suffix
+  quiet_state:
+    - expected database schema is present; missing schema is a STOP
+    - zero open or unconfirmed provider orders
+    - zero active or materially unhedged unreleased executions
+    - zero unreleased capital reservations
+    - zero unresolved post-only admissions or role/quantity violations
+    - zero other unresolved material safety flags
+  dynamic:
+    - stop the lane and prove MainPID=0 and ControlPID=0 while the exact kill remains
+    - one credentialed two-venue guard pass with --require-complete-quiet
+    - restart under the retained kill and require fresh connected Kalshi, Polymarket public and Polymarket user streams
+    - stop with both unit PIDs zero and run a second credentialed complete quiet guard
+    - reject any new/changed kill, flag, order, execution, reservation, exposure, incomplete read or unhealthy stream
+  resolution:
+    - append GUARD_FAILED_RESOLVED_EXACT through resolve_exact_flags for source id 1169 and exact snapshot hash
+    - never update/delete the source row or resolve a later GUARD_FAILED row
+    - re-run the complete static proof after the append
+    - exclusively archive the exact kill bytes with full audit evidence, then restart the lane
+    - any failure restores the exact kill bytes first and leaves the lane stopped; rollback failure is explicit
+
+release_routing: >-
+  release.sh classifies the captured remote kill JSON before choosing a helper. The exact reviewed
+  guard-failure signature routes only to this helper; the flag-211 and false-maker signatures retain
+  their existing independent helpers; an unknown/malformed reason is a hard failure, never a generic
+  fallback. Every helper repeats its own proof.
+
+success_criteria:
+  - Exact positive fixture passes and creates one append-only resolution plus one exclusive audit archive.
+  - Changed digest/reason/time/flag/detail, duplicate source, later source, symlink or malformed JSON fails.
+  - Every missing schema, nonquiet order/execution/reservation/admission/exposure/material-flag case fails.
+  - Incomplete first or second guard, unhealthy warm-up, changed kill race or activation failure restores the exact bytes and keeps entry stopped.
+  - release.sh routes only the three reviewed signatures and rejects everything else.
+  - Focused tests, Bash syntax, integrated suite and replay parity pass before an operator sees a command.
+
+authority: >-
+  L132 changes no cap, hurdle, execution, hedge, settlement, account or kill condition. It grants no
+  agent authority to release, re-sign, arm, confirm, change mode or clear any kill. Only the operator
+  may invoke the exact command after reviewing the registered evidence.

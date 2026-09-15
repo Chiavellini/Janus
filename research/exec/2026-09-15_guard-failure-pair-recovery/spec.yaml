@@ -1,0 +1,82 @@
+id: L133
+registered_at: 2026-09-15
+track: operator/safety
+kind: exact incident-set recovery
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L133
+title: Exact recovery of the two current guard-failure rows
+
+# IMMUTABLE AFTER REGISTRATION. This file and the L133 PENDING ledger row precede any new guard
+# confirmation run, implementation test, release, resolution marker, or kill mutation.
+known_at_registration:
+  retained_kill:
+    sha256: dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83
+    latched_utc: 1789484735.5242064
+    reason: >-
+      guard failed: RuntimeError: RuntimeError: incomplete guard snapshot:
+      balance:polymarket: venue did not return a balance; fills:polymarket:
+      PROJECTION_BATCH_INCOMPLETE: trade read: PolyApiExcepti
+  unresolved_guard_failures:
+    - id: 1169
+      seen_ts: 1789484735.5243115
+      detail: >-
+        RuntimeError: RuntimeError: incomplete guard snapshot: balance:polymarket: venue did not
+        return a balance; fills:polymarket: PROJECTION_BATCH_INCOMPLETE: trade read: PolyApiExcepti
+    - id: 1170
+      seen_ts: 1789488958.056143
+      detail: >-
+        RuntimeError: RuntimeError: incomplete guard snapshot: missing complete fills/positions proof
+  other_known_history: >-
+    pm_post_only_violations retains historical row 1 for a POST_ONLY_PERSISTENCE_FAILED database-lock
+    incident, while the current pm_post_only_orders query has zero nonterminal or violated rows. The
+    historical row is not itself evidence of current safety and must be paired with its exact durable
+    resolution evidence; a blanket deletion, count exemption, or log-text assumption is forbidden.
+  superseded_attempt: >-
+    L132 required exactly one unresolved GUARD_FAILED row and required a later source to fail. Row
+    1170 therefore correctly stops L132. L133 does not revise L132 or reinterpret its outcome.
+
+question: >-
+  Can the repository prove that both registered incomplete guard reads are now transient, all money
+  and post-only state is complete and quiet, append one exact resolution covering only source rows
+  1169 and 1170, and archive only the unchanged retained kill with rollback on every failure?
+
+required_proof:
+  identity:
+    - full deployed 40-hex Git SHA and exact checked-out tree
+    - regular non-symlink kill/live with the exact 64-hex digest, valid JSON, latched UTC and reason above
+    - the unresolved GUARD_FAILED set equals exactly source rows 1169 and 1170 with the exact snapshots above
+    - any missing, changed, duplicate or later GUARD_FAILED row is a STOP
+  quiet_state:
+    - expected database schema is present; missing schema is a STOP
+    - zero open or unconfirmed provider orders
+    - zero active or materially unhedged unreleased executions
+    - zero unreleased capital reservations
+    - zero unresolved post-only admissions or nonterminal/violated post-only orders
+    - every retained historical post-only violation has exact durable resolution evidence; any new or unresolved violation is a STOP
+    - zero other unresolved material safety flags
+  dynamic:
+    - stop the lane and prove MainPID=0 and ControlPID=0 while the exact kill remains
+    - one credentialed two-venue guard pass with --require-complete-quiet
+    - restart under the retained kill and require fresh connected Kalshi, Polymarket public and Polymarket user streams
+    - stop with both unit PIDs zero and run a second credentialed complete quiet guard
+    - reject any new/changed kill, flag, order, execution, reservation, exposure, incomplete read or unhealthy stream
+  resolution:
+    - append GUARD_FAILED_RESOLVED_EXACT through resolve_exact_flags for exactly source ids 1169 and 1170 and their exact joint snapshot hash
+    - never update/delete either source row or resolve a later GUARD_FAILED row
+    - re-run the complete static proof after the append
+    - exclusively archive the exact kill bytes with full audit evidence, then restart the lane
+    - any failure restores the exact kill bytes first and leaves the lane stopped; rollback failure is explicit
+
+success_criteria:
+  - Exact two-source positive fixture passes and creates one append-only joint resolution plus one exclusive audit archive.
+  - L132's one-source fixture remains separate; changed/missing/duplicate/later source, kill identity, symlink or malformed JSON fails.
+  - Historical resolved post-only evidence passes only by exact durable identity; any unresolved/new violation fails.
+  - Every missing schema, nonquiet order/execution/reservation/admission/exposure/material-flag case fails.
+  - Both complete guards and the retained-kill three-stream warm-up pass before activation.
+  - Activation/race failure restores exact kill bytes and keeps entry stopped; a retry cannot broaden the incident set.
+  - Focused tests, Bash syntax, integrated suite and replay parity pass before an operator sees a command.
+
+authority: >-
+  L133 changes no cap, hurdle, execution, hedge, settlement, account or kill condition. It grants no
+  agent authority to release, re-sign, arm, confirm, change mode or clear any kill. Only the operator
+  may invoke the exact reviewed release command.

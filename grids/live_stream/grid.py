@@ -73,7 +73,11 @@ from nodes.execute.maker import (HedgeLevel, MakerFillSession, MakerRestAuthoriz
 from nodes.execute.sizing import SizingDecision, choose_live_size  # noqa: E402
 from nodes.execute.guard import PositionGuard  # noqa: E402
 from nodes.execute.on_loop import OnLoop  # noqa: E402
-from nodes.execute.plan import plan_from_cover, marginal_price  # noqa: E402
+from nodes.execute.plan import maker_plan_from_cover, plan_from_cover, marginal_price  # noqa: E402
+from nodes.execute.entry_experiment import (F22_ROW_ID, EntryArmAssignment, assign_entry_arm,
+                                             assignment_from_record, f22_activation,
+                                             first_three_fills_reconciled, record_f22_decision,
+                                             update_f22_decision)  # noqa: E402
 from nodes.execute.records import ExecutionRecords  # noqa: E402
 from nodes.execute.venues import build_venues  # noqa: E402
 from nodes.exec_kalshi.client import DEMO_BASE, PROD_BASE, KalshiExecution  # noqa: E402
@@ -184,6 +188,11 @@ class Supervisor:
     #: or stopped matching: _execute refuses every real order (ARM_STALE) until it clears.
     #: Pricing continues. Until 2026-09-07 an expired override stopped nothing already running.
     arm_stale: str | None = None
+    #: F22 is a separate signed authority layered on LIMITED_LIVE. A normal live override keeps
+    #: the historical taker path. Persistence failure is an in-memory entry stop until restart.
+    f22_enabled: bool = False
+    f22_authority_detail: str = "not checked"
+    f22_failed: bool = False
     ledger: ExposureLedger | None = None
     kill: KillSwitches | None = None
     breaker: LossBreaker | None = None
@@ -594,11 +603,25 @@ class Supervisor:
 
     def _execute_sized(self, sup: Supervised, evaluated) -> None:
         """One cap-aware live quantity decision for one frozen book epoch."""
+        base = evaluated[0][0]
+        # F22 assignment is event-level and must precede the common sizing sweep: the sweep builds
+        # the current taker-shaped economic candidates, while the selected arm's wire plan is built
+        # only afterwards.  It is deliberately inactive outside LIMITED_LIVE, so paper/history are
+        # never backfilled or relabelled.
+        if self.mode is Mode.LIMITED_LIVE and self.f22_failed:
+            self.refuse("execution", "F22_PERSISTENCE_FAILED", sup.poller.league)
+            return
+        assignment = (assign_entry_arm(base.game_id)
+                      if self.mode is Mode.LIMITED_LIVE and self.f22_enabled else None)
+        if assignment is not None and (self.store is None or self.opportunities is None):
+            # F22's unit cannot exist without both sides of its durable pre-wire join. This is an
+            # instrumentation STOP, not permission to run an unscored order.
+            self.refuse("execution", "F22_INSTRUMENTATION_MISSING", sup.poller.league)
+            return
         # L123: do this before consuming even the cached balance snapshot.  The callback may have
         # priced the event already, but no new capital entry is allowed while guard health is unknown.
         if self._guard_entry_refused(sup):
             return
-        base = evaluated[0][0]
         if not base.offers or sup.poller.proof is None or self.limits is None or self.ledger is None:
             return
         balances = self._cached_balances({})
@@ -612,6 +635,11 @@ class Supervisor:
             min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0),
             max_quote_age_s=min(sup.poller.max_book_age_s, sup.poller.max_rest_book_age_s),
         )
+        identity = None
+        if assignment is not None:
+            # The audit is the exact object subsequently embedded in plan_json by Coordinator.
+            # Caps are copied at assignment/sizing time and never inferred from later order shape.
+            identity = assignment.as_record(self.caps)
         # L79: the fingerprints, the sha and the audit ladder exist for the recorded row; an epoch
         # that selects nothing after an epoch that selected nothing records nothing (L74).
         executable = decision.selected is not None
@@ -632,22 +660,73 @@ class Supervisor:
                                       leg.book.source, leg.min_order_contracts,
                                       leg.tick, dict(leg.fee_overrides), sorted(leg.covers)])
         epoch_payload.append(["proof", sup.poller.proof.as_record()])
+        if assignment is not None:
+            # Include the arm (and its versioned digest) in the idempotency input.  A changed arm
+            # cannot silently look like the same frozen-book epoch.
+            epoch_payload.append(["f22", assignment.as_record(self.caps)])
         input_hash = hashlib.sha256(json.dumps(epoch_payload, separators=(",", ":")).encode()).hexdigest()
+        if identity is not None:
+            # `input_hash` alone is not unique: a real A -> B -> A book path records the second A
+            # with a new occurrence. Predict the append-only row identity under the same loop-owned
+            # connection used by OpportunityStore, then persist it on BOTH sides of the join.
+            # The store recomputes these values when it inserts; a duplicate input returns false
+            # below and therefore never dispatches a plan carrying a nonexistent occurrence.
+            previous = (self.store.con.execute(
+                "SELECT occurrence FROM sizing_decisions WHERE event_id=? ORDER BY id DESC LIMIT 1",
+                (base.game_id,),
+            ).fetchone() if self.store is not None and self.opportunities is not None else None)
+            occurrence = int(previous[0] or 0) + 1 if previous is not None else 1
+            identity["sizing_input_hash"] = input_hash
+            identity["sizing_occurrence"] = occurrence
+            identity["sizing_book_epoch"] = hashlib.sha256(f"{input_hash}:{occurrence}".encode()).hexdigest()
+            if isinstance(decision, SizingDecision):
+                decision = replace(decision, entry_experiment=identity)
         selected_oid = (Opportunity.id_for(base.game_id, decision.selected.quantity)
                         if decision.selected is not None else None)
         # L74: an epoch that selects nothing is recorded only as the transition out of an
         # executable state; its evaluation row already says why. An executable epoch whose input
         # is the last recorded one is the single-flight guard firing: nothing is minted twice.
+        decision_audit = decision.audit()
+        if assignment is not None:
+            # Do not mutate a frozen/duck-typed test decision. Production decisions are the
+            # SizingDecision above; this merge keeps lightweight replay stubs safe as well.
+            decision_audit = dict(decision_audit)
+            decision_audit["entry_experiment"] = dict(identity or assignment.as_record(self.caps))
         recorded = self.opportunities is None or self.opportunities.record_sizing_decision(
             event_id=base.game_id, input_hash=input_hash, executable=executable,
-            selected_opportunity_id=selected_oid, decision=decision.audit(), now=base.evaluated_utc)
+            selected_opportunity_id=selected_oid, decision=decision_audit, now=base.evaluated_utc)
         sup.last_sizing_executable = executable
         if not recorded and executable:
             return
+        if identity is not None and recorded and self.store is not None:
+            # This additive analysis row is committed with the already durable sizing decision,
+            # before _execute can construct a provider request.  A no-selection transition is kept
+            # for lineage but is excluded by the report's eligible-decision filter.
+            try:
+                inserted = record_f22_decision(
+                    self.store, assignment=identity, decision=decision_audit,
+                    selected_quantity=(float(decision.selected.quantity)
+                                       if decision.selected is not None else None),
+                    now=base.evaluated_utc)
+                if not inserted:
+                    raise RuntimeError("F22 decision row was not inserted for a newly recorded sizing epoch")
+            except Exception as exc:
+                if self.store.con.in_transaction:
+                    self.store.con.rollback()
+                self._f22_stop(f"pre-wire decision persistence failed: {brief_error(exc)}")
+                return
         # The decision/outbox must be durable before any worker can reach a venue wire. If this
         # commit fails, the callback catches it and no task is created.
         if self.store is not None:
-            self.store.commit()
+            try:
+                self.store.commit()
+            except Exception as exc:
+                if self.store.con.in_transaction:
+                    self.store.con.rollback()
+                if identity is not None:
+                    self._f22_stop(f"pre-wire decision commit failed: {brief_error(exc)}")
+                    return
+                raise
         if decision.selected is None:
             key = f"{sup.short_name}:SIZE:" + ",".join(decision.binding_constraints)
             if self.said.get(key) != "said":
@@ -664,6 +743,50 @@ class Supervisor:
               f"profit=${selected.profit_usd:.4f} bindings={','.join(decision.binding_constraints) or 'none'} "
               f"fill_model={decision.fill_model}", flush=True)
         self._execute(sup, ev, rec, sizing=decision)
+
+    def _f22_stop(self, detail: str) -> None:
+        """Make an instrumentation failure a real entry stop, with redundant durable alarms."""
+        already = self.f22_failed
+        self.f22_failed = True
+        if not already:
+            print(f"  [f22 STOP] {detail}", flush=True)
+            self.flag("F22_PERSISTENCE_FAILED", detail)
+        if self.kill is not None and self.mode.risks_capital:
+            self.kill.latch("live", f"F22 instrumentation failed: {detail}")
+
+    def _f22_update(self, sizing, *, outcome: str | None = None, detail: str | None = None,
+                    execution_id: str | None = None) -> bool:
+        """Persist an explicit F22 disposition/link without making it an execution input."""
+        identity = getattr(sizing, "entry_experiment", None)
+        if identity is None and isinstance(sizing, dict):
+            identity = sizing.get("entry_experiment")
+        if not identity or self.store is None:
+            return True
+        try:
+            update_f22_decision(self.store, event_id=str(identity.get("event_id") or identity.get("canonical_event_id")),
+                                sizing_book_epoch=str(identity["sizing_book_epoch"]), outcome=outcome,
+                                detail=detail, execution_id=execution_id, now=time.time())
+            self.store.commit()
+            return True
+        except Exception as exc:  # noqa: BLE001 -- reporting must never break the execution door
+            key = (str(identity.get("event_id", "")), "f22:" + type(exc).__name__)
+            self.record_errors[key] = self.record_errors.get(key, 0) + 1
+            if self.record_errors[key] == 1:
+                print(f"  [f22] disposition persistence failed: {brief_error(exc)}", flush=True)
+            self._f22_stop(f"disposition persistence failed: {brief_error(exc)}")
+            return False
+
+    def _f22_link_execution(self, sizing, ex) -> None:
+        """Link the machine row and explicitly preserve a proved pre-wire no-order outcome."""
+        exid = getattr(ex, "execution_id", None)
+        state = str(getattr(getattr(ex, "state", None), "value", getattr(ex, "state", "")))
+        no_wire = (not getattr(ex, "first_client_id", None)
+                   and float(getattr(ex, "first_filled", 0.0) or 0.0) <= 1e-9
+                   and float(getattr(ex, "hedge_filled", 0.0) or 0.0) <= 1e-9
+                   and bool(getattr(ex, "released", False)))
+        self._f22_update(sizing, execution_id=exid,
+                         outcome="local_or_risk_refused_no_wire" if no_wire else None,
+                         detail=state if no_wire else None)
 
     def loop_probe_reading(self, overshoot_s: float) -> None:
         self.loop_lag_readings.append(overshoot_s)
@@ -685,10 +808,16 @@ class Supervisor:
         under it). Said once per change. Below LIMITED_LIVE there is nothing to check."""
         if not self.mode.risks_capital:
             self.arm_stale = None
+            self.f22_enabled = False
+            self.f22_authority_detail = "mode does not risk capital"
             return None
         limits_sha = str(getattr(self.limits, "sha", "") or "")
         st = override_state(self.override_path, code_sha=self.code_sha, limits_sha=limits_sha, now=now)
         reason = stale_reason(st, code_sha=self.code_sha, limits_sha=limits_sha)
+        enabled, authority = f22_activation(root=ROOT, state=st) if reason is None else (False, str(reason))
+        if enabled != self.f22_enabled or authority != self.f22_authority_detail:
+            print(f"[f22] {'ENABLED' if enabled else 'disabled'}: {authority}", flush=True)
+        self.f22_enabled, self.f22_authority_detail = enabled, authority
         if reason != self.arm_stale:
             print(f"[arm] STALE {reason}" if reason else "[arm] override matches again; real orders resume", flush=True)
         self.arm_stale = reason
@@ -724,6 +853,8 @@ class Supervisor:
                 st = st_.stats()
                 socks[name] = {"connected": st.get("connected"), "frames": st.get("frames"), "age_s": st.get("age_s"), "errors": st.get("errors")}
         return {"as_of": t, "mode": self.mode.value, "caps": dict(self.caps), "arm_stale": self.arm_stale,
+                "f22_enabled": self.f22_enabled, "f22_failed": self.f22_failed,
+                "f22_authority": self.f22_authority_detail,
                 "loop_lag_s": round(self.loop_lag_max_s, 3), "stalled": self.stalled, "blocked": len(self.blocked),
                 "sockets": socks, "games": games}
 
@@ -846,12 +977,14 @@ class Supervisor:
         Every refusal is recorded on the opportunity; nothing here raises into the socket loop."""
         # L123: this is deliberately before planning, balances, clearance, or any venue helper.
         if self._guard_entry_refused(sup):
+            self._f22_update(sizing, outcome="local_or_risk_refused_no_wire", detail="GUARD_FAILED")
             return
         if self.arm_stale:
             # The override stopped authorising this process between ticks (check_arm). Refused
             # before any plan, balance call or clearance: nothing is minted for a stale arm.
             print(f"  [risk] refused {sup.short_name}: ARM_STALE {self.arm_stale}", flush=True)
             self.refuse("risk", "ARM_STALE", sup.poller.league)
+            self._f22_update(sizing, outcome="local_or_risk_refused_no_wire", detail="ARM_STALE")
             return
         cov = ev.cover
         m_entry = time.monotonic()
@@ -865,10 +998,55 @@ class Supervisor:
         pre = {"frame_to_eval_ms": _frame_to_eval,
                "eval_to_exec_ms": round(max(0.0, (time.time() - ev.evaluated_utc) * 1000.0 - _frame_to_eval), 2)}
         offers = {o: list(v) for o, v in ev.offers.items()}
-        plan = plan_from_cover(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
-                               league=sup.poller.league, cov=cov, offers=offers, hurdle=MIN_RETURN,
-                               min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0))
+        experiment = getattr(sizing, "entry_experiment", None) if sizing is not None else None
+        assignment: EntryArmAssignment | None = None
+        if experiment is not None:
+            try:
+                assignment = assignment_from_record(experiment)
+            except (TypeError, ValueError) as exc:
+                # The sizing decision is durable before this point. A contradictory identity is a
+                # fail-closed instrumentation stop, never permission to guess or fall back.
+                print(f"  [f22] refused {sup.short_name}: assignment contradiction {exc}", flush=True)
+                self.refuse("execution", "F22_ASSIGNMENT_CONTRADICTION", sup.poller.league)
+                self._f22_update(sizing, outcome="persistence_or_reconciliation_failure", detail="assignment contradiction")
+                return
+            if assignment.forward_row_id != F22_ROW_ID or assignment.event_id != ev.game_id:
+                print(f"  [f22] refused {sup.short_name}: assignment identity mismatch", flush=True)
+                self.refuse("execution", "F22_ASSIGNMENT_CONTRADICTION", sup.poller.league)
+                self._f22_update(sizing, outcome="persistence_or_reconciliation_failure", detail="assignment identity mismatch")
+                return
+            checkpoint_ok, checkpoint_detail = first_three_fills_reconciled(self.store)
+            if not checkpoint_ok:
+                print(f"  [f22] refused {sup.short_name}: F22_RECONCILIATION_CHECKPOINT {checkpoint_detail}", flush=True)
+                self.refuse("execution", "F22_RECONCILIATION_CHECKPOINT", sup.poller.league)
+                self._f22_update(sizing, outcome="local_or_risk_refused_no_wire",
+                                 detail="F22_RECONCILIATION_CHECKPOINT")
+                return
+        plan_kwargs = dict(opportunity_id=Opportunity.id_for(ev.game_id, ev.quantity), event_id=ev.game_id,
+                           league=sup.poller.league, cov=cov, offers=offers, hurdle=MIN_RETURN,
+                           min_net_profit_usd=float(getattr(self.limits, "min_net_profit_usd", 0.0) or 0.0))
+        if assignment is not None and assignment.arm == "maker":
+            # The reviewed maker adapter owns its exact-share cap and the coordinator owns the
+            # existing <=2s continuous hedge/safety-gated lifecycle. A maker refusal ends this
+            # F22 decision; it must never be retried through the taker arm.
+            plan = maker_plan_from_cover(
+                **plan_kwargs,
+                max_quote_age_s=min(sup.poller.max_book_age_s, sup.poller.max_rest_book_age_s),
+            )
+            if plan is None:
+                print(f"  [f22] refused {sup.short_name}: MAKER_PLAN_REFUSED (no taker fallback)", flush=True)
+                self.refuse("execution", "MAKER_PLAN_REFUSED", sup.poller.league)
+                self._f22_update(sizing, outcome="local_or_risk_refused_no_wire", detail="MAKER_PLAN_REFUSED")
+                return
+            if not plan.first.post_only or plan.first.time_in_force != "gtc":
+                print(f"  [f22] refused {sup.short_name}: F22_ROLE_VIOLATION (maker proof absent)", flush=True)
+                self.refuse("execution", "F22_ROLE_VIOLATION", sup.poller.league)
+                self._f22_update(sizing, outcome="role_violation", detail="maker plan role proof absent")
+                return
+        else:
+            plan = plan_from_cover(**plan_kwargs)
         if plan is None:
+            self._f22_update(sizing, outcome="local_or_risk_refused_no_wire", detail="NO_PLAN")
             return
         if sizing is not None:
             plan = replace(plan, sizing=sizing.audit())
@@ -903,6 +1081,7 @@ class Supervisor:
         # the loop 5.6 s with 17 pollers live. The caps and the profit floor are known here.
         until = self.backoff.get(ev.game_id)
         if until is not None and time.monotonic() < until:
+            self._f22_update(sizing, outcome="local_or_risk_refused_no_wire", detail="BACKOFF")
             return                                       # said when it was set; one line per backoff
         blocked_venue = getattr(self.venues.get("polymarket"), "geoblocked", None)
         if blocked_venue:
@@ -911,6 +1090,7 @@ class Supervisor:
                 print(f"  [risk] refused every cover: VENUE_GEOBLOCKED polymarket -- {blocked_venue[:120]} "
                       f"(this host cannot place Polymarket orders; restart from a permitted host)", flush=True)
             self.refuse("risk", "VENUE_GEOBLOCKED", sup.poller.league)
+            self._f22_update(sizing, outcome="local_or_risk_refused_no_wire", detail="VENUE_GEOBLOCKED")
             return
         if self.caps and self.mode.risks_capital:
             stake = sum(c * p for _v, c, p in cand.legs)
@@ -933,6 +1113,7 @@ class Supervisor:
                         # size the lane prices is a defect, not a limit. Said, stored, alarmed.
                         print(f"  [risk] CAP_BINDS_SMALLEST {sup.short_name}: {early[0]} {early[1]} at q={ev.quantity:g}", flush=True)
                         self.flag("CAP_BINDS_SMALLEST", f"{sup.short_name} {early[0]} {early[1]} q={ev.quantity:g}")
+                self._f22_update(sizing, outcome="local_or_risk_refused_no_wire", detail=str(early[0]))
                 return
         if self.mode.sends_real_orders:
             # The round trips (balances, POSTs, settle polling: 0.2-10 s) leave the socket loop.
@@ -946,6 +1127,7 @@ class Supervisor:
                     self.said[key] = self.in_flight
                     print(f"  [risk] refused {sup.short_name}: IN_FLIGHT {self.in_flight} is executing", flush=True)
                 self.refuse("risk", "IN_FLIGHT", sup.poller.league)
+                self._f22_update(sizing, outcome="local_or_risk_refused_no_wire", detail="IN_FLIGHT")
                 return
             try:
                 loop = asyncio.get_running_loop()
@@ -960,6 +1142,7 @@ class Supervisor:
                 # a later frame's NO_EDGE landed first and every move of the execution was refused).
                 if not self._own_opportunity(plan.opportunity_id, sup):
                     self.in_flight = None
+                    self._f22_update(sizing, outcome="local_or_risk_refused_no_wire", detail="OPPORTUNITY_NOT_OWNED")
                     return
                 task = loop.create_task(self._execute_off_loop(sup, ev, plan, cand, offers, pre, m_entry))
                 self.exec_tasks.add(task)
@@ -970,12 +1153,16 @@ class Supervisor:
                 if isinstance(cand, Candidate) else cand)
         clearance = self._clear(sup, aged, balances, pre)
         if clearance is None:
+            self._f22_update(sizing, outcome="local_or_risk_refused_no_wire", detail="RISK_REFUSED")
             return
         pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
         ex = self.coordinator.execute(plan, clearance, offers_books=books_snapshot(offers),
                                       venues_connected=self._connected(), pre_stages=pre,
                                       maker_guard=(lambda remaining: self._maker_rest_refusal(sup, plan, clearance, remaining))
                                       if plan.first.post_only and self.mode.risks_capital else None)
+        # A test/replay stand-in may return no id; production report then leaves this decision
+        # unresolved instead of manufacturing a link.
+        self._f22_link_execution(sizing, ex)
         self._after_execution(sup, ev, ex)
 
     def _own_opportunity(self, opportunity_id: str, sup: Supervised) -> bool:
@@ -1055,25 +1242,29 @@ class Supervisor:
         """Balances in a worker, the gate on the loop, the machine in a worker (its records,
         opportunity moves and journal rows come back to the loop through OnLoop), the
         bookkeeping on the loop. Nothing here raises into the loop; the flight always clears."""
+        sizing_lineage = getattr(plan, "sizing", None) if plan is not None else None
         try:
             # A guard may fail after _execute dispatches this task but before the worker starts.
             # Recheck on the loop before the first balance read; protection has its own path.
             if self._guard_entry_refused(sup):
+                self._f22_update(sizing_lineage, outcome="local_or_risk_refused_no_wire", detail="GUARD_FAILED")
                 return
             # A guard snapshot is already authoritative and copying it cannot block. Do that on
             # the loop so a completed zero-work worker future does not sit behind socket traffic.
             balances = self._cached_balances(pre)
             if balances is None:
                 balances = await asyncio.to_thread(self._balances, pre)
-            if (plan is not None and plan.sizing and plan.first.post_only
+            if (plan is not None and getattr(plan, "sizing", None) and plan.first.post_only
                     and not self._hedge_capacity_ok(sup, plan, plan.quantity)):
                 print(f"  [risk] refused {sup.short_name}: HEDGE_DEPTH_CHANGED before entry", flush=True)
                 self.refuse("risk", "HEDGE_DEPTH_CHANGED", sup.poller.league)
+                self._f22_update(sizing_lineage, outcome="local_or_risk_refused_no_wire", detail="HEDGE_DEPTH_CHANGED")
                 return
             aged = (replace(cand, max_book_age_s=cand.max_book_age_s + max(0.0, time.monotonic() - m_entry))
                     if isinstance(cand, Candidate) else cand)
             clearance = self._clear(sup, aged, balances, pre)
             if clearance is None:
+                self._f22_update(sizing_lineage, outcome="local_or_risk_refused_no_wire", detail="RISK_REFUSED")
                 return
             pre["pre_machine_ms"] = round((time.monotonic() - m_entry) * 1000.0, 2)
             # L97: the `asyncio.to_thread` hop below had no stage at all, and it is the largest
@@ -1090,6 +1281,7 @@ class Supervisor:
             ex = await asyncio.to_thread(self.coordinator.execute, plan, clearance, offers_books=books,
                                          venues_connected=connected, pre_stages=pre,
                                          maker_guard=maker_guard)
+            self._f22_link_execution(sizing_lineage, ex)
             self._after_execution(sup, ev, ex)
         except Exception as exc:  # noqa: BLE001 -- an execution bug must never kill the loop; it is said, counted, flagged
             # The machine itself records a machine error as an execution failure (UNKNOWN_PROVIDER_STATE
@@ -1099,6 +1291,7 @@ class Supervisor:
             self.record_errors[key] = self.record_errors.get(key, 0) + 1
             tb = traceback.format_exc().strip().splitlines()
             print(f"  [exec FAILED] {sup.short_name} {brief_error(exc)}\n    " + "\n    ".join(tb[-4:]), flush=True)
+            self._f22_update(sizing_lineage, outcome="persistence_or_reconciliation_failure", detail="execution dispatch failure")
             self.backoff[ev.game_id] = time.monotonic() + self.backoff_s
             self.flag("EXEC_CRASHED", f"{sup.short_name} q={ev.quantity:g} {brief_error(exc)}")
         finally:
@@ -1822,6 +2015,9 @@ def main() -> int:
             print(f"mode {sup.mode.value} cannot be built: {exc}", file=sys.stderr)
             return 2
         sup.limits, sup.kill = limits, kill
+        # Resolve the experiment authority before the event loop can admit its first entry. The
+        # periodic report tick revalidates the same spec digest and statement thereafter.
+        sup.check_arm()
         sup.breaker = LossBreaker(kill=kill)
         sup.ledger = ExposureLedger(sup.store)
         # The opportunity record's in-memory state belongs to the loop (record_evaluation mutates it

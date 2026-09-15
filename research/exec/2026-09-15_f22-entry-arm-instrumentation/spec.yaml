@@ -1,0 +1,70 @@
+id: L131
+registered_at: 2026-09-15
+track: execution/measurement
+kind: forward descriptive instrumentation
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L131
+title: Immutable entry-arm assignment and complete F22 decision lineage
+
+# IMMUTABLE AFTER REGISTRATION. This file and the L131 PENDING ledger row precede implementation
+# tests, replay, deployment, or any F22 observation.
+question: >-
+  Can every F22-eligible event be assigned once, before arm-specific behavior, to the current
+  bounded-taker route or the reviewed post-only-maker route, and can every downstream decision,
+  order, fill, hedge, settlement and dollar outcome be reproduced without inferring the arm from
+  order shape after the fact?
+
+scope:
+  assignment_unit: canonical externally anchored event_id
+  assignment_rule: >-
+    SHA-256 over the exact UTF-8 bytes of `janus:f22:entry-arm:v1\0` followed by event_id. An even
+    first digest byte is maker and an odd first digest byte is taker. The mapping is pure and
+    versioned; all epochs and repeat entries for one event retain one arm.
+  assignment_time: >-
+    Before maker-plan construction, taker pre-send confirmation, provider submission, or any
+    arm-specific refusal. Assignment itself cannot make an otherwise ineligible cover eligible.
+  no_crossover: >-
+    An event may never submit both entry routes inside F22. Maker refusal/cancel/zero-fill never
+    falls through to taker, and taker refusal/zero-fill never falls through to maker.
+
+required_persistence:
+  - forward row id F22, assignment algorithm/version, canonical event_id, digest and assigned arm
+  - exact sizing input hash, selected quantity, complete existing sizing audit and active cap values
+  - executable tree, runner and limits identities already carried by the lane/run index
+  - arm on both the durable sizing decision and execution plan before any provider wire
+  - provider acceptance/rejection/unknown, post-only role proof where applicable, cumulative fills,
+    cancel/finality, hedge/protection actions, exact fees/cash and terminal reconciliation
+  - a stable classifier that keeps local refusal, provider rejection, authoritative zero-fill,
+    partial fill, full fill, unknown, role violation and reconciliation failure distinct
+
+implementation_limits:
+  - Do not change cover eligibility, fee schedule, settlement proof, freshness, caps, hurdles,
+    breaker, hedge ceilings, protection allowance, unwind policy, or venue order.
+  - Reuse the existing bounded taker and exact-share-capped post-only maker adapters; add no
+    replacement and no fallback.
+  - The maker rest remains the current implementation's maximum of two seconds and is also bounded
+    by the immutable pre-wire quote expiry and continuous full-remainder hedge/safety proof.
+  - The assignment is active only for F22 LIMITED_LIVE execution; historical rows are never
+    backfilled or relabelled.
+
+success_criteria:
+  - Pure assignment test vectors are byte-stable and changing event_id is the only runtime input.
+  - The same event cannot cross arms across repeated epochs, restarts, or replay.
+  - Assignment and arm enter durable state before the first possible provider POST.
+  - Both arms retain their exact existing wire, quantity, terminality and protection contracts.
+  - Maker refusal has no taker fallback; taker refusal has no maker fallback.
+  - A reporting query reconstructs the immutable F22 outcome taxonomy and dollars without parsing
+    human log text or treating unresolved state as zero.
+  - The registered lane replay reports both digests; any movement is stated as a behavior change.
+
+stop_conditions:
+  - missing, mutable or contradictory arm assignment
+  - one event submitting both arms, any implicit fallback or any replacement
+  - arm absent from durable pre-wire lineage
+  - missing authoritative maker/taker role evidence on a maker fill
+  - any cap, hurdle, hedge, settlement, unwind, or protection-policy change hidden in this row
+
+claims_withheld:
+  - L131 does not claim maker profitability, fill improvement, causality, or a daily profit rate.
+  - L131 does not make observations eligible for L63, whose caps and required instrumentation differ.
+  - L131 grants no arm, release, restart, override, kill-clear, order, or account authority.

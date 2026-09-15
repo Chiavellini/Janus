@@ -43,6 +43,9 @@ class SizingDecision:
     binding_constraints: tuple[str, ...]
     risk_context: Mapping[str, object]
     fill_model: str = "BOUNDED_TAKER_V1"
+    #: Optional forward-experiment identity.  Common sizing remains unchanged; the live grid adds
+    #: this only after the event has been assigned and before the durable decision is written.
+    entry_experiment: Mapping[str, object] | None = None
 
     def audit(self) -> dict:
         selected = self.selected
@@ -56,6 +59,7 @@ class SizingDecision:
             "binding_constraints": list(self.binding_constraints),
             "risk_context": dict(self.risk_context),
             "fill_model": self.fill_model,
+            "entry_experiment": (dict(self.entry_experiment) if self.entry_experiment is not None else None),
             "candidates": [
                 {
                     "quantity": c.quantity,

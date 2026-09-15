@@ -8,6 +8,7 @@ league-keying mistake that a fake venue would have caught (HANDOFF 2026-09-03, i
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -284,6 +285,26 @@ def test_arming_override_refuses_a_dirty_or_unknown_code_tree(tmp_path):
     plain.mkdir()
     r, path = write_override(tmp_path, root=plain)
     assert r.returncode == 2 and "unknown" in r.stderr and not path.exists()
+
+
+def test_arming_override_pins_explicit_experiment_spec_bytes(tmp_path):
+    from kernel.tests.test_code_sha import _repo
+    repo = _repo(tmp_path)
+    spec = repo / "research" / "sports" / "f22" / "spec.yaml"
+    spec.parent.mkdir(parents=True)
+    spec.write_text("id: F22\nimmutable: true\n")
+    subprocess.run(["git", "add", "."], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "add spec"], cwd=repo, check=True)
+    r, path = write_override(
+        tmp_path, "--experiment", "F22", "--experiment-spec", "research/sports/f22/spec.yaml",
+        "--assignment-algorithm", "janus:f22:entry-arm:v1", root=repo)
+    assert r.returncode == 0, r.stderr
+    d = json.loads(path.read_text())
+    assert d["experiment"] == {
+        "row_id": "F22", "spec_path": "research/sports/f22/spec.yaml",
+        "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+        "assignment_algorithm": "janus:f22:entry-arm:v1",
+    }
 
 
 def test_settle_takes_the_venues_fills_on_the_proofs_orders_not_the_files_memory():

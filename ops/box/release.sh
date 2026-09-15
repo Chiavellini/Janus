@@ -8,8 +8,9 @@
 # In order: provision the PM redemption key if absent; checkout without restart; sync the pinned
 # redemption runtime and units; re-sign the override at JANUS_ARM_CAPS (default $30 / 25 / $500,
 # 168 h); restart LIMITED_LIVE; clear only the exact reviewed latch captured at paste start after
-# stopped-lane proof; verify post-start streams; run redemption now. L122's exact flag-211 latch is
-# routed to its separate helper; every other latch keeps the independent false-maker path.
+# stopped-lane proof; verify post-start streams; run redemption now. L122's exact flag-211 latch and
+# L133's exact guard-failure incident set are routed to separate helpers; the false-maker path is selected
+# only by its reviewed reason signature. A malformed or unknown reason is a hard failure.
 # A different or changed kill is never cleared. A docs-only sha still gets the same full sequence.
 #
 # The statement is $JANUS_ARM_STATEMENT, else ops/box/arm_statement.txt (the standing one). Any
@@ -66,6 +67,25 @@ fi
 # human/other-risk latch remains a hard stop.
 LIVE_KILL_SHA=$(bash "$HERE/run.sh" "if [ -f /srv/janus/kill/live ]; then sha256sum /srv/janus/kill/live | awk '{print \$1}'; else echo none; fi" | grep -E '^(none|[0-9a-f]{64})$' | tail -1)
 [ -n "$LIVE_KILL_SHA" ] || { echo "could not snapshot live kill"; exit 2; }
+if [ "$LIVE_KILL_SHA" != none ]; then
+  LIVE_KILL_REASON=$(bash "$HERE/run.sh" "if [ -f /srv/janus/kill/live ]; then /usr/bin/python3 -c 'import json; print(json.load(open(\"/srv/janus/kill/live\")).get(\"reason\", \"__MALFORMED__\"))'; else echo none; fi" | tail -1)
+  [ -n "$LIVE_KILL_REASON" ] || { echo "could not snapshot live kill reason" >&2; exit 2; }
+else
+  LIVE_KILL_REASON=none
+fi
+KILL_ROUTE=none
+if [ "$LIVE_KILL_SHA" != none ]; then
+  case "$LIVE_KILL_REASON" in
+    'guard failed: RuntimeError: RuntimeError: incomplete guard snapshot: balance:polymarket: venue did not return a balance; fills:polymarket: PROJECTION_BATCH_INCOMPLETE: trade read: PolyApiExcepti')
+      [ "$LIVE_KILL_SHA" = dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83 ] || { echo "guard-failure reason has an unreviewed digest; refusing clear" >&2; exit 2; }
+      KILL_ROUTE=guard ;;
+    'LEGACY_INCIDENT_ACK_INVALID flag=211: ValueError: acknowledged incident state changed')
+      [ "$LIVE_KILL_SHA" = a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6 ] || { echo "flag-211 reason has an unreviewed digest; refusing clear" >&2; exit 2; }
+      KILL_ROUTE=legacy ;;
+    'unknown provider state:'*'post-only cancel/late-fill lifecycle unresolved:'*) KILL_ROUTE=false_maker ;;
+    *) echo "unknown or malformed live-kill reason; refusing generic clear" >&2; exit 2 ;;
+  esac
+fi
 
 echo "== (0) provision idempotent PM redemption authority"
 python3 "$HERE/provision_redemption.py" --region "$REGION"
@@ -80,11 +100,25 @@ echo "== (c) re-sign the override for the new tree"
 CAPS=${JANUS_ARM_CAPS:-"30 25 500 168"}      # stake, contracts per leg, day notional, hours (GATE row 2026-09-11, F21: one rung up from the smallest size)
 # shellcheck disable=SC2086
 bash "$HERE/write_override.sh" "$STATEMENT" $CAPS
-echo "== (d) restart under LIMITED_LIVE"
-bash "$HERE/mode.sh" LIMITED_LIVE
+if [ "$KILL_ROUTE" = guard ]; then
+  # L133 owns the complete stopped-lane preproof, retained-kill warmup, second guard and final
+  # restart. Starting here first could mint a third GUARD_FAILED row and invalidate exact recovery.
+  echo "== (d) keep lane stopped; L133 recovery owns the guarded restart"
+else
+  echo "== (d) restart under LIMITED_LIVE"
+  bash "$HERE/mode.sh" LIMITED_LIVE
+fi
 if [ "$LIVE_KILL_SHA" != none ]; then
   case "$LIVE_KILL_SHA" in
+    dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83)
+      [ "$KILL_ROUTE" = guard ] || { echo "guard-failure digest has an unexpected reason; refusing clear" >&2; exit 2; }
+      echo "== (e) exact recovery of registered guard-failure flags 1169 and 1170"
+      GUARD_DEPLOYED_SHA=$(bash "$HERE/run.sh" "sudo -u janus git -C /opt/janus rev-parse --verify HEAD" | grep -E '^[0-9a-f]{40}$' | tail -1 || true)
+      [[ "$GUARD_DEPLOYED_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "could not resolve the box's full deployed Git SHA; guard clear remains blocked" >&2; exit 2; }
+      bash "$HERE/clear_guard_failure_latch.sh" "$GUARD_DEPLOYED_SHA" "$LIVE_KILL_SHA"
+      ;;
     a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6)
+      [ "$KILL_ROUTE" = legacy ] || { echo "flag-211 digest has an unexpected reason; refusing clear" >&2; exit 2; }
       echo "== (e) exact recovery of reviewed flag-211 legacy incident latch"
       DEPLOYED_SHA=$(bash "$HERE/run.sh" "sudo -u janus git -C /opt/janus rev-parse --verify HEAD" | grep -E '^[0-9a-f]{40}$' | tail -1 || true)
       case "$DEPLOYED_SHA" in
@@ -94,6 +128,7 @@ if [ "$LIVE_KILL_SHA" != none ]; then
       bash "$HERE/clear_legacy_incident_latch.sh" "$DEPLOYED_SHA" "$LIVE_KILL_SHA"
       ;;
     *)
+      [ "$KILL_ROUTE" = false_maker ] || { echo "unknown live-kill digest; refusing generic clear" >&2; exit 2; }
       echo "== (e) exact recovery of reviewed false maker latch"
       bash "$HERE/clear_false_maker_latch.sh" "$SHA" "$LIVE_KILL_SHA"
       ;;

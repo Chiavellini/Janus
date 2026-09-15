@@ -475,7 +475,8 @@ def test_override_state_is_what_the_report_tick_and_the_watchdog_read(tmp_path):
     kw = dict(code_sha="c0de", limits_sha="11m1")
     st = override_state(ov, now=1000.0, **kw)
     assert st == {"present": False, "expires_utc": None, "seconds_left": None, "code_matches": False,
-                  "limits_matches": False, "mode": None}
+                  "limits_matches": False, "mode": None, "operator_statement": None, "caps": {},
+                  "experiment": None}
     assert stale_reason(st, **kw) == "override missing or incomplete"
     good = {"operator_statement": "I approve.", "signed_by": "operator", "mode": "LIMITED_LIVE", "runner_sha": "head",
             "code_sha": "c0de", "limits_sha": "11m1", "caps": {"stake_usd": 12.0}, "expires_utc": "1970-01-01T01:00:00Z"}

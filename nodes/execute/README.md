@@ -98,3 +98,17 @@ and maker admission stay held, and known exposure still enters protection. Synch
 calls may delay terminal reconciliation after cancel dispatch; restart recovery uses the durable
 cancel intent, order journal and position guard. L63 prospectively measures maker fill selection,
 realized-EV and Sharpe inputs; conditional-fill sizing is not claimed realized-EV optimal.
+
+## F22/L131 reporting
+
+`entry_experiment.py` owns the pure arm assignment and the additive `f22_decisions` analysis
+ledger. A normal `LIMITED_LIVE` override leaves F22 disabled and preserves the historical taker
+route. F22 enables only when the override exactly pins its immutable spec bytes, assignment
+algorithm, registered caps and verbatim operator statement. The live grid writes the F22 row in
+the same pre-wire transaction as the existing sizing decision, then records an explicit local/risk
+no-wire disposition or the execution id. Any lifecycle write failure latches live entry. After the
+first three actual F22 fills, every further admission is blocked until all three have exact released
+cover settlements with complete economics. `ops/f22_report.py` joins those
+immutable epochs to structured orders, post-only role evidence and reconciled settlements. It never
+uses human log text and treats absent or unresolved provider, fee, role, or settlement evidence as
+unknown/blocking; it does not infer zero from a missing row.

@@ -80,6 +80,179 @@ def test_live_book_epoch_dispatches_exactly_one_profit_maximizing_quantity(tmp_p
     assert len(calls) == 1, "identical decision inputs with new receive stamps are one epoch"
 
 
+def test_f22_assignment_is_stable_in_sizing_and_plan_lineage(tmp_path: Path, monkeypatch):
+    """L131/F22: one event keeps one arm, and the exact sizing hash joins both durable rows."""
+    import json
+    import time
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+    from nodes.risk.kill import KillSwitches
+    from nodes.execute.entry_experiment import assign_entry_arm
+
+    sup, s = _supervisor(tmp_path)
+    sup.mode, sup.limits, sup.ledger = Mode.LIMITED_LIVE, load_limits(), ExposureLedger()
+    sup.f22_enabled = True
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.caps = {"stake_usd": 30.0, "max_contracts": 25.0, "day_notional_usd": 500.0}
+    sup.balance_snapshot, sup.balance_snapshot_mono = {"kalshi": 100.0, "polymarket": 100.0}, time.monotonic()
+    sync_all(s.poller, kh=.44, ka=.99, ph=.99, pa=.44)
+    plans = []
+    sup._clear = lambda *_a, **_k: SimpleNamespace(reservation=SimpleNamespace(reservation_id="r"))
+    sup.coordinator = SimpleNamespace(execute=lambda plan, *_a, **_k: plans.append(plan) or object())
+    sup._after_execution = lambda *_a: None
+    sup._on_update("g1")("K_H", T)
+    assert len(plans) == 1
+    row = sup.store.con.execute(
+        "SELECT input_hash, decision_json FROM sizing_decisions WHERE event_id='g1'"
+    ).fetchone()
+    sizing_identity = json.loads(row[1])["entry_experiment"]
+    plan_identity = plans[0].sizing["entry_experiment"]
+    assert sizing_identity == plan_identity
+    assert row[0] == sizing_identity["sizing_input_hash"]
+    stored = sup.store.con.execute(
+        "SELECT book_epoch, occurrence FROM sizing_decisions WHERE event_id='g1'"
+    ).fetchone()
+    assert stored == (sizing_identity["sizing_book_epoch"], sizing_identity["sizing_occurrence"])
+    f22 = sup.store.con.execute(
+        "SELECT sizing_input_hash,sizing_occurrence,sizing_book_epoch,arm,execution_id "
+        "FROM f22_decisions WHERE event_id='g1'"
+    ).fetchone()
+    assert f22[:4] == (row[0], stored[1], stored[0], sizing_identity["arm"])
+    assert f22[4] is None, "a missing test execution id remains unresolved instead of being invented"
+    assert sizing_identity["forward_row_id"] == "F22"
+    assert sizing_identity["arm"] == assign_entry_arm("g1").arm
+    assert assign_entry_arm("g1") == assign_entry_arm("g1"), "repeat epoch cannot reassign"
+
+
+def test_normal_limited_live_is_taker_and_has_no_f22_row_when_authority_is_disabled(tmp_path, monkeypatch):
+    """A signed live override without the separate F22 authority preserves the old taker path."""
+    import grids.live_stream.grid as G
+    import time
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.risk.ledger import ExposureLedger
+    from nodes.risk.limits import load_limits
+    from nodes.risk.kill import KillSwitches
+
+    sup, s = _supervisor(tmp_path)
+    sup.mode, sup.limits, sup.ledger = Mode.LIMITED_LIVE, load_limits(), ExposureLedger()
+    sup.f22_enabled = False
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.caps = {"stake_usd": 30.0, "max_contracts": 25.0, "day_notional_usd": 500.0}
+    sup.balance_snapshot, sup.balance_snapshot_mono = {"kalshi": 100.0, "polymarket": 100.0}, time.monotonic()
+    sync_all(s.poller, kh=.44, ka=.99, ph=.99, pa=.44)
+    ev = s.poller.on_event("stream", "K_H", now=T)[0]
+    plans = []
+    sup._clear = lambda *_a, **_k: SimpleNamespace()
+    sup._after_execution = lambda *_a: None
+    sup.coordinator = SimpleNamespace(execute=lambda plan, *_a, **_k: plans.append(plan) or SimpleNamespace(execution_id="e-disabled"))
+
+    sup._execute(s, ev, SimpleNamespace(net_profit_usd=1.0, locked_return=.02))
+
+    assert len(plans) == 1
+    assert plans[0].first.post_only is False
+    assert plans[0].first.time_in_force != "gtc"
+    f22_table = sup.store.con.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='f22_decisions'"
+    ).fetchone()
+    if f22_table is not None:
+        assert sup.store.con.execute("SELECT COUNT(*) FROM f22_decisions").fetchone()[0] == 0
+
+
+def test_f22_update_failure_stops_entries_and_latches_live(tmp_path, monkeypatch):
+    import grids.live_stream.grid as G
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.execute.entry_experiment import assign_entry_arm
+    from nodes.risk.kill import KillSwitches
+
+    sup, _ = _supervisor(tmp_path)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    identity = assign_entry_arm("g1").as_record({"stake_usd": 30, "max_contracts": 25})
+    identity.update({"sizing_input_hash": "h", "sizing_occurrence": 1, "sizing_book_epoch": "epoch"})
+    from nodes.execute.entry_experiment import F22_DECISIONS_DDL
+    sup.store.ensure_ddl(F22_DECISIONS_DDL)
+    sup.store.con.execute(
+        "INSERT INTO f22_decisions(event_id,forward_row_id,assignment_algorithm,digest,arm,sizing_input_hash,"
+        "sizing_occurrence,sizing_book_epoch,selected_quantity,decision_json,created_utc,updated_utc) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+        ("g1", "F22", identity["assignment_algorithm"], identity["digest"], identity["arm"], "h", 1,
+         "epoch", 10.0, "{}", T, T))
+    sup.store.commit()
+    monkeypatch.setattr(G, "update_f22_decision", lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError("db down")))
+
+    assert not sup._f22_update(SimpleNamespace(entry_experiment=identity), outcome="accepted_full_fill")
+    assert sup.f22_failed is True
+    assert "live" in sup.kill.any_present()
+
+
+def test_f22_first_three_checkpoint_blocks_before_provider_execution(tmp_path):
+    import time
+    from types import SimpleNamespace
+    from kernel.schema import Mode
+    from nodes.execute.entry_experiment import F22_DECISIONS_DDL, assign_entry_arm, record_f22_decision
+    from nodes.execute.records import ExecutionRecords
+    from nodes.reconcile.settle_executions import SETTLEMENTS_DDL
+    from nodes.risk.kill import KillSwitches
+
+    sup, s = _supervisor(tmp_path)
+    sup.mode = Mode.LIMITED_LIVE
+    sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
+    sup.f22_enabled = True
+    ExecutionRecords(sup.store)
+    sup.store.ensure_ddl(F22_DECISIONS_DDL)
+    sup.store.ensure_ddl(SETTLEMENTS_DDL)
+    for i in range(3):
+        event = f"old-{i}"
+        exid = f"ex-{i}"
+        a = assign_entry_arm(event).as_record({"stake_usd": 30, "max_contracts": 25})
+        a.update({"sizing_input_hash": f"hash-{i}", "sizing_occurrence": 1, "sizing_book_epoch": f"epoch-{i}"})
+        record_f22_decision(sup.store, assignment=a, decision={}, selected_quantity=10.0, now=T + i)
+        sup.store.con.execute(
+            "INSERT INTO executions(execution_id,opportunity_id,event_id,league,mode,state,started_utc,last_utc,"
+            "quantity,released,first_filled) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+            (exid, f"opp-{i}", event, "mlb", "LIMITED_LIVE", "HEDGED", T + i, T + i, 10.0, 0, 10.0))
+        sup.store.con.execute(
+            "UPDATE f22_decisions SET execution_id=? WHERE event_id=? AND sizing_book_epoch=?",
+            (exid, event, f"epoch-{i}"))
+    event = "g1"
+    a = assign_entry_arm(event).as_record({"stake_usd": 30, "max_contracts": 25})
+    a.update({"sizing_input_hash": "current-hash", "sizing_occurrence": 1, "sizing_book_epoch": "current-epoch"})
+    record_f22_decision(sup.store, assignment=a, decision={}, selected_quantity=10.0, now=T + 4)
+    sup.store.commit()
+    sync_all(s.poller, kh=.44, ka=.99, ph=.99, pa=.44)
+    ev = s.poller.on_event("stream", "K_H", now=T + 5)[0]
+    sup.coordinator = SimpleNamespace(execute=lambda *_a, **_k: (_ for _ in ()).throw(AssertionError("provider wire")))
+
+    sizing = SimpleNamespace(entry_experiment=a, audit=lambda: {})
+    sup._execute(s, ev, SimpleNamespace(net_profit_usd=1.0, locked_return=.02), sizing=sizing)
+
+    assert sup.refusals[("execution", "F22_RECONCILIATION_CHECKPOINT", "mlb")] == 1
+
+
+def test_f22_maker_refusal_has_no_taker_fallback_or_wire(tmp_path: Path, monkeypatch, capsys):
+    import grids.live_stream.grid as G
+    from types import SimpleNamespace
+    from nodes.execute.entry_experiment import assign_entry_arm
+
+    sup, s = _supervisor(tmp_path)
+    sync_all(s.poller, kh=.44, ka=.99, ph=.99, pa=.44)
+    ev = s.poller.on_event("stream", "K_H", now=T)[0]
+    assert assign_entry_arm(ev.game_id).arm == "maker"
+    sizing = SimpleNamespace(entry_experiment=assign_entry_arm(ev.game_id).as_record(), audit=lambda: {})
+    called = []
+    monkeypatch.setattr(G, "maker_plan_from_cover", lambda **_k: called.append("maker") or None)
+    monkeypatch.setattr(G, "plan_from_cover", lambda **_k: called.append("taker") or (_ for _ in ()).throw(AssertionError("fallback")))
+    sup.coordinator = SimpleNamespace(execute=lambda *_a, **_k: (_ for _ in ()).throw(AssertionError("wire")))
+    sup._execute(s, ev, SimpleNamespace(net_profit_usd=1.0, locked_return=.02), sizing=sizing)
+    assert called == ["maker"]
+    assert sup.refusals[("execution", "MAKER_PLAN_REFUSED", "mlb")] == 1
+    assert "no taker fallback" in capsys.readouterr().out
+
+
 def test_live_selector_runs_even_when_every_legacy_fixed_rung_misses(tmp_path: Path, monkeypatch):
     """An intermediate integer may clear the dollar floor when q_min/5 are too small and 10 has
     crossed a depth/fee step. Fixed-rung profitability must not gate exhaustive live sizing."""

@@ -40,6 +40,9 @@ def main() -> int:
     ap.add_argument("--path", type=Path, default=OVERRIDE_PATH)
     ap.add_argument("--root", type=Path, default=ROOT, help="the checkout whose code tree is pinned (default: this one)")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--experiment", choices=["F22"], help="explicitly authorize a preregistered live experiment")
+    ap.add_argument("--experiment-spec", type=Path, help="repo-relative immutable experiment spec to pin")
+    ap.add_argument("--assignment-algorithm", help="versioned assignment algorithm to pin")
     a = ap.parse_args()
     if not a.statement.strip() or not a.signed_by.strip():
         print("the statement and the signer must be non-empty", file=sys.stderr)
@@ -59,6 +62,19 @@ def main() -> int:
          "caps": {"stake_usd": a.stake_usd, "max_contracts": a.max_contracts, "day_notional_usd": a.day_notional_usd},
          "expires_utc": (datetime.now(timezone.utc) + timedelta(hours=a.expires_hours)).strftime("%Y-%m-%dT%H:%M:%SZ"),
          "written_utc": datetime.now(timezone.utc).isoformat()}
+    if a.experiment:
+        if not a.experiment_spec or not a.assignment_algorithm:
+            print("--experiment requires --experiment-spec and --assignment-algorithm", file=sys.stderr)
+            return 2
+        try:
+            spec = (a.root / a.experiment_spec).resolve(strict=True)
+            spec.relative_to(a.root.resolve())
+        except (OSError, ValueError) as exc:
+            print(f"experiment spec must be a readable file inside the checkout: {exc}", file=sys.stderr)
+            return 2
+        d["experiment"] = {"row_id": a.experiment, "spec_path": a.experiment_spec.as_posix(),
+                           "spec_sha256": hashlib.sha256(spec.read_bytes()).hexdigest(),
+                           "assignment_algorithm": a.assignment_algorithm}
     a.path.parent.mkdir(parents=True, exist_ok=True)
     a.path.write_text(json.dumps(d, indent=2) + "\n")
     a.path.chmod(0o600)

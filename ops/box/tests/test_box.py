@@ -206,6 +206,40 @@ def test_release_routes_only_registered_flag211_digest_to_separate_helper():
     assert release.index("case \"$LIVE_KILL_SHA\"") < release.index("clear_legacy_incident_latch.sh")
 
 
+def test_release_classifies_the_three_reviewed_kill_reasons_and_rejects_unknowns():
+    from pathlib import Path
+    release = (Path(__file__).resolve().parents[1] / "release.sh").read_text()
+    assert "clear_guard_failure_latch.sh" in release
+    assert "dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83" in release
+    assert "GUARD_FAILED" not in release.split("case \"$LIVE_KILL_REASON\"", 1)[0]
+    assert "unknown or malformed live-kill reason; refusing generic clear" in release
+    assert "unknown provider state:'*'post-only cancel/late-fill lifecycle unresolved:'" in release
+
+
+def test_guard_recovery_route_does_not_restart_before_exact_stopped_lane_proof():
+    """A generic mode restart can let the guard append a third source and invalidate L133."""
+    from pathlib import Path
+    release = (Path(__file__).resolve().parents[1] / "release.sh").read_text()
+    classify = release.index('case "$LIVE_KILL_REASON" in')
+    branch = release.index('if [ "$KILL_ROUTE" = guard ]', classify)
+    helper = release.index('bash "$HERE/clear_guard_failure_latch.sh"', branch)
+    generic = release.index('bash "$HERE/mode.sh" LIMITED_LIVE', branch)
+    assert classify < branch < generic < helper
+    block = release[branch:release.index('if [ "$LIVE_KILL_SHA" != none ]', branch)]
+    assert 'if [ "$KILL_ROUTE" = guard ]' in block
+    assert 'keep lane stopped' in block
+
+
+def test_release_override_explicitly_pins_f22_spec_and_assignment():
+    from pathlib import Path
+    script = (Path(__file__).resolve().parents[1] / "write_override.sh").read_text()
+    assert "--experiment F22" in script
+    assert "--experiment-spec research/sports/2026-09-15_limited-live-f22-maker-vs-taker/spec.yaml" in script
+    assert "--assignment-algorithm janus:f22:entry-arm:v1" in script
+    statement = (Path(__file__).resolve().parents[1] / "arm_statement.txt").read_text().strip()
+    assert statement == "proceed with the experiment; consider todays goal (reach 20 usd profit)"
+
+
 def test_release_legacy_route_passes_an_exact_full_deployed_sha_to_the_helper():
     """The L122 route must preserve the box's full checkout SHA verbatim."""
     from pathlib import Path

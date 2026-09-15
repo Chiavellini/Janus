@@ -16,6 +16,18 @@ Not a node. Operational surface: it answers *"is this job healthy?"*, which noth
 | `polymarket_live_proof.py` | GATE step 8 on Polymarket, tiny, the venue's first real order (no demo exists): dry run, `--arm`, `--settle`, `--check`. Needs the wallet key file (600) named by `JANUS_PM_WALLET_KEY_PATH` and an override whose statement names Polymarket. Matched is not settled: the fill counts once the trade is CONFIRMED on-chain. |
 | `kalshi_shards.py` | Kalshi exchange shards: `--show` prints the balance per shard and which shard each registered game series is on; `--move --to N --usd X` plans an intra-account transfer and sends it only with `--confirm` (the operator's). Collateral lives per shard since 2026-08-24; an order on an unfunded shard is refused `user_not_found`. |
 | `proof_check.py` | The post-proof checklist as code, shared by every venue's proof script: resting → canceled, IOC final, fees at the pin, balance delta, settled PnL arithmetic, reservation released. Reads the ledger read-only; never echoes an ack. |
+| `f22_report.py` | Read-only L131/F22 report. Joins the durable F22 decision ledger to structured executions, orders, role evidence and settlements; emits the registered eight-way taxonomy and exact dollars, leaving unknown/unreconciled values as `None`. |
+
+`python3 ops/f22_report.py --db /path/to/janus.sqlite` is the analysis query for F22. It reads the
+database through SQLite's read-only URI and never parses logs. A selected decision is eligible only
+when the common sizing row contains the immutable F22 identity. Pre-wire local/risk refusals are
+persisted explicitly in `f22_decisions`; a missing execution or unresolved provider/settlement
+state remains `unknown_provider_state` and blocks the scored checkpoint. Zero PnL is emitted only
+for an explicit no-position terminal response or an explicit no-wire disposition.
+
+The F22 override also pins the spec file's SHA-256, assignment version, exact registered caps and
+verbatim operator statement. Without that complete authority the live lane stays on its ordinary
+taker route and writes no F22 observations.
 
 ## Why the start row exists
 

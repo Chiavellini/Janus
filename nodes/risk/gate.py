@@ -68,7 +68,8 @@ def override_state(path: Path | str, *, code_sha: str, limits_sha: str, now: flo
     `mode` is the override's own claim, or None."""
     t = now if now is not None else datetime.now(timezone.utc).timestamp()
     out = {"present": False, "expires_utc": None, "seconds_left": None,
-           "code_matches": False, "limits_matches": False, "mode": None}
+           "code_matches": False, "limits_matches": False, "mode": None,
+           "operator_statement": None, "caps": {}, "experiment": None}
     d = _read_override(Path(path))
     if isinstance(d, Refused):
         return out
@@ -76,9 +77,14 @@ def override_state(path: Path | str, *, code_sha: str, limits_sha: str, now: flo
         exp = _expiry_ts(d)
     except (ValueError, TypeError):
         return out
+    try:
+        caps = dict(d.get("caps") or {})
+    except (TypeError, ValueError):
+        return out
     out.update(present=True, expires_utc=str(d["expires_utc"]), seconds_left=exp - t,
                code_matches=(str(d["code_sha"]) == code_sha), limits_matches=(str(d["limits_sha"]) == limits_sha),
-               mode=str(d["mode"]))
+               mode=str(d["mode"]), operator_statement=str(d["operator_statement"]),
+               caps=caps, experiment=d.get("experiment"))
     return out
 
 

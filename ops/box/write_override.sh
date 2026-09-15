@@ -18,7 +18,7 @@ SIGNED_BY=${JANUS_SIGNED_BY:-Bernardo}
 B64=$(printf %s "$STATEMENT" | base64 | tr -d '\n')
 read -r -d '' SCRIPT <<EOS || true
 echo "$B64" | base64 -d > /tmp/janus-statement.txt
-sudo -u janus bash -c 'set -a; . /run/janus/janus.env; set +a; cd /opt/janus; JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/arming_override.py --mode LIMITED_LIVE --signed-by "$SIGNED_BY" --stake-usd $STAKE --max-contracts $CONTRACTS --day-notional-usd $DAY --expires-hours $HOURS --force --statement "\$(cat /tmp/janus-statement.txt)"'
+sudo -u janus bash -c 'set -a; . /run/janus/janus.env; set +a; cd /opt/janus; JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box .venv/bin/python3 ops/arming_override.py --mode LIMITED_LIVE --signed-by "$SIGNED_BY" --stake-usd $STAKE --max-contracts $CONTRACTS --day-notional-usd $DAY --expires-hours $HOURS --force --experiment F22 --experiment-spec research/sports/2026-09-15_limited-live-f22-maker-vs-taker/spec.yaml --assignment-algorithm janus:f22:entry-arm:v1 --statement "\$(cat /tmp/janus-statement.txt)"'
 rm -f /tmp/janus-statement.txt
 EOS
 bash "$(dirname "$0")/run.sh" "$SCRIPT"
