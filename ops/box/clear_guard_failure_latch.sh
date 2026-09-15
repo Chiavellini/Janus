@@ -82,6 +82,13 @@ ARCHIVE="\$AUDIT/guard-failure-1169-1170-cleared-$RELEASE_SHA-$KILL_SHA.json"
 # guard keeps running and could append a later GUARD_FAILED row, invalidating L133 between proof
 # and activation.
 stop_lane_verified
+# L136: settle only the exact already-hedged cover that arrived after L133 was registered.  This
+# uses the ordinary venue-result/apply_settlements path while the registered kill is retained;
+# open or changed evidence fails before L133 can call the database quiet.
+sudo -u janus env JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box '$PY' /opt/janus/ops/box/settle_held_cover.py \
+  --db '$DB' --kill '$KILL' --expected-kill-sha '$KILL_SHA' \
+  --release-sha '$RELEASE_SHA' --repo /opt/janus
+echo STOPPED_EXACT_HELD_COVER_SETTLED
 pre_proved=0
 for _ in \$(seq 1 100); do
   if sudo -u janus env JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box '$PY' /opt/janus/ops/box/clear_guard_failure_latch.py prove --db '$DB' --kill '$KILL' --expected-kill-sha '$KILL_SHA' --release-sha '$RELEASE_SHA' --repo /opt/janus; then

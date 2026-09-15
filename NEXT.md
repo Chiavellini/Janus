@@ -7,26 +7,37 @@ Updated 2026-09-15 for the F22 maker-versus-taker release candidate on branch
 
 ## Current production state
 
-The Mexico box is deployed at `f7c9c1b177f757d6bfbc6e126eeb47bbb001c6eb`. The lane service was
-last observed active in `LIMITED_LIVE`, but `kill/live` is retained, so new entry is blocked. Do not
-describe the lane as trading merely because systemd is active.
+The Mexico box is deployed at `1be680be24f10bc2dc7d783e7c27273deb3b046e`. The lane service is
+stopped (`inactive`, `MainPID=0`, `ControlPID=0`) and `kill/live` is retained, so neither polling nor
+new entry is running. Do not describe the lane as trading.
 
 The current kill is bound to SHA-256
 `dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83` and the first guard failure
-at UTC `1789484735.5242064`. A fresh read-only query found exactly two unresolved `GUARD_FAILED`
-rows: 1169 (Polymarket balance/trade-batch failure) and 1170 (missing complete fills/positions
-proof). L132 required only row 1169 and therefore stopped. L133 preregisters exact recovery for the
-pair `{1169,1170}` without weakening L132.
+at UTC `1789484735.5242064`. The exact unresolved `GUARD_FAILED` rows remain 1169 (Polymarket
+balance/trade-batch failure) and 1170 (missing complete fills/positions proof). L132 required only
+1169 and stopped. L133 registered the pair, but its production run stopped at the first static proof
+because an exact real cover remained unsettled. It appended no resolution and archived no kill.
 
 The Polymarket redemption timer is failing while `data-api.polymarket.com/positions` returns a rate
 limit error. This is an unresolved operating-cost/reliability issue, not evidence of runaway order
 submission. It must not be confused with the entry-attempt volume in the lane.
 
-Two F22 release attempts stopped before provision or checkout at L134: SSM returned the exact kill
-reason followed by a transport blank line, and `release.sh` selected the blank with `tail -1`. The
-candidate now requires exactly one nonblank response line and preserves it for the unchanged exact
-classifier. All 42 box/recovery tests and an independent Luna review passed. A corrected release
-retry is pending; the failed attempts made no production mutation.
+L134 repaired the SSM transport-newline bug, after which release `1be680b` checked out and re-signed
+the unchanged F22 authority. L133 then stopped safely. L135 proved its four nonquiet counters were
+not one stale identity: execution `17077a35` / reservation `b292be2a` is a real 25-contract ATP
+cover with both owned IOC legs filled, zero unhedged quantity and no settlement row. Its $24.49357
+reservation must remain held until both venues finalize. The admission is canonically empty despite
+its retained timestamp; historical persistence flag 211 has valid exact resolution marker 215 but
+no lifecycle row because that incident was itself a persistence failure.
+
+L136 is the registered convergence. Its stopped-lane helper binds the full release, exact retained
+kill, exact execution/reservation/order identities and economics; uses the existing authoritative
+venue result and settlement paths; writes only when both winners are final; performs the entire
+release/reconciliation atomically; and leaves the kill untouched. Its corrected L133 predicates
+accept only the canonical null-owner admission and let an exact cryptographic resolution cover a
+missing lifecycle row while any present bad row still blocks. The first registered provider read
+returned `null` from both venues, so production was not mutated and remains waiting for venue
+finality.
 
 ## F22 release candidate
 
@@ -56,7 +67,7 @@ first-order id, hedge id or nonzero fill.
 ## Verification
 
 The release candidate has zero live F22 observations. It is locally ready, not economically
-validated.
+validated. L136 verification is still being completed before its release commit.
 
 - Focused F22/grid/report tests: 65 passed; the final combined F22/recovery selection passed 87.
 - Integrated suite: the only failure in the final run was the documented pre-existing box FIFO
@@ -66,8 +77,9 @@ validated.
 - Shell syntax, Python compilation and `git diff --check`: passed.
 - Final independent Luna safety audit: RELEASE after its last no-wire reporting blocker was fixed.
 
-No agent ran `--arm`, `--confirm`, `ops/box/write_override.sh`, `ops/box/mode.sh`, the L133 helper,
-or `ops/box/release.sh`; no kill, mode, override, account state or production database was mutated.
+The agent ran the operator-authorized release route. It checked out `1be680b` and re-signed the
+unchanged standing limits, then failed closed in L133. No kill archive, entry, account mutation,
+guard resolution or F22 observation occurred. The one already-held cover is unchanged.
 
 ## Economic truth
 
@@ -92,12 +104,13 @@ turnover, loosen safety, or stop early after a favorable result.
 
 ## Release boundary and immediate continuation
 
-The next production action is one operator-pasted `ops/box/release.sh <commit>` command after this
-candidate is committed and pushed. The release must classify the exact retained kill before it
-changes checkout or restarts anything. For the exact L133 route, the helper stops the lane, proves
-the registered two-row set and global quiet money state, runs two stopped credentialed guards with
-a retained-kill three-stream warm-up between them, appends one exact joint resolution, archives only
-the unchanged kill and restarts. Any mismatch restores the kill and leaves the lane stopped.
+Finish L136 tests, exact replay and independent audit; commit and push one convergence release. Do
+not retry production while either venue result is still open: the exact helper will return WAIT,
+retain the kill and leave the lane stopped. Once both venues are authoritative, the operator has
+authorized the agent to run `ops/box/release.sh <commit>`. The route must atomically settle only the
+registered cover before L133's static proof; then the unchanged two stopped guards, retained-kill
+stream warm-up, exact joint resolution, exclusive kill archive and restart requirements apply. Any
+mismatch retains/restores the kill and leaves the lane stopped.
 
 After a successful release, use `ops/f22_report.py` and the production funnel to observe:
 
@@ -119,11 +132,14 @@ no-fill, and do not infer profitability from attempts, theoretical edges or midp
 - `ops/f22_report.py` and tests: strict prospective scoring and audit report.
 - `ops/arming_override.py`, `ops/box/write_override.sh`, and risk reporting: exact signed F22 pins.
 - `ops/box/clear_guard_failure_latch.py/.sh` and tests: exact L133 recovery, rollback and retry.
+- `ops/box/settle_held_cover.py` and tests: exact atomic L136 settlement convergence while stopped.
 - `ops/box/release.sh` and tests: pre-mutation kill classification and helper-owned guard route.
 - `research/exec/2026-09-15_f22-entry-arm-instrumentation/`: L131 spec and local verdict.
 - `research/exec/2026-09-15_guard-failure-recovery/`: L132 spec and STOP.
 - `research/exec/2026-09-15_guard-failure-pair-recovery/`: L133 spec and local verdict.
 - `research/exec/2026-09-15_release-kill-reason-newline/`: L134 measured transport fix and verdict.
+- `research/exec/2026-09-15_l133-nonquiet-identity/`: L135 exact read-only diagnosis.
+- `research/exec/2026-09-15_stopped-lane-settlement-convergence/`: L136 immutable recovery spec.
 - `research/sports/2026-09-15_limited-live-f22-maker-vs-taker/`: immutable F22 forward spec.
 - `GATE_TO_LIVE.md` and `ops/box/arm_statement.txt`: exact operator statement, unchanged caps.
 - `snooping_ledger.md`: immutable registrations and results.

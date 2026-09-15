@@ -1,0 +1,51 @@
+id: L135
+registered_at: 2026-09-15
+track: operator/safety
+kind: read-only production classification
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L135
+title: Exact identity of the four nonquiet rows that stopped L133
+
+# IMMUTABLE AFTER REGISTRATION. This file and the L135 ledger row precede the identity query or any
+# implementation test, guard invocation, release retry, database write, kill change, or restart.
+known_at_registration:
+  deployed_release: 1be680be24f10bc2dc7d783e7c27273deb3b046e
+  retained_kill_sha256: dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83
+  l133_first_proof:
+    orders: 0
+    unreleased_executions: 1
+    materially_unhedged: 0
+    unreleased_reservations: 1
+    unresolved_admissions: 1
+    historical_post_only_violations_without_accepted_exact_resolution: 1
+    unresolved_post_only_orders: 0
+    other_material_flags: {}
+  release_result: >-
+    STOPPED_PRE_GUARD_1169_1170_PROOF_FAILED; the release exited nonzero before either credentialed
+    guard, resolution append, kill archive, or F22 observation.
+
+question: >-
+  Are the execution, reservation, admission and violation one exact terminal/reconciled historical
+  incident whose current state and existing append-only evidence can safely converge, or does any
+  row represent active, unknown, unmatched or economically unresolved money?
+
+measurement:
+  - Read the complete database rows for every unreleased execution and reservation and every claimed admission.
+  - Exact-join their opportunity, provider order, post-only lifecycle, settlement and flag identities.
+  - Read the complete retained violation and every candidate exact resolution marker through the same validator used by L133.
+  - Report provider/account evidence already persisted, but do not infer missing provider state from a terminal label.
+  - Confirm deployed SHA, unit PIDs and exact kill identity before and after the read.
+
+verdicts:
+  CONVERGENCE_CANDIDATE: >-
+    All four counts are one exact identity; both venue legs and dollars are completely reconciled;
+    unhedged quantity is zero; the reservation/admission are stale derived locks; the post-only order
+    is terminal and nonviolating; and every historical violation source is covered by an exact valid
+    durable marker. This permits a new preregistration for convergence, not a direct mutation.
+  MATERIAL_STOP: >-
+    Any active/open/unknown provider state, nonzero economic mismatch, unmatched identity, incomplete
+    settlement, missing exact violation resolution, second incident, changed kill, or new material flag.
+
+authority: >-
+  Read-only only. L135 grants no database repair, resolver, guard, release, restart, override, mode,
+  kill, cap, hurdle, entry or account authority.

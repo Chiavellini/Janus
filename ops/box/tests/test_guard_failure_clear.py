@@ -113,6 +113,60 @@ def test_historical_violation_is_quiet_only_with_clean_terminal_marker(tmp_path,
         clear.prove(db_path=db, kill_path=kill, expected_digest=digest, release_sha=release, repo=Path("."))
 
 
+def test_exact_resolution_covers_persistence_failure_without_impossible_lifecycle_row(tmp_path, monkeypatch):
+    db, kill, digest, release = fixture(tmp_path, monkeypatch)
+    with sqlite3.connect(db) as con:
+        con.execute("INSERT INTO pm_post_only_violations VALUES(?,?,?,?)",
+                    ("never-persisted", "POST_ONLY_PERSISTENCE_FAILED", "database is locked", 1))
+        con.execute("INSERT INTO lane_flags VALUES(200,?,?,?)",
+                    (1, "POST_ONLY_PERSISTENCE_FAILED", "never-persisted: database is locked"))
+        con.commit()
+        row = con.execute("SELECT id,seen_ts,flag,detail FROM lane_flags WHERE id=200").fetchone()
+        assert resolve_exact_flags(
+            SimpleNamespace(con=con), "POST_ONLY_PERSISTENCE_FAILED", [flag_snapshot(row)],
+            "complete exact historical proof", now=2,
+        )
+    clear.prove(db_path=db, kill_path=kill, expected_digest=digest, release_sha=release, repo=Path("."))
+    with sqlite3.connect(db) as con:
+        con.execute("INSERT INTO pm_post_only_orders VALUES('never-persisted',0,1)")
+    with pytest.raises(RuntimeError, match="violations=1"):
+        clear.prove(db_path=db, kill_path=kill, expected_digest=digest, release_sha=release, repo=Path("."))
+
+
+def test_noncanonical_duplicate_exact_marker_does_not_resolve_history(tmp_path, monkeypatch):
+    db, kill, digest, release = fixture(tmp_path, monkeypatch)
+    with sqlite3.connect(db) as con:
+        con.execute("INSERT INTO pm_post_only_violations VALUES(?,?,?,?)",
+                    ("never-persisted", "POST_ONLY_PERSISTENCE_FAILED", "database is locked", 1))
+        con.execute("INSERT INTO lane_flags VALUES(200,?,?,?)",
+                    (1, "POST_ONLY_PERSISTENCE_FAILED", "never-persisted: database is locked"))
+        source = con.execute("SELECT id,seen_ts,flag,detail FROM lane_flags WHERE id=200").fetchone()
+        snapshots = [flag_snapshot(source), flag_snapshot(source)]
+        payload = {
+            "ids": [200, 200],
+            "rows_sha256": hashlib.sha256(json.dumps(
+                snapshots, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+            "detail": "noncanonical duplicate",
+        }
+        con.execute("INSERT INTO lane_flags VALUES(201,?,?,?)", (
+            2, "POST_ONLY_PERSISTENCE_FAILED_RESOLVED_EXACT",
+            "EXACT_INCIDENTS_V1 " + json.dumps(payload, sort_keys=True, separators=(",", ":")),
+        ))
+    with pytest.raises(RuntimeError, match="violations=1"):
+        clear.prove(db_path=db, kill_path=kill, expected_digest=digest, release_sha=release, repo=Path("."))
+
+
+def test_null_owner_admission_with_retained_timestamp_is_empty(tmp_path, monkeypatch):
+    db, kill, digest, release = fixture(tmp_path, monkeypatch)
+    with sqlite3.connect(db) as con:
+        con.execute("UPDATE pm_post_only_admission SET claimed_utc=123 WHERE slot=1")
+    clear.prove(db_path=db, kill_path=kill, expected_digest=digest, release_sha=release, repo=Path("."))
+    with sqlite3.connect(db) as con:
+        con.execute("UPDATE pm_post_only_admission SET client_order_id='claimed' WHERE slot=1")
+    with pytest.raises(RuntimeError, match="admissions=1"):
+        clear.prove(db_path=db, kill_path=kill, expected_digest=digest, release_sha=release, repo=Path("."))
+
+
 def test_legacy_blanket_resolution_does_not_clear_violation_history(tmp_path, monkeypatch):
     db, kill, digest, release = fixture(tmp_path, monkeypatch)
     with sqlite3.connect(db) as con:
@@ -166,14 +220,15 @@ def test_changed_kill_wins_archive_race_and_is_not_overwritten(tmp_path, monkeyp
 
 def test_shell_orders_two_guards_around_retained_kill_warmup_before_activation():
     script = (Path(__file__).resolve().parents[1] / "clear_guard_failure_latch.sh").read_text()
-    stopped = script.index("stop_lane_verified\npre_proved=0")
+    stopped = script.index("stop_lane_verified\n# L136")
+    settlement = script.index("settle_held_cover.py", stopped)
     preproof = script.index("clear_guard_failure_latch.py prove", stopped)
     first = script.index("STOPPED_GUARD_PASS_1_OK")
     warm_start = script.index("systemctl start janus-live-stream", first)
     streams = script.index("RETAINED_KILL_STREAM_WARMUP_OK")
     second = script.index("STOPPED_GUARD_PASS_2_OK")
     activate = script.index("clear_guard_failure_latch.py activate")
-    assert stopped < preproof < first < warm_start < streams < second < activate
+    assert stopped < settlement < preproof < first < warm_start < streams < second < activate
 
 
 def test_activation_retries_after_append_failure_without_a_second_resolution(tmp_path, monkeypatch):

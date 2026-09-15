@@ -1,0 +1,78 @@
+id: L136
+registered_at: 2026-09-15
+track: operator/safety
+kind: exact stopped-lane settlement convergence
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L136
+title: Settle the one exact held cover before L133's quiet proof
+
+# IMMUTABLE AFTER REGISTRATION. This file and the L136 ledger row precede provider settlement reads,
+# implementation edits/tests, database writes, guard runs, release retry, kill archive or restart.
+known_at_registration:
+  deployed_release: 1be680be24f10bc2dc7d783e7c27273deb3b046e
+  lane: inactive with MainPID=0 and ControlPID=0
+  retained_kill_sha256: dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83
+  held_cover:
+    execution_id: 17077a35da5b46bb92b62daf0d927ff7
+    reservation_id: b292be2ab30449a3a9f53a3387c1aa17
+    event_id: pm:atp:1013694
+    opportunity_id: pm:atp:1013694:moneyline:v1-taker-taker-moneyline:25
+    mode: LIMITED_LIVE
+    state: HEDGED
+    quantity: 25.0
+    first_client_id: 9651448ba6764525bb4b38550019074c
+    hedge_client_id: d69958b6cff34cddbd7d8dc857d8bc17
+    first_fill: {venue: polymarket, contracts: 25.0, price: 0.51, fee_usd: 0.31237}
+    hedge_fill: {venue: kalshi, contracts: 25.0, price: 0.44, fee_usd: 0.4312}
+    unhedged_contracts: 0.0
+    reserved_usd: {polymarket: 13.06237, kalshi: 11.4312}
+    settlement_rows: 0
+  empty_admission:
+    slot: 1
+    client_order_id: null
+    claimed_utc: 1789023357.1954882
+    canonical_predicate: nodes.execution.legacy_incident_ack._empty_admission_state accepts this exact empty shape
+  resolved_persistence_incident:
+    violation_client_id: 40797bee0f17449ca1e4fa3840125232
+    source_flag_id: 211
+    exact_resolution_marker_id: 215
+    valid_exact_source_ids_contains_211: true
+    lifecycle_row: absent because the registered incident was persistence failure under a database lock
+  l135_verdict: MATERIAL_STOP until the real cover is authoritatively settled and released
+
+question: >-
+  Can a stopped-lane, retained-kill helper use the existing venue-authoritative settlement functions
+  to settle only this exact fully hedged cover, while correcting L133's admission and historical
+  violation predicates without weakening any current-order or current-role safety check?
+
+required_behavior:
+  exact_target:
+    - require the full deployed release SHA, exact retained kill bytes, inactive unit and both PIDs zero
+    - require exactly one unreleased execution/reservation and exact equality to the identity and economics above
+    - require both owned orders filled, closed, confirmed and fee-complete; reject any other order or settlement row
+  settlement:
+    - fetch each venue's winner through nodes.reconcile.settle_executions.fetch_results, never a price or midpoint
+    - write nothing unless both venues are final and return exactly one winner belonging to the registered event outcomes
+    - apply through the existing apply_settlements and ExposureLedger path, not direct UPDATE statements
+    - require one released COVER settlement, 25 hedged, zero unhedged/directional, exact released reservation and RECONCILED execution
+    - keep kill/live byte-identical throughout; any provider, identity, write or verification failure leaves it present and the lane stopped
+  proof_predicates:
+    - an admission is unresolved only when its sole slot has a non-null client_order_id; require exact slot=1 and a null or positive finite claimed_utc
+    - a historical violation with no lifecycle row is quiet only when every exact source is covered by a cryptographically valid RESOLVED_EXACT marker
+    - an existing lifecycle row must still be terminal_proved=1 and violated=0; any current/nonterminal/violated row remains a STOP
+  release:
+    - the exact settlement step precedes L133's static quiet proof
+    - all original L133 identity, two-guard, stream-warmup, joint-resolution, archive and rollback requirements remain unchanged
+
+success_criteria:
+  - Exact fixtures produce one COVER settlement and release only the registered execution/reservation.
+  - Open provider result, wrong winner, changed identity/economics, extra held row, write failure or changed kill produces no release and no entry.
+  - Empty owner/null admission passes only the canonical exact shape; any claimed client remains blocked.
+  - Exact marker 215 can resolve missing historical lifecycle row 211; absent/invalid marker or any bad present lifecycle row blocks.
+  - Focused tests, Bash syntax, integrated safety tests and replay parity pass before release.
+
+authority: >-
+  The operator explicitly authorized the agent to execute the exact release. L136 authorizes only
+  venue-authoritative settlement/release of the already fully hedged identified cover while kill/live
+  remains exact, plus proof-predicate corrections matching existing canonical evidence. It changes no
+  cap, hurdle, size, entry, hedge, fee, settlement rule, experiment criterion or account position.

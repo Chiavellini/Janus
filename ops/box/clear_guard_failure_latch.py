@@ -12,6 +12,7 @@ import argparse
 import base64
 import hashlib
 import json
+import math
 import os
 import re
 import sqlite3
@@ -175,8 +176,12 @@ def _valid_exact_resolution_ids(con: sqlite3.Connection, flag: str) -> set[int]:
         try:
             payload = json.loads(detail[len("EXACT_INCIDENTS_V1 "):])
             ids = payload["ids"]
-            if set(payload) != {"ids", "rows_sha256", "detail"} or not ids \
-                    or not all(type(value) is int and value > 0 for value in ids):
+            if set(payload) != {"ids", "rows_sha256", "detail"} or not isinstance(ids, list) or not ids \
+                    or len(set(ids)) != len(ids) \
+                    or not all(type(value) is int and value > 0 for value in ids) \
+                    or not isinstance(payload["detail"], str) \
+                    or not isinstance(payload["rows_sha256"], str) \
+                    or not FULL_SHA256.fullmatch(payload["rows_sha256"]):
                 continue
             rows = [con.execute(
                 "SELECT id,seen_ts,flag,detail FROM lane_flags WHERE id=? AND flag=?", (value, flag)
@@ -200,22 +205,36 @@ def _post_only_violation_history(con: sqlite3.Connection) -> int:
     ).fetchall()
     by_flag: dict[str, set[int]] = {}
     for client_id, code in rows:
-        marker = con.execute(
-            "SELECT terminal_proved,violated FROM pm_post_only_orders WHERE client_order_id=?",
-            (client_id,),
-        ).fetchone()
-        if marker != (1, 0):
-            unresolved += 1
-            continue
         if code not in by_flag:
             by_flag[code] = _valid_exact_resolution_ids(con, code)
         sources = con.execute(
             "SELECT id FROM lane_flags WHERE flag=? AND instr(COALESCE(detail,''),?)>0",
             (code, str(client_id)),
         ).fetchall()
-        if not sources or not any(int(source[0]) in by_flag[code] for source in sources):
+        exact = bool(sources) and any(int(source[0]) in by_flag[code] for source in sources)
+        if not exact:
+            unresolved += 1
+            continue
+        # A persistence failure can occur before its lifecycle row commits; its cryptographically
+        # exact source resolution is then the durable terminal proof.  If a row does exist it must
+        # still be terminal and nonviolating -- an exact historical marker never excuses current
+        # contradictory state.
+        marker = con.execute(
+            "SELECT terminal_proved,violated FROM pm_post_only_orders WHERE client_order_id=?",
+            (client_id,),
+        ).fetchone()
+        if marker is not None and marker != (1, 0):
             unresolved += 1
     return unresolved
+
+
+def _empty_admission(rows: list[tuple]) -> bool:
+    """Match the canonical null-owner admission shape; a retained claim timestamp owns nothing."""
+    if len(rows) != 1 or rows[0][0] != 1 or rows[0][1] is not None:
+        return False
+    stamp = rows[0][2]
+    return stamp is None or (isinstance(stamp, (int, float)) and not isinstance(stamp, bool)
+                             and math.isfinite(float(stamp)) and float(stamp) > 0)
 
 
 def _quiet(con: sqlite3.Connection, *, allow_source: bool) -> dict:
@@ -231,9 +250,10 @@ def _quiet(con: sqlite3.Connection, *, allow_source: bool) -> dict:
     reservations = int(con.execute(
         "SELECT COUNT(*) FROM capital_reservations WHERE released_utc IS NULL"
     ).fetchone()[0])
-    admissions = int(con.execute(
-        "SELECT COUNT(*) FROM pm_post_only_admission WHERE client_order_id IS NOT NULL OR claimed_utc IS NOT NULL"
-    ).fetchone()[0])
+    admission_rows = con.execute(
+        "SELECT slot,client_order_id,claimed_utc FROM pm_post_only_admission ORDER BY slot"
+    ).fetchall()
+    admissions = int(not _empty_admission(admission_rows))
     # The table is append-only. Historical rows pass only through exact durable flag resolution
     # plus clean terminal maker state; a blanket marker or a clean order row alone is insufficient.
     violations = _post_only_violation_history(con)
