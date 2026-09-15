@@ -66,14 +66,22 @@ def test_shell_constructs_remote_script_without_expanding_remote_started():
     assert result.stdout.index("STARTED=$(date +%s.%N)") < result.stdout.index("s=float('$STARTED')")
 
 
+def test_shell_bounds_preproof_wait_at_five_minutes():
+    script = (Path(__file__).resolve().parents[1] / "clear_legacy_incident_latch.sh").read_text()
+    preproof = script.split("pre_proved=0", 1)[1].split("PRE_STOP_LEGACY_211_PROOF_OK", 1)[0]
+    assert "seq 1 100" in preproof
+    assert "sleep 3" in preproof
+    assert "seq 1 101" not in preproof
+
+
 def fixture(tmp_path):
     db = tmp_path / "tuples.sqlite"
     con = sqlite3.connect(db)
     con.executescript("""
       CREATE TABLE historical_legacy_incident_acknowledgements(id INTEGER, supersedes_id INTEGER, flag_id INTEGER, record_json TEXT, record_sha256 TEXT);
-      CREATE TABLE pm_post_only_orders(client_order_id TEXT);
-      CREATE TABLE pm_post_only_admission(slot INTEGER);
-      CREATE TABLE pm_post_only_violations(id INTEGER);
+      CREATE TABLE pm_post_only_orders(client_order_id TEXT, terminal_proved INTEGER, violated INTEGER);
+      CREATE TABLE pm_post_only_admission(slot INTEGER, client_order_id TEXT, claimed_utc REAL);
+      CREATE TABLE pm_post_only_violations(id INTEGER, client_order_id TEXT, code TEXT, detail TEXT, seen_utc REAL);
       CREATE TABLE execution_settlements(execution_id TEXT);
       CREATE TABLE lane_flags(id INTEGER PRIMARY KEY, seen_ts REAL, flag TEXT, detail TEXT);
       CREATE TABLE orders(venue TEXT, open INTEGER, settlement_pending INTEGER, state TEXT);
@@ -81,6 +89,10 @@ def fixture(tmp_path):
       CREATE TABLE capital_reservations(released_utc REAL);
       CREATE TABLE socket_health(seen_ts REAL, venue TEXT, connected INTEGER);
     """)
+    con.execute("INSERT INTO pm_post_only_admission VALUES(1,NULL,NULL)")
+    # The injected matcher in these legacy unit tests stands in for the full historical
+    # acknowledgement matcher; retain the exact one-row cardinality required by L128.
+    con.execute("INSERT INTO pm_post_only_violations VALUES(1,'legacy','POST_ONLY_PERSISTENCE_FAILED','legacy',1)")
     con.commit(); con.close()
     kill = tmp_path / "kill" / "live"
     kill.parent.mkdir()
@@ -109,6 +121,36 @@ def test_prove_requires_exact_reason_full_digests_checkout_and_incident(tmp_path
     with pytest.raises(RuntimeError, match="match_incident"):
         clear.prove(db_path=db, kill_path=kill, expected_digest=digest, release_sha=release,
                     repo=Path("."), incident_matcher=lambda *_: None)
+
+
+def test_terminal_unviolated_maker_history_is_accepted(tmp_path):
+    db, kill, digest, release = fixture(tmp_path)
+    with sqlite3.connect(db) as con:
+        con.execute("INSERT INTO pm_post_only_orders VALUES('later',1,0)")
+        con.execute("UPDATE pm_post_only_admission SET claimed_utc=2 WHERE slot=1")
+    proof = clear.prove(db_path=db, kill_path=kill, expected_digest=digest,
+                        release_sha=release, repo=Path("."), incident_matcher=matcher)
+    assert proof["incident"]["flag"]["id"] == 211
+
+
+@pytest.mark.parametrize("change,expected", [
+    ("INSERT INTO pm_post_only_orders VALUES('active',0,0)", "settled current"),
+    ("INSERT INTO pm_post_only_orders VALUES('violated',1,1)", "settled current"),
+    ("UPDATE pm_post_only_admission SET client_order_id='held' WHERE slot=1", "settled current"),
+    ("INSERT INTO pm_post_only_violations VALUES(2,'new','OTHER','new',2)", "exactly one"),
+    ("INSERT INTO executions VALUES(0,1,'PENDING')", "executions=1"),
+    ("INSERT INTO capital_reservations VALUES(NULL)", "reservations=1"),
+])
+def test_l128_terminal_history_allowance_keeps_current_risk_fail_closed(
+        tmp_path, change, expected):
+    db, kill, digest, release = fixture(tmp_path)
+    with sqlite3.connect(db) as con:
+        con.execute("INSERT INTO pm_post_only_orders VALUES('later',1,0)")
+        con.execute(change)
+    with pytest.raises(RuntimeError, match=expected):
+        clear.prove(db_path=db, kill_path=kill, expected_digest=digest,
+                    release_sha=release, repo=Path("."), incident_matcher=matcher)
+    assert kill.exists()
 
 
 @pytest.mark.parametrize("venue", ["kalshi", "polymarket"])

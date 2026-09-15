@@ -23,7 +23,7 @@ from typing import Callable
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from nodes.execution.legacy_incident_ack import match_incident
+from nodes.execution.legacy_incident_ack import _settled_current_database, match_incident
 from nodes.risk.flags import unresolved_flag_rows
 
 
@@ -158,12 +158,31 @@ def prove(*, db_path: Path, kill_path: Path, expected_digest: str, release_sha: 
     try:
         _tables_and_columns(con)
         try:
-            incident = (match_incident if incident_matcher is None else incident_matcher)(con, FLAG_ID)
+            # L128 is the one reviewed exception to the historical empty-maker matcher: the
+            # acknowledgement still has to match exactly, while later maker rows are accepted
+            # only through the execution node's current terminal-risk predicate.
+            if incident_matcher is None:
+                incident = match_incident(con, FLAG_ID, require_idle=False)
+            else:
+                incident = incident_matcher(con, FLAG_ID)
         except Exception as exc:
             raise RuntimeError(f"match_incident(211) failed: {exc}") from exc
         if incident is None:
             raise RuntimeError("match_incident(211) found no historical acknowledgement")
+        # Keep the global current-risk/quiet proof ahead of the L128 historical-maker allowance.
+        # In particular, open orders and unresolved material flags retain their established
+        # diagnostics and continue to block before any later-history consideration.
         quiet = _quiet(con)
+        if not _settled_current_database(con):
+            raise RuntimeError("settled current database predicate failed")
+        # The matcher proves that the sole row is the violation bound to the acknowledged
+        # incident.  Keep this cardinality check separate: a second violation must block even if
+        # the original row and all current maker risk are otherwise sound.
+        violation_count = int(con.execute("SELECT COUNT(*) FROM pm_post_only_violations").fetchone()[0])
+        if violation_count != 1:
+            raise RuntimeError(
+                f"post-only violation evidence is not exactly one bound incident: count={violation_count}"
+            )
     finally:
         con.close()
     return {"schema": "janus.live_clear.legacy_incident.v1", "kill_sha256": expected_digest,

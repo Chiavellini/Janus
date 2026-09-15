@@ -63,7 +63,7 @@ ARCHIVE="\$AUDIT/legacy-incident-211-cleared-$RELEASE_SHA-$KILL_SHA.json"
 # to re-read the confirmed pre-restart disposition and append its exact resolution marker while the
 # original kill still blocks entry. Never infer quiet from elapsed time: only prove() can end wait.
 pre_proved=0
-for _ in \$(seq 1 25); do
+for _ in \$(seq 1 100); do
   if sudo -u janus env JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box '$PY' /opt/janus/ops/box/clear_legacy_incident_latch.py prove --db '$DB' --kill '$KILL' --expected-kill-sha '$KILL_SHA' --release-sha '$RELEASE_SHA' --repo /opt/janus; then
     pre_proved=1
     break
