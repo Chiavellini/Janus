@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 import sqlite3
 
-from nodes.execution.legacy_incident_ack import match_incident
+from nodes.execution.legacy_incident_ack import _empty_admission_state, match_incident
 from nodes.risk.flags import unresolved_flag_rows
 from ops.box.clear_legacy_incident_latch import MATERIAL_FLAGS
 
@@ -84,8 +84,7 @@ def main():
             hashlib.sha256(canonical(row).encode()).hexdigest() for row in maker
         ],
     }
-    admission_expected = [{"slot": 1, "client_order_id": None, "claimed_utc": None}]
-    admission_exact = table_rows["pm_post_only_admission"] == admission_expected
+    admission_exact = _empty_admission_state(table_rows["pm_post_only_admission"])
     global_quiet = {
         "orders": con.execute(
             "SELECT COUNT(*) FROM orders WHERE open IS NOT 0 OR settlement_pending IS NOT 0 "
@@ -147,7 +146,7 @@ def main():
             "APPEND_ONLY_TERMINAL_HISTORY" if append_only_terminal else "MATERIAL_STOP"
         ),
     }
-    print(json.dumps(result, indent=2, sort_keys=True))
+    print(canonical(result))
 
 
 if __name__ == "__main__":
