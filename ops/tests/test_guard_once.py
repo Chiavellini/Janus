@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 from types import SimpleNamespace
+import pytest
 
 from nodes.discovery.discovery import EVENTS_DDL
 from nodes.execute.records import EXECUTION_DDL
 from nodes.execution.journal import JOURNAL_DDL
 from nodes.store_tuples.store import TupleStore
 from ops.guard_once import load_polymarket_fee_params
+import ops.guard_once as guard_once
 
 
 def test_historical_polymarket_tokens_receive_their_own_fee_schedule(tmp_path):
@@ -34,3 +36,56 @@ def test_historical_polymarket_tokens_receive_their_own_fee_schedule(tmp_path):
     venue = SimpleNamespace(fee_params_by_market={})
     assert load_polymarket_fee_params(st, venue) == 1
     assert venue.fee_params_by_market == {"token": fees["polymarket"]}
+
+
+def _guard_fixture(monkeypatch, *, positions, fills_read_complete=True, errors=None,
+                   orphans=(), mismatches=(), to_protect=(), findings=()):
+    class FakeGuard:
+        def __init__(self, **_kwargs):
+            pass
+        def fetch(self):
+            return type("Snap", (), {"errors": errors or {}, "positions": positions,
+                                     "fills_read_complete": fills_read_complete, "unconfirmed": {},
+                                     "adopted": []})()
+        def apply(self, _snap):
+            return type("Rep", (), {"findings": list(findings), "corrected": 0, "to_protect": list(to_protect),
+                                     "orphans": list(orphans), "mismatches": list(mismatches), "fills_today": []})()
+    monkeypatch.setattr(guard_once, "PositionGuard", FakeGuard)
+
+
+def test_require_complete_quiet_requires_both_readable_positions(monkeypatch):
+    _guard_fixture(monkeypatch, positions={"kalshi": [], "polymarket": []})
+    limits = type("Limits", (), {"protect": object()})()
+    got = guard_once.run_once(venues={}, store=None, journal=None, records=None, limits=limits,
+                              kill=None, started_utc=1, require_complete_quiet=True, log=lambda *_: None)
+    assert got["complete_quiet"]
+
+    _guard_fixture(monkeypatch, positions={"kalshi": [], "polymarket": [], "extra": []})
+    got = guard_once.run_once(venues={}, store=None, journal=None, records=None, limits=limits,
+                              kill=None, started_utc=1, require_complete_quiet=True, log=lambda *_: None)
+    assert not got["complete_quiet"]
+
+
+def test_require_complete_quiet_accepts_exact_resolution_findings(monkeypatch):
+    _guard_fixture(monkeypatch, positions={"kalshi": [], "polymarket": []}, findings=(
+        "ORPHAN_FILL_RESOLVED_EXACT: exact external ownership; kill unchanged",
+        "ORDER_OVERFILL_RESOLVED_EXACT: exact bounded-taker residual acknowledgement; kill unchanged",
+        "POST_ONLY_PERSISTENCE_FAILED_RESOLVED_EXACT: additive migration false alarms; kill unchanged",
+    ))
+    limits = type("Limits", (), {"protect": object()})()
+    got = guard_once.run_once(venues={}, store=None, journal=None, records=None, limits=limits,
+                              kill=None, started_utc=1, require_complete_quiet=True, log=lambda *_: None)
+    assert got["complete_quiet"]
+
+
+@pytest.mark.parametrize("kwargs", [
+    {"fills_read_complete": False}, {"errors": {"fills": "timeout"}},
+    {"orphans": ["x"]}, {"mismatches": ["x"]}, {"to_protect": ["x"]},
+    {"findings": ["FEE_ABOVE_PIN bad"]},
+])
+def test_require_complete_quiet_rejects_any_incomplete_or_material_finding(monkeypatch, kwargs):
+    _guard_fixture(monkeypatch, positions={"kalshi": [], "polymarket": []}, **kwargs)
+    limits = type("Limits", (), {"protect": object()})()
+    got = guard_once.run_once(venues={}, store=None, journal=None, records=None, limits=limits,
+                              kill=None, started_utc=1, require_complete_quiet=True, log=lambda *_: None)
+    assert not got["complete_quiet"]

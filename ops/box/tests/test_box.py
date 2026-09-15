@@ -193,6 +193,25 @@ def test_false_latch_warms_under_kill_and_passes_epoch_through_sudo():
     assert "ORDER_PERSISTENCE_FAILED" in script
 
 
+def test_release_routes_only_registered_flag211_digest_to_separate_helper():
+    from pathlib import Path
+    release = (Path(__file__).resolve().parents[1] / "release.sh").read_text()
+    digest = "a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6"
+    assert digest in release
+    assert "clear_legacy_incident_latch.sh" in release
+    assert "clear_false_maker_latch.sh" in release
+    assert release.index("case \"$LIVE_KILL_SHA\"") < release.index("clear_legacy_incident_latch.sh")
+
+
+def test_legacy_clear_shell_uses_fresh_root_audit_and_complete_credentialed_guards():
+    from pathlib import Path
+    script = (Path(__file__).resolve().parents[1] / "clear_legacy_incident_latch.sh").read_text()
+    assert "mktemp -d" in script and "chown janus:janus" in script and "chmod 700" in script
+    assert script.count("--require-complete-quiet") == 2
+    assert "source /run/janus/janus.env" in script
+    assert "rev-parse --verify HEAD" in (Path(__file__).resolve().parents[1] / "release.sh").read_text()
+
+
 def test_redemption_unit_overrides_the_trading_interpreter_at_exec():
     from pathlib import Path
     unit = (Path(__file__).resolve().parents[1] / "systemd" / "janus-pm-redeem.service").read_text()

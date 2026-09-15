@@ -23,6 +23,8 @@ fail-closed above a hard 500-incident work bound rather than repeatedly scanning
 backlog. Malformed flags and database errors remain visible and latch live entry; corrupt,
 revoked, stale, wrong-target, and cited-incident-mismatch evidence is ignored without authority.
 
-Focused disposition and guard tests are 100/100. Full-suite and replay parity checks are pending
-until L122/L123 are integrated into the same release candidate. No box write, kill clear, arm,
+Focused disposition and guard tests are 100/100. The integrated release baseline passed
+1,642/1,642 excluding only the two pre-declared FIFO races; the one FIFO failure in an unfiltered
+run passed immediately in isolation. Replay over 20,000 frames kept 1,093 evaluation rows, zero
+selections, and exact digests 13e4fb08a76c920f / 4f53cda18c2baa0c. No box write, kill clear, arm,
 mode, override, release, cap, hurdle, size, entry or accounting change occurred.

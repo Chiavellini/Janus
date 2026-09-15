@@ -57,7 +57,8 @@ def load_polymarket_fee_params(store, venue) -> int:
     return n
 
 
-def run_once(*, venues, store, journal, records, limits, kill, started_utc: float, ledger=None, log=print) -> dict:
+def run_once(*, venues, store, journal, records, limits, kill, started_utc: float, ledger=None, log=print,
+             require_complete_quiet: bool = False) -> dict:
     g = PositionGuard(venues=venues, journal=journal, records=records, store=store, limits=limits.protect,
                       started_utc=started_utc, ledger=ledger, kill=kill, log=log)
     snap = g.fetch()
@@ -75,14 +76,32 @@ def run_once(*, venues, store, journal, records, limits, kill, started_utc: floa
         log(f"balance {v}: {bal.available_usd if bal else 'unreadable'}")
     log(f"corrected={rep.corrected} to_protect={rep.to_protect} orphans={len(rep.orphans)} mismatches={len(rep.mismatches)} "
         f"fills_today={[(f.fill_id[:8], f.state.value, round(f.realized_usd, 4)) for f in rep.fills_today]}")
+    complete_quiet = True
+    if require_complete_quiet:
+        required = {"kalshi", "polymarket"}
+        material = ("INVALID", "FAILED", "BLOCKED", "ORPHAN_FILL", "POSITION_MISMATCH",
+                    "UNHEDGED_POSITION", "PROTECT_FAILED", "ORDER_OVERFILL", "FEE_ABOVE_PIN")
+        # Exact resolution findings are the successful result of this pass, not a recurrence of
+        # the incident named before ``_RESOLVED``.  The final database proof still checks that no
+        # cited source flag remains unresolved.
+        active_findings = [finding for finding in rep.findings if "_RESOLVED" not in finding]
+        complete_quiet = (snap.fills_read_complete and not snap.errors
+                          and set(snap.positions) == required
+                          and all(snap.positions.get(v) is not None for v in required)
+                          and not rep.orphans and not rep.mismatches and not rep.to_protect
+                          and not any(any(token in finding for token in material) for finding in active_findings))
+        if not complete_quiet:
+            log("complete guard quiet requirement failed")
     return {"corrected": rep.corrected, "to_protect": rep.to_protect, "orphans": len(rep.orphans), "mismatches": rep.mismatches,
-            "adopted": snap.adopted, "errors": snap.errors}
+            "adopted": snap.adopted, "errors": snap.errors, "complete_quiet": complete_quiet}
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=os.environ.get("JANUS_TUPLES_DB", str(DEFAULT_DB)))
     ap.add_argument("--since-hours", type=float, default=24.0, help="how far back the fills are read")
+    ap.add_argument("--require-complete-quiet", action="store_true",
+                    help="fail unless both required venue positions and the guard report are complete and quiet")
     a = ap.parse_args()
     # The lane may be running: our writes wait behind its lock through the busy handler (BEGIN
     # IMMEDIATE), never fail at once as a read-snapshot upgrade (the worker store's rule).
@@ -99,8 +118,9 @@ def main() -> int:
               "polymarket": PolymarketExecution(PyClobTransport(), journal, Mode.LIMITED_LIVE)}
     load_polymarket_fee_params(store, venues["polymarket"])
     out = run_once(venues=venues, store=store, journal=journal, records=records, limits=limits, kill=kill, ledger=ledger,
-                   started_utc=time.time() - a.since_hours * 3600.0)
-    return 0 if not out["errors"] else 1
+                   started_utc=time.time() - a.since_hours * 3600.0,
+                   require_complete_quiet=a.require_complete_quiet)
+    return 0 if not out["errors"] and out["complete_quiet"] else 1
 
 
 if __name__ == "__main__":

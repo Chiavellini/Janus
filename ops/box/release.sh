@@ -7,8 +7,9 @@
 #
 # In order: provision the PM redemption key if absent; checkout without restart; sync the pinned
 # redemption runtime and units; re-sign the override at JANUS_ARM_CAPS (default $30 / 25 / $500,
-# 168 h); restart LIMITED_LIVE; clear only the exact maker false-latch captured at paste start after
-# stopped-lane terminal-zero/global-idle proof; verify post-start streams; run redemption now.
+# 168 h); restart LIMITED_LIVE; clear only the exact reviewed latch captured at paste start after
+# stopped-lane proof; verify post-start streams; run redemption now. L122's exact flag-211 latch is
+# routed to its separate helper; every other latch keeps the independent false-maker path.
 # A different or changed kill is never cleared. A docs-only sha still gets the same full sequence.
 #
 # The statement is $JANUS_ARM_STATEMENT, else ops/box/arm_statement.txt (the standing one). Any
@@ -82,8 +83,21 @@ bash "$HERE/write_override.sh" "$STATEMENT" $CAPS
 echo "== (d) restart under LIMITED_LIVE"
 bash "$HERE/mode.sh" LIMITED_LIVE
 if [ "$LIVE_KILL_SHA" != none ]; then
-  echo "== (e) exact recovery of reviewed false maker latch"
-  bash "$HERE/clear_false_maker_latch.sh" "$SHA" "$LIVE_KILL_SHA"
+  case "$LIVE_KILL_SHA" in
+    a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6)
+      echo "== (e) exact recovery of reviewed flag-211 legacy incident latch"
+      DEPLOYED_SHA=$(bash "$HERE/run.sh" "sudo -u janus git -C /opt/janus rev-parse --verify HEAD" | grep -E '^[0-9a-f]{40}$' | tail -1 || true)
+      case "$DEPLOYED_SHA" in
+        [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
+        *) echo "could not resolve the box's full deployed Git SHA; legacy clear remains blocked" >&2; exit 2 ;;
+      esac
+      bash "$HERE/clear_legacy_incident_latch.sh" "$DEPLOYED_SHA" "$LIVE_KILL_SHA"
+      ;;
+    *)
+      echo "== (e) exact recovery of reviewed false maker latch"
+      bash "$HERE/clear_false_maker_latch.sh" "$SHA" "$LIVE_KILL_SHA"
+      ;;
+  esac
 else
   echo "== (e) no live kill present at release start"
 fi

@@ -18,6 +18,11 @@ fetch and apply failures, first-writer provenance, failed kill/flag persistence,
 invalidation, startup refusal until a complete `GuardSnapshot` proof, incomplete-without-exception
 handling, recovery, and protection hand-over. `git diff --check` passed.
 
+The integrated release baseline passed **1,642/1,642**, excluding only the two pre-declared FIFO
+races; the one FIFO failure in the unfiltered run passed immediately in isolation. Replay over
+20,000 frames kept 1,093 evaluation rows, zero selections, and exact digests
+`13e4fb08a76c920f / 4f53cda18c2baa0c`.
+
 The pre-existing L121 grid hunk was retained and folded into the L123 handler: its direct live-kill
 latch is now paired with durable `GUARD_FAILED`, independent alarm-failure handling, and the
 in-memory gate. No kill was cleared, no live helper or order ran, and no capital or production state
