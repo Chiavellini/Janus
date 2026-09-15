@@ -6,13 +6,13 @@ Updated 2026-09-14 after L121-L123 on branch claude/hedge-safety-and-speed.
 
 ## Current state
 
-The Mexico box is deployed at 3af2993. The lane service is active but kill/live remains
+The Mexico box is deployed at 31f8b1d. The lane service is active but kill/live remains
 present with exact SHA a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6
 and reason LEGACY_INCIDENT_ACK_INVALID flag=211. Nothing is trading. Read-only inspection found no
 current open or unconfirmed journal orders, cash-pending orders, unreleased executions, or
 unreleased reservations. The production database has every table and column required by L122.
 
-The candidate through L125 passed the integrated suite when the two documented pre-existing FIFO
+The candidate through L126 passed the integrated suite when the two documented pre-existing FIFO
 flakes were excluded. The one FIFO failure seen in an earlier unfiltered run passed immediately
 in isolation. Replay parity is unchanged: 1,093 rows and zero selections at
 13e4fb08a76c920f / 4f53cda18c2baa0c. A fresh external audit returned RELEASE with no remaining
@@ -30,8 +30,9 @@ showed the box safely stopped by a retained kill, no live capital in flight, and
 8e7ab4a. A later operator attempt for 6a64561 exited before changing that checkout. Static review
 then found and registered L124's fail-closed release-route validation defect. The authorized
 3af2993 release deployed and re-signed the standing caps, then failed closed at L125's independent
-helper digest validator; the original kill remained exact and admitted no entry. NEXT.md,
-AGENTS.md, GATE_TO_LIVE.md, the L104-L125 ledger rows and registered specs,
+helper digest validator. The 31f8b1d continuation deployed and failed locally before the helper's
+first remote action at L126's heredoc boundary. The original kill remained exact and admitted no
+entry throughout. NEXT.md, AGENTS.md, GATE_TO_LIVE.md, the L104-L126 ledger rows and registered specs,
 git history, the production database, and exact kill/deployment hashes were treated as sources of
 truth. Status log counters were not treated as authoritative execution state.
 
@@ -48,8 +49,9 @@ truth. Status log counters were not treated as authoritative execution state.
 - ops/box/release.sh and ops/box/tests/test_box.py: route only the exact reviewed retained kill
   through the bounded proof helper and validate the full deployed Git SHA.
 - ops/box/clear_legacy_incident_latch.sh and ops/box/tests/test_legacy_incident_clear.py: preserve
-  exact helper semantics while validating its full release and kill digests correctly.
-- snooping_ledger.md: register L121-L125 before their runs and record their immutable results.
+  exact helper semantics while validating full digests and constructing remote shell variables
+  and quotes correctly.
+- snooping_ledger.md: register L121-L126 before their runs and record their immutable results.
 - NEXT.md: replace the stale deployed-state handoff with this release state and economic truth.
 
 ## Files created
@@ -68,6 +70,8 @@ truth. Status log counters were not treated as authoritative execution state.
 - research/exec/2026-09-14_full-deployed-sha-validator/spec.yaml and verdict.md: L124 registration
   and result.
 - research/exec/2026-09-14_helper_digest_validator/spec.yaml and verdict.md: L125 registration and
+  result.
+- research/exec/2026-09-14_remote_heredoc_boundary/spec.yaml and verdict.md: L126 registration and
   result.
 
 ## Intentionally untouched
@@ -125,6 +129,15 @@ had independently malformed length patterns: 42 groups for the 40-character rele
 for the 64-character kill digest. Both now use anchored exact lowercase-hex expressions and reject
 short, long, uppercase, or non-hex values before remote work. Forty-one focused tests, the
 integrated suite, replay parity, and a separate audit passed.
+
+## L126: local-to-remote heredoc boundary
+
+research/exec/2026-09-14_remote_heredoc_boundary/spec.yaml registers the proof. The helper's
+unquoted heredoc expanded remote STARTED and AUDIT locally and emitted backslash-quoted rather than
+syntactic double quotes. The production-construction test now proves the complete boundary: five
+reviewed values bind locally, every remote variable remains remote, STARTED is assigned before use,
+and archive-dir receives the expanded quoted AUDIT path. Forty-two focused tests, integrated suite,
+replay parity, and the final external audit passed.
 
 ## What is and is not proved toward $100/day
 

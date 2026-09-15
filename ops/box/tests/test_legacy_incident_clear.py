@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 import sqlite3
 import subprocess
 from pathlib import Path
@@ -40,6 +41,29 @@ def test_shell_preamble_requires_exact_full_lowercase_digests():
         result = run(release, malformed)
         assert result.returncode == 2
         assert "validated" not in result.stdout
+
+
+def test_shell_constructs_remote_script_without_expanding_remote_started():
+    helper = Path(__file__).resolve().parents[1] / "clear_legacy_incident_latch.sh"
+    script = helper.read_text()
+    remote_call = 'bash "$HERE/run.sh" "$REMOTE"'
+    assert script.count(remote_call) == 1
+    heredoc = script.split("<<EOS", 1)[1].split("\nEOS", 1)[0]
+    locally_bound = set(re.findall(r"(?<!\\)\$([A-Za-z_][A-Za-z0-9_]*)", heredoc))
+    assert locally_bound == {"DB", "KILL", "KILL_SHA", "PY", "RELEASE_SHA"}
+    harness = script.replace(remote_call, "printf '%s\\n' \"$REMOTE\"")
+    release = "0123456789abcdef" * 2 + "01234567"
+    kill = "abcdef0123456789" * 4
+    result = subprocess.run(
+        ("bash", "-c", harness, str(helper), release, kill),
+        text=True, capture_output=True, check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "STARTED=$(date +%s.%N)" in result.stdout
+    assert "s=float('$STARTED')" in result.stdout
+    assert '--archive-dir "$AUDIT"' in result.stdout
+    assert '\\"' not in result.stdout
+    assert result.stdout.index("STARTED=$(date +%s.%N)") < result.stdout.index("s=float('$STARTED')")
 
 
 def fixture(tmp_path):
