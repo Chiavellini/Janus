@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# THE OPERATOR'S DAILY PASTE: a release under the arm, in one command. The agent prepares it and
-# never runs it (GATE_TO_LIVE 2026-09-07 amendment: "Pin the code tree, one daily paste").
+# One-command release under an exact dated GATE authority. The 2026-09-07 default was an operator
+# paste; later experiment-specific amendments may explicitly authorize the agent to run it.
 #
 #   bash ops/box/release.sh <sha>          # refuses while a co-listed game is in play on the box
 #   bash ops/box/release.sh <sha> --now    # skip that check (the operator's call)
@@ -23,7 +23,13 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 SHA=${1:?the sha to release (git rev-parse main)}
 REGION=${JANUS_BOX_REGION:-mx-central-1}
 NOW=0; [ "${2:-}" = "--now" ] && NOW=1
-STATEMENT=${JANUS_ARM_STATEMENT:-$(cat "$HERE/arm_statement.txt")}
+EXPERIMENT=${JANUS_EXPERIMENT:-F23}
+case "$EXPERIMENT" in
+  F22) DEFAULT_STATEMENT_FILE="$HERE/arm_statement.txt" ;;
+  F23) DEFAULT_STATEMENT_FILE="$HERE/f23_arm_statement.txt" ;;
+  *) echo "unsupported JANUS_EXPERIMENT: $EXPERIMENT" >&2; exit 2 ;;
+esac
+STATEMENT=${JANUS_ARM_STATEMENT:-$(cat "$DEFAULT_STATEMENT_FILE")}
 if [ -z "${STATEMENT// }" ]; then echo "empty statement"; exit 2; fi
 
 if [ $NOW = 0 ]; then
@@ -86,6 +92,9 @@ if [ "$LIVE_KILL_SHA" != none ]; then
       [ "$LIVE_KILL_SHA" = a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6 ] || { echo "flag-211 reason has an unreviewed digest; refusing clear" >&2; exit 2; }
       KILL_ROUTE=legacy ;;
     'unknown provider state:'*'post-only cancel/late-fill lifecycle unresolved:'*) KILL_ROUTE=false_maker ;;
+    'F22 STOP: terminal maker zero-fill fee evidence is NULL; strict report classifies persistence_or_reconciliation_failure')
+      [ "$LIVE_KILL_SHA" = d81bbfc267a235ca7f268e7317d77ee7e83c65f5263117590e4e86d1552b1636 ] || { echo "F22 instrumentation reason has an unreviewed digest; refusing clear" >&2; exit 2; }
+      KILL_ROUTE=f22_instrumentation ;;
     *) echo "unknown or malformed live-kill reason; refusing generic clear" >&2; exit 2 ;;
   esac
 fi
@@ -102,8 +111,8 @@ bash "$HERE/run.sh" 'sudo -u janus /opt/janus/.venv/bin/pip install -q orjson 2>
 echo "== (c) re-sign the override for the new tree"
 CAPS=${JANUS_ARM_CAPS:-"30 25 500 168"}      # stake, contracts per leg, day notional, hours (GATE row 2026-09-11, F21: one rung up from the smallest size)
 # shellcheck disable=SC2086
-bash "$HERE/write_override.sh" "$STATEMENT" $CAPS
-if [ "$KILL_ROUTE" = guard ]; then
+JANUS_EXPERIMENT="$EXPERIMENT" bash "$HERE/write_override.sh" "$STATEMENT" $CAPS
+if [ "$KILL_ROUTE" = guard ] || [ "$KILL_ROUTE" = f22_instrumentation ]; then
   # L133 owns the complete stopped-lane preproof, retained-kill warmup, second guard and final
   # restart. Starting here first could mint a third GUARD_FAILED row and invalidate exact recovery.
   echo "== (d) keep lane stopped; L133 recovery owns the guarded restart"
@@ -129,6 +138,13 @@ if [ "$LIVE_KILL_SHA" != none ]; then
         *) echo "could not resolve the box's full deployed Git SHA; legacy clear remains blocked" >&2; exit 2 ;;
       esac
       bash "$HERE/clear_legacy_incident_latch.sh" "$DEPLOYED_SHA" "$LIVE_KILL_SHA"
+      ;;
+    d81bbfc267a235ca7f268e7317d77ee7e83c65f5263117590e4e86d1552b1636)
+      [ "$KILL_ROUTE" = f22_instrumentation ] || { echo "F22 instrumentation digest has an unexpected reason; refusing clear" >&2; exit 2; }
+      echo "== (e) exact recovery of F22 terminal-zero-fill instrumentation STOP"
+      DEPLOYED_SHA=$(bash "$HERE/run.sh" "sudo -u janus git -C /opt/janus rev-parse --verify HEAD" | grep -E '^[0-9a-f]{40}$' | tail -1 || true)
+      [[ "$DEPLOYED_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "could not resolve the box's full deployed Git SHA; F22 clear remains blocked" >&2; exit 2; }
+      bash "$HERE/clear_f22_instrumentation_latch.sh" "$DEPLOYED_SHA" "$LIVE_KILL_SHA"
       ;;
     *)
       [ "$KILL_ROUTE" = false_maker ] || { echo "unknown live-kill digest; refusing generic clear" >&2; exit 2; }

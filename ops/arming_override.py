@@ -40,7 +40,7 @@ def main() -> int:
     ap.add_argument("--path", type=Path, default=OVERRIDE_PATH)
     ap.add_argument("--root", type=Path, default=ROOT, help="the checkout whose code tree is pinned (default: this one)")
     ap.add_argument("--force", action="store_true")
-    ap.add_argument("--experiment", choices=["F22"], help="explicitly authorize a preregistered live experiment")
+    ap.add_argument("--experiment", choices=["F22", "F23"], help="explicitly authorize a preregistered live experiment")
     ap.add_argument("--experiment-spec", type=Path, help="repo-relative immutable experiment spec to pin")
     ap.add_argument("--assignment-algorithm", help="versioned assignment algorithm to pin")
     a = ap.parse_args()

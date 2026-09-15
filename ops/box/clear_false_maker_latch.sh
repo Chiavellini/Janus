@@ -30,7 +30,8 @@ sys.path.insert(0, '/opt/janus')
 from nodes.risk.flags import unresolved_flag_rows
 flags = ('ORDER_PERSISTENCE_FAILED', 'POST_ONLY_PERSISTENCE_FAILED', 'ORPHAN_FILL',
          'POSITION_MISMATCH', 'PROTECT_FAILED', 'EXEC_CRASHED', 'ORDER_OVERFILL',
-         'POST_ONLY_ROLE_VIOLATION', 'UNHEDGED_POSITION', 'RESERVATION_MISSING')
+         'POST_ONLY_ROLE_VIOLATION', 'UNHEDGED_POSITION', 'RESERVATION_MISSING',
+         'F22_PERSISTENCE_FAILED', 'F23_PERSISTENCE_FAILED')
 con = sqlite3.connect('file:/srv/janus/tuples/tuples.sqlite?mode=ro', uri=True)
 active = {flag: [row[0] for row in unresolved_flag_rows(con, flag)] for flag in flags}
 active = {flag: ids for flag, ids in active.items() if ids}

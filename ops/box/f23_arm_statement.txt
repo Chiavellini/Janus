@@ -1,0 +1,1 @@
+we want to be able to prove we can or cannot reach the goal with the system as is and fix whatever is necessary to reach it.

@@ -8,6 +8,8 @@ import re
 import shlex
 import subprocess
 
+import pytest
+
 from ops.box import creds, latency, provision_redemption
 
 
@@ -216,6 +218,22 @@ def test_release_classifies_the_three_reviewed_kill_reasons_and_rejects_unknowns
     assert "unknown provider state:'*'post-only cancel/late-fill lifecycle unresolved:'" in release
 
 
+def test_release_routes_the_exact_f22_instrumentation_stop_to_a_stopped_lane_recovery():
+    from pathlib import Path
+    release = (Path(__file__).resolve().parents[1] / "release.sh").read_text()
+    helper = (Path(__file__).resolve().parents[1] / "clear_f22_instrumentation_latch.sh").read_text()
+    digest = "d81bbfc267a235ca7f268e7317d77ee7e83c65f5263117590e4e86d1552b1636"
+    reason = "F22 STOP: terminal maker zero-fill fee evidence is NULL; strict report classifies persistence_or_reconciliation_failure"
+    assert digest in release and digest in helper and reason in release
+    assert "clear_f22_instrumentation_latch.sh" in release
+    route = release[release.index("KILL_ROUTE=f22_instrumentation"):]
+    assert "KILL_ROUTE=f22_instrumentation" in release
+    assert "[ \"$KILL_ROUTE\" = guard ] || [ \"$KILL_ROUTE\" = f22_instrumentation ]" in release
+    assert helper.index("STOPPED_EXACT_F22_INSTRUMENTATION_PROOF_OK") < helper.index("systemctl start janus-live-stream")
+    assert helper.index("STOPPED_GUARD_PASS_2_OK") < helper.index("clear_f22_instrumentation_latch.py activate")
+    assert "F23_AUTHORITY_REQUIRED" in helper and "F22_INSTRUMENTATION_ROLLBACK_KILL_ABSENT" in helper
+
+
 def test_release_kill_reason_selector_accepts_one_line_plus_transport_blank_only():
     """AWS text output adds a newline after already newline-terminated SSM stdout (L134)."""
     from pathlib import Path
@@ -255,14 +273,96 @@ def test_guard_recovery_route_does_not_restart_before_exact_stopped_lane_proof()
     assert 'keep lane stopped' in block
 
 
-def test_release_override_explicitly_pins_f22_spec_and_assignment():
+def test_override_supports_closed_f22_and_defaults_to_exact_f23_authority():
     from pathlib import Path
     script = (Path(__file__).resolve().parents[1] / "write_override.sh").read_text()
-    assert "--experiment F22" in script
+    assert "EXPERIMENT=${JANUS_EXPERIMENT:-F23}" in script
+    assert "--experiment F22" in script and "--experiment F23" in script
     assert "--experiment-spec research/sports/2026-09-15_limited-live-f22-maker-vs-taker/spec.yaml" in script
+    assert "--experiment-spec research/sports/2026-09-15_limited-live-f23-maker-vs-taker/spec.yaml" in script
     assert "--assignment-algorithm janus:f22:entry-arm:v1" in script
-    statement = (Path(__file__).resolve().parents[1] / "arm_statement.txt").read_text().strip()
-    assert statement == "proceed with the experiment; consider todays goal (reach 20 usd profit)"
+    assert "--assignment-algorithm janus:f23:entry-arm:v1" in script
+    f23 = (Path(__file__).resolve().parents[1] / "f23_arm_statement.txt").read_text().strip()
+    assert f23 == "we want to be able to prove we can or cannot reach the goal with the system as is and fix whatever is necessary to reach it."
+
+
+def _f22_recovery_fixture():
+    import sqlite3
+    from importlib import import_module
+
+    helper = import_module("ops.box.clear_f22_instrumentation_latch")
+    con = sqlite3.connect(":memory:")
+    con.executescript("""
+      CREATE TABLE f22_decisions(
+        id INTEGER PRIMARY KEY, event_id TEXT, forward_row_id TEXT,
+        assignment_algorithm TEXT, digest TEXT, arm TEXT, sizing_input_hash TEXT,
+        sizing_occurrence INTEGER, sizing_book_epoch TEXT, selected_quantity REAL, execution_id TEXT
+      );
+      CREATE TABLE executions(
+        execution_id TEXT PRIMARY KEY, event_id TEXT, opportunity_id TEXT, state TEXT,
+        first_client_id TEXT, hedge_client_ids TEXT, first_filled REAL, hedge_filled REAL,
+        unhedged REAL, released INTEGER
+      );
+      CREATE TABLE orders(
+        client_order_id TEXT, venue TEXT, venue_order_id TEXT, state TEXT,
+        filled_contracts REAL, avg_price REAL, fee_usd REAL, open INTEGER, settlement_pending INTEGER,
+        execution_id TEXT
+      );
+      CREATE TABLE capital_reservations(reservation_id TEXT, released_utc REAL);
+      CREATE TABLE pm_post_only_orders(client_order_id TEXT, terminal_proved INTEGER, violated INTEGER);
+      CREATE TABLE pm_post_only_admission(slot INTEGER, client_order_id TEXT);
+    """)
+    for row_id, expected in helper.F22_SOURCES.items():
+        event, exid = expected["event_id"], expected["execution_id"]
+        cid, oid = expected["first_client_id"], expected["venue_order_id"]
+        con.execute("INSERT INTO f22_decisions VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                    (row_id, event, "F22", "janus:f22:entry-arm:v1", expected["digest"], "maker",
+                     expected["sizing_input_hash"], 1, expected["sizing_book_epoch"],
+                     expected["selected_quantity"], exid))
+        con.execute("INSERT INTO executions VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    (exid, event, expected["opportunity_id"], "ORDER_UNFILLED", cid, "[]", 0.0, 0.0, 0.0, 1))
+        con.execute("INSERT INTO orders VALUES(?,?,?,?,?,?,?,?,?,?)",
+                    (cid, "polymarket", oid, "UNFILLED", 0.0, None, None, 0, 0, exid))
+        con.execute("INSERT INTO pm_post_only_orders VALUES(?,?,?)", (cid, 1, 0))
+    con.execute("INSERT INTO pm_post_only_admission VALUES(1,NULL)")
+    con.commit()
+    return helper, con
+
+
+def test_f22_recovery_proves_exact_source_execution_and_single_pm_order():
+    helper, con = _f22_recovery_fixture()
+    out = helper._quiet(con)
+    assert out["zero_flight"] and out["zero_unhedged"]
+
+    exid = "785f1ce65f61402c9d940e001be2f41e"
+    con.execute("UPDATE executions SET event_id='wrong-event' WHERE execution_id=?", (exid,))
+    try:
+        helper._quiet(con)
+    except RuntimeError as exc:
+        assert f"source execution {exid} changed" in str(exc)
+    else:
+        raise AssertionError("event/execution mismatch must block exact recovery")
+
+    helper, con = _f22_recovery_fixture()
+    con.execute("UPDATE f22_decisions SET event_id='wrong-event' WHERE id=1")
+    con.execute("UPDATE executions SET event_id='wrong-event' WHERE execution_id=?", (exid,))
+    with pytest.raises(RuntimeError, match="source decision identity changed"):
+        helper._quiet(con)
+
+
+def test_f22_recovery_rejects_hedge_ids_or_extra_order_lineage():
+    for mutation, expected in (
+        (lambda con: con.execute("UPDATE executions SET hedge_client_ids='[\\\"hedge\\\"]' WHERE execution_id='785f1ce65f61402c9d940e001be2f41e'"),
+         "source execution 785f1ce65f61402c9d940e001be2f41e changed"),
+        (lambda con: con.execute("INSERT INTO orders VALUES(?,?,?,?,?,?,?,?,?,?)",
+                                 ("k-one", "kalshi", "k-order-one", "UNFILLED", 0.0, None, None, 0, 0, "785f1ce65f61402c9d940e001be2f41e")),
+         "source order for 785f1ce65f61402c9d940e001be2f41e"),
+    ):
+        helper, con = _f22_recovery_fixture()
+        mutation(con)
+        con.commit()
+        with pytest.raises(RuntimeError, match=expected):
+            helper._quiet(con)
 
 
 def test_release_legacy_route_passes_an_exact_full_deployed_sha_to_the_helper():
