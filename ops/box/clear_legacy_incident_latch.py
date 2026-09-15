@@ -218,7 +218,14 @@ def _exclusive_move(src: Path, dst: Path, expected_digest: str) -> None:
             if _sha(dst.read_bytes()) != expected_digest:
                 raise RuntimeError("audit archive bytes changed during archive")
             os.unlink(staged)
-            quarantine.rmdir()
+            # The archive is now the durable exact-byte source. Failure to remove an empty
+            # scratch directory must not enter rollback after the staged link has been removed;
+            # at that point doing so could discard the archive without any remaining restore
+            # source. A leftover private empty directory is harmless audit litter.
+            try:
+                quarantine.rmdir()
+            except OSError:
+                pass
         except Exception:
             try:
                 if published and dst.exists() and _sha(dst.read_bytes()) == expected_digest:

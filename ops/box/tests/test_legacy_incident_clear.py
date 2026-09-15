@@ -138,6 +138,23 @@ def test_symlink_kill_is_rejected_without_touching_target(tmp_path):
     assert target.exists() and target.read_bytes() != b""
 
 
+def test_scratch_directory_cleanup_failure_cannot_discard_the_only_archive(tmp_path, monkeypatch):
+    _db, kill, digest, _release = fixture(tmp_path)
+    archive = tmp_path / "audit.json"
+    original = kill.read_bytes()
+    original_rmdir = Path.rmdir
+
+    def fail_only_quarantine(path):
+        if path.name.startswith(".legacy-incident-211-"):
+            raise OSError("simulated scratch cleanup failure")
+        return original_rmdir(path)
+
+    monkeypatch.setattr(Path, "rmdir", fail_only_quarantine)
+    clear._exclusive_move(kill, archive, digest)
+    assert not kill.exists()
+    assert archive.read_bytes() == original
+
+
 def test_new_kill_is_not_overwritten_by_rollback(tmp_path):
     _db, kill, digest, _release = fixture(tmp_path)
     archive = tmp_path / "archive.json"

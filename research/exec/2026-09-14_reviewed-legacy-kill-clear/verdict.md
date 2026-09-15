@@ -16,7 +16,7 @@ and digest across an atomic quarantine rename, and publishes exact bytes to a fr
 directory. Failure restores only into an absent live path, never over a new latch, and leaves the
 lane stopped. A new process starts entry-unhealthy under L123 until its own complete guard pass.
 
-The focused operator/box/guard suite passed **37/37**; shell syntax and `git diff --check` passed.
+The focused operator/box/guard suite passed **38/38**; shell syntax and `git diff --check` passed.
 The full release baseline passed **1,642/1,642**, excluding only the two pre-declared FIFO races;
 the one FIFO failure from the unfiltered run passed immediately in isolation. Replay over 20,000
 frames kept 1,093 evaluation rows, zero selections, and exact digests
