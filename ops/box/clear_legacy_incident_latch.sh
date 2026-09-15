@@ -29,8 +29,18 @@ AUDIT=\$(mktemp -d \"\$AUDIT_ROOT/.L122.XXXXXX\")
 chown janus:janus \"\$AUDIT\"
 chmod 700 \"\$AUDIT\"
 ARCHIVE=\"\$AUDIT/legacy-incident-211-cleared-$RELEASE_SHA-$KILL_SHA.json\"
-# Read-only proof before any stop or archive.
-sudo -u janus env JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box '$PY' /opt/janus/ops/box/clear_legacy_incident_latch.py prove --db '$DB' --kill '$KILL' --expected-kill-sha '$KILL_SHA' --release-sha '$RELEASE_SHA' --repo /opt/janus
+# Read-only proof before any stop or archive. The just-restarted L121 guard needs one bounded chance
+# to re-read the confirmed pre-restart disposition and append its exact resolution marker while the
+# original kill still blocks entry. Never infer quiet from elapsed time: only prove() can end wait.
+pre_proved=0
+for _ in \$(seq 1 25); do
+  if sudo -u janus env JANUS_DATA_ROOT=/srv/janus JANUS_HOST=box '$PY' /opt/janus/ops/box/clear_legacy_incident_latch.py prove --db '$DB' --kill '$KILL' --expected-kill-sha '$KILL_SHA' --release-sha '$RELEASE_SHA' --repo /opt/janus; then
+    pre_proved=1
+    break
+  fi
+  sleep 3
+done
+if [ "\$pre_proved" != 1 ]; then echo PRE_STOP_LEGACY_211_PROOF_FAILED >&2; exit 1; fi
 echo PRE_STOP_LEGACY_211_PROOF_OK
 # Complete real two-venue guard pass while stopped with the exact retained kill present.
 systemctl stop janus-live-stream

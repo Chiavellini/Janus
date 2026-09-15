@@ -209,6 +209,8 @@ def test_legacy_clear_shell_uses_fresh_root_audit_and_complete_credentialed_guar
     assert "mktemp -d" in script and "chown janus:janus" in script and "chmod 700" in script
     assert script.count("--require-complete-quiet") == 2
     assert "source /run/janus/janus.env" in script
+    assert "pre_proved=0" in script and "PRE_STOP_LEGACY_211_PROOF_FAILED" in script
+    assert script.index("pre_proved=0") < script.index("# Complete real two-venue guard pass")
     assert "rev-parse --verify HEAD" in (Path(__file__).resolve().parents[1] / "release.sh").read_text()
 
 

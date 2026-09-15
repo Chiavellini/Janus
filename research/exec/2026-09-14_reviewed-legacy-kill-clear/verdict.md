@@ -7,7 +7,8 @@ invalidation, plus the full deployed Git SHA. It revalidates `match_incident(211
 and column schema, both venues' journaled order state, all unreleased executions and reservations,
 and every material unresolved flag including `GUARD_FAILED`. Missing schema is a stop.
 
-The operator path stops the lane, runs a strict real Kalshi/Polymarket guard pass with the retained
+The operator path first waits boundedly for the just-restarted L121 guard to produce a real quiet
+proof under the unchanged kill. It then stops the lane, runs a strict real Kalshi/Polymarket guard pass with the retained
 kill and credential environment, warms all three sockets under that kill, stops again, and repeats
 the strict guard. Exact resolution findings from the first pass are allowed, but incomplete fills,
 unreadable venue positions, errors, orphans, mismatches, protection work, and active material
