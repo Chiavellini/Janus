@@ -22,6 +22,12 @@ The Polymarket redemption timer is failing while `data-api.polymarket.com/positi
 limit error. This is an unresolved operating-cost/reliability issue, not evidence of runaway order
 submission. It must not be confused with the entry-attempt volume in the lane.
 
+Two F22 release attempts stopped before provision or checkout at L134: SSM returned the exact kill
+reason followed by a transport blank line, and `release.sh` selected the blank with `tail -1`. The
+candidate now requires exactly one nonblank response line and preserves it for the unchanged exact
+classifier. All 42 box/recovery tests and an independent Luna review passed. A corrected release
+retry is pending; the failed attempts made no production mutation.
+
 ## F22 release candidate
 
 F22 is the registered event-randomized comparison between:
@@ -117,6 +123,7 @@ no-fill, and do not infer profitability from attempts, theoretical edges or midp
 - `research/exec/2026-09-15_f22-entry-arm-instrumentation/`: L131 spec and local verdict.
 - `research/exec/2026-09-15_guard-failure-recovery/`: L132 spec and STOP.
 - `research/exec/2026-09-15_guard-failure-pair-recovery/`: L133 spec and local verdict.
+- `research/exec/2026-09-15_release-kill-reason-newline/`: L134 measured transport fix and verdict.
 - `research/sports/2026-09-15_limited-live-f22-maker-vs-taker/`: immutable F22 forward spec.
 - `GATE_TO_LIVE.md` and `ops/box/arm_statement.txt`: exact operator statement, unchanged caps.
 - `snooping_ledger.md`: immutable registrations and results.

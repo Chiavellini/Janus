@@ -16,6 +16,9 @@
 # The statement is $JANUS_ARM_STATEMENT, else ops/box/arm_statement.txt (the standing one). Any
 # change to the caps or the statement is a new dated GATE_TO_LIVE row first.
 set -euo pipefail
+single_nonempty_line() {
+  awk 'NF { n += 1; line = $0 } END { if (n == 1) print line; else exit 1 }'
+}
 HERE=$(cd "$(dirname "$0")" && pwd)
 SHA=${1:?the sha to release (git rev-parse main)}
 REGION=${JANUS_BOX_REGION:-mx-central-1}
@@ -68,7 +71,7 @@ fi
 LIVE_KILL_SHA=$(bash "$HERE/run.sh" "if [ -f /srv/janus/kill/live ]; then sha256sum /srv/janus/kill/live | awk '{print \$1}'; else echo none; fi" | grep -E '^(none|[0-9a-f]{64})$' | tail -1)
 [ -n "$LIVE_KILL_SHA" ] || { echo "could not snapshot live kill"; exit 2; }
 if [ "$LIVE_KILL_SHA" != none ]; then
-  LIVE_KILL_REASON=$(bash "$HERE/run.sh" "if [ -f /srv/janus/kill/live ]; then /usr/bin/python3 -c 'import json; print(json.load(open(\"/srv/janus/kill/live\")).get(\"reason\", \"__MALFORMED__\"))'; else echo none; fi" | tail -1)
+  LIVE_KILL_REASON=$(bash "$HERE/run.sh" "if [ -f /srv/janus/kill/live ]; then /usr/bin/python3 -c 'import json; print(json.load(open(\"/srv/janus/kill/live\")).get(\"reason\", \"__MALFORMED__\"))'; else echo none; fi" | single_nonempty_line || true)
   [ -n "$LIVE_KILL_REASON" ] || { echo "could not snapshot live kill reason" >&2; exit 2; }
 else
   LIVE_KILL_REASON=none

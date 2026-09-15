@@ -216,6 +216,31 @@ def test_release_classifies_the_three_reviewed_kill_reasons_and_rejects_unknowns
     assert "unknown provider state:'*'post-only cancel/late-fill lifecycle unresolved:'" in release
 
 
+def test_release_kill_reason_selector_accepts_one_line_plus_transport_blank_only():
+    """AWS text output adds a newline after already newline-terminated SSM stdout (L134)."""
+    from pathlib import Path
+
+    release = (Path(__file__).resolve().parents[1] / "release.sh").read_text()
+    start = release.index("single_nonempty_line() {")
+    end = release.index("\n}", start) + 2
+    function = release[start:end]
+    assert "| single_nonempty_line || true" in release
+
+    def select(payload: str):
+        harness = function + "\nsingle_nonempty_line"
+        return subprocess.run(("bash", "-c", harness), input=payload, text=True,
+                              capture_output=True, check=False)
+
+    expected = "guard failed: exact registered reason"
+    accepted = select(expected + "\n\n")
+    assert accepted.returncode == 0
+    assert accepted.stdout == expected + "\n"
+    for rejected in ("", "\n\n", "unreviewed prefix\n" + expected + "\n"):
+        result = select(rejected)
+        assert result.returncode != 0
+        assert result.stdout == ""
+
+
 def test_guard_recovery_route_does_not_restart_before_exact_stopped_lane_proof():
     """A generic mode restart can let the guard append a third source and invalidate L133."""
     from pathlib import Path

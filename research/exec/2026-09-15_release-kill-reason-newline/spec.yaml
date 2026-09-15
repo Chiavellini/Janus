@@ -1,0 +1,45 @@
+id: L134
+registered_at: 2026-09-15
+track: operator/safety
+kind: release transport parsing
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L134
+title: Preserve the last non-empty SSM line when classifying a retained kill
+
+# IMMUTABLE AFTER REGISTRATION. This file and the L134 ledger row precede the implementation edit,
+# tests, release retry, checkout, override write, guard recovery, or kill mutation.
+known_at_registration:
+  attempted_release: 91b68b5489c63f311cb41992dda3a84f3168d798
+  observed_failure: could not snapshot live kill reason
+  attempts: 2
+  production_state_after_failure:
+    deployed_sha: f7c9c1b177f757d6bfbc6e126eeb47bbb001c6eb
+    lane: active under retained kill
+    kill_sha256: dcc4c761ee8fb5f903475e0400b54a0ef57db8246cd7d378d4846cf181c96d83
+    release_mutation_started: false
+  measured_transport_shape:
+    kill_sha_command_id: d8576116-6a95-4767-9159-72af24914ca7
+    kill_reason_command_id: 469ed21b-ee56-4f71-9147-488adeb6f617
+    reason_stdout: >-
+      The exact expected reason followed by a newline; AWS CLI text rendering adds its own terminal
+      newline, so the pipeline has an empty final line.
+  defect: >-
+    release.sh selects the reason with plain `tail -1`. When SSM StandardOutputContent already ends
+    in a newline and the AWS CLI text formatter appends another, `tail -1` selects the empty line.
+    The preceding SHA read avoids this only because grep removes blank lines.
+
+question: >-
+  Can release classification preserve the exact last non-empty SSM reason line while still failing
+  closed on empty, malformed, changed, multi-line or unreviewed kill evidence?
+
+success_criteria:
+  - A real release-path harness with the expected reason plus a trailing blank line reaches the exact guard route.
+  - Empty/blank-only output remains a hard failure before any provision, checkout, override, mode, helper or kill action.
+  - An unreviewed non-empty reason remains rejected by the existing exact reason/digest classifier.
+  - Selection changes only transport framing; it does not normalize, truncate or broaden the reason match.
+  - Focused release tests and Bash syntax pass before a release retry.
+
+authority: >-
+  L134 changes no cap, hurdle, size, entry, hedge, settlement, account, kill condition or experiment
+  criterion. It only permits exact pre-mutation classification evidence to survive a transport-added
+  blank line. The operator explicitly authorized the agent to execute the exact release retry.
