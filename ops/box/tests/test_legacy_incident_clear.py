@@ -12,6 +12,36 @@ from ops.box import clear_legacy_incident_latch as clear
 REASON = clear.EXPECTED_REASON
 
 
+def test_shell_preamble_requires_exact_full_lowercase_digests():
+    script = (Path(__file__).resolve().parents[1] / "clear_legacy_incident_latch.sh").read_text()
+    preamble = script[:script.index("DB=/srv/janus/tuples/tuples.sqlite")]
+    harness = preamble + "\nprintf 'validated\\n'\n"
+
+    release = "0123456789abcdef" * 2 + "01234567"
+    kill = "abcdef0123456789" * 4
+
+    def run(release_sha, kill_sha):
+        return subprocess.run(
+            ("bash", "-c", harness, "clear-helper", release_sha, kill_sha),
+            text=True, capture_output=True, check=False,
+        )
+
+    valid = run(release, kill)
+    assert valid.returncode == 0
+    assert valid.stdout.strip() == "validated"
+
+    invalid_releases = (release[:-1], release + "a", release.upper(), release[:-1] + "g")
+    invalid_kills = (kill[:-1], kill + "a", kill.upper(), kill[:-1] + "g")
+    for malformed in invalid_releases:
+        result = run(malformed, kill)
+        assert result.returncode == 2
+        assert "validated" not in result.stdout
+    for malformed in invalid_kills:
+        result = run(release, malformed)
+        assert result.returncode == 2
+        assert "validated" not in result.stdout
+
+
 def fixture(tmp_path):
     db = tmp_path / "tuples.sqlite"
     con = sqlite3.connect(db)

@@ -5,8 +5,8 @@ set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 RELEASE_SHA=${1:?full deployed Git SHA required}
 KILL_SHA=${2:?full retained kill SHA256 required}
-case "$RELEASE_SHA" in [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;; *) echo 'full 40-hex release SHA required' >&2; exit 2;; esac
-case "$KILL_SHA" in [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;; *) echo 'full 64-hex kill SHA256 required' >&2; exit 2;; esac
+[[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo 'full 40-hex release SHA required' >&2; exit 2; }
+[[ "$KILL_SHA" =~ ^[0-9a-f]{64}$ ]] || { echo 'full 64-hex kill SHA256 required' >&2; exit 2; }
 DB=/srv/janus/tuples/tuples.sqlite
 KILL=/srv/janus/kill/live
 PY=/opt/janus/.venv/bin/python3

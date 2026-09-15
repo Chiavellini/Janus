@@ -6,13 +6,13 @@ Updated 2026-09-14 after L121-L123 on branch claude/hedge-safety-and-speed.
 
 ## Current state
 
-The Mexico box is still deployed at 8e7ab4a. The lane service is active but kill/live remains
+The Mexico box is deployed at 3af2993. The lane service is active but kill/live remains
 present with exact SHA a9613b6dff2499e3da6fe4aa2b872fa02f955aaefb043e60725f289603c249f6
 and reason LEGACY_INCIDENT_ACK_INVALID flag=211. Nothing is trading. Read-only inspection found no
 current open or unconfirmed journal orders, cash-pending orders, unreleased executions, or
 unreleased reservations. The production database has every table and column required by L122.
 
-The candidate through L124 passed the integrated suite when the two documented pre-existing FIFO
+The candidate through L125 passed the integrated suite when the two documented pre-existing FIFO
 flakes were excluded. The one FIFO failure seen in an earlier unfiltered run passed immediately
 in isolation. Replay parity is unchanged: 1,093 rows and zero selections at
 13e4fb08a76c920f / 4f53cda18c2baa0c. A fresh external audit returned RELEASE with no remaining
@@ -28,8 +28,10 @@ The session began after release 31e7a42 stopped during legacy-latch recovery. Th
 cancelled that command after it printed a very long repeated flag list. Read-only inspection later
 showed the box safely stopped by a retained kill, no live capital in flight, and deployment
 8e7ab4a. A later operator attempt for 6a64561 exited before changing that checkout. Static review
-then found and registered L124's fail-closed full-SHA validation defect. NEXT.md, AGENTS.md,
-GATE_TO_LIVE.md, the L104-L124 ledger rows and registered specs,
+then found and registered L124's fail-closed release-route validation defect. The authorized
+3af2993 release deployed and re-signed the standing caps, then failed closed at L125's independent
+helper digest validator; the original kill remained exact and admitted no entry. NEXT.md,
+AGENTS.md, GATE_TO_LIVE.md, the L104-L125 ledger rows and registered specs,
 git history, the production database, and exact kill/deployment hashes were treated as sources of
 truth. Status log counters were not treated as authoritative execution state.
 
@@ -45,7 +47,9 @@ truth. Status log counters were not treated as authoritative execution state.
 - nodes/execution/README.md and ops/box/README.md: document the recovery and operator contracts.
 - ops/box/release.sh and ops/box/tests/test_box.py: route only the exact reviewed retained kill
   through the bounded proof helper and validate the full deployed Git SHA.
-- snooping_ledger.md: register L121-L124 before their runs and record their immutable results.
+- ops/box/clear_legacy_incident_latch.sh and ops/box/tests/test_legacy_incident_clear.py: preserve
+  exact helper semantics while validating its full release and kill digests correctly.
+- snooping_ledger.md: register L121-L125 before their runs and record their immutable results.
 - NEXT.md: replace the stale deployed-state handoff with this release state and economic truth.
 
 ## Files created
@@ -63,6 +67,8 @@ truth. Status log counters were not treated as authoritative execution state.
   and result.
 - research/exec/2026-09-14_full-deployed-sha-validator/spec.yaml and verdict.md: L124 registration
   and result.
+- research/exec/2026-09-14_helper_digest_validator/spec.yaml and verdict.md: L125 registration and
+  result.
 
 ## Intentionally untouched
 
@@ -111,6 +117,14 @@ Git SHA, so a valid release failed closed before recovery. It now accepts exactl
 hexadecimal characters. A harness executes the real shell route, proves the exact SHA reaches the
 helper untruncated, and rejects abbreviated, overlong, uppercase, and non-hex values. A separate
 audit returned RELEASE.
+
+## L125: exact helper digest validators
+
+research/exec/2026-09-14_helper_digest_validator/spec.yaml registers the proof. The helper itself
+had independently malformed length patterns: 42 groups for the 40-character release SHA and 61
+for the 64-character kill digest. Both now use anchored exact lowercase-hex expressions and reject
+short, long, uppercase, or non-hex values before remote work. Forty-one focused tests, the
+integrated suite, replay parity, and a separate audit passed.
 
 ## What is and is not proved toward $100/day
 
