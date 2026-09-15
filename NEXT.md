@@ -12,9 +12,9 @@ and reason LEGACY_INCIDENT_ACK_INVALID flag=211. Nothing is trading. Read-only i
 current open or unconfirmed journal orders, cash-pending orders, unreleased executions, or
 unreleased reservations. The production database has every table and column required by L122.
 
-The candidate code tree at 1ad69b5 passed 1,642 tests when the two documented pre-existing FIFO
-flakes were excluded. The one FIFO failure seen in an unfiltered run passed immediately in
-isolation. Replay parity is unchanged: 1,093 rows and zero selections at
+The candidate through L124 passed the integrated suite when the two documented pre-existing FIFO
+flakes were excluded. The one FIFO failure seen in an earlier unfiltered run passed immediately
+in isolation. Replay parity is unchanged: 1,093 rows and zero selections at
 13e4fb08a76c920f / 4f53cda18c2baa0c. A fresh external audit returned RELEASE with no remaining
 P0/P1 in the audited recovery and guard paths.
 
@@ -27,7 +27,9 @@ snapshots, and permit only a narrowly proved legacy-kill recovery during an oper
 The session began after release 31e7a42 stopped during legacy-latch recovery. The operator
 cancelled that command after it printed a very long repeated flag list. Read-only inspection later
 showed the box safely stopped by a retained kill, no live capital in flight, and deployment
-8e7ab4a. NEXT.md, AGENTS.md, GATE_TO_LIVE.md, the L104-L123 ledger rows and registered specs,
+8e7ab4a. A later operator attempt for 6a64561 exited before changing that checkout. Static review
+then found and registered L124's fail-closed full-SHA validation defect. NEXT.md, AGENTS.md,
+GATE_TO_LIVE.md, the L104-L124 ledger rows and registered specs,
 git history, the production database, and exact kill/deployment hashes were treated as sources of
 truth. Status log counters were not treated as authoritative execution state.
 
@@ -42,8 +44,8 @@ truth. Status log counters were not treated as authoritative execution state.
   target-bound, venue-authoritative restart recovery.
 - nodes/execution/README.md and ops/box/README.md: document the recovery and operator contracts.
 - ops/box/release.sh and ops/box/tests/test_box.py: route only the exact reviewed retained kill
-  through the bounded proof helper.
-- snooping_ledger.md: register L121-L123 before their runs and record their immutable results.
+  through the bounded proof helper and validate the full deployed Git SHA.
+- snooping_ledger.md: register L121-L124 before their runs and record their immutable results.
 - NEXT.md: replace the stale deployed-state handoff with this release state and economic truth.
 
 ## Files created
@@ -58,6 +60,8 @@ truth. Status log counters were not treated as authoritative execution state.
 - research/exec/2026-09-14_reviewed-legacy-kill-clear/spec.yaml and verdict.md: L122 registration
   and result.
 - research/exec/2026-09-14_guard-failure-fails-closed/spec.yaml and verdict.md: L123 registration
+  and result.
+- research/exec/2026-09-14_full-deployed-sha-validator/spec.yaml and verdict.md: L124 registration
   and result.
 
 ## Intentionally untouched
@@ -98,6 +102,15 @@ incomplete-snapshot failure clears cached authority, appends GUARD_FAILED, and f
 the kill. If persistence itself fails, the in-memory entry stop remains. Existing findings and
 required protection are processed before an incomplete snapshot is rejected, so fail-closed entry
 does not suppress protection.
+
+## L124: full deployed SHA reaches the exact helper
+
+research/exec/2026-09-14_full-deployed-sha-validator/spec.yaml registers the proof. The L122
+release route previously matched only twenty hex characters after reading a full forty-character
+Git SHA, so a valid release failed closed before recovery. It now accepts exactly forty lowercase
+hexadecimal characters. A harness executes the real shell route, proves the exact SHA reaches the
+helper untruncated, and rejects abbreviated, overlong, uppercase, and non-hex values. A separate
+audit returned RELEASE.
 
 ## What is and is not proved toward $100/day
 

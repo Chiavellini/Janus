@@ -88,7 +88,7 @@ if [ "$LIVE_KILL_SHA" != none ]; then
       echo "== (e) exact recovery of reviewed flag-211 legacy incident latch"
       DEPLOYED_SHA=$(bash "$HERE/run.sh" "sudo -u janus git -C /opt/janus rev-parse --verify HEAD" | grep -E '^[0-9a-f]{40}$' | tail -1 || true)
       case "$DEPLOYED_SHA" in
-        [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
+        [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
         *) echo "could not resolve the box's full deployed Git SHA; legacy clear remains blocked" >&2; exit 2 ;;
       esac
       bash "$HERE/clear_legacy_incident_latch.sh" "$DEPLOYED_SHA" "$LIVE_KILL_SHA"

@@ -4,6 +4,9 @@ the latency summary is arithmetic over samples."""
 from __future__ import annotations
 
 import os
+import re
+import shlex
+import subprocess
 
 from ops.box import creds, latency, provision_redemption
 
@@ -201,6 +204,41 @@ def test_release_routes_only_registered_flag211_digest_to_separate_helper():
     assert "clear_legacy_incident_latch.sh" in release
     assert "clear_false_maker_latch.sh" in release
     assert release.index("case \"$LIVE_KILL_SHA\"") < release.index("clear_legacy_incident_latch.sh")
+
+
+def test_release_legacy_route_passes_an_exact_full_deployed_sha_to_the_helper():
+    """The L122 route must preserve the box's full checkout SHA verbatim."""
+    from pathlib import Path
+
+    release = (Path(__file__).resolve().parents[1] / "release.sh").read_text()
+    route_start = release.index('      case "$DEPLOYED_SHA" in')
+    helper_call = '      bash "$HERE/clear_legacy_incident_latch.sh" "$DEPLOYED_SHA" "$LIVE_KILL_SHA"'
+    route_end = release.index(helper_call, route_start) + len(helper_call)
+    route = release[route_start:route_end].replace(
+        'bash "$HERE/clear_legacy_incident_latch.sh"', "record_helper"
+    )
+    pattern = re.search(r"\n        (\[0-9a-f\].*?) ;;", route).group(1)
+    assert pattern.count("[0-9a-f]") == 40
+
+    def run(deployed_sha):
+        harness = f'''\
+set -eu
+DEPLOYED_SHA={shlex.quote(deployed_sha)}
+LIVE_KILL_SHA=kill-digest
+record_helper() {{ printf 'helper:%s:%s\\n' "$1" "$2"; }}
+{route}
+'''
+        return subprocess.run(("bash", "-c", harness), text=True, capture_output=True, check=False)
+
+    full_sha = "0123456789abcdef" * 2 + "01234567"
+    result = run(full_sha)
+    assert result.returncode == 0
+    assert result.stdout.strip() == f"helper:{full_sha}:kill-digest"
+
+    for invalid in (full_sha[:20], full_sha[:-1], full_sha + "a", full_sha.upper(), full_sha[:-1] + "g"):
+        result = run(invalid)
+        assert result.returncode == 2
+        assert "helper:" not in result.stdout
 
 
 def test_legacy_clear_shell_uses_fresh_root_audit_and_complete_credentialed_guards():
