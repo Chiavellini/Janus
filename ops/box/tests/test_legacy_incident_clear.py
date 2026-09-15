@@ -114,6 +114,7 @@ def test_new_material_flag_after_warmup_is_caught_by_final_recheck(tmp_path):
 def test_atomic_quarantine_replacement_keeps_replaced_kill(tmp_path, monkeypatch):
     _db, kill, digest, _release = fixture(tmp_path)
     archive = tmp_path / "audit.json"
+    original = kill.read_bytes()
     original_rename = clear.os.rename
 
     def replace_then_rename(src, dst):
@@ -124,7 +125,27 @@ def test_atomic_quarantine_replacement_keeps_replaced_kill(tmp_path, monkeypatch
     monkeypatch.setattr(clear.os, "rename", replace_then_rename)
     with pytest.raises(RuntimeError, match="atomic quarantine"):
         clear._exclusive_move(kill, archive, digest)
-    assert b"stronger-race" in kill.read_bytes() and not archive.exists()
+    assert b"stronger-race" in kill.read_bytes()
+    assert archive.read_bytes() == original, "the known recovery source survives a failed move"
+
+
+def test_failed_internal_restore_is_explicit_and_preserves_known_archive(tmp_path, monkeypatch):
+    _db, kill, digest, _release = fixture(tmp_path)
+    archive = tmp_path / "audit.json"
+    original = kill.read_bytes()
+    original_unlink = clear.os.unlink
+
+    def fail_staged_unlink(path):
+        if Path(path).name == "live" and Path(path).parent.name.startswith(".legacy-incident-211-"):
+            raise OSError("simulated activation failure after quarantine")
+        return original_unlink(path)
+
+    monkeypatch.setattr(clear.os, "unlink", fail_staged_unlink)
+    monkeypatch.setattr(clear.os, "link", lambda *_a, **_k: (_ for _ in ()).throw(OSError("restore unavailable")))
+    with pytest.raises(RuntimeError, match="rollback failed.*recovery_archive"):
+        clear._exclusive_move(kill, archive, digest)
+    assert not kill.exists()
+    assert archive.read_bytes() == original
 
 
 def test_symlink_kill_is_rejected_without_touching_target(tmp_path):

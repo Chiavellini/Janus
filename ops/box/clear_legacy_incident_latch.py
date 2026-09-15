@@ -177,12 +177,13 @@ def _archive_path(archive_dir: Path, release_sha: str, digest: str) -> Path:
 
 
 def _exclusive_move(src: Path, dst: Path, expected_digest: str) -> None:
-    """Atomically quarantine ``src``, then publish it at an exclusive destination.
+    """Publish exact recovery bytes, then atomically quarantine and unlink ``src``.
 
-    The first rename is atomic and cannot overwrite because the quarantine directory is fresh.
-    The destination is created with an exclusive hard link, so an audit collision can never
-    overwrite prior evidence.  If the moved bytes are not the expected digest, they are restored
-    only when the live path is still absent; a new/changed kill is never removed or overwritten.
+    The recovery archive is an independent, fsynced, exclusive copy made while the live kill is
+    still present. The opened source inode is then moved to a fresh same-filesystem quarantine and
+    rechecked before unlink. A path swap is restored rather than cleared. Once the rename happens,
+    every failure path retains ``dst`` and either restores ``src`` or raises an explicit rollback
+    failure naming the durable archive; it never suppresses loss of the live latch.
     """
     lock = src.parent / ".legacy-incident-211.lock"
     lock_fd = os.open(lock, os.O_CREAT | os.O_RDWR, 0o600)
@@ -205,45 +206,60 @@ def _exclusive_move(src: Path, dst: Path, expected_digest: str) -> None:
             raise RuntimeError("live kill changed during archive")
         quarantine = Path(tempfile.mkdtemp(prefix=".legacy-incident-211-", dir=src.parent))
         staged = quarantine / "live"
-        published = False
+        archived = False
         try:
+            archive_fd = os.open(dst, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            try:
+                with os.fdopen(archive_fd, "wb") as archive_stream:
+                    archive_stream.write(src_raw)
+                    archive_stream.flush()
+                    os.fsync(archive_stream.fileno())
+            except Exception:
+                try:
+                    dst.unlink()
+                except FileNotFoundError:
+                    pass
+                raise
+            archived = True
+            if not stat.S_ISREG(dst.stat(follow_symlinks=False).st_mode) or _sha(dst.read_bytes()) != expected_digest:
+                raise RuntimeError("audit archive bytes changed during archive")
             os.rename(src, staged)
             moved = staged.read_bytes()
-            staged_stat = staged.stat()
+            staged_stat = staged.stat(follow_symlinks=False)
             if ((staged_stat.st_dev, staged_stat.st_ino) != (opened.st_dev, opened.st_ino)
                     or _sha(moved) != expected_digest):
                 raise RuntimeError("live kill changed during atomic quarantine")
-            os.link(staged, dst, follow_symlinks=False)
-            published = True
-            if _sha(dst.read_bytes()) != expected_digest:
-                raise RuntimeError("audit archive bytes changed during archive")
             os.unlink(staged)
-            # The archive is now the durable exact-byte source. Failure to remove an empty
-            # scratch directory must not enter rollback after the staged link has been removed;
-            # at that point doing so could discard the archive without any remaining restore
-            # source. A leftover private empty directory is harmless audit litter.
-            try:
-                quarantine.rmdir()
-            except OSError:
-                pass
-        except Exception:
-            try:
-                if published and dst.exists() and _sha(dst.read_bytes()) == expected_digest:
-                    dst.unlink()
-            except FileNotFoundError:
-                pass
-            try:
-                # Exclusive restoration leaves an intervening new kill untouched.
-                if staged.exists() and not src.exists():
-                    os.link(staged, src, follow_symlinks=False)
-                    staged.unlink()
-                if quarantine.exists():
-                    quarantine.rmdir()
-            except (FileExistsError, OSError):
-                pass
+        except Exception as original:
+            restore_errors = []
+            if not src.exists():
+                recovered = False
+                for recovery_source in (staged, dst if archived else None):
+                    if recovery_source is None or not recovery_source.exists():
+                        continue
+                    try:
+                        os.link(recovery_source, src, follow_symlinks=False)
+                        recovered = True
+                        break
+                    except FileExistsError:
+                        recovered = True  # a concurrent/new kill won; never overwrite it
+                        break
+                    except OSError as exc:
+                        restore_errors.append(f"{recovery_source}: {type(exc).__name__}: {exc}")
+                if not recovered and not src.exists():
+                    raise RuntimeError(
+                        "live kill rollback failed; lane must remain stopped; "
+                        f"recovery_archive={dst}; errors={restore_errors}"
+                    ) from original
             raise
         finally:
             os.close(source_fd)
+            try:
+                if staged.exists() and src.exists():
+                    staged.unlink()
+                quarantine.rmdir()
+            except OSError:
+                pass
     finally:
         try:
             fcntl.flock(lock_fd, fcntl.LOCK_UN)

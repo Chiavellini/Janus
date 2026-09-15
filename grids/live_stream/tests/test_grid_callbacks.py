@@ -557,7 +557,7 @@ def test_guard_failure_crosses_to_thread_and_fails_closed_until_complete_recover
     assert recent_flags(tmp_path / "t.sqlite", "GUARD_FAILED")
 
 
-def test_incomplete_guard_snapshot_cannot_reopen_capital_entry(tmp_path: Path):
+def test_incomplete_guard_snapshot_cannot_reopen_capital_entry_or_block_protection(tmp_path: Path, monkeypatch):
     """L123: structured fetch output with missing fills/positions proof is still a failure."""
     import asyncio
     from types import SimpleNamespace
@@ -569,23 +569,31 @@ def test_incomplete_guard_snapshot_cannot_reopen_capital_entry(tmp_path: Path):
     sup, _s = _supervisor(tmp_path)
     sup.mode = Mode.LIMITED_LIVE
     sup.kill = KillSwitches(tmp_path / "kill", enforce_volume=False)
-    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_auto=False))
+    sup.limits = SimpleNamespace(protect=SimpleNamespace(protect_auto=True))
     sup.venues = {"kalshi": object(), "polymarket": object()}
     # It is deliberately incomplete without raising: no complete fill read and one venue has no
     # position result. This must not count as recovery.
     snap = GuardSnapshot(now=1.0, errors={}, fills_read_complete=False,
                          positions={"kalshi": [], "polymarket": None})
-    rep = SimpleNamespace(findings=[], to_protect=[], fills_today=())
+    rep = SimpleNamespace(findings=[], to_protect=["naked-position"], fills_today=())
+    protected = []
+
+    async def protect(execution_id):
+        protected.append(execution_id)
+
+    monkeypatch.setattr(sup, "_protect_off_loop", protect)
     sup.guard = SimpleNamespace(fetch=lambda: snap, apply=lambda _snap: rep)
     asyncio.run(sup.guard_pass())
     assert sup.guard_unhealthy and sup.guard_passes == 0
+    assert protected == ["naked-position"]
     assert sup.kill.active(live=True) == ["live"]
     assert recent_flags(tmp_path / "t.sqlite", "GUARD_FAILED")
 
     # All required proof fields restore only the in-memory gate; the live kill/evidence remain.
     complete = GuardSnapshot(now=2.0, errors={}, fills_read_complete=True,
                              positions={"kalshi": [], "polymarket": []})
-    sup.guard = SimpleNamespace(fetch=lambda: complete, apply=lambda _snap: rep)
+    complete_rep = SimpleNamespace(findings=[], to_protect=[], fills_today=())
+    sup.guard = SimpleNamespace(fetch=lambda: complete, apply=lambda _snap: complete_rep)
     asyncio.run(sup.guard_pass())
     assert not sup.guard_unhealthy and sup.guard_passes == 1
     assert sup.kill.active(live=True) == ["live"]

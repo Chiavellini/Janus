@@ -8,16 +8,17 @@ and column schema, both venues' journaled order state, all unreleased executions
 and every material unresolved flag including `GUARD_FAILED`. Missing schema is a stop.
 
 The operator path first waits boundedly for the just-restarted L121 guard to produce a real quiet
-proof under the unchanged kill. It then stops the lane, runs a strict real Kalshi/Polymarket guard pass with the retained
-kill and credential environment, warms all three sockets under that kill, stops again, and repeats
+proof under the unchanged kill. It then stops the lane, runs a strict real Kalshi/Polymarket guard
+pass with the retained kill and credential environment, warms all three sockets under that kill, stops again, and repeats
 the strict guard. Exact resolution findings from the first pass are allowed, but incomplete fills,
 unreadable venue positions, errors, orphans, mismatches, protection work, and active material
-findings are not. Activation repeats the database/incident proof, verifies the opened kill inode
-and digest across an atomic quarantine rename, and publishes exact bytes to a fresh exclusive audit
-directory. Failure restores only into an absent live path, never over a new latch, and leaves the
-lane stopped. A new process starts entry-unhealthy under L123 until its own complete guard pass.
+findings are not. Activation repeats the database/incident proof and publishes an independent,
+fsynced exact-byte recovery archive before atomically quarantining the opened kill inode. Failure
+restores only into an absent live path, never over a new latch, then retries and verifies the
+stopped service; a missing kill or failed stop is an explicit exit 97, not a suppressed cleanup. A
+new process starts entry-unhealthy under L123 until its own complete guard pass.
 
-The focused operator/box/guard suite passed **38/38**; shell syntax and `git diff --check` passed.
+The focused operator/box/guard suite passed **39/39**; shell syntax and `git diff --check` passed.
 The full release baseline passed **1,642/1,642**, excluding only the two pre-declared FIFO races;
 the one FIFO failure from the unfiltered run passed immediately in isolation. Replay over 20,000
 frames kept 1,093 evaluation rows, zero selections, and exact digests

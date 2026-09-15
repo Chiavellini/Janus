@@ -17,9 +17,39 @@ AUDIT=\"\"
 ARCHIVE=\"\"
 cleanup() {
   rc=\$?
-  systemctl stop janus-live-stream >/dev/null 2>&1 || true
-  if [ \"\$rc\" != 0 ] && [ -n \"\$ARCHIVE\" ] && [ ! -e '$KILL' ] && [ -e \"\$ARCHIVE\" ]; then
-    '$PY' /opt/janus/ops/box/clear_legacy_incident_latch.py restore --archive \"\$ARCHIVE\" --kill '$KILL' --expected-kill-sha '$KILL_SHA' || true
+  trap - EXIT
+  if [ \"\$rc\" != 0 ]; then
+    rollback_failed=0
+    # Restore the durable exact archive first so even a stubborn service remains entry-blocked.
+    if [ ! -e '$KILL' ]; then
+      if [ -n \"\$ARCHIVE\" ] && [ -e \"\$ARCHIVE\" ]; then
+        if ! '$PY' /opt/janus/ops/box/clear_legacy_incident_latch.py restore --archive \"\$ARCHIVE\" --kill '$KILL' --expected-kill-sha '$KILL_SHA'; then
+          echo LEGACY_211_ROLLBACK_RESTORE_FAILED >&2
+          rollback_failed=1
+        fi
+      else
+        echo LEGACY_211_ROLLBACK_SOURCE_MISSING >&2
+        rollback_failed=1
+      fi
+    fi
+    # A failed helper must leave both independent stops in place. Retry stop, then verify it.
+    stopped=0
+    for _ in 1 2 3; do
+      if systemctl stop janus-live-stream && [ \"\$(systemctl is-active janus-live-stream || true)\" = inactive ]; then
+        stopped=1
+        break
+      fi
+      sleep 1
+    done
+    if [ \"\$stopped\" != 1 ]; then
+      echo LEGACY_211_ROLLBACK_STOP_FAILED >&2
+      rollback_failed=1
+    fi
+    if [ ! -e '$KILL' ]; then
+      echo LEGACY_211_ROLLBACK_KILL_ABSENT >&2
+      rollback_failed=1
+    fi
+    if [ \"\$rollback_failed\" != 0 ]; then exit 97; fi
   fi
   if [ \"\$rc\" != 0 ] && [ -n \"\$AUDIT\" ] && [ ! -e \"\$ARCHIVE\" ]; then rmdir \"\$AUDIT\" >/dev/null 2>&1 || true; fi
   exit \"\$rc\"

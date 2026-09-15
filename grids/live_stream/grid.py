@@ -1413,6 +1413,20 @@ class Supervisor:
         try:
             snap = await asyncio.to_thread(self.guard.fetch)
             rep = self.guard.apply(snap)
+            # A partial snapshot may still prove an already-open execution is naked. Preserve the
+            # protection hand-off before deciding whether this pass is complete enough to admit
+            # NEW capital. Protection re-loads the durable row and receives its own clearance.
+            for line in rep.findings:
+                print(f"  [guard] {line}", flush=True)
+            if rep.to_protect:
+                auto = bool(getattr(getattr(self.limits, "protect", None), "protect_auto", False))
+                key = "guard:naked:" + ",".join(rep.to_protect)
+                if self.said.get(key) != "said":
+                    self.said[key] = "said"
+                    print(f"  [guard] naked and idle: {', '.join(x[:8] for x in rep.to_protect)}"
+                          + (" (protect_auto on: re-protection follows)" if auto else " (protect_auto off: by hand, ops/reconcile_stuck_execution.py)"), flush=True)
+                if auto:
+                    self.reprotect_queue = list(rep.to_protect)
             # PositionGuard.fetch reports venue/read failures in ``snap.errors`` so the loop can
             # still inspect the rest of the evidence. Such a snapshot is not a complete pass and
             # takes the same fail-closed path as an exception; only a complete pass restores health.
@@ -1431,17 +1445,6 @@ class Supervisor:
             # live kill here; both are durable operator evidence and require an explicit human act.
             self.guard_unhealthy = False
             self.guard_failure_detail = ""
-            for line in rep.findings:
-                print(f"  [guard] {line}", flush=True)
-            if rep.to_protect:
-                auto = bool(getattr(getattr(self.limits, "protect", None), "protect_auto", False))
-                key = "guard:naked:" + ",".join(rep.to_protect)
-                if self.said.get(key) != "said":
-                    self.said[key] = "said"
-                    print(f"  [guard] naked and idle: {', '.join(x[:8] for x in rep.to_protect)}"
-                          + (" (protect_auto on: re-protection follows)" if auto else " (protect_auto off: by hand, ops/reconcile_stuck_execution.py)"), flush=True)
-                if auto:
-                    self.reprotect_queue = list(rep.to_protect)
         except Exception as exc:  # noqa: BLE001 -- the guard must never kill the loop
             print(f"  [guard FAILED] {brief_error(exc)}", flush=True)
             self._guard_failed(exc)

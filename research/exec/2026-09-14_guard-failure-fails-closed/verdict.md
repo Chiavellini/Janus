@@ -9,7 +9,8 @@ unhealthy until that first complete proof. A failure preserves the first live-ki
 `GUARD_FAILED` through the grid's thread-correct flag connection,
 invalidates balance and fill snapshots, and leaves the process alive for protective handling. A
 failure of either durable alarm path retains an in-memory entry stop; new entries are refused before
-balance reads, clearance, and venue helpers. A complete later pass restores only that in-memory
+balance reads, clearance, and venue helpers. Even an incomplete pass queues any already-open naked
+execution it found for protection before refusing new capital. A complete later pass restores only that in-memory
 gate and never clears the kill or resolves the append-only flag evidence. Non-capital modes keep the
 failure observable without acquiring live kill authority.
 

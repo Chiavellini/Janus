@@ -211,6 +211,11 @@ def test_legacy_clear_shell_uses_fresh_root_audit_and_complete_credentialed_guar
     assert "source /run/janus/janus.env" in script
     assert "pre_proved=0" in script and "PRE_STOP_LEGACY_211_PROOF_FAILED" in script
     assert script.index("pre_proved=0") < script.index("# Complete real two-venue guard pass")
+    assert "LEGACY_211_ROLLBACK_RESTORE_FAILED" in script
+    assert "LEGACY_211_ROLLBACK_STOP_FAILED" in script
+    assert "LEGACY_211_ROLLBACK_KILL_ABSENT" in script
+    restore_line = next(line for line in script.splitlines() if "clear_legacy_incident_latch.py restore" in line)
+    assert "--archive" in restore_line and "--kill" in restore_line and "|| true" not in restore_line
     assert "rev-parse --verify HEAD" in (Path(__file__).resolve().parents[1] / "release.sh").read_text()
 
 
