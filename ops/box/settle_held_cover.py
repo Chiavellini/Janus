@@ -17,9 +17,16 @@ import re
 import sqlite3
 import stat
 import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Callable
+
+# Production invokes this helper by absolute path from a stopped-lane shell route.  Resolve the
+# checkout from the helper itself before importing repository packages; the caller's cwd and
+# PYTHONPATH are intentionally not part of that contract.
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
 
 from kernel.fetch import Client
 from nodes.opportunity.opportunity import OpportunityStore

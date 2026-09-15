@@ -1,7 +1,9 @@
 import hashlib
 import json
+import os
 import sqlite3
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -16,6 +18,22 @@ from nodes.risk.flags import FLAGS_DDL
 from nodes.risk.ledger import LEDGER_DDL
 from nodes.store_tuples.store import TupleStore
 from ops.box import settle_held_cover as helper
+
+
+def test_direct_path_invocation_imports_from_outside_repo(tmp_path):
+    script = Path(helper.__file__).resolve()
+    env = os.environ.copy()
+    env.pop("PYTHONPATH", None)
+    result = subprocess.run(
+        (sys.executable, str(script), "--help"),
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "usage:" in result.stdout
 
 
 def _fixture(tmp_path: Path):

@@ -7,7 +7,7 @@ Updated 2026-09-15 for the F22 maker-versus-taker release candidate on branch
 
 ## Current production state
 
-The Mexico box is deployed at `1be680be24f10bc2dc7d783e7c27273deb3b046e`. The lane service is
+The Mexico box is deployed at `d7366db10fc666a1fe6fbd597e1c51882b1d8347`. The lane service is
 stopped (`inactive`, `MainPID=0`, `ControlPID=0`) and `kill/live` is retained, so neither polling nor
 new entry is running. Do not describe the lane as trading.
 
@@ -37,7 +37,10 @@ release/reconciliation atomically; and leaves the kill untouched. Its corrected 
 accept only the canonical null-owner admission and let an exact cryptographic resolution cover a
 missing lifecycle row while any present bad row still blocks. The first registered provider read
 returned `null` from both venues, so production was not mutated and remains waiting for venue
-finality.
+finality. The first L136 release attempt exposed only a direct-script import boundary: the release
+checked out `d7366db`, re-signed the unchanged limits and then failed before provider/database work
+because `/opt/janus` was absent from Python's import path. L137 registers the narrow packaging fix;
+the box remained stopped with no settlement row and the reservation unreleased.
 
 ## F22 release candidate
 
@@ -67,7 +70,8 @@ first-order id, hedge id or nonzero fill.
 ## Verification
 
 The release candidate has zero live F22 observations. It is locally ready, not economically
-validated. L136 verification is still being completed before its release commit.
+validated. L136 is locally verified and independently audited; L137's direct-invocation fix is the
+only pending release delta.
 
 - Focused F22/grid/report tests: 65 passed; the final combined F22/recovery selection passed 87.
 - Integrated suite: the only failure in the final run was the documented pre-existing box FIFO
@@ -104,10 +108,10 @@ turnover, loosen safety, or stop early after a favorable result.
 
 ## Release boundary and immediate continuation
 
-Finish L136 tests, exact replay and independent audit; commit and push one convergence release. Do
-not retry production while either venue result is still open: the exact helper will return WAIT,
-retain the kill and leave the lane stopped. Once both venues are authoritative, the operator has
-authorized the agent to run `ops/box/release.sh <commit>`. The route must atomically settle only the
+Finish L137's focused test, exact replay and independent audit; commit and push the packaging fix.
+A production retry while either venue result is still open will return WAIT, retain the kill and
+leave the lane stopped. The operator has authorized the agent to run the exact release route. Once
+both venues are authoritative, the route must atomically settle only the
 registered cover before L133's static proof; then the unchanged two stopped guards, retained-kill
 stream warm-up, exact joint resolution, exclusive kill archive and restart requirements apply. Any
 mismatch retains/restores the kill and leaves the lane stopped.
@@ -140,6 +144,7 @@ no-fill, and do not infer profitability from attempts, theoretical edges or midp
 - `research/exec/2026-09-15_release-kill-reason-newline/`: L134 measured transport fix and verdict.
 - `research/exec/2026-09-15_l133-nonquiet-identity/`: L135 exact read-only diagnosis.
 - `research/exec/2026-09-15_stopped-lane-settlement-convergence/`: L136 immutable recovery spec.
+- `research/exec/2026-09-15_l136-direct-script-import/`: L137 direct-invocation packaging fix.
 - `research/sports/2026-09-15_limited-live-f22-maker-vs-taker/`: immutable F22 forward spec.
 - `GATE_TO_LIVE.md` and `ops/box/arm_statement.txt`: exact operator statement, unchanged caps.
 - `snooping_ledger.md`: immutable registrations and results.

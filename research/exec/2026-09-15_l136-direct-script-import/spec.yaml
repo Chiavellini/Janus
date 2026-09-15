@@ -1,0 +1,33 @@
+id: L137
+registered_at: 2026-09-15
+track: operator/safety
+kind: direct-script import boundary
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L137
+title: Make the exact L136 helper importable under its production direct invocation
+
+# IMMUTABLE AFTER REGISTRATION. This precedes the implementation edit and its tests/release retry.
+known_at_registration:
+  deployed_release: d7366db10fc6
+  production_result: >-
+    release checked out and re-signed the unchanged standing F22 limits, then the stopped-lane
+    helper exited before provider or database work with ModuleNotFoundError: No module named kernel
+  invocation: /opt/janus/.venv/bin/python3 /opt/janus/ops/box/settle_held_cover.py
+  lane: stopped under the retained L133 kill
+
+question: >-
+  Can the exact production direct invocation import the repository packages without changing any
+  L136 identity, settlement, guard, kill, cap, hurdle, size, entry, hedge, or release semantics?
+
+success_criteria:
+  - The helper resolves the repository root from its own installed path before repository imports.
+  - A subprocess test executes the file by path from a working directory outside the repository
+    and reaches argparse help with exit zero.
+  - Focused tests, Bash syntax, Python compilation and replay parity remain green.
+  - Release retry either reaches L136's exact venue-finality result or fails closed with the kill
+    retained and lane stopped.
+
+expected_ev_effect: none directly; restores the already-registered safe recovery path
+prohibited:
+  - Any change to L136 evidence matching, settlement write path, kill handling, risk limits,
+    F22 assignment, entry policy, or account state outside the exact release route.
