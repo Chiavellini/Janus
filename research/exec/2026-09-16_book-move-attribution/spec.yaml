@@ -1,0 +1,125 @@
+row: L143
+date: 2026-09-16
+kind: measurement
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L143
+title: Is the pre-wire first-leg decline latency or adverse selection?
+
+# IMMUTABLE AFTER REGISTRATION. This file and the PENDING ledger row precede any extraction.
+# Nothing below was chosen after seeing a result; the thresholds in decision_rule are the point of
+# the row and must not be moved once data is read.
+
+observed_failure: >-
+  L141 measured that 90 of 95 pre-wire BOOK_MOVED declines failed the Polymarket first-leg
+  price/depth check by 6c at the median, 10c at p90 and 13c at maximum, with the planned websocket
+  book already 548 ms old (p50) / 810 ms (p90) at execution start. Nobody has measured WHY. The two
+  live hypotheses have opposite consequences and the project has been acting as though the first is
+  true without testing it. If the book simply moved during the ~700 ms we were slow, latency work
+  pays and the unattributed time inside the book age is the target. If the displayed depth was never
+  takeable and the gap is the market repricing information we do not hold, then speed buys nothing,
+  entry-rate work is a trap, and the two-leg co-listed lane has no path at any latency. AGENTS.md
+  already records the analogous control from the inherited Kilos work, where filled windows settled
+  -22c against +9.4c for unfilled ones - a 31c gap between what a book displayed and what was
+  actually obtainable - which is exactly this distinction destroying a lead.
+
+question: >-
+  Decomposed across every execution with both a frozen plan ladder and a fresh confirmation ladder,
+  is the change in executable first-leg price explained by elapsed time (a latency/diffusion
+  signature), by a systematic move against the side we were about to take (an adverse-selection
+  signature), or by depth vanishing at an unchanged price (a phantom-liquidity signature)?
+
+known_at_registration:
+  - L141's exact window accounting reproduced against production on 2026-09-15 - 108 included
+    executions as 95 BOOK_MOVED / 10 ORDER_UNFILLED / 3 RECONCILED, 13 Polymarket buy-side order
+    rows, 3 filled, PM fees $0.60932 - so the population and the extraction path are already proved.
+  - coordinator.py:236 already persists the confirmation ladder (five levels, source, fetched_utc,
+    at_utc, at_mono) into executions.protect_json first_leg_confirm, and :365 persists the sent-size
+    sub-record. The evidence needed for this row already exists on disk and requires no new collector.
+  - The confirmation is already overlapped with the Kalshi hedge read (coordinator.py:218-222), so
+    decision_to_confirmation p50 180.43 ms is max(), not sum(), of 168.42 and 102.87. Removing it
+    would save ~65 ms at p50 and ~0 at p90, not 181 ms.
+  - L102's interim CONSUMED=8 / STILL_THERE=0 / PULLED=0 is latency-consistent but n=8 and
+    observational. It is a prior, not a result, and this row does not inherit its conclusion.
+
+population: >-
+  Every structured Janus execution carrying BOTH a frozen planned first-leg ladder and a fresh
+  first-leg confirmation ladder, over the widest contiguous window the bounded rowid tail reaches.
+  Explicitly NOT conditioned on terminal state: declines, terminal zero fills and filled covers are
+  all included, because conditioning on BOOK_MOVED selects the unfavourable tail and cannot
+  distinguish a shifted distribution from the tail of a centred one. That selection is the central
+  methodological point of this row. Rows missing either ladder are reported as missing, never imputed.
+
+measurements:
+  - signed gap per row, in cents, as (confirmed executable marginal price at the planned size)
+    minus (frozen planned marginal price at the same size), positive meaning worse for the side we
+    were about to take
+  - the same gap restricted to each terminal state, reported separately and never pooled into a
+    single headline
+  - elapsed time per row as the correctly differenced interval from frozen book capture to
+    confirmation completion, never a cumulative stamp
+  - rank correlation (Spearman) between elapsed time and absolute gap, and between elapsed time and
+    signed gap, with n reported for each
+  - the gap's distribution: median, p10, p90, and the fraction strictly favourable (gap < 0)
+  - depth at the ORIGINAL planned price in the confirmation ladder, so a price-stable row whose depth
+    vanished is separated from a price-moved row
+  - for rows that reached the wire, the post-submission ladder against the sent ladder, extending
+    L102's CONSUMED / STILL_THERE / PULLED taxonomy to every available order rather than eight
+  - attribution of the book age itself: the differenced interval from websocket frame receipt to
+    book snapshot to machine entry, to locate the time L141 left unexplained
+
+decision_rule:
+  # Fixed before any data is read. Whichever branch the data lands in is the verdict.
+  LATENCY_DOMINATES: >-
+    The all-rows signed gap is centred near zero - median within +/-1.5c of zero and the favourable
+    fraction within 0.40 to 0.60 - AND absolute gap rises with elapsed time at Spearman rho >= 0.20.
+    Consequence: latency work is justified and the unattributed book-age time is the target.
+  ADVERSE_SELECTION_DOMINATES: >-
+    The all-rows signed gap is shifted against us - median >= 1.5c worse with the favourable fraction
+    below 0.40 - AND absolute gap does NOT rise with elapsed time (Spearman rho < 0.20).
+    Consequence: speed cannot recover these rows; the two-leg lane's entry premise needs rework or
+    retirement, and no further latency row should be registered on this mechanism.
+  PHANTOM_DEPTH_DOMINATES: >-
+    A plurality of declining rows show the planned price still present in the confirmation ladder
+    but with depth at that price below the planned size. Consequence: the constraint is displayed
+    liquidity the engine will not honour, and neither speed nor entry-rate work addresses it.
+  MIXED_OR_INCONCLUSIVE: >-
+    Any other outcome, including insufficient rows carrying both ladders. Report the decomposition
+    and explicitly decline a verdict rather than choosing the nearest branch.
+
+immutable_success_criteria:
+  - Every row in the population is accounted for exactly once; rows lacking either ladder are
+    counted and named as missing, never imputed, dropped silently, or coerced to zero.
+  - The offline ladder walk is arithmetically identical to the walk the lane uses
+    (nodes/execute/plan.marginal_price), pinned by a test rather than asserted, so the gap is
+    comparable to what the lane actually compared.
+  - The all-rows distribution is reported before, and more prominently than, any
+    declines-only figure. A declines-only gap is a selected statistic and may not be quoted as the
+    gap.
+  - Signed throughout, never floored or absolute-only. The favourable half is the information that
+    discriminates the two hypotheses.
+  - Elapsed times are adjacent differences within one row. Cumulative stamps from _t0 are never
+    subtracted across rows, and a negative difference is reported as a clock fault, never clamped.
+  - The verdict is whichever decision_rule branch the data satisfies. If none is satisfied, the
+    verdict is MIXED_OR_INCONCLUSIVE. No branch is widened, and no threshold is moved, after a
+    number is seen.
+  - The raw extractor output is written to disk verbatim alongside any summary, and the summary's
+    schema string matches the extractor's. L141 shipped a hand-authored results.json whose schema did
+    not match its own measure.py, which is why its per-order evidence had to be re-queried.
+
+expected_ev_effect: >-
+  None directly; it is descriptive and read-only. Its value is that it is the cheapest available
+  test of whether ANY latency or entry-rate work on the two-leg lane has positive expected value. A
+  LATENCY_DOMINATES verdict justifies a registered speed successor; an ADVERSE_SELECTION_DOMINATES
+  verdict retires that whole line of work and saves the live window it would have consumed.
+
+prohibited:
+  - Quoting a declines-only gap as the headline. Conditioning on failure is the error this row exists
+    to avoid.
+  - Treating L102's n=8 CONSUMED split as a result rather than a prior.
+  - Inferring a fill, or a counterfactual fill, from displayed depth without respecting queue, venue
+    response and role.
+  - Any production mutation. Read-only against a mode=ro connection; no order, kill, override, cap,
+    hurdle, limit or entry policy is touched, and no F22 or F23 row is written, repaired or pooled.
+  - Reading a LATENCY_DOMINATES verdict as authority to remove the confirmation. The confirmation
+    also carries L83's collateral ceiling and the L95 downsize; removing it is a separate entry-policy
+    change needing its own spec, PENDING row and dated GATE amendment.

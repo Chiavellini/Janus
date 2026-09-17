@@ -1,0 +1,99 @@
+row: L146
+date: 2026-09-17
+kind: reproduction
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L146
+title: Does the deployed Polymarket stream code let wrong depth persist on a verified book?
+
+# IMMUTABLE AFTER REGISTRATION. This file and the PENDING ledger row precede writing and running any
+# reproduction. The outcome rule below is the point of the row and must not move once a result is seen.
+
+observed_failure: >-
+  L143 and L144 localised the lane's one-sided first-leg losses to the Polymarket book: over the same
+  169 executions Polymarket moved 128 adverse to 1 favourable while the concurrently confirmed Kalshi
+  hedge leg was symmetric. L145 could not say how, because an exogenous sweep lands on quiet books.
+  A close reading of the stream code produced a specific mechanism, which this row tests by executing
+  the deployed classes rather than by further inference.
+
+hypothesis: >-
+  (a) An ACTIVE Polymarket book is never compared level by level against REST: the Reconciler's due()
+  selects only replicas more than 15 s past their last verification, and any agreeing price_change at
+  ANY depth resets that clock through stream_verified. (b) The per-message check compares top-of-book
+  PRICES only, so neither a stale level below the touch nor a stale size at the touch is detected.
+  (c) A REST correction is written into the replica but not into the stream's own ladder (ps.books),
+  so the next price_change rebuilds the replica from the stale ladder. Consequence: a lost update
+  below the touch leaves phantom liquidity that persists while the book is reported verified.
+
+known_at_registration:
+  - nodes/stream_polymarket, nodes/book_replica, nodes/stream_kalshi and nodes/execute/plan.py are
+    byte-identical between this worktree and the deployed 59dd5ae, so a reproduction here is a
+    statement about production code.
+  - The exclusion of busy books is deliberate. reconcile.py:9-11 gives the reason: reconciling a busy
+    market against REST "would report timing skew as drift every few seconds". This row tests the
+    consequence of that trade-off; it does not assert the trade-off was careless.
+  - protocol.py:18-20 states the design assumption: the check verifies the top of book only, "so an
+    outside REST reconciliation is still the backstop for depth". replica.py:332-333 repeats it.
+  - The repository's own test_polymarket.py:220-230 already applies a below-touch change and asserts
+    the replica stays verified.
+
+method: >-
+  Drive the ACTUAL PolymarketStream, BookReplica, Reconciler, due and KalshiStream objects from
+  nodes/, using the same wire shapes as their existing test suites. The only substitute is the
+  Reconciler's REST fetch callable, which returns a fixed "venue truth" ladder. A lost websocket update
+  is modelled by constructing a local ladder that holds a level the venue truth no longer has — the
+  situation a dropped removal or size cut produces. No logic under test is mocked or patched.
+
+reproductions:
+  R1_phantom_depth_survives_verification: >-
+    A book holds a level below the touch that the venue truth has removed. Agreeing top-of-book
+    price_change messages keep arriving. Defective behaviour: the replica still carries the phantom
+    level, check() reports no fault throughout, and due() never selects the asset.
+  R2_touch_size_unchecked: >-
+    Two local books with identical best prices but different sizes at the touch are both judged to
+    agree with the same venue claim. Defective behaviour: agrees_with returns True for both.
+  R3_rest_correction_overwritten: >-
+    A quiet replica becomes due, is reconciled against the venue truth, adopts it, and is labelled
+    source="rest" with rest_drift incremented. One agreeing price_change then arrives. Defective
+    behaviour: the replica's depth reverts to the stale ps.books ladder and source returns to "ws".
+  C1_touch_level_is_caught: >-
+    CONTROL. The same kind of lost update, but AT the touch, so the venue's claimed best price differs
+    from the local one. Correct behaviour: drift is counted and the replica is invalidated. This proves
+    the harness can detect a caught defect, and that R1's defect is specific to depth.
+  C2_kalshi_sequence_gap_is_caught: >-
+    CONTROL. A Kalshi delta is dropped. Correct behaviour: the sequence gap invalidates the replica.
+    This is the venue whose depth L144 found symmetric.
+
+economic_consequence: >-
+  For R1 and R3, walk both the stale ladder and the venue-truth ladder with
+  nodes.execute.plan.vwap_for_size at 25 contracts and report the signed difference in cents. The
+  magnitude is a property of the constructed ladders and is ILLUSTRATIVE ONLY; it is reported to show
+  the direction of the error (a phantom level makes the book look cheaper for a buyer) and must never
+  be quoted as a production estimate.
+
+outcome_rule:
+  DEFECT_REPRODUCED: R1, R2 and R3 each exhibit the defective behaviour, AND both controls behave correctly.
+  DEFECT_REFUTED: any of R1, R2 or R3 shows the code detecting or durably correcting the stale state, with both controls correct.
+  PARTIAL: both controls correct, and some of R1-R3 reproduce while others do not; each is reported separately.
+  HARNESS_INVALID: either control fails. The harness is then wrong, not the code, and no conclusion about the defect may be drawn.
+
+immutable_success_criteria:
+  - Every reproduction drives the real classes from nodes/; nothing under test is mocked, subclassed or
+    monkeypatched. Only the Reconciler's fetch callable is substituted.
+  - The byte-identity of the tested modules with 59dd5ae is re-checked when the verdict is written.
+  - Both controls are run and reported, and a failing control yields HARNESS_INVALID regardless of R1-R3.
+  - Each reproduction is pinned by a test that asserts the observed behaviour, so the finding is
+    re-runnable and a future fix will visibly break it.
+  - The economic difference is labelled illustrative and never presented as a production magnitude.
+
+expected_ev_effect: >-
+  None directly. DEFECT_REPRODUCED would turn L144's localisation into a specific, fixable code
+  defect and justify a separately registered fix. It would not by itself prove this defect explains
+  L143's measured losses in production; that needs a production measurement.
+
+prohibited:
+  - Any change to nodes/, grids/, kernel/ or ops/. This row reads and executes code; it does not alter it.
+  - Any contact with the production box.
+  - Treating DEFECT_REPRODUCED as proof of production impact, or as authority to change the stream,
+    replica, reconciler or entry policy. A fix needs its own spec, PENDING row, dated GATE amendment
+    and an operator release.
+  - Quoting the illustrative economic difference as an estimate of live losses.

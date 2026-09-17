@@ -1,0 +1,116 @@
+row: L145
+date: 2026-09-16
+kind: measurement
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L145
+title: Is the Polymarket websocket book unfaithful on markets the lane never selected?
+
+# IMMUTABLE AFTER REGISTRATION. This file and the PENDING ledger row precede any extraction.
+# The thresholds in decision_rule are the point of the row and must not move once data is read.
+
+observed_failure: >-
+  L144 excluded joint selection: over the same 169 executions the Kalshi hedge leg was symmetric
+  (median 0.0c, 67.2% favourable given a move) while Polymarket was one-sided (median +6.0c, 0.78%
+  favourable). It could not remove selection entirely, because every row it saw was a market the
+  entry screen had chosen. This row compares the websocket-derived price against a fresh REST read
+  on markets sampled on an exogenous clock, independent of any screen.
+
+known_at_registration:
+  - The lane already compares ws against REST continuously. nodes/stream_polymarket/reconcile.py
+    fetches a REST book for every quiet subscribed Polymarket asset about every 15 s and diffs it
+    level by level (BookReplica._close requires the identical SET of price levels, replica.py:316).
+    That depth-aware counter, rest_drift, is NEVER PERSISTED and NEVER PRINTED. The INSERT at
+    store.py:385 omits the `reconcile` key and the report tick (grid.py:1947-1951) prints only
+    frames/drift/agreement. grids/live_stream/README.md:94 claims the counters "ride along ... in
+    socket_health"; that claim is false and is reported as a documentation defect by this row.
+  - socket_health.drift and socket_health.agreement ARE persisted, but they are a TOP-OF-BOOK check
+    only (stream.py:160-181), a drifted book is invalidated and never traded, and the Kalshi stream
+    computes no equivalent. They cannot supply a venue contrast or a depth test. They are harvested
+    here as context, not as the verdict.
+  - stream_evaluations.legs_json stores, per priced evaluation, each leg as {venue, outcome, vwap}.
+    outcome_id equals the leg's market_id, with a ":NO" suffix marking the complementary projection
+    (poller.py:297-327). legs_json is written on a material cost move or a 15 s heartbeat
+    (store.py:302-307). The stored price is a VWAP at the evaluation quantity, NOT a marginal price,
+    so this row measures a different statistic from L143/L144 and never mixes the two.
+  - The kill is latched and no execution can occur during the sweep, so nothing is selected and
+    acted on while this row samples.
+  - Polymarket's REST limiter queues rather than rejecting (venue_polymarket/books.py:8-9). The
+    lane's reconciler already calls /book at rate=4 on its own bucket, so this row runs Polymarket at
+    rate=2 to avoid making the lane's reconciled books staler.
+
+population: >-
+  Plain (non-":NO") priced legs on both venues, for every game with a recent stream_evaluations row,
+  sampled on an exogenous sweep clock. For each leg the REST book is read once; after the sweep the
+  stream_evaluations row NEAREST in time for the same game and quantity is taken as the ws side. Only
+  pairs whose absolute time separation is at most FRESH_S seconds enter the verdict. ":NO" legs are
+  excluded and counted, because their book is a different token or projection and the mapping is not
+  exercised here. Pairs whose REST ladder cannot fill the quantity are counted as depth-short and
+  never imputed. All evaluation statuses are included; status is reported separately.
+
+pairing:
+  fresh_s: 3.0
+  sensitivity_fresh_s: [1.0, 5.0]   # reported as description only; never changes the verdict
+
+measurements:
+  - signed gap per pair, in cents, as (REST VWAP at the evaluation quantity) minus (ws legs_json
+    VWAP), positive meaning the true book was dearer than the websocket claimed, i.e. the ws was
+    optimistic for a buyer
+  - per venue: count of pairs, count of MOVED pairs (absolute gap above 0.05c), favourable fraction
+    GIVEN a move, median and p10/p90 of the gap over moved pairs and over all pairs
+  - the same split by evaluation status and by quantity rung
+  - Spearman rho of gap against the absolute pair time separation, per venue, with n
+  - socket_health context for the sweep window: differenced Polymarket drift and agreement
+
+decision_rule:
+  # Primary. Symmetry is measured as favourable fraction GIVEN THE PRICE MOVED. That denominator is
+  # the correction to L144, where a 60%-unchanged Kalshi distribution scored 0.2663 against a 0.30
+  # bar despite being symmetric among the rows that moved.
+  PM_FEED_OPTIMISTIC: >-
+    Polymarket favourable-given-move < 0.25 AND Polymarket moved-pair median gap >= 1.0c, while
+    Kalshi favourable-given-move >= 0.35. Consequence: the Polymarket websocket systematically
+    overstates executable liquidity on markets no screen touched; the fix is what the lane screens on.
+  NEITHER_OPTIMISTIC: >-
+    Both venues' favourable-given-move lie within [0.35, 0.65]. Consequence: without selection the
+    Polymarket feed is faithful, so the one-sidedness L143 and L144 saw on selected rows comes from
+    selection after all. This REFUTES L144's venue-asymmetry reading and must be reported as
+    prominently as a confirmation would be.
+  BOTH_OPTIMISTIC: >-
+    Both venues' favourable-given-move < 0.25 with moved-pair median gap >= 1.0c. Consequence: a
+    cause shared by both books, most likely in how the lane derives the stored VWAP, not a
+    Polymarket-specific feed defect.
+  MIXED_OR_INCONCLUSIVE: >-
+    Any other outcome, or fewer than 30 MOVED pairs on either venue at fresh_s. Report the full
+    decomposition and decline a verdict rather than rounding to the nearest branch.
+
+immutable_success_criteria:
+  - The offline VWAP walk is arithmetically identical to plan.vwap_for_size, pinned by test, and the
+    same walk at the same quantity is applied to both venues.
+  - REST ladders are parsed only through nodes/venue_polymarket/books.pm_book and
+    nodes/venue_kalshi/books.kalshi_book, never re-implemented, so the documented ordering traps
+    (Polymarket best-price-last; Kalshi bids-only with folded asks) are handled by the reviewed code.
+  - Every sampled leg is accounted for exactly once: paired-fresh, paired-stale, no-ws-row,
+    depth-short, NO-leg-excluded, or fetch-error. Nothing is imputed or dropped silently.
+  - Symmetry uses favourable-given-move with MOVED-pair counts reported, and the 30-moved-pair
+    minimum is applied per venue.
+  - The verdict is whichever primary branch the data satisfies at fresh_s = 3.0, else
+    MIXED_OR_INCONCLUSIVE. No branch is widened and no threshold moved after a number is seen. The
+    sensitivity windows are description only.
+  - Raw extractor output is retained verbatim with a schema string matching the extractor.
+
+expected_ev_effect: >-
+  None directly; descriptive and read-only. PM_FEED_OPTIMISTIC would localise the lane's losses to a
+  bounded, fixable screening input. NEITHER_OPTIMISTIC would redirect the work back to the entry
+  screen. Either answer is worth more than further execution tuning.
+
+prohibited:
+  - Any call into Reconciler.apply, BookReplica.reconcile, or anything that mutates a replica or
+    writes through on_update. This row reads REST books and a read-only database; it touches no lane
+    state.
+  - Reusing Supervisor.fresh_book or PolymarketExecution.orderbook: they run on the py_clob_client
+    SDK's own httpx client and bypass the token bucket entirely (grid.py:1415-1417).
+  - A second websocket connection, a daemon, a systemd unit, or any production code change. One
+    bounded invocation inside ops/box/run.sh's ~300 s budget.
+  - Comparing this row's VWAP gap with L143/L144's marginal gap as if they were one statistic.
+  - Any production mutation: read-only mode=ro; no order, kill, override, cap, hurdle, limit or entry
+    policy is touched; no F22 or F23 row is written, repaired or pooled.
+  - Treating any verdict as authority to change entry policy.

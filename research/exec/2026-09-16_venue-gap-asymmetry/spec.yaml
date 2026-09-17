@@ -1,0 +1,119 @@
+row: L144
+date: 2026-09-16
+kind: measurement
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L144
+title: Is the one-sided first-leg price gap our own selection, or Polymarket's feed?
+
+# IMMUTABLE AFTER REGISTRATION. This file and the PENDING ledger row precede any extraction.
+# The thresholds in decision_rule are the point of the row and must not move once data is read.
+
+observed_failure: >-
+  L143 measured, across all 202 executions carrying both a frozen plan ladder and a fresh REST
+  confirmation, that the Polymarket first-leg executable price moved 155 adverse / 46 exactly zero /
+  1 favourable, median +6.0c against us, with every row that reached a fill showing a gap of exactly
+  0.0c. A latency race cannot produce that shape: it would return roughly half the moves favourable.
+  L143 registered MIXED_OR_INCONCLUSIVE and explicitly left one alternative unexcluded - an execution
+  starts only when the frozen books pass the entry screen, so the frozen prices are selected to be
+  favourably wrong, and any re-read regresses. That alternative and the Polymarket-feed explanation
+  have opposite consequences and have never been separated.
+
+question: >-
+  Paired within the same executions, is the Kalshi hedge leg's frozen-to-confirmed price gap also
+  one-sided and adverse (which joint selection on the pair predicts), or roughly symmetric around
+  zero (which a Polymarket-specific market-data defect predicts)?
+
+known_at_registration:
+  - L143's population, extraction path and per-row gaps, retained verbatim at
+    research/exec/2026-09-16_book-move-attribution/results_20260916.json, schema
+    janus.l143.book_move_attribution.v1. The Polymarket side of this row must reproduce it exactly on
+    the overlapping executions; a mismatch means this extractor is wrong, not that the data changed.
+  - Both legs are confirmed CONCURRENTLY on one clearance window (coordinator.py:205-215): the hedge
+    read is submitted to a pool and leg A is read inline. Both frozen ladders come from the same
+    books_json snapshot. The comparison is therefore symmetric in timing by construction.
+  - hedge_leg_confirm (coordinator.py:270-282) carries marginal, vwap, limit, budget, break_even,
+    contracts, first_paid_assumed and at_mono. It carries NO ladder, NO source, NO fetched_utc and NO
+    at_utc. Only a signed gap is computable on the Kalshi side.
+  - opportunities.net_profit and opportunities.locked_return are overwritten by observe() on every
+    later evaluation (opportunity.py:169-170) and are therefore NOT the selection-time edge.
+  - executions.quantity is not updated on an L95 downsize, so the planned size is
+    plan_json["first"]["contracts"].
+  - Kalshi asks are synthetic folds of NO bids (venue_kalshi/books.py:22-36) and both ladders are
+    truncated to 25 levels in books_json.
+
+population: >-
+  Every structured Janus execution carrying a frozen plan ladder and a fresh confirmation for BOTH
+  legs, over the widest contiguous window the bounded rowid tail reaches. Not conditioned on terminal
+  state. Rows missing either leg's frozen ladder or either confirmation are counted and named as
+  missing, never imputed. Both confirmations are gated on `not plan.first.post_only`, so the
+  population is the live taker arm only and every claim is scoped to it.
+
+measurements:
+  - signed gap per leg per row, in cents, as (confirmed marginal at the planned size) minus (frozen
+    marginal at the same size), positive meaning worse for the side that leg was about to take
+  - per-leg favourable fraction (gap < 0), median, p10, p90, min and max, reported separately for
+    Polymarket and Kalshi over the same paired rows
+  - the same per-leg distributions split by terminal state, never pooled into a single headline
+  - reconstructed selection-time apparent edge, from plan_json only, as
+    planned_cost = first.limit_price + hedge.vwap + fee + settlement_buffer,
+    planned_profit = contracts * (1 - planned_cost), locked_return = planned_profit /
+    (contracts * planned_cost) - exactly the Candidate arithmetic the clearance screened on
+  - frozen book age per leg, as started_utc minus that leg's books_json fetched_utc
+  - Spearman rho of Polymarket gap against apparent edge, and against Polymarket frozen book age,
+    each reported marginally and stratified within tertiles of the other, with n for every cell
+
+decision_rule:
+  # Primary. Paired over the same executions. Fixed before any data is read.
+  VENUE_SPECIFIC_POLYMARKET: >-
+    Kalshi favourable fraction >= 0.30 AND absolute Kalshi median gap <= 1.5c, while Polymarket
+    favourable fraction < 0.10 AND Polymarket median gap >= 1.5c. Consequence: the Polymarket book
+    the lane screens on is the defect; a separately registered engineering row follows.
+  JOINT_SELECTION: >-
+    Kalshi favourable fraction < 0.30 AND Kalshi median gap >= 1.5c, i.e. both legs one-sided and
+    adverse. Consequence: the entry screen is selecting noise on the pair; stop optimising execution
+    on this mechanism and treat it as a strategy-design problem.
+  MIXED_OR_INCONCLUSIVE: >-
+    Any other outcome, including fewer than 40 paired rows. Report the full decomposition and
+    explicitly decline a verdict rather than rounding to the nearest branch.
+
+secondary_rule: >-
+  Reported always, and never overriding the primary verdict. A predictor (apparent edge, or frozen
+  book age) is called load-bearing only if its marginal absolute Spearman rho >= 0.25 AND it keeps
+  its sign at absolute rho >= 0.15 in at least two of the three strata of the other predictor. If
+  both qualify, or neither, say so plainly rather than choosing between them.
+
+immutable_success_criteria:
+  - The Polymarket gap distribution reproduces L143's 155 adverse / 46 zero / 1 favourable exactly on
+    the overlapping executions. This reconciliation is checked and reported BEFORE any new number is
+    interpreted; a mismatch invalidates the extractor rather than the prior result.
+  - Every row in the population is accounted for exactly once. Rows missing either leg's ladder or
+    confirmation are counted and named, never imputed, dropped silently, or coerced to zero.
+  - The offline ladder walk is arithmetically identical to nodes/execute/plan.marginal_price, pinned
+    by test, and the SAME walk at the SAME size is used for both legs.
+  - The apparent edge is reconstructed from the frozen plan_json only. opportunities.net_profit and
+    opportunities.locked_return are never read.
+  - Signed throughout, never floored or absolute-only, on both legs.
+  - Per-leg results are reported paired over identical rows. A Polymarket figure computed over a
+    different row set than the Kalshi figure may not be compared.
+  - The verdict is whichever primary branch the data satisfies, else MIXED_OR_INCONCLUSIVE. No branch
+    is widened and no threshold moved after a number is seen.
+  - Raw extractor output is written to disk verbatim alongside any summary, with a schema string
+    matching the extractor's.
+
+expected_ev_effect: >-
+  None directly; descriptive and read-only. Its value is that it separates a fixable engineering
+  defect from an unfixable strategy defect. VENUE_SPECIFIC_POLYMARKET justifies a registered row on
+  how the lane sources and ages the Polymarket book. JOINT_SELECTION retires execution optimisation
+  on this mechanism entirely and saves every live window that work would consume.
+
+prohibited:
+  - Claiming anything about the maker arm. Both confirmations are gated on not post_only.
+  - Any phantom-depth or elapsed-time claim on the Kalshi side; those fields are not persisted.
+  - Reading opportunities.net_profit or locked_return as a selection-time edge.
+  - Treating a venue difference in tick size or typical volatility as established without saying so;
+    the favourable FRACTION is the scale-free statistic and carries the primary verdict, while the
+    median gap in cents is scale-dependent and is reported as support, not as the discriminator.
+  - Any production mutation. Read-only against a mode=ro connection; no order, kill, override, cap,
+    hurdle, limit or entry policy is touched, and no F22 or F23 row is written, repaired or pooled.
+  - Treating either verdict as authority to change entry policy. Each leads to a separately
+    registered next step with its own spec and PENDING row.

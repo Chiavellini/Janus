@@ -1,0 +1,83 @@
+{
+ "C1": {
+  "caught": true,
+  "check_fault": "HASH_MISMATCH",
+  "drift_counted": 1,
+  "last_fault": "HASH_MISMATCH",
+  "replica_state": "RESYNCING",
+  "resnapshot_requested": true
+ },
+ "C2": {
+  "caught": true,
+  "gaps_counted": 1,
+  "handle_returned": "gap",
+  "last_fault": "SEQ_GAP",
+  "replica_state": "RESYNCING",
+  "synced_after_snapshot": true
+ },
+ "R1": {
+  "agreement_checks": 60,
+  "any_fault": false,
+  "drift_counted": 0,
+  "economics": {
+   "contracts": 25.0,
+   "illustrative_only": true,
+   "stale_vwap_c": 20.96,
+   "truth_minus_stale_c": 0.28,
+   "truth_vwap_c": 21.24
+  },
+  "ever_due_for_rest": false,
+  "faults_seen": [],
+  "phantom_level_present": true,
+  "phantom_size": 10.0,
+  "source": "ws",
+  "updates_sent": 60,
+  "venue_truth_has_level": false,
+  "verified_utc_advanced_to": 1060.0
+ },
+ "R2": {
+  "replica_fault": null,
+  "replica_touch_size_after": 8.0,
+  "stale_book_agrees": true,
+  "stream_drift_counted": 0,
+  "touch_size_local": 8.0,
+  "touch_size_venue": 1.0,
+  "true_book_agrees": true
+ },
+ "R3": {
+  "after_one_update": {
+   "asks_equal_truth": false,
+   "fault": null,
+   "phantom_level_present": true,
+   "source": "ws"
+  },
+  "after_reconcile": {
+   "asks_equal_truth": true,
+   "last_fault": "HASH_MISMATCH",
+   "phantom_level_present": false,
+   "rest_drift": 1,
+   "source": "rest",
+   "stream_ladder_still_has_phantom": true
+  },
+  "correction_survived": false,
+  "due_before_reconcile": true,
+  "economics": {
+   "contracts": 25.0,
+   "illustrative_only": true,
+   "stale_vwap_c": 20.96,
+   "truth_minus_stale_c": 0.28,
+   "truth_vwap_c": 21.24
+  },
+  "reconciled_assets": [
+   "asset-1"
+  ]
+ },
+ "defective": {
+  "R1": true,
+  "R2": true,
+  "R3": true
+ },
+ "schema": "janus.l146.pm_depth_verification.v1",
+ "verdict": "DEFECT_REPRODUCED",
+ "verdict_reason": "R1, R2 and R3 all exhibit the defect; both controls caught theirs"
+}
