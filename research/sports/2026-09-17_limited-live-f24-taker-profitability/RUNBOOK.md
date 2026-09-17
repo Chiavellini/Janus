@@ -8,21 +8,29 @@ The system trades the way it did before the maker/taker experiments: it buys on 
 Kalshi, and re-checks the Polymarket price right before every order. **Your current limits stay
 exactly as they are.** No code is deployed.
 
-It stops at the **first** of:
+It ends at the **first** of: 30 completed trades, 7 days, $50 of total losses, the $25 daily loss
+limit tripping, or any safety alarm. It does not stop early on a good result, and it is not extended
+on a promising one.
 
-- **30 completed trades**, or
-- **7 days**, or
-- **$50 of total losses**, or
-- the **$25 daily loss limit** tripping, or
-- any safety alarm.
+## What it can cost — read this part twice
 
-It does not stop early on a good result, and it is not extended on a promising one.
+**Only two of those limits stop anything by themselves** (independent audit, 2026-09-17):
 
-## What it can cost
+| Limit | Enforced by | Real? |
+|---|---|---|
+| **$25 realised loss in a day** | the lane's own breaker, which latches the stop | **yes, automatic** |
+| **The authorisation expires after 7 days** | the box refuses to trade without a live authorisation | **yes, automatic** |
+| $50 of total losses | **nobody** — it is a number printed by the progress report | **no** |
+| 30 completed trades | **nobody** — same | **no** |
 
-- At most **$25 in any single day**, because the existing daily limit stops trading.
-- At most about **$50 in total**, because the test stops there.
-- Each trade commits at most **$30**, and at most **$500** is committed per day.
+The breaker counts each **UTC day separately**. Seven days that each lose $24 never trip it. So if
+**nobody looks**, the true worst case is about **$175**, not $50.
+
+The $50 and 30-trade limits are real only because **someone reads the progress report and stops it**.
+The operator chose to run the full seven days with daily checks, so that is the arrangement:
+**the report must be read at least once a day, and the test stopped by hand at $50.**
+
+Per trade the bounds are automatic: at most **$30** committed per trade and **$500** committed per day.
 
 ## What you will learn
 
@@ -92,8 +100,24 @@ It does four things, **in this order**, and stops at the first problem:
 **Why the order matters:** the current authorisation still names F22. Clearing the stop first would
 restart F22, which stops itself on the first unfilled order.
 
-It prints `F24_ARMED` and a `start_utc=` time on success, or `F24_ARM_ABORTED: <reason>` and changes
-nothing else.
+Whatever it prints, **it then reads the box itself** and ends with one of three answers:
+
+- **`F24 IS ARMED`** (exit 0) — with the `start_utc` you need for progress checks.
+- **`F24 IS NOT ARMED`** (exit 2) — the stop is in place and the old authorisation is untouched.
+- **`F24 STATE IS INDETERMINATE`** (exit 3) — **do not re-run it.** Read the evidence printed above it.
+
+**Why the third answer exists.** The tool that talks to the box stops listening after a few minutes
+while the command keeps running there, and a Ctrl-C or a dropped connection does the same. So a
+failure on your screen does **not** prove the box is unchanged: it may have finished arming after
+your end gave up. Never conclude "nothing happened" from a local error.
+
+**To ask at any time whether it is armed** (read-only, safe to run whenever):
+
+```bash
+bash research/sports/2026-09-17_limited-live-f24-taker-profitability/verify_f24.sh
+```
+
+If it ever says `INDETERMINATE` and the lane might be trading, stop it first (below), then sort it out.
 
 ## Checking progress
 
@@ -101,7 +125,11 @@ nothing else.
 bash research/sports/2026-09-17_limited-live-f24-taker-profitability/check_f24.sh START_UTC
 ```
 
-Replace `START_UTC` with the `start_utc` number printed at arming. It only reads data and changes
+Replace `START_UTC` with the `start_utc` number printed at arming. The arming step also pins that
+number on the box, and the report **refuses to run** if the number you type disagrees with it, so a
+mistyped start cannot produce a fake verdict.
+
+**Run this at least once a day** while the test is live: that is what enforces the $50 stop. It only reads data and changes
 nothing. The result says `IN_PROGRESS` until an end condition is reached. Only a result with
 `"ended": true` is the test's answer.
 
