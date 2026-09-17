@@ -11,7 +11,8 @@ fetched. Reconciling a busy market against REST would report timing skew as drif
 seconds; the busy market is already verified by the stream and needs nothing from here. A
 disagreement is adopted from REST and REPORTED (`HASH_MISMATCH` on the replica, `rest_drift` in
 the stats) -- the book is then labelled `source="rest"` and `nodes/game_poller` holds it to the
-stricter REST freshness bound.
+stricter REST freshness bound -- and the asset is queued for a websocket resnapshot (L149), because
+the adoption alone does not reach the stream's own ladder and would be undone by the next update.
 """
 
 from __future__ import annotations
@@ -121,6 +122,14 @@ class Reconciler:
                     self.rest_drift += 1
                     self.drifted.append(asset_id)
                     self.drifted = self.drifted[-20:]
+                    # L149 (2026-09-17): the adoption above reaches this replica only. The stream
+                    # folds every later price_change into its own ladder and rebuilds the replica
+                    # from it, so the correction lasted one message (L146 R3). Do not write REST into
+                    # that ladder: REST carries no sequence number and can lag the socket, and L148
+                    # showed a write-through then makes a removed level permanent. Ask the socket for
+                    # a fresh book instead -- the same recovery a top-of-book drift uses -- whose
+                    # snapshot and later updates arrive in order and so cannot conflict.
+                    self.stream.resnapshot.add(asset_id)
                 if reg.on_update:
                     reg.on_update(asset_id, t_apply)
             if applied:
