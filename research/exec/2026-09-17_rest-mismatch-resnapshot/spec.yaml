@@ -1,0 +1,71 @@
+row: L149
+date: 2026-09-17
+kind: fix
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L149
+title: On a REST disagreement, resync the Polymarket book from the websocket instead of trusting REST
+
+# IMMUTABLE AFTER REGISTRATION. Written before any code for this row, and after L148 was withdrawn.
+
+observed_failure: >-
+  L146 reproduced that a Polymarket REST correction is undone by the next websocket update, because it
+  reaches the replica but not the stream's own ladder (PolymarketStream.books). L148 tried to write the
+  REST ladder into that ladder and failed its registered criterion: any write-through must decide
+  whether REST or the websocket is newer, Polymarket REST carries no sequence number, and its own client
+  says a throttled response is "a stale quote wearing a fresh wall-clock timestamp". When REST lags,
+  the write-through makes a level the websocket already removed permanent.
+
+change: >-
+  In Reconciler.apply, when a reconcile that was not superseded reports HASH_MISMATCH, add the asset
+  to stream.resnapshot. Nothing else. The Reconciler never writes stream.books. The replica keeps its
+  existing REST adoption, so a quiet book stays servable under the stricter REST freshness bound until
+  the websocket answers. The stream's run loop already services stream.resnapshot by unsubscribing and
+  resubscribing the asset, and the venue answers with a full book event, which replaces stream.books
+  wholesale and re-snapshots every registered replica.
+
+why_this_is_safe_where_L148_was_not: >-
+  A websocket book and the websocket updates after it arrive in order on one stream, so they cannot
+  conflict whichever way REST was wrong. REST is used only to DETECT a disagreement, never as the
+  content that is kept. This is the recovery the stream already uses for a top-of-book drift
+  (stream.py sets resnapshot on drift), minus the drift path's invalidation, so the replica is not
+  made unservable.
+
+scope_and_limits:
+  - Fixes L146 R3 on quiet books, which are the only books the Reconciler ever selects.
+  - Does NOT depth-check active books and does NOT change verification. L146 R1 and R2 remain.
+  - Costs one unsubscribe/subscribe round trip per disagreement. If REST disagrees persistently, a
+    quiet asset can be resnapshotted at most about once per reconcile cycle, because a fresh book
+    resets its verification clock and it is not due again for ~15 s.
+  - A second owner of the same token that never received a book is re-snapshotted too. That is a
+    side effect in the right direction, not a goal of this row.
+  - NOT a profitability lever: every live taker entry REST-confirms before sending.
+  - Changes nodes/, which the arming override's code hash covers. Prepared in the worktree; NOT deployed.
+
+immutable_success_criteria:
+  - A disagreement on a non-superseded reconcile queues exactly that asset for resnapshot; an
+    agreement does not; a superseded fetch neither reconciles nor queues.
+  - After the venue's fresh book, stream.books and every registered replica equal that book, and a
+    removed level does not come back on later updates.
+  - The Reconciler never mutates stream.books, in any scenario.
+  - Every L148 review scenario -- WT-1 (unsynced second owner), WT-2 (replica invalidated in flight),
+    M1 (malformed book), F1 (REST ahead of queued frames) and N1/WT-3 (REST lagging the websocket) --
+    ends with the venue's book and no stale level persisting once the resnapshot is answered.
+  - An integration test drives PolymarketStream.run with a fake socket and shows the queued asset is
+    actually unsubscribed and resubscribed -- not merely added to a set.
+  - Each new positive test is shown to fail with the one added line removed.
+  - L146's recorded evidence is unchanged, and its living test is unchanged: REST content still does not
+    survive the next update by itself, by design.
+  - Focused tests and the full suite pass. The replay gate is reported with its real scope: it does
+    not construct a Reconciler, so its digest cannot evidence this change.
+  - An independent adversarial review finds no sequence in which this change leaves the book, or any
+    replica, holding a level the venue no longer has once the resnapshot is answered.
+
+expected_ev_effect: >-
+  Approximately zero on realised profit. Removes one proven data-integrity defect on quiet books
+  without introducing a stale-REST failure mode.
+
+prohibited:
+  - Deploying, releasing, re-signing an override, switching mode or clearing any kill.
+  - Writing REST content into stream.books.
+  - Any change to limits, hurdles, sizing, entry policy, order handling, the hedge or verification.
+  - Editing L146's or L148's recorded evidence.

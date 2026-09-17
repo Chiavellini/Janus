@@ -1,0 +1,117 @@
+id: F24
+date: 2026-09-17
+kind: forward_limited_live
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row F24
+title: Does the plain taker lane make money at the current limits?
+
+# IMMUTABLE AFTER REGISTRATION. This file and the PENDING ledger row precede any F24 observation.
+# REGISTRATION IS NOT AUTHORITY. F24 cannot start until a dated GATE_TO_LIVE amendment carries the
+# operator's own verbatim statement, and the operator (or an agent the amendment explicitly names)
+# writes the override and clears the kill. Nothing in this file arms anything.
+
+operator_request: >-
+  On 2026-09-17 the operator, told that even $20/day needs roughly 15x more completed covers and a
+  higher cap, chose "Test profitability first": prepare the evidence, then approve a short live test at
+  current limits ($25/day maximum loss) to find out whether the system makes money at all. This row is
+  that test's design. The operator's authorising statement is recorded in the GATE amendment, not here.
+
+question: >-
+  With the historical immediate-taker entry and no experiment arm, at the unchanged signed limits, is
+  the lane's realised net profit after fees, hedge slippage, protection losses and settlement outcomes
+  positive -- per completed cover, per eligible day, and in total?
+
+known_at_registration:
+  - The only fully measured window (L141, 24 h) realised -$0.16449 over four settled covers; three
+    netted +$0.82908 and one scalar-settlement cover lost $0.99357. There is no established positive
+    result to confirm.
+  - L143/L144/L146 show the Polymarket replica can carry phantom depth on actively traded books. Every
+    taker entry re-reads the Polymarket book by REST before sending and declines a worse price, so this
+    defect is expected to cost declined attempts, not bad fills. It is NOT fixed on the deployed tree.
+  - L148 attempted a fix for one of the three defects (R3) and FAILED review; it was reverted. Its
+    replacement L149 is implemented and reviewed in the worktree, NOT deployed, and NOT part of F24.
+  - L147: under the $500/day notional cap, where filled covers count after settling, the lane can
+    complete at most about 24 covers a day, about $6.67/day at the best observed $0.28 per cover.
+  - The deployed tree is 59dd5ae. Its f22_activation returns false for an override with no experiment
+    block, "so the historical taker entry remains active" (entry_experiment.py docstring). No part of
+    its live path latches or refuses on a NULL fee, so taker zero fills will not halt F24.
+  - Pre-flight read on 2026-09-17: zero unreleased executions, zero unhedged quantity, zero open or
+    pending orders, zero open reservations, no unresolved material safety flag, a clean code tree
+    matching the current override, and the F22 kill unchanged at SHA-256 d81bbfc2...552b1636.
+
+arm:
+  entry: historical immediate Polymarket taker (FAK/FOK) at the walked executable ceiling, REST-confirmed before send
+  experiment: none -- the override carries no experiment block, so no event is assigned to a maker/taker arm
+  hedge: unchanged immediate Kalshi IOC and book-aware protection
+  code: deployed 59dd5ae, unchanged; no release, no deploy
+
+limits:   # unchanged; every value must equal the signed override and nodes/risk/limits.toml
+  max_combined_planned_stake_usd: 30.0
+  max_requested_contracts_per_leg: 25
+  committed_daily_notional_usd: 500.0
+  max_daily_realized_loss_usd: 25.0
+  min_net_profit_usd: 0.05
+  min_locked_return: 0.005
+  max_protection_loss_usd: 2.50
+  max_protection_loss_per_contract_usd: 0.10
+  protect_auto: true
+  unwind_enabled: false
+
+start: >-
+  The first entry after BOTH (1) an override with no experiment block, at exactly the limits above,
+  has replaced the F22 override and the lane reports "[f22] disabled" and no "[arm] STALE"; and
+  (2) the F22 kill has been archived (not deleted) after a fresh pre-flight read repeats the quiet
+  state above. The override must be written BEFORE the kill is cleared, or F22 resumes.
+
+end: >-
+  The EARLIEST of: 30 settled covers; 7 calendar days (UTC) from start; cumulative realised net loss
+  reaching $50; any stop condition; override expiry; or explicit operator closure. No stopping on
+  profit and no extension on a promising result.
+
+stop_conditions:
+  - any unresolved material safety flag (ORPHAN_FILL, ORDER_OVERFILL, POSITION_MISMATCH, PROTECT_FAILED,
+    EXEC_CRASHED, ORDER_PERSISTENCE_FAILED, UNHEDGED_POSITION, RESERVATION_MISSING, FEE_ABOVE_PIN)
+  - any unhedged or unprotected fill, or any protection loss beyond its allowance
+  - the daily realised-loss breaker latching (it latches kill/live and needs a human to clear, so one
+    latch ends the row rather than pausing it)
+  - any change to code, limits, hurdles, entry policy or the override other than its expiry
+
+unit_of_observation: >-
+  One settled cover: an execution in RECONCILED state whose both legs filled. Realised net is the
+  settlement payout minus both legs' cost and every fee, including protection and settlement losses.
+  A terminal zero fill or a pre-wire decline contributes no cover and no dollars, and is counted
+  separately. An unsettled cover is not scored until it settles; the row cannot end on an unsettled one.
+
+prespecified_analysis:
+  primary: total realised net USD over the row, and net USD per settled cover
+  interval: >-
+    event-clustered bootstrap of net per settled cover, 10000 resamples, seed 170924, percentile 95%
+  daily: realised net per UTC day with at least one settled cover, and per day of the row
+  funnel: attempts, pre-wire declines by reason, submitted orders, terminal zero fills, fills, settled covers
+  tails: every loss-making cover listed with its cause (settlement rule, hedge slippage, protection)
+
+verdicts:
+  LOSES_MONEY: total realised net below zero at the end
+  MAKES_MONEY_PROVEN: total realised net above zero AND the 95% interval for net per settled cover is strictly above zero
+  MAKES_MONEY_NOT_PROVEN: total realised net above zero but the interval includes zero
+  INSUFFICIENT: fewer than 10 settled covers at the end; report the funnel only
+  STOP: any stop condition; preserve the triggering row without reinterpretation
+
+power_note: >-
+  Thirty covers is a go/no-go signal, not a proof. A single scalar or cancelled settlement moved the
+  L141 window from +$0.83 to -$0.16, so the per-cover distribution has a fat loss tail, and
+  MAKES_MONEY_NOT_PROVEN is a likely outcome even if the lane is genuinely profitable. The verdict
+  names exactly which it is and does not round up.
+
+expected_ev_effect: >-
+  Unknown, and that is the point. The worst case is bounded by the $25 daily breaker and the $50
+  cumulative stop. A LOSES_MONEY verdict would end the case for this mechanism at current limits; a
+  MAKES_MONEY verdict would justify measuring whether conversion or surface can scale it.
+
+prohibited:
+  - Starting without a dated GATE amendment carrying the operator's verbatim statement.
+  - Raising any cap, hurdle or allowance; the limits block is fixed.
+  - Deploying any code, including L148, during the row.
+  - Assigning any event to a maker arm, or resuming F22 or F23.
+  - Treating MAKES_MONEY_NOT_PROVEN as proof, or projecting a $/day figure beyond what was observed.
+  - Deleting the F22 kill; it is archived.

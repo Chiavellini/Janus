@@ -1,0 +1,58 @@
+row: L148
+date: 2026-09-17
+kind: fix
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L148
+title: Make a Polymarket REST correction survive the next websocket update
+
+# IMMUTABLE AFTER REGISTRATION. Written before any code was changed.
+
+observed_failure: >-
+  L146 reproduced against code byte-identical to deployed 59dd5ae: when the Reconciler finds a quiet
+  Polymarket replica disagreeing with REST, BookReplica.reconcile adopts the REST ladder into the
+  replica but never into the stream's own ladder, PolymarketStream.books. The next price_change
+  rebuilds the replica from that stale ladder (stream.py project_in with no ladder_key) and relabels
+  it "ws". The correction lasts exactly one message.
+
+change: >-
+  In Reconciler.apply, when a non-superseded reconcile reports HASH_MISMATCH, also write the fetched
+  REST ladder into stream.books[asset_id], preserving that book's tick_size. Only when an entry for
+  the asset already exists: an absent entry means a drift already dropped the book and a websocket
+  resnapshot owns recovery. Agreement changes nothing. A superseded fetch is still skipped whole.
+
+scope_and_limits:
+  - This is the smallest of the three candidate fixes L146 named. It acts only where a reconcile
+    already runs, so it adds no new timing-skew drift reports -- the reason reconcile.py excludes
+    busy books in the first place.
+  - It does NOT depth-check active books and does NOT change what verifies a book. The L146 R1 and R2
+    defects on actively traded books remain.
+  - It is NOT a profitability lever. Every live taker entry re-reads the Polymarket book by REST
+    before sending and declines a worse price, so phantom depth costs declined attempts, not bad
+    fills. The expected effect on realised profit per cover is approximately zero.
+  - It changes nodes/, which the arming override's code hash covers. It is prepared in the worktree
+    and is NOT deployed by this row.
+
+immutable_success_criteria:
+  - New regression tests in nodes/stream_polymarket/tests/test_reconcile.py show: a disagreement is
+    written through and survives the next agreeing update; an agreement leaves stream.books
+    untouched; a superseded fetch writes nothing; tick_size is preserved; an absent stream.books
+    entry is not created; rest_drift and HASH_MISMATCH reporting are unchanged.
+  - L146's reproduction is re-run against the fixed tree. R3 must no longer reproduce, while R1, R2
+    and both controls must be unchanged. L146's recorded result (results_20260917.json, verdict.md,
+    ledger) describes 59dd5ae and is not edited; only its living test is updated to the fixed tree.
+  - The focused Polymarket tests and the full suite pass.
+  - The replay gate is reported with its real scope: it does not run the Reconciler, so an unchanged
+    rows digest is expected and proves nothing about this change.
+  - An independent adversarial review of the diff finds no way for the write-through to overwrite
+    newer websocket state or to resurrect a drifted book.
+
+expected_ev_effect: >-
+  Approximately zero on realised profit. Removes one proven data-integrity defect on quiet books, so a
+  REST-corrected book stays corrected.
+
+prohibited:
+  - Deploying, releasing, re-signing an override, switching mode or clearing any kill.
+  - Any change to limits, hurdles, sizing, entry policy, order handling or the hedge.
+  - Widening the change to active-book depth checks or to verification semantics; those are separate
+    rows that are entry-adjacent and need a dated GATE amendment.
+  - Editing L146's recorded evidence.

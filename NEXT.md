@@ -1,7 +1,46 @@
 # NEXT
 
-Current-state handoff, updated 2026-09-15. Evidence belongs in the linked registered rows; this
+Current-state handoff, updated 2026-09-17. Evidence belongs in the linked registered rows; this
 file is an opinionated map and may be overwritten.
+
+## Where things stand (2026-09-17)
+
+**Production is unchanged and not trading** (details under *Production now*). Nothing below was
+deployed, released, re-signed or switched, and the kill was not touched.
+
+**The one decision waiting on the operator: F24, a plain profitability test.** The operator chose
+"test profitability first". Everything is prepared in
+`research/sports/2026-09-17_limited-live-f24-taker-profitability/` (`RUNBOOK.md` is the plain-language
+entry point): the historical taker lane, no experiment arm, **current limits unchanged**, no deploy,
+ending at the first of 30 settled covers, 7 days, $50 cumulative realised loss, the breaker, any stop
+condition or override expiry. Registered outcomes: LOSES_MONEY / MAKES_MONEY_PROVEN /
+MAKES_MONEY_NOT_PROVEN / INSUFFICIENT / STOP. **Not yet registered**: the ledger row and the GATE
+amendment are written only after the operator gives a verbatim approving sentence and says who runs
+`arm_f24.sh`. That script writes a no-experiment override first, waits for the lane to log F22
+disabled, and only then archives the exact F22 kill; any mismatch leaves the kill in place. Its
+progress reader `check_f24.sh` was run for real and reproduced the last measured day (4 covers,
+−$0.16449). The account was verified quiet: 0 open covers, unhedged, open orders, reservations; no
+unresolved safety flag.
+
+**Why a profitability test rather than more speed work.** L143/L144 showed speed is not the lever and
+the gap is on Polymarket's side. L147 showed the event surface is probably not what binds a
+$20/day goal: the $500/day notional cap (filled covers count after settling) allows ~24 covers, about
+**$6.67/day at the best observed $0.28 per cover**; $20/day would need ~8× the observed conversion and
+$50/day more than one profitable cover per co-listed event per day. So raising the cap is a separate
+operator decision, and it is only worth asking once F24 says whether a cover makes money at all.
+
+**The Polymarket depth defect (L146):** the REST write-through (L148) failed review and was reverted.
+Its replacement, **L149** (on a REST disagreement, ask the websocket for a fresh book; never keep the
+REST content), is implemented and tested in this tree and **not deployed**. It is a data-integrity
+fix, not a profit lever, and it must **not** be deployed during F24 (it would change what F24
+measures). See the L146 section below.
+
+**A pre-existing entry-rate suspect the L149 review surfaced (not investigated):** when a discovery
+refresh changes a game's executable specification, the grid unregisters and re-registers the same
+Polymarket token in one tick (`grids/live_stream/grid.py:441-449`, `478-481`). No subscription frame
+is sent and the ladder is dropped, so the new replica stays DISCONNECTED until the socket reconnects.
+It fails closed (no wrong price), but it silently stops pricing that game. How often it fires in
+production (`[refresh] ... executable slate specification changed` lines) is unmeasured.
 
 ## Production now
 
@@ -186,17 +225,20 @@ the lane prices.
 losses. It is the most specific mechanism found and it points the right way; the below-touch loss
 rate is unmeasured.
 
-**Candidate fixes, each needing its own spec, PENDING row, dated GATE amendment and your release:**
-1. **Make REST corrections write through to `ps.books`.** Smallest; only acts where a reconcile
-   already runs, so it adds no false-drift exposure.
-2. Stop a below-touch update from verifying the whole book.
-3. Depth-check active books with a tolerance for the REST round trip.
+**Fixes, each needing its own spec, PENDING row and, before production, a dated GATE amendment and
+the operator's release:**
+1. **R3, quiet books.** Writing REST into `ps.books` (L148) was tried and **withdrawn**: REST has no
+   sequence number and can lag the socket, so it can make a removed level permanent. **L149** instead
+   queues a websocket resnapshot on a REST disagreement — prepared and tested here, not deployed.
+   Full result: `research/exec/2026-09-17_rest-mismatch-resnapshot/verdict.md`.
+2. Stop a below-touch update from verifying the whole book. (Open.)
+3. Depth-check active books with a tolerance for the REST round trip. (Open.)
 
 (2) and (3) change which books the lane prices from, which is entry-adjacent. Measuring the real rate
 needs on-box frame replay, which conflicts with L51 — also your call. Full result:
 `research/exec/2026-09-17_pm-depth-verification/verdict.md`.
 
-## Release candidate in this tree
+## Release candidate in this tree (F23 — audited DO NOT RELEASE; superseded by F24 for now)
 
 L140 fixes the F22 instrumentation defect prospectively: explicit `fee_usd=0.0` is persisted only
 for complete terminal, non-open, non-pending, zero-fill maker proof. Ambiguous, partial and filled

@@ -1,0 +1,342 @@
+diff --git a/nodes/stream_polymarket/reconcile.py b/nodes/stream_polymarket/reconcile.py
+index 48df33c..5855d4a 100644
+--- a/nodes/stream_polymarket/reconcile.py
++++ b/nodes/stream_polymarket/reconcile.py
+@@ -22,7 +22,8 @@ from dataclasses import dataclass, field
+ from typing import Callable
+ 
+ from kernel.redact import brief_error
+-from nodes.book_replica.replica import Fault, ReplicaState
++from nodes.book_replica.replica import BookReplica, Fault, ReplicaState
++from nodes.stream_polymarket.protocol import SIZE_EPS, AssetBook
+ 
+ 
+ def due(regs: dict, now: float, *, fraction: float = 0.5) -> list[str]:
+@@ -107,12 +108,17 @@ class Reconciler:
+         for asset_id, fetched in books.items():
+             versions = dict(fetched.versions)
+             applied = False
++            any_superseded = False
++            compared = None   # the ladder a SYNCED replica held when REST disagreed with it
+             for reg in self.stream.regs.get(asset_id, ()):
+                 # A WS frame that landed while REST was in flight is strictly newer evidence.
+                 # Never let the delayed response overwrite it with an older ladder.
+                 if versions.get(id(reg.replica)) != reg.replica.updated_utc:
+                     self.superseded += 1
++                    any_superseded = True
+                     continue
++                synced = reg.replica.state is ReplicaState.SYNCED
++                held = (dict(reg.replica.bids), dict(reg.replica.asks)) if synced else None
+                 fault = reg.replica.reconcile(fetched.bids, fetched.asks,
+                                               now=fetched.received_utc, mono=fetched.received_mono)
+                 self.reconciles += 1
+@@ -121,13 +127,62 @@ class Reconciler:
+                     self.rest_drift += 1
+                     self.drifted.append(asset_id)
+                     self.drifted = self.drifted[-20:]
++                    if held is not None and compared is None:
++                        compared = held
+                 if reg.on_update:
+                     reg.on_update(asset_id, t_apply)
++            if compared is not None and not any_superseded:
++                self._write_through(asset_id, fetched, compared)
+             if applied:
+                 done.append(asset_id)
+         self.last_run_utc = t_apply
+         return done
+ 
++    def _write_through(self, asset_id: str, fetched: FetchedBook, compared: tuple[dict, dict]) -> None:
++        """L148 (2026-09-17): make an adopted REST correction survive the next websocket update.
++
++        `BookReplica.reconcile` adopts REST into the REPLICA only. The stream folds every later
++        `price_change` into its own ladder, `stream.books`, and rebuilds the replica from it
++        whole (`project_in`, no `ladder_key`) -- so a correction lasted exactly one message and the
++        stale level came back labelled "ws" (L146 R3, reproduced against deployed 59dd5ae).
++
++        Replace the stream's ladder with the same REST ladder, keeping its tick size, but ONLY when
++        the stream's ladder is provably the one REST disagreed with. The caller passes `compared`
++        only when a replica that was SYNCED immediately before `reconcile` reported the mismatch,
++        and only when no registration on the asset was superseded. This method then requires the
++        stream's current ladder to equal `compared`. Together these close three ways an adversarial
++        review (2026-09-17) made a first version overwrite newer websocket depth:
++
++        * a second owner of the asset that never received a `book` stays DISCONNECTED, is never
++          superseded (`project_in` does not bump a replica that is not SYNCED), and always
++          mismatches -- so "any registration mismatched" was not evidence about `stream.books`;
++        * a replica invalidated by `check()` (HEARTBEAT_LOST) during the flight is likewise never
++          superseded while later frames fold into `stream.books`;
++        * a malformed `book` after a drift recreates an EMPTY entry (`parse_event` calls
++          `setdefault` before `apply_book` raises), so mere presence proved nothing.
++
++        An absent entry is left absent: a drift dropped it and the websocket resnapshot owns
++        recovery. A fresh `AssetBook` rather than an in-place edit, so its sorted-ladder memo cannot
++        outlive the data.
++
++        KNOWN COST, fail-closed: if REST has already seen two or more venue changes whose websocket
++        frames are handled only after this runs, and a later one moves the top of book, the earlier
++        frame's claim will disagree with the corrected ladder. That is reported as drift, the
++        replica is invalidated and a resnapshot is queued -- a brief outage on that market, never a
++        wrong price. Polymarket offers no sequence number that would let this be told apart.
++        """
++        old = self.stream.books.get(asset_id)
++        if old is None:
++            return
++        want_bids, want_asks = compared
++        if not (BookReplica._close(old.bids, want_bids, 1e-9)
++                and BookReplica._close(old.asks, want_asks, 1e-9)):
++            return   # the stream's ladder changed in a way no registration observed; leave it
++        self.stream.books[asset_id] = AssetBook(
++            bids={float(p): float(s) for p, s in fetched.bids if float(s) > SIZE_EPS},
++            asks={float(p): float(s) for p, s in fetched.asks if float(s) > SIZE_EPS},
++            tick_size=old.tick_size)
++
+     def once(self, now: float | None = None, mono: float | None = None) -> list[str]:
+         """One pass, synchronous, on the calling thread. Returns the asset ids reconciled."""
+         targets = self.prepare(now)
+diff --git a/nodes/stream_polymarket/tests/test_reconcile.py b/nodes/stream_polymarket/tests/test_reconcile.py
+index 58951a6..8de4664 100644
+--- a/nodes/stream_polymarket/tests/test_reconcile.py
++++ b/nodes/stream_polymarket/tests/test_reconcile.py
+@@ -152,3 +152,195 @@ def test_each_rest_book_is_stamped_when_its_response_arrives():
+         module.time.time = original
+     assert books["a"].received_utc == T + 21
+     assert books["b"].received_utc == T + 22
++
++
++# ── L148: a REST correction must survive the next websocket update ─────────────────────────
++# These drive the stream's own ladder (`stream.books`) through real `book` events, which the
++# helpers above do not: `stream_with` seeds replicas directly and leaves `stream.books` empty.
++TRUTH_BIDS = [(0.19, 10.0)]
++TRUTH_ASKS = [(0.20, 8.0), (0.21, 10.0), (0.23, 10.0)]
++
++
++def _book(asks, tick="0.01", aid="a"):
++    return {"event_type": "book", "asset_id": aid, "tick_size": tick,
++            "bids": [{"price": "0.19", "size": "10"}],
++            "asks": [{"price": str(p), "size": str(s)} for p, s in asks]}
++
++
++def _change(price, size, side="BUY", bb=0.19, ba=0.20, aid="a"):
++    return {"event_type": "price_change", "price_changes": [
++        {"asset_id": aid, "price": str(price), "size": str(size), "side": side,
++         "best_bid": str(bb), "best_ask": str(ba)}]}
++
++
++def _live_stream(asks, tick="0.01"):
++    """A stream whose replica and own ladder both came from a real `book` event, then went quiet."""
++    s = PolymarketStream()
++    r = BookReplica("polymarket", "a", verification="external", max_unverified_s=30.0,
++                    heartbeat_timeout_s=1e9)
++    s.register("a", r)
++    s.handle(_book(asks, tick), now=T)
++    for i in range(1, 21):
++        s.handle("PONG", now=T + i)
++    return s, r
++
++
++def test_a_rest_correction_is_written_through_and_survives_the_next_update():
++    """L146 R3, fixed. A level the venue removed (0.22) must not come back on the next update."""
++    s, r = _live_stream([(0.20, 8), (0.21, 10), (0.22, 10), (0.23, 10)])
++    rc = Reconciler(s, lambda _aid: (list(TRUTH_BIDS), list(TRUTH_ASKS)))
++    assert rc.once(now=T + 20) == ["a"]
++    assert rc.rest_drift == 1 and r.last_fault is Fault.HASH_MISMATCH, "drift is still reported"
++    assert s.books["a"].asks == dict(TRUTH_ASKS), "the stream's own ladder took the correction"
++
++    s.handle(_change(0.18, 4), now=T + 21)
++    assert 0.22 not in r.asks, "the phantom level did not come back"
++    assert r.asks == dict(TRUTH_ASKS)
++    assert r.check(T + 21, max_age_s=5.0) is None
++
++
++def test_an_agreement_leaves_the_stream_ladder_untouched():
++    s, r = _live_stream(TRUTH_ASKS)
++    before = s.books["a"]
++    rc = Reconciler(s, lambda _aid: (list(TRUTH_BIDS), list(TRUTH_ASKS)))
++    assert rc.once(now=T + 20) == ["a"]
++    assert rc.rest_drift == 0
++    assert s.books["a"] is before, "nothing to correct, so nothing is replaced"
++
++
++def test_a_superseded_fetch_writes_nothing_through():
++    """A websocket update that lands while REST is in flight is newer than the REST response."""
++    s, r = _live_stream([(0.20, 8), (0.21, 10), (0.22, 10)])
++    rc = Reconciler(s, lambda _aid: ([(0.10, 10)], [(0.90, 10)]))
++    books = rc.fetch_due(rc.prepare(T + 20), now=T + 21, mono=6.0)
++    s.handle(_change(0.18, 4), now=T + 20.5)          # agreeing, so it re-projects the replica
++    assert rc.apply(books, now=T + 21) == []
++    assert rc.superseded == 1 and rc.rest_drift == 0
++    assert 0.90 not in s.books["a"].asks and 0.22 in s.books["a"].asks, "REST did not overwrite it"
++
++
++def test_write_through_keeps_the_tick_size():
++    s, r = _live_stream([(0.200, 8), (0.225, 10)], tick="0.001")
++    rc = Reconciler(s, lambda _aid: (list(TRUTH_BIDS), [(0.200, 8)]))
++    rc.once(now=T + 20)
++    assert s.books["a"].asks == {0.200: 8.0}, "the ladder was replaced, so the tick size had to be carried"
++    assert s.books["a"].tick_size == 0.001
++
++
++def test_an_absent_stream_book_is_not_recreated():
++    """No entry means a drift dropped it and a websocket resnapshot owns recovery."""
++    s, r = _live_stream([(0.20, 8), (0.22, 10)])
++    del s.books["a"]
++    rc = Reconciler(s, lambda _aid: (list(TRUTH_BIDS), [(0.20, 8)]))
++    rc.once(now=T + 20)
++    assert rc.rest_drift == 1
++    assert "a" not in s.books
++
++
++def test_a_drift_during_the_rest_flight_is_not_written_back_into_the_stream():
++    """A disagreeing update drops `stream.books` and invalidates the replica WITHOUT bumping
++    `updated_utc`, so the fetch is not superseded and `reconcile` still runs. The write-through
++    must not recreate the dropped ladder: the queued resnapshot owns recovery."""
++    s, r = _live_stream([(0.20, 8), (0.22, 10)])
++    rc = Reconciler(s, lambda _aid: (list(TRUTH_BIDS), [(0.20, 8)]))
++    books = rc.fetch_due(rc.prepare(T + 20), now=T + 21, mono=6.0)
++    s.handle(_change(0.18, 4, ba=0.21), now=T + 20.5)  # venue says best ask 0.21: drift
++    assert "a" not in s.books and "a" in s.resnapshot
++    rc.apply(books, now=T + 21)
++    assert "a" not in s.books, "the drift-dropped ladder stays dropped"
++    assert "a" in s.resnapshot, "recovery is still the websocket's"
++
++
++# ── L148 adversarial review (2026-09-17): the write-through must never beat newer websocket depth ──
++# Each case below made the FIRST version of the write-through overwrite a level the websocket had
++# already updated. They are the reviewers' own sequences, driving the real classes.
++def _second_owner_stream():
++    """A capture replica is SYNCED; a game poller registers the same token later. The subscribed
++    set is unchanged, so the socket sends no new `book` and the poller replica stays DISCONNECTED."""
++    s = PolymarketStream()
++    capture = BookReplica("polymarket", "a", verification="external", max_unverified_s=30.0,
++                          heartbeat_timeout_s=1e9)
++    s.register("a", capture)
++    s.handle(_book([(0.20, 8), (0.21, 10), (0.25, 10)]), now=T)
++    poller = BookReplica("polymarket", "a", verification="external", max_unverified_s=30.0,
++                         heartbeat_timeout_s=1e9)
++    s.register("a", poller)
++    for i in range(1, 21):
++        s.handle("PONG", now=T + i)
++    return s, capture, poller
++
++
++def test_an_unsynced_second_owner_cannot_trigger_an_overwrite_of_newer_depth():
++    """WT-1 / B1 / F2. The synced owner is correctly superseded; the unsynced one is not, and
++    mismatches only because it is empty. That is not evidence about the stream's ladder."""
++    s, capture, poller = _second_owner_stream()
++    assert poller.state is not ReplicaState.SYNCED
++    rest_before_change = ([(0.19, 10.0)], [(0.20, 8.0), (0.21, 10.0), (0.25, 10.0)])
++    rc = Reconciler(s, lambda _aid: rest_before_change)
++    books = rc.fetch_due(rc.prepare(T + 20), now=T + 20.1, mono=1.0)
++    s.handle(_change(0.25, 3, side="SELL"), now=T + 20.05)   # a deep change lands during the flight
++    rc.apply(books, now=T + 20.2)
++    assert rc.superseded == 1
++    assert s.books["a"].asks[0.25] == 3.0, "the newer websocket size survives the REST response"
++    s.handle(_change(0.18, 4), now=T + 21)
++    assert capture.asks[0.25] == 3.0 and poller.asks[0.25] == 3.0
++
++
++def test_a_replica_invalidated_during_the_flight_cannot_trigger_an_overwrite():
++    """WT-2. check() invalidates on HEARTBEAT_LOST without bumping updated_utc, so the fetch is not
++    superseded while later frames fold into the stream's ladder."""
++    s = PolymarketStream()
++    watch = BookReplica("polymarket", "a", verification="external", max_unverified_s=30.0,
++                        heartbeat_timeout_s=1e9)
++    s.register("a", watch)
++    s.handle(_book([(0.20, 8), (0.21, 10), (0.22, 10)]), now=T)
++    late = BookReplica("polymarket", "a", verification="external", max_unverified_s=30.0,
++                       heartbeat_timeout_s=1e9)
++    s.register("a", late)
++    late.snapshot_in([(0.19, 10)], [(0.20, 8), (0.21, 10), (0.22, 10)], now=T)
++    late.invalidate(Fault.HEARTBEAT_LOST)
++    for i in range(1, 21):
++        s.handle("PONG", now=T + i)
++    rc = Reconciler(s, lambda _aid: ([(0.19, 10.0)], [(0.20, 8.0), (0.21, 10.0), (0.22, 10.0)]))
++    books = rc.fetch_due(rc.prepare(T + 20), now=T + 20.2, mono=1.0)
++    s.handle(_change(0.22, 0, side="SELL"), now=T + 20.5)     # the venue removed 0.22
++    assert 0.22 not in watch.asks
++    rc.apply(books, now=T + 21)
++    assert 0.22 not in s.books["a"].asks, "the removal survives the older REST ladder"
++    s.handle(_change(0.18, 4), now=T + 22)
++    assert 0.22 not in watch.asks and 0.22 not in late.asks
++
++
++def test_a_malformed_book_recreating_an_empty_entry_is_not_filled_with_rest():
++    """M1. After a drift drops the ladder, a malformed `book` recreates it EMPTY (setdefault runs
++    before apply_book raises). Presence alone must not license the write-through."""
++    s = PolymarketStream()
++    r = BookReplica("polymarket", "a", verification="external", max_unverified_s=30.0,
++                    heartbeat_timeout_s=1e9)
++    s.register("a", r)
++    s.handle(_book([(0.20, 8), (0.22, 10)]), now=T)
++    for i in range(1, 21):
++        s.handle("PONG", now=T + i)
++    rc = Reconciler(s, lambda _aid: ([(0.19, 10.0)], [(0.20, 8.0)]))
++    books = rc.fetch_due(rc.prepare(T + 20), now=T + 20.2, mono=1.0)
++    s.handle(_change(0.18, 4, ba=0.21), now=T + 20.5)          # drift: ladder dropped
++    bad = _book([(0.20, 8)])
++    bad["asks"].append({"price": "1.5", "size": "1"})          # out of range: apply_book raises
++    s.handle(bad, now=T + 20.6)
++    assert "a" in s.books and s.books["a"].asks == {}, "the malformed book left an empty entry"
++    rc.apply(books, now=T + 21)
++    assert s.books["a"].asks == {}, "REST was not written into a ladder nobody compared"
++
++
++def test_a_rest_read_ahead_of_queued_frames_fails_closed_never_mispriced():
++    """F1, a documented cost. REST already includes two venue changes whose frames arrive after
++    apply; the earlier frame's top-of-book claim disagrees with the corrected ladder. The stream
++    reports drift and invalidates the replica -- a brief outage, never a servable wrong book."""
++    s, r = _live_stream([(0.20, 8), (0.21, 10), (0.23, 10)])
++    rc = Reconciler(s, lambda _aid: ([(0.19, 10.0)], [(0.21, 10.0), (0.23, 5.0)]))
++    books = rc.fetch_due(rc.prepare(T + 20), now=T + 20.1, mono=1.0)
++    rc.apply(books, now=T + 20.2)                              # corrected ladder: 0.20 already gone
++    s.handle(_change(0.23, 5, side="SELL", ba=0.20), now=T + 20.3)   # X, claims the pre-Y top 0.20
++    assert s.drift == 1 and r.state is not ReplicaState.SYNCED
++    assert r.check(T + 20.3, max_age_s=5.0) is not None, "unusable, not mispriced"
++    assert "a" in s.resnapshot, "a websocket resnapshot recovers it"
+diff --git a/research/exec/2026-09-17_pm-depth-verification/test_reproduce.py b/research/exec/2026-09-17_pm-depth-verification/test_reproduce.py
+index 0fa2896..dcd97c0 100644
+--- a/research/exec/2026-09-17_pm-depth-verification/test_reproduce.py
++++ b/research/exec/2026-09-17_pm-depth-verification/test_reproduce.py
+@@ -49,15 +49,20 @@ def test_r2_the_size_at_the_touch_is_never_compared():
+     assert r2["replica_fault"] is None
+ 
+ 
+-def test_r3_a_rest_correction_is_undone_by_the_next_update():
++def test_r3_a_rest_correction_now_survives_the_next_update():
++    """FLIPPED BY L148 (2026-09-17). L146 recorded this defect against deployed 59dd5ae -- the
++    correction was undone by the next update (results_20260917.json, verdict.md, ledger). L148
++    writes the REST ladder through to the stream's own ladder, so in this tree it now survives.
++    L146's recorded evidence is unchanged; this living test tracks the tree it runs against."""
+     r3 = rp.r3_rest_correction_overwritten()
+     assert r3["due_before_reconcile"] is True
+     after = r3["after_reconcile"]
+     assert after["asks_equal_truth"] and after["source"] == "rest" and after["rest_drift"] == 1
+-    assert after["stream_ladder_still_has_phantom"], "REST never reached ps.books"
++    assert after["stream_ladder_still_has_phantom"] is False, "REST reached the stream's ladder"
+     back = r3["after_one_update"]
+-    assert back["phantom_level_present"] and back["source"] == "ws" and back["fault"] is None
+-    assert r3["correction_survived"] is False
++    assert back["phantom_level_present"] is False and back["asks_equal_truth"] is True
++    assert back["fault"] is None
++    assert r3["correction_survived"] is True
+ 
+ 
+ def test_agreeing_traffic_is_the_only_thing_that_keeps_the_book_out_of_reconciliation():
+@@ -82,10 +87,14 @@ def test_the_phantom_level_makes_the_book_look_cheaper_for_a_buyer():
+     assert econ["truth_minus_stale_c"] > 0, "the stale book understates what 25 contracts cost"
+ 
+ 
+-def test_the_registered_outcome_is_defect_reproduced():
++def test_against_this_tree_only_the_active_book_defects_remain():
++    """L146 recorded DEFECT_REPRODUCED against deployed 59dd5ae. With L148's fix in this tree, R3 no
++    longer reproduces; R1 and R2 -- the active-book depth and touch-size defects, which L148
++    deliberately does not touch -- still do, and both controls still catch theirs."""
+     out = rp.run()
+-    assert out["defective"] == {"R1": True, "R2": True, "R3": True}
+-    assert out["verdict"] == "DEFECT_REPRODUCED"
++    assert out["defective"] == {"R1": True, "R2": True, "R3": False}
++    assert out["verdict"] == "PARTIAL"
++    assert out["C1"]["caught"] and out["C2"]["caught"]
+     assert out["schema"] == "janus.l146.pm_depth_verification.v1"
+ 
+ 

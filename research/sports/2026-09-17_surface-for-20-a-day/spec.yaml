@@ -1,0 +1,66 @@
+row: L147
+date: 2026-09-17
+kind: measurement
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L147
+title: Is there enough co-listed market surface for $20 a day?
+
+# IMMUTABLE AFTER REGISTRATION. Written before any census RESULT was read for this question. Only the
+# census spec (research/sports/2026-09-03_co-listing-census/spec.yaml) had been read.
+
+question: >-
+  The operator asked whether $20/day or $50/day is reachable. At the best observed profit per
+  completed cover ($0.28), $20/day needs about 72 covers a day and $50/day about 180. The lane
+  produced about 5. Does the market surface itself -- events both venues list as game markets with
+  two-sided books -- contain enough events for that many covers, or is the surface the binding limit?
+
+known_at_registration:
+  - L141 (24 h window, 15.34 h of executions) recorded 3 completed covers and 95 BOOK_MOVED attempts
+    across 35 distinct events. That is about 4.7 covers a day, roughly 0.08 completed covers per
+    event the lane engaged.
+  - The observed per-cover figure of $0.28 excludes one losing scalar-settlement cover; with it the
+    window's realised net was -$0.16 over four covers. $0.28 is therefore a best case.
+  - The signed daily notional cap is $500, and a filled cover counts against it after it settles
+    (nodes/risk/ledger.py:264-280). At about $21 committed per cover that allows roughly 24 covers a
+    day, which caps the lane near $6.70/day at $0.28 before surface is considered.
+  - L28's census counts co-listed events in a [now - 3 h, now + 48 h] window, touch notional per
+    event and contract life. It ran on the Mac 2026-09-03 to 2026-09-07 and on the box daily after.
+
+source: >-
+  L28 census result files: research/sports/2026-09-03_co-listing-census/results_*.json locally, and
+  the box's copies under /opt/janus/research/sports/2026-09-03_co-listing-census/ if present, read
+  through a small on-box summariser whose output fits one SSM call. Read-only.
+
+measurements:
+  - co-listed events per run and per day (window count scaled by 24/51), total and two-sided on both
+    venues, median across runs
+  - the same per competition, with the census's own JOIN_WEAK label carried through
+  - touch notional per co-listed event (median), to show whether $21 a cover fits the books
+  - covers a day needed for $20 and $50 at $0.28, and the covers per event each would require
+
+decision_rule:
+  SURFACE_INSUFFICIENT_FOR_20: >-
+    Median two-sided co-listed events per day is below 72. Then even one profitable cover on every
+    such event every day could not reach $20/day at the best observed profit per cover.
+  SURFACE_ALLOWS_20_IN_PRINCIPLE: >-
+    Median two-sided co-listed events per day is at least 72. Report the covers per event $20/day
+    would require and set it beside the observed ~0.08; the surface is then not the only limit.
+  INCONCLUSIVE: >-
+    Fewer than 3 usable census runs, or runs that do not separate two-sided co-listed events.
+
+immutable_success_criteria:
+  - Every census run used is named with its timestamp; PARTIAL runs, as the census defines them, are
+    excluded and counted.
+  - Counts are taken from the census's own fields, never re-derived by a different join.
+  - The window-to-day scaling (24/51) is stated wherever a per-day figure appears.
+  - The $0.28 figure is labelled a best case everywhere it is used.
+  - The daily notional ceiling is reported beside the surface result, because either can bind.
+
+expected_ev_effect: >-
+  None directly. It tells the operator whether chasing $20/day or $50/day is limited by the market
+  itself, by the signed caps, or by conversion, before any money is risked on a live test.
+
+prohibited:
+  - Any production mutation, any order, any change to caps or code.
+  - Reading a co-listed event as a tradeable cover. Listing on both venues is necessary, not sufficient.
+  - Quoting the $0.28 best case as the expected profit per cover.
