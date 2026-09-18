@@ -1,0 +1,61 @@
+row: L150
+date: 2026-09-18
+kind: descriptive
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L150
+title: Did the lane's real-money economics get worse over its 25 covers, and in which component?
+
+# IMMUTABLE AFTER REGISTRATION. Written before any query for this row. Read-only: no trading, no
+# state change, no box write. This row cannot arm, release, deploy or clear anything.
+
+operator_claim: >-
+  On 2026-09-18 the operator said the first versions of the system made consistent money and that it
+  "has somehow become worse with every tweak", and that this is a fact rather than an artifact of the
+  one lucky unhedged position. This row tests that claim against the settled record and, if the
+  deterioration is real, identifies WHICH component moved.
+
+question: >-
+  Over the 25 settled LIMITED_LIVE covers (2026-09-08 to 2026-09-15), did realised net per cover
+  deteriorate; is that deterioration distinguishable from the variance of this sample; and which
+  component -- planned entry edge, first-leg execution, hedge slippage, fees, protection, the
+  unhedged remainder, or settlement outcome -- accounts for it?
+
+method:
+  - Read-only queries against the box's tuple store; no writes, no locks, nothing outside `mode=ro`.
+  - Unit: one settled execution in LIMITED_LIVE. Report `cover_usd` (the hedged, arbitrage part) and
+    `directional_usd` (the unhedged remainder) SEPARATELY, because the largest early win was a
+    partly-hedged position whose naked remainder won.
+  - Per cover, decompose: contracts; first-leg average price; hedge average price; their sum against
+    the $1 settlement, which is the locked gross edge; fees per contract per leg from `orders`; the
+    planned edge recorded in `executions.plan_json`; protection from `protect_json`; and the
+    settlement outcome.
+  - Compare the period the operator calls good (through 2026-09-09) with the rest, on the arbitrage
+    part alone and per contract, so a change in stake size cannot masquerade as a change in economics.
+  - State the uncertainty: an event-clustered bootstrap of the difference in mean net per cover,
+    10000 resamples, seed 180924, 95% percentile. Twenty-five covers is a small sample and the
+    interval is expected to be wide; report it rather than asserting a trend.
+
+registered_outcomes:
+  DETERIORATION_REAL_AND_LOCALISED: the later period is worse AND one component accounts for most of it
+  DETERIORATION_REAL_NOT_LOCALISED: the later period is worse but no single component accounts for it
+  DETERIORATION_NOT_DISTINGUISHABLE: the direction is negative but the interval includes zero
+  NO_DETERIORATION: the later period is not worse on the arbitrage part per contract
+  INSUFFICIENT: the stored record cannot answer the question; say exactly which field is missing
+
+known_at_registration:
+  - 25 settled LIMITED_LIVE covers total +$4.17678; 13 of 25 positive.
+  - Daily net: 09-08 +7.8559 (3), 09-09 +0.5548 (6), 09-10 -0.0149 (1), 09-11 -0.4019 (3),
+    09-12 -2.6573 (3), 09-13 -0.9953 (5), 09-15 -0.1645 (4).
+  - The 09-08 total includes a single PARTIAL of +4.25074, a position whose hedge did not fully fill.
+    Excluding it, the whole real-money history is about -$0.07 over 24 covers.
+  - Fees per cover rose from about $0.15 (09-08) to about $0.54 (09-15); the stake cap rose from $12
+    to $30 over the same period, so fees must be normalised per contract before they mean anything.
+  - The watchdog currently reports 4 of the last 10 real covers losing, net -$1.37, and 3 of 10
+    settling above their own break-even.
+  - Known and NOT re-litigated here: hedge slippage (median about 5c, range about +/-15c) dwarfs the
+    roughly 0.5c entry margin, and entry never prices it.
+
+prohibited:
+  - Any write, order, arming, release, deploy, limit change or kill change.
+  - Dropping a cover from the comparison without naming it and its dollars.
+  - Reporting a trend as established when the interval includes zero.
