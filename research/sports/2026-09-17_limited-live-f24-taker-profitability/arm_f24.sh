@@ -7,8 +7,9 @@
 # Requires a dated GATE_TO_LIVE amendment carrying the SAME verbatim statement first.
 #
 # In one remote pass it refuses unless it holds the arming lock, no F24 start pin already exists, the
-# lane is active in LIMITED_LIVE, the kill is exactly the F22 STOP, and the account is quiet with no
-# unresolved material flag. Then, in this order:
+# lane is active in LIMITED_LIVE, the kill is exactly the F22 STOP, NOTHING ELSE IN THE KILL
+# DIRECTORY STOPS THE LANE, and the account is quiet with no unresolved material flag. Then, in this
+# order:
 #   1. copies whatever override is currently on disk into the audit directory, NAMED AND DESCRIBED BY
 #      WHAT IT ACTUALLY IS (the deployed writer truncates in place, so the copy is the only way back
 #      from a half-written file -- but on a second attempt it is the previous attempt's F24 override,
@@ -20,6 +21,17 @@
 #   5. archives (never deletes) the exact F22 kill, then pins the start time on the box.
 # The order matters: clearing the kill under the current F22 override would resume F22.
 #
+# ARCHIVING kill/live IS NOT THE SAME AS LETTING THE LANE TRADE. nodes/risk/kill.py (59dd5ae) keeps
+# FIVE scopes in that one directory -- all, live, venue-<venue>, event-<event_id>,
+# strategy-<version> -- and clearance.clear() refuses every candidate any of them applies to; an
+# unrecognised name is REPORTED but does not refuse: active() consults five exact shapes and nothing
+# same directory holds breaker.json, which is not a kill file and stops more: once the $25/UTC-day
+# breaker latches, evaluate() answers BREAKER_LATCHED from that file BEFORE any kill switch, so
+# kill/live is never re-created and every candidate is refused for the rest of the window. Only
+# LossBreaker.reset(by=<name>) clears it and nothing under ops/ calls it. Arming into either state
+# would write a live override, archive the F22 stop, and leave a lane that places no orders at all
+# while every report calls the row IN_PROGRESS -- so the pre-arm pass refuses both, by name.
+#
 # STEP 3 IS NOT A GREP FOR "[f22] disabled". `grid.check_arm` prints its markers only when they
 # CHANGE, and when the arm is stale it forces F22 disabled WITH THE STALE REASON AS THE AUTHORITY
 # STRING -- so a lane that was already refusing every order logs a line that reads, literally,
@@ -29,6 +41,16 @@
 # which states arm_stale / f22_enabled / mode directly with its own timestamp; the log is only the
 # fallback, and there the WHOLE log's last "[arm] " marker must not be a STALE one and the last
 # "[f22] disabled" must carry the F24 authority itself, never a stale reason.
+#
+# NEITHER IS THE PRE-ARM PASS BELOW A PROOF THAT THE LANE WILL TRADE. It enumerates stop causes, and
+# at 59dd5ae there is always one more that leaves no file: `breaker.evaluate()` answers PNL_UNKNOWN
+# while a single fill is still UNCONFIRMED and refuses every candidate for the rest of the UTC day
+# without latching breaker.json, and BALANCE, BALANCE_UNCONFIRMED, FEE_SCHEDULE and the ledger's
+# reservation refusals do the same. verify_f24.sh, which decides this script's exit code, therefore
+# also reads what the lane ACTUALLY DID -- the risk-channel rows of `refusal_counts` in the tuple
+# store. In the F22 state that record only ever says KILL_SWITCH (clear() checks the kill before the
+# breaker), so it corroborates here rather than adding a gate; it becomes the real evidence a minute
+# or two AFTER the archive, which is why the ARMED message below says to read the box again.
 #
 # WHATEVER THIS PRINTS LOCALLY, THE BOX IS THE AUTHORITY. `ops/box/run.sh` stops listening after its
 # own poll budget while the remote command runs on (memory: janus-box-ssm-long-jobs), and Ctrl-C or a
@@ -63,7 +85,9 @@ B64=$(printf %s "$STATEMENT" | base64 | tr -d '\n')
 read -r -d '' TEMPLATE <<'EOS' || true
 set -u
 PY=/opt/janus/.venv/bin/python3
+KILL_DIR=/srv/janus/kill
 KILL=/srv/janus/kill/live
+BREAKER=/srv/janus/kill/breaker.json
 OVERRIDE=/srv/janus/kill/arming_override.json
 EXPECTED_KILL_SHA=d81bbfc267a235ca7f268e7317d77ee7e83c65f5263117590e4e86d1552b1636
 AUDIT_ROOT=/srv/janus/release-audit
@@ -108,6 +132,107 @@ tr '\0' ' ' < "/proc/$PID/cmdline" | grep -q -- '--mode LIMITED_LIVE' || fail "l
 [ -f "$KILL" ] || fail "no kill/live present; nothing to clear and no reason to arm"
 [ "$(sha256sum "$KILL" | cut -d' ' -f1)" = "$EXPECTED_KILL_SHA" ] || fail "kill/live is not the exact F22 STOP"
 [ -f "$OVERRIDE" ] || fail "no arming override present; refusing to write one blind"
+
+# Archiving kill/live is not the same as letting the lane trade. nodes/risk/kill.py holds FIVE
+# scopes in this one directory and clearance.clear() refuses on any of them; breaker.json, in the
+# same directory, refuses everything by itself and is not lifted by removing a kill file. Arming
+# into either state writes a live override, archives the F22 stop, and produces a lane that places
+# no orders for the whole window -- while every report calls the row IN_PROGRESS.
+STOPS=$(sudo -u janus env F24_KILL_DIR="$KILL_DIR" F24_BREAKER="$BREAKER" "$PY" - <<'PYB'
+"""Could the lane trade once kill/live is archived? 0 yes (one summary line), 1 no (why, and what to do).
+
+Read-only. Everything under kernel/paths.KILL_ROOT except arming_override.json and breaker.json is a
+kill switch: `all`, `live`, `venue-<venue>`, `event-<event_id>`, `strategy-<version>`. A name outside
+those five is UNRECOGNISED and refuses anyway -- nothing here can prove an unknown file is harmless.
+"""
+import json, os
+
+KILL_DIR, BREAKER = os.environ["F24_KILL_DIR"], os.environ["F24_BREAKER"]
+NOT_A_KILL = ("arming_override.json", "breaker.json")
+SCOPED = ("venue-", "event-", "strategy-")
+
+
+def scope(name):
+    if name in ("all", "live"):
+        return name
+    for prefix in SCOPED:
+        if name.startswith(prefix) and len(name) > len(prefix):
+            return prefix[:-1]
+    return None
+
+
+def reason_of(path):
+    try:
+        d = json.loads(open(path).read() or "{}")
+        return str(d.get("reason") or "") if isinstance(d, dict) else ""
+    except Exception:                                     # noqa: BLE001 -- a touched switch is empty
+        return ""
+
+
+problems, notes = [], []
+try:
+    names = sorted(n for n in os.listdir(KILL_DIR) if n not in NOT_A_KILL and n != "live")
+except OSError as exc:
+    print("the kill directory %s could not be listed (%s), so the switches are UNKNOWN, not absent."
+          "\n  Nothing was written. Read it by hand before arming." % (KILL_DIR, exc))
+    raise SystemExit(1)
+
+for n in names:
+    s, why = scope(n), reason_of(os.path.join(KILL_DIR, n))
+    tail = (": %s" % why[:120]) if why else ""
+    if s is None:
+        # NOT a refusal. kill.active() tests exactly "all", "live", "venue-<v>", "event-<id>" and
+        # "strategy-<version>"; a name matching none of them is never consulted, so it CANNOT refuse
+        # a candidate. Verified on the box 2026-09-18: the directory holds .guard-failure-*.lock and
+        # .legacy-incident-*.lock left by the guard tooling, and failing closed on those would make
+        # arming permanently impossible while proving nothing.
+        notes.append(
+            "  %s -- not a kill switch%s: it matches none of kill.active()'s five scopes, so nothing\n"
+            "    consults it. Reported because an unexpected file in this directory is worth a look." % (n, tail))
+    else:
+        how = ("ops/box/kill.sh %s --clear lifts an ssm-latched one within five minutes; a file the\n"
+               "    breaker or a human latched stays until it is removed on the box, deliberately." % n
+               ) if n in ("all", "live") else (
+               "kill_sync.py mirrors only all/live, so this one was set on the box itself: find out\n"
+               "    who set it and why before removing it there.")
+        problems.append(
+            "  %s -- a %s-scope kill switch%s. clearance.clear() refuses every candidate it applies\n"
+            "    to, and archiving kill/live does not lift it. %s" % (n, s, tail, how))
+
+try:
+    raw = open(BREAKER).read()
+except FileNotFoundError:
+    raw = None
+except OSError as exc:
+    raw = None
+    problems.append("  breaker.json -- unreadable (%s). LossBreaker._load() reads this file at every\n"
+                    "    start; an unreadable daily-loss state is treated as latched here." % exc)
+if raw is not None:
+    try:
+        d = json.loads(raw or "{}")
+    except ValueError as exc:
+        d = None
+        problems.append("  breaker.json -- unparseable (%s); fail closed, it may be a latch." % exc)
+    if isinstance(d, dict) and d.get("latched"):
+        problems.append(
+            "  breaker.json -- the daily realised-loss breaker is LATCHED: %s (latched_utc=%s).\n"
+            "    breaker.evaluate() returns BREAKER_LATCHED from this file BEFORE any kill switch is\n"
+            "    consulted, so clearance.clear() refuses EVERY candidate and kill/live is never\n"
+            "    re-created: the directory would look clean and the lane would still place no order.\n"
+            "    Only LossBreaker.reset(by=<name>) clears it, and nothing under ops/ calls it (at\n"
+            "    59dd5ae only nodes/risk/tests/test_risk.py does), so this is a HUMAN DECISION about\n"
+            "    a day that already lost money -- not a file to delete. F24 spec.yaml also makes a\n"
+            "    latch a STOP condition that ENDS the row." % (d.get("reason"), d.get("latched_utc")))
+
+if problems:
+    print("the lane could not place an order even with the F22 kill archived:\n" + "\n".join(problems)
+          + "\n  NOTHING WAS WRITTEN and the kill is in place. Resolve each of these, then re-run.")
+    raise SystemExit(1)
+print("no other kill switch in %s and the breaker is not latched%s"
+      % (KILL_DIR, ("\n  other files there, none of them switches:\n" + "\n".join(notes)) if notes else ""))
+PYB
+) || fail "$STOPS"
+echo "F24_PREARM_STOPS: $STOPS"
 
 # The quiet check is a FILE so it can be run again before the archive. A short or failed write leaves
 # a 0-byte file, and `python3 <empty file>` exits 0 -- which would pass this gate and the post-wait
@@ -343,7 +468,13 @@ case "$VERIFY_RC" in
        echo "its verdict as unverified until the pin exists."
      else
        echo "F24 IS ARMED (verified on the box). Record the start_utc above; check progress with check_f24.sh."
-     fi ;;
+     fi
+     echo "RUN 'bash verify_f24.sh' AGAIN IN ABOUT TWO MINUTES. This verdict rests on the box's state"
+     echo "files plus the lane's own record of why it refused -- and that record cannot corroborate"
+     echo "yet: every report tick up to the archive counts refusals from while the F22 kill was still"
+     echo "in place, so verify_f24.sh discards them (refusals.ticks_before_this_are_pre_arm). Once a"
+     echo "whole tick has elapsed under the new override, a stop that leaves no file -- a PNL_UNKNOWN"
+     echo "breaker, BALANCE_UNCONFIRMED, a failed guard -- shows up as refusals.lane_could_act=false." ;;
   2) echo "F24 IS NOT ARMED (verified on the box): the F22 kill is in place and the F22 override is untouched." ;;
   *) echo "F24 STATE IS INDETERMINATE. Do not re-run this script. Read the evidence above, and stop the lane with 'bash ops/box/kill.sh live' if it may be trading." ;;
 esac

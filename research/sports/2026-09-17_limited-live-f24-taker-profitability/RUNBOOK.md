@@ -131,7 +131,21 @@ your end gave up. Never conclude "nothing happened" from a local error.
 bash research/sports/2026-09-17_limited-live-f24-taker-profitability/verify_f24.sh
 ```
 
-If it ever says `INDETERMINATE` and the lane might be trading, stop it first (below), then sort it out.
+It answers `ARMED` / `NOT_ARMED` / `INDETERMINATE` and prints its evidence. If it ever says
+`INDETERMINATE` and the lane might be trading, stop it first (below), then sort it out.
+
+**What `ARMED` does and does not mean.** It means: authorised to trade and not stopped by any kill
+switch, the loss breaker, an expired or altered authorisation, a stale arm, a dead or paper-mode
+lane, or a venue disconnection — checked against the lane's own live status, not guessed from which
+files exist. It also reads the lane's own record of *why it refused* its most recent candidates, so a
+box that cannot trade says so even when nothing on disk shows it. It is still a reading taken at one
+moment: a stop that latches a second later is only visible on the next run.
+
+**Always re-check about two minutes after arming.** One stop cannot be seen beforehand: while the F22
+stop is still in place the lane reports `KILL_SWITCH` for everything, which hides a daily-loss
+breaker that is waiting on an unconfirmed fill. That state only becomes visible a tick or two after
+the stop is archived. So after arming, run `verify_f24.sh` again; if it is not `ARMED`, stop the lane
+(below) and read the evidence.
 
 ## Checking progress
 
@@ -143,7 +157,18 @@ Replace `START_UTC` with the `start_utc` number printed at arming. The arming st
 number on the box, and the report **refuses to run** if the number you type disagrees with it, so a
 mistyped start cannot produce a fake verdict.
 
-**Run this at least once a day** while the test is live: that is what enforces the $50 stop. It only reads data and changes
+**Run this at least once a day** while the test is live: that is what enforces the $50 stop.
+Read two things in its output: the **all-in realised money** (not the per-trade figure — the all-in
+one includes the losing leftovers when a hedge only partly fills), and whether any completed day had
+**no attempts**. A day with no attempts means the lane may not have been trading at all; the report
+names what it refused with rather than guessing.
+
+Pair it with `verify_f24.sh` (above), which answers the live question the report cannot: *can it
+trade right now?*
+
+**A note on the box's kill directory:** it holds two leftover `.lock` files from the guard tooling.
+They are not kill switches — the system only honours the names `all`, `live`, `venue-…`, `event-…`
+and `strategy-…` — so the tools report them and move on. Don't delete them on the tools' account. It only reads data and changes
 nothing. The result says `IN_PROGRESS` until an end condition is reached. Only a result with
 `"ended": true` is the test's answer.
 

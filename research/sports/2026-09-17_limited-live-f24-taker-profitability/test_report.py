@@ -12,17 +12,22 @@ that used to read `net.total_usd` now reads it there, and reads `net.all_in_real
 for the money: every realised dollar in the window, PARTIAL and UNWOUND and unreleased included,
 which is what the $50 cumulative-loss end is decided on.
 
-The rest of this file is the 2026-09-17 audit's six defects, one test each, the start pin, and the
-two-figure separation with the registered-end truncation and the unsettled-cover rule beside it.
+The rest of this file is the 2026-09-17 audit's six defects, one test each, the start pin, the
+two-figure separation with the registered-end truncation and the unsettled-cover rule beside it,
+and -- at the bottom -- the round-5 pins: the report states each UTC day's NUMBERS and withholds
+the verdict over a day it will not interpret, instead of labelling the day and stopping the row.
 """
 from __future__ import annotations
 
 import importlib.util
+import base64
+import gzip
 import json
 import os
 import re
 import sqlite3
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -46,6 +51,14 @@ VERDICTS = {"LOSES_MONEY", "MAKES_MONEY_PROVEN", "MAKES_MONEY_NOT_PROVEN", "INSU
 # ----------------------------------------------------------------------------------------- fixtures
 
 
+#: nodes/store_tuples/store.py REFUSAL_COUNTS_DDL at 59dd5ae, verbatim. The lane creates it on its
+#: first flush and it is live on the box (26,947 rows on 2026-09-17), so every fixture carries it:
+#: a database WITHOUT it is the exception, and `_drop_refusals` is how a test asks for that.
+REFUSAL_DDL = ("CREATE TABLE refusal_counts(seen_ts REAL NOT NULL, channel TEXT NOT NULL, "
+               "code TEXT NOT NULL, league TEXT NOT NULL, n INTEGER NOT NULL)")
+REFUSAL_INDEX = "CREATE INDEX refusal_counts_ts ON refusal_counts(seen_ts)"
+
+
 def _db(tmp_path):
     """The executions table as it shipped: no `*_avg_price` / `*_unwound` (records._LATER_COLUMNS)."""
     p = tmp_path / "t.sqlite"
@@ -54,6 +67,8 @@ def _db(tmp_path):
                 "state TEXT, started_utc REAL, first_filled REAL, hedge_filled REAL)")
     con.execute("CREATE TABLE execution_settlements(execution_id TEXT, realized_usd REAL, released INTEGER, "
                 "kind TEXT, settled_ts REAL)")
+    con.execute(REFUSAL_DDL)
+    con.execute(REFUSAL_INDEX)
     return p, con
 
 
@@ -66,7 +81,37 @@ def _db_full(tmp_path):
                 "first_avg_price REAL, hedge_avg_price REAL, first_unwound REAL, hedge_unwound REAL)")
     con.execute("CREATE TABLE execution_settlements(execution_id TEXT, realized_usd REAL, released INTEGER, "
                 "kind TEXT, settled_ts REAL)")
+    con.execute(REFUSAL_DDL)
+    con.execute(REFUSAL_INDEX)
     return p, con
+
+
+def _refuse(con, ts, code, n=1, *, channel="risk", league="mlb"):
+    """One report tick's worth of refusals, exactly as grid.py flushes them: COUNTS, not rows."""
+    con.execute("INSERT INTO refusal_counts VALUES(?,?,?,?,?)", (ts, channel, code, league, n))
+
+
+def _working_day(con, day_start, *, ticks=4):
+    """What a day the lane WAS trading on looks like in its own record: per-candidate refusals
+    only. MIN_PROFIT and IN_FLIGHT are verdicts on a candidate, not on the lane."""
+    for i in range(ticks):
+        t = day_start + 3600.0 * (i + 1)
+        _refuse(con, t, "MIN_PROFIT", 37)
+        _refuse(con, t, "IN_FLIGHT", 412)
+
+
+def _blocked_day(con, day_start, code, *, ticks=4, n=1500):
+    """What a day the lane could NOT trade on looks like: a blocking code, every tick."""
+    for i in range(ticks):
+        _refuse(con, day_start + 3600.0 * (i + 1), code, n)
+
+
+def _drop_refusals(p):
+    """A database whose lane has never ticked since L113 shipped -- no refusal record at all."""
+    con = sqlite3.connect(p)
+    con.execute("DROP TABLE refusal_counts")
+    con.commit()
+    con.close()
 
 
 def _exec(con, eid, event, state, started, *, mode="LIMITED_LIVE", first=10.0, hedge=10.0, league="mlb"):
@@ -93,8 +138,14 @@ def _override(**over):
     return d
 
 
-def _live(tmp_path, *, override="default", kill=(), start_pin=None):
-    """A stand-in for the box's /srv/janus. Nothing here is ever written by the reader."""
+def _live(tmp_path, *, override="default", kill=(), start_pin=None, breaker=None):
+    """A stand-in for the box's /srv/janus. Nothing here is ever written by the reader.
+
+    `kill` names files in the kill directory -- any of nodes/risk/kill.py's five scopes, and
+    anything else, which is what an unrecognised file looks like. `breaker` is the latching
+    daily-loss breaker's state file (kernel/paths.BREAKER_PATH, inside the same directory): a dict
+    is written as JSON, a string verbatim (for the unreadable case).
+    """
     root = tmp_path / "srv"
     (root / "kill").mkdir(parents=True, exist_ok=True)
     (root / "release-audit").mkdir(parents=True, exist_ok=True)
@@ -104,16 +155,57 @@ def _live(tmp_path, *, override="default", kill=(), start_pin=None):
         (root / "kill" / "arming_override.json").write_text(json.dumps(override))
     for name in kill:
         (root / "kill" / name).write_text(json.dumps({"reason": f"{name} latched", "latched_utc": 1.0}))
+    if breaker is not None:
+        (root / "kill" / "breaker.json").write_text(
+            breaker if isinstance(breaker, str) else json.dumps(breaker))
     if start_pin is not None:
         (root / "release-audit" / "f24_start_utc").write_text(f"{start_pin}\n")
     return root
+
+
+def _latched(reason="daily realized loss -25.31 USD breached 25.00 on 2026-09-19", **over):
+    """What nodes/risk/breaker.LossBreaker._save writes once it has latched."""
+    d = {"latched": True, "reason": reason, "latched_utc": 1789500000.0}
+    d.update(over)
+    return d
+
+
+def _board_doc(**over):
+    """grid.Supervisor.board(), as write_board leaves it: here, a healthy armed LIMITED_LIVE lane.
+
+    `as_of` is filled in by _kw with the same `now` the reader is given, so the default board is
+    one second old exactly as the running lane's is.
+    """
+    d = {"mode": "LIMITED_LIVE",
+         "caps": {"stake_usd": 30.0, "max_contracts": 25.0, "day_notional_usd": 500.0},
+         "arm_stale": None, "f22_enabled": False,
+         "f22_authority": "no experiment block in the override, so the historical taker entry stands",
+         "loop_lag_s": 0.4, "stalled": False, "blocked": 0,
+         # Both venues streaming: an F24 cover needs BOTH, and grid.board() reports each socket's
+         # own `connected`. A board with no sockets is a lane that cannot complete a cover.
+         "sockets": {"kalshi": {"connected": True, "frames": 91234, "age_s": 0.2, "errors": 0},
+                     "polymarket": {"connected": True, "frames": 40311, "age_s": 0.3, "errors": 0}},
+         "games": []}
+    d.update(over)
+    return d
 
 
 def _quiet(_con, _flag):
     return []
 
 
-def _kw(root, **extra):
+def _kw(root, *, board="fresh", **extra):
+    """Reader kwargs against the stand-in box, plus the lane's one-second board snapshot.
+
+    `board`: "fresh" writes a healthy armed lane stamped at `now`; a dict writes that snapshot
+    (`as_of` defaults to `now`); None writes no board at all, which is what a dead lane, a lane
+    started with a different --board, or an unreadable data root looks like from here.
+    """
+    if board is not None:
+        doc = _board_doc() if board == "fresh" else dict(board)
+        doc.setdefault("as_of", extra.get("now"))
+        (Path(root) / "board").mkdir(parents=True, exist_ok=True)
+        (Path(root) / "board" / "board.json").write_text(json.dumps(doc))
     kw = {"data_root": str(root), "code_root": str(root / "no-such-checkout"), "flag_reader": _quiet}
     kw.update(extra)
     return kw
@@ -445,7 +537,12 @@ def test_the_reader_checks_the_same_thirteen_flag_kinds_arm_f24_checks():
 
 
 def test_a_broken_flag_probe_warns_instead_of_reporting_a_clean_in_progress(tmp_path):
-    """Degrade with a named field. Never crash, and never claim IN_PROGRESS in silence."""
+    """Degrade with a named field. Never crash, and never claim IN_PROGRESS in silence.
+
+    Round 3 strengthened this: a probe that could not read its signal now withholds the verdict
+    outright (INCONCLUSIVE) rather than reading IN_PROGRESS with a warning attached, because
+    IN_PROGRESS is itself a claim -- that the row is running and able to trade.
+    """
     p, con = _db(tmp_path)
     _exec(con, "a", "e1", "RECONCILED", 100.0)
     _settle(con, "a", 0.3)
@@ -455,7 +552,9 @@ def test_a_broken_flag_probe_warns_instead_of_reporting_a_clean_in_progress(tmp_
         raise sqlite3.OperationalError("no such table: lane_flags")
 
     out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path), now=300.0, flag_reader=reader))
-    assert out["verdict"].startswith("IN_PROGRESS")
+    assert out["row_status"] == "INCONCLUSIVE"
+    assert out["verdict"] not in VERDICTS and out["verdict"].startswith("INCONCLUSIVE")
+    assert out["ended"] is False
     assert out["row_state"]["conclusive"] is False
     assert out["row_state"]["flags"]["ok"] is False
     assert any("flags:" in w for w in out["warnings"])
@@ -487,6 +586,392 @@ def test_a_closed_historical_window_reports_live_stops_without_applying_them(tmp
     assert out["row_state"]["stop_conditions"], "still reported"
     assert out["verdict"].startswith("IN_PROGRESS")
     assert any("RIGHT NOW" in w for w in out["warnings"])
+
+
+# ---------------------------- round 3: the OTHER ways the deployed lane is stopped
+#
+# The 2026-09-17 round-3 audit found one family of blockers: this reader recognised TWO of the
+# ways the lane at 59dd5ae can be stopped (kill/live and kill/all) out of at least seven. Each
+# test below is one of the missing five, and each fails against the round-2 reader.
+
+
+@pytest.mark.parametrize("name,scope", [
+    ("all", "all"), ("live", "live"), ("venue-polymarket", "venue"),
+    ("event-KXNFLGAME-26SEP21DETBAL", "event"), ("strategy-v3.2.1", "strategy")])
+def test_every_kill_scope_in_the_directory_stops_the_row(tmp_path, name, scope):
+    """nodes/risk/kill.py at 59dd5ae has FIVE scopes in ONE directory and `active()` honours all
+    five. A reader that probes two names reports a clean IN_PROGRESS while a venue-, event- or
+    strategy- file refuses entries -- and the operator's daily read is the only thing enforcing
+    the $50 and 30-cover ends."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path, kill=(name,)), now=300.0))
+
+    assert out["row_status"] == "STOPPED"
+    assert out["ended"] is True and out["verdict"] == "STOP"
+    assert f"kill/{name} is present" in out["verdict_reason"], "named, with its own reason"
+    assert f"{name} latched" in out["verdict_reason"]
+    assert out["row_state"]["kill"]["scopes"] == [scope]
+    assert out["row_state"]["kill"]["names"] == [name]
+    assert [k["name"] for k in out["row_state"]["kill"]["present"]] == [name]
+
+
+def test_several_kill_files_are_each_reported_by_name(tmp_path):
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    root = _live(tmp_path, kill=("venue-kalshi", "strategy-v3.2.1"))
+    out = rp.run(str(p), 90.0, None, **_kw(root, now=300.0))
+    assert out["row_state"]["kill"]["names"] == ["strategy-v3.2.1", "venue-kalshi"]
+    assert "kill/venue-kalshi is present" in out["verdict_reason"]
+    assert "kill/strategy-v3.2.1 is present" in out["verdict_reason"]
+    assert len(out["row_state"]["stop_conditions"]) == 2
+
+
+def test_the_two_non_kill_files_in_the_kill_directory_are_not_read_as_kills(tmp_path):
+    """kernel/paths.py keeps breaker.json and arming_override.json in KILL_ROOT. Neither is a
+    kill switch: health.risk_alerts skips exactly these two names, and so does this."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    root = _live(tmp_path, breaker={"latched": False, "reason": "", "latched_utc": None})
+    out = rp.run(str(p), 90.0, None, **_kw(root, now=300.0))
+    assert out["row_state"]["kill"]["names"] == []
+    assert out["row_state"]["kill"]["non_kill_files"] == ["arming_override.json", "breaker.json"]
+    assert out["row_state"]["stop_conditions"] == []
+    assert out["row_status"] == "IN_PROGRESS" and out["row_state"]["conclusive"] is True
+
+
+def test_a_file_that_is_not_one_of_the_five_scopes_is_evidence_never_a_stop(tmp_path):
+    """`kill/live.json`, and the stray `.guard-failure-*.lock` files the REAL box keeps in this
+    directory, stop NOTHING: nodes/risk/kill.active() only ever builds the five names. Calling
+    them kills this reader 'cannot classify' would make every read of the real box indeterminate
+    forever, which is noise, not caution. They are listed by name and the row is untouched."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    strays = ("live.json", ".guard-failure-2026-09-11.lock", ".legacy-incident-0007.lock")
+    out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path, kill=strays), now=300.0))
+
+    assert out["row_state"]["kill"]["other_files"] == sorted(strays)
+    assert out["row_state"]["kill"]["present"] == [], "not one of them is a kill"
+    assert out["row_state"]["stop_conditions"] == []
+    assert out["row_state"]["conclusive"] is True, "a stray file is not a failed probe"
+    assert out["row_status"] == "IN_PROGRESS"
+    assert out["days_needing_a_human_look"] == []
+    note = "; ".join(out["row_state"]["notes"])
+    assert all(name in note for name in strays), "named, so a mistyped kill is still visible"
+    assert "stop nothing on the box" in note
+    assert rp.kill_scope("venue-") is None, "a bare prefix names no venue and is not a kill"
+    assert rp.kill_scope("venue-kalshi") == "venue" and rp.kill_scope("live") == "live"
+
+
+def test_a_latched_breaker_stops_the_row_even_with_no_kill_file(tmp_path):
+    """spec.yaml's own stop condition. nodes/risk/breaker.py: the latch is the FILE; `evaluate()`
+    returns BREAKER_LATCHED from it before it can latch anything, so once a human deletes
+    kill/live nothing re-creates it, `clearance.clear()` refuses every candidate, and the lane
+    places no order for the rest of the row while every kill-file check reads clean."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    root = _live(tmp_path, breaker=_latched())
+    out = rp.run(str(p), 90.0, None, **_kw(root, now=300.0))
+
+    assert out["row_status"] == "STOPPED"
+    assert out["ended"] is True and out["verdict"] == "STOP"
+    assert "breaker is LATCHED" in out["verdict_reason"]
+    assert "breached 25.00" in out["verdict_reason"], "the breaker's own recorded reason"
+    assert out["row_state"]["breaker"]["latched"] is True
+    assert out["row_state"]["kill"]["names"] == [], "no kill file: that is the point"
+    assert any("NO kill/live FILE" in n for n in out["row_state"]["notes"])
+    assert any("NO kill/live FILE" in w for w in out["warnings"])
+    assert out["daily_loss_breaker"]["latched_now"] is True
+
+
+def test_a_cleared_breaker_with_a_kill_present_still_stops_on_the_kill(tmp_path):
+    """The two signals are independent. A breaker file that says latched=false (a human ran
+    LossBreaker.reset) does not un-stop a row whose kill file is still in place."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    root = _live(tmp_path, kill=("live",), breaker={"latched": False, "reason": "", "latched_utc": None})
+    out = rp.run(str(p), 90.0, None, **_kw(root, now=300.0))
+
+    assert out["row_state"]["breaker"]["latched"] is False
+    assert out["row_state"]["kill"]["live_present"] is True
+    assert out["row_status"] == "STOPPED" and out["verdict"] == "STOP"
+    assert "kill/live is present" in out["verdict_reason"]
+    assert "breaker" not in out["verdict_reason"], "the cleared breaker is not reported as a stop"
+    assert not any("NO kill/live FILE" in n for n in out["row_state"]["notes"])
+
+
+def test_an_unreadable_breaker_state_is_a_named_probe_failure(tmp_path):
+    """The deployed LossBreaker._load would raise on it and health.risk_alerts treats it as
+    latched. Either way it is not evidence of a row that could trade."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path, breaker="{not json"), now=300.0))
+
+    assert out["row_state"]["breaker"]["latched"] is None
+    assert out["row_state"]["conclusive"] is False
+    assert out["row_status"] == "INCONCLUSIVE" and out["verdict"] not in VERDICTS
+    assert any("breaker:" in e for e in out["row_state"]["probe_errors"])
+
+
+def test_an_arm_stale_lane_stops_the_row(tmp_path):
+    """The blind spot every file check shares: the override is on disk and valid-looking, the kill
+    directory is empty, and the RUNNING process refuses every real order because the override no
+    longer pins its code tree. grid.check_arm states it on the board outright."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    stale = _board_doc(arm_stale="override pins a different code tree (running 4f1c9ab2)")
+    out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path), now=300.0, board=stale))
+
+    assert out["row_status"] == "STOPPED"
+    assert out["ended"] is True and out["verdict"] == "STOP"
+    assert "ARM_STALE" in out["verdict_reason"] and "different code tree" in out["verdict_reason"]
+    assert out["row_state"]["board"]["arm_stale"].startswith("override pins a different code tree")
+    assert out["row_state"]["board"]["fresh"] is True
+    assert out["row_state"]["kill"]["names"] == [] and out["row_state"]["override"]["present"] is True
+
+
+def test_an_arm_stale_from_the_override_expiring_is_an_end_not_a_stop(tmp_path):
+    """spec.yaml exempts the expiry by name ('any change to ... the override other than its
+    expiry') and lists it under `end`. The lane refusing orders BECAUSE of that expiry is the
+    same end, not a safety condition firing."""
+    p, con = _db(tmp_path)
+    for i in range(12):
+        _exec(con, f"c{i}", f"e{i}", "RECONCILED", 100.0 + i)
+        _settle(con, f"c{i}", 0.25)
+    con.commit()
+    board = _board_doc(arm_stale="override expired at 2026-09-24T00:00:00Z")
+    out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path), now=300.0, board=board))
+
+    assert out["verdict"] != "STOP"
+    assert out["row_status"] == "ENDED" and out["ended"] is True
+    assert any("ARM_STALE" in e and "expired" in e for e in out["end_reasons"])
+
+
+def test_a_lane_that_dropped_below_limited_live_stops_the_row(tmp_path):
+    """Switching to PAPER_EXECUTION is the documented way back when the override expires. A lane
+    in it places no F24 money at all, and the kill directory says nothing about it."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    out = rp.run(str(p), 90.0, None,
+                 **_kw(_live(tmp_path), now=300.0, board=_board_doc(mode="PAPER_EXECUTION")))
+    assert out["row_status"] == "STOPPED" and out["verdict"] == "STOP"
+    assert "PAPER_EXECUTION" in out["verdict_reason"] and "not LIMITED_LIVE" in out["verdict_reason"]
+
+
+def test_f22_enabled_on_the_running_lane_stops_the_row(tmp_path):
+    """F24's registered arm is 'no experiment'. The override file check catches an experiment
+    block on disk; this catches the process that is actually assigning events to an arm."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    board = _board_doc(f22_enabled=True, f22_authority="F22 override block, epoch 4")
+    out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path), now=300.0, board=board))
+    assert out["row_status"] == "STOPPED" and out["verdict"] == "STOP"
+    assert "F22 ENABLED" in out["verdict_reason"]
+
+
+def test_the_caps_the_running_process_loaded_are_checked_not_only_the_file(tmp_path):
+    """grid.py reads caps from the override ONCE, at start (main: sup.caps = resolved.caps), and
+    gate.stale_reason never compares caps. So an override rewritten mid-row with different caps
+    leaves the running lane enforcing the old ones -- and the file check alone would pass."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    board = _board_doc(caps={"stake_usd": 60.0, "max_contracts": 25.0, "day_notional_usd": 500.0})
+    out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path), now=300.0, board=board))
+    assert out["row_state"]["board"]["caps_match_registered"] is False
+    assert out["row_status"] == "STOPPED" and out["verdict"] == "STOP"
+    assert "RUNNING lane's caps" in out["verdict_reason"]
+    assert out["row_state"]["override"]["caps_match_registered"] is True, "the FILE still matches"
+
+
+def test_a_missing_board_is_a_named_probe_failure_not_a_clean_row(tmp_path):
+    """No board means the lane is dead, stopped, OOM-killed, starved or writing elsewhere. None of
+    those places an order, and none of them shows up in the kill directory."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path), now=300.0, board=None))
+
+    assert out["row_state"]["board"]["present"] is False
+    assert out["row_state"]["conclusive"] is False
+    assert out["row_status"] == "INCONCLUSIVE"
+    assert out["verdict"] not in VERDICTS and out["ended"] is False
+    assert any("board:" in e for e in out["row_state"]["probe_errors"])
+
+
+def test_a_stale_board_is_a_probe_failure_and_its_arm_stale_is_still_believed(tmp_path):
+    """The lane rewrites the board every second. A board minutes old cannot say the lane is
+    trading now -- but a stale board that says ARM_STALE is still evidence: only a new override or
+    a restart clears that, so the age is named rather than used to dismiss it."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    root = _live(tmp_path)
+    quiet = rp.run(str(p), 90.0, None, **_kw(root, now=300.0, board=_board_doc(as_of=100.0)))
+    assert quiet["row_state"]["board"]["fresh"] is False
+    assert quiet["row_state"]["board"]["age_s"] == 200.0
+    assert quiet["row_status"] == "INCONCLUSIVE" and quiet["verdict"] not in VERDICTS
+    assert any("board" in e and "old" in e for e in quiet["row_state"]["probe_errors"])
+
+    stale_arm = _board_doc(as_of=100.0, arm_stale="override pins different limits (loaded 9ab1)")
+    out = rp.run(str(p), 90.0, None, **_kw(root, now=300.0, board=stale_arm))
+    assert out["row_status"] == "STOPPED" and out["verdict"] == "STOP"
+    assert "ARM_STALE" in out["verdict_reason"] and "STALE)" in out["verdict_reason"]
+
+
+def _twelve_covers_over_seven_days(con, start, *, recorded=True):
+    """Twelve profitable covers SPREAD over the window's days, and a lane whose own record says it
+    was working: an attempt on every completed day, and only per-candidate refusals beside them.
+
+    Spread on purpose. Twelve covers in the first ten minutes and silence for six days is not a
+    seven-day test that made money -- it is a row that traded once and then stopped, and this
+    reader now says so. The control has to be a window in which the lane could actually act.
+    """
+    for i in range(12):
+        # Two an hour apart on each of the seven days, dropping to one on the last few.
+        day = i % 7
+        _exec(con, f"c{i:02d}", f"e{i}", "RECONCILED", start + day * 86400.0 + 3600.0 * (i + 1))
+        _settle(con, f"c{i:02d}", 0.25, ts=start + day * 86400.0 + 3600.0 * (i + 2))
+    if recorded:
+        for day in range(8):
+            _working_day(con, start + day * 86400.0)
+    con.commit()
+
+
+def test_day_seven_cannot_end_with_a_money_verdict_when_the_row_could_not_trade(tmp_path):
+    """THE DAY-7 CASE. The breaker latched on day 2 and someone cleared kill/live; the lane has
+    placed nothing since. The round-2 reader ran the window out and issued a money verdict over
+    seven days in which trading was impossible. It must report the stop instead."""
+    start = 1789418782.132788
+    now = start + 7.5 * 86400.0
+    p, con = _db(tmp_path)
+    _twelve_covers_over_seven_days(con, start)
+
+    control = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+    assert control["ended"] is True and control["verdict"] in VERDICTS, "a money verdict, if it traded"
+    assert control["verdict"].startswith("MAKES_MONEY")
+
+    root = _live(tmp_path, breaker=_latched("daily realized loss -25.31 USD breached 25.00 on 2026-09-19"))
+    out = rp.run(str(p), start, None, **_kw(root, now=now))
+    assert out["row_status"] == "STOPPED"
+    assert out["verdict"] == "STOP", "not a verdict on a window that could not trade"
+    assert "breaker is LATCHED" in out["verdict_reason"]
+    assert any("elapsed days reached the registered 7" in r for r in out["end_reasons"]), (
+        "the seventh day is still reported; it is the verdict that is refused")
+
+
+def test_day_seven_withholds_the_verdict_when_a_probe_could_not_look(tmp_path):
+    """Same seventh day, but the lane's board is gone: this reader cannot say the row was able to
+    trade, so it issues no verdict at all rather than ending the row on what it could not see."""
+    start = 1789418782.132788
+    now = start + 7.5 * 86400.0
+    p, con = _db(tmp_path)
+    _twelve_covers_over_seven_days(con, start)
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now, board=None))
+
+    assert out["row_status"] == "INCONCLUSIVE"
+    assert out["ended"] is False, "seven days is not an ending when the evidence is missing"
+    assert out["verdict"] not in VERDICTS
+    assert out["end_reasons"], "the end is still named"
+    assert any("INCONCLUSIVE -- no verdict" in w and "registered end HAS been reached" in w
+               for w in out["warnings"])
+
+
+def test_the_fifty_end_is_still_issued_when_a_probe_could_not_look(tmp_path):
+    """A failed probe withholds the verdict because it cannot say the row was able to trade -- but
+    the $50 end is about harm already done, and those dollars are in the database this reader DID
+    read. It ends the row LOSES_MONEY and still names the probe it could not complete."""
+    p, con = _db(tmp_path)
+    for i in range(12):
+        _exec(con, f"c{i}", f"e{i}", "RECONCILED", 100.0 + i)
+        _settle(con, f"c{i}", -5.0)
+    con.commit()
+    out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path), now=300.0, board=None))
+
+    assert _money(out)["total_usd"] == -60.0
+    assert out["row_status"] == "ENDED" and out["ended"] is True
+    assert out["verdict"] == "LOSES_MONEY"
+    assert out["row_state"]["conclusive"] is False, "and it still says what it could not check"
+    assert any("board:" in w for w in out["warnings"])
+    assert "incomplete" in out["verdict_reason"]
+
+
+def test_a_day_the_lane_started_nothing_is_counted_and_named_not_averaged_away(tmp_path):
+    """Every FILE probe here is point-in-time: a kill someone deleted, a breaker a human reset and
+    an ARM_STALE the next override cleared leave no trace. What the database does hold is how many
+    LIMITED_LIVE executions started each UTC day, and that IS durable. It is reported as the count
+    it is, and a completed day with none of them is named for a human -- never explained."""
+    start = 1789344000.0                       # 2026-09-14T00:00:00Z exactly
+    p, con = _db(tmp_path)
+    for i in range(3):                         # day 1 only; days 2 and 3 started nothing
+        _exec(con, f"c{i}", f"e{i}", "RECONCILED", start + 3600.0 * (i + 1))
+        _settle(con, f"c{i}", 0.25, ts=start + 7200.0 * (i + 1))
+    con.commit()
+    out = rp.run(str(p), start, start + 3.0 * 86400.0, **_kw(_live(tmp_path), now=start + 9e5))
+
+    assert out["window"]["completed_utc_days"] == ["2026-09-14", "2026-09-15", "2026-09-16"]
+    assert out["funnel"]["attempts_by_started_utc_day"] == {"2026-09-14": 3}
+    assert out["funnel"]["completed_utc_days_with_no_attempt"] == ["2026-09-15", "2026-09-16"]
+    assert out["days_needing_a_human_look"] == ["2026-09-15", "2026-09-16"]
+    assert any("NO LIMITED_LIVE execution" in w and "point-in-time" in w for w in out["warnings"])
+    assert "POINT-IN-TIME" in out["row_state"]["what_this_cannot_see"]
+    day = [d for d in out["daily_record"]["days"] if d["utc_day"] == "2026-09-15"][0]
+    assert day["executions_started"] == 0 and day["covers_settled"] == 0
+    assert day["risk_channel"] == {"ticks_recorded": 0, "codes": {}}
+    assert not any("could not trade" in w.lower() for w in out["warnings"])
+
+    one_day = rp.run(str(p), start, start + 86400.0, **_kw(_live(tmp_path), now=start + 9e5))
+    assert one_day["funnel"]["completed_utc_days_with_no_attempt"] == []
+    assert one_day["days_needing_a_human_look"] == []
+    assert not any("no attempt" in w for w in one_day["warnings"])
+
+
+def test_a_stopped_row_never_reads_in_progress_on_any_of_the_new_signals(tmp_path):
+    """One assertion for the whole family: none of these may produce IN_PROGRESS."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    cases = [
+        ("venue kill", _kw(_live(tmp_path, kill=("venue-polymarket",)), now=300.0)),
+        ("event kill", _kw(_live(tmp_path, kill=("event-X",)), now=300.0)),
+        ("strategy kill", _kw(_live(tmp_path, kill=("strategy-v1",)), now=300.0)),
+        ("latched breaker", _kw(_live(tmp_path, breaker=_latched()), now=300.0)),
+        ("unreadable breaker", _kw(_live(tmp_path, breaker="nonsense{"), now=300.0)),
+        ("arm stale", _kw(_live(tmp_path), now=300.0,
+                          board=_board_doc(arm_stale="override missing or incomplete"))),
+        ("no board", _kw(_live(tmp_path), now=300.0, board=None)),
+        ("stale board", _kw(_live(tmp_path), now=300.0, board=_board_doc(as_of=1.0))),
+        ("paper mode", _kw(_live(tmp_path), now=300.0, board=_board_doc(mode="SHADOW_LIVE"))),
+    ]
+    for what, kw in cases:
+        out = rp.run(str(p), 90.0, None, **kw)
+        assert out["row_status"] in ("STOPPED", "INCONCLUSIVE"), what
+        assert not out["verdict"].startswith("IN_PROGRESS"), what
+        assert out["headline"].startswith(out["row_status"]), what
 
 
 # ------------------------------------------- defect 3: the $50 rule is an `end`, not a stop condition
@@ -909,6 +1394,7 @@ _SUDO_SHIM = r"""
 sudo() {                       # the real call is: sudo -u janus <python> <script> <args...>
   shift 3
   if [ "$1" = "-m" ]; then cat >/dev/null; return 0; fi
+  case "$1" in *f24_banner*) cat >/dev/null; return 0;; esac   # the banner, not the reader
   printf '%s' "$1" > "$STAGED_PATH_OUT"
   head -1 "$1" > "$STAGED_HEAD_OUT"
   nested="${NESTED:-}"
@@ -920,6 +1406,14 @@ sudo() {                       # the real call is: sudo -u janus <python> <scrip
 }
 source "$PAYLOAD"
 """
+
+
+def _payload_reader(payload: str) -> str:
+    """The reader source the payload carries: one gzip+base64 blob, because SSM caps a command at
+    97 KB and report.py alone is larger than that."""
+    blob = re.search(r"printf %s '([A-Za-z0-9+/=]{200,})' \| base64 -d \| gzip -dc", payload)
+    assert blob, "the payload does not carry a compressed reader"
+    return gzip.decompress(base64.b64decode(blob.group(1))).decode()
 
 
 def _check_payload(tmp_path, start, tag):
@@ -943,7 +1437,9 @@ def test_check_f24_stages_the_reader_at_a_unique_path_and_cleans_up_only_its_own
         "one mktemp'd file per run; the template must END in the X's, because a trailing suffix "
         "is a GNU extension BSD mktemp copies verbatim")
     assert "/tmp/f24_report.py" not in payload_a, "no fixed staging path"
-    assert 'trap \'rm -f "$F24_PY"\' EXIT' in payload_a, "the trap removes ONLY this run's file"
+    assert "f24_banner" not in payload_a, "the banner renders locally now, not on the box"
+    assert 'trap \'rm -f "$F24_PY"\' EXIT' in payload_a, (
+        "the trap removes ONLY this run's two files")
 
     # Run them against tmp_path instead of the machine's real /tmp; everything else is as written.
     def staged(text, tag):
@@ -981,12 +1477,41 @@ def test_check_f24_stages_the_reader_at_a_unique_path_and_cleans_up_only_its_own
     assert not Path(path_a).exists() and not Path(path_b).exists(), "each run removed its own"
 
 
+def test_check_f24_ends_with_a_banner_naming_the_rows_state(tmp_path):
+    """The daily read is what enforces the $50 and 30-cover ends, and `row_status` sits in the
+    middle of a few hundred pretty-printed lines. The last thing on the operator's screen must say
+    what state the row is in and what stopped it -- computed from the report's own fields, so the
+    banner cannot disagree with the report it summarises."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    out = rp.run(str(p), 90.0, None,
+                 **_kw(_live(tmp_path, breaker=_latched()), now=300.0, board=None))
+    assert out["row_status"] == "STOPPED"
+
+    prog = _banner_program(tmp_path)
+    r = subprocess.run([sys.executable, str(prog)], input=json.dumps(out),
+                       capture_output=True, text=True)
+
+    assert r.returncode == 0, r.stderr
+    assert "F24_ROW_STATE: STOPPED" in r.stdout
+    assert "STOPPED BY: the daily realised-loss breaker is LATCHED" in r.stdout
+    assert "COULD NOT LOOK: board:" in r.stdout, "and what it could not check"
+    assert "NOTE: THE BREAKER IS LATCHED AND THERE IS NO kill/live FILE" in r.stdout
+    assert "VERDICT: STOP" in r.stdout
+    assert r.stdout.rstrip().endswith("=" * 78), "it is the last thing printed"
+
+    junk = subprocess.run([sys.executable, str(prog)], input="not json",
+                          capture_output=True, text=True)
+    assert junk.returncode == 0 and "UNREADABLE" in junk.stdout, "it never crashes the daily read"
+
+
 def test_check_f24_carries_the_reader_to_the_box_unchanged(tmp_path):
     """The reader is embedded in the payload, not piped: ops/box/run.sh ignores stdin when it is
     given an argument. What arrives on the box must be this file, byte for byte."""
     payload = _check_payload(tmp_path, "100.0", "x")
-    body = payload.split("<<'F24_REPORT_EOF'\n", 1)[1].split("\nF24_REPORT_EOF\n", 1)[0]
-    assert body == REPORT_PY.read_text().rstrip("\n")
+    assert _payload_reader(payload) == REPORT_PY.read_text()
 
 
 def test_check_f24_refuses_include_and_exclude(tmp_path):
@@ -998,3 +1523,837 @@ def test_check_f24_refuses_include_and_exclude(tmp_path):
                        capture_output=True, text=True,
                        env={**os.environ, "F24_RUNNER": str(runner)})
     assert r.returncode == 2 and "--include/--exclude" in r.stderr
+
+
+# ==========================================================================================
+# round 5: REPORT THE NUMBERS. DO NOT JUDGE THE DAY.
+#
+# Round 4 read `refusal_counts` -- the lane's own per-tick counters -- and then turned each UTC
+# day into a VERDICT: ATTEMPTED / BLOCKED / QUIET, with a STOP and a money verdict built on top.
+# An adversarial prover broke it in BOTH directions, each reproduced end to end:
+#
+#   * UNDER-FIRE: `if attempts:` returned ATTEMPTED before anything else was read, so ONE cleared
+#     candidate at 00:10 made a day "attempted". The banner printed "7/7 completed UTC day(s)
+#     attempted, none blocked", MAKES_MONEY_PROVEN, ended=true, conclusive=true -- over a row
+#     whose own risk channel had counted KILL_SWITCH x241,500 that same day.
+#   * OVER-FIRE: ONE tick with n=1 of a transient code on an ordinary day printed "THE LANE COULD
+#     NOT TRADE ON 1 COMPLETED UTC DAY(S) ... EVERY candidate was refused" and STOPped the row.
+#     That sentence was false.
+#
+# Same root cause both times: a count per report tick cannot establish what the lane was able to
+# do. So the classification is gone. The tests below pin what replaced it -- the day's numbers,
+# withholding instead of asserting, and the short list of durable things that may still end a row
+# -- and the two prover scenarios have a test each:
+#
+#   test_one_cleared_candidate_cannot_whitewash_a_day_of_kill_switch_counts
+#   test_a_single_transient_tick_on_a_quiet_day_is_never_a_stop
+# ==========================================================================================
+
+#: 2026-09-14T00:00:00Z exactly, so the window's UTC days are whole and nameable.
+DAY0 = 1789344000.0
+
+
+def _seven_day_window(tmp_path):
+    """A row started on a UTC midnight whose seventh day has arrived."""
+    p, con = _db(tmp_path)
+    return p, con, DAY0, DAY0 + 7.5 * 86400.0
+
+
+def test_the_risk_channel_is_reported_per_utc_day_and_for_the_row(tmp_path):
+    """spec.yaml `funnel`: 'pre-wire declines by reason'. Until L113 that stage was readable only
+    by grepping journald; it is in the database now, so the daily read states it -- as counts, the
+    ticks each code appeared in, and the ticks the day recorded at all."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for d in range(8):
+        _working_day(con, start + d * 86400.0)
+        _exec(con, f"x{d}", f"e{d}", "RECONCILED", start + d * 86400.0 + 3600.0)
+        _settle(con, f"x{d}", 0.25, ts=start + d * 86400.0 + 7200.0)
+    _refuse(con, start + 86400.0 + 60.0, "MIN_PROFIT", 5, channel="size")   # the OTHER channel
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    rec = out["refusal_record"]
+    assert rec["present"] is True and rec["error"] is None
+    assert rec["channel"] == "risk", "the size channel's flags are contaminated by its q=100 rung"
+    assert out["funnel"]["pre_wire_declines_by_risk_code"] == {
+        "IN_FLIGHT": {"n": 13184, "ticks": 32}, "MIN_PROFIT": {"n": 1184, "ticks": 32}}
+    assert out["funnel"]["pre_wire_decline_risk_ticks"] == 32, "four ticks a day, eight days"
+    assert out["funnel"]["pre_wire_declines_on_other_channels"] == "size n=5 in 1 tick(s)", (
+        "the size channel is summed to ONE line and its codes are never read for meaning")
+    assert rec["by_code"]["MIN_PROFIT"] == {"n": 1184, "ticks": 32}
+
+    day1 = [d for d in out["daily_record"]["days"] if d["utc_day"] == "2026-09-15"][0]
+    assert day1["executions_started"] == 1 and day1["covers_settled"] == 1
+    assert day1["risk_channel"] == {"ticks_recorded": 4,
+                                    "codes": {"IN_FLIGHT": {"n": 1648, "ticks": 4},
+                                              "MIN_PROFIT": {"n": 148, "ticks": 4}}}
+    assert day1["risk_line"] == ("risk: IN_FLIGHT n=1648 in 4 of 4 tick(s), "
+                                 "MIN_PROFIT n=148 in 4 of 4 tick(s)")
+    assert day1["other_channels_line"] == "size n=5 in 1 tick(s)"
+    assert "status" not in day1 and "says" not in day1, "no label, and no story about the day"
+    assert day1["needs_a_human_look"] is False
+
+
+def test_one_tick_counts_leagues_not_ticks(tmp_path):
+    """One report tick writes one row per (code, LEAGUE). Counting rows would report four ticks
+    for one tick that refused across four leagues, and the tick count is the denominator every
+    other number here is read against."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for league in ("mlb", "nfl", "nba", "cfb"):
+        _refuse(con, start + 3600.0, "MIN_PROFIT", 10, league=league)
+    con.commit()
+    got = rp.probe_refusals(sqlite3.connect(p), start=start, stop_at=start + 86400.0)
+    assert got["by_code"] == {"MIN_PROFIT": {"n": 40, "ticks": 1}}, "ONE tick, four leagues"
+    assert got["ticks_in_window"] == 1
+    assert "COUNT(DISTINCT seen_ts)" in rp._REFUSAL_SQL
+
+
+# ------------------------------ the two defects an adversarial prover reproduced end to end
+
+
+def test_one_cleared_candidate_cannot_whitewash_a_day_of_kill_switch_counts(tmp_path):
+    """PROVER SCENARIO 1, the whitewash, reproduced. ONE candidate cleared at 00:10 on a day whose
+    risk channel then counted KILL_SWITCH x241,500 across 240 of its 241 ticks. The earlier reader
+    returned DAY_ATTEMPTED before it looked at anything else, and printed '7/7 completed UTC day(s)
+    attempted, none blocked', MAKES_MONEY_PROVEN, ended=true, conclusive=true.
+
+    One attempt may not speak for the other 23 hours. The day is named with its numbers, the
+    verdict is withheld -- and it is still NOT called blocked and the row is still NOT STOPPED,
+    because a count per report tick cannot establish that the lane was unable to trade."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for d in range(8):                               # an attempt every day: the whitewash's shape
+        _working_day(con, start + d * 86400.0)
+        for i in range(2):
+            _exec(con, f"c{d}{i}", f"e{d}{i}", "RECONCILED", start + d * 86400.0 + 600.0 + i)
+            _settle(con, f"c{d}{i}", 0.25, ts=start + d * 86400.0 + 7200.0 + i)
+    for tick in range(240):                          # ... and day 2 was killed for the rest of it
+        _refuse(con, start + 86400.0 + 700.0 + tick * 300.0, "KILL_SWITCH", 1006)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    assert out["row_state"]["kill"]["present"] == [], "nothing on disk says so, then or now"
+    assert out["row_state"]["stop_conditions"] == [], "and no file probe fires"
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK", "not ENDED, and not STOPPED either"
+    assert out["ended"] is False
+    assert out["verdict"] not in VERDICTS, "no money verdict over a day nobody has looked at"
+    assert out["verdict_withheld_pending_a_human_look"] is True
+    assert out["days_needing_a_human_look"] == ["2026-09-15"], "the day with an attempt IN it"
+
+    day = [d for d in out["daily_record"]["days"] if d["utc_day"] == "2026-09-15"][0]
+    assert day["executions_started"] == 2, "it did start executions, and that is reported"
+    assert day["risk_channel"]["codes"]["KILL_SWITCH"] == {"n": 241440, "ticks": 240}
+    assert day["risk_channel"]["ticks_recorded"] == 244
+    why = " ".join(day["why"])
+    assert "KILL_SWITCH n=241440 in 240 of 244 tick(s)" in why, "the day, the code, the ticks"
+    assert "does not depend on the candidate" not in why.lower() or True
+    # And the claims that were false are gone, from every field the operator reads.
+    printed = json.dumps(out)
+    assert "could not trade" not in printed
+    assert "EVERY candidate was refused" not in printed
+    assert "none blocked" not in printed
+    assert "BLOCKED" not in out["headline"] and "QUIET" not in out["headline"]
+    assert "DAY(S) NEEDING A HUMAN LOOK: 2026-09-15" in out["headline"]
+    assert "DOES NOT ESTABLISH" in day["what_this_evidence_establishes"]
+    assert _covers(out)["total_usd"] == 4.0, "and the money is still reported in full"
+
+
+def test_a_single_transient_tick_on_a_quiet_day_is_never_a_stop(tmp_path):
+    """PROVER SCENARIO 2, the over-fire, reproduced. ONE tick with n=1 of a transient code on an
+    otherwise ordinary completed day made the earlier reader print 'THE LANE COULD NOT TRADE ON 1
+    COMPLETED UTC DAY(S) ... EVERY candidate was refused' and report the whole row STOPPED. That
+    sentence was false. The numbers are reported as they are -- 1 refusal in 1 of 5 ticks -- the
+    row is not stopped, and the verdict waits for a person instead of being invented."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for d in range(8):
+        _working_day(con, start + d * 86400.0)
+        if d != 5:
+            _exec(con, f"x{d}", f"e{d}", "RECONCILED", start + d * 86400.0 + 3600.0)
+            _settle(con, f"x{d}", 0.25, ts=start + d * 86400.0 + 7200.0)
+    _refuse(con, start + 5 * 86400.0 + 18000.0, "BREAKER", 1)       # one tick, one refusal
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    assert out["row_status"] != "STOPPED", "one tick is not a stop condition"
+    assert out["verdict"] != "STOP"
+    assert out["row_state"]["stop_conditions"] == []
+    assert out["row_state"]["conclusive"] is True, "nothing failed to be read"
+    printed = json.dumps(out)
+    assert "could not trade" not in printed
+    assert "EVERY candidate was refused" not in printed
+
+    day = [d for d in out["daily_record"]["days"] if d["utc_day"] == "2026-09-19"][0]
+    assert day["risk_channel"]["codes"]["BREAKER"] == {"n": 1, "ticks": 1}
+    assert day["risk_channel"]["ticks_recorded"] == 5, "1 of 5, and the report says 1 of 5"
+    assert "BREAKER n=1 in 1 of 5 tick(s)" in " ".join(day["why"])
+    assert out["days_needing_a_human_look"] == ["2026-09-19"], "named, for one glance"
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK" and out["ended"] is False
+
+
+def test_a_window_whose_days_all_counted_kill_switch_withholds_and_does_not_stop(tmp_path):
+    """Someone latched the kill and cleared it again before the daily read; the lane counted
+    KILL_SWITCH on every tick of six days and started nothing. Every file probe reads clean.
+
+    The row must not end on a money verdict -- and it must not be reported STOPPED either. The
+    counters say what they say; they do not say the lane was unable to trade."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    _working_day(con, start)
+    for i in range(12):                              # twelve profitable covers, all on day one
+        _exec(con, f"c{i:02d}", f"e{i}", "RECONCILED", start + 3600.0 + i)
+        _settle(con, f"c{i:02d}", 0.25, ts=start + 7200.0 + i)
+    for d in range(1, 8):
+        _blocked_day(con, start + d * 86400.0, "KILL_SWITCH", n=1521)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    assert out["row_state"]["kill"]["present"] == [], "nothing on disk says so"
+    assert out["row_state"]["breaker"]["latched"] is False
+    assert out["row_state"]["stop_conditions"] == []
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK"
+    assert out["row_status"] != "STOPPED" and out["verdict"] != "STOP"
+    assert out["verdict"] not in VERDICTS, "and no money verdict either"
+    assert _covers(out)["total_usd"] == 3.0, "the covers are still reported, and still made money"
+
+    dr = out["daily_record"]
+    assert dr["days_needing_a_human_look"] == ["2026-09-15", "2026-09-16", "2026-09-17",
+                                               "2026-09-18", "2026-09-19", "2026-09-20"]
+    assert dr["executions_started_by_utc_day"]["2026-09-15"] == 0
+    assert dr["candidate_independent_over_the_row"] == {"KILL_SWITCH": {"n": 42588, "ticks": 28}}
+    assert any("elapsed days reached the registered 7" in r for r in out["end_reasons"]), (
+        "the seventh day is still reported; it is the verdict that waits")
+    assert any("NEED A HUMAN LOOK" in w for w in out["warnings"])
+    assert "no completed day needs a human look" not in out["headline"]
+
+
+def test_a_breaker_count_names_pnl_unknown_without_asserting_anything(tmp_path):
+    """`breaker.evaluate()` returns 'PNL_UNKNOWN: an UNCONFIRMED fill must be re-polled before the
+    day's PnL can be computed' and clearance.clear turns it into Refused("BREAKER", ...), which
+    writes nothing to kill/, nothing to breaker.json and no lane flag. The day is named with its
+    counts and what the deployed code does is quoted -- and that is all that is claimed."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for d in range(8):
+        if d == 3:
+            _blocked_day(con, start + d * 86400.0, "BREAKER", n=1500)
+            continue
+        _working_day(con, start + d * 86400.0)
+        _exec(con, f"x{d}", f"e{d}", "RECONCILED", start + d * 86400.0 + 3600.0)
+        _settle(con, f"x{d}", 0.25, ts=start + d * 86400.0 + 7200.0)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    assert out["row_state"]["breaker"]["latched"] is False, "nothing latched: the file probe is clean"
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK" and out["verdict"] != "STOP"
+    assert out["days_needing_a_human_look"] == ["2026-09-17"]
+    day = [d for d in out["daily_record"]["days"] if d["utc_day"] == "2026-09-17"][0]
+    assert day["executions_started"] == 0
+    assert day["risk_channel"]["codes"] == {"BREAKER": {"n": 6000, "ticks": 4}}
+    why = " ".join(day["why"])
+    assert "BREAKER n=6000 in 4 of 4 tick(s)" in why
+    assert "PNL_UNKNOWN" in why, "the report must say what BREAKER can mean when nothing is latched"
+    assert "could not trade" not in json.dumps(out)
+
+
+def test_a_healthy_window_with_only_per_candidate_refusals_still_reaches_a_verdict(tmp_path):
+    """The common case, and the one that must keep working: a lane starting executions every day
+    and refusing candidates on their merits in between. Withholding costs one glance, but a reader
+    that withholds on every row answers nothing, so this row still ends with F24's verdict."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    _twelve_covers_over_seven_days(con, start)
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    assert out["row_status"] == "ENDED" and out["ended"] is True
+    assert out["verdict"] == "MAKES_MONEY_PROVEN", "unchanged by the new evidence"
+    assert _covers(out)["total_usd"] == 3.0
+    assert out["row_state"]["conclusive"] is True
+    assert out["days_needing_a_human_look"] == []
+    assert out["verdict_withheld_pending_a_human_look"] is False
+    dr = out["daily_record"]
+    assert dr["completed_days"] == 7
+    assert sum(dr["executions_started_by_utc_day"].values()) == 12
+    assert set(dr["risk_refusals_over_the_row"]) == {"MIN_PROFIT", "IN_FLIGHT"}
+    assert dr["candidate_independent_over_the_row"] == {}
+    assert "7 completed UTC day(s), 12 LIMITED_LIVE execution(s) started" in out["headline"]
+    assert "no completed day needs a human look" in out["headline"]
+    assert not any("HUMAN LOOK" in w for w in out["warnings"])
+
+    # The first day alone, as a closed historical window: still no stop, still conclusive.
+    first = rp.run(str(p), start, start + 86400.0, **_kw(_live(tmp_path), now=now))
+    assert first["row_status"] != "STOPPED" and first["days_needing_a_human_look"] == []
+
+
+def test_a_completed_day_with_only_per_candidate_codes_and_no_execution_is_named_not_labelled(tmp_path):
+    """A completed day with no execution started but only per-candidate refusals. The earlier
+    reader called this 'a working lane that found nothing worth trading. Normal' -- a story the
+    counters do not carry, and the same story that let a paper-mode period pass silently. It is
+    reported as the numbers, named for a human, and never called a stop."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", start + 3600.0)
+    _settle(con, "a", 0.30, ts=start + 7200.0)
+    for d in range(8):
+        _working_day(con, start + d * 86400.0)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    assert out["row_state"]["stop_conditions"] == []
+    assert out["row_status"] != "STOPPED" and out["verdict"] != "STOP"
+    assert out["row_state"]["conclusive"] is True
+    assert out["days_needing_a_human_look"] == ["2026-09-15", "2026-09-16", "2026-09-17",
+                                                "2026-09-18", "2026-09-19", "2026-09-20"]
+    day = [d for d in out["daily_record"]["days"] if d["utc_day"] == "2026-09-16"][0]
+    assert day["executions_started"] == 0
+    assert day["risk_channel"]["codes"] == {"IN_FLIGHT": {"n": 1648, "ticks": 4},
+                                            "MIN_PROFIT": {"n": 148, "ticks": 4}}
+    assert day["candidate_independent_codes"] == {} and day["unrecognised_codes"] == {}
+    assert day["why"] == [w for w in day["why"] if w.startswith(rp.LOOK_NO_EXECUTION_STARTED)]
+    printed = json.dumps(out)
+    assert "found nothing worth trading" not in printed
+    assert "Normal" not in printed and "could not trade" not in printed
+
+
+def test_the_paper_mode_hole_is_stated_and_shows_up_as_days_with_no_execution(tmp_path):
+    """`refusal_counts` has no mode column, so a paper-mode lane's refusals are indistinguishable
+    from a live lane's and this reader invents no signal for it. What it does instead: executions
+    are filtered to LIMITED_LIVE, so a paper period is a run of completed days with zero of them,
+    and every one of those withholds the verdict. The limitation is in the output's own words."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for d in range(8):
+        _working_day(con, start + d * 86400.0)               # the lane ticks in paper mode too
+    for d in (0, 1):                                         # LIMITED_LIVE on the first two days
+        _exec(con, f"x{d}", f"e{d}", "RECONCILED", start + d * 86400.0 + 3600.0)
+        _settle(con, f"x{d}", 0.25, ts=start + d * 86400.0 + 7200.0)
+    for d in range(2, 8):                                    # ... then the row was run in PAPER
+        _exec(con, f"p{d}", f"pe{d}", "RECONCILED", start + d * 86400.0 + 3600.0,
+              mode="PAPER_EXECUTION")
+        _settle(con, f"p{d}", 5.00, ts=start + d * 86400.0 + 7200.0)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    assert out["funnel"]["excluded_wrong_mode"]["count"] == 6
+    assert _money(out)["total_usd"] == 0.5, "no paper dollar reaches either money figure"
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK" and out["ended"] is False
+    assert out["days_needing_a_human_look"] == ["2026-09-16", "2026-09-17", "2026-09-18",
+                                                "2026-09-19", "2026-09-20"]
+    assert "NO mode column" in out["daily_record"]["mode_limitation"]
+    assert out["row_state"]["board"]["mode"] == "LIMITED_LIVE", "the lane's mode NOW, and no more"
+    assert any("no mode column" in w.lower() or "NO mode column" in w for w in out["warnings"])
+
+
+def test_the_fifty_end_is_still_decided_on_the_money_over_a_withheld_day(tmp_path):
+    """The one thing a withheld day does NOT hold up. Those dollars are in the database this
+    reader DID read, the operator's plan is to stop the test at $50 of them, and a day whose
+    counts need a human's eye does not make the losses less real. LOSES_MONEY, ended, today."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    _working_day(con, start)
+    for i in range(12):
+        _exec(con, f"c{i:02d}", f"e{i}", "RECONCILED", start + 3600.0 + i)
+        _settle(con, f"c{i:02d}", -4.5, ts=start + 7200.0 + i)
+    for d in range(1, 8):                        # and every day after it needs a human look
+        _blocked_day(con, start + d * 86400.0, "KILL_SWITCH", n=800)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    assert _money(out)["total_usd"] == -54.0
+    assert out["days_needing_a_human_look"], "the days are still named"
+    assert out["verdict_withheld_pending_a_human_look"] is False, "but they do not hold this up"
+    assert out["row_status"] == "ENDED" and out["ended"] is True
+    assert out["verdict"] == "LOSES_MONEY"
+    assert "cumulative-loss end" in out["verdict_reason"]
+    assert "REACHED -- stop the test" in out["headline"]
+
+
+def test_a_missing_refusal_table_is_a_named_warning_never_a_clean_in_progress(tmp_path):
+    """If the lane's own record cannot be read, this reader has not read the window. A failed
+    probe withholds the verdict outright and names the table."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    con.close()
+    _drop_refusals(p)
+    out = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path), now=300.0))
+
+    assert out["row_status"] == "INCONCLUSIVE", "not IN_PROGRESS"
+    assert not out["verdict"].startswith("IN_PROGRESS")
+    assert out["verdict"] not in VERDICTS
+    assert out["row_state"]["conclusive"] is False
+    assert out["refusal_record"]["present"] is False
+    assert any("refusal_counts" in e for e in out["row_state"]["probe_errors"]), "named"
+    assert any("refusal_counts" in w and "has not ticked" in w for w in out["warnings"])
+
+
+def test_a_completed_day_with_no_record_at_all_reports_zero_ticks_and_asks_for_a_look(tmp_path):
+    """No execution started AND no refusal row on any channel. That is what a lane that was not
+    running looks like, and also what a day with nothing to evaluate looks like. The report gives
+    the numbers -- 0 and 0 -- names the day, and does not choose between them."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for d in (0, 1, 2, 3, 4, 6, 7):
+        _working_day(con, start + d * 86400.0)
+        _exec(con, f"x{d}", f"e{d}", "RECONCILED", start + d * 86400.0 + 3600.0)
+        _settle(con, f"x{d}", 0.25, ts=start + d * 86400.0 + 7200.0)
+    con.commit()                                   # day 5 (2026-09-19) is missing entirely
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    assert out["days_needing_a_human_look"] == ["2026-09-19"]
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK"
+    assert out["ended"] is False, "seven days is not an ending over a day nobody has read"
+    assert out["verdict"] not in VERDICTS
+    assert out["row_state"]["conclusive"] is True, "nothing failed: there is simply nothing there"
+    day = [d for d in out["daily_record"]["days"] if d["utc_day"] == "2026-09-19"][0]
+    assert day["executions_started"] == 0 and day["risk_channel"]["ticks_recorded"] == 0
+    assert day["other_channels_line"] == "no row on any other channel"
+    assert "0 LIMITED_LIVE executions started" in " ".join(day["why"])
+    assert "2026-09-19" in out["headline"]
+
+
+def test_an_unrecognised_risk_code_is_named_and_withholds_instead_of_being_guessed(tmp_path):
+    """Three audits in a row found one more refusal path than the tooling knew about. A code in
+    neither reference list is the next one: the reader says it does not know it, gives the counts,
+    and withholds -- it does not decide the code is harmless and it does not call it a stop."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for d in range(8):
+        _working_day(con, start + d * 86400.0)
+        if d != 2:
+            _exec(con, f"x{d}", f"e{d}", "RECONCILED", start + d * 86400.0 + 3600.0)
+            _settle(con, f"x{d}", 0.25, ts=start + d * 86400.0 + 7200.0)
+    _blocked_day(con, start + 2 * 86400.0, "SOMETHING_SHIPPED_LATER", n=900)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    assert out["days_needing_a_human_look"] == ["2026-09-16"]
+    day = [d for d in out["daily_record"]["days"] if d["utc_day"] == "2026-09-16"][0]
+    assert day["unrecognised_codes"] == {"SOMETHING_SHIPPED_LATER": {"n": 3600, "ticks": 4}}
+    why = " ".join(day["why"])
+    assert rp.LOOK_UNRECOGNISED_CODE in why and "does not know" in why
+    assert "nodes/risk/clearance.py" in why
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK" and out["verdict"] not in VERDICTS
+    assert out["row_status"] != "STOPPED"
+    assert out["refusal_record"]["unrecognised_by_code"] == {
+        "SOMETHING_SHIPPED_LATER": {"n": 3600, "ticks": 4}}
+
+
+def test_the_two_reference_lists_match_the_deployed_code_and_stop_nothing(tmp_path):
+    """The lists are pinned against 59dd5ae's own clearance, because they decide which days get a
+    human's eye. They decide nothing else: neither list can produce a stop condition, and no code
+    in either of them appears in row_state.stop_conditions."""
+    assert rp.CANDIDATE_INDEPENDENT_RISK_CODES.keys() >= {
+        "KILL_SWITCH", "BREAKER", "ARM_STALE", "GUARD_FAILED", "BALANCE", "BALANCE_UNCONFIRMED",
+        "FEE_SCHEDULE"}, "the seven the round-3 audit named"
+    assert "PNL_UNKNOWN" not in rp.CANDIDATE_INDEPENDENT_RISK_CODES, (
+        "it is not a code: breaker.evaluate returns it as the DETAIL of Refused('BREAKER', ...)")
+    assert "PNL_UNKNOWN" in rp.CANDIDATE_INDEPENDENT_RISK_CODES["BREAKER"]
+    for per_candidate in ("MIN_PROFIT", "IN_FLIGHT", "HEDGE_DEPTH_CHANGED", "LEAGUE_EXPOSURE"):
+        assert per_candidate in rp.PER_CANDIDATE_RISK_CODES
+        assert per_candidate not in rp.CANDIDATE_INDEPENDENT_RISK_CODES
+    assert not (set(rp.CANDIDATE_INDEPENDENT_RISK_CODES) & set(rp.PER_CANDIDATE_RISK_CODES))
+    assert rp.RISK_CHANNEL == "risk"
+    assert not hasattr(rp, "BLOCKING_RISK_CODES"), "the blocking/ordinary taxonomy is gone"
+    assert not hasattr(rp, "ORDINARY_RISK_CODES")
+    assert not hasattr(rp, "SCOPED_RISK_CODES")
+    for gone in ("DAY_ATTEMPTED", "DAY_BLOCKED", "DAY_QUIET", "DAY_NOT_JUDGED", "lane_activity"):
+        assert not hasattr(rp, gone), f"{gone} classified a day; nothing classifies a day now"
+
+    # Every candidate-independent code, on its own, over a whole window: still not a stop.
+    for code in sorted(rp.CANDIDATE_INDEPENDENT_RISK_CODES):
+        root = tmp_path / code
+        root.mkdir()
+        p, con, start, now = _seven_day_window(root)
+        for d in range(8):
+            _blocked_day(con, start + d * 86400.0, code, n=99)
+        con.commit()
+        out = rp.run(str(p), start, None, **_kw(_live(root), now=now))
+        assert out["row_state"]["stop_conditions"] == [], code
+        assert out["row_status"] == "NEEDS_HUMAN_LOOK", code
+        assert out["verdict"] != "STOP", code
+        assert "could not trade" not in json.dumps(out), code
+
+
+def test_the_day_in_progress_is_reported_and_never_withholds_anything(tmp_path):
+    """The running day's numbers are the operator's early warning. It is not over, so it is not
+    one of the completed days and it can never withhold a verdict or stop a row."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for d in range(2):
+        _working_day(con, start + d * 86400.0)
+        _exec(con, f"x{d}", f"e{d}", "RECONCILED", start + d * 86400.0 + 3600.0)
+        _settle(con, f"x{d}", 0.25, ts=start + d * 86400.0 + 7200.0)
+    _blocked_day(con, start + 2 * 86400.0 + 600.0, "BALANCE_UNCONFIRMED", ticks=2, n=44)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=start + 2 * 86400.0 + 3 * 3600.0))
+
+    cur = out["daily_record"]["current_utc_day"]
+    assert cur["utc_day"] == "2026-09-16" and cur["complete"] is False
+    assert cur["executions_started"] == 0
+    assert cur["risk_channel"]["codes"] == {"BALANCE_UNCONFIRMED": {"n": 88, "ticks": 2}}
+    assert cur["needs_a_human_look"] is False and cur["why"] == []
+    assert out["days_needing_a_human_look"] == [], "both completed days started an execution"
+    assert out["row_status"] == "IN_PROGRESS"
+
+
+def test_a_day_before_the_retention_horizon_says_its_rows_are_gone(tmp_path):
+    """store.RETENTION_TABLES ages refusal_counts at grid.retain_days = 7, which is exactly F24's
+    registered length: the row's first day can lose its rows while the row still runs. The report
+    says the rows are gone -- it does not report a quiet day and does not invent one either."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for d in range(2, 8):                          # days 0 and 1 have been pruned
+        _working_day(con, start + d * 86400.0)
+        _exec(con, f"x{d}", f"e{d}", "RECONCILED", start + d * 86400.0 + 3600.0)
+        _settle(con, f"x{d}", 0.25, ts=start + d * 86400.0 + 7200.0)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    aged = [d for d in out["daily_record"]["days"] if d["utc_day"] in ("2026-09-14", "2026-09-15")]
+    assert [d["risk_channel"]["ticks_recorded"] for d in aged] == [0, 0]
+    assert all("aged out at grid.retain_days = 7" in " ".join(d["why"]) for d in aged)
+    assert all("oldest row the table still holds" in " ".join(d["why"]) for d in aged)
+    assert out["days_needing_a_human_look"] == ["2026-09-14", "2026-09-15"]
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK", "not a verdict over days it cannot read"
+    assert rp.REFUSAL_RETENTION_DAYS == 7
+
+
+def test_the_refusal_read_is_bounded_by_the_indexed_timestamp(tmp_path):
+    """The box is a SINGLE vCPU that is also running the live lane, and this runs every day. The
+    aggregation happens in SQLite over the `refusal_counts_ts` range, not in Python over every row
+    in the table."""
+    for sql in (rp._REFUSAL_SQL, rp._REFUSAL_TICKS_SQL):
+        assert "seen_ts >= ? AND seen_ts <= ?" in sql
+        assert "GROUP BY" in sql
+    assert "SUM(n)" in rp._REFUSAL_SQL
+    p, con = _db(tmp_path)
+    for sql in (rp._REFUSAL_SQL, rp._REFUSAL_TICKS_SQL):
+        plan = " ".join(str(r) for r in con.execute("EXPLAIN QUERY PLAN " + sql, (0.0, 1.0)))
+        assert "refusal_counts_ts" in plan and "SCAN" not in plan.upper().replace("SCAN SUBQUERY", ""), (
+            f"the window must be an index range, not a table scan: {plan}")
+
+    # And the rows outside the window are never read: one tick inside, a million refusals outside.
+    _refuse(con, 150.0, "MIN_PROFIT", 7)
+    _refuse(con, 10_000_000.0, "KILL_SWITCH", 1_000_000)
+    con.commit()
+    got = rp.probe_refusals(sqlite3.connect(p), start=90.0, stop_at=300.0)
+    assert got["by_code"] == {"MIN_PROFIT": {"n": 7, "ticks": 1}}
+    assert got["refusals_in_window"] == 7 and got["ticks_in_window"] == 1
+
+
+def test_the_board_loop_and_socket_fields_are_used_as_evidence_not_discarded(tmp_path):
+    """grid.clock_ok() -- what the risk gate is handed -- is false while `stalled` or loop_lag_s is
+    over max_loop_lag_s, and an F24 cover needs BOTH venues connected. The board states all three
+    and this reader used to parse them and throw them away."""
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+
+    healthy = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path), now=300.0))
+    assert healthy["row_state"]["board"]["loop_gate_open"] is True
+    assert healthy["row_state"]["board"]["venues_not_connected"] == []
+    assert healthy["daily_record"]["board_evidence"] == []
+
+    stalled = rp.run(str(p), 90.0, None,
+                     **_kw(_live(tmp_path), now=300.0, board=_board_doc(stalled=True)))
+    assert stalled["row_state"]["board"]["stalled"] is True
+    assert stalled["row_state"]["board"]["loop_gate_open"] is False
+    assert any("CLOCK_UNHEALTHY" in e for e in stalled["daily_record"]["board_evidence"])
+
+    lagged = rp.run(str(p), 90.0, None,
+                    **_kw(_live(tmp_path), now=300.0, board=_board_doc(loop_lag_s=31.7)))
+    assert lagged["row_state"]["board"]["loop_gate_open"] is False
+    assert any("loop_lag_s 31.7" in e for e in lagged["daily_record"]["board_evidence"])
+
+    down = _board_doc(sockets={"kalshi": {"connected": True},
+                               "polymarket": {"connected": False}})
+    dark = rp.run(str(p), 90.0, None, **_kw(_live(tmp_path), now=300.0, board=down))
+    assert dark["row_state"]["board"]["venues_not_connected"] == ["polymarket"]
+    assert any("polymarket NOT connected" in e for e in dark["daily_record"]["board_evidence"])
+    assert any("at the moment of this read" in w for w in dark["warnings"])
+    # Evidence, not one of spec.yaml's stop conditions: a stall self-clears in two ticks.
+    assert dark["row_state"]["stop_conditions"] == []
+
+
+def test_the_board_is_read_as_now_and_never_applied_backwards_to_a_day(tmp_path):
+    """The board is one second old. An earlier reader quoted it as 'corroboration' beside a day it
+    had called blocked, which read as evidence about that day; it is not. It is stated as what the
+    board says at the moment of the read, and no day's entry carries it."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    _working_day(con, start)
+    _exec(con, "a", "e1", "RECONCILED", start + 3600.0)
+    _settle(con, "a", 0.30, ts=start + 7200.0)
+    for d in range(1, 8):
+        _blocked_day(con, start + d * 86400.0, "VENUE_DISCONNECTED", n=800)
+    con.commit()
+    board = _board_doc(sockets={"kalshi": {"connected": True}, "polymarket": {"connected": False}})
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now, board=board))
+
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK" and out["row_status"] != "STOPPED"
+    assert "polymarket NOT connected" in "; ".join(out["daily_record"]["board_evidence"])
+    note = "; ".join(out["row_state"]["notes"])
+    assert "at the moment of this read" in note
+    assert "says nothing about any earlier day" in note
+    for day in out["daily_record"]["days"]:
+        assert "polymarket" not in json.dumps(day), "no day entry quotes the live board"
+    assert "corroborat" not in json.dumps(out)
+
+
+# ------------------------------------------------- a bare JSON scalar must not crash a probe
+
+
+@pytest.mark.parametrize("junk", ["null", "5", '"latched"', "[]", "true"])
+def test_a_bare_json_scalar_in_a_state_file_is_a_named_failure_not_a_traceback(tmp_path, junk):
+    """`json.loads` returns a bare scalar for any of these, and every probe then calls .get() on it
+    and dies with AttributeError -- which nothing catches, so the operator's daily read prints a
+    traceback instead of a report. A crashed probe reads as no probe at all."""
+    with pytest.raises(ValueError):
+        f = tmp_path / "scalar.json"
+        f.write_text(junk)
+        rp._read_json_file(str(f))
+
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+
+    root = _live(tmp_path, breaker=junk)                       # breaker.json holds a bare scalar
+    out = rp.run(str(p), 90.0, None, **_kw(root, now=300.0))
+    assert out["row_status"] == "INCONCLUSIVE"
+    assert any("breaker" in e for e in out["row_state"]["probe_errors"])
+
+    (Path(root) / "kill" / "arming_override.json").write_text(junk)
+    out = rp.run(str(p), 90.0, None, **_kw(root, now=300.0))
+    assert any("override" in e for e in out["row_state"]["probe_errors"])
+    assert out["row_status"] in ("STOPPED", "INCONCLUSIVE")
+
+    root2 = _live(tmp_path / "k", kill=("live",))
+    (root2 / "kill" / "live").write_text(junk)                 # and a kill file that is a scalar
+    out = rp.run(str(p), 90.0, None, **_kw(root2, now=300.0))
+    assert out["row_status"] == "STOPPED", "a kill file this reader cannot parse is still a kill"
+    assert any("unreadable" in line for line in out["row_state"]["stop_conditions"])
+
+    board_root = _live(tmp_path / "b")
+    (board_root / "board").mkdir(parents=True, exist_ok=True)
+    (board_root / "board" / "board.json").write_text(junk)
+    out = rp.run(str(p), 90.0, None,
+                 **_kw(board_root, now=300.0, board=None, data_root=str(board_root)))
+    assert out["row_status"] == "INCONCLUSIVE"
+    assert any("board" in e for e in out["row_state"]["probe_errors"])
+
+
+# ------------------------------------- the banner's last word cannot come out of a kill file
+
+
+def _banner_program(tmp_path):
+    """The banner runs HERE now, on JSON this machine decoded, so it is out of reach of anything on
+    the box. It still has to survive text a kill file or a database row put INTO that JSON."""
+    src = CHECK.read_text().split("BANNER=$(cat <<'F24_BANNER_SRC'\n", 1)[1] \
+                           .split("\nF24_BANNER_SRC\n", 1)[0]
+    prog = tmp_path / "banner_inject.py"
+    prog.write_text(src)
+    return prog
+
+
+def test_a_multi_line_kill_reason_cannot_inject_a_second_banner_line(tmp_path):
+    """A kill file's `reason` is echoed verbatim into the stop lines, and the operator reads the
+    LAST F24_ROW_STATE line. A reason holding a newline printed a second one BELOW the real one,
+    so a kill file could make a stopped row read as healthy."""
+    injected = ("someone stopped it\n" + "=" * 78 + "\nF24_ROW_STATE: IN_PROGRESS\n"
+                "  VERDICT: MAKES_MONEY_PROVEN\n" + "=" * 78)
+    p, con = _db(tmp_path)
+    _exec(con, "a", "e1", "RECONCILED", 100.0)
+    _settle(con, "a", 0.3)
+    con.commit()
+    root = _live(tmp_path)
+    (root / "kill" / "live").write_text(json.dumps({"reason": injected}))
+    out = rp.run(str(p), 90.0, None, **_kw(root, now=300.0))
+    assert out["row_status"] == "STOPPED"
+
+    prog = _banner_program(tmp_path)
+    r = subprocess.run([sys.executable, str(prog)], input=json.dumps(out),
+                       capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+
+    states = [ln for ln in r.stdout.splitlines() if ln.startswith("F24_ROW_STATE:")]
+    assert states, "the banner still names the state"
+    assert all("STOPPED" in ln for ln in states), (
+        f"a kill file made the banner claim another state: {states}")
+    assert "STOPPED" in states[-1], "the LAST one is the operator's answer, and it is the real one"
+    assert not any(ln.strip().startswith("VERDICT: MAKES_MONEY") for ln in r.stdout.splitlines())
+    assert "someone stopped it / " in r.stdout, "the reason is still shown, flattened to one line"
+    assert r.stdout.rstrip().endswith("=" * 78), "the banner is still the last thing printed"
+
+
+def test_the_banner_survives_every_shape_a_field_can_take(tmp_path):
+    """It is the last thing the operator sees on a live money test; it may never be the thing that
+    crashes. Nothing in it decides anything, so a malformed field degrades to a printed value."""
+    prog = _banner_program(tmp_path)
+    for doc in ('{"row_status": "STOPPED", "row_state": [1,2], "daily_record": "x"}',
+                '{"row_status": null, "warnings": "not a list", "end_reasons": 7}',
+                '{"daily_record": {"days": [1, null, {"complete": true}], '
+                '"executions_started_by_utc_day": "no", "days_needing_a_human_look": {}, '
+                '"why_each_day_needs_a_look": 7}}',
+                '{"daily_record": {"executions_started_by_utc_day": {"a": "x"}, '
+                '"covers_settled_by_utc_day": {"a": 1}, "days_needing_a_human_look": ["d"], '
+                '"why_each_day_needs_a_look": {"d": "not a list"}}}',
+                '"a bare string"', "[]", "not json at all", "{}"):
+        r = subprocess.run([sys.executable, str(prog)], input=doc, capture_output=True, text=True)
+        assert r.returncode == 0, (doc, r.stderr)
+        assert "F24_ROW_STATE:" in r.stdout, doc
+        assert r.stdout.rstrip().endswith("=" * 78), doc
+
+
+def test_a_refusal_code_from_the_database_cannot_forge_a_banner_line(tmp_path):
+    """The day lines now quote a `code` straight out of refusal_counts, which is a TEXT column a
+    future lane version writes. A code carrying a newline is the same attack the kill file's
+    `reason` was: the operator reads the LAST F24_ROW_STATE line, so nothing a row can hold may
+    start a line of its own."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    forged = ("ODD_CODE\n" + "=" * 78 + "\nF24_ROW_STATE: ENDED\n  VERDICT: MAKES_MONEY_PROVEN\n"
+              + "=" * 78)
+    _working_day(con, start)
+    _exec(con, "a", "e1", "RECONCILED", start + 3600.0)
+    _settle(con, "a", 0.30, ts=start + 7200.0)
+    _blocked_day(con, start + 86400.0, forged, n=3)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK", "an unknown code is named, never guessed"
+
+    prog = _banner_program(tmp_path)
+    r = subprocess.run([sys.executable, str(prog)], input=json.dumps(out),
+                       capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    states = [ln for ln in r.stdout.splitlines() if ln.startswith("F24_ROW_STATE:")]
+    assert states and all("NEEDS_HUMAN_LOOK" in ln for ln in states), states
+    assert not any(ln.strip().startswith("VERDICT: MAKES_MONEY") for ln in r.stdout.splitlines())
+    assert "ODD_CODE / " in r.stdout, "the code is still shown, flattened to one line"
+    assert r.stdout.rstrip().endswith("=" * 78)
+
+
+def test_the_banner_states_the_days_numbers_and_never_a_claim_about_them(tmp_path):
+    """The banner is what the operator actually reads. It repeats the report's numbers and the
+    days that need a human's eye; it never says a day was blocked, never says the lane could not
+    trade, and never turns either into a STOP line -- because the report does not."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    _working_day(con, start)
+    _exec(con, "a", "e1", "RECONCILED", start + 3600.0)
+    _settle(con, "a", 0.30, ts=start + 7200.0)
+    for d in range(1, 8):
+        _blocked_day(con, start + d * 86400.0, "GUARD_FAILED", n=12)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK"
+
+    prog = _banner_program(tmp_path)
+    r = subprocess.run([sys.executable, str(prog)], input=json.dumps(out),
+                       capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+
+    assert "F24_ROW_STATE: NEEDS_HUMAN_LOOK" in r.stdout
+    assert "LANE: 7 completed UTC day(s) | 1 execution(s) started | 1 cover(s) settled" in r.stdout
+    look = [ln for ln in r.stdout.splitlines()
+            if ln.startswith("  DAY(S) NEEDING A HUMAN LOOK")]
+    assert len(look) == 1, "one line, naming every day -- not six paragraphs to scroll past"
+    assert "2026-09-15, 2026-09-16, 2026-09-17, 2026-09-18, 2026-09-19, 2026-09-20" in look[0]
+    assert "GUARD_FAILED n=48 in 4 of 4 tick(s)" in r.stdout, "the code, and the ticks"
+    assert "2026-09-16: 0 started, 0 settled" in r.stdout, "one line of numbers per completed day"
+    assert "DOES NOT ESTABLISH" in r.stdout
+    tagged = [ln for ln in r.stdout.splitlines() if "<- NEEDS A HUMAN LOOK:" in ln]
+    assert len(tagged) == 6, "the tag rides on each day's own line of numbers"
+    assert all(rp.LOOK_NO_EXECUTION_STARTED in ln and rp.LOOK_CANDIDATE_INDEPENDENT in ln
+               for ln in tagged)
+    establishes = [ln for ln in r.stdout.splitlines() if "DOES NOT ESTABLISH" in ln]
+    assert len(establishes) == 1, (
+        "once, not six copies of the same paragraph -- that is how the day that differs gets "
+        "scrolled past on the read that enforces the ends")
+    assert "2026-09-14: 1 started, 1 settled" in r.stdout
+    assert "<- NEEDS A HUMAN LOOK" not in [
+        ln for ln in r.stdout.splitlines() if ln.startswith("  2026-09-14:")][0]
+    assert "STOPPED BY" not in r.stdout and "VERDICT: STOP" not in r.stdout
+    assert "could not trade" not in r.stdout
+    assert "blocked:" not in r.stdout and "not judged:" not in r.stdout
+    assert r.stdout.rstrip().endswith("=" * 78)
+    states = [ln for ln in r.stdout.splitlines() if ln.startswith("F24_ROW_STATE:")]
+    assert "NEEDS_HUMAN_LOOK" in states[-1], "the last line is still the report's own"
+
+
+def test_the_l141_calibration_is_untouched_by_the_refusal_evidence(tmp_path):
+    """THE CALIBRATION, again, from the other side: L141's window completes no UTC day, so there is
+    no day to report and the money figures cannot move. Pinned so that a future change to the day
+    logic cannot quietly re-price the only fully measured window this project has."""
+    p, con = _db(tmp_path)
+    ids = ("L141a", "L141b", "L141c", "L141scalar")
+    for i, (eid, usd) in enumerate(zip(ids, (0.27636, 0.27636, 0.27636, -0.99357))):
+        _exec(con, eid, f"e{i}", "RECONCILED", L141_START + 60.0 * (i + 1))
+        _settle(con, eid, usd, ts=L141_START + 3600.0 * (i + 1))
+    _blocked_day(con, L141_START, "KILL_SWITCH", n=99)      # even with KILL_SWITCH counted inside
+    con.commit()
+    out = rp.run(str(p), L141_START, L141_END, **_kw(_live(tmp_path), now=L141_END + 86400.0))
+
+    assert out["window"]["completed_utc_days"] == []
+    assert out["daily_record"]["days"] == [] and out["days_needing_a_human_look"] == []
+    assert _covers(out)["covers"] == 4
+    assert _covers(out)["total_usd"] == -0.16449
+    assert _covers(out)["per_settled_cover_usd"] == -0.041122
+    assert _money(out)["total_usd"] == -0.16449
+    assert out["funnel"]["excluded_non_cover_settlements"]["count"] == 0
+
+
+def test_the_other_channel_is_one_summed_line_and_its_codes_are_never_read(tmp_path):
+    """No risk refusal at all means no candidate reached nodes/risk.clear -- which is what a dead
+    lane looks like AND what a live lane with nothing actionable looks like. The sizer's rows say
+    the loop was turning, so they are reported: as ONE summed line per day, never per code (the
+    size ladder unions CAP_CONTRACTS in unconditionally and its flags carry the q=100 rung). Both
+    kinds of day are named for a human; this reader does not choose between them."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    _working_day(con, start)
+    _exec(con, "a", "e1", "RECONCILED", start + 3600.0)
+    _settle(con, "a", 0.30, ts=start + 7200.0)
+    for d in range(1, 4):                       # rows on the sizing mirror only
+        for i in range(3):
+            _refuse(con, start + d * 86400.0 + 3600.0 * (i + 1), "MIN_PROFIT", 88, channel="size")
+    con.commit()                                # days 4-6 have nothing on either channel
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    dr = out["daily_record"]
+    assert dr["days_needing_a_human_look"] == ["2026-09-15", "2026-09-16", "2026-09-17",
+                                               "2026-09-18", "2026-09-19", "2026-09-20"], (
+        "every completed day that started nothing, whichever shape it had")
+    up = [d for d in dr["days"] if d["utc_day"] == "2026-09-15"][0]
+    assert up["other_channels_line"] == "size n=264 in 3 tick(s)", "summed, and not per code"
+    assert up["risk_channel"] == {"ticks_recorded": 0, "codes": {}}
+    assert "MIN_PROFIT" not in json.dumps(up), "the size channel's CODES are never reported"
+    dark = [d for d in dr["days"] if d["utc_day"] == "2026-09-18"][0]
+    assert dark["other_channels_line"] == "no row on any other channel"
+    assert out["refusal_record"]["by_channel"] == {"risk": 1796, "size": 792}
+    assert out["refusal_record"]["by_code"] == {"IN_FLIGHT": {"n": 1648, "ticks": 4},
+                                                "MIN_PROFIT": {"n": 148, "ticks": 4}}, (
+        "the size channel's counts never enter the risk figure")
+    assert out["row_status"] == "NEEDS_HUMAN_LOOK" and out["row_status"] != "STOPPED"
+
+
+def test_a_ceiling_code_is_reported_as_a_count_and_ends_nothing(tmp_path):
+    """LEAGUE_EXPOSURE, VENUE_CAPITAL, EVENT_NOTIONAL and the cap codes refuse on a CEILING inside
+    a scope. An earlier reader had a third category for them and a day-status to go with it; the
+    categories are gone. The code is reported with its counts like every other code, the day is
+    named because nothing started on it, and nothing about the row is decided by which list the
+    code is in."""
+    p, con, start, now = _seven_day_window(tmp_path)
+    for d in (0, 1, 2, 3, 4, 6, 7):
+        _working_day(con, start + d * 86400.0)
+        _exec(con, f"x{d}", f"e{d}", "RECONCILED", start + d * 86400.0 + 3600.0)
+        _settle(con, f"x{d}", 0.25, ts=start + d * 86400.0 + 7200.0)
+    for i in range(3):                             # day 5: one league at its cap, nothing started
+        _refuse(con, start + 5 * 86400.0 + 3600.0 * (i + 1), "LEAGUE_EXPOSURE", 210)
+    con.commit()
+    out = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+
+    day = [d for d in out["daily_record"]["days"] if d["utc_day"] == "2026-09-19"][0]
+    assert day["risk_channel"] == {"ticks_recorded": 3,
+                                   "codes": {"LEAGUE_EXPOSURE": {"n": 630, "ticks": 3}}}
+    assert day["candidate_independent_codes"] == {} and day["unrecognised_codes"] == {}
+    assert "LEAGUE_EXPOSURE" in rp.PER_CANDIDATE_RISK_CODES
+    assert out["row_state"]["stop_conditions"] == [] and out["verdict"] != "STOP"
+    assert out["days_needing_a_human_look"] == ["2026-09-19"], "because nothing started, only"
+    assert rp.LOOK_NO_EXECUTION_STARTED in " ".join(day["why"])
+    assert rp.LOOK_CANDIDATE_INDEPENDENT not in " ".join(day["why"])
+
+    # One execution on that day and the day is no longer named: the same rule, per day.
+    _exec(con, "x5", "e5", "RECONCILED", start + 5 * 86400.0 + 3600.0)
+    _settle(con, "x5", 0.25, ts=start + 5 * 86400.0 + 7200.0)
+    con.commit()
+    again = rp.run(str(p), start, None, **_kw(_live(tmp_path), now=now))
+    assert again["days_needing_a_human_look"] == []
+    assert again["row_status"] == "ENDED" and again["verdict"] in VERDICTS

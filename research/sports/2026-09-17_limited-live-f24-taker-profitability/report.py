@@ -38,12 +38,69 @@ What it will NOT do, because spec.yaml says so:
   * score covers the lane traded past the registered 30-cover end. Nothing in the lane stops at 30,
     so the scored set is truncated deterministically at the registered end (`registered_end`), and
     the excluded covers are listed with their dollars -- which stay in `net.all_in_realised`;
-  * report IN_PROGRESS while a stop condition has actually ended the row. The kill file, the arming
-    override and the thirteen material safety flags are probed on every run, read-only;
+  * report IN_PROGRESS while a stop condition has actually ended the row. EVERY file-visible way
+    the deployed lane can be stopped is probed, read-only: the WHOLE kill directory (all five
+    scopes `nodes/risk/kill.active()` honours at 59dd5ae, not two names), the LATCHING daily-loss
+    breaker (`nodes/risk/breaker.py`: it survives a restart AND the clearing of kill/live, and only
+    a human `LossBreaker.reset(by=...)` -- which nothing in ops/ calls -- clears it), the lane's
+    own one-second board snapshot (ARM_STALE, mode, the caps the RUNNING process loaded, F22, and
+    the loop/socket health), the arming override, and the thirteen material safety flags;
+  * call a row ENDED, or issue one of spec.yaml's five verdicts, on evidence it could not gather.
+    A probe that fails or a signal that is unavailable makes `row_state.conclusive` false and the
+    row INCONCLUSIVE: no verdict, no ENDED, and no seventh day running out in silence;
   * hide a `--include` / `--exclude`: both lists and every scored cover id are echoed in the output;
   * run against a start_utc that disagrees with the one arming persisted. It refuses instead;
   * describe the $25 daily breaker as a cap on a day's loss. It is not one: see
     `daily_loss_breaker.what_it_actually_bounds`.
+
+NUMBERS PER UTC DAY, AND NO STORY ABOUT THEM
+--------------------------------------------
+The lane records why it refused, aggregated once per report tick, in the same database this reader
+already opens read-only:
+
+    CREATE TABLE refusal_counts(seen_ts REAL NOT NULL, channel TEXT NOT NULL, code TEXT NOT NULL,
+                                league TEXT NOT NULL, n INTEGER NOT NULL);
+    CREATE INDEX refusal_counts_ts ON refusal_counts(seen_ts);
+
+(`nodes/store_tuples/store.py` REFUSAL_COUNTS_DDL / `refusal_counts()`, written from
+`grids/live_stream/grid.py`'s report tick.) The RISK channel is `nodes/risk.clear` -- the
+authoritative gate that owns the reservation -- plus grid.py's own pre-gate refusals. The `size`
+channel is a read-only sizing mirror whose flags are contaminated by its q=100 rung; it is summed
+into one line and its codes are never read for meaning.
+
+An earlier reader turned those rows into a per-day VERDICT -- ATTEMPTED / BLOCKED / QUIET, and a
+STOP built on it -- and an adversarial prover broke it in both directions, each reproduced end to
+end. One cleared candidate at 00:10 made a day "ATTEMPTED" and printed MAKES_MONEY_PROVEN,
+ended=true, over a row whose own risk channel recorded KILL_SWITCH x241,500. A single tick with
+n=1 of a transient code on a quiet day printed "THE LANE COULD NOT TRADE ... EVERY candidate was
+refused", which was false. Both defects have the same cause: a row of counters cannot support a
+claim about what the lane COULD have done. A tick is one report pass; the table says in how many
+passes a code was counted, never for how long it held, never what happened between two passes,
+and never whether it applied to the candidates the lane actually saw.
+
+So the classification is gone. `daily_record` reports, per completed UTC day: executions started,
+covers settled, every risk-channel code with its count and the number of that day's ticks it
+appeared in, the number of ticks recorded that day, and the size channel in one line. Numbers, and
+nothing else.
+
+WHAT MAY END THE ROW, AND WHAT MERELY WITHHOLDS THE VERDICT
+----------------------------------------------------------
+Only the unambiguous and durable may STOP or END a row: a kill switch present by the DEPLOYED
+semantics of `nodes/risk/kill.py` (`all`, `live`, `venue-`, `event-`, `strategy-`; every other
+name in that directory stops nothing on the box and is listed as evidence, never as a stop -- the
+real box holds stray `.guard-failure-*.lock` files, and calling those unknown kills would make
+every read indeterminate forever), a latched breaker, the arming override missing / expired /
+carrying an experiment / with changed caps, an ARM_STALE lane or a lane not in LIMITED_LIVE, an
+unresolved material safety flag, or a probe that failed.
+
+Everything else WITHHOLDS instead of asserting. When a completed UTC day's numbers are consistent
+with the lane having been unable to trade -- a candidate-independent code in that day's ticks, an
+unrecognised code, or no LIMITED_LIVE execution started at all -- the day is NAMED with its
+counts, the final verdict is withheld pending a human's eye, and the report states in its own
+words what that evidence does and does not establish. It is not called BLOCKED, the row is not
+called STOPPED, and nothing claims "every candidate was refused". The asymmetry is deliberate: a
+withheld verdict costs the operator one glance, a wrong one costs them the answer they paid for.
+The rule is applied PER DAY, so one cleared candidate can never speak for the other 23 hours.
 
 The $50 cumulative-loss rule is one of spec.yaml's `end` conditions, NOT a `stop_condition`: it ends
 the row with the honest verdict LOSES_MONEY, not with "a safety condition fired".
@@ -112,6 +169,146 @@ MATERIAL_FLAGS = (
     "PROTECT_FAILED", "EXEC_CRASHED", "ORDER_OVERFILL", "POST_ONLY_ROLE_VIOLATION", "UNHEDGED_POSITION",
     "RESERVATION_MISSING", "FEE_ABOVE_PIN", "F22_PERSISTENCE_FAILED", "GUARD_FAILED")
 
+#: nodes/risk/kill.py at 59dd5ae: FIVE scopes in ONE directory, and `active()` honours all five.
+#: A reader that probes two names reports "no kill" while a venue-, event- or strategy- file sits
+#: in the directory refusing entries. `any_present()` already enumerates the directory; so does
+#: this. The scope prefixes carry a value (`venue-<venue>`), so a bare "venue-" matches nothing.
+KILL_EXACT_SCOPES = ("all", "live")
+KILL_PREFIX_SCOPES = ("venue-", "event-", "strategy-")
+#: What each scope stops, in kill.py's and gate.py's own terms.
+KILL_SCOPE_EFFECT = {
+    "all": "every mode that sends or simulates an order",
+    "live": "every new LIMITED_LIVE/PRODUCTION entry (clear() refuses; only clear_protect() mints)",
+    "venue": "every entry needing that venue -- and an F24 cover needs BOTH Polymarket and Kalshi",
+    "event": "every entry on that event; the row's registered surface is no longer what it was",
+    "strategy": "every entry from that strategy version -- the lane runs one",
+}
+#: kernel/paths.py puts these two in KILL_ROOT as well, and they are NOT kill switches: the
+#: breaker is read by probe_breaker and the override by probe_override. nodes/risk/health.py's
+#: risk_alerts skips exactly these two names and calls every other file KILL_FILE_PRESENT.
+KILL_DIR_NON_KILL_FILES = ("breaker.json", "arming_override.json")
+
+#: nodes/store_tuples/store.py REFUSAL_COUNTS_DDL: the lane's own COUNTERS, flushed once per
+#: report tick. Counts, per tick, per code, per league -- no duration, no candidate, no mode.
+REFUSAL_TABLE = "refusal_counts"
+#: grid.refuse(): `risk` is nodes/risk.clear -- the authoritative gate that owns the reservation --
+#: and grid.py's own pre-gate refusals. `size` is the read-only sizing mirror, whose flags are
+#: contaminated by its q=100 rung; its rows are summed to one line and its codes are never read.
+RISK_CHANNEL = "risk"
+#: nodes/store_tuples/store.RETENTION_TABLES holds ("refusal_counts", "seen_ts") and
+#: grid.Supervisor.retain_days is 7, so a 7-day row's FIRST day can age out of this table while
+#: the row is still running. The oldest retained row is reported, so a day before it is visibly
+#: a day with nothing left to read rather than a day with nothing to report.
+REFUSAL_RETENTION_DAYS = 7
+
+#: CANDIDATE-INDEPENDENT: when the deployed code returns one of these it has not looked at the
+#: candidate. Each is confirmed in `nodes/risk/clearance.py` or `grids/live_stream/grid.py` at
+#: 59dd5ae; the value is what the deployed code does, quoted, not what this reader concludes.
+#:
+#: THIS LIST DRIVES NO VERDICT. Its only effect is that a completed UTC day carrying one of these
+#: codes is NAMED, with its counts, as a day a human should look at before the row is given a
+#: verdict. It never produces a STOP and it never becomes the claim "the lane could not trade":
+#: the table records a count per report tick, so it cannot say for how long the condition held,
+#: what happened between two ticks, or whether it applied to the candidates the lane saw.
+CANDIDATE_INDEPENDENT_RISK_CODES = {
+    "KILL_SWITCH": ("clearance.clear: kill.active() matched one of nodes/risk/kill.py's five "
+                    "scopes, before any other check"),
+    "BREAKER": ("clearance.clear: breaker.evaluate() refused -- either BREAKER_LATCHED (the "
+                "latching daily-loss breaker) or PNL_UNKNOWN, which a SINGLE fill still "
+                "UNCONFIRMED produces and which refuses every candidate for the rest of the UTC "
+                "day while writing NOTHING to the kill directory, to breaker.json or to a lane flag"),
+    "ARM_STALE": ("grid._execute: check_arm found the override no longer authorises this process "
+                  "(code tree, limits or expiry), and _execute refuses every real order while it is set"),
+    "GUARD_FAILED": ("grid._guard_entry_refused: the position guard's health proof is invalid, so "
+                     "no new capital entry is allowed until a complete pass restores it"),
+    "BALANCE": "clearance.clear: a venue's balance was below the stake the candidate needed",
+    "BALANCE_UNCONFIRMED": ("clearance.clear: venue balances could not be confirmed at all, which "
+                            "refuses every order that sends real money"),
+    "FEE_SCHEDULE": "clearance.clear: a venue's fee schedule is missing or unverified",
+    "CLOCK_UNHEALTHY": ("clearance.clear: grid.clock_ok() is false -- a venue's stamps are outside "
+                        "the bound, or the loop stalled -- and the gate refuses every candidate"),
+    "VENUE_DISCONNECTED": ("clearance.clear: a venue is not connected and synced, and an F24 cover "
+                           "needs BOTH Polymarket and Kalshi"),
+    "VENUE_GEOBLOCKED": ("grid._execute: this host cannot place Polymarket orders; the lane says it "
+                         "refused EVERY cover"),
+    "MODE": "clearance.clear: the lane's mode does not execute, so there is nothing to clear",
+    "NO_CAPS": "clearance.clear: a capital-risking mode with no arming override caps",
+    "CAP_DAY_NOTIONAL": ("clearance.clear: the override's day notional cap is spent, which refuses "
+                         "every further candidate for the rest of the UTC day"),
+    "MAX_EVENTS": "ledger.assess: every simultaneous-event reservation slot is already taken",
+    "TOTAL_CAPITAL": "ledger.assess: open capital is at limits.max_total_usd",
+    "UNRESOLVED_EXPOSURE": "ledger.assess: unresolved exposure is at limits.max_unresolved_usd",
+}
+#: PER-CANDIDATE: the deployed code returned this after looking at THIS candidate at THIS size (or
+#: at the ceiling its scope -- a league, a venue, an event, a quantity -- had already reached).
+#: Listed for the same reason as the other list: so a code in NEITHER can be recognised as one
+#: this reader does not know. A day of these is not called "a working lane that found nothing
+#: worth trading" anywhere in this report; that is a story, and the counters do not carry it.
+PER_CANDIDATE_RISK_CODES = {
+    "MIN_PROFIT": "the candidate's net profit was under the hurdle",
+    "MIN_RETURN": "the candidate's locked return was under the hurdle",
+    "STALE_BOOK": "the candidate was priced from a book older than the bound",
+    "IN_FLIGHT": "another execution was already on the wire (one flight at a time)",
+    "HEDGE_DEPTH_CHANGED": "the hedge book moved between the plan and the entry",
+    "CAP_STAKE": "this candidate's stake was over the override's cap",
+    "CAP_CONTRACTS": "this candidate's quantity was over the override's cap",
+    "MAX_UNHEDGED": "this candidate's first leg was over limits.max_unhedged_contracts",
+    "EVENT_IN_FLIGHT": "that event already had an open reservation (single-flight)",
+    "EVENT_NOTIONAL": "that event was at its per-event notional",
+    "LEAGUE_EXPOSURE": "that league was at its exposure cap",
+    "VENUE_CAPITAL": "that venue was at its capital cap",
+    "EMPTY_RESERVATION": "the candidate asked to reserve nothing",
+}
+
+#: What one row of `refusal_counts` is, and therefore the exact limit of every number below it.
+#: Printed in the report, in the report's own words, beside the days it withholds a verdict over.
+WHAT_A_TICK_IS = (
+    "A tick is ONE report pass in which grids/live_stream/grid.py flushed its refusal counters. "
+    "`n` is how many refusals that code accumulated; `ticks` is in how many of that day's recorded "
+    "passes it appeared. Neither says for how long the condition held, what happened between two "
+    "passes, or whether it applied to the candidates the lane actually saw. `refusal_counts` has "
+    "no mode column and no candidate column, so no count here can be attributed to a candidate, "
+    "to a minute, or to a mode.")
+
+#: Why a completed UTC day is handed to a human instead of being given a label. Each is a FACT
+#: about the numbers; none of them is a finding about the lane.
+LOOK_CANDIDATE_INDEPENDENT = "CANDIDATE_INDEPENDENT_CODE_PRESENT"
+LOOK_UNRECOGNISED_CODE = "UNRECOGNISED_CODE_PRESENT"
+LOOK_NO_EXECUTION_STARTED = "NO_LIMITED_LIVE_EXECUTION_STARTED"
+#: What a day carrying any of the above does and does not establish, said outright in the output.
+WHAT_A_WITHHELD_DAY_ESTABLISHES = (
+    "ESTABLISHES: these codes were counted in this many of the day's recorded report ticks, and "
+    "this many LIMITED_LIVE executions started that day. DOES NOT ESTABLISH: that the lane was "
+    "unable to act, that no candidate could have cleared, that the condition held for the whole "
+    "day, or that it held for any moment between two ticks. This report does not claim any of "
+    "those and cannot rule them out either -- which is why the verdict waits for a human rather "
+    "than being issued or being turned into a STOP.")
+#: The mode hole, stated in the output rather than papered over with an invented signal.
+MODE_LIMITATION = (
+    "`refusal_counts` carries NO mode column, so a paper-mode lane's refusals are indistinguishable "
+    "here from a LIMITED_LIVE lane's. This report does not guess: `row_state.board.mode` is the "
+    "lane's mode NOW, at the moment of this read, and nothing more. What a paper period does leave "
+    "is days with zero LIMITED_LIVE executions started -- executions are filtered to "
+    f"{ROW_MODE} -- and every such completed day is named and withholds the final verdict, which "
+    "is how a half-paper row stops passing silently.")
+
+#: grids/live_stream/grid.py: `loop_stalled()` is `stalled or loop_lag_max_s > max_loop_lag_s`, and
+#: `clock_ok()` -- what the risk gate is handed as `clock_healthy` -- is false while it holds. The
+#: board states both outright. 5.0 s is grid.Supervisor.max_loop_lag_s at 59dd5ae.
+BOARD_MAX_LOOP_LAG_S = 5.0
+#: An F24 cover needs BOTH venues; a socket the board reports as not connected is a lane that
+#: cannot complete one, whatever the kill directory says.
+REQUIRED_VENUES = ("kalshi", "polymarket")
+
+#: grids/live_stream/grid.py Supervisor.write_board writes this snapshot every loop pass (one a
+#: second) to the --board path, whose argparse default is DATA_ROOT/board/board.json. It states
+#: arm_stale, mode, the caps the RUNNING process loaded and the F22 authority OUTRIGHT, which no
+#: file in the kill directory does. verify_f24.sh reads the running lane's own --board out of
+#: /proc; this reader uses the default path and treats a board it cannot find as a probe failure,
+#: never as a pass. The tolerances are verify_f24.sh's, for one answer from both tools.
+BOARD_MAX_AGE_S = 120.0
+BOARD_CLOCK_SKEW_S = 5.0
+
 #: Columns the reader cannot work without, and columns it uses to price what is still open. The
 #: optional ones arrived by ALTER (records._LATER_COLUMNS); a table without one is reported as a
 #: named warning and an understated stake, never as a crash.
@@ -140,6 +337,16 @@ def start_pin_path(data_root: str = DATA_ROOT) -> str:
 
 START_PIN = start_pin_path()
 START_PIN_TOLERANCE_S = 1.0
+
+
+def board_path(data_root: str = DATA_ROOT) -> str:
+    """The lane's one-second snapshot: grid.py's `--board` argparse default under the data root."""
+    return os.path.join(data_root, "board", "board.json")
+
+
+def breaker_path(data_root: str = DATA_ROOT) -> str:
+    """kernel/paths.BREAKER_PATH: the latching daily-loss breaker's state, inside the kill root."""
+    return os.path.join(data_root, "kill", "breaker.json")
 
 
 class StartMismatch(Exception):
@@ -250,8 +457,31 @@ def check_start_pin(start: float, path: str) -> dict:
 
 
 def _read_json_file(path: str) -> dict:
+    """The JSON OBJECT a state file holds, or ValueError.
+
+    `json.loads` happily returns a bare scalar: `null`, `5`, `"latched"`, `[]` are all valid JSON
+    documents. Every caller here then asks it for `.get(...)` or `[...]` and dies with
+    AttributeError or TypeError -- which is not caught anywhere, so a one-byte kill file or a
+    truncated board crashes the whole daily read and the operator sees a traceback instead of a
+    report. A crashed probe is worse than a failed one: it reads as no probe at all. A non-object
+    is therefore raised as ValueError, which is exactly what every caller's `except ... ValueError`
+    branch already handles by naming the file and failing closed.
+    """
     text = open(path).read()
-    return json.loads(text) if text.strip() else {}
+    if not text.strip():
+        return {}
+    d = json.loads(text)
+    if not isinstance(d, dict):
+        raise ValueError(f"holds a bare JSON {type(d).__name__}, not an object: {text.strip()[:80]!r}")
+    return d
+
+
+def _utc_iso(ts) -> str | None:
+    """A UTC timestamp as the operator reads it in the report; None when it is not a number."""
+    try:
+        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(float(ts)))
+    except (TypeError, ValueError, OSError):
+        return None
 
 
 def _parse_utc(text) -> float | None:
@@ -264,26 +494,230 @@ def _parse_utc(text) -> float | None:
     return (dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)).timestamp()
 
 
+def kill_scope(name: str) -> str | None:
+    """Which of nodes/risk/kill.py's five scopes this file name is, or None if it is not one.
+
+    `active()` matches `all`, `live`, and the three prefixed families by the exact name it builds
+    (`venue-{v}`, `event-{id}`, `strategy-{version}`), so a bare prefix with no value -- "venue-"
+    -- matches no action and is NOT a kill. It is listed in `kill.other_files` as evidence.
+    """
+    if name in KILL_EXACT_SCOPES:
+        return name
+    for prefix in KILL_PREFIX_SCOPES:
+        if name.startswith(prefix) and len(name) > len(prefix):
+            return prefix[:-1]
+    return None
+
+
 def probe_kill(kill_dir: str) -> dict:
-    """The kill files, by presence and recorded reason.
+    """EVERY kill file in the directory, by name, scope and recorded reason.
+
+    Probing two names ("live", "all") is how a reader reports a quiet row while a
+    `venue-polymarket`, `event-<id>` or `strategy-<version>` file in the same directory is
+    refusing entries: `KillSwitches.active()` honours all five scopes, and `any_present()`
+    enumerates the whole directory. This enumerates it too.
+
+    AND NOTHING ELSE IS A KILL SWITCH. `active()` matches only the five names it builds, so a file
+    with any other name stops NOTHING on the box -- verified on the real box, whose kill directory
+    holds stray `.guard-failure-*.lock` and `.legacy-incident-*.lock` files. Treating those as
+    kills this reader "cannot classify" would withhold every verdict forever, which is not caution
+    but noise. They are listed by name in `other_files`, as evidence a human may want, and they
+    are neither a stop nor a probe failure. (nodes/risk/health.risk_alerts is more alarmed than
+    this: it calls every non-breaker, non-override file KILL_FILE_PRESENT.)
 
     The daily loss breaker latches `live` when it fires -- but see DAILY_BREAKER_TRUTH for what
-    makes it fire: already-settled losses only, checked before a new entry.
+    makes it fire, and probe_breaker for the latch that OUTLIVES the file.
     """
-    out: dict = {"dir": kill_dir, "live_present": None, "all_present": None, "reasons": {}, "error": None}
+    out: dict = {"dir": kill_dir, "listed": False, "live_present": None, "all_present": None,
+                 "present": [], "names": [], "scopes": [], "other_files": [], "non_kill_files": [],
+                 "reasons": {}, "error": None,
+                 "other_files_note": (
+                     "files in the kill directory that are none of nodes/risk/kill.py's five "
+                     "scopes. active() never builds their names, so they stop nothing on the box: "
+                     "they are reported as evidence and are never treated as a kill, as an unknown "
+                     "kill, or as a reason to withhold anything.")}
     try:
-        for name in ("live", "all"):
-            path = os.path.join(kill_dir, name)
-            present = os.path.exists(path)
-            out[f"{name}_present"] = present
-            if not present:
-                continue
-            try:
-                out["reasons"][name] = _read_json_file(path).get("reason") or "no reason recorded"
-            except (OSError, ValueError) as exc:
-                out["reasons"][name] = f"unreadable ({type(exc).__name__})"
+        entries = sorted(os.listdir(kill_dir))
     except OSError as exc:
         out["error"] = f"{type(exc).__name__}: {exc}"
+        return out
+    out["listed"] = True
+    out["live_present"], out["all_present"] = False, False
+    for name in entries:
+        if name in KILL_DIR_NON_KILL_FILES:
+            out["non_kill_files"].append(name)
+            continue
+        scope = kill_scope(name)
+        if scope is None:
+            out["other_files"].append(name)
+            continue
+        try:
+            reason = _read_json_file(os.path.join(kill_dir, name)).get("reason") or "no reason recorded"
+        except (OSError, ValueError) as exc:
+            reason = f"unreadable ({type(exc).__name__})"
+        out["names"].append(name)
+        out["reasons"][name] = reason
+        out["present"].append({"name": name, "scope": scope, "reason": reason,
+                               "stops": KILL_SCOPE_EFFECT[scope]})
+        if name in KILL_EXACT_SCOPES:
+            out[f"{name}_present"] = True
+    out["scopes"] = sorted({k["scope"] for k in out["present"]})
+    return out
+
+
+def probe_breaker(path: str) -> dict:
+    """The LATCHING daily realised-loss breaker (nodes/risk/breaker.py at 59dd5ae).
+
+    spec.yaml names this a stop condition in its own words: "the daily realised-loss breaker
+    latching (it latches kill/live and needs a human to clear, so one latch ends the row rather
+    than pausing it)". The file is the latch, not the kill file it also creates:
+
+      * `_load` reads `latched` from this file at every construction, so the latch survives a
+        restart;
+      * `evaluate()` returns BREAKER_LATCHED from that flag BEFORE it can latch anything, so
+        kill/live is never re-created after someone deletes it -- and `nodes/risk/clearance.py`
+        refuses every candidate for as long as the flag is set;
+      * only `LossBreaker.reset(by=...)` clears it, and nothing in ops/ calls reset.
+
+    So a latched breaker with NO kill file is a lane that looks armed and places no order for the
+    rest of the row. A missing file is a definite reading (`_load` leaves `latched` False); an
+    unreadable one is not: the deployed `_load` would raise on it, and health.risk_alerts treats
+    it as latched. This reports it as a failed probe and lets the caller fail closed.
+    """
+    out: dict = {"path": path, "present": None, "latched": None, "reason": None, "latched_utc": None,
+                 "error": None,
+                 "what_clears_it": ("a human, by name: LossBreaker.reset(by=...). Nothing in ops/ "
+                                    "calls it, and deleting kill/live does NOT clear it.")}
+    try:
+        out["present"] = os.path.exists(path)
+    except OSError as exc:
+        out["error"] = f"{type(exc).__name__}: {exc}"
+        return out
+    if not out["present"]:
+        out["latched"] = False          # breaker._load: no state file means it has never latched
+        return out
+    try:
+        d = _read_json_file(path)
+    except (OSError, ValueError) as exc:
+        out["error"] = (f"{type(exc).__name__}: {exc} -- the deployed LossBreaker._load would raise "
+                        f"on this file, and nodes/risk/health.risk_alerts treats an unreadable "
+                        f"breaker state as LATCHED")
+        return out
+    out["latched"] = bool(d.get("latched"))
+    out["reason"] = d.get("reason") or None
+    out["latched_utc"] = d.get("latched_utc")
+    return out
+
+
+def probe_board(path: str, *, now: float) -> dict:
+    """The lane's own one-second snapshot: is the RUNNING process able to place a real order?
+
+    `Supervisor.check_arm` sets `arm_stale` from `nodes/risk/gate.stale_reason` on every report
+    tick, and `_execute` refuses every real order while it is set: an ARM_STALE lane keeps
+    evaluating, keeps logging, keeps looking healthy, and trades nothing. Nothing in the kill
+    directory says so, and the log says it only when it CHANGES. `write_board` states it outright,
+    with the mode, the caps this process loaded at start and the F22 authority, stamped `as_of`.
+
+    A board that is missing, unreadable or stale is a NAMED probe failure -- the lane may be dead,
+    stopped, OOM-killed or running below LIMITED_LIVE -- never a quiet pass. The fields of a stale
+    board are still reported, and a stale board that says ARM_STALE is still believed: only a new
+    override or a restart clears that, so the age is named rather than used to dismiss it.
+
+    `stalled`, `loop_lag_s` and `sockets` are read too, and they are not decoration. `clock_ok()`
+    -- what the risk gate is handed as `clock_healthy` -- is `not loop_stalled()` AND both venues'
+    stamps inside the bound, and `loop_stalled()` is exactly `stalled or loop_lag_s >
+    max_loop_lag_s`. A cover needs BOTH venues, so a socket the board reports as not connected is
+    a cover that cannot complete. Neither is one of spec.yaml's stop conditions -- a stall
+    self-clears in two ticks -- so both are reported as what the board says AT THIS MOMENT, in a
+    note. They are never applied backwards to a day: this snapshot is one second old, and the day
+    it describes is today.
+    """
+    out: dict = {"path": path, "present": None, "readable": None, "as_of": None, "age_s": None,
+                 "fresh": None, "max_age_s": BOARD_MAX_AGE_S, "mode": None, "caps": None,
+                 "caps_match_registered": None, "arm_stale": None, "f22_enabled": None,
+                 "f22_authority": None, "stalled": None, "loop_lag_s": None,
+                 "max_loop_lag_s": BOARD_MAX_LOOP_LAG_S, "loop_gate_open": None, "sockets": None,
+                 "venues_not_connected": None, "not_trading_evidence": [], "error": None}
+    try:
+        out["present"] = os.path.exists(path)
+    except OSError as exc:
+        out["error"] = f"{type(exc).__name__}: {exc}"
+        return out
+    if not out["present"]:
+        out["error"] = (f"no board at {path}: the lane writes one every second "
+                        f"(grid.Supervisor.write_board). Without it this reader cannot tell an "
+                        f"armed lane from a dead one or from one refusing every order (ARM_STALE)")
+        return out
+    try:
+        d = _read_json_file(path)
+    except (OSError, ValueError) as exc:
+        out["readable"] = False
+        out["error"] = f"the board at {path} is unreadable: {type(exc).__name__}: {exc}"
+        return out
+    out["readable"] = True
+    try:
+        out["as_of"] = float(d["as_of"])
+    except (KeyError, TypeError, ValueError):
+        out["error"] = f"the board at {path} carries no usable `as_of`: {d.get('as_of')!r}"
+        return out
+    out["age_s"] = round(now - out["as_of"], 1)
+    out["fresh"] = -BOARD_CLOCK_SKEW_S <= out["age_s"] <= BOARD_MAX_AGE_S
+    out["mode"] = d.get("mode")
+    out["arm_stale"] = d.get("arm_stale") or None
+    out["f22_enabled"] = d.get("f22_enabled")
+    out["f22_authority"] = d.get("f22_authority")
+
+    # The loop and the sockets: what the risk gate is actually handed. Parsed and USED, not
+    # discarded -- these are the two board fields that say "this lane is not placing orders"
+    # without anything appearing in the kill directory.
+    out["stalled"] = bool(d["stalled"]) if isinstance(d.get("stalled"), bool) else d.get("stalled")
+    try:
+        out["loop_lag_s"] = None if d.get("loop_lag_s") is None else float(d["loop_lag_s"])
+    except (TypeError, ValueError):
+        out["loop_lag_s"] = None
+    lagged = out["loop_lag_s"] is not None and out["loop_lag_s"] > BOARD_MAX_LOOP_LAG_S
+    out["loop_gate_open"] = not (bool(out["stalled"]) or lagged)
+    if out["stalled"]:
+        out["not_trading_evidence"].append(
+            "the board reports the supervisor loop STALLED at its last tick: grid.loop_stalled() "
+            "is true, so clock_ok() is false and nodes/risk.clear refuses every candidate "
+            "CLOCK_UNHEALTHY until two clean ticks have passed")
+    if lagged:
+        out["not_trading_evidence"].append(
+            f"the board reports loop_lag_s {out['loop_lag_s']:g} over grid.max_loop_lag_s "
+            f"{BOARD_MAX_LOOP_LAG_S:g}: loop_stalled() is true on that alone, so the gate refuses "
+            f"every candidate CLOCK_UNHEALTHY")
+    socks = d.get("sockets") if isinstance(d.get("sockets"), dict) else None
+    out["sockets"] = socks
+    if socks is None:
+        out["venues_not_connected"] = list(REQUIRED_VENUES)
+        out["not_trading_evidence"].append(
+            "the board carries no `sockets` object, so neither venue's stream can be confirmed "
+            "connected; an F24 cover needs BOTH")
+    else:
+        down = [v for v in REQUIRED_VENUES
+                if v not in socks or not (isinstance(socks[v], dict) and socks[v].get("connected"))]
+        out["venues_not_connected"] = down
+        if down:
+            out["not_trading_evidence"].append(
+                f"the board reports {', '.join(down)} NOT connected: an F24 cover needs both "
+                f"Polymarket and Kalshi, so no cover can complete while that holds "
+                f"(nodes/risk.clear refuses VENUE_DISCONNECTED)")
+
+    caps = d.get("caps") if isinstance(d.get("caps"), dict) else None
+    out["caps"] = caps
+    if caps is not None and str(out["mode"]) == ROW_MODE:
+        try:
+            out["caps_match_registered"] = all(
+                abs(float(caps[k]) - v) < 1e-9 for k, v in REGISTERED_CAPS.items() if k in caps
+            ) and set(REGISTERED_CAPS) <= set(caps)
+        except (TypeError, ValueError):
+            out["caps_match_registered"] = False
+    if not out["fresh"]:
+        out["error"] = (f"the board at {path} is {out['age_s']}s old (a live lane rewrites it every "
+                        f"second; more than {BOARD_MAX_AGE_S:g}s means the lane is dead, stopped, "
+                        f"starved or writing somewhere else). Its last reading is reported, but it "
+                        f"does NOT say the lane is trading now")
     return out
 
 
@@ -350,27 +784,401 @@ def probe_flags(con, *, code_root: str, reader=None) -> dict:
     return out
 
 
-def row_state(con, *, now: float, data_root: str, code_root: str, flag_reader=None) -> dict:
-    """Every stop/end condition the reader can observe, plus what it failed to observe.
+def _utc_day_start(day: str) -> float | None:
+    """The epoch second a `YYYY-MM-DD` UTC day begins, or None if it is not one."""
+    try:
+        return datetime.strptime(day, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp()
+    except (TypeError, ValueError):
+        return None
 
-    A probe that fails names itself in `probe_errors` and sets `conclusive` false. It never
-    invents a stop, and it never lets the report claim a clean IN_PROGRESS in silence.
+
+#: The whole refusal read, in TWO statements. `seen_ts` is the indexed column (refusal_counts_ts),
+#: so both are bounded by the row's own window instead of scanning the table: the box is a SINGLE
+#: vCPU that is also running the live lane, and this runs every day. Both channels come back; the
+#: second statement counts the DISTINCT report ticks each (day, channel) recorded, which is the
+#: denominator every per-code tick count is read against.
+#:
+#: COUNT(DISTINCT seen_ts), not COUNT(*): one report tick writes one row per (code, league), so
+#: counting rows would report four ticks for one tick that refused across four leagues.
+_REFUSAL_SQL = (f"SELECT CAST(seen_ts/86400.0 AS INTEGER) AS utc_day, channel, code, SUM(n), "
+                f"COUNT(DISTINCT seen_ts) FROM {REFUSAL_TABLE} WHERE seen_ts >= ? AND seen_ts <= ? "
+                f"GROUP BY 1, 2, 3")
+_REFUSAL_TICKS_SQL = (f"SELECT CAST(seen_ts/86400.0 AS INTEGER) AS utc_day, channel, "
+                      f"COUNT(DISTINCT seen_ts) FROM {REFUSAL_TABLE} "
+                      f"WHERE seen_ts >= ? AND seen_ts <= ? GROUP BY 1, 2")
+_REFUSAL_SPAN_SQL = f"SELECT MIN(seen_ts), MAX(seen_ts) FROM {REFUSAL_TABLE}"
+
+
+def probe_refusals(con, *, start: float, stop_at: float, channel: str = RISK_CHANNEL) -> dict:
+    """What the lane ITSELF counted, per UTC day, per code, over the row's window.
+
+    Counters, and nothing more. `breaker.evaluate()` returning PNL_UNKNOWN, a BALANCE that could
+    not be confirmed, a FEE_SCHEDULE that went unverified and an ARM_STALE a later override
+    cleared all leave nothing on disk -- and all of them are counted here, once per report tick,
+    for as long as the rows are retained. What the counts do NOT carry is duration, candidate or
+    mode: see WHAT_A_TICK_IS, which is printed in the report beside them.
+
+    Cheap by construction: the aggregation happens in SQLite over an indexed `seen_ts` range, so
+    the daily read returns one row per (UTC day, channel, code) plus one per (UTC day, channel)
+    instead of the window's tens of thousands of tick rows. `MIN`/`MAX` over the indexed column
+    are index lookups and give the retention horizon, which is what separates "no row was recorded
+    that day" from "that day is older than anything this table still holds" (store.RETENTION_TABLES
+    ages this table at grid.retain_days = 7).
+
+    A missing or unreadable table is reported as an error and fails closed upstream: this reader
+    says what it could not read, and issues no verdict over a window it could not read.
+    """
+    out: dict = {"table": REFUSAL_TABLE, "channel": channel, "present": None, "error": None,
+                 "window": {"start_utc": start, "end_utc": stop_at},
+                 "ticks_in_window": 0, "refusals_in_window": 0,
+                 "retained_from_utc": None, "retained_to_utc": None,
+                 "by_code": {}, "candidate_independent_by_code": {}, "per_candidate_by_code": {},
+                 "unrecognised_by_code": {},
+                 "by_utc_day": {}, "ticks_by_utc_day": {},
+                 "other_channels_by_utc_day": {}, "other_channels_over_the_row": {},
+                 "by_channel": {}, "sql": [_REFUSAL_SQL, _REFUSAL_TICKS_SQL],
+                 "what_a_tick_is": WHAT_A_TICK_IS,
+                 "other_channel_note": (
+                     "`other_channels_*` sums the NON-risk channels (today: `size`, "
+                     "nodes/execute/sizing's read-only mirror) to ONE count and ONE tick count per "
+                     "day. Its codes are not reported per code and are never read for meaning: the "
+                     "size ladder unions CAP_CONTRACTS in unconditionally and its flags are "
+                     "contaminated by its q=100 rung."),
+                 "cost_note": (
+                     "two indexed range scans over refusal_counts_ts, aggregated in SQLite: the "
+                     "result is one row per (UTC day, channel, code) and one per (UTC day, "
+                     "channel), not per tick. The box writes roughly 9,000 rows a day across both "
+                     "channels, so a 7-day window touches tens of thousands of rows once a day -- "
+                     "bounded, and it never reads outside the row's window. MIN/MAX are index "
+                     "lookups."),
+                 "what_this_is": (
+                     "grids/live_stream/grid.py counts every refusal by (channel, code, league) "
+                     "and flushes it to nodes/store_tuples/store.refusal_counts once per report "
+                     "tick. The `risk` channel is nodes/risk.clear -- the gate that owns the "
+                     "reservation -- plus grid.py's own pre-gate refusals. The `size` channel is a "
+                     "read-only sizing mirror contaminated by its q=100 rung."),
+                 "retention_note": (
+                     f"store.RETENTION_TABLES ages `{REFUSAL_TABLE}` out at grid.retain_days = "
+                     f"{REFUSAL_RETENTION_DAYS} days, which is exactly F24's registered length: "
+                     f"the row's first day can lose its rows while the row is still running. "
+                     f"`retained_from_utc` is the oldest row the table still holds, so a day "
+                     f"entirely before it has no evidence left either way.")}
+    try:
+        present = con.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (REFUSAL_TABLE,)).fetchone()
+    except sqlite3.Error as exc:
+        out["error"] = f"could not look for {REFUSAL_TABLE}: {type(exc).__name__}: {exc}"
+        return out
+    if not present:
+        out["present"] = False
+        out["error"] = (
+            f"this database has no `{REFUSAL_TABLE}` table, so the lane's own count of why it "
+            f"refused cannot be read. It is written by grids/live_stream/grid.py on every report "
+            f"tick at 59dd5ae (store.REFUSAL_COUNTS_DDL creates it on the first flush), so its "
+            f"absence means the lane has not ticked since L113 was deployed, or this is not the "
+            f"lane's database. No verdict is issued over a window whose record could not be read")
+        return out
+    out["present"] = True
+    try:
+        lo, hi = con.execute(_REFUSAL_SPAN_SQL).fetchone()
+        out["retained_from_utc"], out["retained_to_utc"] = lo, hi
+        rows = con.execute(_REFUSAL_SQL, (start, stop_at)).fetchall()
+        tick_rows = con.execute(_REFUSAL_TICKS_SQL, (start, stop_at)).fetchall()
+    except sqlite3.Error as exc:
+        out["error"] = f"reading {REFUSAL_TABLE}: {type(exc).__name__}: {exc}"
+        return out
+
+    by_day: dict[str, dict[str, dict]] = defaultdict(dict)
+    other_by_day: dict[str, dict[str, dict]] = defaultdict(dict)
+    totals: dict[str, dict] = defaultdict(lambda: {"n": 0, "ticks": 0})
+    other_totals: dict[str, dict] = defaultdict(lambda: {"n": 0, "ticks": 0})
+    by_channel: dict[str, int] = defaultdict(int)
+    for day_i, chan, code, n, ticks in rows:
+        day = _day_name(day_i)
+        chan, code, n, ticks = str(chan), str(code), int(n or 0), int(ticks or 0)
+        by_channel[chan] += n
+        if chan != channel:
+            slot = other_by_day[day].setdefault(chan, {"n": 0, "ticks": 0})
+            slot["n"] += n
+            other_totals[chan]["n"] += n
+            continue
+        cell = by_day[day].setdefault(code, {"n": 0, "ticks": 0})
+        cell["n"] += n
+        cell["ticks"] += ticks
+        totals[code]["n"] += n
+        totals[code]["ticks"] += ticks
+    # The DENOMINATOR: how many report ticks that (day, channel) recorded at all. A code seen in 1
+    # of 240 ticks and a code seen in 240 of 240 are different numbers and must read differently.
+    ticks_by_day: dict[str, int] = {}
+    for day_i, chan, ticks in tick_rows:
+        day, chan, ticks = _day_name(day_i), str(chan), int(ticks or 0)
+        if chan == channel:
+            ticks_by_day[day] = ticks_by_day.get(day, 0) + ticks
+        else:
+            other_by_day[day].setdefault(chan, {"n": 0, "ticks": 0})["ticks"] += ticks
+            other_totals[chan]["ticks"] += ticks
+
+    out["ticks_in_window"] = sum(ticks_by_day.values())
+    out["refusals_in_window"] = sum(c["n"] for c in totals.values())
+    out["by_channel"] = dict(sorted(by_channel.items()))
+    out["other_channels_by_utc_day"] = {d: dict(sorted(c.items())) for d, c in sorted(other_by_day.items())}
+    out["other_channels_over_the_row"] = dict(sorted(other_totals.items()))
+    out["by_code"] = dict(sorted(totals.items()))
+    out["candidate_independent_by_code"] = {k: v for k, v in sorted(totals.items())
+                                            if k in CANDIDATE_INDEPENDENT_RISK_CODES}
+    out["per_candidate_by_code"] = {k: v for k, v in sorted(totals.items())
+                                    if k in PER_CANDIDATE_RISK_CODES}
+    out["unrecognised_by_code"] = {k: v for k, v in sorted(totals.items())
+                                   if k not in CANDIDATE_INDEPENDENT_RISK_CODES
+                                   and k not in PER_CANDIDATE_RISK_CODES}
+    out["by_utc_day"] = {d: dict(sorted(c.items())) for d, c in sorted(by_day.items())}
+    out["ticks_by_utc_day"] = dict(sorted(ticks_by_day.items()))
+    return out
+
+
+def _day_name(day_index) -> str:
+    return time.strftime("%Y-%m-%d", time.gmtime(float(day_index) * 86400.0))
+
+
+def _codes_line(codes: dict, ticks_seen: int) -> str:
+    """One line of plain numbers: `CODE n=1234 in 4 of 4 tick(s)`, and nothing else."""
+    if not codes:
+        return f"no code recorded, in {ticks_seen} recorded tick(s)"
+    return ", ".join(f"{k} n={v['n']} in {v['ticks']} of {ticks_seen} tick(s)"
+                     for k, v in sorted(codes.items()))
+
+
+def _other_channels_line(chans: dict) -> str:
+    """The size channel (and any other), summed, in ONE line. Its codes are never read."""
+    if not chans:
+        return "no row on any other channel"
+    return ", ".join(f"{c} n={v['n']} in {v['ticks']} tick(s)" for c, v in sorted(chans.items()))
+
+
+def daily_record(*, completed_days: list[str], partial_day: str | None, attempts_by_day: dict,
+                 covers_by_day: dict, refusals: dict, board: dict) -> dict:
+    """Per UTC day: the numbers, and which days a human has to look at before a verdict is issued.
+
+    There is no day classification here and no day label. An earlier version of this function
+    decided ATTEMPTED / BLOCKED / QUIET per day and built a STOP out of it; a prover broke it in
+    both directions from the same root cause -- counters cannot answer "could the lane have
+    traded". What is reported instead, per completed UTC day:
+
+      * how many LIMITED_LIVE executions STARTED, and how many covers SETTLED;
+      * every risk-channel code, its count, and in how many of that day's ticks it appeared;
+      * how many ticks that day recorded at all;
+      * the other channels summed into one line.
+
+    A day is then handed to a human -- never labelled, never turned into a STOP -- when its
+    numbers are consistent with the lane having been unable to trade: a candidate-independent
+    code appeared, a code this reader does not recognise appeared, or no LIMITED_LIVE execution
+    started at all. The last one carries the paper-mode case (MODE_LIMITATION): `refusal_counts`
+    has no mode column, but executions are filtered to LIMITED_LIVE, so a paper period is a run of
+    days with zero of them and those days withhold the verdict.
+
+    Days with attempts are judged by exactly the same rule: one cleared candidate at 00:10 does
+    not speak for the other 23 hours, which is what the whitewash was made of.
+    """
+    days: list[dict] = []
+    look_reasons: dict[str, list[str]] = {}
+    evidence = list(board.get("not_trading_evidence") or [])
+    horizon = refusals.get("retained_from_utc")
+    by_day = refusals.get("by_utc_day", {}) or {}
+    ticks_by_day = refusals.get("ticks_by_utc_day", {}) or {}
+    other_by_day = refusals.get("other_channels_by_utc_day", {}) or {}
+
+    def facts(day: str, *, complete: bool) -> dict:
+        attempts = int(attempts_by_day.get(day, 0) or 0)
+        codes = dict(by_day.get(day) or {})
+        ticks_seen = int(ticks_by_day.get(day, 0) or 0)
+        others = dict(other_by_day.get(day) or {})
+        independent = {k: v for k, v in sorted(codes.items()) if k in CANDIDATE_INDEPENDENT_RISK_CODES}
+        unrecognised = {k: v for k, v in sorted(codes.items())
+                        if k not in CANDIDATE_INDEPENDENT_RISK_CODES
+                        and k not in PER_CANDIDATE_RISK_CODES}
+        entry = {
+            "utc_day": day,
+            "complete": complete,
+            "executions_started": attempts,
+            "covers_settled": int(covers_by_day.get(day, 0) or 0),
+            "risk_channel": {"ticks_recorded": ticks_seen, "codes": dict(sorted(codes.items()))},
+            "risk_line": f"risk: {_codes_line(codes, ticks_seen)}",
+            "other_channels_line": _other_channels_line(others),
+            "candidate_independent_codes": independent,
+            "unrecognised_codes": unrecognised,
+            "needs_a_human_look": False,
+            #: The short tag(s) for why, so a reader that has room for one line per day (the
+            #: check_f24.sh banner) can state it without reprinting the same paragraph per day.
+            "look_tags": [],
+            "why": [],
+        }
+        if not complete:
+            return entry
+
+        why: list[str] = []
+        tags: list[str] = []
+        if independent:
+            tags.append(LOOK_CANDIDATE_INDEPENDENT)
+            why.append(
+                f"{LOOK_CANDIDATE_INDEPENDENT}: {_codes_line(independent, ticks_seen)}. When the "
+                f"deployed code returns {' / '.join(sorted(independent))} it has not looked at the "
+                f"candidate (" + "; ".join(CANDIDATE_INDEPENDENT_RISK_CODES[k] for k in sorted(independent))
+                + ")")
+        if unrecognised:
+            tags.append(LOOK_UNRECOGNISED_CODE)
+            why.append(
+                f"{LOOK_UNRECOGNISED_CODE}: {_codes_line(unrecognised, ticks_seen)}. This reader "
+                f"does not know {' / '.join(sorted(unrecognised))}; it is in neither of the two "
+                f"reference lists, so whether it depends on the candidate is unknown here. Check it "
+                f"against nodes/risk/clearance.py")
+        if attempts == 0:
+            tags.append(LOOK_NO_EXECUTION_STARTED)
+            aged = ""
+            start_ts = _utc_day_start(day)
+            if (not codes and not others and horizon is not None and start_ts is not None
+                    and start_ts + 86400.0 <= float(horizon)):
+                aged = (f" This day is entirely before the oldest row the table still holds "
+                        f"({_utc_iso(horizon)}), so its refusal rows have aged out at "
+                        f"grid.retain_days = {REFUSAL_RETENTION_DAYS} and there is nothing to read "
+                        f"either way.")
+            why.append(
+                f"{LOOK_NO_EXECUTION_STARTED}: 0 {ROW_MODE} executions started on this completed "
+                f"UTC day. The risk channel recorded {ticks_seen} tick(s) and "
+                f"{_codes_line(codes, ticks_seen)}; other channels: {_other_channels_line(others)}."
+                + aged)
+        if why:
+            entry["needs_a_human_look"] = True
+            entry["look_tags"] = tags
+            entry["why"] = why
+            entry["what_this_evidence_establishes"] = WHAT_A_WITHHELD_DAY_ESTABLISHES
+            look_reasons[day] = why
+        return entry
+
+    for day in completed_days:
+        days.append(facts(day, complete=True))
+    current = facts(partial_day, complete=False) if partial_day else None
+
+    needs_look = [d["utc_day"] for d in days if d["needs_a_human_look"]]
+    notes: list[str] = []
+    if evidence:
+        notes.append("the lane's board reports, at the moment of this read: " + "; ".join(evidence)
+                     + ". That is the board now; it says nothing about any earlier day.")
+    return {
+        "question": ("Per completed UTC day of the row: how many LIMITED_LIVE executions started, "
+                     "how many covers settled, and what the lane counted in its refusal channels. "
+                     "Numbers only -- this reader does not decide what they mean."),
+        "days": days,
+        "current_utc_day": current,
+        "completed_days": len(days),
+        "executions_started_by_utc_day": {d["utc_day"]: d["executions_started"] for d in days},
+        "covers_settled_by_utc_day": {d["utc_day"]: d["covers_settled"] for d in days},
+        "risk_refusals_over_the_row": refusals.get("by_code", {}),
+        "risk_ticks_over_the_row": refusals.get("ticks_in_window", 0),
+        "candidate_independent_over_the_row": refusals.get("candidate_independent_by_code", {}),
+        "unrecognised_over_the_row": refusals.get("unrecognised_by_code", {}),
+        "other_channels_over_the_row_line": _other_channels_line(
+            refusals.get("other_channels_over_the_row", {}) or {}),
+        "days_needing_a_human_look": needs_look,
+        "why_each_day_needs_a_look": look_reasons,
+        "board_evidence": evidence,
+        "notes": notes,
+        "what_a_tick_is": WHAT_A_TICK_IS,
+        "what_a_withheld_day_establishes": WHAT_A_WITHHELD_DAY_ESTABLISHES,
+        "mode_limitation": MODE_LIMITATION,
+        "no_day_label_is_issued": (
+            "This report labels no day, states nothing about what the lane was able to do, and "
+            "states nothing about why any individual candidate was refused. It reports each day's "
+            "numbers, and where those are consistent with the lane having been unable to act it "
+            "withholds the verdict and names the day. Only the durable signals in row_state -- a "
+            "kill file in one of the five deployed scopes, a latched breaker, the override, an "
+            "ARM_STALE or non-LIMITED_LIVE lane, an unresolved material flag, a failed probe -- "
+            "end a row."),
+        "code_reference": {"candidate_independent": CANDIDATE_INDEPENDENT_RISK_CODES,
+                           "per_candidate": PER_CANDIDATE_RISK_CODES},
+        "refusals": refusals,
+    }
+
+
+def row_state(con, *, now: float, data_root: str, code_root: str, flag_reader=None,
+              window: tuple[float, float] | None = None, completed_days: list[str] | None = None,
+              partial_day: str | None = None, attempts_by_day: dict | None = None,
+              covers_by_day: dict | None = None) -> dict:
+    """The stop and end conditions this reader can OBSERVE, plus what it failed to observe.
+
+    Every entry in `stop_conditions` is unambiguous and durable, and there is no other kind:
+
+      1. a kill file present, by the DEPLOYED semantics of nodes/risk/kill.py at 59dd5ae -- the
+         names `all` and `live` and the prefixed families `venue-`, `event-`, `strategy-`. Nothing
+         else in that directory is a kill switch: `active()` never builds another name, so a
+         stray lock file stops nothing. Those are listed in `kill.other_files` as evidence;
+      2. the LATCHED daily-loss breaker, which outlives both a restart and the deletion of
+         kill/live -- spec.yaml's own stop condition, and the one that ends the row rather than
+         pausing it;
+      3. the arming override gone, expired (an `end`, not a stop), carrying an experiment, or no
+         longer at the registered caps;
+      4. an ARM_STALE lane, or a lane the board reports is not in LIMITED_LIVE: `_execute` refuses
+         every real order while either holds, and the lane still looks healthy;
+      5. an unresolved material safety flag, through the box's own reader.
+
+    A probe that fails names itself in `probe_errors` and sets `conclusive` false: no verdict is
+    issued over a signal this reader could not read. It never invents a stop, and it never lets
+    the report claim a clean IN_PROGRESS in silence.
+
+    These file probes are POINT-IN-TIME -- they describe the box NOW -- so the caller applies them
+    only to a window that runs to the present. What the lane counted inside the window is in
+    `daily_record`, and it produces no stop of any kind: see `daily_record.no_day_label_is_issued`.
     """
     kill_dir = os.path.join(data_root, "kill")
     kill = probe_kill(kill_dir)
+    breaker = probe_breaker(breaker_path(data_root))
     override = probe_override(os.path.join(kill_dir, "arming_override.json"), now=now)
+    board = probe_board(board_path(data_root), now=now)
     flags = probe_flags(con, code_root=code_root, reader=flag_reader)
 
     stops: list[str] = []
     ends: list[str] = []
     errors: list[str] = []
+    notes: list[str] = []
 
     if kill["error"]:
         errors.append(f"kill: {kill['error']}")
     else:
-        for name in ("live", "all"):
-            if kill[f"{name}_present"]:
-                stops.append(f"kill/{name} is present: {kill['reasons'].get(name)}")
+        for k in kill["present"]:
+            stops.append(f"kill/{k['name']} is present ({k['scope']} scope -- it stops "
+                         f"{k['stops']}): {k['reason']}")
+        if kill["other_files"]:
+            # Evidence, never a stop and never a withholding. nodes/risk/kill.active() builds only
+            # the five names, so none of these stops anything on the box; the real box keeps stray
+            # `.guard-failure-*.lock` and `.legacy-incident-*.lock` files here, and calling them
+            # kills this reader "cannot classify" would withhold every verdict forever.
+            notes.append(
+                f"the kill directory also holds {', '.join(repr(n) for n in kill['other_files'])}, "
+                f"which nodes/risk/kill.active() never matches (it builds only all, live, venue-*, "
+                f"event-*, strategy-*), so they stop nothing on the box. Listed as evidence: "
+                f"nodes/risk/health.risk_alerts would call each of them KILL_FILE_PRESENT, and a "
+                f"mistyped kill file would look exactly like this")
+
+    # The breaker, and the trap it sets: `evaluate()` returns BREAKER_LATCHED from the FILE before
+    # it can latch anything, so once someone deletes kill/live nothing re-creates it. The row is
+    # over and every other signal here looks clean.
+    if breaker["error"] or breaker["latched"] is None:
+        errors.append(f"breaker: {breaker['error'] or 'no reading from ' + breaker['path']}")
+    elif breaker["latched"]:
+        when = (f" at {_utc_iso(breaker['latched_utc'])}" if breaker["latched_utc"] else "")
+        stops.append(
+            f"the daily realised-loss breaker is LATCHED{when}: {breaker['reason'] or 'no reason recorded'}"
+            f" -- nodes/risk/breaker.evaluate returns BREAKER_LATCHED before any new entry and "
+            f"nodes/risk/clearance refuses every candidate. Only a human clears it, by name "
+            f"(LossBreaker.reset(by=...)), nothing in ops/ calls that, and deleting kill/live does "
+            f"NOT clear it. spec.yaml: one latch ENDS the row rather than pausing it")
+        if kill["listed"] and not kill["live_present"]:
+            notes.append(
+                "THE BREAKER IS LATCHED AND THERE IS NO kill/live FILE. Deleting kill/live does "
+                "not clear the breaker, and the breaker never re-creates it (evaluate() returns "
+                "BREAKER_LATCHED before it can latch anything), so the lane runs, evaluates and "
+                "places NO order while every kill-file check on the box -- verify_f24.sh included "
+                "-- reads clean. The row ended when the breaker latched; nothing traded after it, "
+                "whatever the elapsed days in this report say.")
 
     if override["present"] is None:
         errors.append(f"override: {override['error']}")
@@ -393,14 +1201,60 @@ def row_state(con, *, now: float, data_root: str, code_root: str, flag_reader=No
         elif override["expired"] is None:
             errors.append(f"override: {override['error']}")
 
+    # The lane's own snapshot. An ARM_STALE lane is the blind spot every file check shares: the
+    # override is present and valid-looking on disk, the kill directory is empty, and the running
+    # process refuses every real order because the override no longer pins ITS code tree or limits.
+    if board["error"]:
+        errors.append(f"board: {board['error']}")
+    if board["readable"] and board["as_of"] is not None:
+        aged = "" if board["fresh"] else f" (that board is {board['age_s']}s old -- STALE)"
+        stale = board["arm_stale"]
+        if stale:
+            text = str(stale)
+            if text.lower().startswith("override expired"):
+                # spec.yaml puts override expiry under `end` and exempts it from stop_conditions by
+                # name, so the lane refusing orders BECAUSE of the expiry is that same end.
+                ends.append(f"the lane reports ARM_STALE '{text}'{aged}: it has refused every real "
+                            f"order since, so nothing traded after that moment")
+            else:
+                stops.append(
+                    f"the lane reports ARM_STALE '{text}'{aged}: grid.check_arm set it from "
+                    f"gate.stale_reason and _execute refuses EVERY real order while it is set. The "
+                    f"lane still evaluates and still logs; it places nothing. spec.yaml stops on "
+                    f"'any change to code, limits, hurdles, entry policy or the override other "
+                    f"than its expiry'")
+        if board["mode"] is not None and str(board["mode"]) != ROW_MODE:
+            stops.append(f"the lane's board reports mode {board['mode']!r}, not {ROW_MODE}{aged}: "
+                         f"no real F24 order can be placed in that mode")
+        if board["f22_enabled"]:
+            stops.append(f"the lane's board reports F22 ENABLED ({board['f22_authority']!r}){aged}; "
+                         f"F24's registered arm is 'no experiment'")
+        if board["caps_match_registered"] is False:
+            stops.append(f"the RUNNING lane's caps {board['caps']!r} are not the registered "
+                         f"{REGISTERED_CAPS}{aged} -- these are the caps the process loaded at "
+                         f"start, which an override rewritten since does not change")
+
     if not flags["ok"]:
         errors.append(f"flags: {flags['error']}")
     elif flags["unresolved"]:
         stops.append("unresolved material safety flag(s): "
                      + ", ".join(f"{k}x{v}" for k, v in sorted(flags["unresolved"].items())))
 
-    return {"kill": kill, "override": override, "flags": flags, "stop_conditions": stops,
-            "end_conditions": ends, "probe_errors": errors, "conclusive": not errors}
+    # What the lane counted, per UTC day. It produces NO stop and NO day label -- only numbers,
+    # and a list of days whose numbers a human has to look at before a verdict is issued.
+    w_start, w_end = window if window is not None else (now, now)
+    refusals = probe_refusals(con, start=w_start, stop_at=w_end)
+    if refusals["error"]:
+        errors.append(f"refusals: {refusals['error']}")
+    record = daily_record(completed_days=list(completed_days or []), partial_day=partial_day,
+                          attempts_by_day=dict(attempts_by_day or {}),
+                          covers_by_day=dict(covers_by_day or {}), refusals=refusals, board=board)
+    notes.extend(record["notes"])
+
+    return {"kill": kill, "breaker": breaker, "override": override, "board": board, "flags": flags,
+            "refusals": refusals, "daily_record": record,
+            "stop_conditions": stops, "end_conditions": ends, "probe_errors": errors,
+            "notes": notes, "conclusive": not errors}
 
 
 # ------------------------------------------------------------------------------------------- scoring
@@ -589,20 +1443,59 @@ def run(db: str, start: float, end: float | None = None, include=(), exclude=(),
     net_by_completed = {d: round(by_day.get(d, 0.0), 6) for d in completed_days}
     elapsed_days = (stop_at - start) / 86400.0
 
+    # Every file probe below is POINT-IN-TIME: a kill file that was deleted, a breaker a human
+    # reset (reset() wipes the reason) or an ARM_STALE the next override cleared leaves NO trace in
+    # the kill directory, the breaker state or the board. What the database does hold is how many
+    # LIMITED_LIVE executions started on each UTC day and how many covers settled. Those are
+    # reported as the numbers they are; a day with none of the former is named for a human rather
+    # than given a meaning.
+    attempts_by_day: dict[str, int] = defaultdict(int)
+    for r in rows:
+        attempts_by_day[_utc_day(r["started_utc"])] += 1
+    covers_by_day: dict[str, int] = defaultdict(int)
+    for c in covers_all:
+        covers_by_day[_utc_day(c["settled_ts"])] += 1
+    silent_days = [d for d in completed_days if not attempts_by_day.get(d)]
+
     open_stake_total = round(sum(o["stake_paid_usd"] for o in open_rows), 6)
     open_unpriced = round(sum(o["contracts_without_a_price"] for o in open_rows), 6)
 
-    state = row_state(con, now=now, data_root=data_root, code_root=code_root, flag_reader=flag_reader)
+    # The still-running day is judged too, but only as information: it is not over, so it can
+    # never be one of the row's stopped days.
+    last_day = _utc_day(stop_at)
+    partial_day = last_day if last_day not in set(completed_days) else None
+    state = row_state(con, now=now, data_root=data_root, code_root=code_root, flag_reader=flag_reader,
+                      window=(start, stop_at), completed_days=completed_days,
+                      partial_day=partial_day, attempts_by_day=dict(attempts_by_day),
+                      covers_by_day=dict(covers_by_day))
+    record = state["daily_record"]
     # A live probe describes the lane NOW. Applying it to a closed historical window (the L141
     # calibration run) would brand that window STOP for something that happened afterwards, so the
     # findings are still printed but only bind a window that runs to the present.
     applied = end is None or end >= now
-    stopped = "; ".join(state["stop_conditions"]) if (applied and state["stop_conditions"]) else None
-
+    # STOPPED is reserved for the unambiguous and durable, and there is no second source of stops:
+    # nothing counted in refusal_counts stops a row, because a count per report tick cannot
+    # establish that the lane was unable to trade. Days whose numbers are consistent with that
+    # withhold the verdict instead, below.
+    stop_lines = list(state["stop_conditions"]) if applied else []
+    stopped = "; ".join(stop_lines) if stop_lines else None
+    # WITHHOLD, NEVER ASSERT. A completed UTC day carrying a candidate-independent code, a code
+    # this reader does not recognise, or no LIMITED_LIVE execution at all is named for a human --
+    # not labelled, not called a stop. Per DAY, so one cleared candidate cannot speak for the
+    # other 23 hours, which is exactly how the whitewash was produced.
+    needs_look = list(record["days_needing_a_human_look"])
+    # A probe that could not read its signal is NOT evidence of a quiet row. While the findings
+    # bind (a window that runs to the present), an incomplete probe withholds the verdict outright:
+    # spec.yaml's five verdicts are answers about a row that was able to trade, and this reader
+    # cannot say that when it could not look. It is also what keeps day 7 from arriving quietly.
+    #
     # The $50 end is decided on the ALL-IN realised figure: the dollars a PARTIAL left riding and
     # the dollars the protection layer spent are the operator's dollars, and the operator's plan is
     # to stop this test at $50 of them.
     loss_end = all_in_total <= -CUMULATIVE_LOSS_STOP_USD
+    # ... and that end is the one thing a failed probe does NOT withhold: those dollars are gone
+    # whatever the kill directory says, and LOSES_MONEY rests on the database, which WAS read.
+    inconclusive = applied and stopped is None and not state["conclusive"] and not loss_end
     end_reasons: list[str] = []
     # `blocking` ends wait for outstanding settlements; the $50 end and a stop condition do not,
     # because both are about harm already done and delaying either would hide it.
@@ -627,33 +1520,100 @@ def run(db: str, start: float, end: float | None = None, include=(), exclude=(),
     # still open, so the honest report is AWAITING_SETTLEMENT over a complete set, not a verdict
     # over a truncated one.
     awaiting = bool(blocking) and bool(open_rows) and stopped is None and not loss_end
-    ended = (bool(end_reasons) or stopped is not None) and not awaiting
+    # A withheld day blocks the ending and the verdict, and it does so whether or not the $50 end
+    # or the registered end has arrived -- with ONE exception, below: the $50 end is decided on
+    # dollars that are in the database, so it is never withheld.
+    withheld = bool(needs_look) and stopped is None and not loss_end
+    ended = ((bool(end_reasons) or stopped is not None)
+             and not awaiting and not inconclusive and not withheld)
     v, reason = verdict(cover_total, len(covers), ci, stopped,
                         loss_end=loss_end, all_in_total=all_in_total)
+    look_days = ", ".join(needs_look)
 
     if stopped is not None:
         row_status, verdict_field = "STOPPED", v
-    elif ended:
-        row_status, verdict_field = "ENDED", v
+    elif inconclusive:
+        row_status = "INCONCLUSIVE"
+        verdict_field = (
+            f"INCONCLUSIVE: {len(state['probe_errors'])} stop-condition probe(s) could not read "
+            f"their signal, so this report cannot say the row was able to trade over this window. "
+            f"No verdict is issued (it would have read {v}); see warnings")
+    elif withheld and (bool(end_reasons) or awaiting):
+        row_status = "NEEDS_HUMAN_LOOK"
+        verdict_field = (
+            f"NEEDS_HUMAN_LOOK: the registered end was reached ({'; '.join(end_reasons)}) and "
+            f"{len(needs_look)} completed UTC day(s) carry numbers this report will not interpret "
+            f"({look_days}). No verdict is issued (it would have read {v}); read "
+            f"daily_record.why_each_day_needs_a_look, then decide")
     elif awaiting:
         row_status = "AWAITING_SETTLEMENT"
         verdict_field = (f"AWAITING_SETTLEMENT (would be {v} once {len(open_rows)} filled "
                          f"execution(s) holding {open_stake_total:.5f} USD of stake settle)")
+    elif ended:
+        row_status, verdict_field = "ENDED", v
     else:
-        row_status, verdict_field = "IN_PROGRESS", f"IN_PROGRESS (would be {v})"
+        row_status = "IN_PROGRESS"
+        verdict_field = (f"IN_PROGRESS (would be {v})" if not needs_look else
+                         f"IN_PROGRESS (would be {v}, but {len(needs_look)} completed UTC day(s) "
+                         f"need a human look first: {look_days})")
 
     to_go = round(CUMULATIVE_LOSS_STOP_USD + all_in_total, 6)
+    # The lane's numbers on the same line as the money, stated as numbers. No day is characterised
+    # here; the only judgement on this line is whether a human still has to read a day's counts.
+    lane = (f"{record['completed_days']} completed UTC day(s), "
+            f"{sum(record['executions_started_by_utc_day'].values())} {ROW_MODE} execution(s) "
+            f"started, {sum(record['covers_settled_by_utc_day'].values())} cover(s) settled, "
+            f"{record['risk_ticks_over_the_row']} risk tick(s) recorded")
+    lane += (f" | DAY(S) NEEDING A HUMAN LOOK: {look_days}" if needs_look
+             else " | no completed day needs a human look")
     headline = (
         f"{row_status}: REALISED ALL-IN {all_in_total:+.5f} USD over {len(realised_rows)} settlement "
         f"row(s) | settled covers only (the verdict statistic) {cover_total:+.5f} over {len(covers)} "
         f"cover(s) | open and unsettled {len(open_rows)} execution(s), {open_stake_total:.5f} USD of "
-        f"stake paid and counted in NO realised figure | the ${CUMULATIVE_LOSS_STOP_USD:.0f} end: "
+        f"stake paid and counted in NO realised figure | lane: {lane} | the "
+        f"${CUMULATIVE_LOSS_STOP_USD:.0f} end: "
         + ("REACHED -- stop the test" if loss_end
            else f"{max(0.0, to_go):.5f} USD of further realised loss away"))
 
     warnings = []
     if pin.get("warning"):
         warnings.append(pin["warning"])
+    for n in state["notes"]:
+        warnings.append(n)
+    if inconclusive:
+        warnings.append(
+            "INCONCLUSIVE -- no verdict: " + "; ".join(state["probe_errors"])
+            + (". The registered end HAS been reached (" + "; ".join(end_reasons) + ") and the row "
+               "is still not ended: a window this reader could not prove was able to trade cannot "
+               "produce one of spec.yaml's verdicts." if end_reasons else
+               ". A row can be stopped in ways this run could not check.")
+            + " Fix the probe (or stop the lane) and read again before acting on any figure above.")
+    if needs_look:
+        warnings.append(
+            f"{len(needs_look)} COMPLETED UTC DAY(S) NEED A HUMAN LOOK BEFORE THIS ROW GETS A "
+            f"VERDICT: " + "; ".join(f"{d} -- " + " | ".join(record["why_each_day_needs_a_look"][d])
+                                     for d in needs_look)
+            + f". {WHAT_A_WITHHELD_DAY_ESTABLISHES} No day above is labelled, nothing here says "
+              f"what the lane was able to do, and the row is not reported STOPPED on any of it: "
+              f"the only things that stop or end a row are in "
+              f"row_state.what_may_stop_or_end_a_row.")
+    for d in record["days"]:
+        if d["needs_a_human_look"]:
+            warnings.append(f"{d['utc_day']}: {d['executions_started']} execution(s) started, "
+                            f"{d['covers_settled']} cover(s) settled, {d['risk_line']}; "
+                            f"{d['other_channels_line']}.")
+    if record["board_evidence"]:
+        warnings.append("the lane's own board reports, at the moment of this read: "
+                        + "; ".join(record["board_evidence"])
+                        + ". That is the board now, not a finding about any earlier day, and it is "
+                          "not a registered stop condition.")
+    if silent_days:
+        warnings.append(
+            f"{len(silent_days)} completed UTC day(s) in this window started NO LIMITED_LIVE "
+            f"execution ({', '.join(silent_days)}). {MODE_LIMITATION} Every FILE probe in "
+            f"row_state is point-in-time: a kill file someone deleted, a breaker a human reset "
+            f"(reset() wipes the reason) or an ARM_STALE a new override cleared leaves no trace in "
+            f"them. Each of those days' counts is in daily_record.days.")
     for e in state["probe_errors"]:
         warnings.append(f"stop-condition probe incomplete -- {e}: this report CANNOT say no stop "
                         f"condition fired, only that it could not look")
@@ -740,6 +1700,16 @@ def run(db: str, start: float, end: float | None = None, include=(), exclude=(),
                 "remain in net.all_in_realised.total_usd.")},
         "funnel": {"executions": len(rows),
                    "by_state": dict(sorted(Counter(r["state"] for r in rows).items())),
+                   "attempts_by_started_utc_day": dict(sorted(attempts_by_day.items())),
+                   "covers_settled_by_utc_day": dict(sorted(covers_by_day.items())),
+                   "completed_utc_days_with_no_attempt": silent_days,
+                   # spec.yaml `funnel`: "pre-wire declines by reason". This is the lane's own
+                   # count of them, risk channel, over the window -- the stage that used to be
+                   # readable only by grepping journald. Each code carries `n` (refusals counted)
+                   # and `ticks` (report passes it appeared in); see refusal_record.what_a_tick_is.
+                   "pre_wire_declines_by_risk_code": record["risk_refusals_over_the_row"],
+                   "pre_wire_decline_risk_ticks": record["risk_ticks_over_the_row"],
+                   "pre_wire_declines_on_other_channels": record["other_channels_over_the_row_line"],
                    "settled_covers": len(covers),
                    "settled_covers_in_window": len(covers_all),
                    "filled_not_yet_settled": len(open_rows),
@@ -802,6 +1772,16 @@ def run(db: str, start: float, end: float | None = None, include=(), exclude=(),
                 "prediction of what it will realise.")},
         "daily_loss_breaker": {
             "registered_usd": DAILY_BREAKER_USD,
+            "state_file": state["breaker"]["path"],
+            "latched_now": state["breaker"]["latched"],
+            "latch_reason": state["breaker"]["reason"],
+            "latched_utc": _utc_iso(state["breaker"]["latched_utc"]),
+            "latching_is_a_registered_stop_condition": (
+                "spec.yaml stop_conditions: 'the daily realised-loss breaker latching (it latches "
+                "kill/live and needs a human to clear, so one latch ends the row rather than "
+                "pausing it)'. The latch is this FILE, not the kill file it also writes: deleting "
+                "kill/live leaves it latched, and the lane then places no order for the rest of "
+                "the row while every kill-file check reads clean."),
             "what_it_actually_bounds": DAILY_BREAKER_TRUTH,
             "utc_days_a_7_day_window_touches": END_DAYS + 1,
             "realised_all_in_by_utc_settle_day_usd":
@@ -820,20 +1800,63 @@ def run(db: str, start: float, end: float | None = None, include=(), exclude=(),
         "interval_net_per_cover": ci,
         "loss_making_covers": sorted(
             [c for c in covers if c["realized_usd"] < 0], key=lambda c: c["realized_usd"]),
+        "daily_record": {k: v for k, v in record.items() if k not in ("refusals",)},
+        "days_needing_a_human_look": needs_look,
+        "verdict_withheld_pending_a_human_look": withheld,
+        "refusal_record": state["refusals"],
         "row_state": {"stop_conditions_applied": applied,
                       "stop_conditions": state["stop_conditions"],
+                      "what_may_stop_or_end_a_row": (
+                          "ONLY the unambiguous and durable: a kill file present by the deployed "
+                          "semantics of nodes/risk/kill.py (all, live, venue-*, event-*, "
+                          "strategy-*, and nothing else in that directory); a latched breaker; the "
+                          "arming override missing, expired, carrying an experiment or no longer "
+                          "at the registered caps; an ARM_STALE lane or a lane not in "
+                          f"{ROW_MODE}; an unresolved material safety flag; or a probe that "
+                          "failed. Nothing counted in refusal_counts stops a row: those counts "
+                          "withhold the verdict and name the day instead."),
                       "end_conditions": state["end_conditions"],
                       "probe_errors": state["probe_errors"],
+                      "notes": state["notes"],
                       "conclusive": state["conclusive"],
-                      "kill": state["kill"], "override": state["override"], "flags": state["flags"]},
+                      "inconclusive_withholds_the_verdict": inconclusive,
+                      "probed": ("the whole kill directory (the five deployed scopes, with every "
+                                 "other file listed as evidence), the latching daily-loss breaker, "
+                                 "the arming override, the lane's own board snapshot (ARM_STALE / "
+                                 "mode / running caps / F22 / loop / sockets), and the thirteen "
+                                 "material safety flags; plus, as NUMBERS only, what the lane "
+                                 "counted in refusal_counts per UTC day"),
+                      "what_this_cannot_see": (
+                          "The FILE probes are POINT-IN-TIME. A kill file someone deleted, a "
+                          "breaker a human reset (LossBreaker.reset wipes the reason), a "
+                          "PNL_UNKNOWN that resolved and an ARM_STALE a new override cleared all "
+                          "leave NO trace in them, so a stop that came and went between two daily "
+                          "reads does not appear there. What the counters hold for each day is in "
+                          "daily_record -- counts per report tick, which cannot establish "
+                          "duration, candidate or mode -- and that record ages out at "
+                          f"grid.retain_days = {REFUSAL_RETENTION_DAYS} days. Where those numbers "
+                          "are consistent with the lane having been unable to trade, the day is "
+                          "named and the verdict waits for a human; nothing here is asserted."),
+                      "kill": state["kill"], "breaker": state["breaker"],
+                      "override": state["override"], "board": state["board"],
+                      "flags": state["flags"]},
         "verdict": verdict_field,
         "verdict_reason": reason,
         "warnings": warnings,
-        "note": ("Only a verdict with ended=true is F24's result. net.settled_covers_only is the "
+        "note": ("daily_record reports NUMBERS per completed UTC day -- executions started, covers "
+                 "settled, each risk code with its count and the ticks it appeared in, the ticks "
+                 "recorded that day, and the other channels in one line. It labels no day and "
+                 "makes no claim about what the lane could have done. "
+                 "Only a verdict with ended=true is F24's result. net.settled_covers_only is the "
                  "verdict statistic over spec.yaml's unit of observation; net.all_in_realised is the "
                  "money, and it is what the $50 end and the daily read are about. Neither includes "
                  "anything still unsettled: awaiting_settlement counts that, and the row does not "
-                 "end on it."),
+                 "end on it. row_status INCONCLUSIVE means a stop probe could not read its signal, "
+                 "so no verdict is issued at all -- not even on day 7; NEEDS_HUMAN_LOOK means the "
+                 "end arrived over day(s) whose numbers this report will not interpret, so the "
+                 "verdict waits for a person; STOPPED means one of the durable conditions in "
+                 "row_state.what_may_stop_or_end_a_row was found, and no figure here covers the "
+                 "time since."),
     }
 
 
