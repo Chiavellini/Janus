@@ -1,33 +1,53 @@
 # NEXT
 
-Current-state handoff, updated 2026-09-17. Evidence belongs in the linked registered rows; this
+Current-state handoff, updated 2026-09-18. Evidence belongs in the linked registered rows; this
 file is an opinionated map and may be overwritten.
 
-## Where things stand (2026-09-17)
+## Where things stand (2026-09-18)
 
-**Production is unchanged and not trading** (details under *Production now*). Nothing below was
-deployed, released, re-signed or switched, and the kill was not touched.
+**Production is unchanged and not trading.** The F22 kill is latched and byte-identical; nothing was
+deployed, released or re-signed. The lane runs normally under the kill (it restarts cleanly under
+`kill/live` since d416bf8) and refuses every entry.
 
-**The one decision waiting on the operator: F24, a plain profitability test.** The operator chose
-"test profitability first". Everything is prepared in
-`research/sports/2026-09-17_limited-live-f24-taker-profitability/` (`RUNBOOK.md` is the plain-language
-entry point): the historical taker lane, no experiment arm, **current limits unchanged**, no deploy,
-ending at the first of 30 settled covers, 7 days, $50 cumulative realised loss, the breaker, any stop
-condition or override expiry. Registered outcomes: LOSES_MONEY / MAKES_MONEY_PROVEN /
-MAKES_MONEY_NOT_PROVEN / INSUFFICIENT / STOP. **Not yet registered**: the ledger row and the GATE
-amendment are written only after the operator gives a verbatim approving sentence and says who runs
-`arm_f24.sh`. That script writes a no-experiment override first, waits for the lane to log F22
-disabled, and only then archives the exact F22 kill; any mismatch leaves the kill in place. Its
-progress reader `check_f24.sh` was run for real and reproduced the last measured day (4 covers,
-−$0.16449). The account was verified quiet: 0 open covers, unhedged, open orders, reservations; no
-unresolved safety flag.
+**F24 is authorised, fully tooled, and waiting on ONE thing.** The operator chose to run it with
+**every league, unchanged limits** ("don't exclude anything; 5 dollars should be reachable"). Two dated
+GATE amendments carry the operator's words (*"I approve"*; *"I authorize you to arm, and yes, commit
+and push everything"*). The agent arms with
+`arm_f24.sh "I approve" --send` the moment the quiet check passes, re-verifies ~2 minutes later, and
+reads `check_f24.sh` daily, stopping by hand at −$50 **all-in** realised loss.
 
-**Why a profitability test rather than more speed work.** L143/L144 showed speed is not the lever and
-the gap is on Polymarket's side. L147 showed the event surface is probably not what binds a
-$20/day goal: the $500/day notional cap (filled covers count after settling) allows ~24 covers, about
-**$6.67/day at the best observed $0.28 per cover**; $20/day would need ~8× the observed conversion and
-$50/day more than one profitable cover per co-listed event per day. So raising the cap is a separate
-operator decision, and it is only worth asking once F24 says whether a cover makes money at all.
+**The blocker is the operator's own manual Kalshi trade:** ORPHAN_FILL #1172 (KXTRUMPSAY buy_yes 6.67
+@ 0.68, 2026-09-17 19:36Z) and GUARD_FAILED #1173 behind it. The guard clears them once that position
+is closed or settles; the agent never clears them. Any manual fill during F24 latches the kill and ends
+the row (a registered STOP).
+
+**What the money bounds really are** (RUNBOOK.md, verified against deployed code): only the $25
+breaker and the override expiry act by themselves, and the breaker is a **gate on starting trades**
+against money already settled that UTC day — not a cap on a day's loss. Unattended worst case is
+roughly **$200 plus whatever is open**. The $50 and 30-cover ends exist only because someone reads the
+report daily.
+
+**What the evidence says F24 will find — recorded, not argued:**
+- **L150:** over 25 real covers the ARBITRAGE made **+$0.812**; unhedged remainders made **+$3.365**.
+  Through 09-09 +$0.462/cover, since 09-10 **−$0.209/cover** (bootstrap interval excludes zero, by one
+  cent). The entry rule did not loosen (planned edge 6.0c → 4.3c); the hedge stopped cooperating
+  (fills went from ~3c better than planned to ~2c worse). **ATP is the loss:** 9 covers, −$3.662.
+- **L151:** over every real-money hedge order, realised hedge slippage is **median +1.98c per
+  contract against the 0.50c margin entry requires — about 4x**, adverse on 15 of 17 fills. Entry
+  charges the hedge nothing for this: `slippage_for` gates no order (capacity.py:49-50). The pooled
+  4c reserve went to 0.0 on 2026-09-08 and its replacement (L41) never ran. Wiring the charge into
+  `plan_from_cover.clears()` was tried and **reverted as ineffective** (it binds only on the tick-snap
+  and the pad); it must bind on `locked_return` at `clearance.py:205`, which moves every recorded
+  evaluation and needs its own row, GATE amendment and release — and would price out most covers.
+- **$6.67/day was always a ceiling** (every cover at $0.28 under the $500/day cap), never an
+  expectation. The operator believes $5/day is reachable; F24 is the test of that.
+
+**The F24 tooling was audited five rounds** (each round's fixes introduced new defects, twice the
+agent's own). Final shape: `verify_f24.sh` judges "can it trade" from the lane's own recorded refusals
+(`refusal_counts`), not from which files exist; `report.py` separates the verdict statistic
+(`net.settled_covers_only`) from THE MONEY (`net.all_in_realised`, including partial hedges) and
+withholds a verdict rather than asserting one; `check_f24.sh` ships the reader compressed (it outgrew
+SSM's 97 KB) and renders the banner locally. 203 F24 tests; verified live against the box.
 
 **The Polymarket depth defect (L146):** the REST write-through (L148) failed review and was reverted.
 Its replacement, **L149** (on a REST disagreement, ask the websocket for a fresh book; never keep the
