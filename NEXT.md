@@ -19,9 +19,14 @@ still bill, roughly $0.60–0.70/day. The Polymarket redemption timer is paused 
 - **F24 cannot be armed while it is stopped.** It also still cannot be armed while the operator's other
   strategy trades on the same Kalshi account (next paragraphs).
 
-**Other AWS spend found, 2026-09-01..17 (~$50 total):** two STOPPED us-east-1 instances still bill for
-their attached disks, ~$0.47/day — the old Janus box `i-0c86891ee306de0b8` (20 + 50 GB) and
-`earshot-useast1` `i-04c50d76572aa092e` (30 + 40 GB, a different project). And **$15.71 of AWS Cost
+**Other AWS spend found, 2026-09-01..17 (~$50 total):** the old Janus us-east-1 box
+`i-0c86891ee306de0b8` was **TERMINATED by the operator on 2026-09-18**, and both its disks (20 + 50 GB) are
+gone; Janus now costs nothing in us-east-1. `earshot-useast1` `i-04c50d76572aa092e` (30 + 40 GB) and
+`sweep-box` in us-east-2 (tagged Project=sweep, launched 2026-09-17, with bucket
+`sweep-book-tapes-986420598115`) are NOT Janus and were deliberately left untouched. **Janus's only
+remaining cost is Querétaro's storage, ~$0.70/day:** data disk `vol-0551c767981c71d03` (200 GB, the
+whole trade history), root `vol-0d677527f2b90df66` (20 GB), and snapshot `snap-0cdf81181eae376ef`
+(50 GB, pre-resize 2026-09-11). Deleting them is permanent and is the operator's call. And **$15.71 of AWS Cost
 Explorer API charges** (1c per request, so ~1,500 requests), concentrated 2026-09-12..14 and mostly
 stopped since; the caller is not identified. Deleting the old disks is permanent and is the operator's
 call alone.
