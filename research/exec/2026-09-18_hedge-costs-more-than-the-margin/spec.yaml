@@ -1,0 +1,60 @@
+row: L151
+date: 2026-09-18
+kind: descriptive
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L151
+title: Is the margin the lane selects smaller than the hedge slippage it actually pays?
+
+# IMMUTABLE AFTER REGISTRATION. Read-only. No trading, no arming, no deploy, no state change.
+
+why_this_row_and_not_a_repeat: >-
+  L86 (2026-09-12) already measured realised hedge slippage per league over 15 covers and recorded
+  mlb +0.92 on a 1.89c margin against atp -3.29, adverse 5 of 5, on a 0.46c margin. It is still
+  PENDING with no verdict. The 2026-09-13 analysis doc found that margin minus slippage predicts the
+  SIGN of a cover's outcome on 16 of 19 covers, better than league, size, entry price or gross sum,
+  and recommended gating entry on a league's measured slippage; it set a bar of 20 covers per league
+  and was never actioned. L41 (2026-09-07) was registered to produce those per-league numbers from
+  captured frames and NEVER RAN: research/sports/2026-09-07_kalshi-slippage-by-league/ holds a
+  measure.py and a spec and no results. This row does not re-measure what L86 measured; it states
+  the arithmetic those rows left unstated -- margin against slippage -- on every hedge order rather
+  than on settled covers only, and it closes out what the earlier rows left open.
+
+question: >-
+  Across every real-money Kalshi hedge order the lane has sent, how large is the realised hedge
+  slippage (fill average minus the plan's own hedge VWAP) compared with the margin the lane requires
+  at entry, per league; and does the comparison explain L150's finding that the arbitrage has earned
+  approximately nothing?
+
+method:
+  - Read-only queries (`mode=ro`) against the box's tuple store; bounded, cheap, no writes.
+  - Population: every `orders` row with `venue='kalshi'` and `mode='LIMITED_LIVE'`, joined to its
+    execution for league and to `plan_json.hedge.vwap` for what the plan charged the hedge.
+  - Per filled hedge order: slippage_c = (avg_price - plan hedge vwap) * 100. Report per league the
+    count, the median, the p90 and the worst, and the fill ratio and zero-fill count alongside, so a
+    league that cannot fill is not confused with one that fills expensively.
+  - Compare against the entry hurdles that actually bind: EXECUTION_MIN_LOCKED_RETURN = 0.005 and
+    EXECUTION_MIN_NET_PROFIT_USD = 0.05 (nodes/opportunity/thresholds.py, mirrored in
+    nodes/risk/limits.toml), and against the per-cover margins L86 recorded.
+  - State sample sizes next to every figure. Seventeen filled hedges is not a basis for registering a
+    reserve; this row reports the arithmetic, it does not register a per-league value.
+
+registered_outcomes:
+  SLIPPAGE_EXCEEDS_MARGIN: the median realised slippage is larger than the margin the lane requires
+  MARGIN_EXCEEDS_SLIPPAGE: it is not
+  TOO_FEW_FILLS: fewer than 10 filled hedge orders carry a usable plan vwap
+
+known_at_registration:
+  - L150: lifetime arbitrage +$0.812 over 25 covers; directional +$3.365; atp 9 covers -$3.662.
+  - The pooled 4c slippage reserve was set to 0.0 by operator decision on 2026-09-08 because it was
+    measured at a 3 s horizon the box does not run and "priced out nearly every cover the lane
+    printed" (nodes/cover/capacity.py:39-51). `SLIPPAGE_BY_LEAGUE` holds one interim value, mlb 0.01.
+  - `slippage_for` has never gated an order: it is read by `frontier()` for reporting only
+    (capacity.py:49-50). So since 2026-09-08 entry has charged the hedge nothing for slippage.
+  - A 2026-09-12 episode sent 511 hedge IOCs on one mlb execution over 14 minutes. L105 (2026-09-14)
+    added `max_protect_submits_total = 60` and `protect_total_window_s = 600`, which now bound it;
+    executions after that date show at most 2 attempts. It is history, not a live pathology.
+
+prohibited:
+  - Registering a per-league slippage value from this sample.
+  - Any write, order, arming, release, deploy or limit change.
+  - Reporting a per-league figure without its sample size.

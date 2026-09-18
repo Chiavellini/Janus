@@ -1,0 +1,106 @@
+{
+  "by_league": {
+    "atp": {
+      "executions": 7,
+      "fee_per_contract_median": 0.0124,
+      "filled_orders": 7,
+      "hedge_orders": 26,
+      "mean_fill_ratio": 1.0,
+      "slippage_c_median": 3.0,
+      "slippage_c_p90": 5.0,
+      "slippage_c_worst": 10.0,
+      "slippage_sample": 7,
+      "zero_fill_orders": 19
+    },
+    "ita": {
+      "executions": 1,
+      "fee_per_contract_median": 0.01614,
+      "filled_orders": 2,
+      "hedge_orders": 3,
+      "mean_fill_ratio": 0.9545,
+      "slippage_c_median": 2.983,
+      "slippage_c_p90": 3.983,
+      "slippage_c_worst": 3.983,
+      "slippage_sample": 2,
+      "zero_fill_orders": 1
+    },
+    "itf": {
+      "executions": 4,
+      "fee_per_contract_median": 0.01552,
+      "filled_orders": 4,
+      "hedge_orders": 5,
+      "mean_fill_ratio": 1.0,
+      "slippage_c_median": 0.5,
+      "slippage_c_p90": 1.96,
+      "slippage_c_worst": 1.96,
+      "slippage_sample": 4,
+      "zero_fill_orders": 1
+    },
+    "lal": {
+      "executions": 1,
+      "fee_per_contract_median": 0.00792,
+      "filled_orders": 1,
+      "hedge_orders": 1,
+      "mean_fill_ratio": 1.0,
+      "slippage_c_median": 0.0,
+      "slippage_c_p90": 0.0,
+      "slippage_c_worst": 0.0,
+      "slippage_sample": 1,
+      "zero_fill_orders": 0
+    },
+    "mlb": {
+      "executions": 1,
+      "fee_per_contract_median": 0.01033,
+      "filled_orders": 1,
+      "hedge_orders": 511,
+      "mean_fill_ratio": 1.0,
+      "slippage_c_median": 15.752,
+      "slippage_c_p90": 15.752,
+      "slippage_c_worst": 15.752,
+      "slippage_sample": 1,
+      "zero_fill_orders": 510
+    },
+    "nfl": {
+      "executions": 1,
+      "fee_per_contract_median": 0.00843,
+      "filled_orders": 1,
+      "hedge_orders": 1,
+      "mean_fill_ratio": 1.0,
+      "slippage_c_median": 6.0,
+      "slippage_c_p90": 6.0,
+      "slippage_c_worst": 6.0,
+      "slippage_sample": 1,
+      "zero_fill_orders": 0
+    },
+    "wta": {
+      "executions": 1,
+      "fee_per_contract_median": 0.01613,
+      "filled_orders": 1,
+      "hedge_orders": 6,
+      "mean_fill_ratio": 1.0,
+      "slippage_c_median": 12.2,
+      "slippage_c_p90": 12.2,
+      "slippage_c_worst": 12.2,
+      "slippage_sample": 1,
+      "zero_fill_orders": 5
+    }
+  },
+  "note": "Slippage is realised: the fill average minus the plan's own hedge VWAP. Entry charges the hedge that VWAP and nothing more (plan.py:346-349), and slippage_for gates no order (capacity.py:49-50), so this difference is paid out of the margin.",
+  "orders_without_a_usable_plan_vwap": 0,
+  "pooled": {
+    "adverse": 15,
+    "median_c": 1.983,
+    "p90_c": 10.0,
+    "sample": 17,
+    "worst_c": 15.752
+  },
+  "schema": "janus.l151.hedge_vs_margin.v1",
+  "thresholds": {
+    "min_locked_return": 0.005,
+    "min_net_profit_usd": 0.05,
+    "required_margin_c_per_contract": 0.5
+  },
+  "verdict": "SLIPPAGE_EXCEEDS_MARGIN",
+  "verdict_reason": "median realised hedge slippage +1.98c per contract against a required margin of 0.50c: the hedge costs 4.0x what entry demands"
+}
+
