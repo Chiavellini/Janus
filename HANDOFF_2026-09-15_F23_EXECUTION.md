@@ -202,7 +202,9 @@ zero F23 rows, and globally quiet capital. It cannot generically clear another k
    it does not reduce trading fees. F23 measures whether post-only PM fee savings survive its fill
    loss. If F23 is not positive in realized dollars per eligible decision, stop optimizing that
    maker arm. The next fee mechanism should be a separately registered cheaper venue/pair or the
-   inherited Kalshi MM-at-open lead in sports, which avoids the expensive two-venue pair.
+   inherited Kalshi MM-at-open lead in sports, which avoids the expensive two-venue pair. [Corrected
+   2026-09-18: that lead's evidence is one Bitcoin market with simulated fills, and its derived dollar
+   figures were withdrawn -- see AUDIT_2026-09-15_F23_RELEASE.md:435-461. Its sports test is L152.]
 5. **Address scale only after speed and fee results are honest.** Even 36 covers at recent economics
    do not approach `$100`. The later version must increase safely co-listed surface or dollars per
    cover within signed caps, or adopt a cheaper mechanism. Coverage expansion must not import an

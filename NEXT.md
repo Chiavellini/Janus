@@ -5,6 +5,16 @@ file is an opinionated map and may be overwritten.
 
 ## Where things stand (2026-09-18)
 
+**The three structural directions toward $50/day were tested for free on 2026-09-18, and none survives
+measurement.** More markets/venues scales a ~$0 per-trade edge (the lane already saw 263 tradeable events
+in 48 h yet found ~3 trades/day). Deeper markets add capacity, not edge (at the lane's size the failure is
+a stale Polymarket price, not depth). **Market making at Kalshi's sports open (L152/L153)** — the one
+direction that flips the sign — **is dead on MLB data:** Kalshi opens very wide (median 87c) but almost
+nobody trades then (pre-game CEILING $1.56/day even at 100 % capture); L152's in-play STRONG_LEAD was a
+sampling artifact that L153 reduced to a $7.29/day CEILING at best, $0.22 on a 10 s window, before any
+adverse selection. Only MLB in late August was measured; NFL/NBA were not.
+
+
 **THE BOX IS STOPPED (2026-09-18 17:12:34 UTC, operator's instruction, to stop the bill).** Instance
 `i-0a8c073c72dcdae11` (mx-central-1, Querétaro) was costing **~$1.73/day (~$52/month)** — measured from
 Cost Explorer, 2026-09-12..17 — while not trading. Before stopping, read-only on the box: 0 unreleased
@@ -18,6 +28,17 @@ still bill, roughly $0.60–0.70/day. The Polymarket redemption timer is paused 
   expires 2026-09-22T20:22:36Z; after that a restarted lane is ARM_STALE until F24's arm writes a fresh one.
 - **F24 cannot be armed while it is stopped.** It also still cannot be armed while the operator's other
   strategy trades on the same Kalshi account (next paragraphs).
+
+**Every local Janus launchd job on the Mac was stopped AND disabled (2026-09-18, operator's "stop every
+Janus cost").** Eleven jobs, all KeepAlive and all broken or looping: `live-sports` (the old Mac lane,
+failing every sweep on a malformed `/Volumes/Kilos/janus/tuples/tuples.sqlite` — it could not trade),
+`live-stream` (crash-looping, exit 1), seven collectors pointing at deleted `collectors/*.sh` scripts
+(exit 127, relaunching forever: convergence, ibkr-archive, ibkr-gateway, newborn, shadow,
+track-b-collector, wti-ladder), `watchdog`, and **`com.januswebapp.collector` — the caller behind the
+$15.71 of AWS Cost Explorer charges**: `/Volumes/Kilos/janus-webapp/scripts/collector.py` queried
+`ce get-cost-and-usage` (Project=janus) every 5 minutes, at 1c a request. `launchctl bootout` then
+`launchctl disable`, so they stay off across reboots; every plist is kept. Undo one with
+`launchctl enable gui/$(id -u)/<label>` then `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/<label>.plist`.
 
 **Other AWS spend found, 2026-09-01..17 (~$50 total):** the old Janus us-east-1 box
 `i-0c86891ee306de0b8` was **TERMINATED by the operator on 2026-09-18**, and both its disks (20 + 50 GB) are
@@ -365,8 +386,9 @@ At observed economics, `$100/day` requires about 362 covers. With only the Polym
 it still requires about 209. Therefore execution conversion plus the current maker saving are
 necessary improvements but not sufficient. Reaching the goal also requires materially more
 eligible surface, more dollars per cover within proven caps, a cheaper venue/mechanism, or some
-combination. The high-evidence Kalshi MM-at-open lead remains untested in sports and avoids the
-expensive two-venue fee pair, but it is a different mechanism and must be registered separately.
+combination. The Kalshi MM-at-open lead avoids the expensive two-venue fee pair, but its evidence is
+ONE Bitcoin market with SIMULATED fills; the dollar figures once derived from it were withdrawn
+(`AUDIT_2026-09-15_F23_RELEASE.md:435-461`). Its sports version is L152.
 
 ## Open questions that directly target the goal
 

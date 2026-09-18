@@ -1,0 +1,82 @@
+row: L152
+date: 2026-09-18
+kind: descriptive
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L152
+title: Could a maker quoting inside Kalshi's sports spreads after a market opens earn $50/day?
+
+# IMMUTABLE AFTER REGISTRATION. Written before any distribution in the data was examined. Free only:
+# local files and Kalshi's public market-data API, read-only. No box, no AWS, no orders, no account.
+
+operator_request: >-
+  2026-09-18. The operator does not want to kill the core idea and asked which structural direction
+  could reach ~$50/day. Three read-only surveys found that more markets/venues and deeper markets do
+  not change the per-trade edge; providing liquidity is the only direction that flips its sign, and it
+  has never been measured in sports. The operator chose to test it with free data only.
+
+question: >-
+  How wide and how long-lived are Kalshi sports spreads after Kalshi opens a market, how much actually
+  trades on Kalshi while they are wide, and what is the MOST a maker quoting inside them around the
+  Polymarket mid could earn per day?
+
+known_at_registration:
+  - Taker arbitrage earned +$0.812 over 25 covers (L150); hedge slippage median +1.98c vs a 0.50c margin
+    (L151); perfect hedging would have made ~$1.80/day on the same trades.
+  - The MM-at-open figures (+4.10c/fill, 35.8% both-sides) come from ONE Bitcoin market (KXBTC15M) with
+    SIMULATED fills (Kilos, 2026-07-15), never sports; their withdrawn ceiling was $5.63-11.25/day.
+  - Schema and two rows only were read before registration: ATL@MIL (2026-08-23) opened on Kalshi at
+    0.25/0.95 with Polymarket 0.41/0.66; a sample 18,307 s after open showed Kalshi 0.55/0.58 (3c) and
+    Polymarket 0.52/0.58 (6c). No distribution, decay curve or volume has been examined.
+  - Fees (nodes/fees/models.py): Kalshi maker 0.0175*p*(1-p) per contract; Polymarket maker 0.
+
+data:
+  - /Volumes/Kilos/janus/convergence/track.sqlite  samples (462,258 rows), cycles (5,700): per paired
+    market, Kalshi and Polymarket bid/ask, spreads, open_ts and age_s since Kalshi opened.
+  - /Volumes/Kilos/janus/shadow/kalshi_open.sqlite decisions (82): the snapshot at Kalshi's open.
+  - Kalshi public trade history for the same tickers (read-only HTTP). If it is unavailable or does not
+    reach back to these markets, the row reports INSUFFICIENT_DATA for volume and says so.
+
+definitions:
+  quotable: >-
+    A sample is quotable at threshold T (6c and 10c, both reported) when the Kalshi spread is at least T
+    AND the Polymarket mid lies strictly inside Kalshi's bid-ask, so a two-sided quote around it improves
+    both of Kalshi's touches.
+  edge_per_contract: >-
+    h - kalshi_maker_fee(p), with h = min(pm_mid - k_bid, k_ask - pm_mid) - 0.01 (one tick inside the
+    touch), floored at zero, and p = pm_mid. This treats the Polymarket mid as FAIR VALUE -- an
+    assumption; how well it anchors Kalshi is reported separately through error_c.
+  capturable_volume: >-
+    Kalshi contracts traded while the market was quotable: a trade counts when the most recent sample of
+    its ticker at or before the trade, within 120 s, was quotable.
+  ceiling_usd: >-
+    Sum over capturable trades of edge_per_contract x contracts x capture_share, for capture_share in
+    {0.10, 0.25, 0.50}, with ZERO adverse selection, no queue competition and both sides filling.
+    Scaled per day by the number of calendar days the data covers. It is a CEILING, never an estimate.
+
+report:
+  - coverage: dates, leagues, number of markets, sample cadence
+  - Kalshi spread at open, and its distribution by age_s bucket: 0-5 min, 5-30 min, 30 min-2 h, 2-6 h,
+    6-24 h, >24 h (median, p25, p75, share >= 6c, share >= 10c)
+  - error_c (Kalshi mid minus Polymarket mid) by bucket
+  - share of sample time quotable, by bucket and threshold
+  - capturable volume by bucket; ceiling_usd per day at each capture share and threshold
+  - required_contracts_per_day = 50 / mean(edge_per_contract over capturable trades)
+
+registered_outcomes:
+  STRONG_LEAD: ceiling >= $50/day at 25% capture (either threshold) -> propose a tiny live probe, which is
+    a separate operator decision involving real money
+  WEAK_LEAD: ceiling between $15 and $50/day at 25% capture -> report; the operator decides
+  DEAD: ceiling < $15/day even at 50% capture, OR fewer than 100 contracts/day trade inside quotable
+    windows -> close the direction
+  INSUFFICIENT_DATA: no usable Kalshi trade history -> report the spread structure and the fill volume
+    $50/day would REQUIRE, and no ceiling
+
+cannot_show:
+  - whether anyone trades against OUR quotes, queue position, or how fast competitors narrow the spread
+  - adverse selection: fills are most likely exactly when fair value has moved against the quote
+  - one-sided fills, which leave a naked position (64% of quotes in the Bitcoin model)
+  - anything outside the covered dates and leagues
+
+prohibited:
+  - Any order, arming, deploy, AWS action or box start.
+  - Presenting any $ figure without the word CEILING, its capture share and its sample size.

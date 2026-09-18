@@ -103,9 +103,14 @@ Measured and paid for in Kilos. They constrain the design; they are not Janus re
   no-fill from "no answer". Collapsing them overstates PnL and makes retries double-buy.
 - **The two-leg fee floor is a venue-pair choice spanning 7.5×** — from 3.75¢ (Kalshi+PM, the most
   expensive pair available) down to 0.50¢. The sports lane still scans the expensive pair.
-- **Kalshi MM-at-open**: +4.10¢/fill (n=3,196), adverse selection ≈ 0, **35.8% of markets fill both
-  sides for a riskless +3.75¢/pair.** Never tested beyond BTC. This is the highest-evidence
-  untested lead in the project and it needs no second venue.
+- **Kalshi MM-at-open — read the caveats before quoting it.** The +4.10¢/fill (n=3,196) and "35.8% of
+  markets fill both sides for +3.75¢/pair" come from ONE Bitcoin market (KXBTC15M, Kilos 2026-07-15)
+  with SIMULATED fills from a queue model, not real ones; the edge vanished within 5 s of the open and
+  existed only when spreads were 12–30¢. It was never tested in sports. Two figures derived from it
+  ("$100/day-scale", "$39/day") were withdrawn (`AUDIT_2026-09-15_F23_RELEASE.md:435-461`), whose
+  own ceiling is $5.63–11.25/day and is itself an upper bound. The sports version is being measured
+  by L152 (`research/exec/2026-09-18_kalshi-open-spread-capacity/`). It needs no second venue, but a
+  one-sided fill leaves a naked position, and Kalshi quoting is not built.
 
 ## Working alongside other agents
 

@@ -1,0 +1,44 @@
+{
+  "by_threshold": {
+    "10c": {
+      "CEILING_usd_per_day_L152_at_25pct": 13.9324,
+      "CEILING_usd_per_day_consistent": {
+        "10%": 0.1113,
+        "25%": 0.2781,
+        "50%": 0.5563
+      },
+      "CEILING_usd_per_day_consistent_within_10s": {
+        "10%": 0.0649,
+        "25%": 0.1623,
+        "50%": 0.3246
+      },
+      "CEILING_usd_per_day_pregame_consistent_at_100pct": 0.4633,
+      "CEILING_usd_per_day_pregame_only_at_100pct": 0.4653,
+      "capturable_contracts_L152": 119499.0,
+      "consistent_contracts": 524.74,
+      "consistent_share": 0.0044
+    },
+    "6c": {
+      "CEILING_usd_per_day_L152_at_25pct": 51.432,
+      "CEILING_usd_per_day_consistent": {
+        "10%": 2.9162,
+        "25%": 7.2904,
+        "50%": 14.5808
+      },
+      "CEILING_usd_per_day_consistent_within_10s": {
+        "10%": 0.0883,
+        "25%": 0.2207,
+        "50%": 0.4413
+      },
+      "CEILING_usd_per_day_pregame_consistent_at_100pct": 1.2398,
+      "CEILING_usd_per_day_pregame_only_at_100pct": 1.5569,
+      "capturable_contracts_L152": 248223.18,
+      "consistent_contracts": 32637.19,
+      "consistent_share": 0.1315
+    }
+  },
+  "days": 6.444,
+  "schema": "janus.l153.l152_robustness.v1",
+  "verdict": "ARTIFACT",
+  "verdict_reason": "best consistent CEILING at 25 % capture is 7.29 USD/day (registered bars: >= 50 SURVIVES, 15-50 WEAKENED, < 15 ARTIFACT)"
+}

@@ -1,0 +1,257 @@
+{
+  "CEILING_usd_per_day": {
+    "10c@10%": 5.573,
+    "10c@25%": 13.9324,
+    "10c@50%": 27.8648,
+    "6c@10%": 20.5728,
+    "6c@25%": 51.432,
+    "6c@50%": 102.864
+  },
+  "at_open": {
+    "kalshi_spread": {
+      "median": 0.87,
+      "n": 52,
+      "p25": 0.7,
+      "p75": 0.87
+    },
+    "lag_s": {
+      "median": 65.6168,
+      "n": 82,
+      "p25": 48.4832,
+      "p75": 9855.28
+    },
+    "n": 82,
+    "polymarket_spread": {
+      "median": 0.43,
+      "n": 52,
+      "p25": 0.22,
+      "p75": 0.45
+    }
+  },
+  "by_age_since_open": {
+    "0-5 min": {
+      "ceiling_edge_usd_at_100pct": {
+        "10c": 0.0,
+        "6c": 0.0
+      },
+      "contracts_traded_while_quotable": {
+        "10c": 0.0,
+        "6c": 0.0
+      },
+      "kalshi_mid_minus_pm_mid": {
+        "median": -0.015,
+        "n": 6,
+        "p25": -0.085,
+        "p75": 0.02
+      },
+      "kalshi_spread": {
+        "median": 0.11,
+        "n": 6,
+        "p25": 0.11,
+        "p75": 0.11
+      },
+      "samples": 6,
+      "share_quotable": {
+        "10c": 0.3333,
+        "6c": 0.3333
+      },
+      "share_spread_ge_10c": 1.0,
+      "share_spread_ge_6c": 1.0
+    },
+    "2-6 h": {
+      "ceiling_edge_usd_at_100pct": {
+        "10c": 2.9939,
+        "6c": 9.8492
+      },
+      "contracts_traded_while_quotable": {
+        "10c": 252.66,
+        "6c": 785.22
+      },
+      "kalshi_mid_minus_pm_mid": {
+        "median": -0.005,
+        "n": 12178,
+        "p25": -0.015,
+        "p75": 0.0
+      },
+      "kalshi_spread": {
+        "median": 0.05,
+        "n": 12178,
+        "p25": 0.04,
+        "p75": 0.07
+      },
+      "samples": 12178,
+      "share_quotable": {
+        "10c": 0.0783,
+        "6c": 0.4089
+      },
+      "share_spread_ge_10c": 0.0826,
+      "share_spread_ge_6c": 0.4424
+    },
+    "30 min-2 h": {
+      "ceiling_edge_usd_at_100pct": {
+        "10c": 0.0043,
+        "6c": 0.1535
+      },
+      "contracts_traded_while_quotable": {
+        "10c": 0.4,
+        "6c": 202.18
+      },
+      "kalshi_mid_minus_pm_mid": {
+        "median": -0.01,
+        "n": 3886,
+        "p25": -0.045,
+        "p75": 0.03
+      },
+      "kalshi_spread": {
+        "median": 0.07,
+        "n": 3886,
+        "p25": 0.05,
+        "p75": 0.1
+      },
+      "samples": 3886,
+      "share_quotable": {
+        "10c": 0.2715,
+        "6c": 0.4478
+      },
+      "share_spread_ge_10c": 0.3618,
+      "share_spread_ge_6c": 0.7079
+    },
+    "5-30 min": {
+      "ceiling_edge_usd_at_100pct": {
+        "10c": 0.0,
+        "6c": 0.0
+      },
+      "contracts_traded_while_quotable": {
+        "10c": 7.0,
+        "6c": 7.0
+      },
+      "kalshi_mid_minus_pm_mid": {
+        "median": -0.015,
+        "n": 818,
+        "p25": -0.055,
+        "p75": 0.03
+      },
+      "kalshi_spread": {
+        "median": 0.11,
+        "n": 818,
+        "p25": 0.06,
+        "p75": 0.11
+      },
+      "samples": 818,
+      "share_quotable": {
+        "10c": 0.3374,
+        "6c": 0.3924
+      },
+      "share_spread_ge_10c": 0.621,
+      "share_spread_ge_6c": 0.8117
+    },
+    "6-24 h": {
+      "ceiling_edge_usd_at_100pct": {
+        "10c": 0.0,
+        "6c": 0.0294
+      },
+      "contracts_traded_while_quotable": {
+        "10c": 0.0,
+        "6c": 7.0
+      },
+      "kalshi_mid_minus_pm_mid": {
+        "median": 0.0,
+        "n": 58206,
+        "p25": -0.01,
+        "p75": 0.005
+      },
+      "kalshi_spread": {
+        "median": 0.03,
+        "n": 58206,
+        "p25": 0.02,
+        "p75": 0.04
+      },
+      "samples": 58206,
+      "share_quotable": {
+        "10c": 0.0,
+        "6c": 0.0802
+      },
+      "share_spread_ge_10c": 0.0,
+      "share_spread_ge_6c": 0.0835
+    },
+    ">24 h": {
+      "ceiling_edge_usd_at_100pct": {
+        "10c": 356.1049,
+        "6c": 1315.6111
+      },
+      "contracts_traded_while_quotable": {
+        "10c": 119238.94,
+        "6c": 247221.78
+      },
+      "kalshi_mid_minus_pm_mid": {
+        "median": 0.0,
+        "n": 277894,
+        "p25": -0.005,
+        "p75": 0.005
+      },
+      "kalshi_spread": {
+        "median": 0.01,
+        "n": 277894,
+        "p25": 0.01,
+        "p75": 0.01
+      },
+      "samples": 277894,
+      "share_quotable": {
+        "10c": 0.0,
+        "6c": 0.0
+      },
+      "share_spread_ge_10c": 0.0,
+      "share_spread_ge_6c": 0.0001
+    }
+  },
+  "caveats": [
+    "EVERY dollar figure is a CEILING: zero adverse selection, no queue competition, both sides filling, the Polymarket mid as fair value, fee rounding ignored.",
+    "Capturable volume is Kalshi flow that traded while a quote WOULD have improved the touch; it does not show anyone would have traded against OUR quote.",
+    "MLB only, 2026-08-21..27; nothing here generalises to other leagues or seasons.",
+    "Samples begin ~4 minutes after Kalshi's open; the very first minutes are seen only through kalshi_open.sqlite's open snapshots."
+  ],
+  "contracts_per_day_traded_while_quotable": {
+    "10c": 18545.18,
+    "6c": 38522.02
+  },
+  "coverage": {
+    "days": 6.444,
+    "first_utc": "2026-08-21T04:30:07.412472+00:00",
+    "kalshi_contracts_in_period": 310587116.42,
+    "kalshi_markets": 248,
+    "kalshi_trades_in_period": 1639802,
+    "last_utc": "2026-08-27T15:09:00.479123+00:00",
+    "league": "MLB (KXMLBGAME) only",
+    "sample_cadence_s": "~69 (cycles)",
+    "trades_matched_to_a_sample_within_120s": 901862
+  },
+  "required_filled_contracts_per_day_for_50usd": {
+    "10c": 2314.0,
+    "6c": 3426.0
+  },
+  "schema": "janus.l152.kalshi_open_spread_capacity.v1",
+  "supplementary_by_phase": {
+    "10c": {
+      "in-play": {
+        "CEILING_usd_per_day_at_100pct": 55.2643,
+        "contracts": 119238.94
+      },
+      "pre-game": {
+        "CEILING_usd_per_day_at_100pct": 0.4653,
+        "contracts": 260.06
+      }
+    },
+    "6c": {
+      "in-play": {
+        "CEILING_usd_per_day_at_100pct": 204.1711,
+        "contracts": 247221.78
+      },
+      "pre-game": {
+        "CEILING_usd_per_day_at_100pct": 1.5569,
+        "contracts": 1001.4
+      }
+    }
+  },
+  "verdict": "STRONG_LEAD",
+  "verdict_reason": "CEILING 51.43 USD/day at 25 % capture reaches $50"
+}

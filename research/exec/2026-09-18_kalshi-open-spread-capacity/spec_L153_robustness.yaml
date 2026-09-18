@@ -1,0 +1,37 @@
+row: L153
+date: 2026-09-18
+kind: descriptive
+status_at_registration: PENDING
+ledger_ref: snooping_ledger.md row L153
+title: Does L152's STRONG_LEAD survive checking each trade against the book it was matched to?
+
+# IMMUTABLE AFTER REGISTRATION. Registered after L152's result, BEFORE this check was run. It tests a
+# specific, stated failure mode of L152's registered matching rule; it does not replace L152's verdict.
+
+why: >-
+  L152 returned STRONG_LEAD (CEILING $51.43/day at 25 % capture, 6c). But 99.6 % of its capturable volume
+  is IN-PLAY (6c: 247,222 of 248,223 contracts; pre-game CEILING only $1.56/day at 100 %), and it sits in
+  the >24 h-since-open bucket where the median Kalshi spread is 1c and the share of quotable samples
+  rounds to zero. Samples are ~69 s apart and L152 credits a trade to the latest sample within 120 s. In
+  play, a spread that was wide for an instant at sample time would be credited with every trade in the
+  following minute, most of which likely printed at a 1c spread. That is a sampling artifact until the
+  trades themselves say otherwise.
+
+check: >-
+  A Kalshi trade prints AT a touch: a YES-taker lifts the ask, a NO-taker hits the bid. So a trade is
+  CONSISTENT with its matched sample when its yes_price is within one tick (0.01) of that sample's
+  k_ask (taker_side yes) or k_bid (taker_side no). An inconsistent trade shows the book had moved since
+  the sample, so the sample's wide spread cannot be credited to it.
+  Report, for the 6c and 10c thresholds: the share of L152's capturable contracts that are consistent;
+  the CEILING recomputed on consistent trades only; the same with the match window tightened to 10 s;
+  and the pre-game-only CEILING. Same edge, fee, capture shares and day count as L152.
+
+registered_outcomes:
+  SURVIVES: consistent CEILING >= $50/day at 25 % capture (either threshold)
+  WEAKENED: consistent CEILING between $15 and $50/day at 25 %
+  ARTIFACT: consistent CEILING < $15/day at 25 % -- L152's STRONG_LEAD was produced by the sampling rule
+  and must not be used to justify spending money
+
+prohibited:
+  - Any order, arming, deploy, AWS action or box start.
+  - Editing L152's spec, results or verdict.
