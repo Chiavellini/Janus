@@ -5,6 +5,36 @@ file is an opinionated map and may be overwritten.
 
 ## Where things stand (2026-09-18)
 
+**THE BOX IS STOPPED (2026-09-18 17:12:34 UTC, operator's instruction, to stop the bill).** Instance
+`i-0a8c073c72dcdae11` (mx-central-1, Querétaro) was costing **~$1.73/day (~$52/month)** — measured from
+Cost Explorer, 2026-09-12..17 — while not trading. Before stopping, read-only on the box: 0 unreleased
+executions, 0 unhedged, 0 open orders, 0 open reservations, F22 kill still latched (`d81bbfc2…`).
+Nothing but Janus ran on it (janus-live-stream, janus-board, and the watchdog / pm-redeem / census
+timers), so the operator's other strategy is unaffected. Disks (20 + 200 GB gp3) are preserved and
+still bill, roughly $0.60–0.70/day. The Polymarket redemption timer is paused with it; nothing is lost.
+
+- **Restart:** `aws ec2 start-instances --region mx-central-1 --instance-ids i-0a8c073c72dcdae11`, then
+  wait for SSM. The lane starts under the latched kill and trades nothing (d416bf8). The F22 override
+  expires 2026-09-22T20:22:36Z; after that a restarted lane is ARM_STALE until F24's arm writes a fresh one.
+- **F24 cannot be armed while it is stopped.** It also still cannot be armed while the operator's other
+  strategy trades on the same Kalshi account (next paragraphs).
+
+**Other AWS spend found, 2026-09-01..17 (~$50 total):** two STOPPED us-east-1 instances still bill for
+their attached disks, ~$0.47/day — the old Janus box `i-0c86891ee306de0b8` (20 + 50 GB) and
+`earshot-useast1` `i-04c50d76572aa092e` (30 + 40 GB, a different project). And **$15.71 of AWS Cost
+Explorer API charges** (1c per request, so ~1,500 requests), concentrated 2026-09-12..14 and mostly
+stopped since; the caller is not identified. Deleting the old disks is permanent and is the operator's
+call alone.
+
+**The operator's other strategy shares the Kalshi account.** Its fills (e.g. ORPHAN_FILL #1172,
+KXTRUMPSAY) are indistinguishable, to the guard, from a Janus fill it lost track of, so each one raises
+ORPHAN_FILL, blocks arming, and would latch the kill mid-F24. **Correction to an earlier statement:**
+these do NOT clear when the position closes. Every earlier orphan was cleared by an explicit per-fill
+ownership record in `external_fill_dispositions` (#4 reads "operator-owned open manual fill"). The
+options put to the operator: pause the other strategy for the test, separate Kalshi accounts, or scope
+the guard to Janus's own (sports) markets — the last is a safety-check change needing its own row,
+GATE amendment and release. The operator is deciding.
+
 **Production is unchanged and not trading.** The F22 kill is latched and byte-identical; nothing was
 deployed, released or re-signed. The lane runs normally under the kill (it restarts cleanly under
 `kill/live` since d416bf8) and refuses every entry.
