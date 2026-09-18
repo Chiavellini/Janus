@@ -1,6 +1,10 @@
 # F24 runbook — test whether the system makes money
 
-**Status: prepared, not started.** Nothing here runs until you approve it in your own words.
+**Status: authorised, not armed (2026-09-17).** Both approvals are recorded in `GATE_TO_LIVE.md`:
+the operator's *"I approve"*, and a second amendment, *"I authorize you to arm, and yes, commit and
+push everything"*, which lets the agent run `arm_f24.sh`. Arming is currently **blocked** by an
+unresolved `ORPHAN_FILL` from the operator's own manual Kalshi trade; the quiet check refuses while
+it stands, and the F22 kill is untouched.
 
 ## What this test is
 
@@ -18,13 +22,23 @@ on a promising one.
 
 | Limit | Enforced by | Real? |
 |---|---|---|
-| **$25 realised loss in a day** | the lane's own breaker, which latches the stop | **yes, automatic** |
+| **$25 realised loss in a day** | the lane's breaker — but see below: it is a **gate on starting new trades**, not a cap on a day's loss | **partly** |
 | **The authorisation expires after 7 days** | the box refuses to trade without a live authorisation | **yes, automatic** |
 | $50 of total losses | **nobody** — it is a number printed by the progress report | **no** |
 | 30 completed trades | **nobody** — same | **no** |
 
-The breaker counts each **UTC day separately**. Seven days that each lose $24 never trip it. So if
-**nobody looks**, the true worst case is about **$175**, not $50.
+**What the $25 limit actually does** (`nodes/risk/breaker.py` on the deployed code): before starting a
+trade, it adds up the money **already settled** so far **today** (UTC). If that is −$25 or worse, it
+stops trading and latches the stop. It therefore does **not** cap a day's loss:
+
+- Positions that are open, or filled but not yet settled, count for **nothing** until they settle —
+  and sports positions usually settle hours later, often on the **next** UTC day.
+- It is checked *before* a trade. Trades already in flight are not called back.
+- A seven-day window touches **eight** UTC days, not seven.
+
+So the honest unattended worst case is **roughly $200 by that arithmetic, plus whatever is still open
+when it finally stops** — not $175, and not $50. Earlier drafts of this runbook said $50 and then
+$175; both were too favourable.
 
 The $50 and 30-trade limits are real only because **someone reads the progress report and stops it**.
 The operator chose to run the full seven days with daily checks, so that is the arrangement:
@@ -59,9 +73,9 @@ Thirty trades is a **go/no-go signal, not a proof.**
 
 ## What you need to do
 
-### 1. Approve it in your own words
+### 1. Approve it in your own words — **done 2026-09-17**
 
-Write one sentence saying you approve this test. For example:
+The recorded statement is *"I approve"*. Kept for reference, the shape that was asked for:
 
 > *"I approve F24: run the plain taker lane at the current limits for up to 7 days or 30 completed
 > trades, stopping at $50 of total losses."*
@@ -69,11 +83,11 @@ Write one sentence saying you approve this test. For example:
 Your exact words go into the project's authorisation log, word for word, and into the arming file on
 the box. **Nothing is written on your behalf.**
 
-### 2. Decide who runs the arming step
+### 2. Decide who runs the arming step — **done 2026-09-17**
 
-- **You run it** (the project's default), or
-- **You authorise me to run it.** The authorisation log will say so in your words, as it did on
-  2026-09-07.
+The operator authorised the agent: *"I authorize you to arm, and yes, commit and push everything"*, so
+the agent runs `arm_f24.sh`. The first amendment had explicitly withheld that until the operator said
+it in their own words.
 
 ### 3. The arming step
 
@@ -155,10 +169,12 @@ bash ops/box/run.sh 'systemctl stop janus-live-stream'
 - **`ops/box/write_override.sh`**: it always attaches an experiment.
 - **Deploying any code**, including the prepared L149 book-resync fix. That would change what is being tested mid-test.
 
-## Draft authorisation entry
+## The authorisation entries (already recorded)
 
-This is **not yet in `GATE_TO_LIVE.md`.** It is added only after you give your sentence, with that
-sentence pasted in exactly.
+Both are in `GATE_TO_LIVE.md`, dated 2026-09-17, with the operator's words quoted exactly. The first
+registers F24 at unchanged limits; the second authorises the agent to run `arm_f24.sh` and withholds
+everything else (no limit may be raised, no code deployed, no other kill cleared). The draft below is
+kept only to show the shape that was agreed.
 
 > | 2026-09-17 | **F24 may test whether the plain taker lane makes money, at unchanged limits.**
 > Operator statement, verbatim: *"‹YOUR EXACT SENTENCE›"*. The historical immediate Polymarket taker

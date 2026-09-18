@@ -29,14 +29,23 @@ if [ "$#" -gt 2 ]; then
   exit 2
 fi
 
+# A FIXED staging path made two simultaneous read-only checks (a progress read while another is
+# already running) overwrite and then delete each other's script -- exactly the failure ops/box/run.sh
+# was changed for. Each run stages its own mktemp'd file, chmod 644 so the janus user can read the
+# root-owned temp file, and a trap removes ONLY that file, on every exit path. The template ends in
+# the X's with no `.py` suffix: a trailing suffix is a GNU extension that BSD mktemp copies
+# VERBATIM, which would hand every run the same name again on any non-GNU host. Python does not
+# need the extension.
 REPORT=$(cat "$HERE/report.py")
-PAYLOAD="cat > /tmp/f24_report.py <<'F24_REPORT_EOF'
+PAYLOAD="F24_PY=\$(mktemp /tmp/f24_report.XXXXXX)
+trap 'rm -f \"\$F24_PY\"' EXIT
+chmod 644 \"\$F24_PY\"
+cat > \"\$F24_PY\" <<'F24_REPORT_EOF'
 $REPORT
 F24_REPORT_EOF
 PY=/opt/janus/.venv/bin/python3
-OUT=\$(sudo -u janus \$PY /tmp/f24_report.py $START $END)
+OUT=\$(sudo -u janus \$PY \"\$F24_PY\" $START $END)
 rc=\$?
-rm -f /tmp/f24_report.py
 if [ \$rc -ne 0 ]; then
   printf '%s\n' \"\$OUT\"
   echo \"check_f24: the reader exited \$rc and produced no report (see the message above).\" >&2
